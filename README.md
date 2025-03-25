@@ -1,6 +1,12 @@
 # The NASA AMMOS Multi-Mission BPSec Library (BSL)
 
-The NASA Advanced Multi-Mission Operations System [AMMOS](https://ammos.nasa.gov/) sponsored the development of a mission-agnostic implementation of Bundle Protocol Security (BPSec), as specified in IETF RFC 9172 and RFC 9173.
+**Note.** Once approved by program leadership, the BSL source code will be hosted on this repository!
+
+---
+
+## Summary
+
+The NASA [Advanced Multi-Mission Operations System \(AMMOS\)](https://ammos.nasa.gov/) sponsored the development of a mission-agnostic implementation of Bundle Protocol Security (BPSec), as specified in IETF RFC 9172 and RFC 9173.
 
 The BPSec Library (BSL) links at compile-time to a host Bundle Protocol Agent (BPA), and does not itself define a standalone executable. It exposes a simple interface to the host BPA for querying and applying BPSec-defined security operations on Bundles (the Protocol Data Unit of the Bundle Protocol). The BSL aspires to provide a simple API and flexible architecture readily adaptable for either resource-constrained embedded platforms or high-performance routers or ground systems.
 
@@ -16,7 +22,7 @@ Further context and background on Delay Tolerant Networking, the Bundle Protocol
 
 ## Status and Milestones 
 
-The BSL reached a milestone achieving initial evaluation capability during Q1 2025. Once approved by program leadership, the source code will be available at this repo.
+The BSL reached a milestone achieving initial evaluation capability during Q1 2025. Once approved by program leadership, the source code will be available under a GPL license in this repository.
 
 The BSL targets an initial "1.0" release during Q3-Q4 2025.
 
