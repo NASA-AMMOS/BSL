@@ -6,7 +6,7 @@
 
 ## Summary
 
-The NASA [Advanced Multi-Mission Operations System \(AMMOS\)](https://ammos.nasa.gov/) sponsored the development of a mission-agnostic implementation of Bundle Protocol Security (BPSec), as specified in IETF RFC 9172 and RFC 9173.
+The NASA [Advanced Multi-Missions Operations System \(AMMOS\)](https://ammos.nasa.gov/) sponsored the development of a mission-agnostic implementation of Bundle Protocol Security (BPSec), as specified in IETF RFC 9172 and RFC 9173.
 
 The BPSec Library (BSL) links at compile-time to a host Bundle Protocol Agent (BPA), and does not itself define a standalone executable. It exposes a simple interface to the host BPA for querying and applying BPSec-defined security operations on Bundles (the Protocol Data Unit of the Bundle Protocol). The BSL aspires to provide a simple API and flexible architecture readily adaptable for either resource-constrained embedded platforms or high-performance routers or ground systems.
 
@@ -22,7 +22,7 @@ Further context and background on Delay Tolerant Networking, the Bundle Protocol
 
 ## Status and Milestones 
 
-The BSL reached a milestone achieving initial evaluation capability during Q1 2025. Once approved by program leadership, the source code will be available under a GPL license in this repository.
+The BSL reached a milestone achieving initial evaluation capability during Q1 2025. Once approved by program leadership, the source code will be available under a GPL license in this repository (est Q1-Q2 2025).
 
 The BSL targets an initial "1.0" release during Q3-Q4 2025.
 
@@ -43,8 +43,8 @@ General contacts for NASA AMMOS: https://ammos.nasa.gov/contact/
 The APL team supporting this effort consists of the following.
 
  * Bill Van Besien (FSW Workshop Presenter) -- Bill.Van.Besien@jhuapl.edu
- * Brian Sipos -- Brian.Sipos@jhuapl.edu
- * Chris Krupiarz -- Chris.Krupiarz@jhuapl.edu
- * Sarah Heiner -- Sarah.Heiner@jhuapl.edu
- * Ed Birrane -- Ed.Birrane@jhuapl.edu
+ * Brian Sipos
+ * Chris Krupiarz
+ * Sarah Heiner
+ * Ed Birrane
 
