@@ -1,0 +1,2 @@
+addFilter(r'\S+ W: invalid-url Source0: bsl-.*')
+addFilter(r'bsl\.\S+ E: shared-lib-without-dependency-information /usr/lib64/libbsl_front\.so\.')

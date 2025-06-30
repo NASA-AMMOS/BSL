@@ -1,0 +1,101 @@
+/*
+ * Copyright (c) 2024 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the BPSec Library (BSL).
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This work was performed for the Jet Propulsion Laboratory, California
+ * Institute of Technology, sponsored by the United States Government under
+ * the prime contract 80NM0018D0004 between the Caltech and NASA under
+ * subcontract 1700763.
+ */
+/** @file
+ * @ingroup frontend
+ * Compile-time static configuration for the BSL.
+ */
+#ifndef BSL_BSL_CONFIG_H_
+#define BSL_BSL_CONFIG_H_
+
+#include <stdlib.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Compile-time library version based on SemVer-2.0.0 conventions.
+ * @sa Use bsl_version() to get run-time version.
+ */
+#define BSL_VERSION "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@"
+/** Compile-time major version number */
+#define BSL_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+/** Compile-time minor version number */
+#define BSL_VERSION_MINOR @PROJECT_VERSION_MINOR@
+/** Compile-time patch version number */
+#define BSL_VERSION_PATCH @PROJECT_VERSION_PATCH@
+
+/** Run-time library version based on SemVer-2.0.0 conventions.
+ * @note This may be different than #BSL_VERSION if using dynamic linking.
+ * @return The text form of the library version linked at runtime.
+ */
+const char * bsl_version(void);
+
+#ifndef BSL_MALLOC
+/** Uses the same function signature as C99 malloc().
+ */
+#define BSL_MALLOC malloc
+#endif /* BSL_MALLOC */
+
+#ifndef BSL_REALLOC
+/** Uses the same function signature as C99 realloc().
+ */
+#define BSL_REALLOC realloc
+#endif /* BSL_REALLOC */
+
+#ifndef BSL_FREE
+/** Uses the same function signature as C99 free().
+ */
+#define BSL_FREE free
+#endif /* BSL_FREE */
+
+/** Define to override value/struct allocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_ALLOC(type) BSL_MALLOC(sizeof(type));
+/** Define to override value/struct deallocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_DEL(ptr) BSL_FREE(ptr);
+
+/** Define to override array allocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_REALLOC(type, ptr, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? NULL : BSL_REALLOC((ptr), (n)*sizeof (type)))
+/** Define to override array deallocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_FREE(ptr) BSL_FREE(ptr);
+
+/** Whether this was built for RTEMS/LEON (instead of Ubuntu/x86)
+ */
+#cmakedefine RTEMS_BSP
+
+/** Part of POSIX.1-2008
+ */
+#cmakedefine HAVE_CLOCK_GETTIME
+
+
+#ifdef __cplusplus
+} // extern C
+#endif
+
+#endif  /* BSL_BSL_CONFIG_H_ */

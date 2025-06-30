@@ -1,0 +1,45 @@
+name: Packages
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  push:
+    branches:
+    - main
+  pull_request: {} # any target
+
+jobs:
+  rpm:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Set up OS
+        run: >
+          sudo apt-get update && sudo apt-get install -y
+          cmake ninja-build build-essential
+      - name: Prep
+        run: ./prep.sh -DBUILD_LIB=OFF -DBUILD_TESTING=OFF -DBUILD_DOCS=OFF -DBUILD_PACKAGE=ON
+      - name: Build
+        run: |
+          ./build.sh rpm-container
+      - name: rpmlint Results
+        if: always()
+        run: |
+          echo "## rpmlint results:" >> $GITHUB_STEP_SUMMARY
+          echo >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat build/rpmbuild/rpmlint.txt >> $GITHUB_STEP_SUMMARY
+          echo >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+      - name: Archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: bsl-rpm
+          path: |
+            build/rpmbuild/SRPMS
+            build/rpmbuild/RPMS
+            build/rpmbuild/rpmlint.txt
+          retention-days: 1

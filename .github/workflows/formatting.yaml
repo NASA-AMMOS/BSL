@@ -1,0 +1,28 @@
+name: Source formatting
+
+on:
+  push:
+    branches:
+      - main
+      - 'apl-fy[0-9][0-9]'
+  pull_request: {} # any target
+  schedule:
+    - cron: '20 8 * * 4'
+
+jobs:
+  check-formatting:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+      - name: Set up OS
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+              clang-format python3-pip
+          pip3 install licenseheaders
+      - name: Check code formatting
+        run: ./check_format.sh #|| echo "::warning ::Code formatting issues detected"
+        continue-on-error: true

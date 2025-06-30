@@ -1,0 +1,12 @@
+[submodule "deps/unity"]
+	path = deps/unity
+	url = https://github.com/ThrowTheSwitch/Unity.git
+	branch = master
+[submodule "deps/mlib"]
+	path = deps/mlib
+	url = https://github.com/P-p-H-d/mlib.git
+	branch = master
+[submodule "deps/QCBOR"]
+	path = deps/QCBOR
+	url = https://github.com/laurencelundblade/QCBOR.git
+	branch = master
