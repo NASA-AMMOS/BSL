@@ -1,32 +1,80 @@
+##
+## Copyright (c) 2025 The Johns Hopkins University Applied Physics
+## Laboratory LLC.
+##
+## This file is part of the Bundle Protocol Security Library (BSL).
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##     http://www.apache.org/licenses/LICENSE-2.0
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## This work was performed for the Jet Propulsion Laboratory, California
+## Institute of Technology, sponsored by the United States Government under
+## the prime contract 80NM0018D0004 between the Caltech and NASA under
+## subcontract 1700763.
+##
 name: Build and run tests
 on:
   schedule:
     - cron: '0 0 * * 0'
   push:
     branches:
-    - main
+      - main
+      - 'apl-fy[0-9][0-9]'
   pull_request: {} # any target
 
 jobs:
   unit-test:
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-24.04', 'centos-9']
+    name: Unit Test (os=${{matrix.os}})
+    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
+    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+    permissions:
+      contents: read
+      actions: write
     steps:
+      - name: Set up OS
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y \
+              cmake ninja-build ruby build-essential \
+              libssl-dev \
+              valgrind gcovr xmlstarlet
+      - name: Set up OS
+        if: startsWith(matrix.os, 'centos')
+        run: |
+          dnf config-manager --set-enabled crb
+          dnf install -y epel-release
+          dnf install -y \
+              git rsync \
+              cmake ninja-build \
+              ruby pkg-config gcc gcc-c++ ccache patch \
+              openssl-devel \
+              valgrind xmlstarlet python3-pip
+          pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: recursive
-      - name: Set up OS
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          cmake ninja-build ruby build-essential
-          libssl-dev
-          valgrind gcovr xmlstarlet
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
+      - name: Dependencies
+        run: ./deps.sh
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF
+        run: ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
       - name: Build
         run: ./build.sh
       - name: Test
@@ -36,7 +84,7 @@ jobs:
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
-          name: unit-test-coverage
+          name: ${{github.job}}-${{matrix.os}}-coverage
           path: build/default/coverage*
       - name: Report coverage
         run: |
@@ -44,28 +92,36 @@ jobs:
           echo "Source coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
 
   mock-bpa-test:
-    runs-on: ubuntu-22.04
+    name: Mock BPA Test (os=ubunntu-24.04)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - name: Set up OS
         run: >
           sudo apt-get update && sudo apt-get install -y
           cmake ninja-build ruby build-essential
           libssl-dev
           valgrind gcovr xmlstarlet
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
+      - name: Dependencies
+        run: ./deps.sh
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_DOCS=OFF
+        run: ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
       - name: Build
         run: ./build.sh
       - name: Install
         run: ./build.sh install
+      - name: Check symbols
+        run: echo ./check_symbols.py bsl #FIXME replace
       - name: Test Prep
         run: |
           sudo apt-get update && sudo apt-get install -y \

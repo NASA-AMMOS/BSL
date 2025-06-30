@@ -1,3 +1,24 @@
+##
+## Copyright (c) 2025 The Johns Hopkins University Applied Physics
+## Laboratory LLC.
+##
+## This file is part of the Bundle Protocol Security Library (BSL).
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##     http://www.apache.org/licenses/LICENSE-2.0
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## This work was performed for the Jet Propulsion Laboratory, California
+## Institute of Technology, sponsored by the United States Government under
+## the prime contract 80NM0018D0004 between the Caltech and NASA under
+## subcontract 1700763.
+##
 name: API documentation
 on:
   schedule:
@@ -8,21 +29,11 @@ on:
       - 'apl-fy[0-9][0-9]'
   pull_request: {} # any target
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
   apidoc:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,13 +41,15 @@ jobs:
           fetch-depth: 0
           submodules: recursive
       - name: Set up OS
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          cmake ninja-build ruby build-essential
-          libssl-dev
-          doxygen graphviz plantuml texlive texlive-latex-extra dblatex
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+            cmake ninja-build ruby build-essential \
+            libssl-dev \
+            doxygen graphviz plantuml texlive texlive-latex-extra dblatex
+      - name: Dependency build
+        run: ./deps.sh
       - name: Prep
-        run: ./deps.sh && ./prep.sh -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
+        run: ./prep.sh -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
       - name: Build
         run: |
           ./build.sh --target docs-api-html docs-api-pdf
@@ -51,25 +64,36 @@ jobs:
           path: testroot/usr/share/doc/bsl/api.tar
 
   deploy:
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+    # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     needs: apidoc
-#    if: github.ref == 'refs/heads/main'
-    if: false # disabled for private repository
-    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: bsl-api
+          path: testroot/usr/share/doc/bsl/
       - name: Decompress
+        working-directory: testroot/usr/share/doc/bsl
         run: tar -xf api.tar
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: testroot/usr/share/doc/bsl/
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
