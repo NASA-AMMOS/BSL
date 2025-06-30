@@ -13,7 +13,9 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+      - 'apl-fy[0-9][0-9]'
   pull_request: {} # any target
   schedule:
     - cron: '20 8 * * 4'
@@ -21,8 +23,6 @@ on:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    if: false # disabled for private repository
-
     # Runner size impacts CodeQL analysis time. To learn more, please see:
     #   - https://gh.io/recommended-hardware-resources-for-running-codeql
     #   - https://gh.io/supported-runners-and-hardware-resources
@@ -66,7 +66,7 @@ jobs:
           cmake ninja-build ruby build-essential \
           libssl-dev
         ./deps.sh
-        ./prep.sh -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS=OFF
+        ./prep.sh -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -78,7 +78,7 @@ jobs:
           paths:
           - src
           - test
-          - agent-test
+          - mock-bpa-test
 
     - name: Build
       if: matrix.build-mode == 'manual'
