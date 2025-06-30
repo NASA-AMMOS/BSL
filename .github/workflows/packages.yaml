@@ -31,7 +31,7 @@ on:
 jobs:
   rpm:
     runs-on: ubuntu-22.04
-    container: centos-9
+    container: quay.io/centos/centos:stream9
     permissions:
       contents: read
       actions: write
