@@ -1,0 +1,12 @@
+# Editor files
+*~
+.vscode
+.project
+.pydevproject
+
+# Build files
+deps/build
+build
+testroot
+__pycache__
+/.pytest_cache/

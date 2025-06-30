@@ -1,0 +1,75 @@
+name: API documentation
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  push:
+    branches:
+      - main
+      - 'apl-fy[0-9][0-9]'
+  pull_request: {} # any target
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  apidoc:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Set up OS
+        run: >
+          sudo apt-get update && sudo apt-get install -y
+          cmake ninja-build ruby build-essential
+          libssl-dev
+          doxygen graphviz plantuml texlive texlive-latex-extra dblatex
+      - name: Prep
+        run: ./deps.sh && ./prep.sh -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
+      - name: Build
+        run: |
+          ./build.sh --target docs-api-html docs-api-pdf
+          ./build.sh install --component docs-api
+      - name: Compress
+        working-directory: testroot/usr/share/doc/bsl
+        run: tar -cf api.tar html *.pdf
+      - name: Archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: bsl-api
+          path: testroot/usr/share/doc/bsl/api.tar
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: apidoc
+#    if: github.ref == 'refs/heads/main'
+    if: false # disabled for private repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: bsl-api
+      - name: Decompress
+        run: tar -xf api.tar
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: testroot/usr/share/doc/bsl/
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

@@ -1,0 +1,72 @@
+= bsl-mock-bpa(1)
+The Johns Hopkins University Applied Physics Laboratory LLC.
+// uses external revnumber
+:doctype: manpage
+:manmanual: BSL Mock BP Agent
+:manname: bsl-mock-bpa
+:mansource: BSL {revnumber}
+:man-linkstyle: pass:[blue R < >]
+
+== Name
+
+{manname} - A test fixture BPA for the BPSec Library (BSL)
+
+== Synopsis
+
+*{manname}* [_OPTION_ ...]
+
+== Description
+
+The Mock BPA is a text fixture which links to the BSL and allows external use of the BPA through its example bindings.
+
+[CAUTION]
+.Not a Real BP Agent
+The Mock BPA implements only the minimum amount of encoding/decoding behavior specified in RFC{nbsp}9171 and not any other necessary logic of a real BP Agent.
+
+The Mock BPA operates by communicating with its "underlayer" network and its "overlayer" application both through lock UDP transport.
+When the Mock BPA starts up it binds to two specific local UDP/IP endpoints and always sends to the same two corresponding "other side" UDP/IP endpoints.
+
+Because the Mock BPA uses UDP transport for both underlayer and overlayer, and uses BPv7 PDUs as its payload, it is compatible with off-the-shelf diagnostic tools such as Wireshark with appropriate UDP port numbers mapped using "Decode As..." to the "UDPCL" protocol dissector.
+
+== Options
+
+*-h*::
+Get command help information and exit.
+
+*-o* _ADDRESS:PORT_::
+Choose the overlayer local address-and-port to bind to.
+
+*-a* _ADDRESS:PORT_::
+Choose the overlayer application address-and-port to send to and receive from.
+
+*-u* _ADDRESS:PORT_::
+Choose the underlayer local address-and-port to bind to.
+
+*-r* _ADDRESS:PORT_::
+Choose the underlayer router address-and-port to send to and receive from.
+
+*-e* _EID-URI_::
+The endpoint ID of the local applicaiton which is registered.
+
+*-s* _EID-URI_::
+The endpoint ID of the local security source used to handle BPSec.
+
+== Exit Status
+
+*0*::
+Agent successfully ran and shut down.
+
+*1*::
+Failure processing command options.
+
+*2*::
+Failure initializing the agent.
+
+== Resources
+
+Project source and issues are managed in the repository <https://github.com/NASA-AMMOS/BSL>.
+
+== Copying
+
+Copyright (C) 2024 {author}. +
+Free use of this software is granted under the terms of the Apache-2.0 license.

@@ -1,0 +1,4 @@
+---
+Checks:              '*,-altera*,-llvmlibc-restrict-system-libc-headers,-llvm-header-guard,-bugprone-easily-swappable-parameters,-google-readability-todo,-readability-function-cognitive-complexity, -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling'
+WarningsAsErrors:    '*'
+...

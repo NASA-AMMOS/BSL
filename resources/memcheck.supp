@@ -1,0 +1,10 @@
+# Probable false positive
+# https://github.com/openssl/openssl/issues/19719
+{
+    <Suppress_OpenSSL_EVP_DecryptFinal_ex>
+    Memcheck:Cond
+    obj:*libcrypto.so*
+    ...
+    fun:EVP_DecryptFinal_ex
+    ...
+}
