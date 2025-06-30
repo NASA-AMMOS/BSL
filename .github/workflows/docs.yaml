@@ -30,11 +30,11 @@ jobs:
           fetch-depth: 0
           submodules: recursive
       - name: Set up OS
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          cmake ninja-build ruby build-essential
-          libssl-dev
-          doxygen graphviz plantuml texlive texlive-latex-extra dblatex
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+            cmake ninja-build ruby build-essential \
+            libssl-dev \
+            doxygen graphviz plantuml texlive texlive-latex-extra dblatex
       - name: Prep
         run: ./deps.sh && ./prep.sh -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
       - name: Build
@@ -61,8 +61,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: bsl-api
+          path: testroot/usr/share/doc/bsl/
       - name: Decompress
-        run: tar -xf api.tar
+        working-directory: testroot/usr/share/doc/bsl
+        run: ls -a . && tar -xf api.tar
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
