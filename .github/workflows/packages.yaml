@@ -62,7 +62,7 @@ jobs:
           echo "## rpmlint results:" >> $GITHUB_STEP_SUMMARY
           echo >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cat build/rpmbuild/rpmlint.txt >> $GITHUB_STEP_SUMMARY
+          cat build/default/pkg/rpmbuild/rpmlint.txt >> $GITHUB_STEP_SUMMARY
           echo >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
       - name: Archive

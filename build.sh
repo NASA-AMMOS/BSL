@@ -64,8 +64,8 @@ then
     echo "Executing in container..."
     ${DOCKER} container start -a ${CID}
 
-    mkdir -p build/rpmbuild
-    ${DOCKER} cp ${CID}:/usr/local/src/bsl/build/default/pkg/rpmbuild/ ${SELFDIR}/build/
+    mkdir -p build/default/pkg/rpmbuild
+    ${DOCKER} cp ${CID}:/usr/local/src/bsl/build/default/pkg/rpmbuild/ ${SELFDIR}/build/default/pkg/rpmbuild/
 
     ${DOCKER} container rm ${CID}
 elif [ "$1" = "rpm-build" ]
