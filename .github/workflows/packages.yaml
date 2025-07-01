@@ -36,11 +36,6 @@ jobs:
       contents: read
       actions: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
       - name: Set up OS
         run: |
           dnf config-manager --set-enabled crb
@@ -51,6 +46,11 @@ jobs:
               doxygen graphviz plantuml texlive-bibtex \
               asciidoctor \
               rpm-build rpmlint
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
       - name: Prep
         run: ./build.sh prep -DBUILD_LIB=OFF -DBUILD_TESTING=OFF -DBUILD_DOCS=OFF -DBUILD_PACKAGE=ON
       - name: Build
