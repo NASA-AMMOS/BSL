@@ -70,7 +70,7 @@ jobs:
         with:
           name: bsl-rpm
           path: |
-            build/rpmbuild/SRPMS
-            build/rpmbuild/RPMS
-            build/rpmbuild/rpmlint.txt
+            build/default/pkg/rpmbuild/SRPMS
+            build/default/pkg/rpmbuild/RPMS
+            build/default/pkg/rpmbuild/rpmlint.txt
           retention-days: 1
