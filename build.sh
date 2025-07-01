@@ -124,8 +124,8 @@ function cmd_rpm_container {
         echo "Building on ${HOSTNAME}"
         DOCKEROPTS="${DOCKEROPTS} -h ${HOSTNAME}"
     fi
-    ${DOCKER} build -f pkg/rpmbuild.Containerfile -t bsl .
-    CID=$(${DOCKER} container create ${DOCKEROPTS} bsl)
+    ${DOCKER} build -f pkg/rpmbuild.Containerfile -t localhost/bsl .
+    CID=$(${DOCKER} container create ${DOCKEROPTS} localhost/bsl)
 
     rm -rf ${SELFDIR}/build ${SELFDIR}/testroot
     mkdir -p ${SELFDIR}/build
@@ -135,7 +135,7 @@ function cmd_rpm_container {
     ${DOCKER} container start -a ${CID}
 
     mkdir -p build/default/pkg/rpmbuild
-    ${DOCKER} cp ${CID}:/usr/local/src/bsl/build/default/pkg/rpmbuild/ ${SELFDIR}/build/default/pkg/rpmbuild/
+    ${DOCKER} cp ${CID}:/usr/local/src/bsl/build/default/pkg/rpmbuild/. ${SELFDIR}/build/default/pkg/rpmbuild
 
     ${DOCKER} container rm ${CID}
 
