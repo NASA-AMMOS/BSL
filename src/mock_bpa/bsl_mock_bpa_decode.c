@@ -242,8 +242,25 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, BSL_BundleCtx_t *bundle)
         {
             return 3;
         }
+
+        uint64_t blk_num = blk.blk_num;
         // state is taken by the bundle
         BSL_BundleBlockList_push_move(bundle->blks, &blk);
+
+        const size_t blk_list_len = BSL_BundleBlockList_size(bundle->blks);
+        BSL_BundleBlock_t *found;
+        size_t i;
+        for (i = 0; i < blk_list_len; i++)
+        {
+            found = BSL_BundleBlockList_get(bundle->blks, i);
+            if (found != NULL && (found->blk_num == blk_num))
+            {
+                break;
+            }
+        }
+
+        BSL_BundleBlockIdMap_set_at(bundle->blk_num, blk_num, found);
+
     }
 
     QCBORDecode_ExitArray(dec);

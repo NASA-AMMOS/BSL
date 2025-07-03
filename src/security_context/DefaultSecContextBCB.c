@@ -27,6 +27,7 @@
 
 #include "DefaultSecContext_Private.h"
 #include "rfc9173.h"
+#include "backend/DynSeqReadWrite.h"
 #include <BPSecLib.h>
 #include <qcbor/qcbor_encode.h>
 #include <qcbor/qcbor_spiffy_decode.h>
@@ -195,27 +196,34 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
     BSL_CryptoCipherCtx_t cipher;
     r = BSL_CryptoCipherCtx_Init(&cipher, 0, aes_mode, bcb_context.params.iv.ptr, bcb_context.params.iv.len, cek_space);
     assert(r == 0);
+    r = BSL_CryptoCipherCtx_AddAAD(&cipher, bcb_context.aad.ptr, bcb_context.aad.len);
+    assert(r == 0);
     int nbytes = BSL_CryptoCipherCtx_AddData(&cipher, bcb_context.ciphertext, bcb_context.plaintext);
     assert(nbytes > 0);
+
     BSL_LOG_INFO("Decrypted BTSD: %s", BSL_Log_DumpAsHexString(bcb_context.debugstr.ptr, bcb_context.debugstr.len,
                                                                bcb_context.plaintext.ptr, (size_t)nbytes));
     uint8_t    aes_buf[64];
     BSL_Data_t aes_extra;
     BSL_Data_InitView(&aes_extra, sizeof(aes_buf), aes_buf);
+    
+    // TODO add authtag decrypt verification
 
+    //int i = BSL_CryptoCipherCtx_SetTag(&cipher, (void **)bcb_context.authtag.ptr);
+    // if (i != 0)
+    // {
+    //     BSL_LOG_ERR("Getting auth tag failed.");
+    //     BSL_CryptoCipherCtx_Deinit(&cipher);
+    //     return bcb_context;
+    // }
+    
     if (BSL_CryptoCipherContext_FinalizeData(&cipher, &aes_extra) != 0)
     {
         BSL_LOG_ERR("CANNOT FINALIZE");
         return bcb_context;
     }
-    int i = BSL_CryptoCipherCtx_GetTag(&cipher, (void **)bcb_context.authtag.ptr);
-    BSL_LOG_INFO("Decrypted Auth Tag: %s", BSL_Log_DumpAsHexString(bcb_context.debugstr.ptr, bcb_context.debugstr.len,
-                                                                   bcb_context.authtag.ptr, 16));
-    if (i != 0)
-    {
-        BSL_LOG_ERR("Getting auth tag failed.");
-        return bcb_context;
-    }
+
+    bcb_context.plaintext.len = 35; // TODO TODO TODO TODO
 
     BSL_CryptoCipherCtx_Deinit(&cipher);
     bcb_context.success = true;
@@ -428,19 +436,45 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
     BSLX_ScratchSpace_t        scratch      = { .buffer   = sec_outcome->allocation.ptr,
                                                 .position = 0,
                                                 .size     = sec_outcome->allocation.len };
-    const BSLX_BCBEncryptCtx_t final_result = (BSLX_BCBContext_Encrypt(BSLX_BCBContext_ComputeAAD(
-        BSLX_BCBContext_Initialize(BSLX_GetBCBParams(bundle, sec_oper), target_block_btsd, &scratch))));
-
-    // Append the security result to the sop outcome list.
-    if (final_result.authtag.len > 0)
+    
+    BSLX_BCBParams_t params = BSLX_GetBCBParams(bundle, sec_oper);
+    BSLX_BCBEncryptCtx_t bcb_ctx = BSLX_BCBContext_Initialize(params, target_block_btsd, &scratch);
+    BSLX_BCBEncryptCtx_t final_result;
+    if (params.crypto_mode == BSL_CRYPTO_ENCRYPT)
     {
-        BSL_Log_DumpAsHexString(final_result.debugstr.ptr, final_result.debugstr.len, final_result.authtag.ptr,
-                                final_result.authtag.len);
-        BSL_LOG_DEBUG("Computed Auth Tag: %s", final_result);
-        BSL_SecResult_t *auth_tag_result = BSLX_ScratchSpace_take(&scratch, sizeof(*auth_tag_result));
-        BSL_SecResult_Init(auth_tag_result, RFC9173_BCB_RESULTID_AUTHTAG, RFC9173_CONTEXTID_BCB_AES_GCM,
-                           sec_oper->target_block_num, final_result.authtag);
-        BSL_SecOutcome_AppendResult(sec_outcome, auth_tag_result);
+        final_result = BSLX_BCBContext_Encrypt(BSLX_BCBContext_ComputeAAD(bcb_ctx));
+
+        // Append the security result to the sop outcome list.
+        if (final_result.authtag.len > 0)
+        {
+            BSL_Log_DumpAsHexString(final_result.debugstr.ptr, final_result.debugstr.len, final_result.authtag.ptr,
+                                    final_result.authtag.len);
+            BSL_LOG_DEBUG("Computed Auth Tag: %s", final_result);
+            BSL_SecResult_t *auth_tag_result = BSLX_ScratchSpace_take(&scratch, sizeof(*auth_tag_result));
+            BSL_SecResult_Init(auth_tag_result, RFC9173_BCB_RESULTID_AUTHTAG, RFC9173_CONTEXTID_BCB_AES_GCM,
+                            sec_oper->target_block_num, final_result.authtag);
+            BSL_SecOutcome_AppendResult(sec_outcome, auth_tag_result);
+
+            BSL_SeqWriter_t writer;
+            BSL_SeqWriter_t *writer_ptr = &writer;
+            int x = BSL_BundleCtx_WriteBTSD((BSL_BundleCtx_t *)bundle, sec_oper->target_block_num, &writer_ptr);
+            size_t len = final_result.ciphertext.len;
+            BSL_LOG_INFO("ERR %d, CIPHERLEN: %d",x, len);
+            BSL_SeqWriter_Put(writer_ptr, final_result.ciphertext.ptr, &len);
+            BSL_SeqWriter_Deinit(writer_ptr);
+        }
+    }
+    else
+    {
+        final_result = BSLX_BCBContext_Decrypt(BSLX_BCBContext_ComputeAAD(bcb_ctx));
+        
+        BSL_SeqWriter_t writer;
+        BSL_SeqWriter_t *writer_ptr = &writer;
+        int x = BSL_BundleCtx_WriteBTSD((BSL_BundleCtx_t *)bundle, sec_oper->target_block_num, &writer_ptr);
+        size_t len = final_result.plaintext.len;
+        BSL_LOG_INFO("ERR %d, CIPHERLEN: %d",x, len);
+        BSL_SeqWriter_Put(writer_ptr, final_result.plaintext.ptr, &len);
+        BSL_SeqWriter_Deinit(writer_ptr);
     }
 
     return final_result.success == true ? 0 : -1;

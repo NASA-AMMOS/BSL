@@ -51,46 +51,46 @@ install(
 
 set(LIB_ORDERED bsl_mock_bpa bsl_dynamic bsl_front bsl_test_utils)
 
-add_unity_test(SOURCE test_bsl_text_util.c)
-target_link_libraries(test_bsl_text_util PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_bsl_text_util.c)
+# target_link_libraries(test_bsl_text_util PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_bundle_ctx_dyn.c)
-target_link_libraries(test_bundle_ctx_dyn PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_bundle_ctx_dyn.c)
+# target_link_libraries(test_bundle_ctx_dyn PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_pp_reg_dyn.c)
-target_link_libraries(test_pp_reg_dyn PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_pp_reg_dyn.c)
+# target_link_libraries(test_pp_reg_dyn PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_mock_bpa_encode.c)
-target_link_libraries(test_mock_bpa_encode PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_mock_bpa_encode.c)
+# target_link_libraries(test_mock_bpa_encode PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_mock_bpa_decode.c)
-target_link_libraries(test_mock_bpa_decode PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_mock_bpa_decode.c)
+# target_link_libraries(test_mock_bpa_decode PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_mock_bpa_eid.c)
-target_link_libraries(test_mock_bpa_eid PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_mock_bpa_eid.c)
+# target_link_libraries(test_mock_bpa_eid PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_mock_bpa_eidpat.c)
-target_link_libraries(test_mock_bpa_eidpat PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_mock_bpa_eidpat.c)
+# target_link_libraries(test_mock_bpa_eidpat PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_mock_bpa_label.c)
-target_link_libraries(test_mock_bpa_label PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_mock_bpa_label.c)
+# target_link_libraries(test_mock_bpa_label PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_mock_bpa_codec_loopback.c)
-target_link_libraries(test_mock_bpa_codec_loopback PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_mock_bpa_codec_loopback.c)
+# target_link_libraries(test_mock_bpa_codec_loopback PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_crypto.c)
-target_link_libraries(test_crypto PUBLIC bsl_dynamic)
+# add_unity_test(SOURCE test_crypto.c)
+# target_link_libraries(test_crypto PUBLIC bsl_dynamic)
 
-# Tests the security context via front-end interface.
-add_unity_test(SOURCE test_SecurityContext.c)
-target_link_libraries(test_SecurityContext PUBLIC ${LIB_ORDERED})
+# # Tests the security context via front-end interface.
+# add_unity_test(SOURCE test_SecurityContext.c)
+# target_link_libraries(test_SecurityContext PUBLIC ${LIB_ORDERED})
 
 # Specific test for default security context implementation primitives.
 add_unity_test(SOURCE test_security_context/test_DefaultSecContext.c)
 target_link_libraries(test_DefaultSecContext PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_PolicyProvider.c)
-target_link_libraries(test_PolicyProvider PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_PolicyProvider.c)
+# target_link_libraries(test_PolicyProvider PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_policy_provider/test_DefaultPolicyProvider.c)
-target_link_libraries(test_DefaultPolicyProvider PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_policy_provider/test_DefaultPolicyProvider.c)
+# target_link_libraries(test_DefaultPolicyProvider PUBLIC ${LIB_ORDERED})

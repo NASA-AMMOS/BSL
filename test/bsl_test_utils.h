@@ -25,6 +25,7 @@ static const struct RFC9173_TestVectors_AppendixA1 {
 
     uint64_t bib_asb_sec_target;
     uint64_t bib_asb_context_id;
+    uint64_t bib_asb_blk_num;
     uint64_t bib_asb_context_flags;
     uint64_t bib_asb_sha_variant_key;
     uint64_t bib_asb_sha_variant_value;
@@ -55,6 +56,7 @@ static const struct RFC9173_TestVectors_AppendixA1 {
     // Source: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.3.2
     1,       // bib_asb_sec_target
     1,       // bib_asb_context_id
+    2,       // bib_asb_blk_num
     1,       // bib_asb_context_flags
     1,       // bib_asb_sha_variant_key
     7,       // bib_asb_sha_variant_value (HMAC 512/512)

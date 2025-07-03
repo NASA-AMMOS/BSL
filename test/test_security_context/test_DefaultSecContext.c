@@ -99,7 +99,11 @@ void test_DefaultSecuritContext_RFC9173_A1_BIB_Source(void)
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BSL_SecOper_t bib_oper;
-    BSL_SecOper_Init(&bib_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE);
+    BSL_SecOper_Init(&bib_oper, 
+        RFC9173_TestVectors_AppendixA1.bib_asb_context_id,
+        RFC9173_TestVectors_AppendixA1.bib_asb_sec_target, 
+        RFC9173_TestVectors_AppendixA1.bib_asb_blk_num, 
+        BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE);
     RFC9173_A1_Params bib_params = BSLTEST_GetRFC9173_A1Params(RFC9173_EXAMPLE_A1_KEY);
     BSL_SecOper_AppendParam(&bib_oper, &bib_params.sha_variant);
     BSL_SecOper_AppendParam(&bib_oper, &bib_params.scope_flags);
@@ -196,6 +200,21 @@ void test_DefaultSecuritContext_RFC9173_A2_BCB_Source(void)
     char *auth_tag_str = "efa4b5ac0108e3816c5606479801bc04";
     TEST_ASSERT_EQUAL(true, BSLTEST_IsB16StrEqualTo(auth_tag_str, BSL_SecResult_ResultAsData(auth_tag_result)));
 
+    BSL_Data_t target_blk_tbsd;
+    BSL_BundleContext_GetBlockMetadata(mock_bpa_ctr->bundle, 1, NULL, NULL, NULL, &target_blk_tbsd);
+
+    BSL_LOG_DEBUG("Computed ciphertext:");
+    char ct_c[target_blk_tbsd.len + 1];
+    memcpy(ct_c, target_blk_tbsd.ptr, target_blk_tbsd.len);
+    ct_c[target_blk_tbsd.len] = '\0';
+    for (size_t i = 0; i < target_blk_tbsd.len; i++) {
+        BSL_LOG_INFO("%02X", (unsigned char)ct_c[i]); // Prints each character as 2-digit uppercase hex, followed by a space
+    }
+
+    char * expected_ct = "3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a";
+    TEST_ASSERT_EQUAL(true, BSLTEST_IsB16StrEqualTo(expected_ct, target_blk_tbsd));
+
+
     // TODO(bvb) Complete the BCB implementation to alter the BTSD in-place.
     // Source: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.2.4
     char *encrypted_bundle_str = ("9f88070000820282010282028202018202820201820018281a000f4240850c0201"
@@ -213,9 +232,109 @@ void test_DefaultSecuritContext_RFC9173_A2_BCB_Source(void)
 /// @brief Purpose: Exercises BCB as a security acceptor
 void test_DefaultSecuritContext_RFC9173_A2_BCB_Acceptor(void)
 {
+    char *bundle_with_bcb =     ("9f88070000820282010282028202018202820201820018281a000f4240850c0201"
+                                 "0058508101020182028202018482014c5477656c7665313231323132820201820358"
+                                 "1869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150ef"
+                                 "a4b5ac0108e3816c5606479801bc04850101000058233a09c1e63fe23a7f66a59c73"
+                                 "03837241e070b02619fc59c5214a22f08cd70795e73e9aff");
+
+    // Loads the bundle
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_with_bcb));
+    mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
+
+    // Begin hard coding the sec parameters and creating the sec operation.
+    uint8_t        iv_buf[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+    BSL_Data_t     iv_data  = { .len = sizeof(iv_buf), .owned = 0, .ptr = iv_buf };
+    BSL_SecParam_t param_iv;
+    BSL_SecParam_InitBytestr(&param_iv, RFC9173_BCB_SECPARAM_IV, iv_data);
+
+    BSL_SecParam_t param_aes_variant;
+    BSL_SecParam_InitInt64(&param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+
+    uint8_t        wrapped_key_buf[] = { 0x69, 0xc4, 0x11, 0x27, 0x6f, 0xec, 0xdd, 0xc4, 0x78, 0x0d, 0xf4, 0x2c,
+                                         0x8a, 0x2a, 0xf8, 0x92, 0x96, 0xfa, 0xbf, 0x34, 0xd7, 0xfa, 0xe7, 0x00 };
+    BSL_Data_t     wrapped_key_data  = { .len = sizeof(wrapped_key_buf), .owned = 0, .ptr = wrapped_key_buf };
+    BSL_SecParam_t param_wrapped_key;
+    BSL_SecParam_InitBytestr(&param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, wrapped_key_data);
+
+    BSL_SecParam_t param_scope_flags;
+    BSL_SecParam_InitInt64(&param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
+
+    BSL_SecParam_t param_test_key_id;
+    BSL_SecParam_InitInt64(&param_test_key_id, BSL_SECPARAM_TYPE_INT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
+
+    BSL_SecOper_t bcb_oper;
+    BSL_SecOper_Init(&bcb_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR);
+    BSL_SecOper_AppendParam(&bcb_oper, &param_iv);
+    BSL_SecOper_AppendParam(&bcb_oper, &param_aes_variant);
+    BSL_SecOper_AppendParam(&bcb_oper, &param_wrapped_key);
+    BSL_SecOper_AppendParam(&bcb_oper, &param_scope_flags);
+    BSL_SecOper_AppendParam(&bcb_oper, &param_test_key_id);
+
+    BSL_SecOutcome_t outcome;
+    BSL_SecOutcome_Init(&outcome, &bcb_oper, 10000);
+
+    TEST_ASSERT_EQUAL(0, BSLX_ExecuteBCB(&LocalTestCtx.bsl, mock_bpa_ctr->bundle, &bcb_oper, &outcome));
+
+    TEST_ASSERT_EQUAL(0, BSL_SecOutcome_GetResultCount(&outcome));
+
+    BSL_Data_t target_blk_tbsd;
+    BSL_BundleContext_GetBlockMetadata(mock_bpa_ctr->bundle, 1, NULL, NULL, NULL, &target_blk_tbsd);
+
+    BSL_LOG_DEBUG("Computed PLAINTEXT:");
+    char ct_c[target_blk_tbsd.len + 1];
+    memcpy(ct_c, target_blk_tbsd.ptr, target_blk_tbsd.len);
+    ct_c[target_blk_tbsd.len] = '\0';
+    for (size_t i = 0; i < target_blk_tbsd.len; i++) {
+        BSL_LOG_INFO("%02X", (unsigned char)ct_c[i]); // Prints each character as 2-digit uppercase hex, followed by a space
+    }
+
+    BSL_SecOutcome_Deinit(&outcome);
+    BSL_SecOper_Deinit(&bcb_oper);
+
+}
+
+void test_ruhroh(void)
+{
+
 }
 
 /// @brief Purpose: Exercises BCB as a security acceptor with cryptographic mismatch
 void test_DefaultSecuritContext_RFC9173_A2_BCB_Acceptor_Failure(void)
 {
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
+    mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
+    BSL_BundleBlock_t *const *found = BSL_BundleBlockIdMap_cget(mock_bpa_ctr->bundle->blk_num, 1);
+    if (!found)
+    {
+        BSL_LOG_INFO("sad");
+    }
+    else
+    {
+        BSL_LOG_INFO("NOT sad but %d", (*found)->blk_num);
+    }
+
+    // const size_t blk_list_len = BSL_BundleBlockList_size(mock_bpa_ctr->bundle->blks);
+    // const BSL_BundleBlock_t *found;
+    // BSL_BundleBlock_t *info = NULL;
+
+    // size_t i;
+    // for (i = 0; i < blk_list_len; i++)
+    // {
+    //     found = BSL_BundleBlockList_cget(mock_bpa_ctr->bundle->blks, i);
+    //     if (found != NULL && (found->blk_num == 1))
+    //     {
+    //         info = (BSL_BundleBlock_t *) found;
+    //         break;
+    //     }
+    // }
+
+    // if (!info)
+    // {
+    //     BSL_LOG_INFO("sad ");
+    // }
+    // else
+    // {
+    //     BSL_LOG_INFO("NOT sad");
+    // }
 }
