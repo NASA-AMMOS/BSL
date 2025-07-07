@@ -202,15 +202,13 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
     int i = BSL_CryptoCipherCtx_SetTag(&cipher, bcb_context.authtag.ptr);
     if (i != 0)
     {
-        BSL_LOG_ERR("Setting authtag failed.");
+        BSL_LOG_ERR("Decrypt: set authtag failed.");
         BSL_CryptoCipherCtx_Deinit(&cipher);
         return bcb_context;
     }
 
     BSL_SeqReader_t reader;
     BSL_SeqWriter_t writer;
-
-    BSL_LOG_INFO("INIT READER CT LEN: %d", bcb_context.ciphertext.len);
 
     r = BSL_SeqReader_InitFlat(&reader, bcb_context.ciphertext.ptr, bcb_context.ciphertext.len);
     assert(r == 0);
@@ -220,16 +218,10 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
 
     r = BSL_CryptoCipherCtx_AddSeq(&cipher, &reader, &writer);
     assert(r == 0);
-
-    BSL_LOG_INFO("Decrypted BTSD: %s", BSL_Log_DumpAsHexString(bcb_context.debugstr.ptr, bcb_context.debugstr.len,
-                                                               bcb_context.plaintext.ptr, bcb_context.plaintext.len));
-    
-    BSL_LOG_INFO("authtag: %s", BSL_Log_DumpAsHexString(bcb_context.debugstr.ptr, bcb_context.debugstr.len,
-                                                            bcb_context.authtag.ptr,16));
     
     if (BSL_CryptoCipherContext_FinalizeSeq(&cipher, &writer) != 0)
     {
-        BSL_LOG_ERR("CANNOT FINALIZE");
+        BSL_LOG_ERR("Cannot finalize Decryption");
         BSL_CryptoCipherCtx_Deinit(&cipher);
         BSL_SeqWriter_Deinit(&writer);
         return bcb_context;
@@ -282,7 +274,6 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Encrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
     {
         r = BSL_CryptoCipherCtx_AddAAD(&cipher, bcb_context.aad.ptr, bcb_context.aad.len);
         assert(r == 0);
-        //int nbytes = BSL_CryptoCipherCtx_AddData(&cipher, bcb_context.plaintext, bcb_context.ciphertext);
 
         BSL_SeqReader_t reader;
         BSL_SeqWriter_t writer;
@@ -502,12 +493,14 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
         BSL_AbsSecBlock_t bcb_asb;
         BSL_AbsSecBlock_DecodeFromCBOR(&bcb_asb, asb_btsd);
         
-        BSL_LOG_INFO("THERE ARE %d RESULTS", BSL_SecResultList_size(bcb_asb.results));
+        BSL_LOG_INFO("Decrypt/acceptor: %d results in asb", BSL_SecResultList_size(bcb_asb.results));
         BSL_SecResult_t *authtag_result;
         for (size_t i = 0 ; i < BSL_SecResultList_size(bcb_asb.results); i++)
         {
             authtag_result = BSL_SecResultList_get(bcb_asb.results, i);
-            if (authtag_result->target_block_num == sec_oper->target_block_num)
+
+            // find the authtag in the sec result list by matching target block id
+            if (authtag_result->target_block_num == sec_oper->target_block_num && authtag_result->result_id == 1)
             {
                 memcpy(bcb_ctx.authtag.ptr, authtag_result->_bytes, authtag_result->_bytelen);
                 bcb_ctx.authtag.len = authtag_result->_bytelen;
@@ -521,11 +514,13 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
         {
             BSL_SeqWriter_t writer;
             BSL_SeqWriter_t *writer_ptr = &writer;
-            int x = BSL_BundleCtx_WriteBTSD((BSL_BundleCtx_t *)bundle, sec_oper->target_block_num, &writer_ptr);
+            int r = BSL_BundleCtx_WriteBTSD((BSL_BundleCtx_t *)bundle, sec_oper->target_block_num, &writer_ptr);
+            assert(r == 0);
             size_t len = final_result.plaintext.len;
-            BSL_LOG_INFO("ERR %d, CIPHERLEN: %d",x, len);
-            BSL_SeqWriter_Put(writer_ptr, final_result.plaintext.ptr, &len);
-            BSL_SeqWriter_Deinit(writer_ptr);
+            r = BSL_SeqWriter_Put(writer_ptr, final_result.plaintext.ptr, &len);
+            assert(r == 0);
+            r = BSL_SeqWriter_Deinit(writer_ptr);
+            assert(r == 0);
         }
 
         BSL_AbsSecBlock_Deinit(&bcb_asb);
