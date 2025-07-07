@@ -194,10 +194,18 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
     BSL_LOG_INFO("IV          : %s", BSL_Log_DumpAsHexString(bcb_context.debugstr.ptr, bcb_context.debugstr.len,
                                                              bcb_context.params.iv.ptr, bcb_context.params.iv.len));
     BSL_CryptoCipherCtx_t cipher;
-    r = BSL_CryptoCipherCtx_Init(&cipher, 0, aes_mode, bcb_context.params.iv.ptr, bcb_context.params.iv.len, cek_space);
+    r = BSL_CryptoCipherCtx_Init(&cipher, BSL_CRYPTO_DECRYPT, aes_mode, bcb_context.params.iv.ptr, bcb_context.params.iv.len, cek_space);
     assert(r == 0);
     r = BSL_CryptoCipherCtx_AddAAD(&cipher, bcb_context.aad.ptr, bcb_context.aad.len);
     assert(r == 0);
+    int i = BSL_CryptoCipherCtx_SetTag(&cipher, bcb_context.authtag.ptr);
+    if (i != 0)
+    {
+        BSL_LOG_ERR("Setting authtag failed.");
+        BSL_CryptoCipherCtx_Deinit(&cipher);
+        return bcb_context;
+    }
+
     int nbytes = BSL_CryptoCipherCtx_AddData(&cipher, bcb_context.ciphertext, bcb_context.plaintext);
     assert(nbytes > 0);
 
@@ -209,23 +217,11 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
     
     BSL_LOG_INFO("authtag: %s", BSL_Log_DumpAsHexString(bcb_context.debugstr.ptr, bcb_context.debugstr.len,
                                                             bcb_context.authtag.ptr,16));
-
-    int i = BSL_CryptoCipherCtx_SetTag(&cipher, (void **)bcb_context.authtag.ptr);
-    (void) i;
-
-    // openssl set tag is failing here, not immediately sure why
-    // TODO fix
-
-    // if (i != 0)
-    // {
-    //     BSL_LOG_ERR("Setting auth tag failed.");
-    //     BSL_CryptoCipherCtx_Deinit(&cipher);
-    //     return bcb_context;
-    // }
     
     if (BSL_CryptoCipherContext_FinalizeData(&cipher, &aes_extra) != 0)
     {
         BSL_LOG_ERR("CANNOT FINALIZE");
+        BSL_CryptoCipherCtx_Deinit(&cipher);
         return bcb_context;
     }
 
@@ -496,16 +492,18 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
         }
 
         final_result = BSLX_BCBContext_Decrypt(BSLX_BCBContext_ComputeAAD(bcb_ctx));
-        
-        BSL_SeqWriter_t writer;
-        BSL_SeqWriter_t *writer_ptr = &writer;
-        int x = BSL_BundleCtx_WriteBTSD((BSL_BundleCtx_t *)bundle, sec_oper->target_block_num, &writer_ptr);
-        size_t len = final_result.plaintext.len;
-        BSL_LOG_INFO("ERR %d, CIPHERLEN: %d",x, len);
-        BSL_SeqWriter_Put(writer_ptr, final_result.plaintext.ptr, &len);
-        BSL_SeqWriter_Deinit(writer_ptr);
 
-        BSL_AbsSecBlock_Deinit(&bcb_asb);
+        if (final_result.success)
+        {
+            BSL_SeqWriter_t writer;
+            BSL_SeqWriter_t *writer_ptr = &writer;
+            int x = BSL_BundleCtx_WriteBTSD((BSL_BundleCtx_t *)bundle, sec_oper->target_block_num, &writer_ptr);
+            size_t len = final_result.plaintext.len;
+            BSL_LOG_INFO("ERR %d, CIPHERLEN: %d",x, len);
+            BSL_SeqWriter_Put(writer_ptr, final_result.plaintext.ptr, &len);
+            BSL_SeqWriter_Deinit(writer_ptr);
+        }
+         BSL_AbsSecBlock_Deinit(&bcb_asb);
     }
 
     return final_result.success == true ? 0 : -1;

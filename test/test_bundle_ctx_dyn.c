@@ -243,3 +243,16 @@ void test_bundle_ctx_one_bib(void)
     static const size_t  asb_size  = sizeof(asb_buf) / sizeof(uint8_t);
     add_dummy_block(BSL_BLOCK_TYPE_BIB, 3, asb_buf, asb_size);
 }
+
+void test_BundleBlockIdMap(void)
+{
+    add_dummy_block(1, 1, dummy_btsd, dummy_size);
+
+    BSL_BundleBlock_t *const *found = BSL_BundleBlockIdMap_cget(bundle.blk_num, 1);
+    TEST_ASSERT_NOT_NULL(found);
+    TEST_ASSERT_NOT_NULL(*found);
+    TEST_ASSERT_EQUAL((*found)->blk_num, 1);
+
+    BSL_BundleBlock_t *const *found2 = BSL_BundleBlockIdMap_cget(bundle.blk_num, 99);
+    TEST_ASSERT_NULL(found2);
+}
