@@ -207,9 +207,9 @@ void test_DefaultSecuritContext_RFC9173_A2_BCB_Source(void)
     char ct_c[target_blk_tbsd.len + 1];
     memcpy(ct_c, target_blk_tbsd.ptr, target_blk_tbsd.len);
     ct_c[target_blk_tbsd.len] = '\0';
-    for (size_t i = 0; i < target_blk_tbsd.len; i++) {
-        BSL_LOG_INFO("%02X", (unsigned char)ct_c[i]); // Prints each character as 2-digit uppercase hex, followed by a space
-    }
+    // for (size_t i = 0; i < target_blk_tbsd.len; i++) {
+    //     BSL_LOG_INFO("%02X", (unsigned char)ct_c[i]);
+    // }
 
     char * expected_ct = "3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a";
     TEST_ASSERT_EQUAL(true, BSLTEST_IsB16StrEqualTo(expected_ct, target_blk_tbsd));
@@ -232,6 +232,7 @@ void test_DefaultSecuritContext_RFC9173_A2_BCB_Source(void)
 /// @brief Purpose: Exercises BCB as a security acceptor
 void test_DefaultSecuritContext_RFC9173_A2_BCB_Acceptor(void)
 {
+    // RFC9173 A.2.4 final bundle, with BCB and payload BTSD as ciphertext
     char *bundle_with_bcb =     ("9f88070000820282010282028202018202820201820018281a000f4240850c0201"
                                  "0058508101020182028202018482014c5477656c7665313231323132820201820358"
                                  "1869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150ef"
@@ -271,6 +272,11 @@ void test_DefaultSecuritContext_RFC9173_A2_BCB_Acceptor(void)
     BSL_SecOper_AppendParam(&bcb_oper, &param_scope_flags);
     BSL_SecOper_AppendParam(&bcb_oper, &param_test_key_id);
 
+    // BSL_SecResult_t authtag;
+    // uint8_t authtag_raw = {0xef, 0xa4, 0xb5, 0xac, 0x01, 0x08, 0xe3, 0x81, 0x6c, 0x56, 0x06, 0x47, 0x98, 0x01, 0xbc, 0x04};
+    // BSL_Data_t authtag_data = {.ptr = authtag_raw, .len = sizeof(authtag_raw), .owned = 0}
+    // BSL_SecResult_Init(&authtag, 1, 2, 1, authtag_data);
+
     BSL_SecOutcome_t outcome;
     BSL_SecOutcome_Init(&outcome, &bcb_oper, 10000);
 
@@ -285,9 +291,12 @@ void test_DefaultSecuritContext_RFC9173_A2_BCB_Acceptor(void)
     char ct_c[target_blk_tbsd.len + 1];
     memcpy(ct_c, target_blk_tbsd.ptr, target_blk_tbsd.len);
     ct_c[target_blk_tbsd.len] = '\0';
-    for (size_t i = 0; i < target_blk_tbsd.len; i++) {
-        BSL_LOG_INFO("%02X", (unsigned char)ct_c[i]); // Prints each character as 2-digit uppercase hex, followed by a space
-    }
+    // for (size_t i = 0; i < target_blk_tbsd.len; i++) {
+    //     BSL_LOG_INFO("%02X", (unsigned char)ct_c[i]);
+    // }
+
+    char * expected_pt = "526561647920746f2067656e657261746520612033322d62797465207061796c6f6164";
+    TEST_ASSERT_EQUAL(true, BSLTEST_IsB16StrEqualTo(expected_pt, target_blk_tbsd));
 
     BSL_SecOutcome_Deinit(&outcome);
     BSL_SecOper_Deinit(&bcb_oper);

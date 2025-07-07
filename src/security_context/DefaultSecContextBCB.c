@@ -209,7 +209,11 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
     
     // TODO add authtag decrypt verification
 
+    BSL_LOG_INFO("authtag: %s", BSL_Log_DumpAsHexString(bcb_context.debugstr.ptr, bcb_context.debugstr.len,
+                                                            bcb_context.authtag.ptr,16));
+
     //int i = BSL_CryptoCipherCtx_SetTag(&cipher, (void **)bcb_context.authtag.ptr);
+    BSL_CryptoCipherCtx_SetTag(&cipher, (void **)bcb_context.authtag.ptr);
     // if (i != 0)
     // {
     //     BSL_LOG_ERR("Getting auth tag failed.");
@@ -223,7 +227,7 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
         return bcb_context;
     }
 
-    bcb_context.plaintext.len = 35; // TODO TODO TODO TODO
+    bcb_context.plaintext.len = nbytes; // TODO TODO TODO TODO
 
     BSL_CryptoCipherCtx_Deinit(&cipher);
     bcb_context.success = true;
@@ -466,6 +470,10 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
     }
     else
     {
+
+        // todo get authtag from bcb result
+        // todo query results from asb?
+
         final_result = BSLX_BCBContext_Decrypt(BSLX_BCBContext_ComputeAAD(bcb_ctx));
         
         BSL_SeqWriter_t writer;
