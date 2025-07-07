@@ -194,6 +194,7 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
     BSL_LOG_INFO("IV          : %s", BSL_Log_DumpAsHexString(bcb_context.debugstr.ptr, bcb_context.debugstr.len,
                                                              bcb_context.params.iv.ptr, bcb_context.params.iv.len));
     BSL_CryptoCipherCtx_t cipher;
+
     r = BSL_CryptoCipherCtx_Init(&cipher, BSL_CRYPTO_DECRYPT, aes_mode, bcb_context.params.iv.ptr, bcb_context.params.iv.len, cek_space);
     assert(r == 0);
     r = BSL_CryptoCipherCtx_AddAAD(&cipher, bcb_context.aad.ptr, bcb_context.aad.len);
@@ -206,29 +207,40 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
         return bcb_context;
     }
 
-    int nbytes = BSL_CryptoCipherCtx_AddData(&cipher, bcb_context.ciphertext, bcb_context.plaintext);
-    assert(nbytes > 0);
+    BSL_SeqReader_t reader;
+    BSL_SeqWriter_t writer;
+
+    BSL_LOG_INFO("INIT READER CT LEN: %d", bcb_context.ciphertext.len);
+
+    r = BSL_SeqReader_InitFlat(&reader, bcb_context.ciphertext.ptr, bcb_context.ciphertext.len);
+    assert(r == 0);
+
+    r = BSL_SeqWriter_InitFlat(&writer, &bcb_context.plaintext.ptr, &bcb_context.plaintext.len);
+    assert(r == 0);
+
+    r = BSL_CryptoCipherCtx_AddSeq(&cipher, &reader, &writer);
+    assert(r == 0);
 
     BSL_LOG_INFO("Decrypted BTSD: %s", BSL_Log_DumpAsHexString(bcb_context.debugstr.ptr, bcb_context.debugstr.len,
-                                                               bcb_context.plaintext.ptr, (size_t)nbytes));
-    uint8_t    aes_buf[64];
-    BSL_Data_t aes_extra;
-    BSL_Data_InitView(&aes_extra, sizeof(aes_buf), aes_buf);
+                                                               bcb_context.plaintext.ptr, bcb_context.plaintext.len));
     
     BSL_LOG_INFO("authtag: %s", BSL_Log_DumpAsHexString(bcb_context.debugstr.ptr, bcb_context.debugstr.len,
                                                             bcb_context.authtag.ptr,16));
     
-    if (BSL_CryptoCipherContext_FinalizeData(&cipher, &aes_extra) != 0)
+    if (BSL_CryptoCipherContext_FinalizeSeq(&cipher, &writer) != 0)
     {
         BSL_LOG_ERR("CANNOT FINALIZE");
         BSL_CryptoCipherCtx_Deinit(&cipher);
+        BSL_SeqWriter_Deinit(&writer);
         return bcb_context;
-    }
-
-    bcb_context.plaintext.len = nbytes; // TODO TODO TODO TODO
+    } 
 
     BSL_CryptoCipherCtx_Deinit(&cipher);
     bcb_context.success = true;
+
+    r = BSL_SeqWriter_Deinit(&writer);
+    assert(r == 0);
+
     return bcb_context;
 }
 
@@ -270,19 +282,25 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Encrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
     {
         r = BSL_CryptoCipherCtx_AddAAD(&cipher, bcb_context.aad.ptr, bcb_context.aad.len);
         assert(r == 0);
-        int nbytes = BSL_CryptoCipherCtx_AddData(&cipher, bcb_context.plaintext, bcb_context.ciphertext);
-        if (nbytes > 0)
-        {
-            bcb_context.ciphertext.len = (size_t)nbytes;
-            uint8_t    aes_buf[512];
-            BSL_Data_t aes_extra;
-            BSL_Data_InitView(&aes_extra, sizeof(aes_buf), aes_buf);
+        //int nbytes = BSL_CryptoCipherCtx_AddData(&cipher, bcb_context.plaintext, bcb_context.ciphertext);
 
-            nbytes = BSL_CryptoCipherContext_FinalizeData(&cipher, &aes_extra);
-            if (nbytes == 0)
+        BSL_SeqReader_t reader;
+        BSL_SeqWriter_t writer;
+
+        r = BSL_SeqReader_InitFlat(&reader, bcb_context.plaintext.ptr, bcb_context.plaintext.len);
+        assert(r == 0);
+
+        r = BSL_SeqWriter_InitFlat(&writer,  &bcb_context.ciphertext.ptr, &bcb_context.ciphertext.len);
+        assert(r == 0);
+
+        r = BSL_CryptoCipherCtx_AddSeq(&cipher, &reader, &writer);
+
+        if (r == 0)
+        {
+            r = BSL_CryptoCipherContext_FinalizeSeq(&cipher, &writer);
+            
+            if (r == 0)
             {
-                memcpy(bcb_context.ciphertext.ptr, aes_extra.ptr, (size_t)nbytes);
-                bcb_context.ciphertext.len += (size_t)nbytes;
                 r                       = BSL_CryptoCipherCtx_GetTag(&cipher, (void **)&bcb_context.authtag.ptr);
                 bcb_context.authtag.len = BSL_CRYPTO_AESGCM_AUTH_TAG_LEN;
                 bcb_context.success     = (r == 0);
@@ -295,6 +313,9 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Encrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
             {
                 BSL_LOG_ERR("Cannot finalize encryption");
             }
+
+            r = BSL_SeqWriter_Deinit(&writer);
+            assert(r == 0);
         }
         else
         {
@@ -465,6 +486,9 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
             BSL_SeqWriter_Put(writer_ptr, final_result.ciphertext.ptr, &len);
             BSL_SeqWriter_Deinit(writer_ptr);
         }
+
+        BSL_FREE(final_result.ciphertext.ptr);  // Since this pointer is used with writer, needs this FREE, else memleak
+                                                // Is there a way around this as the standard workflow?
     }
     else
     {
@@ -503,7 +527,9 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
             BSL_SeqWriter_Put(writer_ptr, final_result.plaintext.ptr, &len);
             BSL_SeqWriter_Deinit(writer_ptr);
         }
-         BSL_AbsSecBlock_Deinit(&bcb_asb);
+
+        BSL_AbsSecBlock_Deinit(&bcb_asb);
+        BSL_FREE(final_result.plaintext.ptr);
     }
 
     return final_result.success == true ? 0 : -1;
