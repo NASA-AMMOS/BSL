@@ -249,32 +249,6 @@ int BSL_BundleCtx_WriteBTSD(BSL_BundleCtx_t *bundle, uint64_t blk_num, BSL_SeqWr
     }
     info->btsd.owned = true;
     return 0;
-    
-    // const size_t blk_list_len = BSL_BundleBlockList_size(bundle->blks);
-    // const BSL_BundleBlock_t *found;
-    // BSL_BundleBlock_t *info = NULL;
-
-    // size_t i;
-    // for (i = 0; i < blk_list_len; i++)
-    // {
-    //     found = BSL_BundleBlockList_cget(bundle->blks, i);
-    //     if (found != NULL && (found->blk_num == blk_num))
-    //     {
-    //         info = (BSL_BundleBlock_t *) found;
-    //         break;
-    //     }
-    // }
-
-    // if (!info)
-    // {
-    //     return 2;
-    // }
-    // *writer = &(info->writer);
-    // BSL_Data_Deinit(&(info->btsd));
-    // if (BSL_SeqWriter_InitFlat(*writer, (uint8_t **)&(info->btsd.ptr), &(info->btsd.len)))
-    // {
-    //     return 3;
-    // }
 
     return 0;
 }
