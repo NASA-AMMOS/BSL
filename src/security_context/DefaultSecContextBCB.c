@@ -463,7 +463,6 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
         {
             BSL_Log_DumpAsHexString(final_result.debugstr.ptr, final_result.debugstr.len, final_result.authtag.ptr,
                                     final_result.authtag.len);
-            BSL_LOG_DEBUG("Computed Auth Tag: %s", final_result);
             BSL_SecResult_t *auth_tag_result = BSLX_ScratchSpace_take(&scratch, sizeof(*auth_tag_result));
             BSL_SecResult_Init(auth_tag_result, RFC9173_BCB_RESULTID_AUTHTAG, RFC9173_CONTEXTID_BCB_AES_GCM,
                             sec_oper->target_block_num, final_result.authtag);
@@ -471,10 +470,11 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
 
             BSL_SeqWriter_t writer;
             BSL_SeqWriter_t *writer_ptr = &writer;
-            int x = BSL_BundleCtx_WriteBTSD((BSL_BundleCtx_t *)bundle, sec_oper->target_block_num, &writer_ptr);
+            int r = BSL_BundleCtx_WriteBTSD((BSL_BundleCtx_t *)bundle, sec_oper->target_block_num, &writer_ptr);
+            assert(r == 0);
             size_t len = final_result.ciphertext.len;
-            BSL_LOG_INFO("ERR %d, CIPHERLEN: %d",x, len);
-            BSL_SeqWriter_Put(writer_ptr, final_result.ciphertext.ptr, &len);
+            r = BSL_SeqWriter_Put(writer_ptr, final_result.ciphertext.ptr, &len);
+            assert(r == 0);
             BSL_SeqWriter_Deinit(writer_ptr);
         }
 
@@ -514,6 +514,8 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
         {
             BSL_SeqWriter_t writer;
             BSL_SeqWriter_t *writer_ptr = &writer;
+
+            // modify the target block BTSD in-place
             int r = BSL_BundleCtx_WriteBTSD((BSL_BundleCtx_t *)bundle, sec_oper->target_block_num, &writer_ptr);
             assert(r == 0);
             size_t len = final_result.plaintext.len;
