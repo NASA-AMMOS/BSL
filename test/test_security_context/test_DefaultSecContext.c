@@ -303,47 +303,19 @@ void test_DefaultSecuritContext_RFC9173_A2_BCB_Acceptor(void)
 
 }
 
-void test_ruhroh(void)
+void test_BundleBlockIdMap(void)
 {
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
+    mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
+    BSL_BundleBlock_t *const *found = BSL_BundleBlockIdMap_cget(mock_bpa_ctr->bundle->blk_num, 1);
+    TEST_ASSERT_NOT_NULL(found);
 
+    BSL_BundleBlock_t *const *found2 = BSL_BundleBlockIdMap_cget(mock_bpa_ctr->bundle->blk_num, 99);
+    TEST_ASSERT_NULL(found2);
 }
 
 /// @brief Purpose: Exercises BCB as a security acceptor with cryptographic mismatch
 void test_DefaultSecuritContext_RFC9173_A2_BCB_Acceptor_Failure(void)
 {
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
-    mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
-    BSL_BundleBlock_t *const *found = BSL_BundleBlockIdMap_cget(mock_bpa_ctr->bundle->blk_num, 1);
-    if (!found)
-    {
-        BSL_LOG_INFO("sad");
-    }
-    else
-    {
-        BSL_LOG_INFO("NOT sad but %d", (*found)->blk_num);
-    }
-
-    // const size_t blk_list_len = BSL_BundleBlockList_size(mock_bpa_ctr->bundle->blks);
-    // const BSL_BundleBlock_t *found;
-    // BSL_BundleBlock_t *info = NULL;
-
-    // size_t i;
-    // for (i = 0; i < blk_list_len; i++)
-    // {
-    //     found = BSL_BundleBlockList_cget(mock_bpa_ctr->bundle->blks, i);
-    //     if (found != NULL && (found->blk_num == 1))
-    //     {
-    //         info = (BSL_BundleBlock_t *) found;
-    //         break;
-    //     }
-    // }
-
-    // if (!info)
-    // {
-    //     BSL_LOG_INFO("sad ");
-    // }
-    // else
-    // {
-    //     BSL_LOG_INFO("NOT sad");
-    // }
+    
 }

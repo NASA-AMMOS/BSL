@@ -59,7 +59,7 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Initialize(BSLX_BCBParams_t params, BSL_Dat
 
     if (params.err_count > 0)
     {
-        BSL_LOG_ERR("BCB parameers contain %lu integrity error(s)", params);
+        BSL_LOG_ERR("BCB parameters contain %lu integrity error(s)", params);
         bcb_context.success = false;
         return bcb_context;
     }
@@ -207,16 +207,18 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
     BSL_Data_t aes_extra;
     BSL_Data_InitView(&aes_extra, sizeof(aes_buf), aes_buf);
     
-    // TODO add authtag decrypt verification
-
     BSL_LOG_INFO("authtag: %s", BSL_Log_DumpAsHexString(bcb_context.debugstr.ptr, bcb_context.debugstr.len,
                                                             bcb_context.authtag.ptr,16));
 
-    //int i = BSL_CryptoCipherCtx_SetTag(&cipher, (void **)bcb_context.authtag.ptr);
-    BSL_CryptoCipherCtx_SetTag(&cipher, (void **)bcb_context.authtag.ptr);
+    int i = BSL_CryptoCipherCtx_SetTag(&cipher, (void **)bcb_context.authtag.ptr);
+    (void) i;
+
+    // openssl set tag is failing here, not immediately sure why
+    // TODO fix
+
     // if (i != 0)
     // {
-    //     BSL_LOG_ERR("Getting auth tag failed.");
+    //     BSL_LOG_ERR("Setting auth tag failed.");
     //     BSL_CryptoCipherCtx_Deinit(&cipher);
     //     return bcb_context;
     // }
@@ -470,9 +472,28 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
     }
     else
     {
+        BSL_Data_t asb_btsd;
+        if (BSL_BundleContext_GetBlockMetadata(bundle, sec_oper->sec_block_num, NULL, NULL, NULL, &asb_btsd) < 0)
+        {
+            BSL_LOG_ERR("Could not get block metadata");
+            return -2;
+        }
 
-        // todo get authtag from bcb result
-        // todo query results from asb?
+        BSL_AbsSecBlock_t bcb_asb;
+        BSL_AbsSecBlock_DecodeFromCBOR(&bcb_asb, asb_btsd);
+        
+        BSL_LOG_INFO("THERE ARE %d RESULTS", BSL_SecResultList_size(bcb_asb.results));
+        BSL_SecResult_t *authtag_result;
+        for (size_t i = 0 ; i < BSL_SecResultList_size(bcb_asb.results); i++)
+        {
+            authtag_result = BSL_SecResultList_get(bcb_asb.results, i);
+            if (authtag_result->target_block_num == sec_oper->target_block_num)
+            {
+                memcpy(bcb_ctx.authtag.ptr, authtag_result->_bytes, authtag_result->_bytelen);
+                bcb_ctx.authtag.len = authtag_result->_bytelen;
+                bcb_ctx.authtag.owned = 0;
+            }
+        }
 
         final_result = BSLX_BCBContext_Decrypt(BSLX_BCBContext_ComputeAAD(bcb_ctx));
         
@@ -483,6 +504,8 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
         BSL_LOG_INFO("ERR %d, CIPHERLEN: %d",x, len);
         BSL_SeqWriter_Put(writer_ptr, final_result.plaintext.ptr, &len);
         BSL_SeqWriter_Deinit(writer_ptr);
+
+        BSL_AbsSecBlock_Deinit(&bcb_asb);
     }
 
     return final_result.success == true ? 0 : -1;
