@@ -116,6 +116,10 @@ static const struct RFC9173_TestVectors_AppendixA2 {
     const char *cbor_payload_plaintext;
     const char *cbor_bundle_final;
     const char *cbor_bundle_final_err_bytes;
+
+    uint64_t context_id;
+    uint64_t target_block_num;
+    uint64_t sec_block_num;
 } RFC9173_TestVectors_AppendixA2 = {
     ("9f88070000820282010282028202018202820201820018281a000f424085010100"
     "005823526561647920746f2067656e657261746520612033322d6279746520706179"
@@ -132,7 +136,8 @@ static const struct RFC9173_TestVectors_AppendixA2 {
     "0058508101020182028202018482014c5477656c7665313231323132820201820358"
     "1869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150ef"
     "a4b5ac0108e3816c5606479801bc0485010100005823ffffc1e63fe23a7f66a59c73"
-    "03837241e070b02619fc59c5214a22f08cd70795e73e9aff")
+    "03837241e070b02619fc59c5214a22f08cd70795e73e9aff"),
+    2,1,2
 };
 
 typedef struct {

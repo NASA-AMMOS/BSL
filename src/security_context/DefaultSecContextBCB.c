@@ -196,14 +196,29 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
     BSL_CryptoCipherCtx_t cipher;
 
     r = BSL_CryptoCipherCtx_Init(&cipher, BSL_CRYPTO_DECRYPT, aes_mode, bcb_context.params.iv.ptr, bcb_context.params.iv.len, cek_space);
-    assert(r == 0);
+    if (r != 0)
+    {
+        BSL_LOG_ERR("Decrypt: init failed.");
+        r = BSL_CryptoCipherCtx_Deinit(&cipher);
+        assert(r == 0);
+        return bcb_context;
+    }
+
     r = BSL_CryptoCipherCtx_AddAAD(&cipher, bcb_context.aad.ptr, bcb_context.aad.len);
-    assert(r == 0);
-    int i = BSL_CryptoCipherCtx_SetTag(&cipher, bcb_context.authtag.ptr);
-    if (i != 0)
+    if (r != 0)
+    {
+        BSL_LOG_ERR("Decrypt: add AAD failed.");
+        r = BSL_CryptoCipherCtx_Deinit(&cipher);
+        assert(r == 0);
+        return bcb_context;
+    }
+
+    r = BSL_CryptoCipherCtx_SetTag(&cipher, bcb_context.authtag.ptr);
+    if (r != 0)
     {
         BSL_LOG_ERR("Decrypt: set authtag failed.");
-        BSL_CryptoCipherCtx_Deinit(&cipher);
+        r = BSL_CryptoCipherCtx_Deinit(&cipher);
+        assert(r == 0);
         return bcb_context;
     }
 
@@ -212,24 +227,28 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Decrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
 
     r = BSL_SeqReader_InitFlat(&reader, bcb_context.ciphertext.ptr, bcb_context.ciphertext.len);
     assert(r == 0);
-
     r = BSL_SeqWriter_InitFlat(&writer, &bcb_context.plaintext.ptr, &bcb_context.plaintext.len);
     assert(r == 0);
 
-    r = BSL_CryptoCipherCtx_AddSeq(&cipher, &reader, &writer);
-    assert(r == 0);
-    
-    if (BSL_CryptoCipherContext_FinalizeSeq(&cipher, &writer) != 0)
+    if (BSL_CryptoCipherCtx_AddSeq(&cipher, &reader, &writer) == 0)
     {
-        BSL_LOG_ERR("Cannot finalize Decryption");
-        BSL_CryptoCipherCtx_Deinit(&cipher);
-        BSL_SeqWriter_Deinit(&writer);
-        return bcb_context;
-    } 
+        if (BSL_CryptoCipherContext_FinalizeSeq(&cipher, &writer) == 0)
+        {
+            bcb_context.success = true;
+        }
+        else
+        {
+            BSL_LOG_ERR("Cannot finalize Decryption");
+        }
+    }
+    else
+    {
+        BSL_LOG_ERR("Error adding data to decrypt ctx");
+    }
+    
 
-    BSL_CryptoCipherCtx_Deinit(&cipher);
-    bcb_context.success = true;
-
+    r = BSL_CryptoCipherCtx_Deinit(&cipher);
+    assert(r == 0);
     r = BSL_SeqWriter_Deinit(&writer);
     assert(r == 0);
 
@@ -273,7 +292,13 @@ BSLX_BCBEncryptCtx_t BSLX_BCBContext_Encrypt(const BSLX_BCBEncryptCtx_t bcb_inpu
     if (r == 0)
     {
         r = BSL_CryptoCipherCtx_AddAAD(&cipher, bcb_context.aad.ptr, bcb_context.aad.len);
-        assert(r == 0);
+        if (r != 0)
+        {
+            BSL_LOG_ERR("Encrypt: add AAD failed.");
+            r = BSL_CryptoCipherCtx_Deinit(&cipher);
+            assert(r == 0);
+            return bcb_context;
+        }
 
         BSL_SeqReader_t reader;
         BSL_SeqWriter_t writer;
@@ -436,9 +461,9 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
                     BSL_SecOutcome_t *sec_outcome)
 {
     (void)lib;
-    assert(bundle != NULL);
-    assert(sec_oper != NULL);
-    assert(sec_outcome != NULL);
+    CHKERR1(bundle != NULL);
+    CHKERR1(sec_oper != NULL);
+    CHKERR1(sec_outcome != NULL);
 
     BSL_Data_t target_block_btsd;
     if (BSL_BundleContext_GetBlockMetadata(bundle, sec_oper->target_block_num, NULL, NULL, NULL, &target_block_btsd) < 0)
@@ -471,10 +496,10 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
             BSL_SeqWriter_t writer;
             BSL_SeqWriter_t *writer_ptr = &writer;
             int r = BSL_BundleCtx_WriteBTSD((BSL_BundleCtx_t *)bundle, sec_oper->target_block_num, &writer_ptr);
-            assert(r == 0);
+            CHKERR1(r == 0);
             size_t len = final_result.ciphertext.len;
             r = BSL_SeqWriter_Put(writer_ptr, final_result.ciphertext.ptr, &len);
-            assert(r == 0);
+            CHKERR1(r == 0);
             BSL_SeqWriter_Deinit(writer_ptr);
         }
 
@@ -493,7 +518,7 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
         BSL_AbsSecBlock_t bcb_asb;
         BSL_AbsSecBlock_DecodeFromCBOR(&bcb_asb, asb_btsd);
         
-        BSL_LOG_INFO("Decrypt/acceptor: %d results in asb", BSL_SecResultList_size(bcb_asb.results));
+        BSL_LOG_INFO("Decrypt/acceptor: %d sec results in asb", BSL_SecResultList_size(bcb_asb.results));
         BSL_SecResult_t *authtag_result;
         for (size_t i = 0 ; i < BSL_SecResultList_size(bcb_asb.results); i++)
         {
@@ -517,12 +542,12 @@ int BSLX_ExecuteBCB(BSL_LibCtx_t *lib, const BSL_BundleCtx_t *bundle, const BSL_
 
             // modify the target block BTSD in-place
             int r = BSL_BundleCtx_WriteBTSD((BSL_BundleCtx_t *)bundle, sec_oper->target_block_num, &writer_ptr);
-            assert(r == 0);
+            CHKERR1(r == 0);
             size_t len = final_result.plaintext.len;
             r = BSL_SeqWriter_Put(writer_ptr, final_result.plaintext.ptr, &len);
-            assert(r == 0);
+            CHKERR1(r == 0);
             r = BSL_SeqWriter_Deinit(writer_ptr);
-            assert(r == 0);
+            CHKERR1(r == 0);
         }
 
         BSL_AbsSecBlock_Deinit(&bcb_asb);

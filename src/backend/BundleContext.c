@@ -249,8 +249,6 @@ int BSL_BundleCtx_WriteBTSD(BSL_BundleCtx_t *bundle, uint64_t blk_num, BSL_SeqWr
     }
     info->btsd.owned = true;
     return 0;
-
-    return 0;
 }
 
 int BSL_BundleCtx_AddBlock(BSL_BundleCtx_t *bundle, BSL_BundleBlock_t info)
