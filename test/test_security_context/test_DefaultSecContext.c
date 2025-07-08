@@ -164,10 +164,10 @@ void test_DefaultSecuritContext_RFC9173_A1_BIB(int secrole)
  *  - Compare expected plaintext/ciphertext with computed plaintext/ciphertext
  *   
  */
-TEST_CASE(BSL_SECROLE_SOURCE, 1, true)
-TEST_CASE(BSL_SECROLE_ACCEPTOR, 0, true)
-TEST_CASE(BSL_SECROLE_ACCEPTOR, 0, false)
-void test_DefaultSecuritContext_RFC9173_A2_BCB(int role, int expected_sec_outcomes, bool expect_success)
+TEST_CASE(BSL_SECROLE_SOURCE, 1, true)      // test context with role as sec source; expects 1 sec outcome (the authtag) and success
+TEST_CASE(BSL_SECROLE_ACCEPTOR, 0, true)    // test context with role as sec acceptor; expects no outcomes (in-place decrypt) and success
+TEST_CASE(BSL_SECROLE_ACCEPTOR, 0, false)   // test context with role as sec acceptor, but with modified ciphertext; expects no outcomes and failure
+void test_DefaultSecuritContext_RFC9173_A2_BCB(int role, int expected_sec_outcomes_ct, bool expect_success)
 {
     if (role == BSL_SECROLE_ACCEPTOR)
     {
@@ -231,8 +231,8 @@ void test_DefaultSecuritContext_RFC9173_A2_BCB(int role, int expected_sec_outcom
         return;
     }
 
-    TEST_ASSERT_EQUAL(expected_sec_outcomes, BSL_SecOutcome_GetResultCount(&outcome));
-    if (expected_sec_outcomes > 0)
+    TEST_ASSERT_EQUAL(expected_sec_outcomes_ct, BSL_SecOutcome_GetResultCount(&outcome));
+    if (expected_sec_outcomes_ct > 0)
     {
         const BSL_SecResult_t *auth_tag_result = BSL_SecOutcome_GetResultAtIndex(&outcome, 0);
         TEST_ASSERT_EQUAL(true, BSLTEST_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA2.cbor_authtag, BSL_SecResult_ResultAsData(auth_tag_result)));
