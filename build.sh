@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## Copyright (c) 2024 The Johns Hopkins University Applied Physics
+## Copyright (c) 2025 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Bundle Protocol Security Library (BSL).
@@ -34,6 +34,7 @@ BUILDDIR=${SELFDIR}/build/default
 function usage {
     echo "Usage: $0 [command] [args...]"
     echo "Commands:"
+    echo "  check-format   - Apply and check format for all source code"
     echo "  apply-format   - Apply format to all source code"
     echo "  apply-license  - Apply/update license preamble to files"
     echo "  check          - Run unit tests"
@@ -46,6 +47,10 @@ function usage {
     echo "  rpm-build      - Build RPM package"
     echo "  rpm-container  - Build as RPM package inside container"
     echo "  run [args...]  - Run a command with the environment vars"
+}
+
+function cmd_check_format {
+    ./resources/check_format.sh
 }
 
 function cmd_apply_format {
@@ -149,6 +154,9 @@ case "$1" in
     echotest)
         shift
         echo "Test-after-shift: $@"
+        ;;
+    check-format)
+        cmd_check_format
         ;;
     apply-format)
         cmd_apply_format

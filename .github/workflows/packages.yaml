@@ -45,7 +45,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y
           cmake ninja-build build-essential
       - name: Prep
-        run: ./prep.sh -DBUILD_LIB=OFF -DBUILD_TESTING=OFF -DBUILD_DOCS=OFF -DBUILD_PACKAGE=ON
+        run: ./build.sh prep -DBUILD_LIB=OFF -DBUILD_TESTING=OFF -DBUILD_DOCS=OFF -DBUILD_PACKAGE=ON
       - name: Build
         run: |
           ./build.sh rpm-container

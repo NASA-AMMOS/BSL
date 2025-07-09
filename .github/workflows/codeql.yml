@@ -87,8 +87,8 @@ jobs:
         sudo apt-get update && sudo apt-get install -y \
           cmake ninja-build ruby build-essential \
           libssl-dev
-        ./deps.sh
-        ./prep.sh -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+        ./build.sh deps
+        ./build.sh prep -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL

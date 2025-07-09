@@ -48,5 +48,4 @@ jobs:
               clang-format python3-pip
           pip3 install licenseheaders
       - name: Check code formatting
-        run: ./check_format.sh #|| echo "::warning ::Code formatting issues detected"
-        continue-on-error: true
+        run: ./build.sh check-format

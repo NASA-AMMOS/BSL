@@ -47,9 +47,9 @@ jobs:
             libssl-dev \
             doxygen graphviz plantuml texlive texlive-latex-extra dblatex
       - name: Dependency build
-        run: ./deps.sh
+        run: ./build.sh deps
       - name: Prep
-        run: ./prep.sh -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
+        run: ./build.sh prep -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
       - name: Build
         run: |
           ./build.sh --target docs-api-html docs-api-pdf

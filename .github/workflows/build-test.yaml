@@ -72,9 +72,9 @@ jobs:
         with:
           create-symlink: true
       - name: Dependencies
-        run: ./deps.sh
+        run: ./build.sh deps
       - name: Prep
-        run: ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
+        run: ./build.sh prep -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
       - name: Build
         run: ./build.sh
       - name: Test
@@ -113,9 +113,9 @@ jobs:
         with:
           create-symlink: true
       - name: Dependencies
-        run: ./deps.sh
+        run: ./build.sh deps
       - name: Prep
-        run: ./prep.sh -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
+        run: ./build.sh prep -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
       - name: Build
         run: ./build.sh
       - name: Install
