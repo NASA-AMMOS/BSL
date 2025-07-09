@@ -104,7 +104,7 @@ int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_ke
     unwrapped_key_output->len = (size_t)unwrapped_key_len;
 
     int final_len = 0;
-    int res = EVP_DecryptFinal_ex(ctx, &unwrapped_key_output->ptr[unwrapped_key_output->len], &final_len);
+    int res       = EVP_DecryptFinal_ex(ctx, &unwrapped_key_output->ptr[unwrapped_key_output->len], &final_len);
     if (res != 1)
     {
         BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
@@ -155,7 +155,7 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, size_t content_k
     }
 
     wrapped_key->len = (size_t)len;
-    int final_len = 0;
+    int final_len    = 0;
     if (!EVP_EncryptFinal_ex(ctx, &wrapped_key->ptr[wrapped_key->len], &final_len))
     {
         EVP_CIPHER_CTX_free(ctx);
@@ -237,7 +237,7 @@ int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
 int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
 {
     size_t req = 0;
-    int res = EVP_DigestSignFinal(hmac_ctx->libhandle, NULL, &req);
+    int    res = EVP_DigestSignFinal(hmac_ctx->libhandle, NULL, &req);
     CHK_PROPERTY(res == 1);
 
     *hmac_len = req;
@@ -279,7 +279,8 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
             return BSL_ERR_FAILURE;
     }
 
-    int res = EVP_CipherInit_ex(cipher_ctx->libhandle, cipher, NULL, NULL, NULL, (cipher_ctx->enc == BSL_CRYPTO_ENCRYPT));
+    int res =
+        EVP_CipherInit_ex(cipher_ctx->libhandle, cipher, NULL, NULL, NULL, (cipher_ctx->enc == BSL_CRYPTO_ENCRYPT));
     CHK_PROPERTY(res == 1);
 
     cipher_ctx->block_size = (size_t)EVP_CIPHER_CTX_block_size(cipher_ctx->libhandle);

@@ -29,7 +29,7 @@
 #include <BPSecLib_Private.h>
 
 #define BSL_SECURITYRESPONSESET_ARRAYLEN (10)
-#define BSL_SECURITYRESPONSESET_STRLEN (256)
+#define BSL_SECURITYRESPONSESET_STRLEN   (256)
 
 /// @brief Contains the results and outcomes after performing the security operations.
 /// @note This struct is still in-concept
