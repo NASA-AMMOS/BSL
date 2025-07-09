@@ -36,13 +36,13 @@
 /// @note This is intended to be a write-once, read-only struct
 struct BSL_SecurityActionSet_s
 {
-    BSL_SecOper_t sec_operations[BSL_SECURITYACTIONSET_MAX_OPS];   ///< Fixed array of security operations (for simpler mem management)
-    size_t        sec_operations_count; ///< Count of sec_operations
-    uint64_t      new_block_ids[BSL_SECURITYACTIONSET_MAX_OPS];    ///< Array for IDs of blocks to be created
-    uint64_t      new_block_types[BSL_SECURITYACTIONSET_MAX_OPS];  ///< Array for block type codes of blocks to be created.
-    size_t        arrays_capacity;      ///< Capacity of sec_operations
-    int           err_code;             ///< General error code
+    BSL_SecOper_t sec_operations[BSL_SECURITYACTIONSET_MAX_OPS]; ///< Fixed array of security operations (for simpler
+                                                                 ///< mem management)
+    size_t   sec_operations_count;                               ///< Count of sec_operations
+    uint64_t new_block_ids[BSL_SECURITYACTIONSET_MAX_OPS];       ///< Array for IDs of blocks to be created
+    uint64_t new_block_types[BSL_SECURITYACTIONSET_MAX_OPS]; ///< Array for block type codes of blocks to be created.
+    size_t   arrays_capacity;                                ///< Capacity of sec_operations
+    int      err_code;                                       ///< General error code
 };
-
 
 #endif /* BSLB_SECACTIONSET_H_ */

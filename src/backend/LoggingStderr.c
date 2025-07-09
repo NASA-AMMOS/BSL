@@ -91,11 +91,11 @@ M_BUFFER_DEF(BSL_LogEvent_queue, BSL_LogEvent_event_t, BSL_LOG_QUEUE_SIZE, M_BUF
 /// @endcond
 
 /// Shared safe queue
-static BSL_LogEvent_queue_t event_queue; 
+static BSL_LogEvent_queue_t event_queue;
 /// Sink thread ID
-static pthread_t thr_sink; 
+static pthread_t thr_sink;
 /// True if ::thr_sink is valid
-static atomic_bool thr_valid = ATOMIC_VAR_INIT(false); 
+static atomic_bool thr_valid = ATOMIC_VAR_INIT(false);
 /// NOLINTEND
 
 uint8_t *BSL_Log_DumpAsHexString(uint8_t *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen)
@@ -107,7 +107,7 @@ uint8_t *BSL_Log_DumpAsHexString(uint8_t *dstbuf, size_t dstlen, const uint8_t *
 
     memset(dstbuf, 0, dstlen);
     const char hex_digits[] = "0123456789ABCDEF";
-    for (size_t i = 0; i < srclen && (((i * 2) + 1) < dstlen-1); i++)
+    for (size_t i = 0; i < srclen && (((i * 2) + 1) < dstlen - 1); i++)
     {
         dstbuf[(i * 2)]     = (uint8_t)hex_digits[(srcbuf[i] >> 4) & 0x0F];
         dstbuf[(i * 2) + 1] = (uint8_t)hex_digits[srcbuf[i] & 0x0F];
