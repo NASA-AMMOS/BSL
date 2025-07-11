@@ -31,6 +31,7 @@ target_sources(
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_eidpat.h
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_encode.h
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_decode.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_policy_config.h
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_ctr.h
   ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_MockBPA.h
 )
@@ -42,6 +43,7 @@ target_sources(
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_eidpat.c
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_encode.c
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_decode.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_policy_config.c
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_ctr.c
 )
 target_include_directories(
