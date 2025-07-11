@@ -47,53 +47,6 @@ static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *
     return pat;
 }
 
-void mock_bpa_verify_bib_at_cla_in_policy(BSLP_PolicyProvider_t *policy) {
-
-    BSL_SecParam_InitInt64(param_integ_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
-    BSL_SecParam_InitInt64(param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-    BSL_SecParam_InitInt64(param_test_key, BSL_SECPARAM_TYPE_INT_KEY_ID, 9001);
-    // BSL_SecParam_InitInt64(param_test_key_bad, BSL_SECPARAM_TYPE_INT_KEY_ID, 9002);
-
-    // Create a rule to verify BIB's at CLA Ingress
-    BSLP_PolicyPredicate_t *predicate_all_cl_in = &policy->predicates[policy->predicate_count++];
-    BSLP_PolicyPredicate_Init(predicate_all_cl_in, BSL_POLICYLOCATION_CLIN, mock_bpa_util_get_eid_pattern_from_text("*:**"),
-                              mock_bpa_util_get_eid_pattern_from_text("*:**"), mock_bpa_util_get_eid_pattern_from_text("*:**"));
-    BSLP_PolicyRule_t *rule_verify_bib_cl_in = &policy->rules[policy->rule_count++];
-    BSLP_PolicyRule_Init(rule_verify_bib_cl_in, "Verify BIB on CL in to/from anywhere.", predicate_all_cl_in, 1,
-                         BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
-                         BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_AddParam(rule_verify_bib_cl_in, param_sha_variant);
-    BSLP_PolicyRule_AddParam(rule_verify_bib_cl_in, param_integ_scope_flag);
-    BSLP_PolicyRule_AddParam(rule_verify_bib_cl_in, param_test_key);
-    // BSLP_PolicyRule_AddParam(rule_verify_bib_cl_in, param_test_key_bad);
-}
-
-void mock_bpa_verify_bcb_at_cla_in_policy(BSLP_PolicyProvider_t *policy) {
-
-    uint64_t iv;
-    sscanf("5477656c7665313231323132", "%" SCNx64, &iv);
-
-
-
-    BSL_SecParam_InitInt64(param_aad_scope_flag, RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK, 0);
-    BSL_SecParam_InitInt64(param_init_vector, BSL_SECPARAM_TYPE_IV, iv);
-    BSL_SecParam_InitInt64(param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
-    BSL_SecParam_InitInt64(param_test_key, BSL_SECPARAM_TYPE_INT_KEY_ID, 9001);
-
-    // Create a rule to verify BCB's at CLA Ingress
-    BSLP_PolicyPredicate_t *predicate_all_cl_in = &policy->predicates[policy->predicate_count++];
-    BSLP_PolicyPredicate_Init(predicate_all_cl_in, BSL_POLICYLOCATION_CLIN, mock_bpa_util_get_eid_pattern_from_text("*:**"),
-                              mock_bpa_util_get_eid_pattern_from_text("*:**"), mock_bpa_util_get_eid_pattern_from_text("*:**"));
-    BSLP_PolicyRule_t *rule_verify_bcb_cl_in = &policy->rules[policy->rule_count++];
-    BSLP_PolicyRule_Init(rule_verify_bcb_cl_in, "Verify BCB on CL in to/from anywhere.", predicate_all_cl_in, 1,
-                         BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
-                         BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_AddParam(rule_verify_bcb_cl_in, param_aes_variant);
-    BSLP_PolicyRule_AddParam(rule_verify_bcb_cl_in, param_aad_scope_flag);
-    BSLP_PolicyRule_AddParam(rule_verify_bcb_cl_in, param_init_vector);
-    BSLP_PolicyRule_AddParam(rule_verify_bcb_cl_in, param_test_key);
-}
-
 void mock_bpa_init_policy_config() {
 
     param_integ_scope_flag = calloc(BSL_SecParam_Sizeof(), 1);
@@ -120,17 +73,89 @@ void mock_bpa_handle_policy_config(const bsl_mock_policy_configuration_t policy_
 
     BSL_LOG_DEBUG("\nInterpreted policy: 0x%X\n", policy_bits);
 
-    BSL_SecBlockType_e sec_block_type = policy_bits & 0x01;
-    BSL_SecRole_e sec_role = policy_bits & 0x02;
-    BSL_BundleBlockTypeCode_e bundle_block_type = (policy_bits >> 2) & 0x03;
+    uint32_t sec_block_type = policy_bits & 0x01;
+    uint32_t sec_role = policy_bits & 0x02;
+    uint32_t bundle_block_type = (policy_bits >> 2) & 0x03;
+    uint32_t policy_action_type = (policy_bits >> 4) & 0x03;
 
-    // TODO: get all info on policy and refactor registration here
+    uint64_t iv;
+    sscanf("5477656c7665313231323132", "%" SCNx64, &iv);
 
-    if (policy_bits & 0x01) {
-        mock_bpa_verify_bcb_at_cla_in_policy(policy);
+    // Init params for BCB if equal to 1, otherwise BIB
+    if (sec_block_type == 1) {
+        BSL_SecParam_InitInt64(param_aad_scope_flag, RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK, 0);
+        BSL_SecParam_InitInt64(param_init_vector, BSL_SECPARAM_TYPE_IV, iv);
+        BSL_SecParam_InitInt64(param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
+        BSL_SecParam_InitInt64(param_test_key, BSL_SECPARAM_TYPE_INT_KEY_ID, 9001);
     }
     else {
-        mock_bpa_verify_bib_at_cla_in_policy(policy);
+        BSL_SecParam_InitInt64(param_integ_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
+        BSL_SecParam_InitInt64(param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+        BSL_SecParam_InitInt64(param_test_key, BSL_SECPARAM_TYPE_INT_KEY_ID, 9001);
+        // BSL_SecParam_InitInt64(param_test_key_bad, BSL_SECPARAM_TYPE_INT_KEY_ID, 9002);
+    }
+
+    BSL_SecBlockType_e sec_block_emum;
+    if (sec_role == 1) {
+        sec_block_emum = BSL_SECBLOCKTYPE_BCB;
+    }
+    else {
+        sec_block_emum = BSL_SECBLOCKTYPE_BIB;
+    }
+
+    BSL_SecRole_e role_enum;
+    if (sec_role == 1) {
+        role_enum = BSL_SECROLE_ACCEPTOR;
+    }
+    else {
+        role_enum = BSL_SECROLE_VERIFIER;
+    }
+
+    BSL_BundleBlockTypeCode_e bundle_block_enum;
+    switch (bundle_block_type) {
+        case 0: bundle_block_enum = BSL_BLOCK_TYPE_PRIMARY;
+                break;
+        case 1: bundle_block_enum = BSL_BLOCK_TYPE_PAYLOAD;
+                break;
+        case 2: bundle_block_enum = BSL_BLOCK_TYPE_BIB;
+                break;
+        case 3: bundle_block_enum = BSL_BLOCK_TYPE_BIB;
+                break;
+        default: break;
+    }
+
+    BSL_PolicyAction_e policy_action_enum;
+    switch (policy_action_type) {
+        case 0: policy_action_enum = BSL_POLICYACTION_NOTHING;
+                break;
+        case 1: policy_action_enum = BSL_POLICYACTION_DROP_BLOCK;
+                break;
+        case 2: policy_action_enum = BSL_POLICYACTION_DROP_BUNDLE;
+                break;
+        default: policy_action_enum = BSL_POLICYACTION_NOTHING;
+                break;
+    }
+        
+    // Create a rule to verify security block at CLA Ingress
+    BSLP_PolicyPredicate_t *predicate_all_cl_in = &policy->predicates[policy->predicate_count++];
+    BSLP_PolicyPredicate_Init(predicate_all_cl_in, BSL_POLICYLOCATION_CLIN, mock_bpa_util_get_eid_pattern_from_text("*:**"),
+                              mock_bpa_util_get_eid_pattern_from_text("*:**"), mock_bpa_util_get_eid_pattern_from_text("*:**"));
+    BSLP_PolicyRule_t *rule_verify_cl_in = &policy->rules[policy->rule_count++];
+    BSLP_PolicyRule_Init(rule_verify_cl_in, "Verify BCB on CL in to/from anywhere.", predicate_all_cl_in, 1,
+                         role_enum, sec_block_emum, bundle_block_enum,
+                         policy_action_enum);
+
+    if (sec_block_emum == BSL_SECBLOCKTYPE_BCB) {
+        BSLP_PolicyRule_AddParam(rule_verify_cl_in, param_aes_variant);
+        BSLP_PolicyRule_AddParam(rule_verify_cl_in, param_aad_scope_flag);
+        BSLP_PolicyRule_AddParam(rule_verify_cl_in, param_init_vector);
+        BSLP_PolicyRule_AddParam(rule_verify_cl_in, param_test_key);
+    }
+    else {
+        BSLP_PolicyRule_AddParam(rule_verify_cl_in, param_sha_variant);
+        BSLP_PolicyRule_AddParam(rule_verify_cl_in, param_integ_scope_flag);
+        BSLP_PolicyRule_AddParam(rule_verify_cl_in, param_test_key);
+        // BSLP_PolicyRule_AddParam(rule_verify_cl_in, param_test_key_bad);
     }
 
 }

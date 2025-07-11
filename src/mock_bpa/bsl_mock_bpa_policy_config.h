@@ -39,13 +39,15 @@
 extern "C" {
 #endif
 
-/// -----------------    Bitwise Diagram of the mock bpa config data structure    ---------------------
+/// -----------------    Bitwise Diagram of the mock bpa config data structure    --------------------
 /*                  
  *                      uint32_t : bsl_mock_policy_configuration_t
  *
  *             [  x   x   x   x  |  x   x   x   x  |  x   x   x   x  |  x   x   x   x ]
- *             [ ------------- unused ------------ ]                    [---]   |   |       
- *                                                                        |     |   |            
+ *             [ ------------- unused ------------ ]  [???]   [---]     [---]   |   |
+ *                                                              |         |     |   |       
+ *              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
+                               10 - drop bundle, 11: undefined -|         |     |   |             
  *    Target Block Type: 00 - primary, 01 - payload, 10 - BIB, 11 - BCB  -|     |   |
  *                                        BSL Role: 0 - verifier, 1 - acceptor -|   |    
  *                                                Sec Block Type: 0 - BIB, 1 - BCB -|   
