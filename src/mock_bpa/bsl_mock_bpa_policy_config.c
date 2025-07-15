@@ -91,24 +91,20 @@ void mock_bpa_handle_policy_config_from_json(const bsl_mock_policy_configuration
     json_t *root;
     json_error_t err;
 
-    int cp=0;
-
     root = json_load_file("src/mock_bpa/iontest1policyrule.json", 0, &err);
     if (!root) {
         BSL_LOG_ERR("JSON error: line %d: %s\n", err.line, err.text);
+        json_decref(root);
         return;
     }
-    BSL_LOG_DEBUG("checkpoint %d\n", cp++);
 
-     /* ----- policyrule attr ----- */
+    // policyrule attr 
     json_t *policyrule = json_object_get(root, "policyrule");
     if (!policyrule || !json_is_object(policyrule)) {
         BSL_LOG_ERR("Missing \"policyrule\" \n");
-        goto cleanup;
     }
-    BSL_LOG_DEBUG("checkpoint %d\n", cp++);
 
-     /* ----- filter attr ----- */
+    // filter attr 
     json_t *filter = json_object_get(policyrule, "filter");
     if (filter && json_is_object(filter)) {
         const char *rule_id = json_string_value(json_object_get(filter, "rule_id"));
@@ -117,46 +113,42 @@ void mock_bpa_handle_policy_config_from_json(const bsl_mock_policy_configuration
         json_t     *tgt_val = json_object_get(filter, "tgt");
 
         BSL_LOG_DEBUG("filter:\n");
-        BSL_LOG_DEBUG("  rule_id: %s\n", rule_id ? rule_id : "(null)");
-        BSL_LOG_DEBUG("  role   : %s\n", role    ? role    : "(null)");
-        BSL_LOG_DEBUG("  src    : %s\n", src     ? src     : "(null)");
+        BSL_LOG_DEBUG("     rule_id: %s\n", rule_id ? rule_id : "(null)");
+        BSL_LOG_DEBUG("     role   : %s\n", role    ? role    : "(null)");
+        BSL_LOG_DEBUG("     src    : %s\n", src     ? src     : "(null)");
         if (tgt_val && json_is_integer(tgt_val))
-            BSL_LOG_DEBUG("  tgt    : %" JSON_INTEGER_FORMAT "\n", json_integer_value(tgt_val));
+            BSL_LOG_DEBUG("     tgt     : %" JSON_INTEGER_FORMAT "\n", json_integer_value(tgt_val));
     }
-    BSL_LOG_DEBUG("checkpoint %d\n", cp++);
 
-    /* ----- spec attr ----- */
+    // spec attr
     json_t *spec = json_object_get(policyrule, "spec");
     if (spec && json_is_object(spec)) {
         const char *svc  = json_string_value(json_object_get(spec, "svc"));
         json_t     *id_v = json_object_get(spec, "sc_id");
 
         BSL_LOG_DEBUG("spec:\n");
-        BSL_LOG_DEBUG("  svc  : %s\n", svc ? svc : "(null)");
+        BSL_LOG_DEBUG("     svc: %s\n", svc ? svc : "(null)");
         if (id_v && json_is_integer(id_v))
-            BSL_LOG_DEBUG("  sc_id: %" JSON_INTEGER_FORMAT "\n", json_integer_value(id_v));
+            BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT "\n", json_integer_value(id_v));
 
         json_t *sc_parms = json_object_get(spec, "sc_parms");
         if (sc_parms && json_is_array(sc_parms)) {
             size_t i, n = json_array_size(sc_parms);
-            BSL_LOG_DEBUG("  sc_parms (%zu):\n", n);
+            BSL_LOG_DEBUG("     sc_parms (%zu):\n", n);
             for (i = 0; i < n; ++i) {
                 json_t *entry = json_array_get(sc_parms, i);
                 if (!json_is_object(entry)) continue;
                 const char *id    = json_string_value(json_object_get(entry, "id"));
                 const char *value = json_string_value(json_object_get(entry, "value"));
-                BSL_LOG_DEBUG("    - id: %s, value: %s\n",
+                BSL_LOG_DEBUG("         - id: %s, value: %s\n",
                        id ? id : "(null)", value ? value : "(null)");
             }
         }
     }
-    BSL_LOG_DEBUG("checkpoint %d\n", cp++);
 
     // TODO actually set up the policies
 
-    cleanup:
-        json_decref(root);
-
+    json_decref(root);
 }
 
 static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t policy_bits, BSLP_PolicyProvider_t *policy) {
