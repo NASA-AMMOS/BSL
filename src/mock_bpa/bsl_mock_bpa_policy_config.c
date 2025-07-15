@@ -73,7 +73,8 @@ static void mock_bpa_init_registry(void) {
 }
 
 // TODO real params
-void mock_bpa_handle_policy_config_from_json(const bsl_mock_policy_configuration_t policy_type, BSLP_PolicyProvider_t *policy) {
+void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy)
+{
     mock_bpa_init_policy_config();
 
     uint32_t sec_block_type;
@@ -82,7 +83,6 @@ void mock_bpa_handle_policy_config_from_json(const bsl_mock_policy_configuration
     uint32_t policy_action_type;
     
     (void) policy;
-    (void) policy_type;
     (void) sec_block_type;
     (void) sec_role;
     (void) bundle_block_type;
@@ -91,7 +91,7 @@ void mock_bpa_handle_policy_config_from_json(const bsl_mock_policy_configuration
     json_t *root;
     json_error_t err;
 
-    root = json_load_file("src/mock_bpa/iontest1policyrule.json", 0, &err);
+    root = json_load_file(pp_cfg_file_path, 0, &err);
     if (!root) {
         BSL_LOG_ERR("JSON error: line %d: %s\n", err.line, err.text);
         json_decref(root);
