@@ -45,27 +45,25 @@ extern "C" {
  *                      uint32_t : bsl_mock_policy_configuration_t
  *
  *             [  x   x   x   x  |  x   x   x   x  |  x   x   x   x  |  x   x   x   x ]
- *             [ ------------- unused ------------ ]  [???]   [---]     [---]   |   |
- *                                                              |         |     |   |       
+ *             [ ------------- unused ------------ ]  [---]   [---]     [---]   |   |
+ *                                                      |       |         |     |   |
+ *              BSL Role: 00 - source, 01 - verifier,  -|       |         |     |   |
+ *                        10 - acceptor, 11: undefined -|       |         |     |   |       
  *              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
                                10 - drop bundle, 11: undefined -|         |     |   |             
  *    Target Block Type: 00 - primary, 01 - payload, 10 - BIB, 11 - BCB  -|     |   |
- *                                        BSL Role: 0 - verifier, 1 - acceptor -|   |    
+ *                                           Policy Location: 0 - APP, 1 - CLA -|   |    
  *                                                Sec Block Type: 0 - BIB, 1 - BCB -|   
  *                                                                        
  *                                                                                
 */
 typedef uint32_t bsl_mock_policy_configuration_t;
 
-void mock_bpa_verify_bib_at_cla_in_policy(BSLP_PolicyProvider_t *policy);
-
-void mock_bpa_verify_bcb_at_cla_in_policy(BSLP_PolicyProvider_t *policy);
-
 void mock_bpa_init_policy_config(void);
 
 void mock_bpa_deinit_policy_config(void);
 
-void mock_bpa_handle_policy_config(const bsl_mock_policy_configuration_t policy_type, BSLP_PolicyProvider_t *policy);
+void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy);
 
 void mock_bpa_handle_policy_config_from_json(const bsl_mock_policy_configuration_t policy_type, BSLP_PolicyProvider_t *policy);
 

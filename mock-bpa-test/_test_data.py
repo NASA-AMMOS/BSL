@@ -28,7 +28,7 @@ class _TestData(_TestSet):
         )
 
         # Tests data that corresponds to example A.1.3 in the appendix of RFC-9173
-        self.cases['a_1_3_p0x01'] = _TestCase(
+        self.cases['a_1_3_p0x01,0x21'] = _TestCase(
             [
                 # Sample Primary Block
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
@@ -53,7 +53,7 @@ class _TestData(_TestSet):
         )
 
         # Tests data that corresponds to example A.2 in the appendix of RFC-9173
-        self.cases['a_2_p0x02'] = _TestCase(
+        self.cases['a_2_p0x02,0x21'] = _TestCase(
             [
                 # Sample Primary Block
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
@@ -78,7 +78,7 @@ class _TestData(_TestSet):
         )
 
         # Tests data that corresponds to example A.3.1 in the appendix of RFC-9173
-        self.cases['a_3_1_p0x0f'] = _TestCase(
+        self.cases['a_3_1_p0x0f,0x21'] = _TestCase(
             [
                 # Sample Primary Block
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
@@ -103,7 +103,7 @@ class _TestData(_TestSet):
         )
 
         # Tests data that corresponds to example A.3.4 in the appendix of RFC-9173
-        self.cases['a_3_4_p0x01'] = _TestCase(
+        self.cases['a_3_4_p0x01,0x21'] = _TestCase(
             [
                 # Sample Primary Block
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
