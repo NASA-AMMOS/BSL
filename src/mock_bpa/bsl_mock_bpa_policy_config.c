@@ -72,6 +72,7 @@ static void mock_bpa_init_registry(void) {
     BSL_LOG_DEBUG("Successfully Init policy number %d in registry\n", registry.registry_count);
 }
 
+// TODO real params
 void mock_bpa_handle_policy_config_from_json(const bsl_mock_policy_configuration_t policy_type, BSLP_PolicyProvider_t *policy) {
     mock_bpa_init_policy_config();
 

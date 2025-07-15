@@ -668,6 +668,9 @@ int main(int argc, char **argv)
                 case 'p':
                     mock_bpa_init_policy_config();
                     mock_bpa_handle_policy_config(optarg, policy_callbacks.user_data);
+
+                    // TODO real params
+                    mock_bpa_handle_policy_config_from_json(0, policy_callbacks.user_data);
                     break;
                 default:
                     show_usage(argv[0]);
