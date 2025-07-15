@@ -99,7 +99,7 @@ then
       -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
       -DJANSSON_BUILD_SHARED_LIBS=OFF \
       -DJANSSON_BUILD_DOCS=OFF
-  cmake --build ${BUILDDIR}/jansson --config Release
+  cmake --build ${BUILDDIR}/jansson
   cmake --install ${BUILDDIR}/jansson
   rm -rf ${BUILDDIR}/jansson
   popd
