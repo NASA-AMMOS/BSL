@@ -568,7 +568,7 @@ static void show_usage(const char *argv0)
             "Usage: %s -o <over-socket address:port> -a <application address:port>\n"
             "          -u <under-socket address:port> -r <router address:port>\n"
             "          -e <app-EID> -s <sec-src-EID>\n"
-            "          -p (optional - defaults to none) <policy index>\n", 
+            "          -p (optional - defaults to none) <bsl_mock_policy_configuration_t>\n", 
             argv0);
 }
 

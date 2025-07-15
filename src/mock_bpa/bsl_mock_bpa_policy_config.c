@@ -74,9 +74,10 @@ void mock_bpa_handle_policy_config(const bsl_mock_policy_configuration_t policy_
     BSL_LOG_DEBUG("\nInterpreted policy: 0x%X\n", policy_bits);
 
     uint32_t sec_block_type = policy_bits & 0x01;
-    uint32_t sec_role = policy_bits & 0x02;
+    uint32_t policy_loc = policy_bits & 0x02;
     uint32_t bundle_block_type = (policy_bits >> 2) & 0x03;
     uint32_t policy_action_type = (policy_bits >> 4) & 0x03;
+    uint32_t sec_role = (policy_bits >> 6) & 0x03;
 
     uint64_t iv;
     sscanf("5477656c7665313231323132", "%" SCNx64, &iv);
@@ -96,19 +97,19 @@ void mock_bpa_handle_policy_config(const bsl_mock_policy_configuration_t policy_
     }
 
     BSL_SecBlockType_e sec_block_emum;
-    if (sec_role == 1) {
+    if (sec_block_type == 1) {
         sec_block_emum = BSL_SECBLOCKTYPE_BCB;
     }
     else {
         sec_block_emum = BSL_SECBLOCKTYPE_BIB;
     }
 
-    BSL_SecRole_e role_enum;
-    if (sec_role == 1) {
-        role_enum = BSL_SECROLE_ACCEPTOR;
+    BSL_PolicyLocation_e policy_loc_enum;
+    if (policy_loc == 1) {
+        policy_loc_enum = BSL_POLICYLOCATION_CLIN;
     }
     else {
-        role_enum = BSL_SECROLE_VERIFIER;
+        policy_loc_enum = BSL_POLICYLOCATION_APPIN;
     }
 
     BSL_BundleBlockTypeCode_e bundle_block_enum;
@@ -135,14 +136,26 @@ void mock_bpa_handle_policy_config(const bsl_mock_policy_configuration_t policy_
         default: policy_action_enum = BSL_POLICYACTION_NOTHING;
                 break;
     }
+
+    BSL_SecRole_e sec_role_enum;
+    switch (sec_role) {
+        case 0: sec_role_enum = BSL_SECROLE_SOURCE;
+                break;
+        case 1: sec_role_enum = BSL_SECROLE_VERIFIER;
+                break;
+        case 2: sec_role_enum = BSL_SECROLE_ACCEPTOR;
+                break;
+        default: sec_role_enum = BSL_SECROLE_VERIFIER;
+                break;
+    }
         
     // Create a rule to verify security block at CLA Ingress
     BSLP_PolicyPredicate_t *predicate_all_cl_in = &policy->predicates[policy->predicate_count++];
-    BSLP_PolicyPredicate_Init(predicate_all_cl_in, BSL_POLICYLOCATION_CLIN, mock_bpa_util_get_eid_pattern_from_text("*:**"),
+    BSLP_PolicyPredicate_Init(predicate_all_cl_in, policy_loc_enum, mock_bpa_util_get_eid_pattern_from_text("*:**"),
                               mock_bpa_util_get_eid_pattern_from_text("*:**"), mock_bpa_util_get_eid_pattern_from_text("*:**"));
     BSLP_PolicyRule_t *rule_verify_cl_in = &policy->rules[policy->rule_count++];
     BSLP_PolicyRule_Init(rule_verify_cl_in, "Verify BCB on CL in to/from anywhere.", predicate_all_cl_in, 1,
-                         role_enum, sec_block_emum, bundle_block_enum,
+                         sec_role_enum, sec_block_emum, bundle_block_enum,
                          policy_action_enum);
 
     if (sec_block_emum == BSL_SECBLOCKTYPE_BCB) {
