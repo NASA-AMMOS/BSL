@@ -568,7 +568,7 @@ static void show_usage(const char *argv0)
             "Usage: %s -o <over-socket address:port> -a <application address:port>\n"
             "          -u <under-socket address:port> -r <router address:port>\n"
             "          -e <app-EID> -s <sec-src-EID>\n"
-            "          -p (optional - defaults to none) <bsl_mock_policy_configuration_t>\n", 
+            "          -p (optional - defaults to none) comma delimited hex list of <bsl_mock_policy_configuration_t>, e.g. '0x000f,0x0021'\n", 
             argv0);
 }
 
@@ -665,7 +665,8 @@ int main(int argc, char **argv)
                     break;
                 case 'h':
                 case 'p':
-                    mock_bpa_handle_policy_config(strtoul(optarg, NULL, 0), policy_callbacks.user_data);
+                    mock_bpa_init_policy_config();
+                    mock_bpa_handle_policy_config(optarg, policy_callbacks.user_data);
                     break;
                 default:
                     show_usage(argv[0]);
@@ -710,10 +711,10 @@ int main(int argc, char **argv)
 
     if (retval != 1)
     {
+        mock_bpa_deinit_policy_config();
         bpa_cleanup();
     }
 
-    mock_bpa_deinit_policy_config();
     BSL_CryptoDeinit();
     bsl_mock_bpa_deinit();
     BSL_closelog();

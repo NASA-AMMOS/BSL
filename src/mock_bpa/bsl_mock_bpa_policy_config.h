@@ -62,7 +62,7 @@ void mock_bpa_init_policy_config(void);
 
 void mock_bpa_deinit_policy_config(void);
 
-void mock_bpa_handle_policy_config(const bsl_mock_policy_configuration_t policy_type, BSLP_PolicyProvider_t *policy);
+void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy);
 
 #ifdef __cplusplus
 } // extern C

@@ -45,7 +45,11 @@ class TestAgent(unittest.TestCase):
             policy_config = str(self.pp_cfg_dict[self._testMethodName[5:]])
             LOGGER.info('Using policy config from DICT %s for %s', policy_config, self._testMethodName[5:])
         except Exception:
-            policy_config = self._testMethodName[-4:]
+            policy_config = self._testMethodName
+            # Find the index of the first occurrence of "_p" policy sequence
+            index = policy_config.index("_p")
+            # Slice the string from index + 1 to the end
+            policy_config = policy_config[index + 2:]
             LOGGER.info('Using policy config %s for %s', policy_config, self._testMethodName)
 
         args = [
