@@ -20,13 +20,15 @@ class _TestSet:
 
 # TODO update these to match pp conf
 # may need more / different ones as well
-POLICY_UNDEFINED = 1
+POLICY_UNDEFINED = 0
 BIB_AND_BCB_ACCEPTOR = 1
 BIB_AND_BCB_VERIFIER = 1
 BIB_AND_BCB_SOURCE = 1
+
 BIB_ACCEPTOR = 1
 BIB_VERIFIER = 1 
 BIB_SOURCE = 1
+
 BCB_ACCEPTOR = 1
 BCB_VERIFIER = 1 
 BCB_SOURCE = 1

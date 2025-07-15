@@ -630,6 +630,7 @@ int main(int argc, char **argv)
 
     BSL_HostEID_Init(&app_eid);
     BSL_HostEID_Init(&sec_eid);
+
     if (!retval)
     {
         int opt;
@@ -665,7 +666,9 @@ int main(int argc, char **argv)
                     break;
                 case 'h':
                 case 'p':
-                    mock_bpa_handle_policy_config(strtoul(optarg, NULL, 0), policy_callbacks.user_data);
+                    //mock_bpa_handle_policy_config(strtoul(optarg, NULL, 0), policy_callbacks.user_data);
+                    BSL_LOG_INFO("pushin p");
+                    mock_bpa_handle_policy_config_from_json(strtoul(optarg, NULL, 0), policy_callbacks.user_data);
                     break;
                 default:
                     show_usage(argv[0]);

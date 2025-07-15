@@ -30,6 +30,7 @@
 
 #include <inttypes.h>
 #include <stdio.h>
+#include <jansson.h>
 
 #include <BPSecLib_Private.h>
 #include <policy_provider/SamplePolicyProvider.h>
@@ -65,6 +66,8 @@ void mock_bpa_init_policy_config(void);
 void mock_bpa_deinit_policy_config(void);
 
 void mock_bpa_handle_policy_config(const bsl_mock_policy_configuration_t policy_type, BSLP_PolicyProvider_t *policy);
+
+void mock_bpa_handle_policy_config_from_json(const bsl_mock_policy_configuration_t policy_type, BSLP_PolicyProvider_t *policy);
 
 #ifdef __cplusplus
 } // extern C

@@ -90,3 +90,17 @@ then
   rm -rf ${BUILDDIR}/unity
   popd
 fi
+
+if [ ! -e ${DESTDIR}/usr/include/jansson.h ]
+then
+  echo "Building jansson..."
+  pushd ${DEPSDIR}/jansson
+  cmake -S . -B ${BUILDDIR}/jansson \
+      -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
+      -DJANSSON_BUILD_SHARED_LIBS=OFF \
+      -DJANSSON_BUILD_DOCS=OFF
+  cmake --build ${BUILDDIR}/jansson --config Release
+  cmake --install ${BUILDDIR}/jansson
+  rm -rf ${BUILDDIR}/jansson
+  popd
+fi

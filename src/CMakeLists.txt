@@ -110,6 +110,7 @@ target_link_libraries(bsl_dynamic PUBLIC MLIB::mlib)
 target_link_libraries(bsl_dynamic PUBLIC QCBOR::qcbor)
 target_link_libraries(bsl_dynamic PUBLIC OpenSSL::SSL)
 target_link_libraries(bsl_dynamic PUBLIC Threads::Threads)
+target_link_libraries(bsl_dynamic PUBLIC jansson)
 
 
 add_subdirectory(mock_bpa)

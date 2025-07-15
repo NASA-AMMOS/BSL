@@ -127,20 +127,20 @@ class TestAgent(unittest.TestCase):
 
 # Below utilizes setattr to add methods to a child class of the TestAgent, which will in-turn give us unit tests
 # tldr auto-generated methods for unit tests :)
-# @param requirements_tests needs to be a class that is child of _TestSet()
-def _add_tests(requirements_tests : _TestSet):
+# @param new_tests needs to be a class that is child of _TestSet()
+def _add_tests(new_tests : _TestSet):
     def decorator(cls):
-        for id, tc in requirements_tests.cases.items():
+        for id, tc in new_tests.cases.items():
             if tc.implemented:
                 def _test(cls, id=id):
-                    cls._single_test(requirements_tests.cases[id])
+                    cls._single_test(new_tests.cases[id])
                 setattr(cls, f'test_{id}', _test)
 
         return cls
     return decorator
 
-@_add_tests(_RequirementsCases())
+#@_add_tests(_RequirementsCases())
 @_add_tests(_TestData())
-@_add_tests(_CCSDS_Cases())
+#@_add_tests(_CCSDS_Cases())
 class TestMockBPA(TestAgent):
     pass

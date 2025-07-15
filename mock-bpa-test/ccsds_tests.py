@@ -39,7 +39,7 @@ class _CCSDS_Cases(_TestSet):
 
                     cbor_output = (FAILURE_CODE, 0)
                     
-                self.cases[str(t['test'])] = _TestCase(
+                self.cases['ccsds_' + str(t['test'])] = _TestCase(
                     cbor_input, cbor_output, "1", True, outcome
                 )
                 print(f'CCSDS | Adding test {t["test"]}...')
