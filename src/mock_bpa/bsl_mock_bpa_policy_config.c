@@ -152,6 +152,8 @@ void mock_bpa_handle_policy_config_from_json(const bsl_mock_policy_configuration
     }
     BSL_LOG_DEBUG("checkpoint %d\n", cp++);
 
+    // TODO actually set up the policies
+
     cleanup:
         json_decref(root);
 
