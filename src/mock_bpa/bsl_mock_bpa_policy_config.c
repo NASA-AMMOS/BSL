@@ -106,30 +106,107 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
 
     // filter attr 
     json_t *filter = json_object_get(policyrule, "filter");
+    BSL_LOG_DEBUG("filter:\n");
     if (filter && json_is_object(filter)) {
-        const char *rule_id = json_string_value(json_object_get(filter, "rule_id"));
-        const char *role    = json_string_value(json_object_get(filter, "role"));
-        const char *src     = json_string_value(json_object_get(filter, "src"));
-        json_t     *tgt_val = json_object_get(filter, "tgt");
+        json_t *rule_id = json_object_get(filter, "rule_id");
+        if (!rule_id)
+        {
+            BSL_LOG_ERR("No rule ID \n");
+            json_decref(root);
+            return;
+        }
+        const char *rule_id_str = json_string_value(rule_id);
+        BSL_LOG_DEBUG("     rule_id: %s\n", rule_id_str);
 
-        BSL_LOG_DEBUG("filter:\n");
-        BSL_LOG_DEBUG("     rule_id: %s\n", rule_id ? rule_id : "(null)");
-        BSL_LOG_DEBUG("     role   : %s\n", role    ? role    : "(null)");
-        BSL_LOG_DEBUG("     src    : %s\n", src     ? src     : "(null)");
-        if (tgt_val && json_is_integer(tgt_val))
-            BSL_LOG_DEBUG("     tgt     : %" JSON_INTEGER_FORMAT "\n", json_integer_value(tgt_val));
+        json_t *role = json_object_get(filter, "role");
+        if (!role)
+        {
+            BSL_LOG_ERR("No sec role\n");
+            json_decref(root);
+            return;
+        }
+        const char *role_str = json_string_value(role); 
+        BSL_LOG_DEBUG("     role   : %s\n", role_str);
+
+        if (!strcmp(role_str, "s"))
+        {
+            sec_role = BSL_SECROLE_SOURCE;
+        }
+        else if (!strcmp(role_str, "v"))
+        {
+            sec_role = BSL_SECROLE_VERIFIER;
+        }
+        else if (!strcmp(role_str, "a"))
+        {
+            sec_role = BSL_SECROLE_ACCEPTOR;
+        }
+        else
+        {
+            BSL_LOG_ERR("INVALID SEC ROLE %s\n", role_str);
+            json_decref(root);
+            return;
+        }
+
+        // TODO deal with wildcards *
+        const char *src_str;
+        const char *dest_str;
+        const char *sec_src_str;
+
+        json_t *src = json_object_get(filter, "src");
+        if (src)
+        {
+            src_str = json_string_value(src);
+            BSL_LOG_DEBUG("     src    : %s\n", src_str);
+        }
+
+        json_t *dest = json_object_get(filter, "dest");
+        if (dest)
+        {
+            dest_str = json_string_value(dest);
+            BSL_LOG_DEBUG("     dest    : %s\n", dest_str);
+        }
+
+        json_t *sec_src = json_object_get(filter, "sec_src");
+        if (sec_src)
+        {
+            sec_src_str = json_string_value(sec_src);
+            BSL_LOG_DEBUG("     sec_src    : %s\n", sec_src_str);
+        }
+
+        if (!dest && !src && !sec_src)
+        {
+            BSL_LOG_ERR("No EIDs set, INVALID RULE\n");
+            json_decref(root);
+            return;
+        }
+
+        json_t *tgt = json_object_get(filter, "tgt");
+        if (!tgt)
+        {
+            BSL_LOG_ERR("No tgt\n");
+            json_decref(root);
+            return;
+        }
+        const long tgt_l = json_integer_value(tgt);
+        BSL_LOG_DEBUG("     tgt    : %" JSON_INTEGER_FORMAT "\n", tgt_l);
+    
+        // duplicate from spec attr?
+        // json_t *sc_id = json_object_get(filter, "sc_id");
+        // long sc_id_l = json_integer_value(sc_id);
     }
 
     // spec attr
     json_t *spec = json_object_get(policyrule, "spec");
     if (spec && json_is_object(spec)) {
-        const char *svc  = json_string_value(json_object_get(spec, "svc"));
-        json_t     *id_v = json_object_get(spec, "sc_id");
+        json_t *svc = json_object_get(spec, "svc");
+        const char *svc_c  = json_string_value(svc);
+
+        json_t *sc_id = json_object_get(spec, "sc_id");
+        long sc_id_l = json_integer_value(sc_id);
 
         BSL_LOG_DEBUG("spec:\n");
-        BSL_LOG_DEBUG("     svc: %s\n", svc ? svc : "(null)");
-        if (id_v && json_is_integer(id_v))
-            BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT "\n", json_integer_value(id_v));
+        BSL_LOG_DEBUG("     svc: %s\n", svc_c ? svc_c : "(null)");
+        BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT "\n", sc_id_l ? sc_id_l : -1);
 
         json_t *sc_parms = json_object_get(spec, "sc_parms");
         if (sc_parms && json_is_array(sc_parms)) {
@@ -138,16 +215,75 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             for (i = 0; i < n; ++i) {
                 json_t *entry = json_array_get(sc_parms, i);
                 if (!json_is_object(entry)) continue;
-                const char *id    = json_string_value(json_object_get(entry, "id"));
-                const char *value = json_string_value(json_object_get(entry, "value"));
-                BSL_LOG_DEBUG("         - id: %s, value: %s\n",
-                       id ? id : "(null)", value ? value : "(null)");
+                
+                json_t *id = json_object_get(entry, "id");
+                if (!id) continue;
+                const char *id_str = json_string_value(id);
+
+                // TODO
+                switch (sc_id_l)
+                {
+                    case 1:
+                        if (!strcmp(id_str, "key_name"))
+                        {
+
+                        }
+                        else if (!strcmp(id_str, "sha_variant"))
+                        {
+                            
+                        }
+                        else if (!strcmp(id_str, "scope_flags"))
+                        {
+                            
+                        }
+                        else
+                        {
+                            BSL_LOG_ERR("INVALID KEY FOR SC ID %d\n", sc_id_l);
+                            json_decref(root);
+                            return;
+                        }
+                        break;
+                    case 2:
+                        if (!strcmp(id_str, "key_name"))
+                        {
+
+                        }
+                        else if (!strcmp(id_str, "iv"))
+                        {
+                            
+                        }
+                        else if (!strcmp(id_str, "aes_variant"))
+                        {
+                            
+                        }
+                        else if (!strcmp(id_str, "aad_scope"))
+                        {
+                            
+                        }
+                        else
+                        {
+                            BSL_LOG_ERR("INVALID KEY FOR SC ID %d\n", sc_id_l);
+                            json_decref(root);
+                            return;
+                        }
+                        break;
+                    default:
+                        BSL_LOG_ERR("INVALID SC ID\n");
+                        json_decref(root);
+                        return;    
+                }
+                
+                json_t *value = json_object_get(entry, "value");
+                if (!value) continue;
+                const char *value_str = json_string_value(value);
+                
+                BSL_LOG_DEBUG("         - id: %s, value: %s\n", id_str, value_str);
             }
         }
     }
 
     // TODO actually set up the policies
-
+    
     json_decref(root);
 }
 
