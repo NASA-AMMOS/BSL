@@ -108,6 +108,8 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     json_t *filter = json_object_get(policyrule, "filter");
     BSL_LOG_DEBUG("filter:\n");
     if (filter && json_is_object(filter)) {
+
+        // Get rule_id
         json_t *rule_id = json_object_get(filter, "rule_id");
         if (!rule_id)
         {
@@ -118,6 +120,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         const char *rule_id_str = json_string_value(rule_id);
         BSL_LOG_DEBUG("     rule_id: %s\n", rule_id_str);
 
+        // get sec role
         json_t *role = json_object_get(filter, "role");
         if (!role)
         {
@@ -128,6 +131,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         const char *role_str = json_string_value(role); 
         BSL_LOG_DEBUG("     role   : %s\n", role_str);
 
+        // check for valid sec role
         if (!strcmp(role_str, "s"))
         {
             sec_role = BSL_SECROLE_SOURCE;
@@ -147,7 +151,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             return;
         }
 
-        // TODO deal with wildcards *
+        // check EIDs
         const char *src_str;
         const char *dest_str;
         const char *sec_src_str;
@@ -173,6 +177,8 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             BSL_LOG_DEBUG("     sec_src    : %s\n", sec_src_str);
         }
 
+        // must have at least 1 EID for valid filter (for ION)
+        // do we care about this for BSL? TODO
         if (!dest && !src && !sec_src)
         {
             BSL_LOG_ERR("No EIDs set, INVALID RULE\n");
@@ -180,6 +186,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             return;
         }
 
+        // check tgt (target block type)
         json_t *tgt = json_object_get(filter, "tgt");
         if (!tgt)
         {
@@ -189,8 +196,10 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         }
         const long tgt_l = json_integer_value(tgt);
         BSL_LOG_DEBUG("     tgt    : %" JSON_INTEGER_FORMAT "\n", tgt_l);
+
+        bundle_block_type = tgt_l;
     
-        // duplicate from spec attr?
+        // duplicate from spec attr? (ION)
         // json_t *sc_id = json_object_get(filter, "sc_id");
         // long sc_id_l = json_integer_value(sc_id);
     }
@@ -198,9 +207,12 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     // spec attr
     json_t *spec = json_object_get(policyrule, "spec");
     if (spec && json_is_object(spec)) {
+
+        // TODO we can probably get rid of this since we have sc_id
         json_t *svc = json_object_get(spec, "svc");
         const char *svc_c  = json_string_value(svc);
 
+        // check sec ctx id
         json_t *sc_id = json_object_get(spec, "sc_id");
         long sc_id_l = json_integer_value(sc_id);
 
@@ -220,7 +232,8 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
                 if (!id) continue;
                 const char *id_str = json_string_value(id);
 
-                // TODO
+                // TODO value check/set
+                // different valid param IDs for different contexts
                 switch (sc_id_l)
                 {
                     case 1:
@@ -281,8 +294,6 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             }
         }
     }
-
-    // TODO actually set up the policies
     
     json_decref(root);
 }
