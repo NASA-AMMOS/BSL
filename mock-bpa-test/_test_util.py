@@ -7,12 +7,20 @@ class _TestCase:
     @param impl - boolean, true if test is implemented, false if not (placeholder for empty test fixtures)
     @param success - boolean, true if input bundle is expected to have an output bundle, false if error/no output
     '''
-    def __init__(self, input_data, expected_output, policy_config, impl, success):
+    def __init__(self, input_data, expected_output, policy_config, is_implemented : bool, expect_success: bool, input_data_format : str):
         self.input_data = input_data
         self.expected_output = expected_output
         self.policy_config = policy_config
-        self.implemented = impl
-        self.success = success
+
+        # can be removed once all tests are implemeneted
+        self.is_implemented = is_implemented
+
+        # true if test expected to succeed (return output bundle with no errors)
+        self.expect_success = expect_success
+
+        # "HEX" or "BUNDLEARRAY"
+        self.input_data_format = input_data_format
+
 
 class _TestSet:
     def __init__(self):

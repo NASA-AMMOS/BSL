@@ -86,7 +86,7 @@ void tearDown(void)
  *  - Common repeated patterns are in the process of being factored out
  *  - All values are drawn from RFC9173 Appendix A.
  */
-void ntest_SecurityContext_BIB_Source(void)
+void test_SecurityContext_BIB_Source(void)
 {
     TEST_ASSERT_EQUAL(
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));

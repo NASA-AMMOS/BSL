@@ -109,13 +109,13 @@ class TestAgent(unittest.TestCase):
     def _single_test(self, testcase : _TestCase):
 
         # TODO handle failures/no output
-        if not testcase.success:
+        if not testcase.expect_success:
             self.assertTrue(False)
 
         # start mock BPA using specified policy config
         self._start()
 
-        tx_data = self._encode(testcase.input_data)
+        tx_data = testcase.input_data if (testcase.input_data_format == "HEX") else self._encode(testcase.input_data)
         expected_rx = self._encode(testcase.expected_output)
         self._ul_sock.send(tx_data)
         LOGGER.debug('waiting')
@@ -135,7 +135,7 @@ class TestAgent(unittest.TestCase):
 def _add_tests(new_tests : _TestSet):
     def decorator(cls):
         for id, tc in new_tests.cases.items():
-            if tc.implemented:
+            if tc.is_implemented:
                 def _test(cls, id=id):
                     cls._single_test(new_tests.cases[id])
                 setattr(cls, f'test_{id}', _test)
@@ -143,8 +143,8 @@ def _add_tests(new_tests : _TestSet):
         return cls
     return decorator
 
-#@_add_tests(_RequirementsCases())
-@_add_tests(_TestData())
+@_add_tests(_RequirementsCases())
+#@_add_tests(_TestData())
 #@_add_tests(_CCSDS_Cases())
 class TestMockBPA(TestAgent):
     pass

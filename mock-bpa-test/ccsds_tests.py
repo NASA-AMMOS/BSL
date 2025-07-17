@@ -40,6 +40,11 @@ class _CCSDS_Cases(_TestSet):
                     cbor_output = (FAILURE_CODE, 0)
                     
                 self.cases['ccsds_' + str(t['test'])] = _TestCase(
-                    cbor_input, cbor_output, "1", True, outcome
+                    input_data = cbor_input,
+                    expected_output = cbor_output,
+                    policy_config = "1", #TODO
+                    expect_success = outcome,
+                    is_implemented = True,
+                    input_data_format = "HEX"
                 )
                 print(f'CCSDS | Adding test {t["test"]}...')
