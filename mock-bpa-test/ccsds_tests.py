@@ -45,6 +45,7 @@ class _CCSDS_Cases(_TestSet):
                     policy_config = "1", #TODO
                     expect_success = outcome,
                     is_implemented = True,
-                    input_data_format = "HEX"
+                    input_data_format = "BUNDLEARRAY",
+                    expected_output_format= "BUNDLEARRAY"
                 )
                 print(f'CCSDS | Adding test {t["test"]}...')

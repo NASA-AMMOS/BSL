@@ -116,7 +116,7 @@ class TestAgent(unittest.TestCase):
         self._start()
 
         tx_data = testcase.input_data if (testcase.input_data_format == "HEX") else self._encode(testcase.input_data)
-        expected_rx = self._encode(testcase.expected_output)
+        expected_rx = testcase.expected_output if (testcase.expected_output == "HEX") else self._encode(testcase.expected_output)
         self._ul_sock.send(tx_data)
         LOGGER.debug('waiting')
         rx_data = self._wait_for(self._ul_sock)

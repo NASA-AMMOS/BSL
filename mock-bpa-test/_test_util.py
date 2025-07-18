@@ -7,7 +7,9 @@ class _TestCase:
     @param impl - boolean, true if test is implemented, false if not (placeholder for empty test fixtures)
     @param success - boolean, true if input bundle is expected to have an output bundle, false if error/no output
     '''
-    def __init__(self, input_data, expected_output, policy_config, is_implemented : bool, expect_success: bool, input_data_format : str):
+    def __init__(self, input_data, expected_output, policy_config, 
+                 is_implemented : bool, expect_success: bool, 
+                 input_data_format : str, expected_output_format : str):
         self.input_data = input_data
         self.expected_output = expected_output
         self.policy_config = policy_config
@@ -18,8 +20,11 @@ class _TestCase:
         # true if test expected to succeed (return output bundle with no errors)
         self.expect_success = expect_success
 
+        # TODO make this an enum?
         # "HEX" or "BUNDLEARRAY"
         self.input_data_format = input_data_format
+        # "HEX" or "BUNDLEARRAY" or "ERR" or "NONE"
+        self.expected_output_format = expected_output_format
 
 
 class _TestSet:
