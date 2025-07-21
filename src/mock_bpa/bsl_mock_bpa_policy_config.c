@@ -450,9 +450,8 @@ void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy
     BSL_LOG_DEBUG("Successfully created policy registry of size: %d\n", registry.registry_count);
 }
 
-void mock_bpa_key_registry_init(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy)
+void mock_bpa_key_registry_init(const char *pp_cfg_file_path)
 {
-    (void) policy;
 
     json_t *root;
     json_error_t err;
@@ -513,6 +512,24 @@ void mock_bpa_key_registry_init(const char *pp_cfg_file_path, BSLP_PolicyProvide
         }
         const char *k_str = json_string_value(k);
         BSL_LOG_DEBUG("k: %s\n", k_str);
+
+        char cmd[100];
+        sprintf(cmd,"echo \"%s\" | basenc --decode --base64url | basenc --base16 --wrap=0", k_str);
+        FILE *pipe = popen(cmd, "r");
+        if (pipe == NULL)
+        {
+            BSL_LOG_ERR("Failed to establish pipe");
+            return;
+        }
+
+        uint8_t kstr_buf[1024];
+        while (fgets((char *) kstr_buf, sizeof(kstr_buf), pipe) != NULL)
+        {
+            BSL_LOG_DEBUG("%s", kstr_buf);
+            //BSL_Crypto_AddRegistryKey(atoi(kid_str), kstr_buf, sizeof(kstr_buf));
+        }
+        pclose(pipe);
+
     }
 
 }
