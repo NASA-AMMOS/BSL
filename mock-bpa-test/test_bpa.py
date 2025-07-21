@@ -52,12 +52,15 @@ class TestAgent(unittest.TestCase):
             policy_config = policy_config[index + 2:]
             LOGGER.info('Using policy config %s for %s', policy_config, self._testMethodName)
 
+        key_set="src/mock_bpa/keysettest.json"
+
         args = [
             'bash', 'build.sh', 'run', 'build/default/src/mock_bpa/bsl-mock-bpa',
             '-e', 'ipn:1.2',
             '-u', 'localhost:4556', '-r', 'localhost:14556',
             '-o', 'localhost:24556', '-a', 'localhost:34556',
-            '-p', policy_config
+            '-p', policy_config,
+            '-k', key_set
         ]
         self._agent = CmdRunner(args, stderr=subprocess.STDOUT)
 
