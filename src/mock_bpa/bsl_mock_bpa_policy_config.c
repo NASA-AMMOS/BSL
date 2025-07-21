@@ -92,7 +92,8 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     json_error_t err;
 
     root = json_load_file(pp_cfg_file_path, 0, &err);
-    if (!root) {
+    if (!root) 
+    {
         BSL_LOG_ERR("JSON error: line %d: %s\n", err.line, err.text);
         json_decref(root);
         return;
@@ -100,15 +101,17 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
 
     // policyrule attr 
     json_t *policyrule = json_object_get(root, "policyrule");
-    if (!policyrule || !json_is_object(policyrule)) {
+    if (!policyrule || !json_is_object(policyrule)) 
+    {
         BSL_LOG_ERR("Missing \"policyrule\" \n");
+        return;
     }
 
     // filter attr 
     json_t *filter = json_object_get(policyrule, "filter");
     BSL_LOG_DEBUG("filter:\n");
-    if (filter && json_is_object(filter)) {
-
+    if (filter && json_is_object(filter)) 
+    {
         // Get rule_id
         json_t *rule_id = json_object_get(filter, "rule_id");
         if (!rule_id)
@@ -445,4 +448,71 @@ void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy
         
     }
     BSL_LOG_DEBUG("Successfully created policy registry of size: %d\n", registry.registry_count);
+}
+
+void mock_bpa_key_registry_init(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy)
+{
+    (void) policy;
+
+    json_t *root;
+    json_error_t err;
+
+    BSL_LOG_INFO("Reading keys from %s", pp_cfg_file_path);
+    root = json_load_file(pp_cfg_file_path, 0, &err);
+    if (!root) 
+    {
+        BSL_LOG_ERR("JSON error: line %d: %s\n", err.line, err.text);
+        json_decref(root);
+        return;
+    }
+
+    json_t *keys = json_object_get(root, "keys");
+    if (!keys || !json_is_array(keys)) 
+    {
+        BSL_LOG_ERR("Missing \"keys\" \n");
+        return;
+    }
+
+    size_t n = json_array_size(keys);
+    printf("Found %zu key objects\n\n", n);
+
+    for (size_t i = 0; i < n; ++i) {
+        json_t *key_obj = json_array_get(keys, i);
+        if (!json_is_object(key_obj))
+        {
+            continue;
+        }
+
+        json_t *kty = json_object_get(key_obj, "kty");
+        if (!kty) 
+        {
+            BSL_LOG_ERR("Missing \"kty\" \n");
+            continue;
+        }
+
+        if (0 != strcmp("oct", json_string_value(kty)))
+        {
+            BSL_LOG_ERR("Not a symmetric key set\n");
+            continue;
+        }
+
+        json_t *kid = json_object_get(key_obj, "kid");
+        if (!kid) 
+        {
+            BSL_LOG_ERR("Missing \"kid\" \n");
+            continue;
+        }
+        const char *kid_str = json_string_value(kid);
+        BSL_LOG_DEBUG("kid: %s\n", kid_str);
+
+        json_t *k = json_object_get(key_obj, "k");
+        if (!k)
+        {
+            BSL_LOG_ERR("Missing \"kid\" \n");
+            continue;
+        }
+        const char *k_str = json_string_value(k);
+        BSL_LOG_DEBUG("k: %s\n", k_str);
+    }
+
 }

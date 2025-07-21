@@ -143,8 +143,8 @@ def _add_tests(new_tests : _TestSet):
         return cls
     return decorator
 
-@_add_tests(_RequirementsCases())
-#@_add_tests(_TestData())
+#@_add_tests(_RequirementsCases())
+@_add_tests(_TestData())
 #@_add_tests(_CCSDS_Cases())
 class TestMockBPA(TestAgent):
     pass
