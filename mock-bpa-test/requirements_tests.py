@@ -23,7 +23,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # policy to accept both the blocks
-            policy_config = BIB_AND_BCB_ACCEPTOR,
+            # policy_config = BIB_AND_BCB_ACCEPTOR,
+            policy_config = '0x86,0x87',
             is_implemented = True,
             expect_success = True,
             input_data_format = "BUNDLEARRAY",
@@ -47,7 +48,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # Policy to add a BIB
-            policy_config = BIB_SOURCE,
+            # policy_config = BIB_SOURCE,
+            policy_config = '0x06',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -70,7 +72,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # Policy to accept that BIB
-            policy_config = BIB_ACCEPTOR,
+            # policy_config = BIB_ACCEPTOR,
+            policy_config = '0x86',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -93,7 +96,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # Policy to add a BIB
-            policy_config = BIB_SOURCE,
+            # policy_config = BIB_SOURCE,
+            policy_config = '0x06',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -117,7 +121,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # policy to verify that BIB
-            policy_config = BIB_VERIFIER,
+            #policy_config = BIB_VERIFIER,
+            policy_config = '0x46',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -163,7 +168,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
             ],
             # 
-            policy_config = POLICY_UNDEFINED,
+            #policy_config = POLICY_UNDEFINED,
+            policy_config = '0x86',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -183,7 +189,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
             ],
             # 
-            policy_config = BIB_SOURCE,
+            # policy_config = BIB_SOURCE,
+            policy_config = '0x06',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -203,7 +210,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
             ],
             # 
-            policy_config = BIB_VERIFIER,
+            #policy_config = BIB_VERIFIER,
+            policy_config = '0x46',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -221,7 +229,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # 
-            policy_config = BIB_ACCEPTOR,
+            # policy_config = BIB_ACCEPTOR,
+            policy_config = '0x86',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -245,7 +254,8 @@ class _RequirementsCases(_TestSet):
             # No output because it was deleted, logs to indicate deletion.
             expected_output = (NO_OUTPUT, DELETION),
             # policy to verify the BIB and delete target if failed.
-            policy_config = BIB_VERIFIER,
+            #policy_config = BIB_VERIFIER,
+            policy_config = '0x5A',
             is_implemented = False,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -267,7 +277,8 @@ class _RequirementsCases(_TestSet):
             # No output because it was deleted, logs to indicate deletion.
             expected_output = (NO_OUTPUT, DELETION),
             # policy to verify the BIB and delete bundle if failed.
-            policy_config = BIB_VERIFIER,
+            # policy_config = BIB_VERIFIER,
+            policy_config = '0x66',
             is_implemented = False,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -291,7 +302,8 @@ class _RequirementsCases(_TestSet):
             expected_output = [
 
             ],
-            policy_config = BIB_AND_BCB_SOURCE,
+            # policy_config = BIB_AND_BCB_SOURCE,
+            policy_config = '0x06,0x07',
             is_implemented = False,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -316,7 +328,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             # 
-            policy_config = BIB_SOURCE,
+            # policy_config = BIB_SOURCE,
+            policy_config = '0x06',
             is_implemented = False,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -340,7 +353,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             # 
-            policy_config = POLICY_UNDEFINED,
+            # policy_config = POLICY_UNDEFINED,
+            policy_config = '0x86',
             is_implemented = False, 
             expect_success = True,
             input_data_format = "BUNDLEARRAY",
@@ -367,7 +381,8 @@ class _RequirementsCases(_TestSet):
                 [11, 2, 0, 0, bytes.fromhex('8101010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
-            policy_config = BIB_SOURCE,
+            # policy_config = BIB_SOURCE,
+            policy_config = '0x06',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -383,7 +398,8 @@ class _RequirementsCases(_TestSet):
                 [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
                 [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
-            policy_config = BCB_SOURCE,
+            # policy_config = BCB_SOURCE,
+            policy_config = '0x07',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -405,7 +421,8 @@ class _RequirementsCases(_TestSet):
 
             ],
             # 
-            policy_config = POLICY_UNDEFINED,
+            # policy_config = POLICY_UNDEFINED,
+            policy_config = '0x86',
             is_implemented = False,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -427,7 +444,8 @@ class _RequirementsCases(_TestSet):
 
             ],
             # 
-            policy_config = POLICY_UNDEFINED,
+            # policy_config = POLICY_UNDEFINED,
+            policy_config = '0x86',
             is_implemented = False,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -446,7 +464,8 @@ class _RequirementsCases(_TestSet):
             # Confirm that the operations fails and returns a Reason Code 8.
             expected_output = (FAILURE_CODE, 8),
             # Execute as a BIB acceptor.
-            policy_config = BIB_VERIFIER,
+            # policy_config = BIB_VERIFIER,
+            policy_config = '0x46',
             is_implemented = False,
 			expect_success = False,
 			input_data_format = "HEX",
@@ -468,7 +487,8 @@ class _RequirementsCases(_TestSet):
             ],
             # Ensure that the host interface returns an error code (since the block does not exist). Confirm that a log indicating this error is created.
             expected_output = (FAILURE_CODE, 0), # doesn't specify an error code
-            policy_config = BIB_VERIFIER,
+            # policy_config = BIB_VERIFIER,
+            policy_config = '0x46',
             is_implemented = False,
 			expect_success = False,
 			input_data_format = "BUNDLEARRAY",
@@ -492,7 +512,8 @@ class _RequirementsCases(_TestSet):
             # confirm that no further security operation processing was taken (specifically, no BIB operations should be seen).
             expected_output = (FAILURE_CODE, 0), # doesn't specify an error code
             # 
-            policy_config = BCB_ACCEPTOR,
+            # policy_config = BCB_ACCEPTOR,
+            policy_config = '0x87',
             is_implemented = False,
 			expect_success = False,
 			input_data_format = "BUNDLEARRAY",
@@ -515,7 +536,8 @@ class _RequirementsCases(_TestSet):
             # Result asserts there are three blocks present, each with the expected type.
             # TODO ?
             expected_output = [],
-            policy_config = POLICY_UNDEFINED,
+            # policy_config = POLICY_UNDEFINED,
+            policy_config = '0x87',
             is_implemented = False,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -533,7 +555,8 @@ class _RequirementsCases(_TestSet):
             # Test code asserts there are three blocks present, each with the expected id.
             # TODO ?
             expected_output = [],
-            policy_config = POLICY_UNDEFINED,
+            # policy_config = POLICY_UNDEFINED,
+            policy_config = '0x86',
             is_implemented = False,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -559,7 +582,8 @@ class _RequirementsCases(_TestSet):
                 [11, 2, 0, 0, bytes.fromhex('8101010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
-            policy_config = BIB_VERIFIER,
+            # policy_config = BIB_VERIFIER,
+            policy_config = '0x46',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -581,7 +605,8 @@ class _RequirementsCases(_TestSet):
                 [11, 2, 0, 0, bytes.fromhex('8101010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
-            policy_config = BIB_SOURCE,
+            # policy_config = BIB_SOURCE,
+            policy_config = '0x06',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -604,7 +629,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # 
-            policy_config = BIB_ACCEPTOR,
+            # policy_config = BIB_ACCEPTOR,
+            policy_config = '0x96',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
@@ -628,7 +654,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             # 
-            policy_config = BCB_SOURCE,
+            # policy_config = BCB_SOURCE,
+            policy_config = '0x07',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = "BUNDLEARRAY",
