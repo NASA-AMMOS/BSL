@@ -62,7 +62,7 @@ BSL_Data_t BSLX_Bytestr_AsData(BSLX_Bytestr_t *self);
 
 typedef struct BSLX_BIB_s
 {
-    int64_t              key_id;
+    const char*          key_id;
     BSL_PrimaryBlock_t   primary_block;
     BSL_CanonicalBlock_t target_block;
     BSL_CanonicalBlock_t sec_block;
@@ -85,7 +85,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data);
 typedef struct BSLX_BCB_s
 {
     size_t   err_count;
-    uint64_t key_id;
+    const char* key_id;
 
     // Data wrappers and containers for borrowed and owned/allocated buffers
     // These will ALL be deinitialized at the end, so _Deinit MUST be called.

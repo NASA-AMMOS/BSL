@@ -111,7 +111,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
     memset(self, 0, sizeof(*self));
     self->sha_variant           = -1;
     self->integrity_scope_flags = -1;
-    self->key_id                = -1;
+    self->key_id                = "";
 
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
     {
@@ -124,10 +124,12 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
             int_val = BSL_SecParam_GetAsUInt64(param);
         }
 
-        if (param_id == BSL_SECPARAM_TYPE_INT_KEY_ID)
+        if (param_id == BSL_SECPARAM_TYPE_KEY_ID)
         {
-            assert(is_int);
-            self->key_id = int_val;
+            assert(!is_int);
+            BSL_Data_t res;
+            BSL_SecParam_GetAsBytestr(param, &res);
+            self->key_id = (char *) res.ptr;
         }
         else if (param_id == BSL_SECPARAM_TYPE_INT_FIXED_KEY)
         {

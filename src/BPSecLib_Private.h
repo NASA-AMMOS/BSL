@@ -627,6 +627,7 @@ enum BSL_SecParam_Types_e
     BSL_SECPARAM_TYPE_UNKNOWN = 0, ///< Inidcates parsed value not of expected type.
     BSL_SECPARAM_TYPE_INT64,       ///< Indicates value type is an unsigned integer.
     BSL_SECPARAM_TYPE_BYTESTR,     ///< Indicates the value type is a byte string.
+    BSL_SECPARAM_TYPE_STR
 };
 
 /** Defines supplementary Security Paramter type used internally by
@@ -639,7 +640,7 @@ typedef enum
     BSL_SECPARAM_TYPE_INT_STARTINDEX = 1000,
 
     /// @brief Used to pass in a key id found in the key registry.
-    BSL_SECPARAM_TYPE_INT_KEY_ID,
+    BSL_SECPARAM_TYPE_KEY_ID,
 
     /// @brief Used by tests to pass in a specific key bytestring
     BSL_SECPARAM_TYPE_INT_FIXED_KEY,
@@ -699,6 +700,14 @@ int BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t
  * @returns Negative on an error.
  */
 int BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value);
+
+/**
+ * @param self This Security Paramter
+ * @param param_id ID of the parameter
+ * @param value text string of the parameter
+ * @returns Negative on an error.
+ */
+int BSL_SecParam_InitStr(BSL_SecParam_t *self, uint64_t param_id, const char* value);
 
 /** Returns true when the value type is an integer.
  *
