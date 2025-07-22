@@ -410,7 +410,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, BSL_Data_t encoded_c
                 // This is a failure case - should more clearly return?
                 BSL_LOG_ERR("Unhandled case");
                 // NOLINTNEXTLINE
-                exit(1);
+                return BSL_ERR_DECODING;
             }
 
             const size_t item_end = QCBORDecode_Tell(&asbdec);
