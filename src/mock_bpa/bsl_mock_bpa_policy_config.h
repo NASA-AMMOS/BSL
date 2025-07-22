@@ -35,6 +35,7 @@
 #include <BPSecLib_Private.h>
 #include <policy_provider/SamplePolicyProvider.h>
 #include <security_context/rfc9173.h>
+#include <CryptoInterface.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,6 +67,8 @@ void mock_bpa_deinit_policy_config(void);
 void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy);
 
 void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy);
+
+void mock_bpa_key_registry_init(const char *pp_cfg_file_path);
 
 #ifdef __cplusplus
 } // extern C

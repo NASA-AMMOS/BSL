@@ -634,7 +634,7 @@ int main(int argc, char **argv)
     if (!retval)
     {
         int opt;
-        while ((opt = getopt(argc, argv, "ha:o:a:u:r:e:s:p:")) != -1)
+        while ((opt = getopt(argc, argv, "ha:o:a:u:r:e:s:p:k:")) != -1)
         {
             switch (opt)
             {
@@ -671,6 +671,9 @@ int main(int argc, char **argv)
 
                     // TODO real params
                     mock_bpa_handle_policy_config_from_json("src/mock_bpa/iontest1policyrule.json", policy_callbacks.user_data);
+                    break;
+                case 'k':
+                    mock_bpa_key_registry_init(optarg);
                     break;
                 default:
                     show_usage(argv[0]);
