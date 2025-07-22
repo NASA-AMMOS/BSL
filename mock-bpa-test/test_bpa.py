@@ -26,14 +26,14 @@ class TestAgent(unittest.TestCase):
 
     def __init__(self, methodName = "runTest"):
         super().__init__(methodName)
-        self.testdata = _TestData()
+        # self.testdata = _TestData()
         self.requirements_tests = _RequirementsCases()
-        self.ccsds_tests = _CCSDS_Cases()
+        #self.ccsds_tests = _CCSDS_Cases()
         self.pp_cfg_dict = {}
         for id, tc in self.requirements_tests.cases.items():
             self.pp_cfg_dict[id] = tc.policy_config
-        for id, tc in self.ccsds_tests.cases.items():
-             self.pp_cfg_dict[id] = tc.policy_config
+        # for id, tc in self.ccsds_tests.cases.items():
+        #     self.pp_cfg_dict[id] = tc.policy_config
 
     def setUp(self):
 
@@ -146,8 +146,8 @@ def _add_tests(new_tests : _TestSet):
         return cls
     return decorator
 
-#@_add_tests(_RequirementsCases())
-@_add_tests(_TestData())
+@_add_tests(_RequirementsCases())
+#@_add_tests(_TestData())
 #@_add_tests(_CCSDS_Cases())
 class TestMockBPA(TestAgent):
     pass
