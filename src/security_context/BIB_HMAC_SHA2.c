@@ -117,8 +117,8 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
     {
         const BSL_SecParam_t *param    = BSL_SecOper_GetParamAt(sec_oper, param_index);
         uint64_t              param_id = BSL_SecParam_GetId(param);
-        bool     is_int  = BSL_SecParam_IsInt64(param);
-        uint64_t int_val = -1;
+        bool                  is_int   = BSL_SecParam_IsInt64(param);
+        uint64_t              int_val  = -1;
         if (is_int)
         {
             int_val = BSL_SecParam_GetAsUInt64(param);
@@ -129,7 +129,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
             assert(!is_int);
             BSL_Data_t res;
             BSL_SecParam_GetAsBytestr(param, &res);
-            self->key_id = (char *) res.ptr;
+            self->key_id = (char *)res.ptr;
         }
         else if (param_id == BSL_SECPARAM_TYPE_INT_FIXED_KEY)
         {
@@ -205,8 +205,7 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
         // Now begin process of computing IPPT
         if (self->integrity_scope_flags & RFC9173_BIB_INTEGSCOPEFLAG_INC_PRIM)
         {
-            UsefulBufC prim_encoded = { .ptr = self->primary_block.cbor,
-                                        .len = self->primary_block.cbor_len };
+            UsefulBufC prim_encoded = { .ptr = self->primary_block.cbor, .len = self->primary_block.cbor_len };
             QCBOREncode_AddEncoded(&encoder, prim_encoded);
         }
         if (self->integrity_scope_flags & RFC9173_BIB_INTEGSCOPEFLAG_INC_TARGET_HDR)
@@ -269,7 +268,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
     }
 
     void  *hmac_result_ptr = (void *)&self->hmac_result_val._bytes[0];
-    size_t hmaclen = 0;
+    size_t hmaclen         = 0;
     if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, &hmac_result_ptr, &hmaclen)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_finalize failed with code %d", res);

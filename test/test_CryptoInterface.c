@@ -248,7 +248,7 @@ TEST_MATRIX([ 0, 1 ], ["2"], [BSL_CRYPTO_SHA_384], ["7768617420646f2079612077616
 TEST_MATRIX([ 0, 1 ], ["2"], [BSL_CRYPTO_SHA_512], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
             ["164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34"
              "d4a6b4b636e070a38bce737"])
-void test_hmac_in(int input_case, const char* keyid, BSL_CryptoCipherSHAVariant_e sha_var, const char *plaintext_in,
+void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_e sha_var, const char *plaintext_in,
                   char *expected)
 {
     string_t exp_txt;

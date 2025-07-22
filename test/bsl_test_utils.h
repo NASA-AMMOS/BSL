@@ -276,7 +276,7 @@ typedef struct
     BSL_SecParam_t test_key_id;
 } RFC9173_A1_Params;
 
-RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char* key_id);
+RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id);
 
 typedef struct
 {
@@ -291,7 +291,7 @@ typedef struct
     uint64_t       scope_flag;
 } RFC9173_AppendixA2_BCB;
 
-RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A2Params(const char* key_id);
+RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A2Params(const char *key_id);
 
 typedef struct BSL_TestContext_s
 {

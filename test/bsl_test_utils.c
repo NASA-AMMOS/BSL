@@ -220,7 +220,7 @@ BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text)
     return pat;
 }
 
-RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char* key_id)
+RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id)
 {
     RFC9173_A1_Params params = { 0 };
     BSL_SecParam_InitInt64(&params.sha_variant, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key,

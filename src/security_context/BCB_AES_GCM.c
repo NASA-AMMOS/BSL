@@ -154,9 +154,9 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     // This should have resized the buffer downward
     CHK_PROPERTY(content_enc_key.len < 2048);
 
-    BSL_Cipher_t cipher = { 0 };
-    int cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, aes_mode, bcb_context->iv.ptr, (int)bcb_context->iv.len,
-                                      content_enc_key);
+    BSL_Cipher_t cipher      = { 0 };
+    int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, aes_mode, bcb_context->iv.ptr,
+                                               (int)bcb_context->iv.len, content_enc_key);
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
@@ -474,7 +474,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
                 assert(!is_int);
                 BSL_Data_t res;
                 assert(BSL_SUCCESS == BSL_SecParam_GetAsBytestr(param, &res));
-                bcb_context->key_id = (char *) res.ptr;
+                bcb_context->key_id = (char *)res.ptr;
                 BSL_LOG_DEBUG("Param[%lu]: KEY_ID value = %s", param_id, bcb_context->key_id);
                 break;
             }

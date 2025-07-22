@@ -515,7 +515,7 @@ typedef enum
 } BSL_BundleCtrlFlag_e;
 
 /** @brief Calls the host interface to get a bundle primary block information.abort
- * 
+ *
  * @param[in]       bundle Bundle context
  * @param[out]   result_primary_block Non-null pointer to result which gets populated on a zero return code.
  * @returns 0 on success, negative on error
@@ -523,17 +523,17 @@ typedef enum
 int BSL_BundleCtx_GetBundleMetadata(const BSL_BundleRef_t *bundle, BSL_PrimaryBlock_t *result_primary_block);
 
 /** @brief Returns an array in which each element contains the id of the corresponding block.abort
- * 
+ *
  * @param[in] bundle    Bundle context
  * @param[in] array_count   Number of elements in `block_id_index_array`
  * @param[out] block_id_index_array Array of `array_count` elements for results
  * @param[out] result_count Contains the number of elements put into the array
  */
-int BSL_BundleCtx_GetBlockIds(const BSL_BundleRef_t *bundle, size_t array_count,
-                              uint64_t block_ids_array[array_count], size_t *result_count);
+int BSL_BundleCtx_GetBlockIds(const BSL_BundleRef_t *bundle, size_t array_count, uint64_t block_ids_array[array_count],
+                              size_t *result_count);
 
 /** @brief Returns information about the bundle Canonical block
- * 
+ *
  * @param[in] bundle Context bundle
  * @param[in] block_num The number of the bundle canonical block we seek information on
  * @param[out] result_block Pointer to allocated memory which contains the results of the query.
@@ -551,7 +551,7 @@ int BSL_BundleCtx_GetBlockMetadata(const BSL_BundleRef_t *bundle, uint64_t block
 int BSL_BundleCtx_CreateBlock(BSL_BundleRef_t *bundle, uint64_t block_type_code, uint64_t *block_num);
 
 /** @brief Requests the removal of a block from a bundle
- * 
+ *
  * @param[in] bundle    Context bundle
  * @param[in] block_num Block number to be removed
  * @returns 0 on success, negative on failure.
@@ -559,9 +559,9 @@ int BSL_BundleCtx_CreateBlock(BSL_BundleRef_t *bundle, uint64_t block_type_code,
 int BSL_BundleCtx_RemoveBlock(BSL_BundleRef_t *bundle, uint64_t block_num);
 
 /** @brief Requests the re-allocation of a block's BTSD, useful for BCB.
- * 
+ *
  * @note Uses semantics similar to memcpy.
- * 
+ *
  * @param[in] bundle Context bundle
  * @param[in] block_num Number of block requesting re-allocated of BTSD
  * @param[in] bytesize Size of new BTSD
@@ -707,7 +707,7 @@ int BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, uint64_t val
  * @param value text string of the parameter
  * @returns Negative on an error.
  */
-int BSL_SecParam_InitStr(BSL_SecParam_t *self, uint64_t param_id, const char* value);
+int BSL_SecParam_InitStr(BSL_SecParam_t *self, uint64_t param_id, const char *value);
 
 /** Returns true when the value type is an integer.
  *
@@ -1014,13 +1014,13 @@ size_t BSL_SecurityActionSet_Sizeof(void);
 void BSL_SecurityActionSet_Init(BSL_SecurityActionSet_t *self);
 
 /** @brief Increment a security failure for this action set
- * 
+ *
  * @param[in, out] self Pointer to this security action set.
  */
 void BSL_SecurityActionSet_IncrError(BSL_SecurityActionSet_t *self);
 
 /** @brief Returns count of failures after processing this action set
- * 
+ *
  * @param[in] self Pointer ot this security action set.
  * @returns Count of errors.
  */
@@ -1033,7 +1033,7 @@ size_t BSL_SecurityActionSet_CountErrors(const BSL_SecurityActionSet_t *self);
 void BSL_SecurityActionSet_Deinit(BSL_SecurityActionSet_t *self);
 
 /** @brief Append a security operation to the security action set
- * 
+ *
  * @param[in, out] self This security action set.
  * @param[in] sec_oper Security operation to include.
  * @returns 0 on success, negative on error
