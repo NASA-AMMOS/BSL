@@ -526,7 +526,8 @@ void mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         while (fgets((char *) kstr_buf, sizeof(kstr_buf), pipe) != NULL)
         {
             BSL_LOG_DEBUG("%s", kstr_buf);
-            //BSL_Crypto_AddRegistryKey(atoi(kid_str), kstr_buf, sizeof(kstr_buf));
+            // TODO change atoi once KIDs can be strings
+            BSL_Crypto_AddRegistryKey(atoi(kid_str), kstr_buf, sizeof(kstr_buf));
         }
         pclose(pipe);
 

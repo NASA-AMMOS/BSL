@@ -52,7 +52,7 @@ class TestAgent(unittest.TestCase):
             policy_config = policy_config[index + 2:]
             LOGGER.info('Using policy config %s for %s', policy_config, self._testMethodName)
 
-        key_set="src/mock_bpa/keysettest.json"
+        key_set="src/mock_bpa/key_set_1.json"
 
         args = [
             'bash', 'build.sh', 'run', 'build/default/src/mock_bpa/bsl-mock-bpa',
