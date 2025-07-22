@@ -207,6 +207,13 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         // long sc_id_l = json_integer_value(sc_id);
     }
 
+    // es_ref
+    json_t *es_ref = json_object_get(policyrule, "es_ref");
+    if (!es_ref || !json_is_string(es_ref))
+    {
+        BSL_LOG_DEBUG("NO ES REF");
+    }
+
     // spec attr
     json_t *spec = json_object_get(policyrule, "spec");
     if (spec && json_is_object(spec)) {
@@ -294,6 +301,49 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
                 const char *value_str = json_string_value(value);
                 
                 BSL_LOG_DEBUG("         - id: %s, value: %s\n", id_str, value_str);
+            }
+        }
+    }
+
+    // event set
+    json_t *event_set = json_object_get(root, "event_set");
+    if (event_set && json_is_object(event_set)) 
+    {
+        // es_ref
+        json_t *es_ref_es = json_object_get(policyrule, "es_ref");
+        if (!es_ref_es || !json_is_string(es_ref_es))
+        {
+            BSL_LOG_DEBUG("NO ES REF");
+        }
+
+        json_t *events = json_object_get(event_set, "events");
+        if (events && json_is_array(events)) 
+        {
+            size_t i, n = json_array_size(events);
+            BSL_LOG_DEBUG("num events (%zu):\n", n);
+            for (i = 0; i < n; ++i) {
+                json_t *entry = json_array_get(events, i);
+                if (!json_is_object(entry)) continue;
+                
+                json_t *event_id = json_object_get(entry, "event_id");
+                if (!event_id) continue;
+                const char *event_id_str = json_string_value(event_id);
+
+                BSL_LOG_DEBUG("EVENT ID FOUND: %s", event_id_str);
+
+                json_t *actions = json_object_get(entry, "actions");
+                if (actions && json_is_array(actions)) 
+                {
+                    size_t j, m = json_array_size(actions);
+                    BSL_LOG_DEBUG("num actions in %s (%zu):\n", event_id_str, m);
+                    for (j = 0; j < m; ++j) {
+                        json_t *act = json_array_get(actions, j);
+                        if (!json_is_string(act)) continue;
+
+                        const char *act_str = json_string_value(act);
+                        BSL_LOG_DEBUG("Action of %s: %s", event_id_str, act_str);
+                    }
+                }
             }
         }
     }
