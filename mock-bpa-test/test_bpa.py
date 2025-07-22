@@ -33,7 +33,7 @@ class TestAgent(unittest.TestCase):
         for id, tc in self.requirements_tests.cases.items():
             self.pp_cfg_dict[id] = tc.policy_config
         for id, tc in self.ccsds_tests.cases.items():
-             self.pp_cfg_dict[id] = tc.policy_config
+            self.pp_cfg_dict[id] = tc.policy_config
 
     def setUp(self):
 

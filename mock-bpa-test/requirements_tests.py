@@ -393,6 +393,7 @@ class _RequirementsCases(_TestSet):
         # BSL_28
         # Supporting BCB AES GCM
         # The purpose of this test case is to verify that the BSL can support the use of the BCB-AES-GCM default security context [RFC 9173] for BCB-confidentiality security operations.
+        #
         # TODO 
         self.cases["BSL_28"] = (_TestCase(
             # Input is CBOR provided in Appendix A2 for BCB https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.2
@@ -414,6 +415,7 @@ class _RequirementsCases(_TestSet):
         # BSL_29
         # Supporting BIB HMAC SHA
         # The purpose of this test case is to verify that the BSL can support the use of the BIB-HMAC-SHA default security context [RFC 9173] for bib-integrity security operations.
+        #
         # TODO
         self.cases["BSL_29"] = (_TestCase(
             # CBOR provided in RFC 9173 Appendix A1 https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.1.3 (for BIB)
@@ -500,6 +502,7 @@ class _RequirementsCases(_TestSet):
         # BSL_43
         # Query Existing Block Types
         # The purpose of this test case is to verify that the BSL can use a BPA interface to query what block types exist in a bundle.
+        #
         #TODO should this be  a unit test?
         self.cases["BSL_43"] = (_TestCase(
             # Create a bundle using the vector in RFC9173 Appendix A1.4. 
@@ -522,6 +525,7 @@ class _RequirementsCases(_TestSet):
         # BSL_44
         # Query Block Numbers
         # The purpose of this test case is to verify that the BSL can use a BPA interface to query what block numbers are present in a bundle.
+        #
         # TODO should this be  a unit test?
         self.cases["BSL_44"] = (_TestCase(
             # Create a bundle using the vector in RFC9173 Appendix A1.4. Then the BSL will use the BPA host interface to show that there is block 0, 1, and 2 present.
@@ -539,6 +543,7 @@ class _RequirementsCases(_TestSet):
         # BSL_45
         # Request BPA Block Contents
         # The purpose of this test case is to verify that the BSL can use a BPA interface to request, from the BPA, block contents associated with a specific block.
+        #
         # TODO is my interpretation of this language correct?
         self.cases["BSL_45"] = (_TestCase(
             # Create a bundle using the vector in RFC9173 Appendix A1.4. Then the BSL will use the BPA to retrieve the block header fields and BTSD.
