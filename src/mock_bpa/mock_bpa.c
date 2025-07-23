@@ -70,6 +70,7 @@ static struct sockaddr_in6                  under_addr  = { .sin6_family = 0 };
 static struct sockaddr_in6                  router_addr = { .sin6_family = 0 };
 static int                                  tx_notify_r, tx_notify_w;
 static BSL_HostEID_t                        sec_eid;
+static bool                                 policy_configured = false;
 
 static int ingest_netaddr(struct sockaddr_in6 *addr, const char *optarg)
 {
@@ -671,6 +672,8 @@ int main(int argc, char **argv)
 
                     // TODO real params
                     // mock_bpa_handle_policy_config_from_json("src/mock_bpa/iontest1policyrule.json", policy_callbacks.user_data);
+
+                    policy_configured = true;
                     break;
                 case 'k':
                     if(mock_bpa_key_registry_init(optarg))
@@ -717,9 +720,12 @@ int main(int argc, char **argv)
         retval = bpa_exec();
     }
 
+    if(policy_configured) {
+        mock_bpa_deinit_policy_config();
+    }
+
     if (retval != 1)
     {
-        mock_bpa_deinit_policy_config();
         bpa_cleanup();
     }
 
