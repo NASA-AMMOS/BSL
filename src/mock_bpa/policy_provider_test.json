@@ -5,7 +5,8 @@
       "rule_id": "1",
       "role": "s",
       "src": "ipn:2.1",
-      "tgt": 1
+      "tgt": 1,
+      "loc": "appin"
     },
     "spec": {
       "svc": "bib-integrity",

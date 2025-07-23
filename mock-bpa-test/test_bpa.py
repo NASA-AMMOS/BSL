@@ -28,12 +28,12 @@ class TestAgent(unittest.TestCase):
         super().__init__(methodName)
         # self.testdata = _TestData()
         self.requirements_tests = _RequirementsCases()
-        #self.ccsds_tests = _CCSDS_Cases()
+        self.ccsds_tests = _CCSDS_Cases()
         self.pp_cfg_dict = {}
         for id, tc in self.requirements_tests.cases.items():
             self.pp_cfg_dict[id] = tc.policy_config
-        # for id, tc in self.ccsds_tests.cases.items():
-        #     self.pp_cfg_dict[id] = tc.policy_config
+        for id, tc in self.ccsds_tests.cases.items():
+            self.pp_cfg_dict[id] = tc.policy_config
 
     def setUp(self):
 
@@ -111,10 +111,6 @@ class TestAgent(unittest.TestCase):
 
     def _single_test(self, testcase : _TestCase):
 
-        # TODO handle failures/no output
-        if not testcase.expect_success:
-            self.assertTrue(False)
-
         # start mock BPA using specified policy config
         self._start()
 
@@ -122,8 +118,12 @@ class TestAgent(unittest.TestCase):
         expected_rx = testcase.expected_output if (testcase.expected_output == "HEX") else self._encode(testcase.expected_output)
         self._ul_sock.send(tx_data)
         LOGGER.debug('waiting')
-        rx_data = self._wait_for(self._ul_sock)
 
+        try:
+            rx_data = self._wait_for(self._ul_sock)
+        except AssertionError:
+            self.assertEqual("NONE", testcase.expected_output_format)
+                
         LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
         LOGGER.info('\nReceived data:\n%s\n', binascii.hexlify(rx_data))
 
@@ -146,8 +146,8 @@ def _add_tests(new_tests : _TestSet):
         return cls
     return decorator
 
-@_add_tests(_RequirementsCases())
-#@_add_tests(_TestData())
-#@_add_tests(_CCSDS_Cases())
+#@_add_tests(_RequirementsCases())
+@_add_tests(_TestData())
+@_add_tests(_CCSDS_Cases())
 class TestMockBPA(TestAgent):
     pass

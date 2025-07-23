@@ -78,15 +78,15 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     mock_bpa_init_policy_config();
 
     uint32_t sec_block_type;
-    uint32_t sec_role;
+    uint32_t sec_ctx_id;
+    BSL_SecRole_e sec_role;
     uint32_t bundle_block_type;
     uint32_t policy_action_type;
-    
-    (void) policy;
-    (void) sec_block_type;
-    (void) sec_role;
-    (void) bundle_block_type;
-    (void) policy_action_type;
+    BSL_PolicyLocation_e policy_loc_enum;
+
+    const char *src_str = "";
+    const char *dest_str = "";
+    const char *sec_src_str = "";
 
     json_t *root;
     json_error_t err;
@@ -154,11 +154,6 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             return;
         }
 
-        // check EIDs
-        const char *src_str;
-        const char *dest_str;
-        const char *sec_src_str;
-
         json_t *src = json_object_get(filter, "src");
         if (src)
         {
@@ -201,10 +196,46 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         BSL_LOG_DEBUG("     tgt    : %" JSON_INTEGER_FORMAT "\n", tgt_l);
 
         bundle_block_type = tgt_l;
-    
-        // duplicate from spec attr? (ION)
-        // json_t *sc_id = json_object_get(filter, "sc_id");
-        // long sc_id_l = json_integer_value(sc_id);
+
+        // check loc (sec location )
+        json_t *loc = json_object_get(filter, "loc");
+        if (!loc)
+        {
+            BSL_LOG_ERR("No loc\n");
+            json_decref(root);
+            return;
+        }
+        const char *loc_str = json_string_value(loc);
+        BSL_LOG_DEBUG("     loc    : %s\n", loc_str);
+
+        if (strcmp(loc_str, "appin"))
+        {
+            policy_loc_enum = BSL_POLICYLOCATION_APPIN;
+        }
+        else if (strcmp(loc_str, "appout"))
+        {
+            policy_loc_enum = BSL_POLICYLOCATION_APPOUT;
+        } 
+        else if (strcmp(loc_str, "clin"))
+        {
+            policy_loc_enum = BSL_POLICYLOCATION_CLIN;
+        } 
+        else if (strcmp(loc_str, "clout"))
+        {
+            policy_loc_enum = BSL_POLICYLOCATION_CLOUT;
+        }
+        else
+        {
+            BSL_LOG_ERR("INVALID POLICY LOCATION %s\n", loc_str);
+            json_decref(root);
+            return;
+        }
+  
+        json_t *sc_id = json_object_get(filter, "sc_id");
+        long sc_id_l = json_integer_value(sc_id);
+        BSL_LOG_DEBUG("     scid    : %" JSON_INTEGER_FORMAT "\n", sc_id_l);
+
+        sec_ctx_id = sc_id_l;
     }
 
     // es_ref

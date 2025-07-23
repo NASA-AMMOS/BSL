@@ -27,7 +27,8 @@ class _CCSDS_Cases(_TestSet):
 
                     output = t['outgoing_bundle']['hex'][2:].replace(" ", "")[:-1]
                     b_output = binascii.unhexlify(output)
-                    cbor_output = cbor2.loads(b_output)
+                    output = cbor2.loads(b_output)
+                    output_format = "BUNDLEARRAY"
                 else:
                     try:
                         input = t['incoming_bundle']['hex'][2:].replace(" ", "")[:-1]
@@ -37,15 +38,16 @@ class _CCSDS_Cases(_TestSet):
                         print(f'CCSDS | Test {t["test"]}: Bundle hex not specified, TODO yaml should be filled in.')
                         continue
 
-                    cbor_output = (FAILURE_CODE, 0)
+                    output = (FAILURE_CODE, 0)
+                    output_format = "ERR"
                     
                 self.cases['ccsds_' + str(t['test'])] = _TestCase(
                     input_data = cbor_input,
-                    expected_output = cbor_output,
+                    expected_output = output,
                     policy_config = "1", #TODO
                     expect_success = outcome,
                     is_implemented = True,
                     input_data_format = "BUNDLEARRAY",
-                    expected_output_format= "BUNDLEARRAY"
+                    expected_output_format = output_format
                 )
                 print(f'CCSDS | Adding test {t["test"]}...')
