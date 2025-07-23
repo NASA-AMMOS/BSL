@@ -70,8 +70,9 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
     for (size_t index = 0; index < BSLB_SecResultList_size(self->results); index++)
     {
         BSL_SecResult_t *sec_result = BSLB_SecResultList_get(self->results, index);
-        BSL_Log_DumpAsHexString((uint8_t*)str, sizeof(str), sec_result->_bytes, sec_result->_bytelen);
-        BSL_LOG_INFO("ASB  Result[%lu]: tgt=%lu, id=%lu %s", index, sec_result->target_block_num, sec_result->result_id, str);
+        BSL_Log_DumpAsHexString((uint8_t *)str, sizeof(str), sec_result->_bytes, sec_result->_bytelen);
+        BSL_LOG_INFO("ASB  Result[%lu]: tgt=%lu, id=%lu %s", index, sec_result->target_block_num, sec_result->result_id,
+                     str);
     }
 }
 
@@ -409,7 +410,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, BSL_Data_t encoded_c
                 // This is a failure case - should more clearly return?
                 BSL_LOG_ERR("Unhandled case");
                 // NOLINTNEXTLINE
-                exit(1); 
+                exit(1);
             }
 
             const size_t item_end = QCBORDecode_Tell(&asbdec);
