@@ -201,8 +201,23 @@ void suiteSetUp(void)
     uint8_t test1[20] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
                           0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b };
     uint8_t test2[4]  = { 0x4a, 0x65, 0x66, 0x65 };
+    uint8_t test7[131] = {  0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+                            0xaa };
     BSL_Crypto_AddRegistryKey(1, test1, 20);
     BSL_Crypto_AddRegistryKey(2, test2, 4);
+    BSL_Crypto_AddRegistryKey(7, test7, 131);
 
     uint8_t test_128[16] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
                              0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b };
@@ -248,6 +263,14 @@ TEST_MATRIX([ 0, 1 ], [2], [BSL_CRYPTO_SHA_384], ["7768617420646f2079612077616e7
 TEST_MATRIX([ 0, 1 ], [2], [BSL_CRYPTO_SHA_512], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
             ["164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34"
              "d4a6b4b636e070a38bce737"])
+
+// Test vector 7
+TEST_MATRIX([ 0, 1 ], [7], [BSL_CRYPTO_SHA_256], ["5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e"],
+            ["9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2"])
+TEST_MATRIX([ 0, 1 ], [7], [BSL_CRYPTO_SHA_384], ["5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e"],
+            ["6617178e941f020d351e2f254e8fd32c602420feb0b8fb9adccebb82461e99c5a678cc31e799176d3860e6110c46523e"])
+TEST_MATRIX([ 0, 1 ], [7], [BSL_CRYPTO_SHA_512], ["5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e"],
+            ["e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58"])
 void test_hmac_in(int input_case, uint64_t keyid, BSL_CryptoCipherSHAVariant_e sha_var, const char *plaintext_in,
                   char *expected)
 {
@@ -313,6 +336,79 @@ void test_hmac_in(int input_case, uint64_t keyid, BSL_CryptoCipherSHAVariant_e s
     BSL_Data_Deinit(&pt_in_data);
     string_clear(exp_txt);
     string_clear(pt_txt);
+}
+
+TEST_CASE(100, BSL_CRYPTO_SHA_256, "abc123", 1)
+TEST_CASE(1, 999, "abc123", 1)
+TEST_CASE(1, BSL_CRYPTO_SHA_256, "abc123", -1)
+void test_for_failure_hmac(uint64_t keyid, BSL_CryptoCipherSHAVariant_e sha_var, const char *plaintext_in, const int point_of_failure)
+{
+    string_t pt_txt;
+    string_init_set_str(pt_txt, plaintext_in);
+    BSL_Data_t pt_in_data;
+    BSL_Data_Init(&pt_in_data);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&pt_in_data, pt_txt),
+                                  "BSL_TestUtils_DecodeBase16() failed");
+
+    int ret;
+
+    BSL_AuthCtx_t hmac;
+    ret = BSL_AuthCtx_Init(&hmac, keyid, sha_var);
+
+    if (1 == point_of_failure) // first checkpoint
+    {
+        TEST_ASSERT_NOT_EQUAL(0, ret);
+        goto deinit;
+    }
+    TEST_ASSERT_EQUAL(0, ret);
+
+    BSL_SeqReader_t reader;
+    BSL_SeqReader_InitFlat(&reader, pt_in_data.ptr, pt_in_data.len);
+    TEST_ASSERT_NOT_NULL(&reader);
+
+    ret = BSL_AuthCtx_DigestSeq(&hmac, &reader);
+    if (2 == point_of_failure) // second checkpoint
+    {
+        TEST_ASSERT_NOT_EQUAL(0, ret);
+        goto deinit;
+    }
+    TEST_ASSERT_EQUAL(0, ret);
+
+    int hmac_sz = 0;
+    switch (hmac.SHA_variant)
+    {
+        case BSL_CRYPTO_SHA_256:
+            hmac_sz = 32;
+            break;
+        case BSL_CRYPTO_SHA_384:
+            hmac_sz = 48;
+            break;
+        case BSL_CRYPTO_SHA_512:
+            hmac_sz = 64;
+            break;
+        default:
+            TEST_ABORT();
+    }
+
+    {
+        uint8_t hmac_buf[hmac_sz];
+        void   *hmac_buf_ptr = hmac_buf;
+        size_t  hmac_len;
+        ret = BSL_AuthCtx_Finalize(&hmac, &hmac_buf_ptr, &hmac_len);
+        if (3 == point_of_failure) // third checkpoint
+        {
+            TEST_ASSERT_NOT_EQUAL(0, ret);
+            goto deinit;
+        }
+        TEST_ASSERT_EQUAL(0, ret);
+    }
+    
+deinit:
+    TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Deinit(&hmac));
+
+    BSL_Data_Deinit(&pt_in_data);
+    string_clear(pt_txt);
+
 }
 
 /**
