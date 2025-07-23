@@ -450,9 +450,10 @@ void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy
     BSL_LOG_DEBUG("Successfully created policy registry of size: %d\n", registry.registry_count);
 }
 
-void mock_bpa_key_registry_init(const char *pp_cfg_file_path)
+int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
 {
 
+    int retval = 0;
     json_t *root;
     json_error_t err;
 
@@ -462,14 +463,14 @@ void mock_bpa_key_registry_init(const char *pp_cfg_file_path)
     {
         BSL_LOG_ERR("JSON error: line %d: %s\n", err.line, err.text);
         json_decref(root);
-        return;
+        return 1;
     }
 
     json_t *keys = json_object_get(root, "keys");
     if (!keys || !json_is_array(keys)) 
     {
         BSL_LOG_ERR("Missing \"keys\" \n");
-        return;
+        return 1;
     }
 
     size_t n = json_array_size(keys);
@@ -519,7 +520,7 @@ void mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         if (pipe == NULL)
         {
             BSL_LOG_ERR("Failed to establish pipe");
-            return;
+            return 1;
         }
 
         uint8_t kstr_buf[1024];
@@ -527,10 +528,11 @@ void mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         {
             BSL_LOG_DEBUG("%s", kstr_buf);
             // TODO change atoi once KIDs can be strings
-            BSL_Crypto_AddRegistryKey(atoi(kid_str), kstr_buf, sizeof(kstr_buf));
+            retval = BSL_Crypto_AddRegistryKey(atoi(kid_str), kstr_buf, sizeof(kstr_buf));
         }
         pclose(pipe);
 
     }
 
+    return retval;
 }

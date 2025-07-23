@@ -670,10 +670,11 @@ int main(int argc, char **argv)
                     mock_bpa_handle_policy_config(optarg, policy_callbacks.user_data);
 
                     // TODO real params
-                    mock_bpa_handle_policy_config_from_json("src/mock_bpa/iontest1policyrule.json", policy_callbacks.user_data);
+                    // mock_bpa_handle_policy_config_from_json("src/mock_bpa/iontest1policyrule.json", policy_callbacks.user_data);
                     break;
                 case 'k':
-                    mock_bpa_key_registry_init(optarg);
+                    if(mock_bpa_key_registry_init(optarg))
+                        retval = 1;
                     break;
                 default:
                     show_usage(argv[0]);
