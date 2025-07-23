@@ -198,3 +198,9 @@ if(BUILD_PACKAGE)
 
     add_subdirectory(pkg)
 endif(BUILD_PACKAGE)
+
+add_custom_target(graphviz ALL
+    COMMAND ${CMAKE_COMMAND} "--graphviz=dep_chart.dot" .
+    COMMAND dot -Tpng dep_chart.dot -o dep_chart.png
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+)
