@@ -54,11 +54,13 @@ set_target_properties(bsl_mock_bpa
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
+target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib QCBOR::qcbor)
 target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_default_sc bsl_sample_pp)
 
 add_executable(bsl-mock-bpa)
 target_sources(bsl-mock-bpa PRIVATE mock_bpa.c)
-target_link_libraries(bsl-mock-bpa PUBLIC Threads::Threads bsl_mock_bpa bsl_dynamic bsl_default_sc bsl_sample_pp)
+target_link_libraries(bsl-mock-bpa PUBLIC bsl_mock_bpa bsl_dynamic bsl_default_sc bsl_sample_pp bsl_crypto)
+target_link_libraries(bsl-mock-bpa PUBLIC Threads::Threads)
 
 # Installation config
 install(
