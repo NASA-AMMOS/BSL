@@ -73,6 +73,7 @@ static void mock_bpa_init_registry(void) {
 }
 
 // TODO real params
+/*
 void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy)
 {
     mock_bpa_init_policy_config();
@@ -380,7 +381,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     }
     
     json_decref(root);
-}
+}*/
 
 static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t policy_bits, BSLP_PolicyProvider_t *policy) {
 
