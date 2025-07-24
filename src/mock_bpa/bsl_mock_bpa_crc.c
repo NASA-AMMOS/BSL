@@ -79,6 +79,7 @@ void mock_bpa_crc_apply(UsefulBuf buf, size_t begin, size_t end, BSL_BundleCRCTy
             *crc_enc = htonl(crc_val);
             break;
         }
+        case BSL_BUNDLECRCTYPE_NONE:
         default:
             break;
     }
@@ -124,6 +125,7 @@ bool mock_bpa_crc_check(UsefulBufC buf, size_t begin, size_t end, BSL_BundleCRCT
             same                   = (crc_val == orig_val);
             break;
         }
+        case BSL_BUNDLECRCTYPE_NONE:
         default:
             break;
     }
