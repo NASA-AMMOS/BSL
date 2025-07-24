@@ -447,6 +447,7 @@ void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy
         pt = strtok(NULL, ",");
         
     }
+    
     BSL_LOG_DEBUG("Successfully created policy registry of size: %d\n", registry.registry_count);
 }
 
