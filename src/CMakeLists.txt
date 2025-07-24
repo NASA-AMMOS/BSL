@@ -161,8 +161,6 @@ set_target_properties(bsl_dynamic
 target_link_libraries(bsl_dynamic PUBLIC bsl_front)
 target_link_libraries(bsl_dynamic PUBLIC MLIB::mlib)
 target_link_libraries(bsl_dynamic PUBLIC QCBOR::qcbor)
-target_link_libraries(bsl_dynamic PUBLIC Threads::Threads)
-
 
 add_subdirectory(mock_bpa)
 find_program(CLANG_FORMAT "clang-format")
