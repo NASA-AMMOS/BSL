@@ -87,7 +87,7 @@ jobs:
           path: testroot/usr/share/doc/bsl/
       - name: Decompress
         working-directory: testroot/usr/share/doc/bsl
-        run: tar -xf api.tar
+        run: tar -xf api.tar && rm api.tar
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
