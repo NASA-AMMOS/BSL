@@ -58,6 +58,23 @@ target_include_directories(
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/bsl>
 )
 
+# Crypto Library
+set(BSL_CRYPTO_C
+  ${CMAKE_CURRENT_SOURCE_DIR}/crypto/CryptoInterface.c
+)
+
+add_library(bsl_crypto)
+target_sources(bsl_crypto PUBLIC ${BSL_CRYPTO_C})
+add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h)
+target_compile_options(bsl_crypto PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes
+                       -Wmissing-prototypes -Wredundant-decls -Wcast-align
+                       -Wformat=2 -Wswitch-enum -Wlogical-op -Wduplicated-branches
+                       -fno-strict-aliasing -Werror=format-security -fno-common
+                       -Wstrict-aliasing=2)
+target_link_libraries(bsl_crypto PUBLIC bsl_front)
+target_link_libraries(bsl_crypto PUBLIC MLIB::mlib)
+target_link_libraries(bsl_crypto INTERFACE OpenSSL::Crypto)
+
 # Default Security Context library
 set(BSL_DEFAULT_SC_H
     ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.h
@@ -80,8 +97,8 @@ target_compile_options(bsl_default_sc PRIVATE -Wshadow -Wpointer-arith -Wstrict-
                        -fno-strict-aliasing -Werror=format-security -fno-common
                        -Wstrict-aliasing=2)
 target_link_libraries(bsl_default_sc PUBLIC bsl_front)
+target_link_libraries(bsl_default_sc PUBLIC bsl_crypto)
 target_link_libraries(bsl_default_sc PUBLIC QCBOR::qcbor)
-target_link_libraries(bsl_default_sc PUBLIC OpenSSL::SSL)
 
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
@@ -111,7 +128,6 @@ set(BSL_DYNAMIC_H
 
 set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/CryptoInterface.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_Data.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/HostInterface.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c
@@ -143,8 +159,6 @@ set_target_properties(bsl_dynamic
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_dynamic PUBLIC bsl_front)
-target_link_libraries(bsl_dynamic PUBLIC bsl_default_sc)
-target_link_libraries(bsl_dynamic PUBLIC bsl_sample_pp)
 target_link_libraries(bsl_dynamic PUBLIC MLIB::mlib)
 target_link_libraries(bsl_dynamic PUBLIC QCBOR::qcbor)
 target_link_libraries(bsl_dynamic PUBLIC Threads::Threads)
