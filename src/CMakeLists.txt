@@ -163,7 +163,7 @@ endif()
 
 # Installation config
 install(
-    TARGETS bsl_front bsl_dynamic
+    TARGETS bsl_front bsl_dynamic bsl_default_sc bsl_sample_pp bsl_crypto
     RUNTIME
         COMPONENT runtime
     LIBRARY
