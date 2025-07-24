@@ -29,7 +29,6 @@ option(BUILD_TESTING "Enable building unit tests" OFF)
 option(TEST_MEMCHECK "Enable test runtime memory checking" OFF)
 option(TEST_COVERAGE "Enable test runtime coverage logging" OFF)
 option(BUILD_PACKAGE "Enable building package outputs" OFF)
-option(GENERATE_GRAPHVIZ "Generate a dependency graph via Graphviz" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -200,10 +199,24 @@ if(BUILD_PACKAGE)
     add_subdirectory(pkg)
 endif(BUILD_PACKAGE)
 
-if(GENERATE_GRAPHVIZ)
-  add_custom_target(graphviz ALL
-      COMMAND ${CMAKE_COMMAND} "--graphviz=dep_chart.dot" .
-      COMMAND dot -Tpng dep_chart.dot -o dep_chart.png
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-  )
-endif(GENERATE_GRAPHVIZ)
+add_custom_command(
+    OUTPUT dep_chart.dot
+    COMMAND ${CMAKE_COMMAND} "--graphviz=dep_chart.dot" .
+)
+find_program(CMD_DOT NAMES dot)
+message(STATUS "Found dot at ${CMD_DOT}")
+if(CMD_DOT)
+    add_custom_command(
+        DEPENDS dep_chart.dot
+        OUTPUT dep_chart.svg
+        COMMAND ${CMD_DOT} -Tsvg dep_chart.dot -o dep_chart.svg
+    )
+    add_custom_command(
+        DEPENDS dep_chart.dot
+        OUTPUT dep_chart.png
+        COMMAND ${CMD_DOT} -Tpng dep_chart.dot -o dep_chart.png
+    )
+    add_custom_target(graphviz
+        DEPENDS dep_chart.svg dep_chart.png
+    )
+endif(CMD_DOT)
