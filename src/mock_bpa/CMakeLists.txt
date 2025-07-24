@@ -58,8 +58,7 @@ target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_default_sc bsl_sample_pp
 
 add_executable(bsl-mock-bpa)
 target_sources(bsl-mock-bpa PRIVATE mock_bpa.c)
-target_link_libraries(bsl-mock-bpa PUBLIC bsl_mock_bpa bsl_dynamic)
-target_link_libraries(bsl-mock-bpa PUBLIC Threads::Threads)
+target_link_libraries(bsl-mock-bpa PUBLIC Threads::Threads bsl_mock_bpa bsl_dynamic bsl_default_sc bsl_sample_pp)
 
 # Installation config
 install(
