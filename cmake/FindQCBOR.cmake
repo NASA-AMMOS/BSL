@@ -9,4 +9,3 @@ set_target_properties(QCBOR::qcbor PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${QCBOR_HEADER}"
   IMPORTED_LOCATION "${QCBOR_LIB}"
 )
-target_link_libraries(QCBOR::qcbor INTERFACE m)
