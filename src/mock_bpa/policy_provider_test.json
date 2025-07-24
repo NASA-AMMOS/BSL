@@ -18,5 +18,14 @@
       ]
     },
     "es_ref": "d_integrity"
+  },
+  "event_set": {
+    "es_ref": "d_integrity",
+    "events": [
+      {
+        "event_id": "sop_processed",
+        "actions": ["remove_all_target_sops"]
+      }
+    ]
   }
 }
