@@ -97,7 +97,7 @@ BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bi
     return action_set;
 }
 
-BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse()
+BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void)
 {
     return calloc(BSL_SecurityResponseSet_Sizeof(), 1);
 }

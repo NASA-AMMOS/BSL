@@ -78,6 +78,12 @@ add_compile_options(
     -Wextra
     -Wpedantic
     -Werror
+    -Wshadow -Wpointer-arith -Wstrict-prototypes
+    -Wmissing-prototypes -Wredundant-decls -Wcast-align
+    -Wformat=2 -Wswitch-enum -Wlogical-op -Wduplicated-branches
+    -fno-strict-aliasing -Werror=format-security -fno-common
+    -Wstrict-aliasing=2
+    # -Wconversion
 )
 # LEON safe options
 add_compile_options(

@@ -301,7 +301,7 @@ typedef struct BSL_TestContext_s
 } BSL_TestContext_t;
 
 BSL_SecurityActionSet_t   *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context);
-BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse();
+BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void);
 
 void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib);
 
