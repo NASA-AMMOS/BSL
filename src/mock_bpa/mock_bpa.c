@@ -669,8 +669,8 @@ int main(int argc, char **argv)
                     mock_bpa_init_policy_config();
                     mock_bpa_handle_policy_config(optarg, policy_callbacks.user_data);
 
-                    // TODO real params
-                    //mock_bpa_handle_policy_config_from_json("src/mock_bpa/policy_provider_test.json", policy_callbacks.user_data);
+                    // TODO JSON parsing
+                    // mock_bpa_handle_policy_config_from_json("src/mock_bpa/policy_provider_test.json", policy_callbacks.user_data);
                     break;
                 case 'k':
                     mock_bpa_key_registry_init(optarg);
