@@ -1,3 +1,11 @@
+from enum import Enum
+
+class DataFormat(Enum):
+    BUNDLEARRAY=0
+    HEX=1
+    ERR=2
+    NONE=3
+
 # "structure" to hold a simple test case
 class _TestCase:
     '''
@@ -9,7 +17,7 @@ class _TestCase:
     '''
     def __init__(self, input_data, expected_output, policy_config, 
                  is_implemented : bool, expect_success: bool, 
-                 input_data_format : str, expected_output_format : str):
+                 input_data_format : DataFormat, expected_output_format : DataFormat):
         self.input_data = input_data
         self.expected_output = expected_output
         self.policy_config = policy_config
@@ -20,31 +28,13 @@ class _TestCase:
         # true if test expected to succeed (return output bundle with no errors)
         self.expect_success = expect_success
 
-        # TODO make this an enum?
-        # "HEX" or "BUNDLEARRAY"
         self.input_data_format = input_data_format
-        # "HEX" or "BUNDLEARRAY" or "ERR" or "NONE"
         self.expected_output_format = expected_output_format
 
 
 class _TestSet:
     def __init__(self):
         self.cases = {}
-
-# TODO update these to match pp conf
-# may need more / different ones as well
-POLICY_UNDEFINED = 0
-BIB_AND_BCB_ACCEPTOR = 1
-BIB_AND_BCB_VERIFIER = 1
-BIB_AND_BCB_SOURCE = 1
-
-BIB_ACCEPTOR = 1
-BIB_VERIFIER = 1 
-BIB_SOURCE = 1
-
-BCB_ACCEPTOR = 1
-BCB_VERIFIER = 1 
-BCB_SOURCE = 1
 
 NO_OUTPUT = 0
 FAILURE_CODE = -1

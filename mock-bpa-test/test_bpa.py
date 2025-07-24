@@ -14,7 +14,7 @@ import unittest
 import cbor2
 from helpers.runner import CmdRunner, Timeout
 from _test_data import _TestData
-from _test_util import _TestCase, _TestSet
+from _test_util import _TestCase, _TestSet, DataFormat
 from requirements_tests import _RequirementsCases
 from ccsds_tests import _CCSDS_Cases
 
@@ -28,7 +28,7 @@ class TestAgent(unittest.TestCase):
         super().__init__(methodName)
         # self.testdata = _TestData()
         self.requirements_tests = _RequirementsCases()
-        #self.ccsds_tests = _CCSDS_Cases()
+        # self.ccsds_tests = _CCSDS_Cases()
         self.pp_cfg_dict = {}
         for id, tc in self.requirements_tests.cases.items():
             self.pp_cfg_dict[id] = tc.policy_config
@@ -111,9 +111,9 @@ class TestAgent(unittest.TestCase):
 
     def _single_test(self, testcase : _TestCase):
 
-        # TODO handle failures/no output
-        if not testcase.expect_success:
-            self.assertTrue(False)
+        if not (DataFormat.BUNDLEARRAY == testcase.expected_output_format):
+            # ignore no output cases for now
+            self.assertEqual(False, True)
 
         # start mock BPA using specified policy config
         self._start()
@@ -122,8 +122,9 @@ class TestAgent(unittest.TestCase):
         expected_rx = testcase.expected_output if (testcase.expected_output == "HEX") else self._encode(testcase.expected_output)
         self._ul_sock.send(tx_data)
         LOGGER.debug('waiting')
-        rx_data = self._wait_for(self._ul_sock)
 
+        rx_data = self._wait_for(self._ul_sock)
+                
         LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
         LOGGER.info('\nReceived data:\n%s\n', binascii.hexlify(rx_data))
 

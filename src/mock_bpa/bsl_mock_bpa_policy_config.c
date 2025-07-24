@@ -72,21 +72,38 @@ static void mock_bpa_init_registry(void) {
     BSL_LOG_DEBUG("Successfully Init policy number %d in registry\n", registry.registry_count);
 }
 
-// TODO real params
+// TODO: JSON PARSING IN PROGRESS, THIS DOESN'T DO ANYTHING YET
 void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy)
 {
     mock_bpa_init_policy_config();
 
     uint32_t sec_block_type;
-    uint32_t sec_role;
+    uint32_t sec_ctx_id;
+    BSL_SecRole_e sec_role;
     uint32_t bundle_block_type;
     uint32_t policy_action_type;
-    
+    BSL_PolicyLocation_e policy_loc_enum;
+
+    const char *src_str = "";
+    const char *dest_str = "";
+    const char *sec_src_str = "";
+    BSL_HostEIDPattern_t src_eid;
+    BSL_HostEIDPattern_t dest_eid;
+    BSL_HostEIDPattern_t sec_src_eid;
+
     (void) policy;
     (void) sec_block_type;
+    (void) sec_ctx_id;
     (void) sec_role;
     (void) bundle_block_type;
     (void) policy_action_type;
+    (void) policy_loc_enum;
+    (void) src_str;
+    (void) dest_str;
+    (void) sec_src_str;
+    (void) src_eid;
+    (void) dest_eid;
+    (void) sec_src_eid;
 
     json_t *root;
     json_error_t err;
@@ -154,16 +171,12 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             return;
         }
 
-        // check EIDs
-        const char *src_str;
-        const char *dest_str;
-        const char *sec_src_str;
-
         json_t *src = json_object_get(filter, "src");
         if (src)
         {
             src_str = json_string_value(src);
             BSL_LOG_DEBUG("     src    : %s\n", src_str);
+            src_eid = mock_bpa_util_get_eid_pattern_from_text(src_str);
         }
 
         json_t *dest = json_object_get(filter, "dest");
@@ -171,6 +184,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         {
             dest_str = json_string_value(dest);
             BSL_LOG_DEBUG("     dest    : %s\n", dest_str);
+            dest_eid = mock_bpa_util_get_eid_pattern_from_text(dest_str);
         }
 
         json_t *sec_src = json_object_get(filter, "sec_src");
@@ -178,6 +192,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         {
             sec_src_str = json_string_value(sec_src);
             BSL_LOG_DEBUG("     sec_src    : %s\n", sec_src_str);
+            sec_src_eid = mock_bpa_util_get_eid_pattern_from_text(sec_src_str);
         }
 
         // must have at least 1 EID for valid filter (for ION)
@@ -201,10 +216,46 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         BSL_LOG_DEBUG("     tgt    : %" JSON_INTEGER_FORMAT "\n", tgt_l);
 
         bundle_block_type = tgt_l;
-    
-        // duplicate from spec attr? (ION)
-        // json_t *sc_id = json_object_get(filter, "sc_id");
-        // long sc_id_l = json_integer_value(sc_id);
+
+        // check loc (sec location )
+        json_t *loc = json_object_get(filter, "loc");
+        if (!loc)
+        {
+            BSL_LOG_ERR("No loc\n");
+            json_decref(root);
+            return;
+        }
+        const char *loc_str = json_string_value(loc);
+        BSL_LOG_DEBUG("     loc    : %s\n", loc_str);
+
+        if (strcmp(loc_str, "appin"))
+        {
+            policy_loc_enum = BSL_POLICYLOCATION_APPIN;
+        }
+        else if (strcmp(loc_str, "appout"))
+        {
+            policy_loc_enum = BSL_POLICYLOCATION_APPOUT;
+        } 
+        else if (strcmp(loc_str, "clin"))
+        {
+            policy_loc_enum = BSL_POLICYLOCATION_CLIN;
+        } 
+        else if (strcmp(loc_str, "clout"))
+        {
+            policy_loc_enum = BSL_POLICYLOCATION_CLOUT;
+        }
+        else
+        {
+            BSL_LOG_ERR("INVALID POLICY LOCATION %s\n", loc_str);
+            json_decref(root);
+            return;
+        }
+  
+        json_t *sc_id = json_object_get(filter, "sc_id");
+        long sc_id_l = json_integer_value(sc_id);
+        BSL_LOG_DEBUG("     scid    : %" JSON_INTEGER_FORMAT "\n", sc_id_l);
+
+        sec_ctx_id = sc_id_l;
     }
 
     // es_ref
@@ -218,7 +269,6 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     json_t *spec = json_object_get(policyrule, "spec");
     if (spec && json_is_object(spec)) {
 
-        // TODO we can probably get rid of this since we have sc_id
         json_t *svc = json_object_get(spec, "svc");
         const char *svc_c  = json_string_value(svc);
 
@@ -231,10 +281,12 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT "\n", sc_id_l ? sc_id_l : -1);
 
         json_t *sc_parms = json_object_get(spec, "sc_parms");
-        if (sc_parms && json_is_array(sc_parms)) {
+        if (sc_parms && json_is_array(sc_parms)) 
+        {
             size_t i, n = json_array_size(sc_parms);
             BSL_LOG_DEBUG("     sc_parms (%zu):\n", n);
-            for (i = 0; i < n; ++i) {
+            for (i = 0; i < n; ++i) 
+            {
                 json_t *entry = json_array_get(sc_parms, i);
                 if (!json_is_object(entry)) continue;
                 
@@ -242,7 +294,12 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
                 if (!id) continue;
                 const char *id_str = json_string_value(id);
 
-                // TODO value check/set
+                json_t *value = json_object_get(entry, "value");
+                if (!value) continue;
+                const char *value_str = json_string_value(value);
+                
+                BSL_LOG_DEBUG("         - id: %s, value: %s\n", id_str, value_str);
+
                 // different valid param IDs for different contexts
                 switch (sc_id_l)
                 {
@@ -295,12 +352,6 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
                         json_decref(root);
                         return;    
                 }
-                
-                json_t *value = json_object_get(entry, "value");
-                if (!value) continue;
-                const char *value_str = json_string_value(value);
-                
-                BSL_LOG_DEBUG("         - id: %s, value: %s\n", id_str, value_str);
             }
         }
     }
@@ -321,7 +372,8 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         {
             size_t i, n = json_array_size(events);
             BSL_LOG_DEBUG("num events (%zu):\n", n);
-            for (i = 0; i < n; ++i) {
+            for (i = 0; i < n; ++i) 
+            {
                 json_t *entry = json_array_get(events, i);
                 if (!json_is_object(entry)) continue;
                 
@@ -336,7 +388,8 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
                 {
                     size_t j, m = json_array_size(actions);
                     BSL_LOG_DEBUG("num actions in %s (%zu):\n", event_id_str, m);
-                    for (j = 0; j < m; ++j) {
+                    for (j = 0; j < m; ++j) 
+                    {
                         json_t *act = json_array_get(actions, j);
                         if (!json_is_string(act)) continue;
 
@@ -578,6 +631,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         while (fgets((char *) kstr_buf, sizeof(kstr_buf), pipe) != NULL)
         {
             BSL_LOG_DEBUG("%s", kstr_buf);
+            
             // TODO change atoi once KIDs can be strings
             retval = BSL_Crypto_AddRegistryKey(atoi(kid_str), kstr_buf, sizeof(kstr_buf));
         }
