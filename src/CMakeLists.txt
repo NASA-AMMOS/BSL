@@ -37,14 +37,7 @@ set(BSL_FRONT_C
 
 add_library(bsl_front)
 target_sources(bsl_front PUBLIC ${BSL_FRONT_H})
-target_sources(bsl_front PUBLIC ${BSL_FRONT_C})
-add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h)
-target_compile_options(bsl_front PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes
-                       -Wmissing-prototypes -Wredundant-decls -Wcast-align
-                       -Wformat=2 -Wswitch-enum -Wlogical-op -Wduplicated-branches
-                       -fno-strict-aliasing -Werror=format-security -fno-common
-                       -Wstrict-aliasing=2)
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+target_sources(bsl_front PRIVATE ${BSL_FRONT_C})
 
 set_target_properties(bsl_front
     PROPERTIES
@@ -92,13 +85,7 @@ set(BSL_DYNAMIC_C
 add_library(bsl_dynamic)
 add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h)
 target_sources(bsl_dynamic PUBLIC ${BSL_DYNAMIC_H})
-target_sources(bsl_dynamic PUBLIC ${BSL_DYNAMIC_C})
-target_compile_options(bsl_dynamic PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes
-                       -Wmissing-prototypes -Wredundant-decls -Wcast-align
-                       -Wformat=2 -Wswitch-enum -Wlogical-op -Wduplicated-branches
-                       -fno-strict-aliasing -Werror=format-security -fno-common
-                       -Wstrict-aliasing=2)
-                       # -Wconversion
+target_sources(bsl_dynamic PRIVATE ${BSL_DYNAMIC_C})
 set_target_properties(bsl_dynamic
     PROPERTIES
         VERSION ${CMAKE_PROJECT_VERSION}

@@ -35,7 +35,7 @@ target_sources(
   ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_MockBPA.h
 )
 target_sources(
-  bsl_mock_bpa PUBLIC
+  bsl_mock_bpa PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa.c
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_crc.c
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_eid.c
