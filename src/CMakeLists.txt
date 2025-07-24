@@ -58,13 +58,55 @@ target_include_directories(
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/bsl>
 )
 
+# Default Security Context library
+set(BSL_DEFAULT_SC_H
+    ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext_Private.h
+)
+
+set(BSL_DEFAULT_SC_C
+  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BCB_AES_GCM.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BIB_HMAC_SHA2.c
+)
+
+add_library(bsl_default_sc)
+target_sources(bsl_default_sc PUBLIC ${BSL_DEFAULT_SC_H})
+target_sources(bsl_default_sc PUBLIC ${BSL_DEFAULT_SC_C})
+add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h)
+target_compile_options(bsl_default_sc PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes
+                       -Wmissing-prototypes -Wredundant-decls -Wcast-align
+                       -Wformat=2 -Wswitch-enum -Wlogical-op -Wduplicated-branches
+                       -fno-strict-aliasing -Werror=format-security -fno-common
+                       -Wstrict-aliasing=2)
+target_link_libraries(bsl_default_sc PUBLIC bsl_front)
+target_link_libraries(bsl_default_sc PUBLIC QCBOR::qcbor)
+target_link_libraries(bsl_default_sc PUBLIC OpenSSL::SSL)
+
+# Example Policy Provider library
+set(BSL_SAMPLE_PP_H
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.h
+)
+
+set(BSL_SAMPLE_PP_C
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.c
+)
+
+add_library(bsl_sample_pp)
+target_sources(bsl_sample_pp PUBLIC ${BSL_SAMPLE_PP_H})
+target_sources(bsl_sample_pp PUBLIC ${BSL_SAMPLE_PP_C})
+add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h)
+target_compile_options(bsl_sample_pp PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes
+                       -Wmissing-prototypes -Wredundant-decls -Wcast-align
+                       -Wformat=2 -Wswitch-enum -Wlogical-op -Wduplicated-branches
+                       -fno-strict-aliasing -Werror=format-security -fno-common
+                       -Wstrict-aliasing=2)
+target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
+
 # Dynamic backend library
 set(BSL_DYNAMIC_H
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext_Private.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.h
 )
 
 set(BSL_DYNAMIC_C
@@ -83,10 +125,6 @@ set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BCB_AES_GCM.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BIB_HMAC_SHA2.c
 )
 
 add_library(bsl_dynamic)
@@ -105,9 +143,10 @@ set_target_properties(bsl_dynamic
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_dynamic PUBLIC bsl_front)
+target_link_libraries(bsl_dynamic PUBLIC bsl_default_sc)
+target_link_libraries(bsl_dynamic PUBLIC bsl_sample_pp)
 target_link_libraries(bsl_dynamic PUBLIC MLIB::mlib)
 target_link_libraries(bsl_dynamic PUBLIC QCBOR::qcbor)
-target_link_libraries(bsl_dynamic PUBLIC OpenSSL::SSL)
 target_link_libraries(bsl_dynamic PUBLIC Threads::Threads)
 
 
