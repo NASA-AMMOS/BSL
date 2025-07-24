@@ -57,7 +57,6 @@ target_include_directories(
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/bsl>
 )
-target_link_libraries(bsl_front PUBLIC MLIB::mlib)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H

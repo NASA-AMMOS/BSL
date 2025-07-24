@@ -136,7 +136,7 @@ int BSL_Data_Resize(BSL_Data_t *data, size_t len)
     {
         return BSL_SUCCESS;
     }
-    
+
     if (len == 0)
     {
         bsl_data_int_free(data);
