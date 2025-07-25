@@ -1,5 +1,4 @@
-from _test_util import _TestCase, _TestSet
-from _test_util import * 
+from _test_util import _TestCase, _TestSet, DataFormat
 import binascii
 
 # Test data from RFC9173
@@ -24,7 +23,7 @@ class _TestData(_TestSet):
                 # Sample Payoad Block 
                 [1, 1, 0, 0, binascii.unhexlify(b'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
-            1, True, True, "BUNDLEARRAY", "BUNDLEARRAY"
+            1, True, True, DataFormat.BUNDLEARRAY, DataFormat.BUNDLEARRAY
         )
 
         # Tests data that corresponds to example A.1.3 in the appendix of RFC-9173
@@ -49,7 +48,7 @@ class _TestData(_TestSet):
                 # Sample Payoad Block
                 [1, 1, 0, 0, binascii.unhexlify(b'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
-            1, True, True, "BUNDLEARRAY", "BUNDLEARRAY"
+            1, True, True, DataFormat.BUNDLEARRAY, DataFormat.BUNDLEARRAY
         )
 
         # Tests data that corresponds to example A.2 in the appendix of RFC-9173
@@ -74,7 +73,7 @@ class _TestData(_TestSet):
                 # Sample Payoad Block
                 [1, 1, 0, 0, binascii.unhexlify(b'3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')],
             ],
-            1, True, True, "BUNDLEARRAY", "BUNDLEARRAY"
+            1, True, True, DataFormat.BUNDLEARRAY, DataFormat.BUNDLEARRAY
         )
 
         # Tests data that corresponds to example A.3.1 in the appendix of RFC-9173
@@ -99,7 +98,7 @@ class _TestData(_TestSet):
                 # Sample Payoad Block
                 [1, 1, 0, 0, binascii.unhexlify(b'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
-            1, True, True, "BUNDLEARRAY", "BUNDLEARRAY"
+            1, True, True, DataFormat.BUNDLEARRAY, DataFormat.BUNDLEARRAY
         )
 
         # Tests data that corresponds to example A.3.4 in the appendix of RFC-9173
@@ -136,7 +135,7 @@ class _TestData(_TestSet):
                 # Sample Payoad Block (ENCRYPTED)
                 [1, 1, 0, 0, binascii.unhexlify(b'3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')],
             ],
-            1, True, True, "BUNDLEARRAY", "BUNDLEARRAY"
+            1, True, True, DataFormat.BUNDLEARRAY, DataFormat.BUNDLEARRAY
         )
 
         # Tests data that corresponds to example A.4 in the appendix of RFC-9173
@@ -167,5 +166,5 @@ class _TestData(_TestSet):
                 # Sample Payoad Block (ENCRYPTED)
                 [1, 1, 0, 0, binascii.unhexlify(b'90eab6457593379298a8724e16e61f837488e127212b59ac91f8a86287b7d07630a122')],
             ],
-            1, True, True, "BUNDLEARRAY", "BUNDLEARRAY"
+            1, True, True, DataFormat.BUNDLEARRAY, DataFormat.BUNDLEARRAY
         )
