@@ -42,6 +42,7 @@
 #include "bsl_mock_bpa.h"
 #include "mock_bpa_ctr.h"
 #include "bsl_mock_bpa_policy_config.h"
+#include "mock_bpa_policy_registry.h"
 
 static atomic_bool stop_state;
 
@@ -71,6 +72,7 @@ static struct sockaddr_in6                  router_addr = { .sin6_family = 0 };
 static int                                  tx_notify_r, tx_notify_w;
 static BSL_HostEID_t                        sec_eid;
 static bool                                 policy_configured = false;
+static mock_bpa_policy_registry_t           registry;
 
 static int ingest_netaddr(struct sockaddr_in6 *addr, const char *optarg)
 {
@@ -652,8 +654,8 @@ int main(int argc, char **argv)
                     break;
                 case 'h':
                 case 'p':
-                    mock_bpa_init_policy_config();
-                    mock_bpa_handle_policy_config(optarg, policy_callbacks.user_data);
+                    mock_bpa_init_policy_registry(&registry);
+                    mock_bpa_handle_policy_config(optarg, policy_callbacks.user_data, &registry);
 
                     // TODO JSON parsing
                     // // mock_bpa_handle_policy_config_from_json("src/mock_bpa/policy_provider_test.json", policy_callbacks.user_data);
@@ -706,7 +708,7 @@ int main(int argc, char **argv)
     }
 
     if(policy_configured) {
-        mock_bpa_deinit_policy_config();
+        mock_bpa_deinit_policy_registry(&registry);
     }
 
     if (retval != 1)

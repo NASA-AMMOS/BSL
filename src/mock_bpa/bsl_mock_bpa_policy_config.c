@@ -27,30 +27,6 @@
 
 #include "bsl_mock_bpa_policy_config.h"
 
-typedef struct mock_bpa_policy_params
-{
-    // Params related to BIB
-    BSL_SecParam_t *param_integ_scope_flag;
-    BSL_SecParam_t *param_sha_variant;
-
-    // Params related to BCB
-    BSL_SecParam_t *param_aad_scope_flag;
-    BSL_SecParam_t *param_init_vector;
-    BSL_SecParam_t *param_aes_variant;
-
-    // Params agnostic to BIB vs BCB
-    BSL_SecParam_t *param_test_key;
-} mock_bpa_policy_params_t;
-
-#define MOCK_BPA_MAX_POLICIES 100
-
-typedef struct mock_bpa_policy_registry
-{
-    mock_bpa_policy_params_t mock_bpa_policy_registry[MOCK_BPA_MAX_POLICIES];
-    uint32_t registry_count;
-} mock_bpa_policy_registry_t;
-
-static mock_bpa_policy_registry_t registry;
 
 static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *text)
 {
@@ -60,22 +36,9 @@ static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *
     return pat;
 }
 
-static void mock_bpa_init_registry(void) {
-
-    registry.mock_bpa_policy_registry[registry.registry_count].param_integ_scope_flag = calloc(BSL_SecParam_Sizeof(), 1);
-    registry.mock_bpa_policy_registry[registry.registry_count].param_sha_variant = calloc(BSL_SecParam_Sizeof(), 1);
-    registry.mock_bpa_policy_registry[registry.registry_count].param_aad_scope_flag = calloc(BSL_SecParam_Sizeof(), 1);
-    registry.mock_bpa_policy_registry[registry.registry_count].param_init_vector = calloc(BSL_SecParam_Sizeof(), 1);
-    registry.mock_bpa_policy_registry[registry.registry_count].param_aes_variant = calloc(BSL_SecParam_Sizeof(), 1);
-    registry.mock_bpa_policy_registry[registry.registry_count].param_test_key = calloc(BSL_SecParam_Sizeof(), 1);
-
-    BSL_LOG_DEBUG("Successfully Init policy number %d in registry\n", registry.registry_count);
-}
-
 // TODO: JSON PARSING IN PROGRESS, THIS DOESN'T DO ANYTHING YET
 void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy)
 {
-    mock_bpa_init_policy_config();
 
     uint32_t sec_block_type;
     uint32_t sec_ctx_id;
@@ -404,11 +367,9 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     json_decref(root);
 }
 
-static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t policy_bits, BSLP_PolicyProvider_t *policy) {
+static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t policy_bits, BSLP_PolicyProvider_t *policy, mock_bpa_policy_params_t *params) {
 
     BSL_LOG_DEBUG("\nInterpreted policy: 0x%X\n", policy_bits);
-
-    mock_bpa_init_registry();
 
     uint32_t sec_block_type = policy_bits & 0x01;
     uint32_t policy_loc = policy_bits & 0x02;
@@ -421,16 +382,16 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
 
     // Init params for BCB if equal to 1, otherwise BIB
     if (sec_block_type == 1) {
-        BSL_SecParam_InitInt64(registry.mock_bpa_policy_registry[registry.registry_count].param_aad_scope_flag, RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK, 0);
-        BSL_SecParam_InitInt64(registry.mock_bpa_policy_registry[registry.registry_count].param_init_vector, BSL_SECPARAM_TYPE_IV, iv);
-        BSL_SecParam_InitInt64(registry.mock_bpa_policy_registry[registry.registry_count].param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
-        //BSL_SecParam_InitInt64(registry.mock_bpa_policy_registry[registry.registry_count].param_test_key, BSL_SECPARAM_TYPE_INT_KEY_ID, 9001);
+        BSL_SecParam_InitInt64(params->param_aad_scope_flag, RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK, 0);
+        BSL_SecParam_InitInt64(params->param_init_vector, BSL_SECPARAM_TYPE_IV, iv);
+        BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
+        //BSL_SecParam_InitInt64(params->param_test_key, BSL_SECPARAM_TYPE_INT_KEY_ID, 9001);
     }
     else {
-        BSL_SecParam_InitInt64(registry.mock_bpa_policy_registry[registry.registry_count].param_integ_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
-        BSL_SecParam_InitInt64(registry.mock_bpa_policy_registry[registry.registry_count].param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-        //BSL_SecParam_InitInt64(registry.mock_bpa_policy_registry[registry.registry_count].param_test_key, BSL_SECPARAM_TYPE_INT_KEY_ID, 9001);
-        // BSL_SecParam_InitInt64(registry.mock_bpa_policy_registry[registry.registry_count].param_test_key_bad, BSL_SECPARAM_TYPE_INT_KEY_ID, 9002);
+        BSL_SecParam_InitInt64(params->param_integ_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
+        BSL_SecParam_InitInt64(params->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+        //BSL_SecParam_InitInt64(params->param_test_key, BSL_SECPARAM_TYPE_INT_KEY_ID, 9001);
+        // BSL_SecParam_InitInt64(params->param_test_key_bad, BSL_SECPARAM_TYPE_INT_KEY_ID, 9002);
     }
 
     BSL_SecBlockType_e sec_block_emum;
@@ -496,53 +457,32 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
                          policy_action_enum);
 
     if (sec_block_emum == BSL_SECBLOCKTYPE_BCB) {
-        BSLP_PolicyRule_AddParam(rule_all_in, registry.mock_bpa_policy_registry[registry.registry_count].param_aes_variant);
-        BSLP_PolicyRule_AddParam(rule_all_in, registry.mock_bpa_policy_registry[registry.registry_count].param_aad_scope_flag);
-        BSLP_PolicyRule_AddParam(rule_all_in, registry.mock_bpa_policy_registry[registry.registry_count].param_init_vector);
-        BSLP_PolicyRule_AddParam(rule_all_in, registry.mock_bpa_policy_registry[registry.registry_count].param_test_key);
+        BSLP_PolicyRule_AddParam(rule_all_in, params->param_aes_variant);
+        BSLP_PolicyRule_AddParam(rule_all_in, params->param_aad_scope_flag);
+        BSLP_PolicyRule_AddParam(rule_all_in, params->param_init_vector);
+        BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key);
     }
     else {
-        BSLP_PolicyRule_AddParam(rule_all_in, registry.mock_bpa_policy_registry[registry.registry_count].param_sha_variant);
-        BSLP_PolicyRule_AddParam(rule_all_in, registry.mock_bpa_policy_registry[registry.registry_count].param_integ_scope_flag);
-        BSLP_PolicyRule_AddParam(rule_all_in, registry.mock_bpa_policy_registry[registry.registry_count].param_test_key);
-        // BSLP_PolicyRule_AddParam(rule_all_in, registry.mock_bpa_policy_registry[registry.registry_count].param_test_key_bad);
+        BSLP_PolicyRule_AddParam(rule_all_in, params->param_sha_variant);
+        BSLP_PolicyRule_AddParam(rule_all_in, params->param_integ_scope_flag);
+        BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key);
+        // BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key_bad);
     }
 
 }
 
-void mock_bpa_init_policy_config() {
-
-    // placeholder for symmetry
-    registry.registry_count = 0;
-}
-
-void mock_bpa_deinit_policy_config() {
-
-    for(uint32_t i = 0; i < registry.registry_count; i++) {
-        free(registry.mock_bpa_policy_registry[i].param_integ_scope_flag);
-        free(registry.mock_bpa_policy_registry[i].param_sha_variant);
-        free(registry.mock_bpa_policy_registry[i].param_aad_scope_flag);
-        free(registry.mock_bpa_policy_registry[i].param_init_vector);
-        free(registry.mock_bpa_policy_registry[i].param_aes_variant);
-        free(registry.mock_bpa_policy_registry[i].param_test_key);
-
-        BSL_LOG_DEBUG("Successfully De-init policy number %d in registry\n", i);
-    }
-}
-
-void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy) {
+void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg) {
 
     char *pt;
-
-    registry.registry_count = 0;
 
     // Split up and register each policy
     pt = strtok(policies,",");
     while (pt != NULL) {
 
-        if (registry.registry_count < MOCK_BPA_MAX_POLICIES) {
-            mock_bpa_register_policy(strtoul(pt, NULL, 0), policy);
-            registry.registry_count++;
+        mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(reg);
+
+        if(params != NULL) {
+            mock_bpa_register_policy(strtoul(pt, NULL, 0), policy, params);
         }
         else {
             BSL_LOG_ERR("\nPOLICY COUNT EXCEEDED, NOT REGISTERING FURTHER\n");
@@ -551,7 +491,7 @@ void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy
         
     }
     
-    BSL_LOG_DEBUG("Successfully created policy registry of size: %d\n", registry.registry_count);
+    BSL_LOG_DEBUG("Successfully created policy registry of size: %d\n", mock_bpa_policy_registry_size(reg));
 }
 
 int mock_bpa_key_registry_init(const char *pp_cfg_file_path)

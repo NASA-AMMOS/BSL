@@ -37,6 +37,8 @@
 #include <security_context/rfc9173.h>
 #include <CryptoInterface.h>
 
+#include "mock_bpa_policy_registry.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,11 +62,7 @@ extern "C" {
 */
 typedef uint32_t bsl_mock_policy_configuration_t;
 
-void mock_bpa_init_policy_config(void);
-
-void mock_bpa_deinit_policy_config(void);
-
-void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy);
+void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg);
 
 void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy);
 
