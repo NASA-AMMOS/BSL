@@ -67,9 +67,9 @@ void setUp(void)
     BSL_SecParam_t param_sha_variant = { 0 };
     BSL_SecParam_InitInt64(&param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
     BSL_SecParam_t param_test_key_correct = { 0 };
-    BSL_SecParam_InitInt64(&param_test_key_correct, BSL_SECPARAM_TYPE_INT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_InitStr(&param_test_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
     BSL_SecParam_t param_test_key_bad = { 0 };
-    BSL_SecParam_InitInt64(&param_test_key_bad, BSL_SECPARAM_TYPE_INT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
+    BSL_SecParam_InitStr(&param_test_key_bad, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
 
     // Create a rule to Accept BIB blocks on all bundle from everywhere/to everywhere at APPIN (app ingress)
     BSLP_PolicyPredicate_t *predicate_all_appin = &policy->predicates[policy->predicate_count++];

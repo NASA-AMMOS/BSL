@@ -33,15 +33,15 @@
 #include <mock_bpa/mock_bpa_ctr.h>
 
 /// @brief Key ID for the Appendix A1 key in OpenSSL
-#define RFC9173_EXAMPLE_A1_KEY (9100)
+#define RFC9173_EXAMPLE_A1_KEY "9100"
 
 /// @brief Key ID for the Appendix A2 key in OpenSSL
-#define RFC9173_EXAMPLE_A2_KEY (9102)
+#define RFC9173_EXAMPLE_A2_KEY "9102"
 
 /// @brief Key ID for the Appendix A3 key in OpenSSL
-#define RFC9173_EXAMPLE_A3_KEY (9103)
+#define RFC9173_EXAMPLE_A3_KEY "9103"
 
-#define RFC9173_EXAMPLE_A4_BCB_KEY (9104)
+#define RFC9173_EXAMPLE_A4_BCB_KEY "9104"
 
 #define quick_data_t(field, tgt) \
     field.len = sizeof(tgt);     \
@@ -86,7 +86,7 @@ typedef struct
     BSL_SecOper_t sec_oper;
 } BIBTestContext;
 
-void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, uint64_t key_id);
+void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id);
 
 static const uint8_t ApxA2_InitVec[]       = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
 static const uint8_t ApxA2_AuthTag[]       = { 0xef, 0xa4, 0xb5, 0xac, 0x01, 0x08, 0xe3, 0x81,
@@ -276,7 +276,7 @@ typedef struct
     BSL_SecParam_t test_key_id;
 } RFC9173_A1_Params;
 
-RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(uint64_t key_id);
+RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id);
 
 typedef struct
 {
@@ -291,7 +291,7 @@ typedef struct
     uint64_t       scope_flag;
 } RFC9173_AppendixA2_BCB;
 
-RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A2Params(uint64_t key_id);
+RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A2Params(const char *key_id);
 
 typedef struct BSL_TestContext_s
 {

@@ -141,7 +141,7 @@ void BSL_CryptoDeinit(void);
  * @return 0 if successful
  */
 BSL_REQUIRE_CHECK
-int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, uint64_t keyid, BSL_CryptoCipherSHAVariant_e sha_var);
+int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const char *keyid, BSL_CryptoCipherSHAVariant_e sha_var);
 
 /**
  * Input data to HMAC sign to context
@@ -180,13 +180,13 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 /**
  * @todo Doxygen
  */
-int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, size_t key_id,
+int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *key_id,
                          size_t aes_variant);
 
 /**
  * @todo Doxygen
  */
-int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, size_t content_key_id, size_t aes_variant);
+int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *content_key_id, size_t aes_variant);
 
 /**
  * Initialize crypto context resources and set as encoding or decoding
@@ -208,7 +208,7 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
  * @param[out] secret_len Pointer to the stored secret length, if successful.
  * @return Zero upon success.
  */
-int BSLB_Crypto_GetRegistryKey(uint64_t keyid, const uint8_t **secret, size_t *secret_len);
+int BSLB_Crypto_GetRegistryKey(const char *keyid, const uint8_t **secret, size_t *secret_len);
 
 /**
  * Add additional authenticated data (AAD) to cipher context
@@ -284,7 +284,7 @@ int BSL_Crypto_GenIV(void *buf, int size);
  * @param secret_len length of raw key
  * @return Zero upon success.
  */
-int BSL_Crypto_AddRegistryKey(uint64_t keyid, const uint8_t *secret, size_t secret_len);
+int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t secret_len);
 
 #ifdef __cplusplus
 } // extern C

@@ -180,7 +180,8 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_VERIFIER, RFC9173_EXAMPLE_A2_KEY);
 
     // Note - switch to use the WRONG KEY
-    bib_test_context.param_test_key._uint_value = RFC9173_EXAMPLE_A2_KEY;
+    memcpy(bib_test_context.param_test_key._bytes, RFC9173_EXAMPLE_A2_KEY, strlen(RFC9173_EXAMPLE_A2_KEY));
+    bib_test_context.param_test_key._bytelen = strlen(RFC9173_EXAMPLE_A2_KEY);
 
     BSL_SecurityActionSet_t   *malloced_actionset   = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
@@ -267,7 +268,7 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
     TEST_ASSERT_EQUAL(4, primary_block.block_count);
 
     BSL_SecParam_t param_key = { 0 };
-    BSL_SecParam_InitInt64(&param_key, BSL_SECPARAM_TYPE_INT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_InitStr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
     BSL_SecOper_t bib_oper_primary = { 0 };
     BSL_SecOper_Init(&bib_oper_primary, 1, 0, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
                      BSL_POLICYACTION_DROP_BLOCK);
@@ -278,7 +279,7 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &param_key);
 
     BSL_SecParam_t bcb_param_key = { 0 };
-    BSL_SecParam_InitInt64(&bcb_param_key, BSL_SECPARAM_TYPE_INT_KEY_ID, RFC9173_EXAMPLE_A3_KEY);
+    BSL_SecParam_InitStr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A3_KEY);
     BSL_SecOper_t bcb_oper = { 0 };
     BSL_SecOper_Init(&bcb_oper, 2, 1, 4, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR, BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bcb_oper, &bcb_param_key);
@@ -317,7 +318,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     TEST_ASSERT_EQUAL(2, primary_block.block_count);
 
     BSL_SecParam_t param_key = { 0 };
-    BSL_SecParam_InitInt64(&param_key, BSL_SECPARAM_TYPE_INT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_InitStr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
 
     BSL_SecParam_t param_sha_var = { 0 };
     BSL_SecParam_InitInt64(&param_sha_var, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC256);
@@ -339,7 +340,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &param_integ_scope);
 
     BSL_SecParam_t bcb_param_key = { 0 };
-    BSL_SecParam_InitInt64(&bcb_param_key, BSL_SECPARAM_TYPE_INT_KEY_ID, RFC9173_EXAMPLE_A3_KEY);
+    BSL_SecParam_InitStr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A3_KEY);
 
     BSL_SecParam_t bcb_scope = { 0 };
     BSL_SecParam_InitInt64(&bcb_scope, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
@@ -406,7 +407,7 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
 
     // FIRST we must decrypt the BCB targets.
     BSL_SecParam_t bcb_param_key = { 0 };
-    BSL_SecParam_InitInt64(&bcb_param_key, BSL_SECPARAM_TYPE_INT_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_SecParam_InitStr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
     BSL_SecParam_t bcb_scope = { 0 };
     BSL_SecParam_InitInt64(&bcb_scope, RFC9173_BCB_SECPARAM_AADSCOPE, 0x07);
     BSL_SecParam_t aes_variant = { 0 };
@@ -426,7 +427,7 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &bcb_scope);
 
     BSL_SecParam_t param_key = { 0 };
-    BSL_SecParam_InitInt64(&param_key, BSL_SECPARAM_TYPE_INT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_InitStr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
     BSL_SecParam_t sha_variant = { 0 };
     BSL_SecParam_InitInt64(&sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
     BSL_SecParam_t scope_flag = { 0 };
@@ -479,7 +480,7 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     TEST_ASSERT_EQUAL(1, primary_block.block_count);
 
     BSL_SecParam_t param_key = { 0 };
-    BSL_SecParam_InitInt64(&param_key, BSL_SECPARAM_TYPE_INT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_InitStr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
     BSL_SecParam_t sha_variant = { 0 };
     BSL_SecParam_InitInt64(&sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
     BSL_SecParam_t scope_flag = { 0 };
@@ -492,7 +493,7 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecOper_AppendParam(&bib_oper_payload, &scope_flag);
 
     BSL_SecParam_t bcb_param_key = { 0 };
-    BSL_SecParam_InitInt64(&bcb_param_key, BSL_SECPARAM_TYPE_INT_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_SecParam_InitStr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
     BSL_SecParam_t bcb_scope = { 0 };
     BSL_SecParam_InitInt64(&bcb_scope, RFC9173_BCB_SECPARAM_AADSCOPE, 0x07);
     BSL_SecParam_t aes_variant = { 0 };
