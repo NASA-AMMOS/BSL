@@ -84,6 +84,18 @@ void setUp(void)
     BSLP_PolicyRule_AddParam(rule_accept_bib, &param_scope_flag);
     BSLP_PolicyRule_AddParam(rule_accept_bib, &param_test_key_correct);
 
+    // clout: verify bib, drop bundle on fail
+    BSLP_PolicyPredicate_t *predicate_app_clout_drop_bundle = &policy->predicates[policy->predicate_count++];
+    BSLP_PolicyPredicate_Init(predicate_app_clout_drop_bundle, BSL_POLICYLOCATION_CLOUT, BSL_TestUtils_GetEidPatternFromText("*:**"),
+                              BSL_TestUtils_GetEidPatternFromText("*:**"), BSL_TestUtils_GetEidPatternFromText("*:**"));
+    BSLP_PolicyRule_t *rule_verify_bib_clout = &policy->rules[policy->rule_count++];
+    BSLP_PolicyRule_Init(rule_verify_bib_clout, "Verify BIB on clout", predicate_app_clout_drop_bundle, 1,
+                         BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
+                         BSL_POLICYACTION_DROP_BLOCK);
+    BSLP_PolicyRule_AddParam(rule_verify_bib_clout, &param_sha_variant);
+    BSLP_PolicyRule_AddParam(rule_verify_bib_clout, &param_scope_flag);
+    BSLP_PolicyRule_AddParam(rule_verify_bib_clout, &param_test_key_correct);
+
     BSLP_PolicyPredicate_t *predicate_all_appout = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate_all_appout, BSL_POLICYLOCATION_APPOUT,
                               BSL_TestUtils_GetEidPatternFromText("*:**"), BSL_TestUtils_GetEidPatternFromText("*:**"),
@@ -96,7 +108,7 @@ void setUp(void)
     BSLP_PolicyRule_AddParam(rule_source_bib, &param_scope_flag);
     BSLP_PolicyRule_AddParam(rule_source_bib, &param_test_key_correct);
 
-    /// Create a rule to verify BIB's at CLA Ingress
+    /// Create a rule to accept BIB's at CLA Ingress
     BSLP_PolicyPredicate_t *predicate_all_cl_in = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate_all_cl_in, BSL_POLICYLOCATION_CLIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
                               BSL_TestUtils_GetEidPatternFromText("*:**"), BSL_TestUtils_GetEidPatternFromText("*:**"));
@@ -107,6 +119,8 @@ void setUp(void)
     BSLP_PolicyRule_AddParam(rule_verify_bib_cl_in, &param_sha_variant);
     BSLP_PolicyRule_AddParam(rule_verify_bib_cl_in, &param_scope_flag);
     BSLP_PolicyRule_AddParam(rule_verify_bib_cl_in, &param_test_key_bad);
+
+    // (stoneje2) TODO: USE EIDS TO CREATE ADDITIONAL FILTERING WITH RULES SO WE CAN HAVE GOOD, BAD FOR ALL SRC, VERIF, ACCERPT
 
     /// Register the Security Context
     BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
@@ -178,7 +192,45 @@ void test_SourceSimpleBIB(void)
     TEST_ASSERT_TRUE(is_expected);
 }
 
-void test_API_StripBIBOnSuccess(void) {}
+void test_API_StripBIBOnSuccess(void) 
+{
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+
+    BSL_PrimaryBlock_t primary_block = { 0 };
+    BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
+    TEST_ASSERT_EQUAL(2, primary_block.block_count);
+
+    // should be bib
+    BSL_CanonicalBlock_t res;
+    TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 2, &res));
+    TEST_ASSERT_EQUAL(11, res.type_code);
+
+    BSL_SecurityActionSet_t action_set = { 0 };
+    int query_result = BSL_API_QuerySecurity(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, BSL_POLICYLOCATION_APPIN);
+
+    TEST_ASSERT_EQUAL(0, query_result);
+    TEST_ASSERT_EQUAL(1, action_set.sec_operations_count);
+
+    BSL_SecurityResponseSet_t response_set = { 0 };
+    int apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
+
+    TEST_ASSERT_EQUAL(0, apply_result);
+    TEST_ASSERT_EQUAL(0, response_set.failure_count);
+
+    for (int i = response_set.total_operations - 1; i >= 0; i--)
+    {
+        TEST_ASSERT_EQUAL(0, response_set.results[i]);
+        BSL_LOG_INFO("PASSED RESULT %d",i);
+    }
+
+    BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
+    TEST_ASSERT_EQUAL(1, primary_block.block_count);
+
+    // no more bib
+    TEST_ASSERT_NOT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 2, &res));
+
+    BSL_SecurityActionSet_Deinit(&action_set);
+}
 
 /**
  * Use a peculiar rule where we only remove the security's targets block if the operation failed.
@@ -221,4 +273,44 @@ void test_API_RemoveFailedBlock(void)
     BSL_SecurityActionSet_Deinit(&action_set);
 }
 
-void test_API_DropBundleOnFailedBlock(void) {}
+void test_API_DropBundleOnFailedBlock(void) 
+{
+
+}
+
+void test_API_SimpleBIBVerify(void) 
+{
+    TEST_ASSERT_EQUAL(
+        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+
+    BSL_PrimaryBlock_t primary_block = { 0 };
+    BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
+    TEST_ASSERT_EQUAL(2, primary_block.block_count);
+
+    BSL_SecurityActionSet_t action_set = { 0 };
+
+    int query_result = BSL_API_QuerySecurity(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
+                                                 BSL_POLICYLOCATION_CLOUT);
+
+    TEST_ASSERT_EQUAL(0, query_result);
+    TEST_ASSERT_EQUAL(1, action_set.sec_operations_count);
+    BSL_SecurityResponseSet_t response_set = { 0 };
+
+    BSL_LOG_INFO("bipped up swagged out");
+
+    int apply_result =
+        BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
+
+    TEST_ASSERT_EQUAL(0, apply_result);
+
+    BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
+    TEST_ASSERT_EQUAL(2, primary_block.block_count);
+
+    TEST_ASSERT_EQUAL(0, mock_bpa_encode(&LocalTestCtx.mock_bpa_ctr));
+    bool is_expected = (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib,
+                                                      LocalTestCtx.mock_bpa_ctr.encoded));
+
+    BSL_SecurityActionSet_Deinit(&action_set);
+
+    TEST_ASSERT_TRUE(is_expected);
+}

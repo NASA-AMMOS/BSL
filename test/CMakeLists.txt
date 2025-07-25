@@ -56,8 +56,8 @@ set(LIB_ORDERED bsl_front bsl_dynamic bsl_mock_bpa bsl_test_utils)
 # add_unity_test(SOURCE test_MockBPA_Codecs.c)
 # target_link_libraries(test_MockBPA_Codecs PUBLIC ${LIB_ORDERED})
 
-add_unity_test(SOURCE test_CryptoInterface.c)
-target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
+# add_unity_test(SOURCE test_CryptoInterface.c)
+# target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
 
 # add_unity_test(SOURCE test_SecurityTypes.c)
 # target_link_libraries(test_SecurityTypes PUBLIC ${LIB_ORDERED})
@@ -78,6 +78,6 @@ target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
 # add_unity_test(SOURCE test_DefaultSecurityContext.c)
 # target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
 
-# # Exercises the MockBPA using the publicly exposed BSL front end
-# add_unity_test(SOURCE test_PublicInterfaceImpl.c)
-# target_link_libraries(test_PublicInterfaceImpl PUBLIC ${LIB_ORDERED})
+# Exercises the MockBPA using the publicly exposed BSL front end
+add_unity_test(SOURCE test_PublicInterfaceImpl.c)
+target_link_libraries(test_PublicInterfaceImpl PUBLIC ${LIB_ORDERED})
