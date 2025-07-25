@@ -12,6 +12,7 @@ Source0: @CPACK_SOURCE_PACKAGE_FILE_NAME@.tar.gz
 BuildRequires: cmake
 BuildRequires: gcc
 BuildRequires: openssl-devel
+BuildRequires: jansson-devel
 BuildRequires: asciidoctor
 %if %{with apidoc}
 BuildRequires: doxygen

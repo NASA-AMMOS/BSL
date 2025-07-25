@@ -37,9 +37,12 @@
 
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
+#include <CryptoInterface.h>
 
 #include "bsl_mock_bpa.h"
 #include "mock_bpa_ctr.h"
+#include "bsl_mock_bpa_policy_config.h"
+#include "mock_bpa_policy_registry.h"
 
 static atomic_bool stop_state;
 
@@ -61,13 +64,15 @@ static pthread_t thr_over_rx, thr_under_rx, thr_deliver, thr_forward;
 static BSL_LibCtx_t *bsl;
 
 // Configuration
-static BSL_HostEID_t       app_eid;
-static struct sockaddr_in6 over_addr   = { .sin6_family = 0 };
-static struct sockaddr_in6 app_addr    = { .sin6_family = 0 };
-static struct sockaddr_in6 under_addr  = { .sin6_family = 0 };
-static struct sockaddr_in6 router_addr = { .sin6_family = 0 };
-static int                 tx_notify_r, tx_notify_w;
-static BSL_HostEID_t       sec_eid;
+static BSL_HostEID_t                        app_eid;
+static struct sockaddr_in6                  over_addr   = { .sin6_family = 0 };
+static struct sockaddr_in6                  app_addr    = { .sin6_family = 0 };
+static struct sockaddr_in6                  under_addr  = { .sin6_family = 0 };
+static struct sockaddr_in6                  router_addr = { .sin6_family = 0 };
+static int                                  tx_notify_r, tx_notify_w;
+static BSL_HostEID_t                        sec_eid;
+static bool                                 policy_configured = false;
+static mock_bpa_policy_registry_t           registry;
 
 static int ingest_netaddr(struct sockaddr_in6 *addr, const char *optarg)
 {
@@ -565,7 +570,8 @@ static void show_usage(const char *argv0)
     fprintf(stderr,
             "Usage: %s -o <over-socket address:port> -a <application address:port>\n"
             "          -u <under-socket address:port> -r <router address:port>\n"
-            "          -e <app-EID> -s <sec-src-EID>\n",
+            "          -e <app-EID> -s <sec-src-EID>\n"
+            "          -p (optional - defaults to none) comma delimited hex list of <bsl_mock_policy_configuration_t>, e.g. '0x000f,0x0021'\n", 
             argv0);
 }
 
@@ -595,18 +601,28 @@ int main(int argc, char **argv)
 
     BSL_PolicyDesc_t policy_callbacks = { .deinit_fn = BSLP_Deinit,
                                           .query_fn  = BSLP_QueryPolicy,
-                                          .user_data = malloc(100000) };
+                                          .user_data = calloc(sizeof(BSLP_PolicyProvider_t), 1) };
     assert(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(bsl, policy_callbacks));
 
-    BSL_SecCtxDesc_t security_context_callbacks;
-    (void)security_context_callbacks;
+    BSL_CryptoInit();
+
+    BSL_SecCtxDesc_t bib_sec_desc;
+    bib_sec_desc.execute  = BSLX_BIB_Execute;
+    bib_sec_desc.validate = BSLX_BIB_Validate;
+    assert(0 == BSL_API_RegisterSecurityContext(bsl, 1, bib_sec_desc));
+
+    BSL_SecCtxDesc_t bcb_sec_desc;
+    bcb_sec_desc.execute  = BSLX_BCB_Execute;
+    bcb_sec_desc.validate = BSLX_BCB_Validate;
+    assert(0 == BSL_API_RegisterSecurityContext(bsl, 2, bcb_sec_desc));
 
     BSL_HostEID_Init(&app_eid);
     BSL_HostEID_Init(&sec_eid);
+
     if (!retval)
     {
         int opt;
-        while ((opt = getopt(argc, argv, "ha:o:a:u:r:e:s:")) != -1)
+        while ((opt = getopt(argc, argv, "ha:o:a:u:r:e:s:p:k:")) != -1)
         {
             switch (opt)
             {
@@ -637,6 +653,19 @@ int main(int argc, char **argv)
                     }
                     break;
                 case 'h':
+                case 'p':
+                    mock_bpa_init_policy_registry(&registry);
+                    mock_bpa_handle_policy_config(optarg, policy_callbacks.user_data, &registry);
+
+                    // TODO JSON parsing
+                    // // mock_bpa_handle_policy_config_from_json("src/mock_bpa/policy_provider_test.json", policy_callbacks.user_data);
+
+                    policy_configured = true;
+                    break;
+                case 'k':
+                    if(mock_bpa_key_registry_init(optarg))
+                        retval = 1;
+                    break;
                 default:
                     show_usage(argv[0]);
                     retval = 1;
@@ -678,10 +707,16 @@ int main(int argc, char **argv)
         retval = bpa_exec();
     }
 
+    if(policy_configured) {
+        mock_bpa_deinit_policy_registry(&registry);
+    }
+
     if (retval != 1)
     {
         bpa_cleanup();
     }
+
+    BSL_CryptoDeinit();
     bsl_mock_bpa_deinit();
     BSL_closelog();
     free(bsl);
