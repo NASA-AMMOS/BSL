@@ -104,6 +104,8 @@ More notes forthcoming.
  * The C standard library does not provide containers. Arrays is all we have, so that's what we have to work with.
  * Third party libraries providing containers may be more hassle and risk than they are worth.
 
+#### &raquo; M\*Lib structures should not be referenced in the Frontend API
+ * Keep M\*Lib usage to the BSL backend, and use standard/primative structs for frontend API. The frontend should not include any M\*Lib headers.
 
 # Documentation
 
