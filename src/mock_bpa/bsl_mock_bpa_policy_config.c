@@ -573,7 +573,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
             BSL_LOG_DEBUG("%s", kstr_buf);
             
             // TODO change atoi once KIDs can be strings
-            retval = BSL_Crypto_AddRegistryKey(atoi(kid_str), kstr_buf, sizeof(kstr_buf));
+            retval = BSL_Crypto_AddRegistryKey(kid_str, kstr_buf, sizeof(kstr_buf));
         }
         pclose(pipe);
 
