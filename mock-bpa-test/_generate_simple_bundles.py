@@ -23,32 +23,28 @@ def sign_and_encrypt(   payload_s:str,
     denc_tag = bytes.fromhex(denc_tag_s)
     iv = bytes.fromhex('5477656c7665313231323132')
     aad = bytes.fromhex('00')
+    ippt_scope_flag = 0
 
     results = [None, None, None]
 
     if sign:
-        # IPPT is a CBOR sequence of [scope flag : payload]
-        # TODO this will break if bytestring < 0x17 bytes: 0x4 - 0x57
-        ippt = '0058' + hex(len(payload_s)//2)[2:]
-        payload = bytes.fromhex(ippt+payload_s)
+        payload_ippt = cbor2.dumps(ippt_scope_flag)
+        payload_ippt += cbor2.dumps(payload)
 
-        signature = hmac.new(sign_key, payload, hashlib.sha512).digest()
+        signature = hmac.new(sign_key, payload_ippt, hashlib.sha512).digest()
         results[0] = signature.hex()
 
     if enc:
         cipher = AES.new(enc_key, AES.MODE_GCM, nonce=iv)
         cipher.update(aad)
         ciphertext, tag = cipher.encrypt_and_digest(payload)
-        #print(f"Ciphertext: {ciphertext.hex()} | Authtag: {tag.hex()}")
         results[1] = (ciphertext.hex(), tag.hex(), '69c411276fecddc4780df42c8a2af89296fabf34d7fae700', iv.hex())
 
     if denc:
         cipher = AES.new(denc_key, AES.MODE_GCM, nonce=iv)
         plaintext = cipher.decrypt_and_verify(payload, denc_tag)
-        #print(f"plaintext: {plaintext.hex()}")
         results[2] = plaintext.hex()
 
-    #print(f'RESULTS: {results}')
     return results
 
 
@@ -82,7 +78,7 @@ def add_bib_to_bundle_over_x(bundle, x):
             # create ASB and cbor dump as BIB btsd
             asb = [
                 [x], 1, 1, [2, [2, 1]],
-                [[1, 7], [3, bytes.fromhex('0000')]],
+                [[1, 7], [3, 0]],
                 [[[1, bytes.fromhex(sign)]]]
             ]
             buf = io.BytesIO()
@@ -134,12 +130,12 @@ def add_bcb_to_bundle_over_x(bundle, x):
 b = [
     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                  # 2 byte uint - 300
-    [7, 2, 0, 0, '19012C'],
+    #[7, 2, 0, 0, '19012C'],
     [1, 1, 0, 0, '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
 ]
 
 print (f"ORIGINAL BUNDLE: {b}")
-# b = add_bib_to_bundle_over_x(b, 0)
-# print(f'BUNDLE AFTER BIB: {b}')
-b = add_bcb_to_bundle_over_x(b, 2)
+b = add_bib_to_bundle_over_x(b, 1)
+print(f'BUNDLE AFTER BIB: {b}')
+b = add_bcb_to_bundle_over_x(b, 1)
 print(f'FINAL BUNDLE: {b}')

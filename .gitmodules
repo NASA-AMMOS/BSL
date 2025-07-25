@@ -10,7 +10,3 @@
 	path = deps/QCBOR
 	url = https://github.com/laurencelundblade/QCBOR.git
 	branch = master
-[submodule "deps/jansson"]
-	path = deps/jansson
-	url = https://github.com/akheron/jansson.git
-	branch = master

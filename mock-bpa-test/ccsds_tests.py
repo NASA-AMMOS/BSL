@@ -2,7 +2,6 @@ import yaml
 import cbor2
 import binascii
 from _test_util import _TestCase, _TestSet, DataFormat
-from _test_util import * 
 
 # TODO in progress
 
