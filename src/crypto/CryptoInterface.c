@@ -27,6 +27,7 @@
 #include <CryptoInterface.h>
 
 #include <m-dict.h>
+#include <m-string.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
@@ -53,7 +54,7 @@ static int BSLB_CryptoKey_Deinit(BSLB_CryptoKey_t *key)
 /// @cond Doxygen_Suppress
 #define M_OPL_BSLB_CryptoKey_t() M_OPEXTEND(M_POD_OPLIST, CLEAR(API_2(BSLB_CryptoKey_Deinit)))
 /// Stable dict of crypto keys (key: key ID | value: key)
-DICT_DEF2(BSLB_CryptoKeyDict, uint64_t, M_BASIC_OPLIST, BSLB_CryptoKey_t, M_OPL_BSLB_CryptoKey_t())
+DICT_DEF2(BSLB_CryptoKeyDict, string_t, STRING_OPLIST, BSLB_CryptoKey_t, M_OPL_BSLB_CryptoKey_t())
 /// @endcond
 
 /// Crypto key registry
@@ -71,7 +72,7 @@ void BSL_CryptoDeinit(void)
     BSLB_CryptoKeyDict_clear(StaticKeyRegistry);
 }
 
-int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, size_t key_id,
+int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *key_id,
                          size_t aes_variant)
 {
     const EVP_CIPHER *cipher = (aes_variant == BSL_CRYPTO_AES_128) ? EVP_aes_128_wrap() : EVP_aes_256_wrap();
@@ -117,7 +118,7 @@ int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_ke
     return 0;
 }
 
-int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, size_t content_key_id, size_t aes_variant)
+int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *content_key_id, size_t aes_variant)
 {
     const EVP_CIPHER *cipher = (aes_variant == BSL_CRYPTO_AES_128) ? EVP_aes_128_wrap() : EVP_aes_256_wrap();
     EVP_CIPHER_CTX   *ctx    = EVP_CIPHER_CTX_new();
@@ -166,7 +167,7 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, size_t content_k
     return 0;
 }
 
-int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, uint64_t keyid, BSL_CryptoCipherSHAVariant_e sha_var)
+int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const char *keyid, BSL_CryptoCipherSHAVariant_e sha_var)
 {
     CHK_ARG_NONNULL(hmac_ctx);
 
@@ -192,8 +193,11 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, uint64_t keyid, BSL_CryptoCipherSH
             return BSL_ERR_FAILURE;
     }
 
+    string_t keyid_str;
+    string_init_set_str(keyid_str, keyid);
+
     pthread_mutex_lock(&StaticCryptoMutex);
-    const BSLB_CryptoKey_t *key_info = BSLB_CryptoKeyDict_cget(StaticKeyRegistry, keyid);
+    const BSLB_CryptoKey_t *key_info = BSLB_CryptoKeyDict_cget(StaticKeyRegistry, keyid_str);
     if (key_info == NULL)
     {
         // Special case which should not happen
@@ -430,7 +434,7 @@ int BSL_Crypto_GenIV(void *buf, int size)
     return 0;
 }
 
-int BSL_Crypto_AddRegistryKey(uint64_t keyid, const uint8_t *secret, size_t secret_len)
+int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t secret_len)
 {
     CHK_ARG_NONNULL(secret);
     CHK_ARG_EXPR(secret_len > 0);
@@ -452,20 +456,26 @@ int BSL_Crypto_AddRegistryKey(uint64_t keyid, const uint8_t *secret, size_t secr
         return ecode;
     }
 
+    string_t keyid_str;
+    string_init_set_str(keyid_str, keyid);
+
     pthread_mutex_lock(&StaticCryptoMutex);
-    BSLB_CryptoKeyDict_set_at(StaticKeyRegistry, keyid, key);
+    BSLB_CryptoKeyDict_set_at(StaticKeyRegistry, keyid_str, key);
     pthread_mutex_unlock(&StaticCryptoMutex);
 
     return 0;
 }
 
-int BSLB_Crypto_GetRegistryKey(uint64_t keyid, const uint8_t **secret, size_t *secret_len)
+int BSLB_Crypto_GetRegistryKey(const char *keyid, const uint8_t **secret, size_t *secret_len)
 {
     CHK_ARG_NONNULL(secret);
     // CHK_ARG_NONNULL(secret_len); // Note: secret_len CAN be NULL - this maybe should be fixed.
 
+    string_t keyid_str;
+    string_init_set_str(keyid_str, keyid);
+
     pthread_mutex_lock(&StaticCryptoMutex);
-    const BSLB_CryptoKey_t *found = BSLB_CryptoKeyDict_cget(StaticKeyRegistry, keyid);
+    const BSLB_CryptoKey_t *found = BSLB_CryptoKeyDict_cget(StaticKeyRegistry, keyid_str);
 
     if (!found)
     {

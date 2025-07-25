@@ -65,6 +65,7 @@ function(add_unity_test)
     UNITY_INCLUDE_FLOAT
     UNITY_INCLUDE_DOUBLE
   )
+  target_compile_options(${BASENAME} PRIVATE -Wno-redundant-decls -Wno-missing-prototypes -Wno-shadow)
   target_link_libraries(${BASENAME} PUBLIC unity::framework)
 
   add_test(

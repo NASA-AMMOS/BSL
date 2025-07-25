@@ -105,7 +105,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     CHK_PRECONDITION(bcb_context->aad.len > 0);
 
     // Key must have been set (this feeds the key encryption key)
-    CHK_PRECONDITION(bcb_context->key_id > 0);
+    CHK_PRECONDITION(bcb_context->key_id);
 
     // BTSD replacement is not yet allocated
     CHK_PRECONDITION(bcb_context->btsd_replacement.ptr != NULL);
@@ -224,7 +224,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     CHK_PRECONDITION(bcb_context->aad.len > 0);
 
     // Must have a key ID from the security operation parameters
-    CHK_PRECONDITION(bcb_context->key_id > 0);
+    CHK_PRECONDITION(bcb_context->key_id);
 
     // BTSD replacement is not yet allocated
     CHK_PRECONDITION(bcb_context->btsd_replacement.ptr != NULL);
@@ -469,12 +469,13 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
                 }
                 break;
             }
-            case BSL_SECPARAM_TYPE_INT_KEY_ID:
+            case BSL_SECPARAM_TYPE_KEY_ID:
             {
-                assert(is_int);
-                bcb_context->key_id = BSL_SecParam_GetAsUInt64(param);
-                BSL_LOG_DEBUG("Param[%lu]: KEY_ID value = %lu", param_id, bcb_context->key_id);
-                BSL_LOG_DEBUG("Key ID = %lu", bcb_context->key_id);
+                assert(!is_int);
+                BSL_Data_t res;
+                assert(BSL_SUCCESS == BSL_SecParam_GetAsBytestr(param, &res));
+                bcb_context->key_id = (char *)res.ptr;
+                BSL_LOG_DEBUG("Param[%lu]: KEY_ID value = %s", param_id, bcb_context->key_id);
                 break;
             }
             case BSL_SECPARAM_TYPE_INT_FIXED_KEY:

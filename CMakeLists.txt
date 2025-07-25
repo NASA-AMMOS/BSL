@@ -78,6 +78,12 @@ add_compile_options(
     -Wextra
     -Wpedantic
     -Werror
+    -Wshadow -Wpointer-arith -Wstrict-prototypes
+    -Wmissing-prototypes -Wredundant-decls -Wcast-align
+    -Wformat=2 -Wswitch-enum -Wlogical-op -Wduplicated-branches
+    -fno-strict-aliasing -Werror=format-security -fno-common
+    -Wstrict-aliasing=2
+    # -Wconversion
 )
 # LEON safe options
 add_compile_options(
@@ -199,3 +205,25 @@ if(BUILD_PACKAGE)
 
     add_subdirectory(pkg)
 endif(BUILD_PACKAGE)
+
+add_custom_command(
+    OUTPUT dep_chart.dot
+    COMMAND ${CMAKE_COMMAND} "--graphviz=dep_chart.dot" .
+)
+find_program(CMD_DOT NAMES dot)
+message(STATUS "Found dot at ${CMD_DOT}")
+if(CMD_DOT)
+    add_custom_command(
+        DEPENDS dep_chart.dot
+        OUTPUT dep_chart.svg
+        COMMAND ${CMD_DOT} -Tsvg dep_chart.dot -o dep_chart.svg
+    )
+    add_custom_command(
+        DEPENDS dep_chart.dot
+        OUTPUT dep_chart.png
+        COMMAND ${CMD_DOT} -Tpng dep_chart.dot -o dep_chart.png
+    )
+    add_custom_target(graphviz
+        DEPENDS dep_chart.svg dep_chart.png
+    )
+endif(CMD_DOT)

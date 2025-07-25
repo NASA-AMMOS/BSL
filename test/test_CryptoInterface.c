@@ -215,17 +215,17 @@ void suiteSetUp(void)
                             0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
                             0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
                             0xaa };
-    BSL_Crypto_AddRegistryKey(1, test1, 20);
-    BSL_Crypto_AddRegistryKey(2, test2, 4);
-    BSL_Crypto_AddRegistryKey(7, test7, 131);
+    BSL_Crypto_AddRegistryKey("Key1", test1, 20);
+    BSL_Crypto_AddRegistryKey("Key2", test2, 4);
+    BSL_Crypto_AddRegistryKey("Key7", test7, 131);
 
     uint8_t test_128[16] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
                              0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b };
     uint8_t test_256[32] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
                              0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
                              0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b };
-    BSL_Crypto_AddRegistryKey(8, test_256, 32);
-    BSL_Crypto_AddRegistryKey(9, test_128, 16);
+    BSL_Crypto_AddRegistryKey("Key8", test_256, 32);
+    BSL_Crypto_AddRegistryKey("Key9", test_128, 16);
 }
 
 int suiteTearDown(int failures)
@@ -247,31 +247,31 @@ void tearDown(void)
 
 // test vectors from RFC 4231
 // Test vector 1
-TEST_MATRIX([ 0, 1 ], [1], [BSL_CRYPTO_SHA_256], ["4869205468657265"],
+TEST_MATRIX([ 0, 1 ], ["Key1"], [BSL_CRYPTO_SHA_256], ["4869205468657265"],
             ["b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7"])
-TEST_MATRIX([ 0, 1 ], [1], [BSL_CRYPTO_SHA_384], ["4869205468657265"],
+TEST_MATRIX([ 0, 1 ], ["Key1"], [BSL_CRYPTO_SHA_384], ["4869205468657265"],
             ["afd03944d84895626b0825f4ab46907f15f9dadbe4101ec682aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6"])
-TEST_MATRIX([ 0, 1 ], [1], [BSL_CRYPTO_SHA_512], ["4869205468657265"],
+TEST_MATRIX([ 0, 1 ], ["Key1"], [BSL_CRYPTO_SHA_512], ["4869205468657265"],
             ["87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914ee"
              "b61f1702e696c203a126854"])
 
 // Test vector 2
-TEST_MATRIX([ 0, 1 ], [2], [BSL_CRYPTO_SHA_256], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
+TEST_MATRIX([ 0, 1 ], ["Key2"], [BSL_CRYPTO_SHA_256], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
             ["5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"])
-TEST_MATRIX([ 0, 1 ], [2], [BSL_CRYPTO_SHA_384], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
+TEST_MATRIX([ 0, 1 ], ["Key2"], [BSL_CRYPTO_SHA_384], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
             ["af45d2e376484031617f78d2b58a6b1b9c7ef464f5a01b47e42ec3736322445e8e2240ca5e69e2c78b3239ecfab21649"])
-TEST_MATRIX([ 0, 1 ], [2], [BSL_CRYPTO_SHA_512], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
+TEST_MATRIX([ 0, 1 ], ["Key2"], [BSL_CRYPTO_SHA_512], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
             ["164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34"
              "d4a6b4b636e070a38bce737"])
 
 // Test vector 7
-TEST_MATRIX([ 0, 1 ], [7], [BSL_CRYPTO_SHA_256], ["5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e"],
+TEST_MATRIX([ 0, 1 ], ["Key7"], [BSL_CRYPTO_SHA_256], ["5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e"],
             ["9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2"])
-TEST_MATRIX([ 0, 1 ], [7], [BSL_CRYPTO_SHA_384], ["5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e"],
+TEST_MATRIX([ 0, 1 ], ["Key7"], [BSL_CRYPTO_SHA_384], ["5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e"],
             ["6617178e941f020d351e2f254e8fd32c602420feb0b8fb9adccebb82461e99c5a678cc31e799176d3860e6110c46523e"])
-TEST_MATRIX([ 0, 1 ], [7], [BSL_CRYPTO_SHA_512], ["5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e"],
+TEST_MATRIX([ 0, 1 ], ["Key7"], [BSL_CRYPTO_SHA_512], ["5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e"],
             ["e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58"])
-void test_hmac_in(int input_case, uint64_t keyid, BSL_CryptoCipherSHAVariant_e sha_var, const char *plaintext_in,
+void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_e sha_var, const char *plaintext_in,
                   char *expected)
 {
     string_t exp_txt;
@@ -338,84 +338,20 @@ void test_hmac_in(int input_case, uint64_t keyid, BSL_CryptoCipherSHAVariant_e s
     string_clear(pt_txt);
 }
 
-TEST_CASE(100, BSL_CRYPTO_SHA_256, "abc123", 1)
-TEST_CASE(1, 999, "abc123", 1)
-TEST_CASE(1, BSL_CRYPTO_SHA_256, "abc123", -1)
-void test_for_failure_hmac(uint64_t keyid, BSL_CryptoCipherSHAVariant_e sha_var, const char *plaintext_in, const int point_of_failure)
+TEST_CASE("100", BSL_CRYPTO_SHA_256)
+TEST_CASE("1", 999)
+void test_for_failure_hmac_init(const char *keyid, BSL_CryptoCipherSHAVariant_e sha_var)
 {
-    string_t pt_txt;
-    string_init_set_str(pt_txt, plaintext_in);
-    BSL_Data_t pt_in_data;
-    BSL_Data_Init(&pt_in_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&pt_in_data, pt_txt),
-                                  "BSL_TestUtils_DecodeBase16() failed");
-
-    int ret;
-
     BSL_AuthCtx_t hmac;
-    ret = BSL_AuthCtx_Init(&hmac, keyid, sha_var);
-
-    if (1 == point_of_failure) // first checkpoint
-    {
-        TEST_ASSERT_NOT_EQUAL(0, ret);
-        goto deinit;
-    }
-    TEST_ASSERT_EQUAL(0, ret);
-
-    BSL_SeqReader_t reader;
-    BSL_SeqReader_InitFlat(&reader, pt_in_data.ptr, pt_in_data.len);
-    TEST_ASSERT_NOT_NULL(&reader);
-
-    ret = BSL_AuthCtx_DigestSeq(&hmac, &reader);
-    if (2 == point_of_failure) // second checkpoint
-    {
-        TEST_ASSERT_NOT_EQUAL(0, ret);
-        goto deinit;
-    }
-    TEST_ASSERT_EQUAL(0, ret);
-
-    int hmac_sz = 0;
-    switch (hmac.SHA_variant)
-    {
-        case BSL_CRYPTO_SHA_256:
-            hmac_sz = 32;
-            break;
-        case BSL_CRYPTO_SHA_384:
-            hmac_sz = 48;
-            break;
-        case BSL_CRYPTO_SHA_512:
-            hmac_sz = 64;
-            break;
-        default:
-            TEST_ABORT();
-    }
-
-    {
-        uint8_t hmac_buf[hmac_sz];
-        void   *hmac_buf_ptr = hmac_buf;
-        size_t  hmac_len;
-        ret = BSL_AuthCtx_Finalize(&hmac, &hmac_buf_ptr, &hmac_len);
-        if (3 == point_of_failure) // third checkpoint
-        {
-            TEST_ASSERT_NOT_EQUAL(0, ret);
-            goto deinit;
-        }
-        TEST_ASSERT_EQUAL(0, ret);
-    }
-    
-deinit:
+    TEST_ASSERT_NOT_EQUAL(0, BSL_AuthCtx_Init(&hmac, keyid, sha_var));
     TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Deinit(&hmac));
-
-    BSL_Data_Deinit(&pt_in_data);
-    string_clear(pt_txt);
-
 }
 
 /**
  * Test library encrypt using OpenSSL example decrypt
  */
-TEST_MATRIX([ "plaintext", "0123456789", "" ], [ 8, 9 ])
-void test_encrypt(const char *plaintext_in, uint64_t keyid)
+TEST_MATRIX([ "plaintext", "0123456789", "" ], [ "Key8", "Key9" ])
+void test_encrypt(const char *plaintext_in, const char *keyid)
 {
     int res;
 
@@ -436,7 +372,7 @@ void test_encrypt(const char *plaintext_in, uint64_t keyid)
     res = BSL_SeqWriter_InitFlat(&writer, &ciphertext, &ct_size);
     TEST_ASSERT_EQUAL(0, res);
 
-    int aes_var = (keyid == 8) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
+    int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
     BSL_Cipher_t   ctx;
     const uint8_t *ekey;
@@ -473,7 +409,7 @@ void test_encrypt(const char *plaintext_in, uint64_t keyid)
     TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key, NULL));
     TEST_ASSERT_NOT_NULL(key);
 
-    const EVP_CIPHER *cipher = (keyid == 8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
+    const EVP_CIPHER *cipher = (0 == strcmp(keyid, "Key8")) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
     res = gcm_decrypt(cipher, ciphertext, ct_size, aad, 2, (unsigned char *)tag, (unsigned char *)key, iv, iv_len,
                       plaintext, &plaintext_len);
     TEST_ASSERT_EQUAL(0, res);
@@ -490,8 +426,8 @@ void test_encrypt(const char *plaintext_in, uint64_t keyid)
 /**
  * Test library decrypt using OpenSSL example encrypt
  */
-TEST_MATRIX([ "plaintext", "0123456789", "" ], [ 8, 9 ])
-void test_decrypt(const char *plaintext_in, uint64_t keyid)
+TEST_MATRIX([ "plaintext", "0123456789", "" ], [ "Key8", "Key9" ])
+void test_decrypt(const char *plaintext_in, const char *keyid)
 {
     int res;
 
@@ -510,7 +446,7 @@ void test_decrypt(const char *plaintext_in, uint64_t keyid)
     TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key, NULL));
     TEST_ASSERT_NOT_NULL(key);
 
-    const EVP_CIPHER *cipher = (keyid == 8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
+    const EVP_CIPHER *cipher = (0 == strcmp(keyid, "Key8")) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
     res = gcm_encrypt(cipher, (unsigned char *)plaintext_in, strlen(plaintext_in), aad, 2, (unsigned char *)key, iv,
                       iv_len, ciphertext, &ciphertext_len, tag);
     TEST_ASSERT_EQUAL(0, res);
@@ -527,7 +463,7 @@ void test_decrypt(const char *plaintext_in, uint64_t keyid)
     res = BSL_SeqWriter_InitFlat(&writer, &plaintext, &pt_size);
     TEST_ASSERT_EQUAL(0, res);
 
-    int aes_var = (keyid == 8) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
+    int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
     const uint8_t *ckey;
     size_t         ckeylen;
