@@ -111,7 +111,6 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
     memset(self, 0, sizeof(*self));
     self->sha_variant           = -1;
     self->integrity_scope_flags = -1;
-    self->key_id                = "";
 
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
     {

@@ -201,16 +201,16 @@ void suiteSetUp(void)
     uint8_t test1[20] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
                           0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b };
     uint8_t test2[4]  = { 0x4a, 0x65, 0x66, 0x65 };
-    BSL_Crypto_AddRegistryKey("1", test1, 20);
-    BSL_Crypto_AddRegistryKey("2", test2, 4);
+    BSL_Crypto_AddRegistryKey("Key1", test1, 20);
+    BSL_Crypto_AddRegistryKey("Key2", test2, 4);
 
     uint8_t test_128[16] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
                              0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b };
     uint8_t test_256[32] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
                              0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
                              0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b };
-    BSL_Crypto_AddRegistryKey("8", test_256, 32);
-    BSL_Crypto_AddRegistryKey("9", test_128, 16);
+    BSL_Crypto_AddRegistryKey("Key8", test_256, 32);
+    BSL_Crypto_AddRegistryKey("Key9", test_128, 16);
 }
 
 int suiteTearDown(int failures)
@@ -232,20 +232,20 @@ void tearDown(void)
 
 // test vectors from RFC 4231
 // Test vector 1
-TEST_MATRIX([ 0, 1 ], ["1"], [BSL_CRYPTO_SHA_256], ["4869205468657265"],
+TEST_MATRIX([ 0, 1 ], ["Key1"], [BSL_CRYPTO_SHA_256], ["4869205468657265"],
             ["b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7"])
-TEST_MATRIX([ 0, 1 ], ["1"], [BSL_CRYPTO_SHA_384], ["4869205468657265"],
+TEST_MATRIX([ 0, 1 ], ["Key1"], [BSL_CRYPTO_SHA_384], ["4869205468657265"],
             ["afd03944d84895626b0825f4ab46907f15f9dadbe4101ec682aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6"])
-TEST_MATRIX([ 0, 1 ], ["1"], [BSL_CRYPTO_SHA_512], ["4869205468657265"],
+TEST_MATRIX([ 0, 1 ], ["Key1"], [BSL_CRYPTO_SHA_512], ["4869205468657265"],
             ["87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914ee"
              "b61f1702e696c203a126854"])
 
 // Test vector 2
-TEST_MATRIX([ 0, 1 ], ["2"], [BSL_CRYPTO_SHA_256], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
+TEST_MATRIX([ 0, 1 ], ["Key2"], [BSL_CRYPTO_SHA_256], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
             ["5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843"])
-TEST_MATRIX([ 0, 1 ], ["2"], [BSL_CRYPTO_SHA_384], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
+TEST_MATRIX([ 0, 1 ], ["Key2"], [BSL_CRYPTO_SHA_384], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
             ["af45d2e376484031617f78d2b58a6b1b9c7ef464f5a01b47e42ec3736322445e8e2240ca5e69e2c78b3239ecfab21649"])
-TEST_MATRIX([ 0, 1 ], ["2"], [BSL_CRYPTO_SHA_512], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
+TEST_MATRIX([ 0, 1 ], ["Key2"], [BSL_CRYPTO_SHA_512], ["7768617420646f2079612077616e7420666f72206e6f7468696e673f"],
             ["164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34"
              "d4a6b4b636e070a38bce737"])
 void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_e sha_var, const char *plaintext_in,
@@ -318,7 +318,7 @@ void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_
 /**
  * Test library encrypt using OpenSSL example decrypt
  */
-TEST_MATRIX([ "plaintext", "0123456789", "" ], [ "8", "9" ])
+TEST_MATRIX([ "plaintext", "0123456789", "" ], [ "Key8", "Key9" ])
 void test_encrypt(const char *plaintext_in, const char *keyid)
 {
     int res;
@@ -340,7 +340,7 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     res = BSL_SeqWriter_InitFlat(&writer, &ciphertext, &ct_size);
     TEST_ASSERT_EQUAL(0, res);
 
-    int aes_var = (0 == strcmp(keyid, "8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
+    int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
     BSL_Cipher_t   ctx;
     const uint8_t *ekey;
@@ -377,7 +377,7 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key, NULL));
     TEST_ASSERT_NOT_NULL(key);
 
-    const EVP_CIPHER *cipher = (0 == strcmp(keyid, "8")) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
+    const EVP_CIPHER *cipher = (0 == strcmp(keyid, "Key8")) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
     res = gcm_decrypt(cipher, ciphertext, ct_size, aad, 2, (unsigned char *)tag, (unsigned char *)key, iv, iv_len,
                       plaintext, &plaintext_len);
     TEST_ASSERT_EQUAL(0, res);
@@ -394,7 +394,7 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
 /**
  * Test library decrypt using OpenSSL example encrypt
  */
-TEST_MATRIX([ "plaintext", "0123456789", "" ], [ "8", "9" ])
+TEST_MATRIX([ "plaintext", "0123456789", "" ], [ "Key8", "Key9" ])
 void test_decrypt(const char *plaintext_in, const char *keyid)
 {
     int res;
@@ -414,7 +414,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key, NULL));
     TEST_ASSERT_NOT_NULL(key);
 
-    const EVP_CIPHER *cipher = (0 == strcmp(keyid, "8")) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
+    const EVP_CIPHER *cipher = (0 == strcmp(keyid, "Key8")) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
     res = gcm_encrypt(cipher, (unsigned char *)plaintext_in, strlen(plaintext_in), aad, 2, (unsigned char *)key, iv,
                       iv_len, ciphertext, &ciphertext_len, tag);
     TEST_ASSERT_EQUAL(0, res);
@@ -431,7 +431,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     res = BSL_SeqWriter_InitFlat(&writer, &plaintext, &pt_size);
     TEST_ASSERT_EQUAL(0, res);
 
-    int aes_var = (0 == strcmp(keyid, "8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
+    int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
     const uint8_t *ckey;
     size_t         ckeylen;

@@ -62,6 +62,7 @@ BSL_Data_t BSLX_Bytestr_AsData(BSLX_Bytestr_t *self);
 
 typedef struct BSLX_BIB_s
 {
+    /// @brief set to external pointer which will outloast BIB context
     const char          *key_id;
     BSL_PrimaryBlock_t   primary_block;
     BSL_CanonicalBlock_t target_block;
