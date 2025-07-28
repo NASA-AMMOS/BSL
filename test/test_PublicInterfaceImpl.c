@@ -431,31 +431,31 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc,
     int query_result = -1;
     int apply_result = -1;
 
-    char *ba;
+    char *bundle_modify_eid;
     if (sec_block_type == BSL_SECBLOCKTYPE_BIB)
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
-            ba  = malloc(strlen(RFC9173_TestVectors_AppendixA1.cbor_bundle_original)+1);
-            strcpy(ba, RFC9173_TestVectors_AppendixA1.cbor_bundle_original);
+            bundle_modify_eid  = malloc(strlen(RFC9173_TestVectors_AppendixA1.cbor_bundle_original)+1);
+            strcpy(bundle_modify_eid, RFC9173_TestVectors_AppendixA1.cbor_bundle_original);
         }
         else
         {
-            ba = malloc(strlen(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib)+1);
-            strcpy(ba, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib);
+            bundle_modify_eid = malloc(strlen(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib)+1);
+            strcpy(bundle_modify_eid, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib);
         }
     }
     else
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
-            ba  = malloc(strlen(RFC9173_TestVectors_AppendixA2.cbor_bundle_original)+1);
-            strcpy(ba, RFC9173_TestVectors_AppendixA2.cbor_bundle_original);
+            bundle_modify_eid  = malloc(strlen(RFC9173_TestVectors_AppendixA2.cbor_bundle_original)+1);
+            strcpy(bundle_modify_eid, RFC9173_TestVectors_AppendixA2.cbor_bundle_original);
         }
         else
         {
-            ba = malloc(strlen(RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb)+1);
-            strcpy(ba, RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb);
+            bundle_modify_eid = malloc(strlen(RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb)+1);
+            strcpy(bundle_modify_eid, RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb);
         }
     }
 
@@ -465,57 +465,57 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc,
     if (src_eid)
     {
         int num1, num2;
-        if (sscanf(src_eid, "ipn:%d.%d", &num1, &num2) != 2) {
-            printf("Invalid format.\n");
-            return;
+        if (sscanf(src_eid, "ipn:%d.%d", &num1, &num2) != 2) 
+        {
+            TEST_ABORT();
         }
 
         char buf[3];
         snprintf(buf, sizeof(buf), "%02d", num1);
-        ba[26] = buf[0];
-        ba[27] = buf[1];
+        bundle_modify_eid[26] = buf[0];
+        bundle_modify_eid[27] = buf[1];
 
         snprintf(buf, sizeof(buf), "%02d", num2);
-        ba[28] = buf[0];
-        ba[29] = buf[1];
+        bundle_modify_eid[28] = buf[0];
+        bundle_modify_eid[29] = buf[1];
     }
     if (dest_eid)
     {
         int num1, num2;
-        if (sscanf(dest_eid, "ipn:%d.%d", &num1, &num2) != 2) {
-            printf("Invalid format.\n");
-            return;
+        if (sscanf(dest_eid, "ipn:%d.%d", &num1, &num2) != 2) 
+        {
+            TEST_ABORT();
         }
 
         char buf[3];
         snprintf(buf, sizeof(buf), "%02d", num1);
-        ba[16] = buf[0];
-        ba[17] = buf[1];
+        bundle_modify_eid[16] = buf[0];
+        bundle_modify_eid[17] = buf[1];
 
         snprintf(buf, sizeof(buf), "%02d", num2);
-        ba[18] = buf[0];
-        ba[19] = buf[1];
+        bundle_modify_eid[18] = buf[0];
+        bundle_modify_eid[19] = buf[1];
     }
     if (secsrc_eid)
     {
         int num1, num2;
-        if (sscanf(secsrc_eid, "ipn:%d.%d", &num1, &num2) != 2) {
-            printf("Invalid format.\n");
-            return;
+        if (sscanf(secsrc_eid, "ipn:%d.%d", &num1, &num2) != 2) 
+        {
+            TEST_ABORT();
         }
 
         char buf[3];
         snprintf(buf, sizeof(buf), "%02d", num1);
-        ba[36] = buf[0];
-        ba[37] = buf[1];
+        bundle_modify_eid[36] = buf[0];
+        bundle_modify_eid[37] = buf[1];
 
         snprintf(buf, sizeof(buf), "%02d", num2);
-        ba[38] = buf[0];
-        ba[39] = buf[1];
+        bundle_modify_eid[38] = buf[0];
+        bundle_modify_eid[39] = buf[1];
     }
 
-    BSL_LOG_INFO("-- BUNDLE WITH EID EDITS: %s", ba);
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, ba));
+    BSL_LOG_INFO("-- BUNDLE WITH EID EDITS: %s", bundle_modify_eid);
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_modify_eid));
 
     switch(sec_role)
     {
@@ -627,5 +627,5 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc,
     }
 
     BSL_SecurityActionSet_Deinit(&action_set);
-    free(ba);
+    free(bundle_modify_eid);
 }
