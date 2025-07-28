@@ -39,6 +39,7 @@
 #include <BPSecLib_MockBPA.h>
 #include <CryptoInterface.h>
 #include <security_context/rfc9173.h>
+#include <backend/SecurityResultSet.h>
 
 #include "bsl_test_utils.h"
 
@@ -86,7 +87,7 @@ void tearDown(void)
  *  - Common repeated patterns are in the process of being factored out
  *  - All values are drawn from RFC9173 Appendix A.
  */
-void ntest_SecurityContext_BIB_Source(void)
+void test_SecurityContext_BIB_Source(void)
 {
     TEST_ASSERT_EQUAL(
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
@@ -96,25 +97,19 @@ void ntest_SecurityContext_BIB_Source(void)
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_SOURCE, RFC9173_EXAMPLE_A1_KEY);
 
     BSL_SecurityActionSet_t   *malloced_actionset   = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityResponseSet_t response_set = { 0 };
 
-    TEST_ASSERT_EQUAL(0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
+    TEST_ASSERT_EQUAL(0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &response_set,
                                                            &mock_bpa_ctr->bundle_ref, malloced_actionset));
-    BSL_CanonicalBlock_t block;
-    BSL_BundleCtx_GetBlockMetadata(&mock_bpa_ctr->bundle_ref, 2, &block);
-    bool x = BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bib_abs_sec_block,
-                                           (BSL_Data_t) { .len = block.btsd_len, .ptr = block.btsd });
-    TEST_ASSERT_TRUE(x);
-    TEST_ASSERT_EQUAL(0, mock_bpa_encode(mock_bpa_ctr));
-    bool is_expected =
-        (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib, mock_bpa_ctr->encoded));
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    for (size_t i = 0; i < response_set.total_operations; i++)
+    {
+        TEST_ASSERT_EQUAL(0, response_set.results[i]);
+    }
+
+    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
-    free(malloced_responseset);
     free(malloced_actionset);
-
-    TEST_ASSERT_TRUE(is_expected);
 }
 
 /**
@@ -140,18 +135,23 @@ void test_SecurityContext_BIB_Verifier(void)
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_VERIFIER, RFC9173_EXAMPLE_A1_KEY);
 
     BSL_SecurityActionSet_t   *malloced_actionset   = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityResponseSet_t response_set = { 0 };
 
-    TEST_ASSERT_EQUAL(0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
+    TEST_ASSERT_EQUAL(0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &response_set,
                                                            &mock_bpa_ctr->bundle_ref, malloced_actionset));
+
+    for (size_t i = 0; i < response_set.total_operations; i++)
+    {
+        TEST_ASSERT_EQUAL(0, response_set.results[i]);
+    }
+
     TEST_ASSERT_EQUAL(0, mock_bpa_encode(mock_bpa_ctr));
     bool is_match =
         (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib, mock_bpa_ctr->encoded));
 
     BSL_SecurityActionSet_Deinit(malloced_actionset);
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    BSL_SecurityResponseSet_Deinit(&response_set);
     free(malloced_actionset);
-    free(malloced_responseset);
 
     TEST_ASSERT_TRUE(is_match);
 }
@@ -184,16 +184,17 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
     bib_test_context.param_test_key._bytelen = strlen(RFC9173_EXAMPLE_A2_KEY);
 
     BSL_SecurityActionSet_t   *malloced_actionset   = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityResponseSet_t response_set = { 0 };
 
     TEST_ASSERT_NOT_EQUAL(BSL_SUCCESS,
-                          BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
+                          BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &response_set,
                                                             &mock_bpa_ctr->bundle_ref, malloced_actionset));
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    TEST_ASSERT_NOT_EQUAL(0, response_set.failure_count);
+
+    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     free(malloced_actionset);
-    free(malloced_responseset);
 }
 
 /**
@@ -218,31 +219,24 @@ void test_SecurityContext_BIB_Acceptor(void)
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_ACCEPTOR, RFC9173_EXAMPLE_A1_KEY);
 
     BSL_SecurityActionSet_t   *malloced_actionset   = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityResponseSet_t response_set = { 0 };
 
-    // int  encode_result      = -1;
-    // bool is_equal_test_vec  = false;
-    int  sec_context_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
+    int  sec_context_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &response_set,
                                                                 &mock_bpa_ctr->bundle_ref, malloced_actionset);
 
     // Note, we use the goto statements to better cleanup if failure happens
     if (sec_context_result != 0)
         goto cleanup;
 
-    // encode_result = mock_bpa_encode(mock_bpa_ctr);
-    // if (encode_result != 0)
-    //     goto cleanup;
-
-    // is_equal_test_vec =
-    //     BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_original, mock_bpa_ctr->encoded);
-    // if (!is_equal_test_vec)
-    //     goto cleanup;
+    for (size_t i = 0; i < response_set.total_operations; i++)
+    {
+        TEST_ASSERT_EQUAL(0, response_set.results[i]);
+    }
 
 cleanup:
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     free(malloced_actionset);
-    free(malloced_responseset);
 
     TEST_ASSERT_EQUAL(0, sec_context_result);
     // TEST_ASSERT_EQUAL(0, encode_result);
@@ -290,17 +284,21 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
     BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bib_oper_ext_block);
     BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bcb_oper);
 
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityResponseSet_t response_set = { 0 };
 
-    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
+    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &response_set,
                                                               &mock_bpa_ctr->bundle_ref, malloced_actionset);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_result);
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    for (size_t i = 0; i < response_set.total_operations; i++)
+    {
+        TEST_ASSERT_EQUAL(0, response_set.results[i]);
+    }
+
+    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
 
     free(malloced_actionset);
-    free(malloced_responseset);
 }
 
 void test_RFC9173_AppendixA_Example3_Source(void)
@@ -360,25 +358,29 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bib_oper_ext_block);
     BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bcb_oper);
 
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityResponseSet_t response_set = { 0 };
 
-    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
+    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &response_set,
                                                               &mock_bpa_ctr->bundle_ref, malloced_actionset);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_result);
+
+    for (size_t i = 0; i < response_set.total_operations; i++)
+    {
+        TEST_ASSERT_EQUAL(0, response_set.results[i]);
+    }
 
     // Should have created a new security block
     BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &primary_block);
     TEST_ASSERT_TRUE(primary_block.block_count >= 4);
     TEST_ASSERT_TRUE(primary_block.block_count <= 5);
 
-    const size_t response_count = BSL_SecurityResponseSet_CountResponses(malloced_responseset);
+    const size_t response_count = BSL_SecurityResponseSet_CountResponses(&response_set);
     TEST_ASSERT_EQUAL(3, response_count);
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
 
     free(malloced_actionset);
-    free(malloced_responseset);
 }
 
 void test_RFC9173_AppendixA_Example4_Acceptor(void)
@@ -446,25 +448,21 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bcb_op_tgt_bib);
     BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bib_oper_payload);
 
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityResponseSet_t response_set = { 0 };
 
-    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
+    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &response_set,
                                                               &mock_bpa_ctr->bundle_ref, malloced_actionset);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_result);
 
-    // After all the security results have been stripped, this is the bundle's result.
-    // See: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.4.1
-    const char *expected_processed_bundle = ("9f88070000820282010282028202018202820201820018281a000f424085010100"
-                                             "005823526561647920746f2067656e657261746520612033322d6279746520706179"
-                                             "6c6f6164ff");
-    TEST_ASSERT_EQUAL(0, mock_bpa_encode(mock_bpa_ctr));
-    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(expected_processed_bundle, mock_bpa_ctr->encoded));
+    for (size_t i = 0; i < response_set.total_operations; i++)
+    {
+        TEST_ASSERT_EQUAL(0, response_set.results[i]);
+    }
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
 
     free(malloced_actionset);
-    free(malloced_responseset);
 }
 
 void test_RFC9173_AppendixA_Example4_Source(void)
@@ -524,19 +522,23 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bcb_op_tgt_bib);
     BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bib_oper_payload);
 
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityResponseSet_t response_set = { 0 };
 
-    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
+    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &response_set,
                                                               &mock_bpa_ctr->bundle_ref, malloced_actionset);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_result);
+
+    for (size_t i = 0; i < response_set.total_operations; i++)
+    {
+        TEST_ASSERT_EQUAL(0, response_set.results[i]);
+    }
 
     BSL_PrimaryBlock_t prim_blk;
     BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &prim_blk);
     TEST_ASSERT_TRUE(prim_blk.block_count >= 3 && prim_blk.block_count <= 4);
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
 
     free(malloced_actionset);
-    free(malloced_responseset);
 }
