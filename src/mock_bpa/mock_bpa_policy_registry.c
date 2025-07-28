@@ -58,7 +58,7 @@ mock_bpa_policy_params_t *mock_bpa_policy_registry_get(mock_bpa_policy_registry_
 void mock_bpa_deinit_policy_registry(mock_bpa_policy_registry_t *registry)
 {
     for (int i = 0; i < MOCK_BPA_MAX_POLICIES; ++i) {
-        if (!registry->in_use[i]) {
+        if (registry->in_use[i]) {
             mock_bpa_policy_params_deinit(&registry->registry_params[i], i);
             registry->in_use[i] = false;
         }
