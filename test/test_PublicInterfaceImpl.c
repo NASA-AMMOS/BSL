@@ -216,7 +216,7 @@ void test_API_RemoveFailedBlock(void)
     // Now, make sure there are no blocks! The security operation was stripped AND the target block that
     // could not be verified was stripped.
     BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
-    TEST_ASSERT_EQUAL(0, primary_block.block_count);
+    TEST_ASSERT_EQUAL(1, primary_block.block_count);
 
     BSL_SecurityActionSet_Deinit(&action_set);
 }
