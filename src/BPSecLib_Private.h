@@ -831,7 +831,8 @@ bool BSL_SecOper_IsRoleVerifier(const BSL_SecOper_t *self);
  * @param[in] self This Security Operation
  * @return boolean
  */
-bool BSL_SecOper_IsRoleAccepter(const BSL_SecOper_t *self);
+bool BSL_SecOper_IsRoleAcceptor(const BSL_SecOper_t *self);
+
 
 /** Return true if this security operation is BIB
  * @param[in] self This security operation

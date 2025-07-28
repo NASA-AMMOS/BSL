@@ -187,7 +187,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     // TODO/FIXME - This logic seems to be correct, but should be refactored and simplified.
     // There are too many branches/conditionals each with their own return statement.
 
-    if (BSL_SecOper_IsRoleAccepter(sec_oper))
+    if (BSL_SecOper_IsRoleAcceptor(sec_oper))
     {
         uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
         int      status           = BSL_AbsSecBlock_StripResults(&abs_sec_block, target_block_num);
@@ -309,7 +309,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
     // TODO/FIXME - This logic seems to be correct, but should be refactored and simplified.
     // There are too many branches/conditionals each with their own return statement.
 
-    if (BSL_SecOper_IsRoleAccepter(sec_oper))
+    if (BSL_SecOper_IsRoleAcceptor(sec_oper))
     {
         uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
         int      status           = BSL_AbsSecBlock_StripResults(&abs_sec_block, target_block_num);
