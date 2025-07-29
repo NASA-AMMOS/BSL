@@ -60,8 +60,8 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
-          crb enable
           dnf install -y epel-release
+          crb enable
           dnf install -y \
               git rsync \
               cmake ninja-build \
