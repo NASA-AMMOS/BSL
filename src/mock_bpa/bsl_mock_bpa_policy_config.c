@@ -383,7 +383,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
 
     // Init params for BCB if equal to 1, otherwise BIB
     if (sec_block_type == 1) {
-        BSL_SecParam_InitInt64(params->param_aad_scope_flag, RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK, 0);
+        BSL_SecParam_InitInt64(params->param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE, RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK);
         BSL_Data_t     iv = { .owned = 0, .ptr = iv_buf, .len = 12 };
         BSL_SecParam_InitBytestr(params->param_init_vector, RFC9173_BCB_SECPARAM_IV, iv);
         BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
