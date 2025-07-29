@@ -60,7 +60,7 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
-          rm /var/lib/man-db/auto-update && \
+          dnf install -y man-db && rm /var/lib/man-db/auto-update && \
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
