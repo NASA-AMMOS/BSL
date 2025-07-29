@@ -90,11 +90,11 @@ jobs:
         run: ./build.sh install
       - name: Check symbols
         run: |
-          ./check_symbols.py --prefix bsl_ -- bsl_front bsl_dynamic
-          ./check_symbols.py --prefix bsl_ bslb_ -- bsl_crypto
-          ./check_symbols.py --prefix bslx_ -- bsl_default_sc
-          ./check_symbols.py --prefix bslp_ -- bsl_sample_pp
-          ./check_symbols.py -- bsl_mock_bpa
+          ./check_symbols.py bsl_front bsl_dynamic --prefix bsl_
+          ./check_symbols.py bsl_crypto --prefix bsl_ bslb_
+          ./check_symbols.py bsl_default_sc --prefix bslx_
+          ./check_symbols.py bsl_sample_pp --prefix bslp_
+          ./check_symbols.py bsl_mock_bpa --prefix MockBPA_ bsl_eidpat_ bsl_mock_ mock_bpa_
       - name: Test
         run: ./build.sh check
       - name: Collect coverage
