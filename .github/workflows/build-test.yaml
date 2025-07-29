@@ -49,8 +49,8 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo rm /var/lib/man-db/auto-update && \
-          sudo apt-get update && \
+          sudo rm /var/lib/man-db/auto-update
+          sudo apt-get update
           sudo apt-get install -y \
               cmake ninja-build \
               ruby pkg-config ccache patch \
@@ -60,8 +60,8 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
-          dnf install -y man-db && rm /var/lib/man-db/auto-update && \
-          dnf config-manager --set-enabled crb
+          dnf install -y man-db && rm /var/lib/man-db/auto-update
+          crb enable
           dnf install -y epel-release
           dnf install -y \
               git rsync \
