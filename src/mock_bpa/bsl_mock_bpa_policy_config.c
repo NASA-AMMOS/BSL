@@ -372,7 +372,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     BSL_LOG_DEBUG("\nInterpreted policy: 0x%X\n", policy_bits);
 
     uint32_t sec_block_type = policy_bits & 0x01;
-    uint32_t policy_loc = policy_bits & 0x02;
+    uint32_t policy_loc = (policy_bits >> 1) & 0x01;
     uint32_t bundle_block_type = (policy_bits >> 2) & 0x03;
     uint32_t policy_action_type = (policy_bits >> 4) & 0x03;
     uint32_t sec_role = (policy_bits >> 6) & 0x03;
@@ -397,28 +397,36 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     BSL_SecBlockType_e sec_block_emum;
     if (sec_block_type == 1) {
         sec_block_emum = BSL_SECBLOCKTYPE_BCB;
+        BSL_LOG_DEBUG("\nPolicy: 0x%X - BSL Security Block Type: BCB", policy_bits);
     }
     else {
         sec_block_emum = BSL_SECBLOCKTYPE_BIB;
+        BSL_LOG_DEBUG("\nPolicy: 0x%X - BSL Security Block Type: BIB", policy_bits);
     }
 
     BSL_PolicyLocation_e policy_loc_enum;
     if (policy_loc == 1) {
         policy_loc_enum = BSL_POLICYLOCATION_CLIN;
+        BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Location: CLIN", policy_bits);
     }
     else {
-        policy_loc_enum = BSL_POLICYLOCATION_APPIN;
+        policy_loc_enum = BSL_POLICYLOCATION_CLOUT;
+        BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Location: CLOUT", policy_bits);
     }
 
     BSL_BundleBlockTypeCode_e bundle_block_enum;
     switch (bundle_block_type) {
         case 0: bundle_block_enum = BSL_BLOCK_TYPE_PRIMARY;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: PRIMARY", policy_bits);
                 break;
         case 1: bundle_block_enum = BSL_BLOCK_TYPE_PAYLOAD;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: PAYLOAD", policy_bits);
                 break;
         case 2: bundle_block_enum = BSL_BLOCK_TYPE_BIB;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: BIB", policy_bits);
                 break;
-        case 3: bundle_block_enum = BSL_BLOCK_TYPE_BIB;
+        case 3: bundle_block_enum = BSL_BLOCK_TYPE_BCB;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: BCB", policy_bits);
                 break;
         default: break;
     }
@@ -426,24 +434,32 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     BSL_PolicyAction_e policy_action_enum;
     switch (policy_action_type) {
         case 0: policy_action_enum = BSL_POLICYACTION_NOTHING;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Acion: DO NOTHING", policy_bits);
                 break;
         case 1: policy_action_enum = BSL_POLICYACTION_DROP_BLOCK;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Acion: DROP BLOCK", policy_bits);
                 break;
         case 2: policy_action_enum = BSL_POLICYACTION_DROP_BUNDLE;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Acion: DROP BUNDLE", policy_bits);
                 break;
         default: policy_action_enum = BSL_POLICYACTION_NOTHING;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Acion: DO NOTHING", policy_bits);
                 break;
     }
 
     BSL_SecRole_e sec_role_enum;
     switch (sec_role) {
         case 0: sec_role_enum = BSL_SECROLE_SOURCE;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Security Role: SOURCE", policy_bits);
                 break;
         case 1: sec_role_enum = BSL_SECROLE_VERIFIER;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Security Role: VERIFIER", policy_bits);
                 break;
         case 2: sec_role_enum = BSL_SECROLE_ACCEPTOR;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Security Role: ACCEPTOR", policy_bits);
                 break;
         default: sec_role_enum = BSL_SECROLE_VERIFIER;
+                BSL_LOG_DEBUG("\nPolicy: 0x%X - Security Role: VERIFIER", policy_bits);
                 break;
     }
         
@@ -572,7 +588,6 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         {
             BSL_LOG_DEBUG("%s", kstr_buf);
             
-            // TODO change atoi once KIDs can be strings
             retval = BSL_Crypto_AddRegistryKey(kid_str, kstr_buf, sizeof(kstr_buf));
         }
         pclose(pipe);

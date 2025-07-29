@@ -709,6 +709,7 @@ int main(int argc, char **argv)
 
     if(policy_configured) {
         mock_bpa_deinit_policy_registry(&registry);
+        policy_configured = false;
     }
 
     if (retval != 1)
