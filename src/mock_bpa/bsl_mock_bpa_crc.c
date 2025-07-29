@@ -67,7 +67,7 @@ void mock_bpa_crc_apply(UsefulBuf buf, size_t begin, size_t end, BSL_BundleCRCTy
 
             const uint16_t crc_val = bp_crc16(blk_enc);
             // Network byte order
-            crc_pos[0] = (crc_val >> 16) & 0xFF;
+            crc_pos[0] = (crc_val >> 8) & 0xFF;
             crc_pos[1] = crc_val & 0xFF;
             break;
         }
@@ -116,7 +116,7 @@ bool mock_bpa_crc_check(UsefulBufC buf, size_t begin, size_t end, BSL_BundleCRCT
 
             const uint16_t crc_val = bp_crc16(blk_enc);
             // Network byte order
-            same = ((crc_pos[0] == ((crc_val >> 16) & 0xFF)) && (crc_pos[1] == (crc_val & 0xFF)));
+            same = ((crc_pos[0] == ((crc_val >> 8) & 0xFF)) && (crc_pos[1] == (crc_val & 0xFF)));
             break;
         }
         case BSL_BUNDLECRCTYPE_32:
