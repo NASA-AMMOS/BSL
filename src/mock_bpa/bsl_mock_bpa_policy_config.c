@@ -377,30 +377,34 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     uint32_t policy_action_type = (policy_bits >> 4) & 0x03;
     uint32_t sec_role = (policy_bits >> 6) & 0x03;
 
-    uint64_t iv;
-    sscanf("5477656c7665313231323132", "%" SCNx64, &iv);
+    uint64_t sec_context;
+
+    uint8_t iv_buf[12] = {0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32};
 
     // Init params for BCB if equal to 1, otherwise BIB
     if (sec_block_type == 1) {
         BSL_SecParam_InitInt64(params->param_aad_scope_flag, RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK, 0);
-        BSL_SecParam_InitInt64(params->param_init_vector, BSL_SECPARAM_TYPE_IV, iv);
+        BSL_Data_t     iv = { .owned = 0, .ptr = iv_buf, .len = 12 };
+        BSL_SecParam_InitBytestr(params->param_init_vector, RFC9173_BCB_SECPARAM_IV, iv);
         BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
-        BSL_SecParam_InitInt64(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, 9001);
+        BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9102");
     }
     else {
         BSL_SecParam_InitInt64(params->param_integ_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
         BSL_SecParam_InitInt64(params->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-        BSL_SecParam_InitInt64(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, 9001);
+        BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9100");
         // BSL_SecParam_InitInt64(params->param_test_key_bad, BSL_SECPARAM_TYPE_KEY_ID, 9002);
     }
 
     BSL_SecBlockType_e sec_block_emum;
     if (sec_block_type == 1) {
         sec_block_emum = BSL_SECBLOCKTYPE_BCB;
+        sec_context = 2;
         BSL_LOG_DEBUG("\nPolicy: 0x%X - BSL Security Block Type: BCB", policy_bits);
     }
     else {
         sec_block_emum = BSL_SECBLOCKTYPE_BIB;
+        sec_context = 1;
         BSL_LOG_DEBUG("\nPolicy: 0x%X - BSL Security Block Type: BIB", policy_bits);
     }
 
@@ -464,11 +468,13 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     }
         
     // Create a rule to verify security block at APP/CLA Ingress
+    char policybits_str[100];
+    sprintf(policybits_str, "Policy: %x", policy_bits);
     BSLP_PolicyPredicate_t *predicate_all_in = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate_all_in, policy_loc_enum, mock_bpa_util_get_eid_pattern_from_text("*:**"),
                               mock_bpa_util_get_eid_pattern_from_text("*:**"), mock_bpa_util_get_eid_pattern_from_text("*:**"));
     BSLP_PolicyRule_t *rule_all_in = &policy->rules[policy->rule_count++];
-    BSLP_PolicyRule_Init(rule_all_in, "Verify BCB on CL in to/from anywhere.", predicate_all_in, 1,
+    BSLP_PolicyRule_Init(rule_all_in, policybits_str, predicate_all_in, sec_context,
                          sec_role_enum, sec_block_emum, bundle_block_enum,
                          policy_action_enum);
 
@@ -574,23 +580,25 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         const char *k_str = json_string_value(k);
         BSL_LOG_DEBUG("k: %s\n", k_str);
 
-        char cmd[100];
-        sprintf(cmd,"echo \"%s\" | basenc --decode --base64url | basenc --base16 --wrap=0", k_str);
-        FILE *pipe = popen(cmd, "r");
-        if (pipe == NULL)
-        {
-            BSL_LOG_ERR("Failed to establish pipe");
-            return 1;
-        }
+        retval = BSL_Crypto_AddRegistryKey(kid_str, (uint8_t *)k_str, sizeof(k_str));
 
-        uint8_t kstr_buf[1024];
-        while (fgets((char *) kstr_buf, sizeof(kstr_buf), pipe) != NULL)
-        {
-            BSL_LOG_DEBUG("%s", kstr_buf);
+        // char cmd[100];
+        // sprintf(cmd,"echo \"%s\" | basenc --decode --base64url | basenc --base16 --wrap=0", k_str);
+        // FILE *pipe = popen(cmd, "r");
+        // if (pipe == NULL)
+        // {
+        //     BSL_LOG_ERR("Failed to establish pipe");
+        //     return 1;
+        // }
+
+        // uint8_t kstr_buf[1024];
+        // while (fgets((char *) kstr_buf, sizeof(kstr_buf), pipe) != NULL)
+        // {
+        //     BSL_LOG_DEBUG("%s", kstr_buf);
             
-            retval = BSL_Crypto_AddRegistryKey(kid_str, kstr_buf, sizeof(kstr_buf));
-        }
-        pclose(pipe);
+        //     retval = BSL_Crypto_AddRegistryKey(kid_str, kstr_buf, sizeof(kstr_buf));
+        // }
+        // pclose(pipe);
 
     }
 
