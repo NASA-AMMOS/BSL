@@ -23,8 +23,6 @@
 #define _BSL_TEST_UTILS_H_
 
 #include <m-string.h>
-#include <qcbor/qcbor_decode.h>
-#include <qcbor/qcbor_encode.h>
 
 #include <backend/PublicInterfaceImpl.h>
 #include <backend/SecOperation.h>
