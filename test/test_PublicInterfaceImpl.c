@@ -431,35 +431,29 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc,
     int query_result = -1;
     int apply_result = -1;
 
-    char *bundle_modify_eid;
     if (sec_block_type == BSL_SECBLOCKTYPE_BIB)
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
-            bundle_modify_eid  = malloc(strlen(RFC9173_TestVectors_AppendixA1.cbor_bundle_original)+1);
-            strcpy(bundle_modify_eid, RFC9173_TestVectors_AppendixA1.cbor_bundle_original);
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
         }
         else
         {
-            bundle_modify_eid = malloc(strlen(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib)+1);
-            strcpy(bundle_modify_eid, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib);
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
         }
     }
     else
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
-            bundle_modify_eid  = malloc(strlen(RFC9173_TestVectors_AppendixA2.cbor_bundle_original)+1);
-            strcpy(bundle_modify_eid, RFC9173_TestVectors_AppendixA2.cbor_bundle_original);
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.cbor_bundle_original));
+
         }
         else
         {
-            bundle_modify_eid = malloc(strlen(RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb)+1);
-            strcpy(bundle_modify_eid, RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb);
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb));
         }
     }
-
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_modify_eid));
 
     // Modify EIDs to match policy rule filters
     int res = BSL_TestUtils_ModifyEIDs(&LocalTestCtx.mock_bpa_ctr.bundle_ref, src_eid, dest_eid, secsrc_eid);
@@ -576,5 +570,4 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc,
     }
 
     BSL_SecurityActionSet_Deinit(&action_set);
-    free(bundle_modify_eid);
 }
