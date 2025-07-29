@@ -35,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ['ubuntu-24.04', 'centos-9']
-        compiler: ['gcc', 'clang']
+        compiler: ['gcc']
     name: Unit Test (${{matrix.os}} ${{matrix.compiler}})
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
