@@ -101,7 +101,7 @@ jobs:
           echo "Source coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
 
   mock-bpa-test:
-    name: Mock BPA Test (ubunntu-24.04 gcc)
+    name: Mock BPA Test (ubuntu-24.04 gcc)
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -132,7 +132,7 @@ jobs:
         run: ./build.sh install
       - name: Check symbols
         run: |
-          ./check_symbols.py --prefix bsl_ -- bsl_front bsl_backend bsl_crypto
+          ./check_symbols.py --prefix bsl_ -- bsl_front bsl_dynamic bsl_crypto
           ./check_symbols.py --prefix bslx_ -- bsl_default_sc
           ./check_symbols.py --prefix bslp_ -- bsl_sample_pp
           ./check_symbols.py -- bsl_mock_bpa
