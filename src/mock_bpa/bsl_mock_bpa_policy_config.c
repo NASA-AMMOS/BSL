@@ -27,6 +27,32 @@
 
 #include "bsl_mock_bpa_policy_config.h"
 
+int hexchar_to_int(char c) 
+{
+    if ('0' <= c && c <= '9') return c - '0';
+    if ('a' <= c && c <= 'f') return c - 'a' + 10;
+    if ('A' <= c && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+int hexstring_to_bytes(const char *hexstr, uint8_t *out, size_t out_size) 
+{
+    size_t len = strlen(hexstr);
+    if (len % 2 != 0 || out_size < len / 2) {
+        return -1;
+    }
+
+    for (size_t i = 0; i < len / 2; ++i) {
+        int high = hexchar_to_int(hexstr[2 * i]);
+        int low  = hexchar_to_int(hexstr[2 * i + 1]);
+        if (high == -1 || low == -1) {
+            return -1;
+        }
+        out[i] = (high << 4) | low;
+    }
+
+    return (int)(len / 2);
+}
 
 static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *text)
 {
@@ -580,7 +606,15 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         const char *k_str = json_string_value(k);
         BSL_LOG_DEBUG("k: %s\n", k_str);
 
-        retval = BSL_Crypto_AddRegistryKey(kid_str, (uint8_t *)k_str, sizeof(k_str));
+        uint8_t key_buf[strlen(k_str)/2];
+        hexstring_to_bytes(k_str, key_buf, sizeof(key_buf));
+
+        for (size_t j = 0; j < strlen(k_str)/2; j++) {
+            uint8_t byte_value = key_buf[j];
+            BSL_LOG_INFO("%x", byte_value);
+        }
+
+        retval = BSL_Crypto_AddRegistryKey(kid_str, key_buf, strlen(k_str)/2);
 
         // char cmd[100];
         // sprintf(cmd,"echo \"%s\" | basenc --decode --base64url | basenc --base16 --wrap=0", k_str);

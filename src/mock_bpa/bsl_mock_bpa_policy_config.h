@@ -68,6 +68,9 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
 
 int mock_bpa_key_registry_init(const char *pp_cfg_file_path);
 
+int hexchar_to_int(char c);
+int hexstring_to_bytes(const char *hexstr, uint8_t *out, size_t out_size);
+
 #ifdef __cplusplus
 } // extern C
 #endif

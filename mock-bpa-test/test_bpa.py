@@ -57,7 +57,7 @@ class TestAgent(unittest.TestCase):
 
         args = [
             'bash', 'build.sh', 'run', 'build/default/src/mock_bpa/bsl-mock-bpa',
-            '-e', 'ipn:1.2',
+            '-e', 'ipn:2.1',
             '-u', 'localhost:4556', '-r', 'localhost:14556',
             '-o', 'localhost:24556', '-a', 'localhost:34556',
             '-p', policy_config,
@@ -131,6 +131,8 @@ class TestAgent(unittest.TestCase):
 
         cbor_str = cbor2.loads(rx_data)
         LOGGER.info('\nCBOR representation of received data:\n%s\n', cbor_str)
+
+        print(f'exp: {binascii.hexlify(expected_rx)}, got: {binascii.hexlify(rx_data)}')
 
         self.assertEqual(binascii.hexlify(expected_rx), binascii.hexlify(rx_data))
 
