@@ -86,6 +86,15 @@ jobs:
               -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
       - name: Build
         run: ./build.sh
+      - name: Install
+        run: ./build.sh install
+      - name: Check symbols
+        run: |
+          ./check_symbols.py --prefix bsl_ -- bsl_front bsl_dynamic
+          ./check_symbols.py --prefix bsl_ bslb_ -- bsl_crypto
+          ./check_symbols.py --prefix bslx_ -- bsl_default_sc
+          ./check_symbols.py --prefix bslp_ -- bsl_sample_pp
+          ./check_symbols.py -- bsl_mock_bpa
       - name: Test
         run: ./build.sh check
       - name: Collect coverage
@@ -130,12 +139,6 @@ jobs:
         run: ./build.sh
       - name: Install
         run: ./build.sh install
-      - name: Check symbols
-        run: |
-          ./check_symbols.py --prefix bsl_ -- bsl_front bsl_dynamic bsl_crypto
-          ./check_symbols.py --prefix bslx_ -- bsl_default_sc
-          ./check_symbols.py --prefix bslp_ -- bsl_sample_pp
-          ./check_symbols.py -- bsl_mock_bpa
       - name: Test Prep
         run: |
           sudo apt-get update && sudo apt-get install -y \
