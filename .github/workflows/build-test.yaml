@@ -49,6 +49,7 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
+          sudo rm /var/lib/man-db/auto-update && \
           sudo apt-get update && \
           sudo apt-get install -y \
               cmake ninja-build \
@@ -59,6 +60,7 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
+          rm /var/lib/man-db/auto-update && \
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
@@ -118,6 +120,7 @@ jobs:
     steps:
       - name: Set up OS
         run: |
+          sudo rm /var/lib/man-db/auto-update && \
           sudo apt-get update && sudo apt-get install -y \
           cmake ninja-build ruby gcc g++ ccache patch \
           libssl-dev \
