@@ -216,13 +216,6 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     /// Confirm that the target block is decrypted correctly.
     BSL_CanonicalBlock_t target_block;
     BSL_BundleCtx_GetBlockMetadata(&mock_bpa_ctr->bundle_ref, 1, &target_block);
-    // TEST_ASSERT_EQUAL(sizeof(ApxA2_PayloadData), target_block.btsd_len);
-    // uint8_t logstr[500];
-    // BSL_LOG_INFO("EXPECTED payload: %s",
-    //              BSL_Log_DumpAsHexString(logstr, sizeof(logstr), ApxA2_PayloadData, sizeof(ApxA2_PayloadData)));
-    // BSL_LOG_INFO("ACTUAL payload:   %s",
-    //              BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block.btsd, target_block.btsd_len));
-    // TEST_ASSERT_EQUAL(0, memcmp(ApxA2_PayloadData, target_block.btsd, sizeof(ApxA2_PayloadData)));
 
     BSL_SecOutcome_Deinit(outcome);
     BSL_SecOper_Deinit(&bcb_test_context.sec_oper);
