@@ -42,15 +42,20 @@ jobs:
     permissions:
       contents: read
       actions: write
+    env:
+      CC: ${{matrix.compiler=='clang' && 'clang' || 'gcc'}}
+      CXX: ${{matrix.compiler=='clang' && 'clang++' || 'g++'}}
     steps:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update && \
           sudo apt-get install -y \
-              cmake ninja-build ruby gcc g++ ccache patch \
+              cmake ninja-build \
+              ruby pkg-config ccache patch \
+              ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
               libssl-dev \
-              ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \              valgrind gcovr xmlstarlet
+              valgrind gcovr xmlstarlet
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
@@ -59,9 +64,10 @@ jobs:
           dnf install -y \
               git rsync \
               cmake ninja-build \
-              ruby pkg-config gcc gcc-c++ ccache patch \
+              ruby pkg-config ccache patch \
+              ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
               openssl-devel \
-              ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \              valgrind xmlstarlet python3-pip
+              valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -77,7 +83,6 @@ jobs:
       - name: Prep
         run: |
           ./build.sh prep \
-              ${{matrix.compiler=='clang' && '-DCMAKE_C_COMPILER=clang' || ''}} \
               -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
       - name: Build
         run: ./build.sh
