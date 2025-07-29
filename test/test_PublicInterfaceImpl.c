@@ -459,67 +459,12 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc,
         }
     }
 
-    // We need to modify the primary block header for different dest/src/secsrc EIDs
-    // Locations of EIDs in string representation of CBOR bundle:
-    // dest: ipn:[16,17].[18,19]
-    // src ipn: [26,27].[28,29]
-    // secsrc ipn: [36,37].[38,39]
-    if (src_eid)
-    {
-        uint64_t node_num, srv_num;
-        if (sscanf(src_eid, "ipn:%"PRIu64".%"PRIu64, &node_num, &srv_num) != 2) 
-        {
-            TEST_ABORT();
-        }
-
-        char buf[3];
-        snprintf(buf, sizeof(buf), "%02"PRIx64, node_num);
-        bundle_modify_eid[26] = buf[0];
-        bundle_modify_eid[27] = buf[1];
-
-        snprintf(buf, sizeof(buf), "%02"PRIx64, srv_num);
-        bundle_modify_eid[28] = buf[0];
-        bundle_modify_eid[29] = buf[1];
-    }
-    if (dest_eid)
-    {
-        uint64_t node_num, srv_num;
-        if (sscanf(dest_eid, "ipn:%"PRIu64".%"PRIu64, &node_num, &srv_num) != 2) 
-        {
-            TEST_ABORT();
-        }
-
-        char buf[3];
-        snprintf(buf, sizeof(buf), "%02"PRIx64, node_num);
-        bundle_modify_eid[16] = buf[0];
-        bundle_modify_eid[17] = buf[1];
-
-        snprintf(buf, sizeof(buf), "%02"PRIx64, srv_num);
-        bundle_modify_eid[18] = buf[0];
-        bundle_modify_eid[19] = buf[1];
-    }
-    if (secsrc_eid)
-    {
-        uint64_t node_num, srv_num;
-        if (sscanf(secsrc_eid, "ipn:%"PRIu64".%"PRIu64, &node_num, &srv_num) != 2) 
-        {
-            TEST_ABORT();
-        }
-
-        char buf[3];
-        snprintf(buf, sizeof(buf), "%02"PRIx64, node_num);
-        bundle_modify_eid[36] = buf[0];
-        bundle_modify_eid[37] = buf[1];
-
-        snprintf(buf, sizeof(buf), "%02"PRIx64, srv_num);
-        bundle_modify_eid[38] = buf[0];
-        bundle_modify_eid[39] = buf[1];
-    }
-
-    BSL_LOG_INFO("-- BUNDLE WITH EID EDITS: %s", bundle_modify_eid);
-
-    // After modifying the string CBOR, we can load it into a new bundle context in our test context
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_modify_eid));
+
+    // Modify EIDs to match policy rule filters
+    int res = BSL_TestUtils_ModifyEIDs(&LocalTestCtx.mock_bpa_ctr.bundle_ref, src_eid, dest_eid, secsrc_eid);
+    BSL_LOG_INFO("EID MODIFICATION RESULT: %d", res);
+
 
     switch(sec_role)
     {

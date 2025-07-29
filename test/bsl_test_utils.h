@@ -23,6 +23,8 @@
 #define _BSL_TEST_UTILS_H_
 
 #include <m-string.h>
+#include <qcbor/qcbor_decode.h>
+#include <qcbor/qcbor_encode.h>
 
 #include <backend/PublicInterfaceImpl.h>
 #include <backend/SecOperation.h>
@@ -332,5 +334,7 @@ int BSL_TestUtils_EncodeBase16(string_t output, const BSL_Data_t *input, bool up
  * @return Zero upon success.
  */
 int BSL_TestUtils_DecodeBase16(BSL_Data_t *output, const string_t input);
+
+int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid, const char *secsrc_eid);
 
 #endif
