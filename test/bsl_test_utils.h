@@ -269,6 +269,29 @@ static const RFC9173_TestVectorsA2 RFC9173_TestVectors_AppendixA2 = {
      "e73e9a")
 };
 
+static const struct RFC9173_TestVectors_A4
+{
+    const char *cbor_bundle_original;
+    const char *cbor_bundle_final;
+
+} RFC9173_TestVectors_AppendixA4 = {
+    .cbor_bundle_original = (   "9f8807000082028201028202820201820282020182001"
+                                "8281a000f424085010100005823526561647920746f20"
+                                "67656e657261746520612033322d62797465207061796"
+                                "c6f6164ff"),
+    .cbor_bundle_final = (      "9f8807000082028201028202820201820282020182001"
+                                "8281a000f4240850b0300005846438ed6208eb1c1ffb9"
+                                "4d952175167df0902902064a2983910c4fb2340790bf4"
+                                "20a7d1921d5bf7c4721e02ab87a93ab1e0b75cf62e494"
+                                "8727c8b5dae46ed2af05439b88029191850c020100584"
+                                "9820301020182028202018382014c5477656c76653132"
+                                "313231328202038204078281820150220ffc45c8a9019"
+                                "99ecc60991dd78b2981820150d2c51cb2481792dae8b2"
+                                "1d848cede99b8501010000582390eab6457593379298a"
+                                "8724e16e61f837488e127212b59ac91f8a86287b7d076"
+                                "30a122ff"),
+};
+
 typedef struct
 {
     BSL_SecParam_t sha_variant;

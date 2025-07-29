@@ -66,11 +66,17 @@ void setUp(void)
 
     BSL_SecParam_t param_scope_flag = { 0 };
     BSL_SecParam_InitInt64(&param_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
+    BSL_SecParam_t param_scope_flag_7 = { 0 };
+    BSL_SecParam_InitInt64(&param_scope_flag_7, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0x7);
     BSL_SecParam_t param_sha_variant = { 0 };
     BSL_SecParam_InitInt64(&param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+    BSL_SecParam_t param_sha_variant_384 = { 0 };
+    BSL_SecParam_InitInt64(&param_sha_variant_384, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
     
     BSL_SecParam_t param_aes_variant = { 0 };
     BSL_SecParam_InitInt64(&param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_SecParam_t param_aes_variant_256 = { 0 };
+    BSL_SecParam_InitInt64(&param_aes_variant_256, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
     BSL_SecParam_t param_aad_scope_flag = { 0 };
     BSL_SecParam_InitInt64(&param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
 
@@ -103,6 +109,10 @@ void setUp(void)
     BSL_SecParam_InitStr(&param_test_bcb_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
     BSL_SecParam_t param_test_bcb_key_bad = { 0 };
     BSL_SecParam_InitStr(&param_test_bcb_key_bad, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_t param_test_bcb_2_key_correct = { 0 };
+    BSL_SecParam_InitStr(&param_test_bcb_2_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_SecParam_t param_test_bcb_2_key_bad = { 0 };
+    BSL_SecParam_InitStr(&param_test_bcb_2_key_bad, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
 
     // test bib accepting with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
     // CLIN, SRC=ipn:1.1, ACCEPTOR, BIB, PAYLOAD, DROP BLOCK, good key
@@ -223,12 +233,70 @@ void setUp(void)
     // test bib & bcb accpeting with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
     // CLIN, SRC=ipn:1.9, ACCEPTOR, BIB, PAYLOAD, DROP BLOCK, good key
     // CLIN, SRC=ipn:1.9, ACCEPTOR, BCB, PAYLOAD, DROP BLOCK, good key
-    // CLIN, SRC=ipn:1.10, ACCEPTOR, BIB, PAYLOAD, DROP BUNDLE, bad key
-    // CLIN, SRC=ipn:1.10, ACCEPTOR, BCB, PAYLOAD, DROP BUNDLE, bad key
+    // BSLP_PolicyPredicate_t *predicate_9a = &policy->predicates[policy->predicate_count++];
+    // BSLP_PolicyPredicate_Init(predicate_9a, BSL_POLICYLOCATION_CLIN,
+    //                           BSL_TestUtils_GetEidPatternFromText("ipn:*.1.9"), BSL_TestUtils_GetEidPatternFromText("*:**"),
+    //                           BSL_TestUtils_GetEidPatternFromText("*:**"));
+    // BSLP_PolicyRule_t *rule_9a = &policy->rules[policy->rule_count++];
+    // BSLP_PolicyRule_Init(   rule_9a, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.9) WITH POLICY DROP BLOCK", 
+    //                         predicate_9a, 1, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
+    //                         BSL_POLICYACTION_DROP_BLOCK);
+    // BSLP_PolicyRule_AddParam(rule_9a, &param_sha_variant);
+    // BSLP_PolicyRule_AddParam(rule_9a, &param_scope_flag);
+    // BSLP_PolicyRule_AddParam(rule_9a, &param_test_bib_key_correct);
+
+    // BSLP_PolicyPredicate_t *predicate_9b = &policy->predicates[policy->predicate_count++];
+    // BSLP_PolicyPredicate_Init(predicate_9b, BSL_POLICYLOCATION_CLIN,
+    //                           BSL_TestUtils_GetEidPatternFromText("ipn:*.1.5"), BSL_TestUtils_GetEidPatternFromText("*:**"),
+    //                           BSL_TestUtils_GetEidPatternFromText("*:**"));
+    // BSLP_PolicyRule_t *rule_9b = &policy->rules[policy->rule_count++];
+    // BSLP_PolicyRule_Init(   rule_9b, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.9) WITH POLICY DROP BLOCK", 
+    //                         predicate_9b, 2, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
+    //                         BSL_POLICYACTION_DROP_BLOCK);
+    // BSLP_PolicyRule_AddParam(rule_9b, &param_test_bcb_key_correct);
+    // BSLP_PolicyRule_AddParam(rule_9b, &param_iv);
+    // BSLP_PolicyRule_AddParam(rule_9b, &param_wrapped_key);
+    // BSLP_PolicyRule_AddParam(rule_9b, &param_auth_tag);
+    // BSLP_PolicyRule_AddParam(rule_9b, &param_aes_variant);
+
+    // // CLIN, SRC=ipn:1.10, ACCEPTOR, BIB, PAYLOAD, DROP BUNDLE, bad key
+    // // CLIN, SRC=ipn:1.10, ACCEPTOR, BCB, PAYLOAD, DROP BUNDLE, bad key
+    // BSLP_PolicyPredicate_t *predicate_2 = &policy->predicates[policy->predicate_count++];
+    // BSLP_PolicyPredicate_Init(predicate_2, BSL_POLICYLOCATION_CLIN,
+    //                           BSL_TestUtils_GetEidPatternFromText("ipn:*.1.10"), BSL_TestUtils_GetEidPatternFromText("*:**"),
+    //                           BSL_TestUtils_GetEidPatternFromText("*:**"));
+    // BSLP_PolicyRule_t *rule_2 = &policy->rules[policy->rule_count++];
+    // BSLP_PolicyRule_Init(   rule_2, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.10)", 
+    //                         predicate_2, 1, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
+    //                         BSL_POLICYACTION_DROP_BUNDLE);
+    // BSLP_PolicyRule_AddParam(rule_2, &param_sha_variant);
+    // BSLP_PolicyRule_AddParam(rule_2, &param_scope_flag);
+    // BSLP_PolicyRule_AddParam(rule_2, &param_test_bib_key_bad);
+    // BSLP_PolicyPredicate_t *predicate_6 = &policy->predicates[policy->predicate_count++];
+    // BSLP_PolicyPredicate_Init(predicate_6, BSL_POLICYLOCATION_CLIN,
+    //                           BSL_TestUtils_GetEidPatternFromText("ipn:*.1.10"), BSL_TestUtils_GetEidPatternFromText("*:**"),
+    //                           BSL_TestUtils_GetEidPatternFromText("*:**"));
+    // BSLP_PolicyRule_t *rule_6 = &policy->rules[policy->rule_count++];
+    // BSLP_PolicyRule_Init(   rule_6, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.10)", 
+    //                         predicate_6, 2, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
+    //                         BSL_POLICYACTION_DROP_BUNDLE);
+    // BSLP_PolicyRule_AddParam(rule_6, &param_test_bcb_key_bad);
+    // BSLP_PolicyRule_AddParam(rule_6, &param_iv);
+    // BSLP_PolicyRule_AddParam(rule_6, &param_wrapped_key);
+    // BSLP_PolicyRule_AddParam(rule_6, &param_auth_tag);
+    // BSLP_PolicyRule_AddParam(rule_6, &param_aes_variant);
+
+
     // CLIN, SRC=ipn:1.11, ACCEPTOR, BIB, PAYLOAD, DROP BLOCK, bad key
     // CLIN, SRC=ipn:1.11, ACCEPTOR, BCB, PAYLOAD, DROP BLOCK, bad key
+
+
+
     // CLIN, SRC=ipn:1.12, ACCEPTOR, BIB, PAYLOAD, NOTHING, bad key
     // CLIN, SRC=ipn:1.12, ACCEPTOR, BCB, PAYLOAD, NOTHING, bad key
+
+
+
 
     // test bib sourcing with good key
     // CLOUT, DEST=ipn:1.1, SOURCE, BIB, PAYLOAD, DROP BLOCK, good key
@@ -261,6 +329,40 @@ void setUp(void)
     // test bib & bcb sourcing with good key
     // CLOUT, DEST=ipn:1.9, SOURCE, BIB, PAYLOAD, DROP BLOCK, good key
     // CLOUT, DEST=ipn:1.9, SOURCE, BCB, PAYLOAD, DROP BLOCK, good key
+    // CLOUT, DEST=ipn:1.9, SOURCE, BCB, BIB, DROP BLOCK, good key
+    BSLP_PolicyPredicate_t *predicate_15a = &policy->predicates[policy->predicate_count++];
+    BSLP_PolicyPredicate_Init(predicate_15a, BSL_POLICYLOCATION_CLOUT,
+                              BSL_TestUtils_GetEidPatternFromText("*:**"), BSL_TestUtils_GetEidPatternFromText("*:**"),
+                              BSL_TestUtils_GetEidPatternFromText("ipn:*.1.9"));
+    BSLP_PolicyRule_t *rule_15a = &policy->rules[policy->rule_count++];
+    BSLP_PolicyRule_Init(   rule_15a, "SOURCE BIB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:1.9) WITH POLICY DROP BLOCK", 
+                            predicate_15a, 1, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
+                            BSL_POLICYACTION_DROP_BLOCK);
+    BSLP_PolicyRule_AddParam(rule_15a, &param_sha_variant_384);
+    BSLP_PolicyRule_AddParam(rule_15a, &param_scope_flag_7);
+    BSLP_PolicyRule_AddParam(rule_15a, &param_test_bib_key_correct);
+   
+    BSLP_PolicyPredicate_t *predicate_15b = &policy->predicates[policy->predicate_count++];
+    BSLP_PolicyPredicate_Init(predicate_15b, BSL_POLICYLOCATION_CLOUT,
+                              BSL_TestUtils_GetEidPatternFromText("*:**"), BSL_TestUtils_GetEidPatternFromText("*:**"),
+                              BSL_TestUtils_GetEidPatternFromText("ipn:*.1.9"));
+    BSLP_PolicyRule_t *rule_15b = &policy->rules[policy->rule_count++];
+    BSLP_PolicyRule_Init(   rule_15b, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:1.9)", 
+                            predicate_15b, 2, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
+                            BSL_POLICYACTION_DROP_BLOCK);
+    BSLP_PolicyRule_AddParam(rule_15b, &param_test_bcb_2_key_correct);
+    BSLP_PolicyRule_AddParam(rule_15b, &param_aes_variant_256);
+
+    BSLP_PolicyPredicate_t *predicate_15c = &policy->predicates[policy->predicate_count++];
+    BSLP_PolicyPredicate_Init(predicate_15c, BSL_POLICYLOCATION_CLOUT,
+                              BSL_TestUtils_GetEidPatternFromText("*:**"), BSL_TestUtils_GetEidPatternFromText("*:**"),
+                              BSL_TestUtils_GetEidPatternFromText("ipn:*.1.9"));
+    BSLP_PolicyRule_t *rule_15c = &policy->rules[policy->rule_count++];
+    BSLP_PolicyRule_Init(   rule_15c, "SOURCE BCB OVER BIB AT CLOUT FILTER(DEST=ipn:1.9)", 
+                            predicate_15c, 2, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_BIB,
+                            BSL_POLICYACTION_DROP_BLOCK);
+    BSLP_PolicyRule_AddParam(rule_15c, &param_test_bcb_2_key_correct);
+    BSLP_PolicyRule_AddParam(rule_15c, &param_aes_variant_256);
 
     // test bib verif with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
     // APPIN, DEST=ipn:1.1, VERIF, BIB, PAYLOAD, DROP BLOCK, good key
@@ -398,27 +500,30 @@ void tearDown(void)
     TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));
 }
 
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.1", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.2", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.3", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.4", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.5", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.6", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.7", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.8", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_CLOUT, NULL, "ipn:1.1", NULL, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_CLOUT, NULL, "ipn:1.5", NULL, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.1", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.2", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.3", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.4", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.5", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.6", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.7", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1)
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.8", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1)
+#define TEST_BOTH_BIB_BCB 99
+
+// TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.1", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.2", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.3", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.4", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.5", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.6", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.7", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.8", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_CLOUT, NULL, "ipn:1.1", NULL, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_CLOUT, NULL, "ipn:1.5", NULL, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
+TEST_CASE(BSL_POLICYLOCATION_CLOUT, NULL, "ipn:1.9", NULL, BSL_SECROLE_SOURCE, 99, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 2, 2)
+// TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.1", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.2", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.3", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.4", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.5", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.6", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.7", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1)
+// TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.8", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1)
 void test_comprehensive(BSL_PolicyLocation_e policy_loc, 
     const char *src_eid, const char *dest_eid, const char *secsrc_eid, 
-    BSL_SecRole_e sec_role, BSL_SecBlockType_e sec_block_type, uint8_t target_block, 
+    BSL_SecRole_e sec_role, int sec_block_type, uint8_t target_block, 
     BSL_PolicyAction_e policy_act, bool good_key, int sec_blks_ct, int expected_act_ct)
 {
 
@@ -442,7 +547,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc,
             TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
         }
     }
-    else
+    else if (sec_block_type == BSL_SECBLOCKTYPE_BCB)
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
@@ -452,6 +557,18 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc,
         else
         {
             TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb));
+        }
+    }
+    else if (sec_block_type == TEST_BOTH_BIB_BCB)
+    {
+        if (sec_role == BSL_SECROLE_SOURCE)
+        {
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA4.cbor_bundle_original));
+
+        }
+        else
+        {
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA4.cbor_bundle_final));
         }
     }
 
@@ -563,9 +680,18 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc,
             TEST_ASSERT_EQUAL(1+sec_blks_ct, primary_block.block_count);
 
             BSL_CanonicalBlock_t res;
-            TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 2, &res));
-            TEST_ASSERT_EQUAL(sec_block_type, res.type_code);
-
+            if (sec_block_type == TEST_BOTH_BIB_BCB)
+            {
+                TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 2, &res));
+                TEST_ASSERT_EQUAL(11, res.type_code);
+                TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 3, &res));
+                TEST_ASSERT_EQUAL(12, res.type_code);
+            }
+            else
+            {
+                TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 2, &res));
+                TEST_ASSERT_EQUAL(sec_block_type, res.type_code);
+            }
             break;
     }
 
