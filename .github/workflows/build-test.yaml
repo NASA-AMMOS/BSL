@@ -35,7 +35,8 @@ jobs:
       fail-fast: false
       matrix:
         os: ['ubuntu-24.04', 'centos-9']
-    name: Unit Test (os=${{matrix.os}})
+        compiler: ['gcc', 'clang']
+    name: Unit Test (${{matrix.os}} ${{matrix.compiler}})
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
     permissions:
@@ -47,9 +48,9 @@ jobs:
         run: |
           sudo apt-get update && \
           sudo apt-get install -y \
-              cmake ninja-build ruby build-essential \
+              cmake ninja-build ruby gcc g++ ccache patch \
               libssl-dev \
-              valgrind gcovr xmlstarlet
+              ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \              valgrind gcovr xmlstarlet
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
@@ -60,8 +61,53 @@ jobs:
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch \
               openssl-devel \
-              valgrind xmlstarlet python3-pip
+              ${{matrix.compiler=='clang' && 'clang llvm' || ''}} \              valgrind xmlstarlet python3-pip
           pip3 install gcovr
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
+      - name: Dependencies
+        run: ./build.sh deps
+      - name: Prep
+        run: |
+          ./build.sh prep \
+              ${{matrix.compiler=='clang' && '-DCMAKE_C_COMPILER=clang' || ''}} \
+              -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
+      - name: Build
+        run: ./build.sh
+      - name: Test
+        run: ./build.sh check
+      - name: Collect coverage
+        run: ./build.sh coverage
+      - name: Archive coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
+          path: build/default/coverage*
+      - name: Report coverage
+        run: |
+          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/packages/package[@name="src"]/@line-rate * 100)' -n build/default/coverage-xml.xml)
+          echo "Source coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
+
+  mock-bpa-test:
+    name: Mock BPA Test (ubunntu-24.04 gcc)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Set up OS
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          cmake ninja-build ruby gcc g++ ccache patch \
+          libssl-dev \
+          valgrind gcovr xmlstarlet
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -77,51 +123,14 @@ jobs:
         run: ./build.sh prep -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
       - name: Build
         run: ./build.sh
-      - name: Test
-        run: ./build.sh check
-      - name: Collect coverage
-        run: ./build.sh coverage
-      - name: Archive coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{github.job}}-${{matrix.os}}-coverage
-          path: build/default/coverage*
-      - name: Report coverage
-        run: |
-          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/packages/package[@name="src"]/@line-rate * 100)' -n build/default/coverage-xml.xml)
-          echo "Source coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
-
-  mock-bpa-test:
-    name: Mock BPA Test (os=ubunntu-24.04)
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      actions: write
-    steps:
-      - name: Set up OS
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          cmake ninja-build ruby build-essential
-          libssl-dev
-          valgrind gcovr xmlstarlet
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          create-symlink: true
-      - name: Dependencies
-        run: ./build.sh deps
-      - name: Prep
-        run: ./build.sh prep -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
-      - name: Build
-        run: ./build.sh
       - name: Install
         run: ./build.sh install
       - name: Check symbols
-        run: echo ./check_symbols.py bsl #FIXME replace
+        run: |
+          ./check_symbols.py --prefix bsl_ -- bsl_front bsl_backend bsl_crypto
+          ./check_symbols.py --prefix bslx_ -- bsl_default_sc
+          ./check_symbols.py --prefix bslp_ -- bsl_sample_pp
+          ./check_symbols.py -- bsl_mock_bpa
       - name: Test Prep
         run: |
           sudo apt-get update && sudo apt-get install -y \
