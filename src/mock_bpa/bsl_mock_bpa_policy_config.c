@@ -386,7 +386,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
         BSL_SecParam_InitInt64(params->param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE, RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK);
         BSL_Data_t     iv = { .owned = 0, .ptr = iv_buf, .len = 12 };
         BSL_SecParam_InitBytestr(params->param_init_vector, RFC9173_BCB_SECPARAM_IV, iv);
-        BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
+        BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
         BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9102");
     }
     else {

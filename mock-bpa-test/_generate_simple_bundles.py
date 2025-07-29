@@ -135,7 +135,7 @@ b = [
 ]
 
 print (f"ORIGINAL BUNDLE: {b}")
-b = add_bib_to_bundle_over_x(b, 1)
+b = add_bib_to_bundle_over_x(b, 0)
 print(f'BUNDLE AFTER BIB: {b}')
-b = add_bcb_to_bundle_over_x(b, 1)
+#b = add_bcb_to_bundle_over_x(b, 1)
 print(f'FINAL BUNDLE: {b}')
