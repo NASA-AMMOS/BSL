@@ -581,6 +581,13 @@ int BSL_BundleCtx_CreateBlock(BSL_BundleRef_t *bundle, uint64_t block_type_code,
  */
 int BSL_BundleCtx_RemoveBlock(BSL_BundleRef_t *bundle, uint64_t block_num);
 
+/** @brief Requests dropping of bundle
+ *
+ * @param[in] bundle    Context bundle
+ * @return 0 on success, negative on failure.
+ */
+int BSL_BundleCtx_DropBundle(BSL_BundleRef_t *bundle);
+
 /** @brief Requests the re-allocation of a block's BTSD, useful for BCB.
  *
  * @note Uses semantics similar to memcpy.

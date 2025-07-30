@@ -252,7 +252,9 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
 
     if (must_drop)
     {
-        BSL_LOG_ERR("TODO Drop bundle using host interface");
+        // Drop the bundle and return operation error
+        BSL_LOG_WARNING("***** Drop bundle due to failed security operation *******");
+        BSL_BundleCtx_DropBundle(bundle);
     }
 
     // TODO CHK_POSTCONDITION
