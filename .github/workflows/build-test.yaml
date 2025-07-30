@@ -35,30 +35,38 @@ jobs:
       fail-fast: false
       matrix:
         os: ['ubuntu-24.04', 'centos-9']
-    name: Unit Test (os=${{matrix.os}})
+        compiler: ['gcc']
+    name: Unit Test (${{matrix.os}} ${{matrix.compiler}})
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
     permissions:
       contents: read
       actions: write
+    env:
+      CC: ${{matrix.compiler=='clang' && 'clang' || 'gcc'}}
+      CXX: ${{matrix.compiler=='clang' && 'clang++' || 'g++'}}
     steps:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo apt-get update && \
+          sudo rm /var/lib/man-db/auto-update
+          sudo apt-get update
           sudo apt-get install -y \
-              cmake ninja-build ruby build-essential \
+              cmake ninja-build \
+              ruby pkg-config ccache patch \
+              ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
               libssl-dev \
               valgrind gcovr xmlstarlet
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
-          dnf config-manager --set-enabled crb
           dnf install -y epel-release
+          crb enable
           dnf install -y \
               git rsync \
               cmake ninja-build \
-              ruby pkg-config gcc gcc-c++ ccache patch \
+              ruby pkg-config ccache patch \
+              ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
               openssl-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
@@ -74,9 +82,20 @@ jobs:
       - name: Dependencies
         run: ./build.sh deps
       - name: Prep
-        run: ./build.sh prep -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
+        run: |
+          ./build.sh prep \
+              -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_TESTING=ON
       - name: Build
         run: ./build.sh
+      - name: Install
+        run: ./build.sh install
+      - name: Check symbols
+        run: |
+          ./check_symbols.py bsl_front bsl_dynamic --prefix bsl_
+          ./check_symbols.py bsl_crypto --prefix bsl_ bslb_
+          ./check_symbols.py bsl_default_sc --prefix bslx_
+          ./check_symbols.py bsl_sample_pp --prefix bslp_
+          ./check_symbols.py bsl_mock_bpa --prefix MockBPA_ bsl_eidpat_ bsl_mock_ mock_bpa_
       - name: Test
         run: ./build.sh check
       - name: Collect coverage
@@ -84,7 +103,7 @@ jobs:
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
-          name: ${{github.job}}-${{matrix.os}}-coverage
+          name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
           path: build/default/coverage*
       - name: Report coverage
         run: |
@@ -92,21 +111,23 @@ jobs:
           echo "Source coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
 
   mock-bpa-test:
-    name: Mock BPA Test (os=ubunntu-24.04)
+    name: Mock BPA Test (ubuntu-24.04 gcc)
     runs-on: ubuntu-24.04
     permissions:
       contents: read
       actions: write
     steps:
       - name: Set up OS
-        run: >
-          sudo apt-get update && sudo apt-get install -y
-          cmake ninja-build ruby build-essential
-          libssl-dev
+        run: |
+          sudo rm /var/lib/man-db/auto-update && \
+          sudo apt-get update && sudo apt-get install -y \
+          cmake ninja-build ruby gcc g++ ccache patch \
+          libssl-dev \
           valgrind gcovr xmlstarlet
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: recursive
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -120,8 +141,6 @@ jobs:
         run: ./build.sh
       - name: Install
         run: ./build.sh install
-      - name: Check symbols
-        run: echo ./check_symbols.py bsl #FIXME replace
       - name: Test Prep
         run: |
           sudo apt-get update && sudo apt-get install -y \
