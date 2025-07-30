@@ -138,6 +138,9 @@ class TestAgent(unittest.TestCase):
             self.assertEqual(binascii.hexlify(expected_rx), binascii.hexlify(rx_data))
             
         elif (testcase.expected_output_format == DataFormat.NONE):
+            self._ul_sock.send(tx_data)
+            LOGGER.debug('waiting')
+            
             rx_data = self._wait_for(self._ul_sock, True)
             self.assertEqual(rx_data, 'TIMEOUT') #TODO
             self.assertEqual(True,False)
