@@ -202,6 +202,14 @@ static void *work_over_rx(void *arg _U_)
             continue;
         }
 
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (!bundle->valid) 
+        {
+            BSL_LOG_ERR("bundle was marked to drop by BSL");
+            mock_bpa_ctr_deinit(&item);
+            continue;
+        }
+
         // loopback
         data_queue_push(deliver, item);
     }
@@ -237,6 +245,14 @@ static void *work_under_rx(void *arg _U_)
             continue;
         }
 
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (!bundle->valid) 
+        {
+            BSL_LOG_ERR("bundle was marked to drop by BSL");
+            mock_bpa_ctr_deinit(&item);
+            continue;
+        }
+
         // loopback
         data_queue_push(forward, item);
     }
@@ -261,6 +277,14 @@ static void *work_deliver(void *arg _U_)
         if (mock_bpa_process(BSL_POLICYLOCATION_APPOUT, item.bundle_ref.data))
         {
             BSL_LOG_ERR("work_deliver failed security processing");
+            mock_bpa_ctr_deinit(&item);
+            continue;
+        }
+
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (!bundle->valid) 
+        {
+            BSL_LOG_ERR("bundle was marked to drop by BSL");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
@@ -297,6 +321,14 @@ static void *work_forward(void *arg _U_)
         if (mock_bpa_process(BSL_POLICYLOCATION_CLOUT, item.bundle_ref.data))
         {
             BSL_LOG_ERR("work_forward failed security processing");
+            mock_bpa_ctr_deinit(&item);
+            continue;
+        }
+
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (!bundle->valid) 
+        {
+            BSL_LOG_ERR("bundle was marked to drop by BSL");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
