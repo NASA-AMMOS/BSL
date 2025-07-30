@@ -27,7 +27,7 @@
 
 #include "bsl_mock_bpa_policy_config.h"
 
-int hexchar_to_int(char c) 
+int mock_bpa_hexchar_to_int(char c) 
 {
     if ('0' <= c && c <= '9') return c - '0';
     if ('a' <= c && c <= 'f') return c - 'a' + 10;
@@ -35,7 +35,7 @@ int hexchar_to_int(char c)
     return -1;
 }
 
-int hexstring_to_bytes(const char *hexstr, uint8_t *out, size_t out_size) 
+int mock_bpa_hexstring_to_bytes(const char *hexstr, uint8_t *out, size_t out_size) 
 {
     size_t len = strlen(hexstr);
     if (len % 2 != 0 || out_size < len / 2) {
@@ -43,8 +43,8 @@ int hexstring_to_bytes(const char *hexstr, uint8_t *out, size_t out_size)
     }
 
     for (size_t i = 0; i < len / 2; ++i) {
-        int high = hexchar_to_int(hexstr[2 * i]);
-        int low  = hexchar_to_int(hexstr[2 * i + 1]);
+        int high = mock_bpa_hexchar_to_int(hexstr[2 * i]);
+        int low  = mock_bpa_hexchar_to_int(hexstr[2 * i + 1]);
         if (high == -1 || low == -1) {
             return -1;
         }
@@ -611,7 +611,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         BSL_LOG_DEBUG("k: %s\n", k_str);
 
         uint8_t key_buf[strlen(k_str)/2];
-        hexstring_to_bytes(k_str, key_buf, sizeof(key_buf));
+        mock_bpa_hexstring_to_bytes(k_str, key_buf, sizeof(key_buf));
 
         retval = BSL_Crypto_AddRegistryKey(kid_str, key_buf, strlen(k_str)/2);
 
