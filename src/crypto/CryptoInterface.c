@@ -72,7 +72,7 @@ void BSL_CryptoDeinit(void)
     BSLB_CryptoKeyDict_clear(StaticKeyRegistry);
 }
 
-int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *key_id,
+int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *kek_id,
                          size_t aes_variant)
 {
     const EVP_CIPHER *cipher = (aes_variant == BSL_CRYPTO_AES_128) ? EVP_aes_128_wrap() : EVP_aes_256_wrap();
@@ -85,8 +85,14 @@ int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_ke
     memset(keybuf, 0, sizeof(keybuf));
 
     size_t keylen = 0;
-    assert(BSLB_Crypto_GetRegistryKey(key_id, (const uint8_t **)&key, &keylen) == 0);
+    assert(BSLB_Crypto_GetRegistryKey(kek_id, (const uint8_t **)&key, &keylen) == 0);
     assert(keylen > 0);
+
+    BSL_LOG_INFO("da KEY %s:", kek_id);
+    for (size_t i = 0; i < keylen; i ++)
+    {
+        BSL_LOG_INFO("%02x", key[i]);
+    }
 
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, key, NULL);
     assert(dec_result == 1);
@@ -106,6 +112,7 @@ int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_ke
 
     int final_len = 0;
     int res       = EVP_DecryptFinal_ex(ctx, &unwrapped_key_output->ptr[unwrapped_key_output->len], &final_len);
+    BSL_LOG_INFO("FINALIZE? %d", res);
     if (res != 1)
     {
         BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
