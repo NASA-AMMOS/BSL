@@ -180,7 +180,7 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 /**
  * @todo Doxygen
  */
-int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *key_id,
+int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *kek_id,
                          size_t aes_variant);
 
 /**

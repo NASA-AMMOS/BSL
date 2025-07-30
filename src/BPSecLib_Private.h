@@ -663,6 +663,8 @@ typedef enum
     /// @brief This must be explicitly set, and set to 0, to avoid generating a wrapped key.
     BSL_SECPARAM_TYPE_INT_USE_WRAPPED_KEY,
 
+    BSL_KEY_ENCRYPTION_KEY_ID,
+
     BSL_SECPARAM_TYPE_AUTH_TAG,
 
     BSL_SECPARAM_TYPE_IV,
