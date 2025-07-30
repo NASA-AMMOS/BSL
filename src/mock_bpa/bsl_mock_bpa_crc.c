@@ -63,20 +63,24 @@ void mock_bpa_crc_apply(UsefulBuf buf, size_t begin, size_t end, BSL_BundleCRCTy
     {
         case BSL_BUNDLECRCTYPE_16:
         {
-            uint16_t *crc_enc = (uint16_t *)endptr - 1; // less one crc value
+            uint8_t *crc_pos = endptr - 2; // less one crc value
 
             const uint16_t crc_val = bp_crc16(blk_enc);
-
-            *crc_enc = htons(crc_val);
+            // Network byte order
+            crc_pos[0] = (crc_val >> 8) & 0xFF;
+            crc_pos[1] = crc_val & 0xFF;
             break;
         }
         case BSL_BUNDLECRCTYPE_32:
         {
-            uint32_t *crc_enc = (uint32_t *)endptr - 1; // less one crc value
+            uint8_t *crc_pos = endptr - 4; // less one crc value
 
             const uint32_t crc_val = bp_crc32(blk_enc);
-
-            *crc_enc = htonl(crc_val);
+            // Network byte order
+            crc_pos[0] = (crc_val >> 24) & 0xFF;
+            crc_pos[1] = (crc_val >> 16) & 0xFF;
+            crc_pos[2] = (crc_val >> 8) & 0xFF;
+            crc_pos[3] = crc_val & 0xFF;
             break;
         }
         case BSL_BUNDLECRCTYPE_NONE:
@@ -108,21 +112,21 @@ bool mock_bpa_crc_check(UsefulBufC buf, size_t begin, size_t end, BSL_BundleCRCT
     {
         case BSL_BUNDLECRCTYPE_16:
         {
-            const uint16_t *crc_enc = (uint16_t *)endptr - 1; // less one crc value
-            // copy of original for reference
-            const uint16_t orig_val = ntohs(*crc_enc);
-            const uint16_t crc_val  = bp_crc16(blk_enc);
-            same                    = (crc_val == orig_val);
+            const uint8_t *crc_pos = endptr - 2; // less one crc value
+
+            const uint16_t crc_val = bp_crc16(blk_enc);
+            // Network byte order
+            same = ((crc_pos[0] == ((crc_val >> 8) & 0xFF)) && (crc_pos[1] == (crc_val & 0xFF)));
             break;
         }
         case BSL_BUNDLECRCTYPE_32:
         {
-            const uint32_t *crc_enc = (uint32_t *)endptr - 1; // less one crc value
-            // copy of original for reference
-            const uint32_t orig_val = ntohs(*crc_enc);
+            const uint8_t *crc_pos = endptr - 4; // less one crc value
 
             const uint16_t crc_val = bp_crc32(blk_enc);
-            same                   = (crc_val == orig_val);
+            // Network byte order
+            same = ((crc_pos[0] == ((crc_val >> 24) & 0xFF)) && (crc_pos[1] == ((crc_val >> 16) & 0xFF))
+                    && (crc_pos[2] == ((crc_val >> 8) & 0xFF)) && (crc_pos[3] == (crc_val & 0xFF)));
             break;
         }
         case BSL_BUNDLECRCTYPE_NONE:
