@@ -310,3 +310,24 @@ int BSL_TestUtils_DecodeBase16(BSL_Data_t *out, const string_t in)
     }
     return 0;
 }
+
+int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid, const char *secsrc_eid)
+{
+    BSL_PrimaryBlock_t primary_block = { 0 };
+    BSL_BundleCtx_GetBundleMetadata(input_bundle, &primary_block);
+    int res = 0;
+    if (src_eid)
+    {
+        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_src_node_id), src_eid, NULL));
+    }
+    if (dest_eid)
+    {
+        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_dest_eid), dest_eid, NULL) << 1);
+    }
+    if (secsrc_eid)
+    {
+        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_report_to_eid), secsrc_eid, NULL) << 2);
+    }
+
+    return res;
+}

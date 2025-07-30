@@ -333,4 +333,6 @@ int BSL_TestUtils_EncodeBase16(string_t output, const BSL_Data_t *input, bool up
  */
 int BSL_TestUtils_DecodeBase16(BSL_Data_t *output, const string_t input);
 
+int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid, const char *secsrc_eid);
+
 #endif
