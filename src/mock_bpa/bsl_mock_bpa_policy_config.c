@@ -402,9 +402,11 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     uint32_t bundle_block_type = (policy_bits >> 2) & 0x03;
     uint32_t policy_action_type = (policy_bits >> 4) & 0x03;
     uint32_t sec_role = (policy_bits >> 6) & 0x03;
+    uint32_t use_wrapped_key = (policy_bits >> 8) & 0x01;
+
+    BSL_LOG_INFO("Using wrapped key? %d", use_wrapped_key);
 
     uint64_t sec_context;
-
     uint8_t iv_buf[12] = {0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32};
 
     // Init params for BCB if equal to 1, otherwise BIB
@@ -413,14 +415,19 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
         BSL_Data_t     iv = { .owned = 0, .ptr = iv_buf, .len = 12 };
         BSL_SecParam_InitBytestr(params->param_init_vector, RFC9173_BCB_SECPARAM_IV, iv);
         BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-        BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9102");
-        //BSL_SecParam_InitStr(params->param_key_enc_key, , "9103");
+        if (use_wrapped_key)
+        {
+            BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9103");
+        }
+        else
+        {
+            BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9102");
+        }
     }
     else {
         BSL_SecParam_InitInt64(params->param_integ_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
         BSL_SecParam_InitInt64(params->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
         BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9100");
-        // BSL_SecParam_InitInt64(params->param_test_key_bad, BSL_SECPARAM_TYPE_KEY_ID, 9002);
     }
 
     BSL_SecBlockType_e sec_block_emum;

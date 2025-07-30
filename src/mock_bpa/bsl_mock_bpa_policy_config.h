@@ -48,8 +48,9 @@ extern "C" {
  *                      uint32_t : bsl_mock_policy_configuration_t
  *
  *             [  x   x   x   x  |  x   x   x   x  |  x   x   x   x  |  x   x   x   x ]
- *             [ ------------- unused ------------ ]  [---]   [---]     [---]   |   |
- *                                                      |       |         |     |   |
+ *             [ ------------- unused -------]  |     [---]   [---]     [---]   |   |
+ *                                              |       |       |         |     |   |
+ *                     Use Wrapped Key for BCB -|       |       |         |     |   |
  *              BSL Role: 00 - source, 01 - verifier,  -|       |         |     |   |
  *                        10 - acceptor, 11: undefined -|       |         |     |   |       
  *              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
