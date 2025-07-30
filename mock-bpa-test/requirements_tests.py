@@ -258,14 +258,14 @@ class _RequirementsCases(_TestSet):
             # Bundle with a BIB targeting primary block
             input_data = [
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
-                [11, 2, 0, 0, '8100010182028202018282010782034200008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e'],
+                [11, 2, 0, 0, '810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e'],
                 [1, 1, 0, 0, '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
             ],
             # No output because it was deleted, logs to indicate deletion.
             expected_output = (NO_OUTPUT, DELETION),
             policy_config = '0x66',
-            is_implemented = False,
-			expect_success = True,
+            is_implemented = True,
+			expect_success = False,
 			input_data_format = DataFormat.BUNDLEARRAY,
             expected_output_format = DataFormat.NONE
         ))
@@ -310,12 +310,12 @@ class _RequirementsCases(_TestSet):
             # in the test vector Appendix A.1.4. This shows the cryptographic results were encoded correctly.
             expected_output = [
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
-                [11, 2, 0, 0, bytes.fromhex('8101010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             # 
             policy_config = '0x04',
-            is_implemented = False,
+            is_implemented = True,
 			expect_success = True,
 			input_data_format = DataFormat.BUNDLEARRAY,
             expected_output_format = DataFormat.BUNDLEARRAY
@@ -334,12 +334,12 @@ class _RequirementsCases(_TestSet):
             # TODO ???
             expected_output = [
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
-                [11, 2, 0, 0, bytes.fromhex('8101010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             # 
-            policy_config = '0x86',
-            is_implemented = False, 
+            policy_config = '0x04',
+            is_implemented = True, 
             expect_success = True,
             input_data_format = DataFormat.BUNDLEARRAY,
             expected_output_format = DataFormat.BUNDLEARRAY

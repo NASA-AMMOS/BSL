@@ -101,40 +101,46 @@ class TestAgent(unittest.TestCase):
         LOGGER.debug('Encoded to data %s', binascii.hexlify(buf.getvalue()))
         return buf.getvalue()
 
-    def _wait_for(self, sock: socket.socket) -> bytes:
+    def _wait_for(self, sock: socket.socket, timeout_expected=False) -> bytes:
 
         LOGGER.debug('Waiting for socket data...')
         rrd, rwr, rxp = select.select([sock], [], [], 1.0)
-        if not rrd:
+        if not rrd and not timeout_expected:
             self.fail('Timeout waiting for data')
+        elif not rrd and timeout_expected:
+            return 'TIMEOUT'
         data = sock.recv(65535)
         return data
 
     def _single_test(self, testcase : _TestCase):
 
-        if not (DataFormat.BUNDLEARRAY == testcase.expected_output_format):
-            # ignore no output cases for now
-            self.assertEqual(False, True)
-
         # start mock BPA using specified policy config
         self._start()
 
         tx_data = testcase.input_data if (testcase.input_data_format == "HEX") else self._encode(testcase.input_data)
-        expected_rx = testcase.expected_output if (testcase.expected_output == "HEX") else self._encode(testcase.expected_output)
-        self._ul_sock.send(tx_data)
-        LOGGER.debug('waiting')
 
-        rx_data = self._wait_for(self._ul_sock)
-                
-        LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
-        LOGGER.info('\nReceived data:\n%s\n', binascii.hexlify(rx_data))
+        if (testcase.expected_output_format == DataFormat.BUNDLEARRAY):
+            expected_rx = testcase.expected_output if (testcase.expected_output == "HEX") else self._encode(testcase.expected_output)
 
-        cbor_str = cbor2.loads(rx_data)
-        LOGGER.info('\nCBOR representation of received data:\n%s\n', cbor_str)
+            self._ul_sock.send(tx_data)
+            LOGGER.debug('waiting')
 
-        print(f'exp: {binascii.hexlify(expected_rx)}, got: {binascii.hexlify(rx_data)}')
+            rx_data = self._wait_for(self._ul_sock)
+                    
+            LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
+            LOGGER.info('\nReceived data:\n%s\n', binascii.hexlify(rx_data))
 
-        self.assertEqual(binascii.hexlify(expected_rx), binascii.hexlify(rx_data))
+            cbor_str = cbor2.loads(rx_data)
+            LOGGER.info('\nCBOR representation of received data:\n%s\n', cbor_str)
+
+            print(f'exp: {binascii.hexlify(expected_rx)}, got: {binascii.hexlify(rx_data)}')
+
+            self.assertEqual(binascii.hexlify(expected_rx), binascii.hexlify(rx_data))
+            
+        elif (testcase.expected_output_format == DataFormat.NONE):
+            rx_data = self._wait_for(self._ul_sock, True)
+            self.assertEqual(rx_data, 'TIMEOUT') #TODO
+            self.assertEqual(True,False)
 
 # Below utilizes setattr to add methods to a child class of the TestAgent, which will in-turn give us unit tests
 # tldr auto-generated methods for unit tests :)
