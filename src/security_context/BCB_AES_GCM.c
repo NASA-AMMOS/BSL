@@ -130,15 +130,9 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     BSL_Data_t content_enc_key = { 0 };
     if (bcb_context->wrapped_key.len > 0)
     {
-        if (!bcb_context->kek_id)
-        {
-            BSL_LOG_ERR("NO KEK TO UNWRAP KEY");
-            goto error;
-        }
-
         BSL_Data_InitBuffer(&content_enc_key, BSLX_MAX_KEYLEN);
         int unwrap_result =
-            BSL_Crypto_UnwrapKey(&content_enc_key, bcb_context->wrapped_key, bcb_context->kek_id, aes_mode);
+            BSL_Crypto_UnwrapKey(&content_enc_key, bcb_context->wrapped_key, bcb_context->key_id, aes_mode);
         if (BSL_SUCCESS != unwrap_result)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
@@ -315,7 +309,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
             goto error;
         }
 
-        int wrap_result = BSL_Crypto_WrapKey(&bcb_context->wrapped_key, content_enc_key, bcb_context->kek_id, aes_mode);
+        int wrap_result = BSL_Crypto_WrapKey(&bcb_context->wrapped_key, content_enc_key, bcb_context->key_id, aes_mode);
         if (BSL_SUCCESS != wrap_result)
         {
             BSL_LOG_ERR("Failed to wrap AES key");
@@ -510,15 +504,6 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
                 const uint64_t arg_val = BSL_SecParam_GetAsUInt64(param);
                 BSL_LOG_DEBUG("Param[%lu]: USE_WRAPPED_KEY value = %lu", param_id, arg_val);
                 bcb_context->skip_keywrap = (arg_val == 0);
-                break;
-            }
-            case BSL_KEY_ENCRYPTION_KEY_ID:
-            {
-                assert(!is_int);
-                BSL_Data_t res;
-                assert(BSL_SUCCESS == BSL_SecParam_GetAsBytestr(param, &res));
-                bcb_context->kek_id = (char *)res.ptr;
-                BSL_LOG_DEBUG("Param[%lu]: KEK_ID value = %s", param_id, bcb_context->kek_id);
                 break;
             }
             default:

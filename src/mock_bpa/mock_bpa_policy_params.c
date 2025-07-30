@@ -36,7 +36,6 @@ void mock_bpa_policy_params_init(mock_bpa_policy_params_t *params, int policy_nu
     params->param_init_vector = calloc(BSL_SecParam_Sizeof(), 1);
     params->param_aes_variant = calloc(BSL_SecParam_Sizeof(), 1);
     params->param_test_key = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_key_enc_key = calloc(BSL_SecParam_Sizeof(), 1);
 
     params->active = true;
 
@@ -51,7 +50,6 @@ void mock_bpa_policy_params_deinit(mock_bpa_policy_params_t *params, int policy_
     free(params->param_init_vector);
     free(params->param_aes_variant);
     free(params->param_test_key);
-    free(params->param_key_enc_key);
 
     params->active = false;
 
