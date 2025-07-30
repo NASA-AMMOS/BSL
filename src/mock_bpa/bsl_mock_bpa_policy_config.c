@@ -609,11 +609,6 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         uint8_t key_buf[strlen(k_str)/2];
         hexstring_to_bytes(k_str, key_buf, sizeof(key_buf));
 
-        for (size_t j = 0; j < strlen(k_str)/2; j++) {
-            uint8_t byte_value = key_buf[j];
-            BSL_LOG_INFO("%x", byte_value);
-        }
-
         retval = BSL_Crypto_AddRegistryKey(kid_str, key_buf, strlen(k_str)/2);
 
         // char cmd[100];

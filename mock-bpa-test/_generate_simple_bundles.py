@@ -56,7 +56,7 @@ def add_bib_to_bundle_over_x(bundle, x):
         sign = sign_and_encrypt(cbor2.dumps(bundle[0]).hex(), sign=True, enc=False, denc=False)[0]
         asb = [
                 [x], 1, 1, [2, [2, 1]],
-                [[1, 7], [3, bytes.fromhex('0000')]],
+                [[1, 7], [3, 0]],
                 [[[1, bytes.fromhex(sign)]]]
             ]
         buf = io.BytesIO()
