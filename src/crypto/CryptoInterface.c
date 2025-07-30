@@ -393,13 +393,14 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer)
     // finalize can add 1 cipher block
     uint8_t buf[EVP_CIPHER_CTX_block_size(cipher_ctx->libhandle)];
 
-    int len = 0;
-    int res = EVP_CipherFinal_ex(cipher_ctx->libhandle, buf, &len);
+    int evp_len = 0;
+    int res     = EVP_CipherFinal_ex(cipher_ctx->libhandle, buf, &evp_len);
     CHK_PROPERTY(res == 1);
 
-    if (len > 0)
+    if (evp_len > 0)
     {
-        BSL_SeqWriter_Put(writer, buf, (size_t *)&len);
+        size_t bsl_len = evp_len;
+        BSL_SeqWriter_Put(writer, buf, &bsl_len);
     }
 
     return 0;

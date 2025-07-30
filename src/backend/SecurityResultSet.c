@@ -25,7 +25,7 @@
  */
 #include "SecurityResultSet.h"
 
-size_t BSL_SecurityResponseSet_Sizeof()
+size_t BSL_SecurityResponseSet_Sizeof(void)
 {
     return sizeof(BSL_SecurityResponseSet_t);
 }

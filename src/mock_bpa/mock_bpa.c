@@ -74,11 +74,11 @@ static BSL_HostEID_t                        sec_eid;
 static bool                                 policy_configured = false;
 static mock_bpa_policy_registry_t           policy_registry;
 
-static int ingest_netaddr(struct sockaddr_in6 *addr, const char *optarg)
+static int ingest_netaddr(struct sockaddr_in6 *addr, const char *arg)
 {
-    const char *node    = optarg;
+    const char *node    = arg;
     const char *service = "4556";
-    char       *sep     = strchr(optarg, ':');
+    char       *sep     = strchr(arg, ':');
     if (sep)
     {
         *sep    = '\0';
@@ -96,7 +96,7 @@ static int ingest_netaddr(struct sockaddr_in6 *addr, const char *optarg)
     int res = getaddrinfo(node, service, &hints, &result);
     if (res)
     {
-        BSL_LOG_ERR("Failed to resolve router address: %s", optarg);
+        BSL_LOG_ERR("Failed to resolve router address: %s", arg);
         return 1;
     }
     else
@@ -524,9 +524,9 @@ static void bpa_cleanup(void)
     mock_bpa_ctr_t item;
 
     // join RX workers first
-    // mock_bpa_ctr_init(&item);
+    mock_bpa_ctr_init(&item);
     data_queue_push(under_rx, item);
-    // mock_bpa_ctr_init(&item);
+    mock_bpa_ctr_init(&item);
     data_queue_push(over_rx, item);
     if (pthread_join(thr_under_rx, NULL))
     {
@@ -538,9 +538,9 @@ static void bpa_cleanup(void)
     }
 
     // then delivery/forward workers after RX are all flushed
-    // mock_bpa_ctr_init(&item);
+    mock_bpa_ctr_init(&item);
     data_queue_push(forward, item);
-    // mock_bpa_ctr_init(&item);
+    mock_bpa_ctr_init(&item);
     data_queue_push(deliver, item);
     if (pthread_join(thr_forward, NULL))
     {
