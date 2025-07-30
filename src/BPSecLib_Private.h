@@ -667,6 +667,8 @@ typedef enum
 
     BSL_SECPARAM_TYPE_IV,
 
+    BSL_KEY_ENCRYPTION_KEY_ID,
+
     /// @brief Do not use. Indicates final index of internal param ids.
     BSL_SECPARAM_TYPE_INT_ENDINDEX
 } BSL_SecParam_InternalIds;

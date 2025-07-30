@@ -44,6 +44,7 @@ typedef struct mock_bpa_policy_params
     BSL_SecParam_t *param_aad_scope_flag;
     BSL_SecParam_t *param_init_vector;
     BSL_SecParam_t *param_aes_variant;
+    BSL_SecParam_t *param_key_enc_key;
 
     // Params agnostic to BIB vs BCB
     BSL_SecParam_t *param_test_key;

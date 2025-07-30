@@ -414,6 +414,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
         BSL_SecParam_InitBytestr(params->param_init_vector, RFC9173_BCB_SECPARAM_IV, iv);
         BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
         BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9102");
+        BSL_SecParam_InitStr(params->param_key_enc_key, BSL_KEY_ENCRYPTION_KEY_ID, "9103");
     }
     else {
         BSL_SecParam_InitInt64(params->param_integ_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
@@ -509,6 +510,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_aad_scope_flag);
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_init_vector);
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key);
+        BSLP_PolicyRule_AddParam(rule_all_in, params->param_key_enc_key);
     }
     else {
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_sha_variant);

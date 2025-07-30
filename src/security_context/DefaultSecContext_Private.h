@@ -87,6 +87,7 @@ typedef struct BSLX_BCB_s
 {
     size_t      err_count;
     const char *key_id;
+    const char *kek_id;
 
     // Data wrappers and containers for borrowed and owned/allocated buffers
     // These will ALL be deinitialized at the end, so _Deinit MUST be called.
