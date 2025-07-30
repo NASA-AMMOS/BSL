@@ -315,7 +315,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
             goto error;
         }
 
-        int wrap_result = BSL_Crypto_WrapKey(&bcb_context->wrapped_key, content_enc_key, bcb_context->key_id, aes_mode);
+        int wrap_result = BSL_Crypto_WrapKey(&bcb_context->wrapped_key, content_enc_key, bcb_context->kek_id, aes_mode);
         if (BSL_SUCCESS != wrap_result)
         {
             BSL_LOG_ERR("Failed to wrap AES key");

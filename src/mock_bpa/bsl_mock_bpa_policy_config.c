@@ -507,10 +507,12 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
 
     if (sec_block_emum == BSL_SECBLOCKTYPE_BCB) {
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_aes_variant);
-        BSLP_PolicyRule_AddParam(rule_all_in, params->param_aad_scope_flag);
-        BSLP_PolicyRule_AddParam(rule_all_in, params->param_init_vector);
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key);
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_key_enc_key);
+        if (sec_role != BSL_SECROLE_SOURCE) {
+            BSLP_PolicyRule_AddParam(rule_all_in, params->param_aad_scope_flag);
+            BSLP_PolicyRule_AddParam(rule_all_in, params->param_init_vector);
+        }
     }
     else {
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_sha_variant);
