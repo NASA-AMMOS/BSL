@@ -263,7 +263,7 @@ class _RequirementsCases(_TestSet):
             ],
             # No output because it was deleted, logs to indicate deletion.
             expected_output = (NO_OUTPUT, DELETION),
-            policy_config = '0x66',
+            policy_config = '0x62',
             is_implemented = True,
 			expect_success = False,
 			input_data_format = DataFormat.BUNDLEARRAY,
