@@ -78,7 +78,7 @@ def add_bib_to_bundle_over_x(bundle, x):
             continue
 
         # find the target block
-        if blk[0] == x:
+        if blk[1] == x:
 
             # get the HMAC signature 
             sign = sign_and_encrypt(blk[4], sign=True, enc=False, denc=False)[0]
@@ -138,7 +138,7 @@ b = [
 
 
 print (f"ORIGINAL BUNDLE: {b}")
-b = add_bib_to_bundle_over_x(b, 7)
+b = add_bib_to_bundle_over_x(b, 2)
 print(f'BUNDLE AFTER BIB: {b}')
 #b = add_bcb_to_bundle_over_x(b, 1)
 print(f'FINAL BUNDLE: {b}')
