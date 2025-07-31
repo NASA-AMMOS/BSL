@@ -236,14 +236,17 @@ class _RequirementsCases(_TestSet):
             input_data = [
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
                 [7, 2, 0, 0, bytes.fromhex('19012C')], # 2 byte, 012c
-                [11, 3, 0, 0, bytes.fromhex('810201018202820300828201058203008181820158203ED614C0D97F49B3633627779AA18A338D212BF3C92B97759D9739CD50725596')],
+                                            # NOTE this differs from RFC9173 A3, uses SHA512 instead of SHA256
+                [11, 3, 0, 0, bytes.fromhex('810701018202820201828201078203008181820158406a8b78889abb36f06a2272b88f7fceab74fe69b35b4c5f7b737634ff478d9fd800f0797e2ce6ac0f0d413b34c2196e1e777a180cb63ffc33d2761e386177fa78')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
-            # No output because it was deleted, logs to indicate deletion.
-            expected_output = (NO_OUTPUT, DELETION),
-            #policy_config = BIB_VERIFIER,
-            policy_config = '0x5A',
-            is_implemented = False,
+            # Bundle with removed target block
+            expected_output = [
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config = '0x5E', #TODO
+            is_implemented = True,
 			expect_success = True,
 			input_data_format = DataFormat.BUNDLEARRAY,
             expected_output_format = DataFormat.NONE

@@ -55,7 +55,7 @@ extern "C" {
  *                        10 - acceptor, 11: undefined -|       |         |     |   |       
  *              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
                                10 - drop bundle, 11: undefined -|         |     |   |             
- *    Target Block Type: 00 - primary, 01 - payload, 10 - BIB, 11 - BCB  -|     |   |
+*                                                     Target Block Type: -|     |   |
  *                                        Policy Location: 0 - CLOUT, 1 - CLIN -|   |    
  *                                                Sec Block Type: 0 - BIB, 1 - BCB -|   
  *                                                                        
