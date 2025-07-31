@@ -286,7 +286,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
         uint8_t *ptr    = &((uint8_t *)(self->params))[offset];
         BSL_SecOper_AppendParam(sec_oper, (BSL_SecParam_t *)ptr);
     }
-    BSL_LOG_INFO("Created sec operation for rule `%s`", self->description);
+    BSL_LOG_INFO("Created sec operation for rule `%s` ctx id: %d", self->description, self->context_id);
 
     return BSL_SUCCESS;
 }

@@ -5,7 +5,7 @@ RUN --mount=type=cache,target=/var/cache/yum dnf install -y epel-release
 # Dependencies for library, test executables, bsl-mock-bpa, and apidoc HTML
 RUN --mount=type=cache,target=/var/cache/yum dnf install -y \
     rsync cmake git ninja-build gcc ruby \
-    openssl-devel \
+    openssl-devel jansson-devel \
     doxygen graphviz plantuml texlive-bibtex \
     asciidoctor \
     rpm-build rpmlint
