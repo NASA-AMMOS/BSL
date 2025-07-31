@@ -418,10 +418,12 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
         if (use_wrapped_key)
         {
             BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9103");
+            BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_TYPE_INT_USE_WRAPPED_KEY, 1);
         }
         else
         {
             BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9102");
+            BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_TYPE_INT_USE_WRAPPED_KEY, 0);
         }
     }
     else {
@@ -515,6 +517,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     if (sec_block_emum == BSL_SECBLOCKTYPE_BCB) {
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_aes_variant);
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key);
+        BSLP_PolicyRule_AddParam(rule_all_in, params->param_use_wrapped_key);
         // BSLP_PolicyRule_AddParam(rule_all_in, params->param_key_enc_key);
         if (sec_role != BSL_SECROLE_SOURCE) {
             BSLP_PolicyRule_AddParam(rule_all_in, params->param_aad_scope_flag);
