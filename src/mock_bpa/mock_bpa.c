@@ -61,13 +61,13 @@ static pthread_t thr_over_rx, thr_under_rx, thr_deliver, thr_forward;
 static BSL_LibCtx_t *bsl;
 
 // Configuration
-static BSL_HostEID_t       app_eid;
+static BSL_HostEID_t      app_eid;
 static struct sockaddr_in over_addr   = { .sin_family = 0 };
 static struct sockaddr_in app_addr    = { .sin_family = 0 };
 static struct sockaddr_in under_addr  = { .sin_family = 0 };
 static struct sockaddr_in router_addr = { .sin_family = 0 };
-static int                 tx_notify_r, tx_notify_w;
-static BSL_HostEID_t       sec_eid;
+static int                tx_notify_r, tx_notify_w;
+static BSL_HostEID_t      sec_eid;
 
 static int ingest_netaddr(struct sockaddr_in *addr, const char *arg)
 {
