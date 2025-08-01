@@ -73,7 +73,7 @@ static int ingest_netaddr(struct sockaddr_in6 *addr, const char *arg)
 {
     const char *node    = arg;
     const char *service = "4556";
-    char       *sep     = strchr(arg, ':');
+    char       *sep     = strrchr(arg, ':');
     if (sep)
     {
         *sep    = '\0';
