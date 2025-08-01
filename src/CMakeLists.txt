@@ -37,14 +37,7 @@ set(BSL_FRONT_C
 
 add_library(bsl_front)
 target_sources(bsl_front PUBLIC ${BSL_FRONT_H})
-target_sources(bsl_front PUBLIC ${BSL_FRONT_C})
-add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h)
-target_compile_options(bsl_front PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes
-                       -Wmissing-prototypes -Wredundant-decls -Wcast-align
-                       -Wformat=2 -Wswitch-enum -Wlogical-op -Wduplicated-branches
-                       -fno-strict-aliasing -Werror=format-security -fno-common
-                       -Wstrict-aliasing=2)
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+target_sources(bsl_front PRIVATE ${BSL_FRONT_C})
 
 set_target_properties(bsl_front
     PROPERTIES
@@ -57,20 +50,74 @@ target_include_directories(
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/bsl>
 )
-target_link_libraries(bsl_front PUBLIC MLIB::mlib)
+
+# Crypto Library
+set(BSL_CRYPTO_C
+  ${CMAKE_CURRENT_SOURCE_DIR}/crypto/CryptoInterface.c
+)
+
+add_library(bsl_crypto)
+target_sources(bsl_crypto PRIVATE ${BSL_CRYPTO_C})
+set_target_properties(bsl_crypto
+    PROPERTIES
+        VERSION ${CMAKE_PROJECT_VERSION}
+        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+)
+target_link_libraries(bsl_crypto PUBLIC bsl_front)
+target_link_libraries(bsl_crypto PUBLIC MLIB::mlib)
+target_link_libraries(bsl_crypto INTERFACE OpenSSL::Crypto)
+
+# Default Security Context library
+set(BSL_DEFAULT_SC_H
+  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext_Private.h
+)
+
+set(BSL_DEFAULT_SC_C
+  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BCB_AES_GCM.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BIB_HMAC_SHA2.c
+)
+
+add_library(bsl_default_sc)
+target_sources(bsl_default_sc PUBLIC ${BSL_DEFAULT_SC_H})
+target_sources(bsl_default_sc PRIVATE ${BSL_DEFAULT_SC_C})
+set_target_properties(bsl_default_sc
+    PROPERTIES
+        VERSION ${CMAKE_PROJECT_VERSION}
+        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+)
+target_link_libraries(bsl_default_sc PUBLIC bsl_front)
+target_link_libraries(bsl_default_sc PUBLIC bsl_crypto)
+target_link_libraries(bsl_default_sc PUBLIC QCBOR::qcbor)
+
+# Example Policy Provider library
+set(BSL_SAMPLE_PP_H
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.h
+)
+
+set(BSL_SAMPLE_PP_C
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.c
+)
+
+add_library(bsl_sample_pp)
+target_sources(bsl_sample_pp PUBLIC ${BSL_SAMPLE_PP_H})
+target_sources(bsl_sample_pp PRIVATE ${BSL_SAMPLE_PP_C})
+set_target_properties(bsl_sample_pp
+    PROPERTIES
+        VERSION ${CMAKE_PROJECT_VERSION}
+        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+)
+target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext_Private.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.h
 )
 
 set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/CryptoInterface.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_Data.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/HostInterface.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c
@@ -84,22 +131,12 @@ set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BCB_AES_GCM.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BIB_HMAC_SHA2.c
 )
 
 add_library(bsl_dynamic)
 add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h)
 target_sources(bsl_dynamic PUBLIC ${BSL_DYNAMIC_H})
-target_sources(bsl_dynamic PUBLIC ${BSL_DYNAMIC_C})
-target_compile_options(bsl_dynamic PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes
-                       -Wmissing-prototypes -Wredundant-decls -Wcast-align
-                       -Wformat=2 -Wswitch-enum -Wlogical-op -Wduplicated-branches
-                       -fno-strict-aliasing -Werror=format-security -fno-common
-                       -Wstrict-aliasing=2)
-                       # -Wconversion
+target_sources(bsl_dynamic PRIVATE ${BSL_DYNAMIC_C})
 set_target_properties(bsl_dynamic
     PROPERTIES
         VERSION ${CMAKE_PROJECT_VERSION}
@@ -108,9 +145,6 @@ set_target_properties(bsl_dynamic
 target_link_libraries(bsl_dynamic PUBLIC bsl_front)
 target_link_libraries(bsl_dynamic PUBLIC MLIB::mlib)
 target_link_libraries(bsl_dynamic PUBLIC QCBOR::qcbor)
-target_link_libraries(bsl_dynamic PUBLIC OpenSSL::SSL)
-target_link_libraries(bsl_dynamic PUBLIC Threads::Threads)
-
 
 add_subdirectory(mock_bpa)
 find_program(CLANG_FORMAT "clang-format")
@@ -129,7 +163,7 @@ endif()
 
 # Installation config
 install(
-    TARGETS bsl_front bsl_dynamic
+    TARGETS bsl_front bsl_dynamic bsl_default_sc bsl_sample_pp bsl_crypto
     RUNTIME
         COMPONENT runtime
     LIBRARY

@@ -31,6 +31,20 @@ size_t BSL_SecParam_Sizeof(void)
     return sizeof(BSL_SecParam_t);
 }
 
+int BSL_SecParam_InitStr(BSL_SecParam_t *self, uint64_t param_id, const char *value)
+{
+    CHK_ARG_NONNULL(self);
+    CHK_ARG_EXPR(value != NULL);
+
+    memset(self, 0, sizeof(*self));
+    self->param_id = param_id;
+    self->_type    = BSL_SECPARAM_TYPE_STR;
+    self->_bytelen = strlen(value);
+    memcpy(self->_bytes, value, strlen(value));
+
+    return BSL_SUCCESS;
+}
+
 int BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t value)
 {
     CHK_ARG_NONNULL(self);
