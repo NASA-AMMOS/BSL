@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## Copyright (c) 2024 The Johns Hopkins University Applied Physics
+## Copyright (c) 2025 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Bundle Protocol Security Library (BSL).
@@ -55,7 +55,7 @@ fi
 
 echo "Applying markings to source..."
 # Directory trees
-for DIRNAME in cmake src test docs .github
+for DIRNAME in resources cmake src test mock-bpa-test docs pkg .github
 do
     licenseheaders ${LICENSEOPTS} --dir ${SELFDIR}/${DIRNAME}
 done
