@@ -33,7 +33,7 @@ import time
 from typing import List
 import unittest
 import cbor2
-from helpers.runner import CmdRunner, Timeout
+from helpers import CmdRunner, compose_args
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
@@ -47,12 +47,12 @@ class TestAgent(unittest.TestCase):
         os.chdir(path)
         LOGGER.info('Working in %s', path)
 
-        args = [
-            'bash', 'build.sh', 'run', 'bsl-mock-bpa',
+        args = compose_args([
+            'bsl-mock-bpa',
             '-e', 'ipn:1.2',
             '-u', 'localhost:4556', '-r', 'localhost:14556',
             '-o', 'localhost:24556', '-a', 'localhost:34556',
-        ]
+        ])
         self._agent = CmdRunner(args, stderr=subprocess.STDOUT)
 
         # Bind underlayer messaging
@@ -71,7 +71,7 @@ class TestAgent(unittest.TestCase):
         self._ul_sock.close()
         self._ul_sock = None
 
-        self._agent.stop()
+        self._agent.stop() # FIXME assert equal to zero?
         self._agent = None
 
     def _start(self):

@@ -119,11 +119,12 @@ jobs:
     steps:
       - name: Set up OS
         run: |
-          sudo rm /var/lib/man-db/auto-update && \
-          sudo apt-get update && sudo apt-get install -y \
-          cmake ninja-build ruby gcc g++ ccache patch \
-          libssl-dev \
-          valgrind gcovr xmlstarlet
+          sudo rm /var/lib/man-db/auto-update
+          sudo apt-get update
+          sudo apt-get install -y \
+              cmake ninja-build ruby gcc g++ ccache patch \
+              libssl-dev \
+              valgrind gcovr xmlstarlet
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -144,11 +145,13 @@ jobs:
       - name: Test Prep
         run: |
           sudo apt-get update && sudo apt-get install -y \
-          python3 python3-pip
+              python3 python3-pip
           pip3 install --upgrade pip
           pip3 install -r mock-bpa-test/requirements.txt
       - name: Test
-        run: python3 -m pytest mock-bpa-test --capture=no --log-cli-level=debug
+        env:
+          TEST_MEMCHECK: '1'
+        run: python3 -m pytest mock-bpa-test --log-cli-level=debug
       - name: Collect coverage
         run: ./build.sh coverage
       - name: Archive coverage

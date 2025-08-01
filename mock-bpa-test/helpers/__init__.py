@@ -19,3 +19,6 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
+
+from .runner import CmdRunner, compose_args
+from .timer import Timer
