@@ -31,7 +31,12 @@ def sign_and_encrypt(   payload_s:str,
         payload_ippt = cbor2.dumps(ippt_scope_flag)
         payload_ippt += cbor2.dumps(payload)
 
+        print(f'ippt: {payload_ippt.hex()}')
+
         signature = hmac.new(sign_key, payload_ippt, hashlib.sha512).digest()
+
+        print(f'sign: {signature.hex()}')
+
         results[0] = signature.hex()
 
     if enc:
@@ -68,9 +73,12 @@ def add_bib_to_bundle_over_x(bundle, x):
 
         return bundle
 
-    for blk in bundle:
+    for i, blk in enumerate(bundle):
+        if i == 0:
+            continue
+
         # find the target block
-        if blk[0] == x:
+        if blk[1] == x:
 
             # get the HMAC signature 
             sign = sign_and_encrypt(blk[4], sign=True, enc=False, denc=False)[0]
@@ -121,21 +129,16 @@ def add_bcb_to_bundle_over_x(bundle, x):
 
     return bundle
 
-# b = [
-#         [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-#         [1, 1, 0, 0, '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
-#     ]
-
-# 9173 - A.3.1
 b = [
     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                  # 2 byte uint - 300
-    #[7, 2, 0, 0, '19012C'],
+    [7, 2, 0, 0, '19012C'],
     [1, 1, 0, 0, '526561647920746f2067656e657261746520612033322d62797465207061796c6f6164']
 ]
 
+
 print (f"ORIGINAL BUNDLE: {b}")
-b = add_bib_to_bundle_over_x(b, 0)
+b = add_bib_to_bundle_over_x(b, 2)
 print(f'BUNDLE AFTER BIB: {b}')
 #b = add_bcb_to_bundle_over_x(b, 1)
 print(f'FINAL BUNDLE: {b}')
