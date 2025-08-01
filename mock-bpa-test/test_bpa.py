@@ -50,19 +50,19 @@ class TestAgent(unittest.TestCase):
         args = compose_args([
             'bsl-mock-bpa',
             '-e', 'ipn:1.2',
-            '-u', '::1:4556', '-r', '::1:14556',
-            '-o', '::1:24556', '-a', '::1:34556',
+            '-u', 'localhost:4556', '-r', 'localhost:14556',
+            '-o', 'localhost:24556', '-a', 'localhost:34556',
         ])
         self._agent = CmdRunner(args, stderr=subprocess.STDOUT)
 
         # Bind underlayer messaging
-        self._ul_sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        self._ul_sock.bind(('::1', 14556))
-        self._ul_sock.connect(('::1', 4556))
+        self._ul_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._ul_sock.bind(('localhost', 14556))
+        self._ul_sock.connect(('localhost', 4556))
 
         # Bind overlayer messaging
-        self._ol_sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-        self._ol_sock.bind(('::1', 34556))
+        self._ol_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._ol_sock.bind(('localhost', 34556))
 
     def tearDown(self):
         self._ol_sock.close()
