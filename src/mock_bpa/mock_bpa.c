@@ -61,26 +61,26 @@ static pthread_t thr_over_rx, thr_under_rx, thr_deliver, thr_forward;
 static BSL_LibCtx_t *bsl;
 
 // Configuration
-static BSL_HostEID_t       app_eid;
-static struct sockaddr_in6 over_addr   = { .sin6_family = 0 };
-static struct sockaddr_in6 app_addr    = { .sin6_family = 0 };
-static struct sockaddr_in6 under_addr  = { .sin6_family = 0 };
-static struct sockaddr_in6 router_addr = { .sin6_family = 0 };
-static int                 tx_notify_r, tx_notify_w;
-static BSL_HostEID_t       sec_eid;
+static BSL_HostEID_t      app_eid;
+static struct sockaddr_in over_addr   = { .sin_family = 0 };
+static struct sockaddr_in app_addr    = { .sin_family = 0 };
+static struct sockaddr_in under_addr  = { .sin_family = 0 };
+static struct sockaddr_in router_addr = { .sin_family = 0 };
+static int                tx_notify_r, tx_notify_w;
+static BSL_HostEID_t      sec_eid;
 
-static int ingest_netaddr(struct sockaddr_in6 *addr, const char *arg)
+static int ingest_netaddr(struct sockaddr_in *addr, const char *arg)
 {
     const char *node    = arg;
     const char *service = "4556";
-    char       *sep     = strchr(arg, ':');
+    char       *sep     = strrchr(arg, ':');
     if (sep)
     {
         *sep    = '\0';
         service = sep + 1; // might be at the terminator
     }
     struct addrinfo hints = {
-        .ai_family   = AF_INET6,
+        .ai_family   = AF_INET,
         .ai_socktype = SOCK_DGRAM,
         .ai_protocol = IPPROTO_UDP,
         .ai_flags    = AI_ADDRCONFIG | AI_NUMERICSERV,
@@ -99,7 +99,7 @@ static int ingest_netaddr(struct sockaddr_in6 *addr, const char *arg)
         for (const struct addrinfo *rp = result; rp != NULL; rp = rp->ai_next)
         {
             // use first address
-            if (rp->ai_family == AF_INET6)
+            if (rp->ai_family == AF_INET)
             {
                 memcpy(addr, rp->ai_addr, rp->ai_addrlen);
                 break;
@@ -110,18 +110,18 @@ static int ingest_netaddr(struct sockaddr_in6 *addr, const char *arg)
     return 0;
 }
 
-static int bind_udp(int *sock, const struct sockaddr_in6 *addr)
+static int bind_udp(int *sock, const struct sockaddr_in *addr)
 {
-    *sock = socket(addr->sin6_family, SOCK_DGRAM, IPPROTO_UDP);
+    *sock = socket(addr->sin_family, SOCK_DGRAM, IPPROTO_UDP);
     if (*sock < 0)
     {
         BSL_LOG_ERR("Failed to open UDP socket");
         return 2;
     }
     {
-        char nodebuf[INET6_ADDRSTRLEN];
-        inet_ntop(addr->sin6_family, &addr->sin6_addr, nodebuf, sizeof(nodebuf));
-        BSL_LOG_DEBUG("Binding UDP socket to [%s]:%d", nodebuf, ntohs(addr->sin6_port));
+        char nodebuf[INET_ADDRSTRLEN];
+        inet_ntop(addr->sin_family, &addr->sin_addr, nodebuf, sizeof(nodebuf));
+        BSL_LOG_DEBUG("Binding UDP socket to [%s]:%d", nodebuf, ntohs(addr->sin_port));
 
         int res = bind(*sock, (struct sockaddr *)addr, sizeof(*addr));
         if (res)
@@ -643,25 +643,25 @@ int main(int argc, char **argv)
                     break;
             }
         }
-        if (!retval && (over_addr.sin6_family != AF_INET6))
+        if (!retval && (over_addr.sin_family != AF_INET))
         {
             BSL_LOG_ERR("Missing over-socket address\n");
             show_usage(argv[0]);
             retval = 1;
         }
-        if (!retval && (app_addr.sin6_family != AF_INET6))
+        if (!retval && (app_addr.sin_family != AF_INET))
         {
             BSL_LOG_ERR("Missing application address\n");
             show_usage(argv[0]);
             retval = 1;
         }
-        if (!retval && (under_addr.sin6_family != AF_INET6))
+        if (!retval && (under_addr.sin_family != AF_INET))
         {
             BSL_LOG_ERR("Missing under-socket address\n");
             show_usage(argv[0]);
             retval = 1;
         }
-        if (!retval && (router_addr.sin6_family != AF_INET6))
+        if (!retval && (router_addr.sin_family != AF_INET))
         {
             BSL_LOG_ERR("Missing router address\n");
             show_usage(argv[0]);

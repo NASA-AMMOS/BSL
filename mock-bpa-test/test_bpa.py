@@ -1,3 +1,24 @@
+#
+# Copyright (c) 2025 The Johns Hopkins University Applied Physics
+# Laboratory LLC.
+#
+# This file is part of the Bundle Protocol Security Library (BSL).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# This work was performed for the Jet Propulsion Laboratory, California
+# Institute of Technology, sponsored by the United States Government under
+# the prime contract 80NM0018D0004 between the Caltech and NASA under
+# subcontract 1700763.
+#
 ''' Simple I/O tests of the mock agent.
 '''
 import binascii
@@ -12,7 +33,7 @@ import time
 from typing import List
 import unittest
 import cbor2
-from helpers.runner import CmdRunner, Timeout
+from helpers import CmdRunner, compose_args
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
@@ -26,21 +47,21 @@ class TestAgent(unittest.TestCase):
         os.chdir(path)
         LOGGER.info('Working in %s', path)
 
-        args = [
-            'bash', 'build.sh', 'run', 'bsl-mock-bpa',
+        args = compose_args([
+            'bsl-mock-bpa',
             '-e', 'ipn:1.2',
             '-u', 'localhost:4556', '-r', 'localhost:14556',
             '-o', 'localhost:24556', '-a', 'localhost:34556',
-        ]
+        ])
         self._agent = CmdRunner(args, stderr=subprocess.STDOUT)
 
         # Bind underlayer messaging
-        self._ul_sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        self._ul_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._ul_sock.bind(('localhost', 14556))
         self._ul_sock.connect(('localhost', 4556))
 
         # Bind overlayer messaging
-        self._ol_sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        self._ol_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._ol_sock.bind(('localhost', 34556))
 
     def tearDown(self):
@@ -50,7 +71,7 @@ class TestAgent(unittest.TestCase):
         self._ul_sock.close()
         self._ul_sock = None
 
-        self._agent.stop()
+        self._agent.stop() # FIXME assert equal to zero?
         self._agent = None
 
     def _start(self):
