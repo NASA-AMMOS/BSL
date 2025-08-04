@@ -1,5 +1,27 @@
+#
+# Copyright (c) 2025 The Johns Hopkins University Applied Physics
+# Laboratory LLC.
+#
+# This file is part of the Bundle Protocol Security Library (BSL).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# This work was performed for the Jet Propulsion Laboratory, California
+# Institute of Technology, sponsored by the United States Government under
+# the prime contract 80NM0018D0004 between the Caltech and NASA under
+# subcontract 1700763.
+#
 
 import logging
+import os
 import re
 import signal
 import subprocess
@@ -12,8 +34,23 @@ LOGGER = logging.getLogger(__name__)
 ''' Logger for this module. '''
 
 
-class Timeout(RuntimeError):
-    ''' Represent a timeout for the CmdRunner class '''
+def compose_args(args: List[str]) -> List[str]:
+    ''' Combine executions arguments with any prefix scripts and/or tools
+    needed to run from the `testroot` environment.
+    '''
+    args = list(args)
+    if os.environ.get('TEST_MEMCHECK', ''):
+        valgrind = [
+            'valgrind',
+            '--tool=memcheck',
+            '--leak-check=full',
+            '--suppressions=resources/memcheck.supp',
+            '--gen-suppressions=all',
+            '--error-exitcode=2',
+        ]
+        args = valgrind + args
+    args = ['./build.sh', 'run'] + args
+    return args
 
 
 class CmdRunner:
@@ -21,6 +58,8 @@ class CmdRunner:
 
     :param args: The command arguments to execute including the command
     itself.
+    :param kwargs: Additional keyword arguments given to
+    :py:func:`subprocess.Popen`
     '''
 
     def __init__(self, args: List[str], **kwargs):
@@ -44,7 +83,7 @@ class CmdRunner:
         while not self._stdout_lines.empty():
             self._stdout_lines.get()
 
-        LOGGER.debug('Starting process: %s', self._fmt_args())
+        LOGGER.info('Starting process: %s', self._fmt_args())
         self.proc = subprocess.Popen(
             self._args,
             stdin=subprocess.PIPE,
@@ -63,12 +102,12 @@ class CmdRunner:
         )
         self._writer.start()
 
-    def stop(self, timeout=5):
+    def stop(self, timeout=5) -> int:
         if not self.proc:
             return None
 
         if self.proc.returncode is None:
-            LOGGER.debug('Stopping process: %s', self._fmt_args())
+            LOGGER.info('Stopping process: %s', self._fmt_args())
             self.proc.send_signal(signal.SIGINT)
             try:
                 self.proc.wait(timeout=timeout)
@@ -78,7 +117,7 @@ class CmdRunner:
 
         ret = self.proc.returncode
         self.proc = None
-        LOGGER.debug('Stopped with exit code: %s', ret)
+        LOGGER.info('Stopped with exit code: %s', ret)
 
         self._reader.join()
         self._reader = None
@@ -91,7 +130,7 @@ class CmdRunner:
     def _read_stdout(self, stream):
         LOGGER.debug('Starting stdout thread')
         for line in iter(stream.readline, ''):
-            LOGGER.debug('Got line: %s', line.strip())
+            LOGGER.debug('Got stdout: %s', line.strip())
             self._stdout_lines.put(line)
         LOGGER.debug('Stopping stdout thread')
 
@@ -101,7 +140,7 @@ class CmdRunner:
             text = self._stdin_lines.get()
             if text is None:
                 break
-            LOGGER.debug('Sending text: %s', text)
+            LOGGER.debug('Sending stdin: %s', text.strip())
             stream.write(text)
             stream.flush()
         LOGGER.debug('Stopping stdin thread')
@@ -110,7 +149,7 @@ class CmdRunner:
         try:
             text = self._stdout_lines.get(timeout=timeout)
         except queue.Empty:
-            raise Timeout()
+            raise TimeoutError('no lines received before timeout')
         return text
 
     def wait_for_text(self, pattern, timeout=5):
@@ -126,7 +165,7 @@ class CmdRunner:
             try:
                 text = self._stdout_lines.get(timeout=remain_time)
             except queue.Empty:
-                raise Timeout()
+                raise TimeoutError('text not received before timeout')
 
             if expr.match(text) is not None:
                 return text
