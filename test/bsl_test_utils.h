@@ -269,7 +269,8 @@ static const RFC9173_TestVectorsA2 RFC9173_TestVectors_AppendixA2 = {
      "e73e9a")
 };
 
-static const struct RFC9173_TestVectors_A4
+// A4, but BCB only targets payload, not BIB
+static const struct RFC9173_TestVectors_A4_Modified
 {
     const char *cbor_bundle_original;
     const char *cbor_bundle_final;
@@ -283,13 +284,12 @@ static const struct RFC9173_TestVectors_A4
                                 "8281a000f4240850b0300005846438ed6208eb1c1ffb9"
                                 "4d952175167df0902902064a2983910c4fb2340790bf4"
                                 "20a7d1921d5bf7c4721e02ab87a93ab1e0b75cf62e494"
-                                "8727c8b5dae46ed2af05439b88029191850c020100584"
-                                "9820301020182028202018382014c5477656c76653132"
-                                "313231328202038204078281820150220ffc45c8a9019"
-                                "99ecc60991dd78b2981820150d2c51cb2481792dae8b2"
-                                "1d848cede99b8501010000582390eab6457593379298a"
-                                "8724e16e61f837488e127212b59ac91f8a86287b7d076"
-                                "30a122ff"),
+                                "8727c8b5dae46ed2af05439b88029191850c020100583"
+                                "48101020182028202018382014C5477656C7665313231"
+                                "3231328202038204008181820150D2C51CB2481792DAE"
+                                "8B21D848CEDE99B8501010000582390eab64575933792"
+                                "98a8724e16e61f837488e127212b59ac91f8a86287b7d"
+                                "07630a122ff"),
 };
 
 typedef struct
