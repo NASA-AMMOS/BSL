@@ -247,7 +247,7 @@ class _RequirementsCases(_TestSet):
                 [11, 3, 0, 0, bytes.fromhex('81020101820282020182820107820300818182015840ffff78889abb36f06a2272b88f7fceab74fe69b35b4c5f7b737634ff478d9fd800f0797e2ce6ac0f0d413b34c2196e1e777a180cb63ffc33d2761e386177fa78')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
-            policy_config = '0x5E', #TODO
+            policy_config = '0x5E',
             is_implemented = True,
 			expect_success = True,
 			input_data_format = DataFormat.BUNDLEARRAY,
@@ -275,7 +275,7 @@ class _RequirementsCases(_TestSet):
             expected_output_format = DataFormat.NONE
         ))
 
-        # BSL_23a
+        # BSL_23
         # RFC Compliant Cryptographs
         # The purpose of this test case is to verify that the BSL can alter the contents of non-security blocks to incorporate cryptographic outputs in accordance with RFC 9173.
         #
@@ -283,19 +283,21 @@ class _RequirementsCases(_TestSet):
         # The test takes the bundle provided by the unit test (content from RFC 9173) and confirms that after
         # the security operation has been applied, the bundle's blocks match the output described in the test vector.
         #   
-        # TODO two tests?
-        self.cases["BSL_23a"] = (_TestCase(
+        # repeat of BSL_2
+        self.cases["BSL_23"] = (_TestCase(
             input_data = [
-                [7, 0, 0, [2, [5, 1]], [2, [4, 1]], [2, [2, 1]], [0, 40], 1000000], 
-                [11, 3, 0, 0,  bytes.fromhex('')],
-                [12, 2, 0, 0,  bytes.fromhex('')],
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
+                [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')], 
+                [11, 3, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')], 
+                [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')]
+            ],
+            # A bundle with just the **payload** block
+            expected_output = [
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
-            expected_output = [
-
-            ],
-            policy_config = '0x04,0x05',
-            is_implemented = False,
+            policy_config = '0x186,0x187',
+            is_implemented = True,
 			expect_success = True,
 			input_data_format = DataFormat.BUNDLEARRAY,
             expected_output_format = DataFormat.BUNDLEARRAY
@@ -360,7 +362,6 @@ class _RequirementsCases(_TestSet):
         # Test that for both BIB-protected and BCB-protected Bundle, the expected results match the final result. 
         # This shows that they implement the security context of RFC9173 in Appendix A1 and A2.
         self.cases["BSL_27a"] = (_TestCase(
-            # 
             input_data = [
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')], 
@@ -396,20 +397,21 @@ class _RequirementsCases(_TestSet):
         # BSL_28
         # Supporting BCB AES GCM
         # The purpose of this test case is to verify that the BSL can support the use of the BCB-AES-GCM default security context [RFC 9173] for BCB-confidentiality security operations.
-        #
-        # TODO 
+        # This is the first half of the validation for SSF-4-0
+        # repeat of bsl_27b
         self.cases["BSL_28"] = (_TestCase(
             # Input is CBOR provided in Appendix A2 for BCB https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.2
-            input_data = [
-
+             input_data = [
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746f2067656e657261746520612033322d62797465207061796c6f6164')]
             ],
-            # This is the first half of the validation for SSF-4-0
             expected_output = [
-
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [12, 2, 1, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
-            # 
-            policy_config = '0x86',
-            is_implemented = False,
+            policy_config = '0x05',
+            is_implemented = True,
 			expect_success = True,
 			input_data_format = DataFormat.BUNDLEARRAY,
             expected_output_format = DataFormat.BUNDLEARRAY
@@ -419,19 +421,20 @@ class _RequirementsCases(_TestSet):
         # Supporting BIB HMAC SHA
         # The purpose of this test case is to verify that the BSL can support the use of the BIB-HMAC-SHA default security context [RFC 9173] for bib-integrity security operations.
         #
-        # TODO
+        # repeat bsl_27a
         self.cases["BSL_29"] = (_TestCase(
             # CBOR provided in RFC 9173 Appendix A1 https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.1.3 (for BIB)
-            input_data = [
-
+             input_data = [
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')], 
             ],
-            # This is the second half of the validation for SSF-4-0
             expected_output = [
-
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
+                [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
-            # 
-            policy_config = '0x86',
-            is_implemented = False,
+            policy_config = '0x04',
+            is_implemented = True,
 			expect_success = True,
 			input_data_format = DataFormat.BUNDLEARRAY,
             expected_output_format = DataFormat.BUNDLEARRAY
@@ -443,14 +446,15 @@ class _RequirementsCases(_TestSet):
         self.cases["BSL_33"] = (_TestCase(
             # Using the Bundle from RFC 9173 Appendix A1.4, change the bytes of the BIB header to be be all zeros (thus not a valid CBOR array).
             # Header: 850b020000 -> 0000000000
-            input_data =    '9f88070000820282010282028202018202820201820018281a000f4240000000000058568101010182028202018282010782030081818' \
-                            '20158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6c' \
-                            'cece003e95e8164dcc89a156e185010100005823526561647920746f2067656e657261746520612033322d62797465207061796c6f6164ff',
+            input_data = bytes.fromhex( '9f88070000820282010282028202018202820201820018281a000f42400000000000585681010101820282020182820' \
+                                        '1078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb' \
+                                        '1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e185010100005823526561647920746f2067656e657' \
+                                        '261746520612033322d62797465207061796c6f6164ff'),
             # Confirm that the operations fails and returns a Reason Code 8.
             expected_output = (FAILURE_CODE, 8),
             # Execute as a BIB acceptor.
-            policy_config = '0x46',
-            is_implemented = False,
+            policy_config = '0x86',
+            is_implemented = True,
 			expect_success = False,
 			input_data_format = DataFormat.HEX,
             expected_output_format = DataFormat.ERR
@@ -472,7 +476,7 @@ class _RequirementsCases(_TestSet):
             # Ensure that the host interface returns an error code (since the block does not exist). Confirm that a log indicating this error is created.
             expected_output = (FAILURE_CODE, 0), # doesn't specify an error code
             policy_config = '0x46',
-            is_implemented = False,
+            is_implemented = True,
 			expect_success = False,
 			input_data_format = DataFormat.BUNDLEARRAY,
             expected_output_format = DataFormat.ERR
@@ -496,7 +500,7 @@ class _RequirementsCases(_TestSet):
             expected_output = (FAILURE_CODE, 0), # doesn't specify an error code
             # 
             policy_config = '0x87',
-            is_implemented = False,
+            is_implemented = True,
 			expect_success = False,
 			input_data_format = DataFormat.BUNDLEARRAY,
             expected_output_format = DataFormat.ERR
@@ -529,7 +533,7 @@ class _RequirementsCases(_TestSet):
         # Query Block Numbers
         # The purpose of this test case is to verify that the BSL can use a BPA interface to query what block numbers are present in a bundle.
         #
-        # TODO should this be  a unit test?
+        # TODO should this be a unit test?
         self.cases["BSL_44"] = (_TestCase(
             # Create a bundle using the vector in RFC9173 Appendix A1.4. Then the BSL will use the BPA host interface to show that there is block 0, 1, and 2 present.
             input_data = [],

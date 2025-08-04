@@ -117,7 +117,7 @@ class TestAgent(unittest.TestCase):
         # start mock BPA using specified policy config
         self._start()
 
-        tx_data = testcase.input_data if (testcase.input_data_format == "HEX") else self._encode(testcase.input_data)
+        tx_data = testcase.input_data if (testcase.input_data_format == DataFormat.HEX) else self._encode(testcase.input_data)
 
         if (testcase.expected_output_format == DataFormat.BUNDLEARRAY):
             expected_rx = testcase.expected_output if (testcase.expected_output == "HEX") else self._encode(testcase.expected_output)
@@ -142,7 +142,19 @@ class TestAgent(unittest.TestCase):
             LOGGER.debug('waiting')
             
             rx_data = self._wait_for(self._ul_sock, True)
-            self.assertEqual(rx_data, 'TIMEOUT') #TODO
+
+            LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
+            self.assertEqual(rx_data, 'TIMEOUT')
+            self.assertEqual(True,False) # TODO validate output?
+        elif (testcase.expected_output_format == DataFormat.ERR):
+            self._ul_sock.send(tx_data)
+            LOGGER.debug('waiting')
+            
+            rx_data = self._wait_for(self._ul_sock, True)
+
+            LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
+            LOGGER.debug('TODO handle err codes')
+
             self.assertEqual(True,False)
 
 # Below utilizes setattr to add methods to a child class of the TestAgent, which will in-turn give us unit tests
