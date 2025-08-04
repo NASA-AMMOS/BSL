@@ -203,9 +203,9 @@ static void *work_over_rx(void *arg _U_)
         }
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (!bundle->valid) 
+        if (!bundle->retain) 
         {
-            BSL_LOG_ERR("bundle was marked to drop by BSL");
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
@@ -246,9 +246,9 @@ static void *work_under_rx(void *arg _U_)
         }
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (!bundle->valid) 
+        if (!bundle->retain) 
         {
-            BSL_LOG_ERR("bundle was marked to drop by BSL");
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
@@ -282,9 +282,9 @@ static void *work_deliver(void *arg _U_)
         }
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (!bundle->valid) 
+        if (!bundle->retain) 
         {
-            BSL_LOG_ERR("bundle was marked to drop by BSL");
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
@@ -326,9 +326,9 @@ static void *work_forward(void *arg _U_)
         }
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (!bundle->valid) 
+        if (!bundle->retain) 
         {
-            BSL_LOG_ERR("bundle was marked to drop by BSL");
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
             mock_bpa_ctr_deinit(&item);
             continue;
         }

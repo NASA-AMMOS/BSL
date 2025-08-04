@@ -114,7 +114,7 @@ int BSL_BundleCtx_RemoveBlock(BSL_BundleRef_t *bundle, uint64_t block_num)
     return (result == 0) ? BSL_SUCCESS : BSL_ERR_HOST_CALLBACK_FAILED;
 }
 
-int BSL_BundleCtx_DropBundle(BSL_BundleRef_t *bundle)
+int BSL_BundleCtx_DeleteBundle(BSL_BundleRef_t *bundle)
 {
     CHK_ARG_NONNULL(bundle);
     CHK_PRECONDITION(HostDescriptorTable.bundle_drop_fn != NULL);
