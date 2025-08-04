@@ -468,7 +468,8 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
         case 3: bundle_block_enum = BSL_BLOCK_TYPE_BUNDLE_AGE;
                 BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: BUNDLE AGE", policy_bits);
                 break;
-        default: break;
+        default:
+            return;
     }
 
     BSL_PolicyAction_e policy_action_enum;
