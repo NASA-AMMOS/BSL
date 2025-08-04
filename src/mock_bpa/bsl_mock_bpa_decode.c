@@ -240,23 +240,35 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
 
     QCBORItem decitem;
     QCBORDecode_EnterArray(dec, &decitem);
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+    {
+        return 2;
+    }
     if (decitem.val.uCount != QCBOR_COUNT_INDICATES_INDEFINITE_LENGTH)
     {
-        // FIXME warn but still process
+        BSL_LOG_WARNING("Bundle starts with definite length array");
     }
 
-    if (bsl_mock_decode_primary(dec, &(bundle->primary_block)))
+    BSL_LOG_DEBUG("decoding primary block...");
+    int res = bsl_mock_decode_primary(dec, &(bundle->primary_block));
+    if (res || QCBORDecode_GetError(dec))
     {
+        BSL_LOG_ERR("failed in primary block");
         return 2;
     }
 
     // iterate until failure of CBOR, not block decoder
     while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &decitem))
     {
+        BSL_LOG_DEBUG("decoding canonical block (at %zd)...", QCBORDecode_Tell(dec));
+//        if (decitem.val)
+
         MockBPA_CanonicalBlock_t blk       = { 0 };
-        int                      parse_res = bsl_mock_decode_canonical(dec, &blk);
-        if (parse_res)
+
+        res = bsl_mock_decode_canonical(dec, &blk);
+        if (res || QCBORDecode_GetError(dec))
         {
+            BSL_LOG_ERR("failed in canonical block");
             free(blk.btsd);
             return 3;
         }

@@ -22,10 +22,11 @@ from ccsds_tests import _CCSDS_Cases
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
 
+
 class TestAgent(unittest.TestCase):
     ''' Verify whole-agent behavior with the bsl-mock-bpa '''
 
-    def __init__(self, methodName = "runTest"):
+    def __init__(self, methodName="runTest"):
         super().__init__(methodName)
         # self.testdata = _TestData()
         self.requirements_tests = _RequirementsCases()
@@ -53,7 +54,7 @@ class TestAgent(unittest.TestCase):
             policy_config = policy_config[index + 2:]
             LOGGER.info('Using policy config %s for %s', policy_config, self._testMethodName)
 
-        key_set="src/mock_bpa/key_set_1.json"
+        key_set = "src/mock_bpa/key_set_1.json"
 
         args = [
             'bash', 'build.sh', 'run', 'build/default/src/mock_bpa/bsl-mock-bpa',
@@ -82,8 +83,10 @@ class TestAgent(unittest.TestCase):
         self._ul_sock.close()
         self._ul_sock = None
 
-        self._agent.stop()
-        self._agent = None
+        if self._agent:
+            # Exit cleanly if not already gone
+            self.assertEqual(0, self._agent.stop())
+            self._agent = None
 
     def _start(self):
 
@@ -112,7 +115,7 @@ class TestAgent(unittest.TestCase):
         data = sock.recv(65535)
         return data
 
-    def _single_test(self, testcase : _TestCase):
+    def _single_test(self, testcase: _TestCase):
 
         # start mock BPA using specified policy config
         self._start()
@@ -126,7 +129,7 @@ class TestAgent(unittest.TestCase):
             LOGGER.debug('waiting')
 
             rx_data = self._wait_for(self._ul_sock)
-                    
+
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
             LOGGER.info('\nReceived data:\n%s\n', binascii.hexlify(rx_data))
 
@@ -136,43 +139,54 @@ class TestAgent(unittest.TestCase):
             print(f'exp: {binascii.hexlify(expected_rx)}, got: {binascii.hexlify(rx_data)}')
 
             self.assertEqual(binascii.hexlify(expected_rx), binascii.hexlify(rx_data))
-            
+
         elif (testcase.expected_output_format == DataFormat.NONE):
             self._ul_sock.send(tx_data)
             LOGGER.debug('waiting')
-            
+
             rx_data = self._wait_for(self._ul_sock, True)
 
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
             self.assertEqual(rx_data, 'TIMEOUT')
-            self.assertEqual(True,False) # TODO validate output?
+            self.assertEqual(True, False)  # TODO validate output?
         elif (testcase.expected_output_format == DataFormat.ERR):
             self._ul_sock.send(tx_data)
             LOGGER.debug('waiting')
-            
+
             rx_data = self._wait_for(self._ul_sock, True)
 
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
             LOGGER.debug('TODO handle err codes')
 
-            self.assertEqual(True,False)
+            self.assertEqual(True, False)
+
 
 # Below utilizes setattr to add methods to a child class of the TestAgent, which will in-turn give us unit tests
 # tldr auto-generated methods for unit tests :)
 # @param new_tests needs to be a class that is child of _TestSet()
-def _add_tests(new_tests : _TestSet):
+def _add_tests(new_tests: _TestSet):
+
     def decorator(cls):
         for id, tc in new_tests.cases.items():
             if tc.is_implemented:
+
                 def _test(cls, id=id):
                     cls._single_test(new_tests.cases[id])
+
                 setattr(cls, f'test_{id}', _test)
 
         return cls
+
     return decorator
 
+
 @_add_tests(_RequirementsCases())
-#@_add_tests(_TestData())
-#@_add_tests(_CCSDS_Cases())
+# @_add_tests(_TestData())
+# @_add_tests(_CCSDS_Cases())
 class TestMockBPA(TestAgent):
-    pass
+
+    def test_start_stop_p00(self):
+        self._start()
+
+        self.assertEqual(0, self._agent.stop())
+        self._agent = None

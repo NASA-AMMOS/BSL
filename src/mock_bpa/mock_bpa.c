@@ -406,7 +406,11 @@ static int bpa_exec(void)
         int res = poll(pfds, sizeof(pfds) / sizeof(struct pollfd), -1);
         if (res < 0)
         {
-            retval = 4;
+            BSL_LOG_ERR("poll failed with errno: %d", errno);
+            if (errno != EINTR)
+            {
+                retval = 4;
+            }
             break;
         }
 
