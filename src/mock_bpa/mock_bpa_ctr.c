@@ -37,7 +37,7 @@ void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr)
     // HostEID_t's are initialized deeper into the decode function.
 
     MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
-    bundle->valid = true;
+    bundle->retain = true;
 }
 
 void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src)

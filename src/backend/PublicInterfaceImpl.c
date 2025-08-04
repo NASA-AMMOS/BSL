@@ -253,8 +253,8 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     if (must_drop)
     {
         // Drop the bundle and return operation error
-        BSL_LOG_WARNING("***** Drop bundle due to failed security operation *******");
-        BSL_BundleCtx_DropBundle(bundle);
+        BSL_LOG_WARNING("***** Delete bundle due to failed security operation *******");
+        BSL_BundleCtx_DeleteBundle(bundle);
     }
 
     // TODO CHK_POSTCONDITION

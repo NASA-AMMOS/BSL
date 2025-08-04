@@ -246,7 +246,7 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
     return 0;
 }
 
-int MockBPA_DropBundle(BSL_BundleRef_t *bundle_ref)
+int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref)
 {
     if (!bundle_ref || !bundle_ref->data)
     {
@@ -256,7 +256,7 @@ int MockBPA_DropBundle(BSL_BundleRef_t *bundle_ref)
     MockBPA_Bundle_t *bundle = bundle_ref->data;
 
     // Mark the bundle for deletion
-    bundle->valid = false;
+    bundle->retain = false;
 
     return 0;
 }
@@ -274,7 +274,7 @@ int bsl_mock_bpa_init(void)
         .bundle_get_block_ids  = MockBPA_GetBlockNums,
         .block_create_fn       = MockBPA_CreateBlock,
         .block_remove_fn       = MockBPA_RemoveBlock,
-        .bundle_drop_fn        = MockBPA_DropBundle,
+        .bundle_drop_fn        = MockBPA_DeleteBundle,
         .block_realloc_btsd_fn = MockBPA_ReallocBTSD,
 
         // Old-style callbacks
