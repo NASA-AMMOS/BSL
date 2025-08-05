@@ -19,30 +19,42 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+
 /** @file
- * @brief SecurityResultSet implementation for result after application of security operations.
- * @ingroup backend_dyn
+ * Data structure and calls for the mock bpa policy registry memory pool
+ * @ingroup mock_bpa
  */
-#ifndef BSLB_SECURITYRESULTSET_H_
-#define BSLB_SECURITYRESULTSET_H_
+
+#ifndef MOCK_BPA_POLICY_REGISTRY_H_
+#define MOCK_BPA_POLICY_REGISTRY_H_
 
 #include <BPSecLib_Private.h>
 
-#define BSL_SECURITYRESPONSESET_ARRAYLEN (10)
-#define BSL_SECURITYRESPONSESET_STRLEN   (256)
+#include "mock_bpa_policy_params.h"
 
-/// @brief Contains the results and outcomes after performing the security operations.
-/// @note This struct is still in-concept
-struct BSL_SecurityResponseSet_s
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define MOCK_BPA_MAX_POLICIES 100
+
+typedef struct mock_bpa_policy_registry
 {
-    /// @brief This maps to the sec_operations in BSL_SecurityActionSet,
-    ///        and contains the result code of that security operation.
-    int                results[BSL_SECURITYRESPONSESET_ARRAYLEN];
-    char               err_msg[BSL_SECURITYRESPONSESET_STRLEN];
-    BSL_PolicyAction_e err_action_codes[BSL_SECURITYRESPONSESET_ARRAYLEN];
-    int                err_code;
-    size_t             total_operations;
-    size_t             failure_count;
-};
+    mock_bpa_policy_params_t registry_params[MOCK_BPA_MAX_POLICIES];
+    bool                     in_use[MOCK_BPA_MAX_POLICIES];
+    int                      registry_count;
+} mock_bpa_policy_registry_t;
 
-#endif /* BSLB_SECURITYRESULTSET_H_ */
+void mock_bpa_policy_registry_init(mock_bpa_policy_registry_t *registry);
+
+int mock_bpa_policy_registry_size(mock_bpa_policy_registry_t *registry);
+
+mock_bpa_policy_params_t *mock_bpa_policy_registry_get(mock_bpa_policy_registry_t *registry);
+
+void mock_bpa_policy_registry_deinit(mock_bpa_policy_registry_t *registry);
+
+#ifdef __cplusplus
+} // extern C
+#endif
+
+#endif // MOCK_BPA_POLICY_REGISTRY_H_
