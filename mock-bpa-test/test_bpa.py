@@ -125,14 +125,12 @@ class TestAgent(unittest.TestCase):
         LOGGER.debug('Encoded to data %s', binascii.hexlify(buf.getvalue()))
         return buf.getvalue()
 
-    def _wait_for(self, sock: socket.socket, timeout_expected=False) -> bytes:
+    def _wait_for(self, sock: socket.socket) -> bytes:
 
         LOGGER.debug('Waiting for socket data...')
         rrd, rwr, rxp = select.select([sock], [], [], 1.0)
-        if not rrd and not timeout_expected:
-            self.fail('Timeout waiting for data')
-        elif not rrd and timeout_expected:
-            return 'TIMEOUT'
+        if not rrd:
+            raise TimeoutError('Did not receive bundle in time')
         data = sock.recv(65535)
         return data
 
@@ -165,21 +163,20 @@ class TestAgent(unittest.TestCase):
             self._ul_sock.send(tx_data)
             LOGGER.debug('waiting')
 
-            rx_data = self._wait_for(self._ul_sock, True)
+            with self.assertRaises(TimeoutError):
+                self._wait_for(self._ul_sock)
 
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
-            self.assertEqual(rx_data, 'TIMEOUT')
-            self.assertEqual(True, False)  # TODO validate output?
+            self.fail('Validate output')
         elif (testcase.expected_output_format == DataFormat.ERR):
             self._ul_sock.send(tx_data)
             LOGGER.debug('waiting')
 
-            rx_data = self._wait_for(self._ul_sock, True)
+            with self.assertRaises(TimeoutError):
+                self._wait_for(self._ul_sock)
 
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
-            LOGGER.debug('TODO handle err codes')
-
-            self.assertEqual(True, False)
+            self.fail('TODO handle err codes')
 
 
 # Below utilizes setattr to add methods to a child class of the TestAgent, which will in-turn give us unit tests
