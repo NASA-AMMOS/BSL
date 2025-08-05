@@ -76,12 +76,10 @@ void BSL_CryptoDeinit(void)
     BSLB_CryptoKeyDict_clear(StaticKeyRegistry);
 }
 
-//#if defined(BSL_CRYPTO_RNG_FN_OVERRIDE)
 void BSL_Crypto_Set_RNG_generator(bsl_crypto_randbytes_fn rand_gen_fn)
 {
     rand_bytes_generator = rand_gen_fn;
 }
-//#endif
 
 int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *key_id,
                          size_t aes_variant)

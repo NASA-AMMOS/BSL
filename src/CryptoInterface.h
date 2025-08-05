@@ -141,13 +141,12 @@ void BSL_CryptoInit(void);
  */
 void BSL_CryptoDeinit(void);
 
-//#if defined(BSL_CRYPTO_RNG_FN_OVERRIDE)
 /**
  * Set RNG generator to be used by crypto library
  * @param[in] rand_gen_fn random bytes generation function.
+ * @warning Intended to be used only for testing. Providing an alternative RNG may break FIPS-140 compatibility
  */
 void BSL_Crypto_Set_RNG_generator(bsl_crypto_randbytes_fn rand_gen_fn);
-//#endif
 
 /**
  * Initialize HMAC context resources and set private key and SHA variant
