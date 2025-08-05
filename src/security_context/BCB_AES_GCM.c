@@ -273,7 +273,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     }
     else
     {
-        // FIXME the key bytes shouldn't be copied outside of crypto library. 
+        // FIXME the key bytes shouldn't be copied outside of crypto library.
         // possible alternative:
         // GenKey should instead return a keyid and add generated key to registry
         const size_t keysize = is_aes128 ? 16 : 32;

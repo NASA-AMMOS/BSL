@@ -81,7 +81,7 @@ void BSL_Crypto_Set_RNG_generator(bsl_crypto_randbytes_fn rand_gen_fn)
 {
     rand_bytes_generator = rand_gen_fn;
 }
-//#endif 
+//#endif
 
 int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *key_id,
                          size_t aes_variant)
@@ -158,7 +158,7 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *kek_
     }
 
     int len = (int)wrapped_key->len;
-    if (!EVP_EncryptUpdate(ctx, (unsigned char *) wrapped_key->ptr, &len, cek.ptr, cek.len))
+    if (!EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek.ptr, cek.len))
     {
         EVP_CIPHER_CTX_free(ctx);
         return -2;
