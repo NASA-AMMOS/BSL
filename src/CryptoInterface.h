@@ -125,6 +125,9 @@ typedef struct BSL_Cipher_s
 
 /**
  * Function pointer def for random bytestring generator
+ * @param buf buffer to fill with random bytes
+ * @param len size of random buffer
+ * @return 1 if success, 0 if failure
  */
 typedef int (*bsl_crypto_randbytes_fn)(unsigned char *buf, int len);
 

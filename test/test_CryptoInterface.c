@@ -192,10 +192,16 @@ int gcm_decrypt(const EVP_CIPHER *cipher, unsigned char *ciphertext, int ciphert
     return 0;
 }
 
+int fake_test_rand(unsigned char * buf, int sz)
+{
+    memset(buf, 1, sz);
+    return 1;
+}
+
 void suiteSetUp(void)
 {
     BSL_openlog();
-    BSL_CryptoInit(NULL);
+    BSL_CryptoInit(fake_test_rand);
 
     // static keys
     uint8_t test1[20] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
