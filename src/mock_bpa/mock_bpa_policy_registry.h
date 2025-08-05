@@ -36,14 +36,13 @@
 extern "C" {
 #endif
 
-
 #define MOCK_BPA_MAX_POLICIES 100
 
 typedef struct mock_bpa_policy_registry
 {
     mock_bpa_policy_params_t registry_params[MOCK_BPA_MAX_POLICIES];
-    bool in_use[MOCK_BPA_MAX_POLICIES];
-    int registry_count;
+    bool                     in_use[MOCK_BPA_MAX_POLICIES];
+    int                      registry_count;
 } mock_bpa_policy_registry_t;
 
 void mock_bpa_policy_registry_init(mock_bpa_policy_registry_t *registry);

@@ -29,7 +29,8 @@
 
 void mock_bpa_policy_registry_init(mock_bpa_policy_registry_t *registry)
 {
-    for (int i = 0; i < MOCK_BPA_MAX_POLICIES; ++i) {
+    for (int i = 0; i < MOCK_BPA_MAX_POLICIES; ++i)
+    {
         registry->in_use[i] = false;
     }
     registry->registry_count = 0;
@@ -42,10 +43,12 @@ int mock_bpa_policy_registry_size(mock_bpa_policy_registry_t *registry)
 
 mock_bpa_policy_params_t *mock_bpa_policy_registry_get(mock_bpa_policy_registry_t *registry)
 {
-    for (int i = 0; i < MOCK_BPA_MAX_POLICIES; ++i) {
+    for (int i = 0; i < MOCK_BPA_MAX_POLICIES; ++i)
+    {
         int index = registry->registry_count + i;
-        if (!registry->in_use[index]) {
-            registry->in_use[index] = true;
+        if (!registry->in_use[index])
+        {
+            registry->in_use[index]  = true;
             registry->registry_count = index + 1;
             mock_bpa_policy_params_init(&registry->registry_params[index], index);
             return &registry->registry_params[index];
@@ -57,8 +60,10 @@ mock_bpa_policy_params_t *mock_bpa_policy_registry_get(mock_bpa_policy_registry_
 
 void mock_bpa_policy_registry_deinit(mock_bpa_policy_registry_t *registry)
 {
-    for (int i = 0; i < MOCK_BPA_MAX_POLICIES; ++i) {
-        if (registry->in_use[i]) {
+    for (int i = 0; i < MOCK_BPA_MAX_POLICIES; ++i)
+    {
+        if (registry->in_use[i])
+        {
             mock_bpa_policy_params_deinit(&registry->registry_params[i], i);
             registry->in_use[i] = false;
         }

@@ -36,7 +36,7 @@
 int MockBPA_GetEid(const void *user_data, BSL_HostEID_t *result_eid)
 {
     const char *local_ipn = getenv("BSL_TEST_LOCAL_IPN_EID");
-    int x = mock_bpa_eid_from_text(result_eid, local_ipn, (void *)user_data);
+    int         x         = mock_bpa_eid_from_text(result_eid, local_ipn, (void *)user_data);
     return (0 == x) ? 0 : -1;
 }
 

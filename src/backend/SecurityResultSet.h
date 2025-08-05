@@ -37,12 +37,12 @@ struct BSL_SecurityResponseSet_s
 {
     /// @brief This maps to the sec_operations in BSL_SecurityActionSet,
     ///        and contains the result code of that security operation.
-    int    results[BSL_SECURITYRESPONSESET_ARRAYLEN];
-    char   err_msg[BSL_SECURITYRESPONSESET_STRLEN];
+    int                results[BSL_SECURITYRESPONSESET_ARRAYLEN];
+    char               err_msg[BSL_SECURITYRESPONSESET_STRLEN];
     BSL_PolicyAction_e err_action_codes[BSL_SECURITYRESPONSESET_ARRAYLEN];
-    int    err_code;
-    size_t total_operations;
-    size_t failure_count;
+    int                err_code;
+    size_t             total_operations;
+    size_t             failure_count;
 };
 
 #endif /* BSLB_SECURITYRESULTSET_H_ */

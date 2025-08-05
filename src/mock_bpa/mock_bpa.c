@@ -64,15 +64,15 @@ static pthread_t thr_over_rx, thr_under_rx, thr_deliver, thr_forward;
 static BSL_LibCtx_t *bsl;
 
 // Configuration
-static BSL_HostEID_t      app_eid;
-static struct sockaddr_in over_addr   = { .sin_family = 0 };
-static struct sockaddr_in app_addr    = { .sin_family = 0 };
-static struct sockaddr_in under_addr  = { .sin_family = 0 };
-static struct sockaddr_in router_addr = { .sin_family = 0 };
-static int                tx_notify_r, tx_notify_w;
-static BSL_HostEID_t      sec_eid;
-static bool                                 policy_configured = false;
-static mock_bpa_policy_registry_t           policy_registry;
+static BSL_HostEID_t              app_eid;
+static struct sockaddr_in         over_addr   = { .sin_family = 0 };
+static struct sockaddr_in         app_addr    = { .sin_family = 0 };
+static struct sockaddr_in         under_addr  = { .sin_family = 0 };
+static struct sockaddr_in         router_addr = { .sin_family = 0 };
+static int                        tx_notify_r, tx_notify_w;
+static BSL_HostEID_t              sec_eid;
+static bool                       policy_configured = false;
+static mock_bpa_policy_registry_t policy_registry;
 
 static int ingest_netaddr(struct sockaddr_in *addr, const char *arg)
 {
@@ -580,7 +580,8 @@ static void show_usage(const char *argv0)
             "Usage: %s -o <over-socket address:port> -a <application address:port>\n"
             "          -u <under-socket address:port> -r <router address:port>\n"
             "          -e <app-EID> -s <sec-src-EID>\n"
-            "          -p (optional - defaults to none) comma delimited hex list of <bsl_mock_policy_configuration_t>, e.g. '0x000f,0x0021'\n", 
+            "          -p (optional - defaults to none) comma delimited hex list of <bsl_mock_policy_configuration_t>, "
+            "e.g. '0x000f,0x0021'\n",
             argv0);
 }
 
@@ -669,12 +670,13 @@ int main(int argc, char **argv)
                     mock_bpa_handle_policy_config(optarg, policy_callbacks.user_data, &policy_registry);
 
                     // TODO JSON parsing
-                    // // mock_bpa_handle_policy_config_from_json("src/mock_bpa/policy_provider_test.json", policy_callbacks.user_data);
+                    // // mock_bpa_handle_policy_config_from_json("src/mock_bpa/policy_provider_test.json",
+                    // policy_callbacks.user_data);
 
                     policy_configured = true;
                     break;
                 case 'k':
-                    if(mock_bpa_key_registry_init(optarg))
+                    if (mock_bpa_key_registry_init(optarg))
                         retval = 1;
                     break;
                 default:
@@ -718,7 +720,8 @@ int main(int argc, char **argv)
         retval = bpa_exec();
     }
 
-    if(policy_configured) {
+    if (policy_configured)
+    {
         mock_bpa_policy_registry_deinit(&policy_registry);
         policy_configured = false;
     }

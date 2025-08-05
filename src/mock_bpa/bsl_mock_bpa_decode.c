@@ -261,9 +261,9 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
     while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &decitem))
     {
         BSL_LOG_DEBUG("decoding canonical block (at %zd)...", QCBORDecode_Tell(dec));
-//        if (decitem.val)
+        //        if (decitem.val)
 
-        MockBPA_CanonicalBlock_t blk       = { 0 };
+        MockBPA_CanonicalBlock_t blk = { 0 };
 
         res = bsl_mock_decode_canonical(dec, &blk);
         if (res || QCBORDecode_GetError(dec))

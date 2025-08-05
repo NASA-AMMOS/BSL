@@ -27,16 +27,15 @@
 
 #include "mock_bpa_policy_params.h"
 
-
 void mock_bpa_policy_params_init(mock_bpa_policy_params_t *params, int policy_num)
 {
     params->param_integ_scope_flag = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_sha_variant = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_aad_scope_flag = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_init_vector = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_aes_variant = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_test_key = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_use_wrapped_key = calloc(BSL_SecParam_Sizeof(), 1);
+    params->param_sha_variant      = calloc(BSL_SecParam_Sizeof(), 1);
+    params->param_aad_scope_flag   = calloc(BSL_SecParam_Sizeof(), 1);
+    params->param_init_vector      = calloc(BSL_SecParam_Sizeof(), 1);
+    params->param_aes_variant      = calloc(BSL_SecParam_Sizeof(), 1);
+    params->param_test_key         = calloc(BSL_SecParam_Sizeof(), 1);
+    params->param_use_wrapped_key  = calloc(BSL_SecParam_Sizeof(), 1);
 
     params->active = true;
 
