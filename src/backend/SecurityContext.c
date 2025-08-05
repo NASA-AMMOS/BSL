@@ -521,6 +521,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             }
         }
 
+        BSL_SecOper_Deinit(sec_oper);
         BSL_SecOutcome_Deinit(outcome);
 
         if (errcode != 0)
