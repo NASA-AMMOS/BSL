@@ -190,6 +190,7 @@ static void *work_over_rx(void *arg _U_)
         data_queue_pop(&item, over_rx);
         if (item.encoded.len == 0)
         {
+            mock_bpa_ctr_deinit(&item);
             break;
         }
         BSL_LOG_INFO("over_rx");
@@ -219,6 +220,7 @@ static void *work_under_rx(void *arg _U_)
         data_queue_pop(&item, under_rx);
         if (item.encoded.len == 0)
         {
+            mock_bpa_ctr_deinit(&item);
             break;
         }
 
@@ -254,6 +256,7 @@ static void *work_deliver(void *arg _U_)
         data_queue_pop(&item, deliver);
         if (item.encoded.len == 0)
         {
+            mock_bpa_ctr_deinit(&item);
             break;
         }
         BSL_LOG_INFO("deliver");
@@ -290,6 +293,7 @@ static void *work_forward(void *arg _U_)
         data_queue_pop(&item, forward);
         if (item.encoded.len == 0)
         {
+            mock_bpa_ctr_deinit(&item);
             break;
         }
         BSL_LOG_INFO("forward");

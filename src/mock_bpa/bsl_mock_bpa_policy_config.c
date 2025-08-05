@@ -101,7 +101,6 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     if (!root) 
     {
         BSL_LOG_ERR("JSON error: line %d: %s\n", err.line, err.text);
-        json_decref(root);
         return;
     }
 
@@ -110,6 +109,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     if (!policyrule || !json_is_object(policyrule)) 
     {
         BSL_LOG_ERR("Missing \"policyrule\" \n");
+        json_decref(root);
         return;
     }
 
@@ -577,6 +577,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
     if (!keys || !json_is_array(keys)) 
     {
         BSL_LOG_ERR("Missing \"keys\" \n");
+        json_decref(root);
         return 1;
     }
 
@@ -645,6 +646,8 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         // pclose(pipe);
 
     }
+
+    json_decref(root);
 
     return retval;
 }
