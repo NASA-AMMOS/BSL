@@ -32,9 +32,8 @@
 
 #define TEST_CASE(...)
 
-static BSL_TestContext_t LocalTestCtx = { 0 };
-
-static BSL_SecurityActionSet_t action_set = { 0 };
+static BSL_TestContext_t       LocalTestCtx = { 0 };
+static BSL_SecurityActionSet_t action_set   = { 0 };
 
 void suiteSetUp(void)
 {
@@ -55,6 +54,7 @@ void setUp(void)
     memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
     TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
     mock_bpa_ctr_init(&LocalTestCtx.mock_bpa_ctr);
+    memset(&action_set, 0, sizeof(action_set));
 
     /// Register the policy provider with some rules
     BSL_PolicyDesc_t policy_desc = { 0 };

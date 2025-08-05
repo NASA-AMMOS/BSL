@@ -357,15 +357,15 @@ int BSL_TestUtils_EncodeBase16(string_t output, const BSL_Data_t *input, bool up
 int BSL_TestUtils_DecodeBase16(BSL_Data_t *output, const string_t input);
 
 /**
- * Modify bundle's source, destination, and sec source EIDs
+ * Modify bundle's source, destination, and report-to EIDs
  * @param[in, out] input_bundle bundle to modify
- * @param[in] src_eid source EID to set bundle source EID to. Set to NULL if bundle source EID should remain unchanged.
- * @param[in] dest_eid destination EID to set bundle destination EID to. Set to NULL if bundle destination EID should
- * remain unchanged.
- * @param[in] secsrc_eid security source EID to set bundle security source EID to. Set to NULL if bundle security source
- * EID should remain unchanged.
+ * @param[in] src_eid EID to set bundle source EID to. Set to NULL if bundle source EID should remain unchanged.
+ * @param[in] dest_eid EID to set bundle destination EID to. Set to NULL if bundle destination EID should remain
+ * unchanged.
+ * @param[in] report_to_eid EID to set bundle report-to EID to. Set to NULL if bundle report-to EID should remain
+ * unchanged.
  */
 int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid,
-                             const char *secsrc_eid);
+                             const char *report_to_eid);
 
 #endif
