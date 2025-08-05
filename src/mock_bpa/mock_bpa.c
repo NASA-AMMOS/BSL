@@ -664,7 +664,7 @@ int main(int argc, char **argv)
                     break;
                 case 'h':
                 case 'p':
-                    mock_bpa_init_policy_registry(&policy_registry);
+                    mock_bpa_policy_registry_init(&policy_registry);
                     mock_bpa_handle_policy_config(optarg, policy_callbacks.user_data, &policy_registry);
 
                     // TODO JSON parsing
@@ -718,7 +718,7 @@ int main(int argc, char **argv)
     }
 
     if(policy_configured) {
-        mock_bpa_deinit_policy_registry(&policy_registry);
+        mock_bpa_policy_registry_deinit(&policy_registry);
         policy_configured = false;
     }
 

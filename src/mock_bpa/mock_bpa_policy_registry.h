@@ -46,13 +46,13 @@ typedef struct mock_bpa_policy_registry
     int registry_count;
 } mock_bpa_policy_registry_t;
 
-void mock_bpa_init_policy_registry(mock_bpa_policy_registry_t *registry);
+void mock_bpa_policy_registry_init(mock_bpa_policy_registry_t *registry);
 
 int mock_bpa_policy_registry_size(mock_bpa_policy_registry_t *registry);
 
 mock_bpa_policy_params_t *mock_bpa_policy_registry_get(mock_bpa_policy_registry_t *registry);
 
-void mock_bpa_deinit_policy_registry(mock_bpa_policy_registry_t *registry);
+void mock_bpa_policy_registry_deinit(mock_bpa_policy_registry_t *registry);
 
 #ifdef __cplusplus
 } // extern C

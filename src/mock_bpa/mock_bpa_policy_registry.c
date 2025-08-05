@@ -27,7 +27,7 @@
 
 #include "mock_bpa_policy_registry.h"
 
-void mock_bpa_init_policy_registry(mock_bpa_policy_registry_t *registry)
+void mock_bpa_policy_registry_init(mock_bpa_policy_registry_t *registry)
 {
     for (int i = 0; i < MOCK_BPA_MAX_POLICIES; ++i) {
         registry->in_use[i] = false;
@@ -55,7 +55,7 @@ mock_bpa_policy_params_t *mock_bpa_policy_registry_get(mock_bpa_policy_registry_
     return NULL;
 }
 
-void mock_bpa_deinit_policy_registry(mock_bpa_policy_registry_t *registry)
+void mock_bpa_policy_registry_deinit(mock_bpa_policy_registry_t *registry)
 {
     for (int i = 0; i < MOCK_BPA_MAX_POLICIES; ++i) {
         if (registry->in_use[i]) {
