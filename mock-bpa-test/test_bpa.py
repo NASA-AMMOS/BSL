@@ -79,7 +79,7 @@ class TestAgent(unittest.TestCase):
 
         args = compose_args([
             'bsl-mock-bpa',
-            '-e', 'ipn:1.2',
+            '-e', 'ipn:2.1',
             '-u', 'localhost:4556', '-r', 'localhost:14556',
             '-o', 'localhost:24556', '-a', 'localhost:34556',
             '-p', policy_config,
