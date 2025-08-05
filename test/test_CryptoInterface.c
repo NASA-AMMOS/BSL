@@ -195,7 +195,7 @@ int gcm_decrypt(const EVP_CIPHER *cipher, unsigned char *ciphertext, int ciphert
 void suiteSetUp(void)
 {
     BSL_openlog();
-    BSL_CryptoInit();
+    BSL_CryptoInit(NULL);
 
     // static keys
     uint8_t test1[20] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,

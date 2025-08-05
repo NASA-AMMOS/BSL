@@ -57,14 +57,25 @@ static int BSLB_CryptoKey_Deinit(BSLB_CryptoKey_t *key)
 DICT_DEF2(BSLB_CryptoKeyDict, string_t, STRING_OPLIST, BSLB_CryptoKey_t, M_OPL_BSLB_CryptoKey_t())
 /// @endcond
 
+static bsl_crypto_randbytes_fn rand_bytes_generator;
+
 /// Crypto key registry
 static BSLB_CryptoKeyDict_t StaticKeyRegistry;
 static pthread_mutex_t      StaticCryptoMutex = PTHREAD_MUTEX_INITIALIZER;
 // NOLINTEND
 
-void BSL_CryptoInit(void)
+void BSL_CryptoInit(bsl_crypto_randbytes_fn rand_gen)
 {
     BSLB_CryptoKeyDict_init(StaticKeyRegistry);
+
+    if (rand_gen)
+    {
+        rand_bytes_generator = rand_gen;
+    }
+    else
+    {
+        rand_bytes_generator = RAND_bytes;
+    }
 }
 
 void BSL_CryptoDeinit(void)
@@ -413,9 +424,9 @@ int BSL_Crypto_GenKey(uint8_t *key_buffer, size_t key_length)
     CHK_ARG_EXPR(key_length == 16 || key_length == 32);
 
     int key_length_int = (int)key_length;
-    if (RAND_bytes(key_buffer, key_length_int) != 1)
+    if (rand_bytes_generator(key_buffer, key_length_int) != 1)
     {
-        OPENSSL_cleanse(key_buffer, key_length_int);
+        memset(key_buffer, 0, key_length_int);
         return -2;
     }
 
@@ -431,7 +442,8 @@ int BSL_Crypto_GenIV(void *buf, int size)
     }
 
     memset(buf, 0, size);
-    CHK_PROPERTY(RAND_bytes((unsigned char *)buf, size) == 1);
+    CHK_PROPERTY(rand_bytes_generator((unsigned char *)buf, size) == 1);
+    //CHK_PROPERTY(RAND_bytes((unsigned char *)buf, size) == 1);
     return 0;
 }
 
