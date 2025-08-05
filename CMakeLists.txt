@@ -80,23 +80,25 @@ add_compile_options(
     -Werror
     -Wshadow -Wpointer-arith -Wstrict-prototypes
     -Wmissing-prototypes -Wredundant-decls -Wcast-align
-    -Wformat=2 -Wswitch-enum -Wlogical-op -Wduplicated-branches
+    -Wformat=2 -Wswitch-enum
     -fno-strict-aliasing -Werror=format-security -fno-common
     -Wstrict-aliasing=2
     # -Wconversion
 )
-# LEON safe options
 add_compile_options(
     -ffunction-sections
     -fdata-sections
     -fno-omit-frame-pointer
     $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-enforce-eh-specs>
-    $<$<COMPILE_LANGUAGE:CXX>:-fnothrow-opt>
 )
 if(CMAKE_C_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
+    add_compile_options(
+        -Wlogical-op -Wduplicated-branches
+        $<$<COMPILE_LANGUAGE:CXX>:-fno-enforce-eh-specs>
+        $<$<COMPILE_LANGUAGE:CXX>:-fnothrow-opt>
+    )
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -gdwarf-4")
 endif()
@@ -108,16 +110,12 @@ add_custom_target(clang-tidy
   COMMENT "Running clang-tidy..."
 )
 
-# Force specific POSIX compatibility version
-add_definitions(
-  "-D_POSIX_C_SOURCE=200809L"
-)
-
 if(BUILD_LIB)
     find_package(MLIB REQUIRED)
     find_package(QCBOR REQUIRED)
     find_package(OpenSSL REQUIRED)
     find_package(Threads REQUIRED)
+    find_package(jansson REQUIRED)
 endif(BUILD_LIB)
 
 include(CheckSymbolExists)

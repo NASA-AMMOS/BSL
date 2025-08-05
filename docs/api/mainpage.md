@@ -1,3 +1,4 @@
+@mainpage Introduction
 <!--
 Copyright (c) 2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
@@ -19,10 +20,6 @@ Institute of Technology, sponsored by the United States Government under
 the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 -->
-@mainpage Introduction
-
-# Introduction
-
 
 This documentation is for the detailed BPSec Library (BSL) application programming interface (API) in the C language.
 This is an implementation of RFC 9172 @cite rfc9172 functionality and RFC 9173 @cite rfc9173 default security contexts.

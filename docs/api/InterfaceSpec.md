@@ -1,3 +1,4 @@
+@page BSL Interface Specification
 <!--
 Copyright (c) 2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
@@ -19,6 +20,8 @@ Institute of Technology, sponsored by the United States Government under
 the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 -->
+This document functions as the AMMOS MiMTAR required interface specificaiton.
+
 Bundle Protocol Security Library (BPSec Lib) Software Interface Specification
 =============================================================================
 
