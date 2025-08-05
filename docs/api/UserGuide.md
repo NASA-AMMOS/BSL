@@ -1,3 +1,4 @@
+@page userguide User Guide (BPA Developer)
 <!--
 Copyright (c) 2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
@@ -20,11 +21,9 @@ the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 -->
 
-# User Guide (BPA Developer)
-
 This page covers the using BPSecLib from the perspective of the **Application Programmer**, or more specifically, the BPA developer.
 
-## BPA Interaction
+# BPA Interaction
 
  - Notes.
 

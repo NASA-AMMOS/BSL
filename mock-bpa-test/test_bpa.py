@@ -1,3 +1,24 @@
+#
+# Copyright (c) 2025 The Johns Hopkins University Applied Physics
+# Laboratory LLC.
+#
+# This file is part of the Bundle Protocol Security Library (BSL).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# This work was performed for the Jet Propulsion Laboratory, California
+# Institute of Technology, sponsored by the United States Government under
+# the prime contract 80NM0018D0004 between the Caltech and NASA under
+# subcontract 1700763.
+#
 ''' Simple I/O tests of the mock agent.
 '''
 import binascii
@@ -13,7 +34,11 @@ from typing import List
 import unittest
 import cbor2
 
+<<<<<<< HEAD
 from helpers.runner import CmdRunner, Timeout
+=======
+from helpers import CmdRunner, compose_args
+>>>>>>> main
 from _test_data import _TestData
 from _test_util import _TestCase, _TestSet, DataFormat
 from requirements_tests import _RequirementsCases
@@ -25,7 +50,11 @@ LOGGER = logging.getLogger(__name__)
 class TestAgent(unittest.TestCase):
     ''' Verify whole-agent behavior with the bsl-mock-bpa '''
 
+<<<<<<< HEAD
     def __init__(self, methodName = "runTest"):
+=======
+    def __init__(self, methodName="runTest"):
+>>>>>>> main
         super().__init__(methodName)
         # self.testdata = _TestData()
         self.requirements_tests = _RequirementsCases()
@@ -53,25 +82,36 @@ class TestAgent(unittest.TestCase):
             policy_config = policy_config[index + 2:]
             LOGGER.info('Using policy config %s for %s', policy_config, self._testMethodName)
 
+<<<<<<< HEAD
         key_set="src/mock_bpa/key_set_1.json"
 
         args = [
             'bash', 'build.sh', 'run', 'build/default/src/mock_bpa/bsl-mock-bpa',
+=======
+        key_set = "src/mock_bpa/key_set_1.json"
+
+        args = compose_args([
+            'bsl-mock-bpa',
+>>>>>>> main
             '-e', 'ipn:2.1',
             '-u', 'localhost:4556', '-r', 'localhost:14556',
             '-o', 'localhost:24556', '-a', 'localhost:34556',
             '-p', policy_config,
             '-k', key_set
+<<<<<<< HEAD
         ]
+=======
+        ])
+>>>>>>> main
         self._agent = CmdRunner(args, stderr=subprocess.STDOUT)
 
         # Bind underlayer messaging
-        self._ul_sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        self._ul_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._ul_sock.bind(('localhost', 14556))
         self._ul_sock.connect(('localhost', 4556))
 
         # Bind overlayer messaging
-        self._ol_sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        self._ol_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._ol_sock.bind(('localhost', 34556))
 
     def tearDown(self):
@@ -82,8 +122,17 @@ class TestAgent(unittest.TestCase):
         self._ul_sock.close()
         self._ul_sock = None
 
-        self._agent.stop()
-        self._agent = None
+        if self._agent:
+            # Exit cleanly if not already gone
+            ret = self._agent.stop()
+
+            # TODO: fix this issue with runner not joining back
+            if (ret == -9):
+                ret = 0
+                LOGGER.warning('Runner proc unable to join cleanly - faking ret val for now')
+
+            self.assertEqual(0, ret)
+            self._agent = None
 
     def _start(self):
 
@@ -101,6 +150,7 @@ class TestAgent(unittest.TestCase):
         LOGGER.debug('Encoded to data %s', binascii.hexlify(buf.getvalue()))
         return buf.getvalue()
 
+<<<<<<< HEAD
     def _wait_for(self, sock: socket.socket, timeout_expected=False) -> bytes:
 
         LOGGER.debug('Waiting for socket data...')
@@ -113,6 +163,18 @@ class TestAgent(unittest.TestCase):
         return data
 
     def _single_test(self, testcase : _TestCase):
+=======
+    def _wait_for(self, sock: socket.socket) -> bytes:
+
+        LOGGER.debug('Waiting for socket data...')
+        rrd, rwr, rxp = select.select([sock], [], [], 1.0)
+        if not rrd:
+            raise TimeoutError('Did not receive bundle in time')
+        data = sock.recv(65535)
+        return data
+
+    def _single_test(self, testcase: _TestCase):
+>>>>>>> main
 
         # start mock BPA using specified policy config
         self._start()
@@ -126,7 +188,11 @@ class TestAgent(unittest.TestCase):
             LOGGER.debug('waiting')
 
             rx_data = self._wait_for(self._ul_sock)
+<<<<<<< HEAD
                     
+=======
+
+>>>>>>> main
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
             LOGGER.info('\nReceived data:\n%s\n', binascii.hexlify(rx_data))
 
@@ -136,6 +202,7 @@ class TestAgent(unittest.TestCase):
             print(f'exp: {binascii.hexlify(expected_rx)}, got: {binascii.hexlify(rx_data)}')
 
             self.assertEqual(binascii.hexlify(expected_rx), binascii.hexlify(rx_data))
+<<<<<<< HEAD
             
         elif (testcase.expected_output_format == DataFormat.NONE):
             self._ul_sock.send(tx_data)
@@ -156,10 +223,33 @@ class TestAgent(unittest.TestCase):
             LOGGER.debug('TODO handle err codes')
 
             self.assertEqual(True,False)
+=======
+
+        elif (testcase.expected_output_format == DataFormat.NONE):
+            self._ul_sock.send(tx_data)
+            LOGGER.debug('waiting')
+
+            with self.assertRaises(TimeoutError):
+                self._wait_for(self._ul_sock)
+
+            LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
+            self.fail('Validate output')
+        elif (testcase.expected_output_format == DataFormat.ERR):
+            self._ul_sock.send(tx_data)
+            LOGGER.debug('waiting')
+
+            with self.assertRaises(TimeoutError):
+                self._wait_for(self._ul_sock)
+
+            LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
+            self.fail('TODO handle err codes')
+
+>>>>>>> main
 
 # Below utilizes setattr to add methods to a child class of the TestAgent, which will in-turn give us unit tests
 # tldr auto-generated methods for unit tests :)
 # @param new_tests needs to be a class that is child of _TestSet()
+<<<<<<< HEAD
 def _add_tests(new_tests : _TestSet):
     def decorator(cls):
         for id, tc in new_tests.cases.items():
@@ -176,3 +266,31 @@ def _add_tests(new_tests : _TestSet):
 #@_add_tests(_CCSDS_Cases())
 class TestMockBPA(TestAgent):
     pass
+=======
+def _add_tests(new_tests: _TestSet):
+
+    def decorator(cls):
+        for id, tc in new_tests.cases.items():
+            if tc.is_implemented and tc.is_working:
+
+                def _test(cls, id=id):
+                    cls._single_test(new_tests.cases[id])
+
+                setattr(cls, f'test_{id}', _test)
+
+        return cls
+
+    return decorator
+
+
+@_add_tests(_RequirementsCases())
+# @_add_tests(_TestData())
+# @_add_tests(_CCSDS_Cases())
+class TestMockBPA(TestAgent):
+
+    def test_start_stop_p00(self):
+        self._start()
+
+        self.assertEqual(0, self._agent.stop())
+        self._agent = None
+>>>>>>> main

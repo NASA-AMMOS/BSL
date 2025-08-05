@@ -490,6 +490,7 @@ typedef enum
     /// @brief Primary block ID (a special case)
     BSL_BLOCK_TYPE_PRIMARY = 0,
     /// @brief Payload block
+<<<<<<< HEAD
     BSL_BLOCK_TYPE_PAYLOAD = 1,
     BSL_BLOCK_TYPE_BUNDLE_AUTH = 2,
     BSL_BLOCK_TYPE_PAYLOAD_INTEGRITY = 3,
@@ -500,6 +501,18 @@ typedef enum
     BSL_BLOCK_TYPE_METADATA_EXT = 8,
     BSL_BLOCK_TYPE_EXT_SECURITY = 9,
     BSL_BLOCK_TYPE_HOP_COUNT = 10,
+=======
+    BSL_BLOCK_TYPE_PAYLOAD                 = 1,
+    BSL_BLOCK_TYPE_BUNDLE_AUTH             = 2,
+    BSL_BLOCK_TYPE_PAYLOAD_INTEGRITY       = 3,
+    BSL_BLOCK_TYPE_PAYLOAD_CONFIDENTIALITY = 4,
+    BSL_BLOCK_TYPE_PREVIOUS_HOP_INSERTION  = 5,
+    BSL_BLOCK_TYPE_PREVIOUS_NODE           = 6,
+    BSL_BLOCK_TYPE_BUNDLE_AGE              = 7,
+    BSL_BLOCK_TYPE_METADATA_EXT            = 8,
+    BSL_BLOCK_TYPE_EXT_SECURITY            = 9,
+    BSL_BLOCK_TYPE_HOP_COUNT               = 10,
+>>>>>>> main
     /// @brief Block Integrity @cite iana:bundle
     BSL_BLOCK_TYPE_BIB = 11,
     /// @brief Block Confidentiality @cite iana:bundle

@@ -1,3 +1,4 @@
+@page Developer_Guide Developer Guide
 <!--
 Copyright (c) 2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
@@ -19,8 +20,6 @@ Institute of Technology, sponsored by the United States Government under
 the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 -->
-
-# Developer Guide
 
 This page covers information for **Backend Developers**, or more specifically those who may be implementing a BPSec backend, or a new Security Context or Policy Provider.
 
