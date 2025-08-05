@@ -276,7 +276,10 @@ typedef struct BSL_Data_s
 /** Static initializer for a data store.
  * @sa BSL_Data_Init()
  */
-#define BSL_DATA_INIT_NULL { .owned = false, .ptr = NULL, .len = 0 }
+#define BSL_DATA_INIT_NULL                    \
+    {                                         \
+        .owned = false, .ptr = NULL, .len = 0 \
+    }
 
 /** Initialize an empty data struct.
  *
@@ -387,7 +390,10 @@ int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t *bufsize)
 /** Static initializer for an invalid ::BSL_HostEID_t.
  * Even after this, BSL_HostEID_Init() must be used to get into a valid state.
  */
-#define BSL_HOSTEID_INIT_INVALID { .handle = NULL }
+#define BSL_HOSTEID_INIT_INVALID \
+    {                            \
+        .handle = NULL           \
+    }
 
 /** Initialize an abstract EID.
  *
@@ -434,7 +440,10 @@ int BSL_HostEID_DecodeFromCBOR(BSL_HostEID_t *eid, void *decoder);
 /** Static initializer for an invalid ::BSL_HostEIDPattern_t.
  * Even after this, BSL_HostEIDPattern_Init() must be used to get into a valid state.
  */
-#define BSL_HOSTEID_INIT_INVALID { .handle = NULL }
+#define BSL_HOSTEID_INIT_INVALID \
+    {                            \
+        .handle = NULL           \
+    }
 
 /** Initialize an abstract EID Pattern.
  *
