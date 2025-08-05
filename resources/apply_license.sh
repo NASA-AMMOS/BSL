@@ -41,7 +41,7 @@ cd $SELFDIR
 LICENSEOPTS="${LICENSEOPTS} --tmpl ${SELFDIR}/resources/apply_license.tmpl"
 LICENSEOPTS="${LICENSEOPTS} --years $(date +%Y)"
 # Excludes only apply to directory (--dir) mode and not file mode
-#LICENSEOPTS="${LICENSEOPTS} --exclude *.yml"
+LICENSEOPTS="${LICENSEOPTS} --exclude=${SELFDIR}/docs/api/*.md"
 
 
 # Specific paths

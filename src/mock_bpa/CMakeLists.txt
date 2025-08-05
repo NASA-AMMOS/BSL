@@ -31,6 +31,9 @@ target_sources(
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_eidpat.h
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_encode.h
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_decode.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_policy_config.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_policy_params.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_policy_registry.h
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_ctr.h
   ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_MockBPA.h
 )
@@ -42,6 +45,9 @@ target_sources(
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_eidpat.c
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_encode.c
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_decode.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_policy_config.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_policy_params.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_policy_registry.c
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_ctr.c
 )
 target_include_directories(
@@ -54,7 +60,9 @@ set_target_properties(bsl_mock_bpa
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib QCBOR::qcbor)
+target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
+target_link_libraries(bsl_mock_bpa PUBLIC QCBOR::qcbor)
+target_link_libraries(bsl_mock_bpa PUBLIC Jansson::Jansson)
 target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_default_sc bsl_sample_pp)
 
 add_executable(bsl-mock-bpa)

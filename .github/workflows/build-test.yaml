@@ -55,7 +55,7 @@ jobs:
               cmake ninja-build \
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
-              libssl-dev \
+              libssl-dev libjansson-dev \
               valgrind gcovr xmlstarlet
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -67,7 +67,7 @@ jobs:
               cmake ninja-build \
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
-              openssl-devel \
+              openssl-devel jansson-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
@@ -129,7 +129,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
               cmake ninja-build ruby gcc g++ ccache patch \
-              libssl-dev \
+              libssl-dev libjansson-dev \
               valgrind gcovr xmlstarlet
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -140,7 +140,7 @@ jobs:
               git rsync \
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch \
-              openssl-devel \
+              openssl-devel jansson-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
       - name: Checkout repository
