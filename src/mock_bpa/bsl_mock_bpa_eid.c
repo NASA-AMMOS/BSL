@@ -63,7 +63,6 @@ void bsl_mock_eid_deinit(bsl_mock_eid_t *eid)
 int MockBPA_EID_Init(void *user_data _U_, BSL_HostEID_t *eid)
 {
     CHKERR1(eid);
-    assert(eid != NULL);
     memset(eid, 0, sizeof(BSL_HostEID_t));
     eid->handle = BSL_MALLOC(sizeof(bsl_mock_eid_t));
     if (!(eid->handle))
