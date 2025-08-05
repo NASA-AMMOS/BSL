@@ -236,25 +236,15 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     bool                         is_aes128 = bcb_context->aes_variant == RFC9173_BCB_AES_VARIANT_A128GCM;
     BSL_CryptoCipherAESVariant_e aes_mode  = is_aes128 ? BSL_CRYPTO_AES_128 : BSL_CRYPTO_AES_256;
 
-    // The IV is already defined if being populated from a test
-    // Normally, this won't be the case, so we check here.
-    // If it is empty, then generate a random IV.
-    if (bcb_context->iv.len == 0)
+    // https://www.rfc-editor.org/rfc/rfc9173.html#name-initialization-vector-iv
+    // "A value of 12 bytes SHOULD be used unless local security policy requires a different length"
+    BSL_Data_InitBuffer(&bcb_context->iv, RFC9173_BCB_DEFAULT_IV_LEN);
+    void        *iv_ptr = bcb_context->iv.ptr;
+    const size_t iv_len = bcb_context->iv.len;
+    if (BSL_SUCCESS != BSL_Crypto_GenIV(iv_ptr, iv_len))
     {
-        // https://www.rfc-editor.org/rfc/rfc9173.html#name-initialization-vector-iv
-        // "A value of 12 bytes SHOULD be used unless local security policy requires a different length"
-        BSL_Data_InitBuffer(&bcb_context->iv, RFC9173_BCB_DEFAULT_IV_LEN);
-        void        *iv_ptr = bcb_context->iv.ptr;
-        const size_t iv_len = bcb_context->iv.len;
-        if (BSL_SUCCESS != BSL_Crypto_GenIV(iv_ptr, iv_len))
-        {
-            BSL_LOG_ERR("Failed to generate IV");
-            return BSL_ERR_SECURITY_CONTEXT_FAILED;
-        }
-    }
-    else
-    {
-        BSL_LOG_WARNING("Using test-harness IV");
+        BSL_LOG_ERR("Failed to generate IV");
+        return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
     BSL_Data_t content_enc_key = { 0 };
@@ -283,23 +273,17 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     }
     else
     {
-        if (bcb_context->test_content_enc_key.len > 0)
+        // FIXME the key bytes shouldn't be copied outside of crypto library.
+        // possible alternative:
+        // GenKey should instead return a keyid and add generated key to registry
+        const size_t keysize = is_aes128 ? 16 : 32;
+        BSL_LOG_DEBUG("Generating %lu bit AES key", keysize * 8);
+        if (BSL_SUCCESS != BSL_Crypto_GenKey(content_enc_key.ptr, keysize))
         {
-            ASSERT_PROPERTY(content_enc_key.len >= bcb_context->test_content_enc_key.len);
-            BSL_LOG_WARNING("Using CEK from test parameter");
-            memcpy(content_enc_key.ptr, bcb_context->test_content_enc_key.ptr, bcb_context->test_content_enc_key.len);
-            content_enc_key.len = bcb_context->test_content_enc_key.len;
+            BSL_LOG_ERR("Failed to generate AES key");
+            goto error;
         }
-        else
-        {
-            const size_t keysize = is_aes128 ? 16 : 32;
-            BSL_LOG_DEBUG("Generating %lu bit AES key", keysize * 8);
-            if (BSL_SUCCESS != BSL_Crypto_GenKey(content_enc_key.ptr, keysize))
-            {
-                BSL_LOG_ERR("Failed to generate AES key");
-                goto error;
-            }
-        }
+        content_enc_key.len = keysize;
 
         if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, BSLX_MAX_KEYLEN))
         {
@@ -478,23 +462,10 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
                 BSL_LOG_DEBUG("Param[%lu]: KEY_ID value = %s", param_id, bcb_context->key_id);
                 break;
             }
-            case BSL_SECPARAM_TYPE_INT_FIXED_KEY:
-            {
-                BSL_LOG_DEBUG("BCB using fixed key from test harness");
-                BSL_SecParam_GetAsBytestr(param, &bcb_context->test_content_enc_key);
-                break;
-            }
             case BSL_SECPARAM_TYPE_AUTH_TAG:
             {
                 BSL_LOG_DEBUG("Parsing auth tag");
                 BSL_SecParam_GetAsBytestr(param, &bcb_context->authtag);
-                break;
-            }
-            case BSL_SECPARAM_TYPE_IV:
-            {
-                // If we need to pass in an IV for testing purposes.
-                BSL_LOG_DEBUG("Param[%lu]: USE TEST INITIALIZATION VECTOR", param_id);
-                BSL_SecParam_GetAsBytestr(param, &bcb_context->iv);
                 break;
             }
             case BSL_SECPARAM_TYPE_INT_USE_WRAPPED_KEY:
@@ -584,9 +555,6 @@ static void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context)
     BSL_Data_Deinit(&bcb_context->debugstr);
     BSL_Data_Deinit(&bcb_context->authtag);
     BSL_Data_Deinit(&bcb_context->iv);
-    BSL_Data_Deinit(&bcb_context->test_content_enc_key);
-    BSL_Data_Deinit(&bcb_context->test_init_vector);
-    BSL_Data_Deinit(&bcb_context->test_key_enc_key);
     BSL_Data_Deinit(&bcb_context->wrapped_key);
     memset(bcb_context, 0, sizeof(*bcb_context));
 }

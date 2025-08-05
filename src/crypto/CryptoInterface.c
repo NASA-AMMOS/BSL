@@ -57,6 +57,9 @@ static int BSLB_CryptoKey_Deinit(BSLB_CryptoKey_t *key)
 DICT_DEF2(BSLB_CryptoKeyDict, string_t, STRING_OPLIST, BSLB_CryptoKey_t, M_OPL_BSLB_CryptoKey_t())
 /// @endcond
 
+/// Random bytes generator
+static BSL_Crypto_RandBytesFn rand_bytes_generator;
+
 /// Crypto key registry
 static BSLB_CryptoKeyDict_t StaticKeyRegistry;
 static pthread_mutex_t      StaticCryptoMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -65,11 +68,17 @@ static pthread_mutex_t      StaticCryptoMutex = PTHREAD_MUTEX_INITIALIZER;
 void BSL_CryptoInit(void)
 {
     BSLB_CryptoKeyDict_init(StaticKeyRegistry);
+    rand_bytes_generator = RAND_bytes;
 }
 
 void BSL_CryptoDeinit(void)
 {
     BSLB_CryptoKeyDict_clear(StaticKeyRegistry);
+}
+
+void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn)
+{
+    rand_bytes_generator = rand_gen_fn;
 }
 
 int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *key_id,
@@ -118,7 +127,7 @@ int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_ke
     return 0;
 }
 
-int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *content_key_id, size_t aes_variant)
+int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *kek_id, size_t aes_variant)
 {
     const EVP_CIPHER *cipher = (aes_variant == BSL_CRYPTO_AES_128) ? EVP_aes_128_wrap() : EVP_aes_256_wrap();
     EVP_CIPHER_CTX   *ctx    = EVP_CIPHER_CTX_new();
@@ -134,12 +143,12 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *cont
     size_t keylen = 64;
 
     // TODO(bvb) replace w error checking
-    BSL_LOG_INFO("Content key ID = %lu", cek);
-    int got_crypto_key = BSLB_Crypto_GetRegistryKey(content_key_id, (const uint8_t **)&key, &keylen);
+    int got_crypto_key = BSLB_Crypto_GetRegistryKey(kek_id, (const uint8_t **)&key, &keylen);
+
     assert(got_crypto_key == 0);
     assert(keylen > 0);
 
-    int enc_result = EVP_EncryptInit_ex(ctx, cipher, NULL, cek.ptr, NULL);
+    int enc_result = EVP_EncryptInit_ex(ctx, cipher, NULL, key, NULL);
     if (!enc_result)
     {
         EVP_CIPHER_CTX_free(ctx);
@@ -147,9 +156,7 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *cont
     }
 
     int len = (int)wrapped_key->len;
-    if (!EVP_EncryptUpdate(ctx, wrapped_key->ptr, &len,
-                           // (int*)&wrapped_key->len,
-                           key, (int)keylen))
+    if (!EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek.ptr, cek.len))
     {
         EVP_CIPHER_CTX_free(ctx);
         return -2;
@@ -413,9 +420,9 @@ int BSL_Crypto_GenKey(uint8_t *key_buffer, size_t key_length)
     CHK_ARG_EXPR(key_length == 16 || key_length == 32);
 
     int key_length_int = (int)key_length;
-    if (RAND_bytes(key_buffer, key_length_int) != 1)
+    if (rand_bytes_generator(key_buffer, key_length_int) != 1)
     {
-        OPENSSL_cleanse(key_buffer, key_length_int);
+        memset(key_buffer, 0, key_length_int);
         return -2;
     }
 
@@ -431,7 +438,7 @@ int BSL_Crypto_GenIV(void *buf, int size)
     }
 
     memset(buf, 0, size);
-    CHK_PROPERTY(RAND_bytes((unsigned char *)buf, size) == 1);
+    CHK_PROPERTY(rand_bytes_generator((unsigned char *)buf, size) == 1);
     return 0;
 }
 

@@ -123,6 +123,14 @@ typedef struct BSL_Cipher_s
     size_t block_size;
 } BSL_Cipher_t;
 
+/**
+ * Function pointer def for random bytestring generator
+ * @param buf buffer to fill with random bytes
+ * @param len size of random buffer
+ * @return 1 if success, 0 if failure
+ */
+typedef int (*BSL_Crypto_RandBytesFn)(unsigned char *buf, int len);
+
 /** Initialize the crypto subsystem.
  * This must be called once per process.
  */
@@ -132,6 +140,13 @@ void BSL_CryptoInit(void);
  * This should be called at the end of the process.
  */
 void BSL_CryptoDeinit(void);
+
+/**
+ * Set RNG generator to be used by crypto library
+ * @param[in] rand_gen_fn random bytes generation function.
+ * @warning Intended to be used only for testing. Providing an alternative RNG may break FIPS-140 compatibility
+ */
+void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn);
 
 /**
  * Initialize HMAC context resources and set private key and SHA variant

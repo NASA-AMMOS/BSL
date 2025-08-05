@@ -95,6 +95,8 @@ void tearDown(void)
  */
 void test_RFC9173_AppendixA_Example1_BIB_Source(void)
 {
+    BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a1);
+
     TEST_ASSERT_EQUAL(
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
@@ -150,6 +152,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
  */
 void test_RFC9173_AppendixA_Example2_BCB_Source(void)
 {
+    BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a2_cek);
     // Loads the bundle
     TEST_ASSERT_EQUAL(
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));

@@ -93,7 +93,6 @@ const char * bsl_version(void);
  */
 #cmakedefine HAVE_CLOCK_GETTIME
 
-
 #ifdef __cplusplus
 } // extern C
 #endif
