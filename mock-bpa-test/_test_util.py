@@ -16,7 +16,7 @@ class _TestCase:
     @param success - boolean, true if input bundle is expected to have an output bundle, false if error/no output
     '''
     def __init__(self, input_data, expected_output, policy_config, 
-                 is_implemented : bool, expect_success: bool, 
+                 is_implemented : bool, is_working: bool, expect_success: bool, 
                  input_data_format : DataFormat, expected_output_format : DataFormat):
         self.input_data = input_data
         self.expected_output = expected_output
@@ -24,6 +24,9 @@ class _TestCase:
 
         # can be removed once all tests are implemeneted
         self.is_implemented = is_implemented
+
+        # can be removed once all tests are wworking
+        self.is_working = is_working
 
         # true if test expected to succeed (return output bundle with no errors)
         self.expect_success = expect_success

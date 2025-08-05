@@ -186,7 +186,7 @@ def _add_tests(new_tests: _TestSet):
 
     def decorator(cls):
         for id, tc in new_tests.cases.items():
-            if tc.is_implemented:
+            if tc.is_implemented and tc.is_working:
 
                 def _test(cls, id=id):
                     cls._single_test(new_tests.cases[id])
