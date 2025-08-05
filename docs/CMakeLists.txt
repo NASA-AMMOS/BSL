@@ -19,8 +19,7 @@ Institute of Technology, sponsored by the United States Government under
 the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 ]]
-#message(${BUILD_DOCS_API})
-#add_subdirectory(api)
+
 if(BUILD_DOCS_API)
     add_subdirectory(api)
 endif(BUILD_DOCS_API)

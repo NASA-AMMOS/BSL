@@ -1,2 +1,5 @@
 cbor2 ~= 5.6
 pytest
+pyCryptodome
+pytest-subtests
+pyyaml

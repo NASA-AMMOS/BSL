@@ -11,3 +11,5 @@ build
 testroot
 __pycache__
 /.pytest_cache/
+venv/
+mock-bpa-test/ccsds_bpsec_redbook_draft_734.5-R-2_requirements_implementation_guide.yaml
