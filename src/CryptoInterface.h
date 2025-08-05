@@ -130,6 +130,7 @@ typedef int (*bsl_crypto_randbytes_fn)(unsigned char *buf, int len);
 
 /** Initialize the crypto subsystem.
  * This must be called once per process.
+ * @param[in] rand_gen_fn random bytes generation function. Set to NULL to use default (OpenSSL RAND_bytes).
  */
 void BSL_CryptoInit(bsl_crypto_randbytes_fn rand_gen_fn);
 

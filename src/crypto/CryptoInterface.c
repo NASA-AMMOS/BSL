@@ -57,6 +57,7 @@ static int BSLB_CryptoKey_Deinit(BSLB_CryptoKey_t *key)
 DICT_DEF2(BSLB_CryptoKeyDict, string_t, STRING_OPLIST, BSLB_CryptoKey_t, M_OPL_BSLB_CryptoKey_t())
 /// @endcond
 
+/// Random bytes generator
 static bsl_crypto_randbytes_fn rand_bytes_generator;
 
 /// Crypto key registry
@@ -443,7 +444,6 @@ int BSL_Crypto_GenIV(void *buf, int size)
 
     memset(buf, 0, size);
     CHK_PROPERTY(rand_bytes_generator((unsigned char *)buf, size) == 1);
-    //CHK_PROPERTY(RAND_bytes((unsigned char *)buf, size) == 1);
     return 0;
 }
 
