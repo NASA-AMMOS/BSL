@@ -356,16 +356,6 @@ int BSL_TestUtils_EncodeBase16(string_t output, const BSL_Data_t *input, bool up
  */
 int BSL_TestUtils_DecodeBase16(BSL_Data_t *output, const string_t input);
 
-int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len);
-int rfc9173_byte_gen_fn_a2_kek(unsigned char *buf, int len);
-int rfc9173_byte_gen_fn_a2_cek(unsigned char *buf, int len);
-int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len);
-
-int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len);
-int rfc9173_byte_gen_fn_a2_kek(unsigned char *buf, int len);
-int rfc9173_byte_gen_fn_a2_cek(unsigned char *buf, int len);
-int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len);
-
 /**
  * Modify bundle's source, destination, and report-to EIDs
  * @param[in, out] input_bundle bundle to modify
@@ -377,5 +367,10 @@ int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len);
  */
 int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid,
                              const char *report_to_eid);
+
+int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len);
+int rfc9173_byte_gen_fn_a2_kek(unsigned char *buf, int len);
+int rfc9173_byte_gen_fn_a2_cek(unsigned char *buf, int len);
+int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len);
 
 #endif
