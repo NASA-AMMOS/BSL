@@ -61,7 +61,6 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
     quick_data(context->auth_tag, ApxA2_AuthTag);
     quick_data(context->wrapped_key, ApxA2_WrappedKey);
     quick_data(context->key_enc_key, ApxA2_KeyEncKey);
-    quick_data(context->content_enc_key, ApxA2_ContentEncKey);
 
     BSL_SecParam_InitInt64(&context->param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
     BSL_SecParam_InitStr(&context->param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
@@ -70,8 +69,6 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
     BSL_SecParam_InitBytestr(&context->param_init_vec, RFC9173_BCB_SECPARAM_IV, context->init_vector);
     BSL_SecParam_InitBytestr(&context->param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, context->auth_tag);
     BSL_SecParam_InitBytestr(&context->param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, context->wrapped_key);
-    BSL_SecParam_InitBytestr(&context->param_content_enc_key, BSL_SECPARAM_TYPE_INT_FIXED_KEY,
-                             context->content_enc_key);
 
     BSL_SecOper_Init(&context->sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_NOTHING);
 
@@ -81,8 +78,6 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_scope_flags);
     if (role != BSL_SECROLE_SOURCE)
         BSL_SecOper_AppendParam(&context->sec_oper, &context->param_auth_tag);
-    if (role == BSL_SECROLE_SOURCE)
-        BSL_SecOper_AppendParam(&context->sec_oper, &context->param_content_enc_key);
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_test_key_id);
 }
 
@@ -100,6 +95,71 @@ BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bi
 BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void)
 {
     return calloc(BSL_SecurityResponseSet_Sizeof(), 1);
+}
+
+int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len)
+{
+    if (len == 12) // IV
+    {
+        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+        memcpy(buf, iv, 12);
+    }
+    else // A1 KEY
+    {
+        uint8_t rfc9173A1_key[] = { 0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b,
+                                    0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b };
+        memcpy(buf, rfc9173A1_key, len);
+    }
+    return 1;
+}
+
+int rfc9173_byte_gen_fn_a2_kek(unsigned char *buf, int len)
+{
+    if (len == 12) // IV
+    {
+        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+        memcpy(buf, iv, 12);
+    }
+    else // A2 KEY
+    {
+        uint8_t rfc9173A2_key[] = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+                                    0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70 };
+        memcpy(buf, rfc9173A2_key, len);
+    }
+    return 1;
+}
+
+int rfc9173_byte_gen_fn_a2_cek(unsigned char *buf, int len)
+{
+    if (len == 12) // IV
+    {
+        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+        memcpy(buf, iv, 12);
+    }
+    else // A3 KEY
+    {
+        uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
+                                    0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
+        memcpy(buf, rfc9173A3_key, len);
+    }
+    return 1;
+}
+
+int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len)
+{
+    if (len == 12) // IV
+    {
+        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+        memcpy(buf, iv, 12);
+    }
+    else // A4 KEY
+    {
+        uint8_t rfc9173A4_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69, 0x6f, 0x70, 0x61,
+                                    0x73, 0x64, 0x66, 0x67, 0x68, 0x71, 0x77, 0x65, 0x72, 0x74, 0x79,
+                                    0x75, 0x69, 0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
+        memcpy(buf, rfc9173A4_key, len);
+    }
+    return 1;
 }
 
 void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib)
