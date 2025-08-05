@@ -252,7 +252,7 @@ cleanup:
 // See RFC: https://www.rfc-editor.org/rfc/rfc9173.html#name-example-3-security-blocks-f
 void test_RFC9173_AppendixA_Example3_Acceptor(void)
 {
-    BSL_Crypto_Set_RNG_generator(rfc9173_byte_gen_fn_a4);
+    BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a4);
     const char *final_bundle = ("9f88070000820282010282028202018202820201820018281a000f4240850b0300"
                                 "00585c8200020101820282030082820105820300828182015820cac6ce8e4c5dae57"
                                 "988b757e49a6dd1431dc04763541b2845098265bc817241b81820158203ed614c0d9"
@@ -384,7 +384,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
 
 void test_RFC9173_AppendixA_Example4_Acceptor(void)
 {
-    BSL_Crypto_Set_RNG_generator(rfc9173_byte_gen_fn_a4);
+    BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a4);
     // See: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.4.5
     const char *final_bundle = ("9f88070000820282010282028202018202820201820018281a000f4240850b0300"
                                 "005846438ed6208eb1c1ffb94d952175167df0902902064a2983910c4fb2340790bf"
@@ -471,7 +471,7 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
 
 void test_RFC9173_AppendixA_Example4_Source(void)
 {
-    BSL_Crypto_Set_RNG_generator(rfc9173_byte_gen_fn_a4);
+    BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a4);
     const char *original_bundle = ("9f88070000820282010282028202018202820201820018281a000f424085010100"
                                    "005823526561647920746f2067656e657261746520612033322d6279746520706179"
                                    "6c6f6164ff");

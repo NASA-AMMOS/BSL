@@ -58,7 +58,7 @@ DICT_DEF2(BSLB_CryptoKeyDict, string_t, STRING_OPLIST, BSLB_CryptoKey_t, M_OPL_B
 /// @endcond
 
 /// Random bytes generator
-static bsl_crypto_randbytes_fn rand_bytes_generator;
+static BSL_Crypto_RandBytesFn rand_bytes_generator;
 
 /// Crypto key registry
 static BSLB_CryptoKeyDict_t StaticKeyRegistry;
@@ -76,7 +76,7 @@ void BSL_CryptoDeinit(void)
     BSLB_CryptoKeyDict_clear(StaticKeyRegistry);
 }
 
-void BSL_Crypto_Set_RNG_generator(bsl_crypto_randbytes_fn rand_gen_fn)
+void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn)
 {
     rand_bytes_generator = rand_gen_fn;
 }
