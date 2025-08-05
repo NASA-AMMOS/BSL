@@ -65,24 +65,23 @@ static BSLB_CryptoKeyDict_t StaticKeyRegistry;
 static pthread_mutex_t      StaticCryptoMutex = PTHREAD_MUTEX_INITIALIZER;
 // NOLINTEND
 
-void BSL_CryptoInit(bsl_crypto_randbytes_fn rand_gen)
+void BSL_CryptoInit(void)
 {
     BSLB_CryptoKeyDict_init(StaticKeyRegistry);
-
-    if (rand_gen)
-    {
-        rand_bytes_generator = rand_gen;
-    }
-    else
-    {
-        rand_bytes_generator = RAND_bytes;
-    }
+    rand_bytes_generator = RAND_bytes;
 }
 
 void BSL_CryptoDeinit(void)
 {
     BSLB_CryptoKeyDict_clear(StaticKeyRegistry);
 }
+
+//#if defined(BSL_CRYPTO_RNG_FN_OVERRIDE)
+void BSL_Crypto_Set_RNG_generator(bsl_crypto_randbytes_fn rand_gen_fn)
+{
+    rand_bytes_generator = rand_gen_fn;
+}
+//#endif 
 
 int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *key_id,
                          size_t aes_variant)
@@ -130,7 +129,7 @@ int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_ke
     return 0;
 }
 
-int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *content_key_id, size_t aes_variant)
+int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *kek_id, size_t aes_variant)
 {
     const EVP_CIPHER *cipher = (aes_variant == BSL_CRYPTO_AES_128) ? EVP_aes_128_wrap() : EVP_aes_256_wrap();
     EVP_CIPHER_CTX   *ctx    = EVP_CIPHER_CTX_new();
@@ -146,12 +145,12 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *cont
     size_t keylen = 64;
 
     // TODO(bvb) replace w error checking
-    BSL_LOG_INFO("Content key ID = %lu", cek);
-    int got_crypto_key = BSLB_Crypto_GetRegistryKey(content_key_id, (const uint8_t **)&key, &keylen);
+    int got_crypto_key = BSLB_Crypto_GetRegistryKey(kek_id, (const uint8_t **)&key, &keylen);
+
     assert(got_crypto_key == 0);
     assert(keylen > 0);
 
-    int enc_result = EVP_EncryptInit_ex(ctx, cipher, NULL, cek.ptr, NULL);
+    int enc_result = EVP_EncryptInit_ex(ctx, cipher, NULL, key, NULL);
     if (!enc_result)
     {
         EVP_CIPHER_CTX_free(ctx);
@@ -159,9 +158,7 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *cont
     }
 
     int len = (int)wrapped_key->len;
-    if (!EVP_EncryptUpdate(ctx, wrapped_key->ptr, &len,
-                           // (int*)&wrapped_key->len,
-                           key, (int)keylen))
+    if (!EVP_EncryptUpdate(ctx, (unsigned char *) wrapped_key->ptr, &len, cek.ptr, cek.len))
     {
         EVP_CIPHER_CTX_free(ctx);
         return -2;

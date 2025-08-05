@@ -252,6 +252,7 @@ cleanup:
 // See RFC: https://www.rfc-editor.org/rfc/rfc9173.html#name-example-3-security-blocks-f
 void test_RFC9173_AppendixA_Example3_Acceptor(void)
 {
+    BSL_Crypto_Set_RNG_generator(rfc9173_byte_gen_fn_a4);
     const char *final_bundle = ("9f88070000820282010282028202018202820201820018281a000f4240850b0300"
                                 "00585c8200020101820282030082820105820300828182015820cac6ce8e4c5dae57"
                                 "988b757e49a6dd1431dc04763541b2845098265bc817241b81820158203ed614c0d9"
@@ -383,6 +384,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
 
 void test_RFC9173_AppendixA_Example4_Acceptor(void)
 {
+    BSL_Crypto_Set_RNG_generator(rfc9173_byte_gen_fn_a4);
     // See: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.4.5
     const char *final_bundle = ("9f88070000820282010282028202018202820201820018281a000f4240850b0300"
                                 "005846438ed6208eb1c1ffb94d952175167df0902902064a2983910c4fb2340790bf"
@@ -469,6 +471,7 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
 
 void test_RFC9173_AppendixA_Example4_Source(void)
 {
+    BSL_Crypto_Set_RNG_generator(rfc9173_byte_gen_fn_a4);
     const char *original_bundle = ("9f88070000820282010282028202018202820201820018281a000f424085010100"
                                    "005823526561647920746f2067656e657261746520612033322d6279746520706179"
                                    "6c6f6164ff");
@@ -498,10 +501,6 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecParam_InitInt64(&bcb_scope, RFC9173_BCB_SECPARAM_AADSCOPE, 0x07);
     BSL_SecParam_t aes_variant = { 0 };
     BSL_SecParam_InitInt64(&aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
-    uint8_t        iv[]     = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
-    BSL_Data_t     iv_data  = { .len = sizeof(iv), .ptr = iv };
-    BSL_SecParam_t init_vec = { 0 };
-    BSL_SecParam_InitBytestr(&init_vec, BSL_SECPARAM_TYPE_IV, iv_data);
 
     BSL_SecOper_t bcb_op_tgt_payload = { 0 };
     BSL_SecOper_Init(&bcb_op_tgt_payload, 2, 1, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
@@ -509,14 +508,12 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &bcb_param_key);
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &aes_variant);
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &bcb_scope);
-    BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &init_vec);
 
     BSL_SecOper_t bcb_op_tgt_bib = { 0 };
     BSL_SecOper_Init(&bcb_op_tgt_bib, 2, 2, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &bcb_param_key);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &aes_variant);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &bcb_scope);
-    BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &init_vec);
 
     BSL_SecurityActionSet_t *malloced_actionset = calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(malloced_actionset);

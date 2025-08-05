@@ -133,14 +133,21 @@ typedef int (*bsl_crypto_randbytes_fn)(unsigned char *buf, int len);
 
 /** Initialize the crypto subsystem.
  * This must be called once per process.
- * @param[in] rand_gen_fn random bytes generation function. Set to NULL to use default (OpenSSL RAND_bytes).
  */
-void BSL_CryptoInit(bsl_crypto_randbytes_fn rand_gen_fn);
+void BSL_CryptoInit(void);
 
 /** Deinitialize the crypto subsystem.
  * This should be called at the end of the process.
  */
 void BSL_CryptoDeinit(void);
+
+//#if defined(BSL_CRYPTO_RNG_FN_OVERRIDE)
+/**
+ * Set RNG generator to be used by crypto library
+ * @param[in] rand_gen_fn random bytes generation function.
+ */
+void BSL_Crypto_Set_RNG_generator(bsl_crypto_randbytes_fn rand_gen_fn);
+//#endif
 
 /**
  * Initialize HMAC context resources and set private key and SHA variant
