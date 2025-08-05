@@ -245,7 +245,6 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     }
 
     return auth_success ? BSL_SUCCESS : BSL_ERR_SECURITY_OPERATION_FAILED;
-    // return BSL_SUCCESS;
 }
 
 static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
@@ -521,7 +520,6 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             }
         }
 
-        BSL_SecOper_Deinit(sec_oper);
         BSL_SecOutcome_Deinit(outcome);
 
         if (errcode != 0)

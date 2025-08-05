@@ -151,8 +151,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         }
     }
 
-    BSL_LOG_INFO("got past unwrap key! %d", content_enc_key.len);
-
     // This should have resized the buffer downward
     CHK_PROPERTY(content_enc_key.len < 2048);
 
