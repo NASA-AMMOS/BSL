@@ -311,7 +311,8 @@ int BSL_TestUtils_DecodeBase16(BSL_Data_t *out, const string_t in)
     return 0;
 }
 
-int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid, const char *secsrc_eid)
+int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid,
+                             const char *secsrc_eid)
 {
     BSL_PrimaryBlock_t primary_block = { 0 };
     BSL_BundleCtx_GetBundleMetadata(input_bundle, &primary_block);
