@@ -93,9 +93,6 @@ typedef struct BSLX_BCB_s
     BSL_Data_t authtag;
     BSL_Data_t iv;
     BSL_Data_t wrapped_key;
-    BSL_Data_t test_content_enc_key;
-    BSL_Data_t test_init_vector;
-    BSL_Data_t test_key_enc_key;
     BSL_Data_t btsd_replacement;
     BSL_Data_t debugstr;
     BSL_Data_t aad;
