@@ -1131,7 +1131,8 @@ size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *s
  * This memory must be zeroed before being passed, doing otherwise will raise an assertion.
  *
  * @param[in] bsl BSL library context
- * @param[out] output_action_set  policy action set, which may contain error codes and other info. @preallocated Caller-allocated, zeroed space for action set
+ * @param[out] output_action_set  policy action set, which may contain error codes and other info. @preallocated
+ * Caller-allocated, zeroed space for action set
  * @param[in,out] bundle Bundle seeking security operations
  * @param[in] location Where in the BPA lifecycle this query arises from
  * @return 0 if success
@@ -1142,20 +1143,23 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
 /** Finalizes policy provider for sec ops & sec results for a bundle
  *
  * @param[in] bsl BSL library context
- * @param[in] policy_actions A policy action set, which may contain error codes and other info. @preallocated Caller-allocated, zeroed space for action set
+ * @param[in] policy_actions A policy action set, which may contain error codes and other info. @preallocated
+ * Caller-allocated, zeroed space for action set
  * @param[in,out] bundle Bundle seeking security operations
  * @param[in] response_output results from security context
  * @param[in] location Where in the BPA lifecycle this query arises from
  * @return 0 if success
  */
-int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions, const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
+int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions,
+                                       const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
 
 /// @brief Callback interface to query policy provider to populate the action set
 typedef int (*BSL_PolicyInspect_f)(const void *user_data, BSL_SecurityActionSet_t *output_action_set,
                                    const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location);
 
 /// @brief Callback interface to query policy provider to populate the action set
-typedef int (*BSL_PolicyFinalize_f)(const void *user_data, const BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
+typedef int (*BSL_PolicyFinalize_f)(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
+                                    const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
 
 /// @brief Callback interface for policy provider to shut down and release any resources
 typedef void (*BSL_PolicyDeinit_f)(void *user_data);
@@ -1163,10 +1167,10 @@ typedef void (*BSL_PolicyDeinit_f)(void *user_data);
 /// @brief Descriptor of opaque data and callbacks for Policy Provider.
 struct BSL_PolicyDesc_s
 {
-    void               *user_data;
-    BSL_PolicyInspect_f query_fn;  ///< Function pointer to query policy
+    void                *user_data;
+    BSL_PolicyInspect_f  query_fn;    ///< Function pointer to query policy
     BSL_PolicyFinalize_f finalize_fn; ///< Function pointer to finalize policy
-    BSL_PolicyDeinit_f  deinit_fn; ///< Function to deinit the policy provider at termination of BPA.
+    BSL_PolicyDeinit_f   deinit_fn;   ///< Function to deinit the policy provider at termination of BPA.
 };
 
 /** Call the underying security context to perform the given action

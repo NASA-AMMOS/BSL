@@ -40,7 +40,8 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
     return bsl->policy_registry.query_fn(bsl->policy_registry.user_data, output_action_set, bundle, location);
 }
 
-int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions, const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
+int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions,
+                                       const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
 {
     CHK_ARG_NONNULL(bsl);
     CHK_ARG_NONNULL(policy_actions);
