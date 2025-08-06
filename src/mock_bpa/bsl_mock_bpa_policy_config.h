@@ -48,15 +48,24 @@ extern "C" {
  *                      uint32_t : bsl_mock_policy_configuration_t
  *
  *             [  x   x   x   x  |  x   x   x   x  |  x   x   x   x  |  x   x   x   x ]
- *             [ ------------- unused -------]  |     [---]   [---]     [---]   |   |
+ *             [ --------- unused -------]  |   |     [---]   [---]     [---]   |   |
+ *                                          |   |       |       |         |     |   |
+ *           "Don't care": set EIDs s.t.   -|   |       |       |         |     |   | 
+ *           bundle doens't match any rule -|   |       |       |         |     |   |
  *                                              |       |       |         |     |   |
  *                     Use Wrapped Key for BCB -|       |       |         |     |   |
+ *                                                      |       |         |     |   |
  *              BSL Role: 00 - source, 01 - verifier,  -|       |         |     |   |
  *                        10 - acceptor, 11: undefined -|       |         |     |   |
+ *                                                              |         |     |   |
  *              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
-                               10 - drop bundle, 11: undefined -|         |     |   |
-*                                                     Target Block Type: -|     |   |
+ *                             10 - drop bundle, 11: undefined -|         |     |   |
+ *                                                                        |     |   |
+*                           Target Block Type: 00 - primary, 01 payload  -|     |   |
+*                                              10 - bib, 11 - bundle age -|     |   |
+ *                                                                              |   |
  *                                        Policy Location: 0 - CLOUT, 1 - CLIN -|   |
+ *                                                                                  |
  *                                                Sec Block Type: 0 - BIB, 1 - BCB -|
  *
  *

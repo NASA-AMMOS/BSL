@@ -164,15 +164,6 @@ class _RequirementsCases(_TestSet):
         #       3. Identical output with log showing verification
         #       4. Remove BIB
         #
-        # Bundle Primary EIDs:
-        #           src     dest
-        #       1.  [5.1,   6.1]
-        #       2.  [2.1,   5.1]
-        #       3.  [3.1,   5.1]
-        #       4.  [4.1,   5.1]
-        #
-        # Can use ONE policy config and "filters"
-        # (e.g. source role, BIB policyrule filter should be role src for src_eid=2.1, role ver for 3.1, etc.)
         self.cases["BSL_14a"] = (_TestCase(
             input_data=[
                 [7, 0, 0, [2, [6, 1]], [2, [5, 1]], [2, [2, 1]], [0, 40], 1000000],
@@ -186,9 +177,9 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             #
-            policy_config='0x82',
+            policy_config='0x280',
             is_implemented=True,
-            is_working=False,
+            is_working=True,
             expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY

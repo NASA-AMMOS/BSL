@@ -404,6 +404,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     uint32_t policy_action_type = (policy_bits >> 4) & 0x03;
     uint32_t sec_role           = (policy_bits >> 6) & 0x03;
     uint32_t use_wrapped_key    = (policy_bits >> 8) & 0x01;
+    uint32_t policy_ignore      = (policy_bits >> 9) & 0x01;
 
     BSL_LOG_INFO("Using wrapped key? %d", use_wrapped_key);
 
@@ -528,11 +529,23 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
             break;
     }
 
+    BSL_LOG_INFO("ingore bundle? %d", policy_ignore);
+    BSL_HostEIDPattern_t eid_src_pat;
+    if (policy_ignore)
+    {
+        BSL_LOG_INFO("Creating src eid pattern ipn:0.0.0 - bundle should be ignored!");
+        eid_src_pat = mock_bpa_util_get_eid_pattern_from_text("ipn:0.0.0");
+    }
+    else
+    {
+        eid_src_pat = mock_bpa_util_get_eid_pattern_from_text("*:**");
+    }
+
     // Create a rule to verify security block at APP/CLA Ingress
     char policybits_str[100];
     sprintf(policybits_str, "Policy: %x", policy_bits);
     BSLP_PolicyPredicate_t *predicate_all_in = &policy->predicates[policy->predicate_count++];
-    BSLP_PolicyPredicate_Init(predicate_all_in, policy_loc_enum, mock_bpa_util_get_eid_pattern_from_text("*:**"),
+    BSLP_PolicyPredicate_Init(predicate_all_in, policy_loc_enum, eid_src_pat,
                               mock_bpa_util_get_eid_pattern_from_text("*:**"),
                               mock_bpa_util_get_eid_pattern_from_text("*:**"));
     BSLP_PolicyRule_t *rule_all_in = &policy->rules[policy->rule_count++];
