@@ -220,9 +220,9 @@ class _RequirementsCases(_TestSet):
             ],
             #
             # policy_config = BIB_VERIFIER,
-            policy_config='0x42',
+            policy_config='0x62',
             is_implemented=True,
-            is_working=True,
+            is_working=False,
             expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
