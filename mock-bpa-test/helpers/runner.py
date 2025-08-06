@@ -30,8 +30,24 @@ import threading
 from typing import List
 import queue
 
+class SearchableHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.records = []
+
+    def emit(self, record):
+        msg = self.format(record)
+        self.records.append(msg)
+
+    def search(self, text):
+        return [r for r in self.records if text in r]
+
+# Set up logging
 LOGGER = logging.getLogger(__name__)
-''' Logger for this module. '''
+
+search_handler = SearchableHandler()
+search_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+LOGGER.addHandler(search_handler)
 
 
 def compose_args(args: List[str]) -> List[str]:
@@ -126,6 +142,9 @@ class CmdRunner:
         self._writer = None
 
         return ret
+    
+    def _log_contains(self, text):
+        return search_handler.search(text)
 
     def _read_stdout(self, stream):
         LOGGER.debug('Starting stdout thread')

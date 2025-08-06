@@ -295,14 +295,14 @@ class _RequirementsCases(_TestSet):
             # Bundle with a BIB targeting primary block
             input_data=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92dda8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
+                [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92dda8ec93df80b41620df5bc6c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # No output because it was deleted, logs to indicate deletion.
             expected_output=(NO_OUTPUT, DELETION),
             policy_config='0x62',
             is_implemented=True,
-            is_working=False,
+            is_working=True,
             expect_success=False,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.NONE

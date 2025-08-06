@@ -274,7 +274,7 @@ int bsl_mock_bpa_init(void)
         .bundle_get_block_ids  = MockBPA_GetBlockNums,
         .block_create_fn       = MockBPA_CreateBlock,
         .block_remove_fn       = MockBPA_RemoveBlock,
-        .bundle_drop_fn        = MockBPA_DeleteBundle,
+        .bundle_delete_fn      = MockBPA_DeleteBundle,
         .block_realloc_btsd_fn = MockBPA_ReallocBTSD,
 
         // Old-style callbacks

@@ -189,7 +189,7 @@ typedef struct
     int (*block_realloc_btsd_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t bytesize);
 
     /// @brief Host BPA function to delete Bundle
-    int (*bundle_drop_fn)(BSL_BundleRef_t *bundle_ref);
+    int (*bundle_delete_fn)(BSL_BundleRef_t *bundle_ref);
 
     /// @brief Host BPA function to encode an EID to CBOR.
     int (*eid_to_cbor)(void *encoder, const BSL_HostEID_t *eid);

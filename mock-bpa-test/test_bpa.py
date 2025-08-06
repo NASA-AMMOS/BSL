@@ -174,7 +174,18 @@ class TestAgent(unittest.TestCase):
                 self._wait_for(self._ul_sock)
 
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
-            self.fail('Validate output')
+
+            LOGGER.warning('Check log output to validate reason for no data!!')
+
+            # Currently hard-coded for test case 19 but no other instances of DataFormat.NONE
+            case_19_str = "Delete bundle due to failed security operation"
+
+            LOGGER.debug("Searching test runner logger for failure string: %s", case_19_str)
+            found = self._agent._log_contains(case_19_str)
+            for s in found:
+                LOGGER.debug("\nFOUND OCCURENCE: %s\n", s)
+            self.assertTrue(len(found) > 0)
+            
         elif (testcase.expected_output_format == DataFormat.ERR):
             self._ul_sock.send(tx_data)
             LOGGER.debug('waiting')
