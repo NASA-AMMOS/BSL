@@ -1,11 +1,15 @@
 
 aad
 AbsSecBlock
+acceptor
+Acceptor
+ACCEPTOR
 ADU
 aes
 AMMOS
 amongst
 APIs
+APL
 appin
 APPIN
 ApplySecurity
@@ -17,11 +21,14 @@ backend
 Backend
 backends
 Backends
+BCB
 BCBs
 BIB's
+Birrane
 Bitwise
 bpa
 BPA's
+BPSec
 BPSecLib
 BPv
 BSL
@@ -36,6 +43,7 @@ bytestream
 bytestring
 bytestrings
 callee's
+CBOR
 cek
 centric
 CFE
@@ -52,6 +60,7 @@ CRIT
 crypto
 Crypto
 CRYPTO
+cryptographic
 ctx
 de
 De
@@ -60,6 +69,7 @@ Decodeable
 DecodeBase
 decrypt
 DECRYPT
+decrypted
 DefaultSecuritContext's
 deinit
 Deinit
@@ -70,6 +80,7 @@ DocID
 doxygen
 dtn
 eid
+Encodings
 enum
 Enum
 FFI
@@ -82,20 +93,26 @@ Heiner
 hmac
 html
 IANA
+IETF
 init
 Init
 initializer
 invariants
+ipn
+IPN
 IPPT
 IsInt
+JHU
 Josefsson
 JPL
+JSON
 len
 lifecycle
 Lifecycles
 malloc
 MALLOC
 McKeever
+md
 mem
 MGSS
 MiMTAR
@@ -104,6 +121,7 @@ MLIB
 MMCS
 namespace
 namespaced
+NIST
 nullable
 NULLs
 num
@@ -116,6 +134,8 @@ params
 PDU
 Pelissier
 PKEY
+plaintext
+Plaintext
 POSIX
 pre
 Pre
@@ -123,6 +143,7 @@ ptr
 QCBOR
 Quickstart
 RDD
+README
 READMEs
 realloc
 Req
