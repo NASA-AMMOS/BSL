@@ -433,9 +433,8 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     }
 
     // Over-allocate size for the ASB BTSD in the block
-    const size_t est_btsd_size = BSL_AbsSecBlock_Sizeof() + ((n_params + n_results + 1) * BSL_SecParam_Sizeof());
-    BSL_LOG_INFO("EST BTSD SIZE (BCB BEFORE ENCODE) ! %d", est_btsd_size);
-    if (BSL_BundleCtx_ReallocBTSD(bundle, sec_blk.block_num, est_btsd_size) != BSL_SUCCESS)
+    const size_t est_asb_bytelen = BSL_AbsSecBlock_Sizeof() + ((n_params + n_results + 1) * BSL_SecParam_Sizeof());
+    if (BSL_BundleCtx_ReallocBTSD(bundle, sec_blk.block_num, est_asb_bytelen) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to allocate space for ASB in BTSD");
         return BSL_ERR_HOST_CALLBACK_FAILED;
@@ -461,8 +460,6 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     }
 
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
-
-    BSL_LOG_INFO("EST BTSD SIZE (BCB AFTER ENCODE) ! %d", encode_result);
 
     // Now cut the BTSD buffer down to the correct size.
     if (BSL_BundleCtx_ReallocBTSD(bundle, sec_blk.block_num, encode_result) != BSL_SUCCESS)

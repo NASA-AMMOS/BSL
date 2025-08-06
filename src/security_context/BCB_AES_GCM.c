@@ -628,12 +628,6 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     // Copy the encrypted/decrypted data into the blocks newly reallocated BTSD space.
     memcpy(target_block.btsd, bcb_context.btsd_replacement.ptr, bcb_context.btsd_replacement.len);
 
-    BSL_LOG_INFO("AUTHTAG !!!!!! (len=%d)", bcb_context.authtag.len);
-    for (size_t i = 0; i < bcb_context.authtag.len; i ++)
-    {
-        BSL_LOG_INFO("%02x", bcb_context.authtag.ptr[i]);
-    }
-
     // Generally we expect an auth tag with the encryption
     // If present, append it to the result.
     if (bcb_context.authtag.len > 0)

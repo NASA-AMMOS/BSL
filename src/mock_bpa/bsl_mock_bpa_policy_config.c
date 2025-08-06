@@ -540,7 +540,6 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
             break;
     }
 
-    BSL_LOG_INFO("ingore bundle? %d", policy_ignore);
     BSL_HostEIDPattern_t eid_src_pat;
     if (policy_ignore)
     {
