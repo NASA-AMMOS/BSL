@@ -57,6 +57,7 @@ void setUp(void)
     policy_desc.user_data        = calloc(sizeof(BSLP_PolicyProvider_t), 1);
     policy_desc.query_fn         = BSLP_QueryPolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
+    policy_desc.finalize_fn      = BSLP_FinalizePolicy;
     TEST_ASSERT_EQUAL(0, BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, policy_desc));
 
     BSLP_PolicyProvider_t *policy = LocalTestCtx.bsl.policy_registry.user_data;

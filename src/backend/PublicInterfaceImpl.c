@@ -77,6 +77,8 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, BSL_PolicyDesc_t desc)
 {
     CHK_ARG_NONNULL(lib);
     CHK_ARG_EXPR(desc.query_fn != NULL);
+    CHK_ARG_EXPR(desc.finalize_fn != NULL);
+    CHK_ARG_EXPR(desc.deinit_fn != NULL);
 
     lib->policy_registry = desc;
     return BSL_SUCCESS;
@@ -89,23 +91,9 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
     CHK_ARG_NONNULL(output_action_set);
     CHK_ARG_NONNULL(bundle);
 
-    CHK_PRECONDITION(bsl->policy_registry.query_fn != NULL);
-    CHK_PRECONDITION(bsl->policy_registry.deinit_fn != NULL);
-
     BSL_LOG_INFO("Querying policy provider for security actions...");
-    int query_status = 0;
-    if (bsl->policy_registry.query_fn != NULL)
-    {
-        query_status =
-            bsl->policy_registry.query_fn(bsl->policy_registry.user_data, output_action_set, bundle, location);
-        BSL_LOG_INFO("Completed query: status=%d", query_status);
-    }
-    else
-    {
-        query_status = BSL_ERR_NOT_FOUND;
-        BSL_LOG_WARNING("No policy provider defined");
-        return query_status;
-    }
+    int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
+    BSL_LOG_INFO("Completed query: status=%d", query_status);
 
     // Here - find the sec block numbers for all ASBs
 
@@ -183,6 +171,8 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(policy_actions);
 
+    CHK_PRECONDITION(bsl->policy_registry.finalize_fn != NULL);
+
     int exec_code = BSL_SecCtx_ExecutePolicyActionSet((BSL_LibCtx_t *)bsl, response_output, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)
     {
@@ -199,6 +189,9 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     // There should be as many responses as there were sec operations
     ASSERT_PROPERTY(response_output->total_operations == policy_actions->sec_operations_count);
 
+    int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);
+    BSL_LOG_INFO("Completed finalize: status=%d", finalize_status);
+
     bool must_drop = false;
     for (size_t oper_index = 0; oper_index < policy_actions->sec_operations_count; oper_index++)
     {
@@ -211,6 +204,8 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
         {
             BSL_LOG_DEBUG("Security operation [%lu] success, target block num = %lu", oper_index,
                           policy_actions->sec_operations[oper_index].target_block_num);
+            
+            
             continue;
         }
 

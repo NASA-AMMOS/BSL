@@ -494,31 +494,21 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
         int errcode = -1;
         if (BSL_SecOper_IsBIB(sec_oper))
         {
-            errcode = BSL_SecOper_IsRoleSource(sec_oper) == true
-                          ? BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome)
-                          : BSL_ExecBIBAccept(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+            errcode = BSL_SecOper_IsRoleSource(sec_oper) ? BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome) : BSL_ExecBIBAccept(sec_ctx->execute, lib, bundle, sec_oper, outcome);
         }
         else
         {
-            if (BSL_SecOper_IsRoleSource(sec_oper))
-            {
-                errcode = BSL_ExecBCBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome);
-            }
-            else
-            {
-                errcode = BSL_ExecBCBAcceptor(sec_ctx->execute, lib, bundle, sec_oper, outcome);
-            }
+            errcode = BSL_SecOper_IsRoleSource(sec_oper) ? BSL_ExecBCBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome) : BSL_ExecBCBAcceptor(sec_ctx->execute, lib, bundle, sec_oper, outcome);
         }
-
-        BSL_SecOutcome_Deinit(outcome);
 
         if (errcode != 0)
         {
             fail_count += 1;
             BSL_LOG_ERR("Security Op failed: %d", errcode);
             output_response->results[sec_oper_index] = -1;
-            continue;
         }
+
+        BSL_SecOutcome_Deinit(outcome);
     }
     free(outcome);
 
