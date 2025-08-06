@@ -161,7 +161,7 @@ class CmdRunner:
             remain_time = deadline_time - time.time_ns() / 1e9
             if remain_time <= 0:
                 break
-            LOGGER.debug('Waiting for new line up to %s s', remain_time)
+            # LOGGER.debug('Waiting for new line up to %s s', remain_time)
             try:
                 text = self._stdout_lines.get(timeout=remain_time)
             except queue.Empty:
