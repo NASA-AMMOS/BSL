@@ -203,9 +203,7 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
         if (block_err_code == BSL_SUCCESS)
         {
             BSL_LOG_DEBUG("Security operation [%lu] success, target block num = %lu", oper_index,
-                          policy_actions->sec_operations[oper_index].target_block_num);
-            
-            
+                          policy_actions->sec_operations[oper_index].target_block_num);            
             continue;
         }
 
