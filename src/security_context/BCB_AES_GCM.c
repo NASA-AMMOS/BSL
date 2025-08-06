@@ -354,13 +354,11 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     CHK_POSTCONDITION(bcb_context->btsd_replacement.len == ciphertext_len);
 
     BSL_Data_Deinit(&content_enc_key);
-    BSL_Data_Deinit(&bcb_context->wrapped_key);
     BSL_Cipher_Deinit(&cipher);
     return BSL_SUCCESS;
     // Do any releasing
 error:
     BSL_Data_Deinit(&content_enc_key);
-    BSL_Data_Deinit(&bcb_context->wrapped_key);
     BSL_Cipher_Deinit(&cipher);
     return BSL_ERR_SECURITY_CONTEXT_FAILED;
 }
@@ -629,6 +627,12 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     // Copy the encrypted/decrypted data into the blocks newly reallocated BTSD space.
     memcpy(target_block.btsd, bcb_context.btsd_replacement.ptr, bcb_context.btsd_replacement.len);
 
+    BSL_LOG_INFO("AUTHTAG !!!!!! (len=%d)", bcb_context.authtag.len);
+    for (size_t i = 0; i < bcb_context.authtag.len; i ++)
+    {
+        BSL_LOG_INFO("%02x", bcb_context.authtag.ptr[i]);
+    }
+
     // Generally we expect an auth tag with the encryption
     // If present, append it to the result.
     if (bcb_context.authtag.len > 0)
@@ -647,6 +651,51 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
             BSL_SecOutcome_AppendResult(sec_outcome, auth_tag);
         }
         free(auth_tag);
+    }
+
+    if (bcb_context.iv.len > 0)
+    {
+        BSL_SecParam_t *iv_param = calloc(1, BSL_SecResult_Sizeof());
+        if (BSL_SUCCESS != BSL_SecParam_InitBytestr(iv_param, RFC9173_BCB_SECPARAM_IV, bcb_context.iv))
+        {
+            BSL_LOG_ERR("Failed to append BCB source IV");
+            goto error;
+        }
+        else
+        {
+            BSL_LOG_INFO("Appending BCB source IV");
+            BSL_SecOutcome_AppendParam(sec_outcome, iv_param);
+        }
+        free(iv_param);
+    }
+
+    BSL_SecParam_t *aes_param = calloc(1, BSL_SecResult_Sizeof());
+    if (BSL_SUCCESS != BSL_SecParam_InitInt64(aes_param, RFC9173_BCB_SECPARAM_AESVARIANT, bcb_context.aes_variant))
+    {
+        BSL_LOG_ERR("Failed to append BCB AES param");
+        goto error;
+    }
+    else
+    {
+        BSL_LOG_INFO("Appending BCB AES param");
+        BSL_SecOutcome_AppendParam(sec_outcome, aes_param);
+    }
+    free(aes_param);
+
+    if (bcb_context.wrapped_key.len > 0)
+    {
+        BSL_SecParam_t *aes_wrapped_key_param = calloc(1, BSL_SecResult_Sizeof());
+        if (BSL_SUCCESS != BSL_SecParam_InitBytestr(aes_wrapped_key_param, RFC9173_BCB_SECPARAM_AESVARIANT, bcb_context.wrapped_key))
+        {
+            BSL_LOG_ERR("Failed to append BCB AES param");
+            goto error;
+        }
+        else
+        {
+            BSL_LOG_INFO("Appending BCB AES param");
+            BSL_SecOutcome_AppendParam(sec_outcome, aes_wrapped_key_param);
+        }
+        free(aes_wrapped_key_param);
     }
 
     BSLX_BCB_Deinit(&bcb_context);

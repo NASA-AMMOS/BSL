@@ -80,6 +80,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path);
 
 int mock_bpa_hexchar_to_int(char c);
 int mock_bpa_hexstring_to_bytes(const char *hexstr, uint8_t *out, size_t out_size);
+int bsl_mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len);
 
 #ifdef __cplusplus
 } // extern C
