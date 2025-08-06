@@ -434,6 +434,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
                 assert(is_int);
                 uint64_t aad_scope = BSL_SecParam_GetAsUInt64(param);
                 BSL_LOG_DEBUG("Param[%lu]: AAD_SCOPE value = %lu", param_id, aad_scope);
+                bcb_context->aad_scope = aad_scope;
                 if ((aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK) == 0)
                 {
                     BSL_LOG_DEBUG("BCB AAD does not contain primary block flag");
@@ -685,7 +686,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (bcb_context.wrapped_key.len > 0)
     {
         BSL_SecParam_t *aes_wrapped_key_param = calloc(1, BSL_SecResult_Sizeof());
-        if (BSL_SUCCESS != BSL_SecParam_InitBytestr(aes_wrapped_key_param, RFC9173_BCB_SECPARAM_AESVARIANT, bcb_context.wrapped_key))
+        if (BSL_SUCCESS != BSL_SecParam_InitBytestr(aes_wrapped_key_param, RFC9173_BCB_SECPARAM_WRAPPEDKEY, bcb_context.wrapped_key))
         {
             BSL_LOG_ERR("Failed to append BCB AES param");
             goto error;
@@ -697,6 +698,19 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         }
         free(aes_wrapped_key_param);
     }
+
+    BSL_SecParam_t *scope_flag_param = calloc(1, BSL_SecResult_Sizeof());
+    if (BSL_SUCCESS != BSL_SecParam_InitInt64(scope_flag_param, RFC9173_BCB_SECPARAM_AADSCOPE, bcb_context.aad_scope))
+    {
+        BSL_LOG_ERR("Failed to append BCB AES param");
+        goto error;
+    }
+    else
+    {
+        BSL_LOG_INFO("Appending BCB AES param");
+        BSL_SecOutcome_AppendParam(sec_outcome, scope_flag_param);
+    }
+    free(scope_flag_param);
 
     BSLX_BCB_Deinit(&bcb_context);
     return BSL_SUCCESS;

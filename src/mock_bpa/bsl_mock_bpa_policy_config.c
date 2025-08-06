@@ -428,7 +428,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     if (sec_block_type == 1)
     {
         BSL_SecParam_InitInt64(params->param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE,
-                               RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK);
+                               RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
         BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
                                RFC9173_BCB_AES_VARIANT_A128GCM);
         if (use_wrapped_key)
