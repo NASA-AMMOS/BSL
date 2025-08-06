@@ -25,9 +25,9 @@
  *
  * Notes:
  *  - These tests exercise the security context front-end interface.
- *  - They are mostly concerned with given bundles, blocks, and PolicyActionSets
+ *  - They are mostly concerned with given bundles, blocks, and Policy Action Sets
  *  - They test correctness mostly by verifying that operations modify the bundle as intended
- *  - They are checked against test vectors in Appendex A of RFC9173.
+ *  - They are checked against test vectors in Appendix A of RFC9173.
  *
  * @ingroup unit-tests
  */

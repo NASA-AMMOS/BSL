@@ -84,12 +84,6 @@ void MockBPA_EID_Deinit(void *user_data _U_, BSL_HostEID_t *eid)
     memset(eid, 0, sizeof(BSL_HostEID_t));
 }
 
-int mock_bpa_get_secsrc(BSL_HostEID_t *eid, void *user_data)
-{
-    const char *local_ipn = getenv("BSL_TEST_LOCAL_IPN_EID");
-    return mock_bpa_eid_from_text(eid, local_ipn, user_data);
-}
-
 int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data _U_)
 {
     CHKERR1(eid);

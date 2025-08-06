@@ -53,7 +53,7 @@ typedef struct
  * A policy predicate represents a way to match whether a rule applies to a bundle.
  *
  * @param[in] self This predicate
- * @param[in] location BSL_PolicyLocation_e location in the BPA
+ * @param[in] location The ::BSL_PolicyLocation_e location in the BPA
  * @param[in] src_eid_pattern Host-defined EID pattern to match for
  * @param[in] srcsrc_eid_pattern Host-defined EID pattern for SECURITY SOURCE in security block
  * @param[in] dst_eid_pattern Host-defined EID pattern for DESTINATION EID
@@ -149,7 +149,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
                                       const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location);
 
 #define BSLP_POLICYPREDICATE_ARRAY_CAPACITY (100)
-/// @brief Concrete definition of the BSL_PolicyProvider_t
+/// @brief Concrete definition of a policy provider
 typedef struct BSLP_PolicyProvider_s
 {
     BSL_StaticString_t     name;
