@@ -156,18 +156,6 @@ static bool BSL_AbsSecBlock_ContainsResult(const BSL_AbsSecBlock_t *abs_sec_bloc
         if (hdr_matches)
         {
             int cmp = memcmp(actual->_bytes, expected->_bytes, expected->_bytelen);
-
-            BSL_LOG_INFO("ACTUAL:");
-            for (size_t i = 0; i < expected->_bytelen; i++)
-            {
-                BSL_LOG_INFO("%02x", actual->_bytes[i]);
-            }
-            BSL_LOG_INFO("EXPECT:");
-            for (size_t i = 0; i < expected->_bytelen; i++)
-            {
-                BSL_LOG_INFO("%02x", expected->_bytes[i]);
-            }
-
             return cmp == 0;
         }
     }
