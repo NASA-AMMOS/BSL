@@ -116,7 +116,7 @@ bool BSL_SecOper_IsRoleSource(const BSL_SecOper_t *self)
     return self->_role == BSL_SECROLE_SOURCE;
 }
 
-bool BSL_SecOper_IsRoleAccepter(const BSL_SecOper_t *self)
+bool BSL_SecOper_IsRoleAcceptor(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(self != NULL);
     return self->_role == BSL_SECROLE_ACCEPTOR;

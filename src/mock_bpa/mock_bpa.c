@@ -611,6 +611,7 @@ int main(int argc, char **argv)
 
     BSL_PolicyDesc_t policy_callbacks = { .deinit_fn = BSLP_Deinit,
                                           .query_fn  = BSLP_QueryPolicy,
+                                          .finalize_fn      = BSLP_FinalizePolicy,
                                           .user_data = calloc(sizeof(BSLP_PolicyProvider_t), 1) };
     assert(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(bsl, policy_callbacks));
 

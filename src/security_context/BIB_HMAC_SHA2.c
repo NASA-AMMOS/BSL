@@ -254,6 +254,12 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
 
     BSL_AuthCtx_t hmac_ctx;
 
+    BSL_LOG_INFO("DA IPPT!!: %lu (keyid=%s)", ippt_data.len, self->key_id);
+    for (size_t i = 0; i < ippt_data.len; i ++)
+    {
+        BSL_LOG_INFO("%02x", ((uint8_t*)ippt_data.ptr)[i]);
+    }
+
     int res = 0;
     if ((res = BSL_AuthCtx_Init(&hmac_ctx, self->key_id, self->sha_variant)) != 0)
     {
@@ -274,6 +280,12 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         goto error;
     }
     self->hmac_result_val.bytelen = hmaclen;
+
+    BSL_LOG_INFO("DA CALC'd HMAC: %lu", hmaclen);
+    for (size_t i = 0; i < hmaclen; i ++)
+    {
+        BSL_LOG_INFO("%02x", ((uint8_t*)hmac_result_ptr)[i]);
+    }
 
     if ((res = BSL_AuthCtx_Deinit(&hmac_ctx)) != 0)
     {

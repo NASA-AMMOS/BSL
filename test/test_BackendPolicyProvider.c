@@ -53,6 +53,7 @@ void setUp(void)
     BSL_PolicyDesc_t policy_desc = { 0 };
     policy_desc.user_data        = calloc(sizeof(BSLP_PolicyProvider_t), 1);
     policy_desc.query_fn         = BSLP_QueryPolicy;
+    policy_desc.finalize_fn      = BSLP_FinalizePolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
     assert(BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, policy_desc) == 0);
 
