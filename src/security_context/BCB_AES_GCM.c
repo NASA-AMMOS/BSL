@@ -680,7 +680,9 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (bcb_context.wrapped_key.len > 0)
     {
         BSL_SecParam_t *aes_wrapped_key_param = calloc(1, BSL_SecResult_Sizeof());
-        if (BSL_SUCCESS != BSL_SecParam_InitBytestr(aes_wrapped_key_param, RFC9173_BCB_SECPARAM_WRAPPEDKEY, bcb_context.wrapped_key))
+        if (BSL_SUCCESS
+            != BSL_SecParam_InitBytestr(aes_wrapped_key_param, RFC9173_BCB_SECPARAM_WRAPPEDKEY,
+                                        bcb_context.wrapped_key))
         {
             BSL_LOG_ERR("Failed to append BCB AES param");
             goto error;

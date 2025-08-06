@@ -100,7 +100,7 @@ typedef struct BSLX_BCB_s
     // Cipher mode variants
     BSL_CipherMode_e          crypto_mode;
     rfc9173_bcb_aes_variant_e aes_variant;
-    uint64_t aad_scope;
+    uint64_t                  aad_scope;
 
     // Metadata about bundles and blocks
     BSL_PrimaryBlock_t   primary_block;
