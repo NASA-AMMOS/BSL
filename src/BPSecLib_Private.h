@@ -25,8 +25,8 @@
  *
  * @details
  * This file is for backend and BSL-adjacent modules (the Policy Provider, Security Context, and Test Harness) to have
- * more reach into the BSL, without requiring any of them to have specific dependencies on the other. The Host BPA should
- * only need the purely public header file.
+ * more reach into the BSL, without requiring any of them to have specific dependencies on the other. The Host BPA
+ * should only need the purely public header file.
  *
  * @author Bill.Van.Besien@jhuapl.edu
  */
