@@ -1,4 +1,4 @@
-@page userguide User Guide (BPA Developer)
+@mainpage Introduction
 <!--
 Copyright (c) 2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
@@ -21,22 +21,20 @@ the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 -->
 
-This page covers the using BPSecLib from the perspective of the **Application Programmer**, or more specifically, the BPA developer.
+This documentation is for the detailed BPSec Library (BSL) application programming interface (API) in the C language.
+This is an implementation of RFC 9172 @cite rfc9172 functionality and RFC 9173 @cite rfc9173 default security contexts.
 
-# BPA Interaction
+For details about installation, maintenance, and compile-time use of the BSL, see the _BSL Product Guide_ @cite bsl_prod_guide.
+For details about higher-level run-time use patterns, see the _BSL User Guide_ @cite bsl_user_guide.
 
- - Notes.
-
----
-
-This page discusses information about the structure of the BSL but not its actual APIs.
-
-# Library Architecture
+# Library Architecture {#bsl-arch}
 
 The BSL as a whole is separated into two primary layers of implementation: an API-centric abstract _Frontend_ library and a host-binding concrete _Backend_ library.
 
-The Frontend library provides the service API for the BSL to be called by its associated BPA as needed and for stable public APIs used by Policy Provider implementations and Security Context implementations.
-The Backend library implements forward-declared structs and functions from the Frontend using specific concrete data containers, algorithms, etc.
+The Frontend library provides the service API for the BSL to be called by its associated [BPA integration](@ref bpa-integrators) and for stable public APIs used by [Policy Provider implementations](@ref policy-providers) and [Security Context implementations](@ref security-contexts).
+The Backend library implements forward-declared structs and functions from the Frontend using specific concrete data containers, algorithms, _etc._
+
+The BSL source repository also contains @ref example-pps and @ref example-default-scs to actually exercise the BSL during testing, and a @ref mock-bpa which allows as-built integration testing of the BSL using a pseudo-daemon process.
 
 @dot
 digraph example {
@@ -71,4 +69,37 @@ The BSL is written for the C99 language @cite ISO:9899:1999 excluding any compil
 
 The Dynamic Backend relies on the POSIX.1-2008 @cite IEEE:1003.1-2008 standard for operating system abstraction, and M*LIB @cite lib:mlib for heap-allocated data containers.
 
+The example default security contexts use the OpenSSL library @cite lib:openssl for all cryptographic functions, including random number generation.
+This allows these security contexts to be FIPS-140 @cite NIST:FIPS-140-3 compliant.
+
 BSL unit tests use the Unity library @cite lib:unity for test execution and assertions.
+
+
+@defgroup frontend Frontend
+@brief Files in the Frontend library of the BSL.
+
+This provides the abstract APIs used for the BSL service interface and APIs used by Policy Provider implementations and Security Context implementations.
+
+
+@defgroup backend_dyn Dynamic Backend
+@brief Files in the Dynamic Backend library of the BSL.
+
+This is the concrete implementation of a backend using dynamic heap-allocated containers and registries.
+It uses POSIX APIs to provide necessary Host functions for the BSL, and OpenSSL APIs to provide crypto functions for the BSL.
+
+
+@defgroup example_pp Example Policy Provider
+@brief Implementation of a simple rule-based policy provider.
+
+This group contains files used by the Example Policy Provider library included with the BSL.
+
+
+@defgroup example_security_context Default Security Contexts
+@brief Implementation of the default security contexts using the BSL crypto API.
+
+This group contains files used by the Default Security Contexts library included with the BSL.
+
+@defgroup mock_bpa Example/Mock BP Agent
+@brief Files used in the Mock BPA used for testing.
+
+The Mock BPA performs whole-bundle encoding and decoding (CODEC) functions, but no other stateful bundle processing.

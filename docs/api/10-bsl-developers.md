@@ -1,4 +1,4 @@
-@page Developer_Guide Developer Guide
+@page bsl-developers BSL Developer Topics
 <!--
 Copyright (c) 2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
@@ -80,7 +80,7 @@ More notes forthcoming.
  * \*Note: Certain functions that wrap OpenSSL functionality may also permit NULLs to be consistent with its interface.
 
 #### &raquo; Extremely defensive coding style
- * The BPSecLib is intended for flight systems, mission-critical systems, and security-critical systems.
+ * The BSL is intended for flight systems, mission-critical systems, and security-critical systems.
  * Safety and correctness are the primacy concerns.
  * Basic idea: All functions validate their context's state, and _only_ continue to execute if the state is valid. I.e., "If it's not in a proper state, it's not going to run". It is safer to crash than continue with undefined behavior.
  * All function arguments are aggressively checked. Macros help indicate argument sanity, property checks and pre/post conditions.

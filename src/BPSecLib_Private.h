@@ -1151,7 +1151,7 @@ struct BSL_PolicyDesc_s
 {
     void               *user_data;
     BSL_PolicyInspect_f query_fn;  ///< Function pointer to query policy
-    BSL_PolicyDeinit_f  deinit_fn; ///< Function to deinit the policy provider at termination of BPA.
+    BSL_PolicyDeinit_f  deinit_fn; ///< Function to deinit the policy provider at termination of BSL
 };
 
 /** Call the underlying security context to perform the given action
