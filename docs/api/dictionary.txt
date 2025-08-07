@@ -1,4 +1,3 @@
-
 aad
 AbsSecBlock
 acceptor
@@ -86,6 +85,7 @@ Enum
 FFI
 filesystem
 FIPS
+fn
 frontend
 Frontend
 GCM
@@ -106,7 +106,9 @@ JHU
 Josefsson
 JPL
 JSON
+JWK
 len
+LibCtx
 lifecycle
 Lifecycles
 malloc
@@ -128,6 +130,7 @@ num
 openssl
 OpenSSL
 OPLIST
+overlayer
 param
 Param
 params
@@ -136,9 +139,12 @@ Pelissier
 PKEY
 plaintext
 Plaintext
+PolicyDesc
 POSIX
+PPs
 pre
 Pre
+preconditons
 ptr
 QCBOR
 Quickstart
@@ -153,6 +159,7 @@ RNG
 RTEMS
 ruleset
 sc
+SCs
 SHA
 sipos
 speciality
@@ -167,8 +174,11 @@ syslog
 Todo
 TODO
 typedef
+UDPCL
 uint
+un
 Uncategorized
+underlayer
 unix
 validator
 verifier
