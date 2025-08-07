@@ -27,14 +27,12 @@ This is an implementation of RFC 9172 @cite rfc9172 functionality and RFC 9173 @
 For details about installation, maintenance, and compile-time use of the BSL, see the _BSL Product Guide_ @cite bsl_prod_guide.
 For details about higher-level run-time use patterns, see the _BSL User Guide_ @cite bsl_user_guide.
 
-There is more technical detail about the BSL architecture in the [Background](Background.md) page.
-
 # Getting Started with the API
 
-Each runtime instance of the BSL is isolated for thread safety within a host-specific struct referenced by a @ref BSL_LibCtx_t pointer.
+Each runtime instance of the BSL is isolated for thread safety within a host-specific struct referenced by a [BSL_LibCtx_t](@ref BSL_LibCtx_s) pointer.
 
 The runtime instance is used by the BPA via the BSL _service interface_ to process bundles at each of the following four security interaction points within the BPA's bundle workflow.
-When invoked from the BPA, all BSL activities will occur within the context of a single bundle which is referenced by a @ref BSL_BundleCtx_t pointer.
+When invoked from the BPA, all BSL activities will occur within the context of a single bundle which is referenced by a ::BSL_BundleRef_t pointer.
 
 Details of how the BSL processing order relates to other BPA processing of bundles along the BPA's workflow are left to the BPA integration.
 
@@ -78,10 +76,6 @@ New notes coming soon.
 New notes coming soon.
 
 ## Notes
-
-New notes coming soon.
-
-## Legalistics
 
 New notes coming soon.
 

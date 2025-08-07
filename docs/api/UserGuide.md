@@ -59,7 +59,7 @@ digraph example {
 }
 @enddot
 
-The BSL comes with a @ref frontend and a @ref backend_dyn implementation which uses heap-allocated, dynamially-sized data structures and run-time registration capabilities.
+The BSL comes with a @ref frontend and a @ref backend_dyn implementation which uses heap-allocated, dynamically-sized data structures and run-time registration capabilities.
 For a more constrained (_e.g._, flight software) environment an alternative backend could be implemented with fixed-size data containers and constant-time registry lookup algorithms.
 
 Along with these libraries are also two integration extensions: an _Example Policy_ module and a _Default Security Contexts_ module.

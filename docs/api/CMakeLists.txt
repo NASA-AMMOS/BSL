@@ -19,7 +19,13 @@ Institute of Technology, sponsored by the United States Government under
 the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 ]]
+
+include(GNUInstallDirs)
+
 find_package(Doxygen REQUIRED)
+
+find_program(XMLSTARLET_EXECUTABLE xmlstarlet)
+find_program(ASPELL_EXECUTABLE aspell)
 
 find_program(MAKE_EXECUTABLE make)
 message(STATUS "Found make at ${MAKE_EXECUTABLE}")
@@ -36,12 +42,15 @@ endif(PLANTUML_JAR)
 
 configure_file(Doxyfile.in Doxyfile @ONLY)
 
+set(XML_COMBINE ${CMAKE_CURRENT_BINARY_DIR}/xml/combine.xslt)
+set(XML_INDEX ${CMAKE_CURRENT_BINARY_DIR}/xml/index.xml)
 add_custom_target(
     docs-api-html
     BYPRODUCTS
         ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
         ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.tex
         ${CMAKE_CURRENT_BINARY_DIR}/latex/Makefile
+        ${XML_COMBINE} ${XML_INDEX}
     DEPENDS
         ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
         ${CMAKE_CURRENT_SOURCE_DIR}/footer.html
@@ -63,6 +72,38 @@ install(
     TYPE DOC
     COMPONENT docs-api
 )
+
+if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
+    # spellcheck on combined XML output
+    set(DICTIONARY_TXT "${CMAKE_CURRENT_SOURCE_DIR}/dictionary.txt")
+    set(SPELLCHECK_XSL "${CMAKE_CURRENT_SOURCE_DIR}/spellcheck.xsl")
+    set(MISSPELLING_TXT "misspelling.txt")
+    add_custom_command(
+        OUTPUT "dictionary.cwl"
+        DEPENDS ${DICTIONARY_TXT}
+        COMMAND cat "${DICTIONARY_TXT}" |
+            ${ASPELL_EXECUTABLE} --lang=en create master "./dictionary.cwl"
+    )
+    add_custom_command(
+        OUTPUT ${MISSPELLING_TXT}
+        DEPENDS
+            ${XML_COMBINE} ${XML_INDEX}
+            ${SPELLCHECK_XSL} "dictionary.cwl"
+        COMMAND
+            ${XMLSTARLET_EXECUTABLE} tr "${XML_COMBINE}" "${XML_INDEX}" |
+            ${XMLSTARLET_EXECUTABLE} tr "${SPELLCHECK_XSL}" |
+            ${ASPELL_EXECUTABLE} --mode=html --lang=EN_US --extra-dicts=./dictionary.cwl list |
+            sort | uniq > "${MISSPELLING_TXT}"
+    )
+    add_custom_target(
+        docs-api-misspelling ALL
+        DEPENDS "${MISSPELLING_TXT}"
+        COMMAND cat "${MISSPELLING_TXT}"
+        # success means file is present and empty
+        COMMAND test -f "${MISSPELLING_TXT}" -a ! -s "${MISSPELLING_TXT}"
+        COMMENT "Checking ${MISSPELLING_TXT}"
+    )
+endif(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
 
 if(MAKE_EXECUTABLE AND DBLATEX_EXECUTABLE)
     add_custom_target(

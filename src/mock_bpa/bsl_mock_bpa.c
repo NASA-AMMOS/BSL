@@ -262,9 +262,8 @@ int bsl_mock_bpa_init(void)
         .block_realloc_btsd_fn = MockBPA_ReallocBTSD,
 
         // Old-style callbacks
-        .eid_init   = MockBPA_EID_Init,
-        .eid_deinit = MockBPA_EID_Deinit,
-        // .get_secsrc       = mock_bpa_get_secsrc,
+        .eid_init      = MockBPA_EID_Init,
+        .eid_deinit    = MockBPA_EID_Deinit,
         .eid_to_cbor   = (int (*)(void *, const BSL_HostEID_t *))bsl_mock_encode_eid,
         .eid_from_cbor = (int (*)(void *, BSL_HostEID_t *))bsl_mock_decode_eid,
         .eid_from_text = mock_bpa_eid_from_text,

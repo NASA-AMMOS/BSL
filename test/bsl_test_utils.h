@@ -126,7 +126,7 @@ typedef struct
 
 void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role);
 
-/// @brief Hardcoded single struct with fields populated from test vector in Appendix A1 for BIB.
+/// @brief Hard-coded single struct with fields populated from test vector in Appendix A1 for BIB.
 static const struct RFC9173_TestVectors_AppendixA1
 {
     uint64_t prim_bp_version;
