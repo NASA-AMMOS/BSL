@@ -113,14 +113,11 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     BSL_Data_t btsd_view;
     BSL_Data_InitView(&btsd_view, sec_blk.btsd_len, sec_blk.btsd);
     int encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, btsd_view);
-    BSL_LOG_INFO("ENCODE RESULT: %d", encode_result);
     if (encode_result <= BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to encode ASB");
         return BSL_ERR_ENCODING;
     }
-
-    BSL_LOG_INFO("BTSD NEEDED ENCODING SIZE: %d", encode_result);
 
     if (BSL_BundleCtx_ReallocBTSD(bundle, created_block_id, (size_t)encode_result) != BSL_SUCCESS)
     {
@@ -471,14 +468,11 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     BSL_Data_t btsd_view = { 0 };
     BSL_Data_InitView(&btsd_view, sec_blk.btsd_len, sec_blk.btsd);
     int encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, btsd_view);
-    BSL_LOG_INFO("ENCODE RESULT: %d", encode_result);
     if (encode_result <= 0)
     {
         BSL_LOG_ERR("Failed to encode ASB");
         return BSL_ERR_ENCODING;
     }
-
-    BSL_LOG_INFO("BTSD NEEDED ENCODING SIZE: %d", encode_result);
 
     // Needed size returned to encode_result, realloc btsd
     if (BSL_BundleCtx_ReallocBTSD(bundle, created_block_id, (size_t)encode_result) != BSL_SUCCESS)
