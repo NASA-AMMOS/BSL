@@ -621,7 +621,8 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         }
 
         // Refresh the block metadata to account for change in size.
-        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &target_block))
+        if (BSL_SUCCESS
+            != BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &target_block))
         {
             BSL_LOG_ERR("Failed to get block data");
             goto error;
