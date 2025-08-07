@@ -194,7 +194,17 @@ class TestAgent(unittest.TestCase):
                 self._wait_for(self._ul_sock)
 
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
-            self.fail('TODO handle err codes')
+
+            LOGGER.warning('Check log output to validate expected error')
+
+            # TBD - this logic is not used yet
+            err_case_str = "tbd"
+
+            LOGGER.debug("Searching test runner logger for error string: %s", err_case_str)
+            found = self._agent._log_contains(err_case_str)
+            for s in found:
+                LOGGER.debug("\nFOUND OCCURENCE: %s\n", s)
+            self.assertTrue(len(found) > 0)
 
 
 # Below utilizes setattr to add methods to a child class of the TestAgent, which will in-turn give us unit tests

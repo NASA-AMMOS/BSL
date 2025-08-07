@@ -54,8 +54,8 @@ extern "C" {
  *              BSL Role: 00 - source, 01 - verifier,  -|       |         |     |   |
  *                        10 - acceptor, 11: undefined -|       |         |     |   |
  *              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
-                               10 - drop bundle, 11: undefined -|         |     |   |
-*                                                     Target Block Type: -|     |   |
+ *                             10 - drop bundle, 11: undefined -|         |     |   |
+ *                                                    Target Block Type: -|     |   |
  *                                        Policy Location: 0 - CLOUT, 1 - CLIN -|   |
  *                                                Sec Block Type: 0 - BIB, 1 - BCB -|
  *
@@ -70,6 +70,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
 int mock_bpa_key_registry_init(const char *pp_cfg_file_path);
 
 int mock_bpa_hexchar_to_int(char c);
+
 int mock_bpa_hexstring_to_bytes(const char *hexstr, uint8_t *out, size_t out_size);
 
 #ifdef __cplusplus
