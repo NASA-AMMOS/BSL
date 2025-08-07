@@ -60,7 +60,7 @@ jobs:
           ./build.sh install --component docs-api
       - name: Compress
         working-directory: testroot/usr/share/doc/bsl
-        run: tar -cf html.tar html && rm -rf html && find testroot/usr/share/doc/bsl/
+        run: tar -cf html.tar html && rm -rf html && find . -type f
       - name: Archive
         uses: actions/upload-artifact@v4
         with:
