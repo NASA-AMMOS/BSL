@@ -95,7 +95,7 @@ int mock_bpa_encode(mock_bpa_ctr_t *ctr)
     {
         return 2;
     }
-    size_t need;
+    size_t     need;
     QCBORError res = QCBOREncode_FinishGetSize(&encoder, &need);
     if (res != QCBOR_SUCCESS)
     {
