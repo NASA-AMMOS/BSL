@@ -609,24 +609,27 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         goto error;
     }
 
-    // Re-allocated the target block's BTSD, since enc/dec may slightly change its size.
-    const uint64_t target_blk_id = BSL_SecOper_GetTargetBlockNum(sec_oper);
-    if (BSL_SUCCESS
-        != BSL_BundleCtx_ReallocBTSD((BSL_BundleRef_t *)bundle, target_blk_id, bcb_context.btsd_replacement.len))
+    if (!BSL_SecOper_IsRoleVerifier(sec_oper))
     {
-        BSL_LOG_ERR("Failed to replace target BTSD");
-        goto error;
-    }
+        // Re-allocated the target block's BTSD, since enc/dec may slightly change its size.
+        const uint64_t target_blk_id = BSL_SecOper_GetTargetBlockNum(sec_oper);
+        if (BSL_SUCCESS
+            != BSL_BundleCtx_ReallocBTSD((BSL_BundleRef_t *)bundle, target_blk_id, bcb_context.btsd_replacement.len))
+        {
+            BSL_LOG_ERR("Failed to replace target BTSD");
+            goto error;
+        }
 
-    // Refresh the block metadata to account for change in size.
-    if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &target_block))
-    {
-        BSL_LOG_ERR("Failed to get block data");
-        goto error;
+        // Refresh the block metadata to account for change in size.
+        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &target_block))
+        {
+            BSL_LOG_ERR("Failed to get block data");
+            goto error;
+        }
+        ASSERT_PROPERTY(target_block.btsd_len == bcb_context.btsd_replacement.len);
+        // Copy the encrypted/decrypted data into the blocks newly reallocated BTSD space.
+        memcpy(target_block.btsd, bcb_context.btsd_replacement.ptr, bcb_context.btsd_replacement.len);
     }
-    ASSERT_PROPERTY(target_block.btsd_len == bcb_context.btsd_replacement.len);
-    // Copy the encrypted/decrypted data into the blocks newly reallocated BTSD space.
-    memcpy(target_block.btsd, bcb_context.btsd_replacement.ptr, bcb_context.btsd_replacement.len);
 
     // Generally we expect an auth tag with the encryption
     // If present, append it to the result.

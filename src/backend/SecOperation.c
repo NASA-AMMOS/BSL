@@ -122,6 +122,12 @@ bool BSL_SecOper_IsRoleAcceptor(const BSL_SecOper_t *self)
     return self->_role == BSL_SECROLE_ACCEPTOR;
 }
 
+bool BSL_SecOper_IsRoleVerifier(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(self != NULL);
+    return self->_role == BSL_SECROLE_VERIFIER;
+}
+
 bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(self != NULL);
