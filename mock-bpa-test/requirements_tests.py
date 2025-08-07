@@ -271,7 +271,7 @@ class _RequirementsCases(_TestSet):
             ],
             policy_config='0x5E',
             is_implemented=True,
-            is_working=False,
+            is_working=True,
             expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
