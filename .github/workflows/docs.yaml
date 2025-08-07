@@ -47,20 +47,24 @@ jobs:
           sudo apt-get install -y \
               cmake ninja-build ruby build-essential \
               libssl-dev libjansson-dev \
-              doxygen graphviz plantuml \
-              dblatex texlive texlive-latex-extra texlive-font-utils \
+              doxygen graphviz plantuml dblatex \
               xmlstarlet aspell
+      - name: Cached texlive
+        uses: paolobrasolin/setup-texlive-action@v1
       - name: Dependency build
         run: ./build.sh deps
       - name: Prep
         run: ./build.sh prep -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
       - name: Build
-        run: |
-          ./build.sh --target docs-api-html docs-api-pdf docs-api-misspelling
-          ./build.sh install --component docs-api
+        run: ./build.sh --target docs-api-html docs-api-pdf docs-api-misspelling
+      - name: Install
+        run: ./build.sh install --component docs-api
       - name: Compress
         working-directory: testroot/usr/share/doc/bsl
-        run: tar -cf html.tar html && rm -rf html && find . -type f
+        run: |
+          tar -cf html.tar html
+          rm -rf html
+          find . -type f
       - name: Archive
         uses: actions/upload-artifact@v4
         with:
@@ -82,7 +86,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     needs: apidoc
-    if: github.ref == 'refs/heads/main'
+#    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
@@ -91,7 +95,10 @@ jobs:
           path: testroot/usr/share/doc/bsl/
       - name: Decompress
         working-directory: testroot/usr/share/doc/bsl
-        run: tar -xf html.tar && rm html.tar
+        run: |
+          find . -type f
+          tar -xf html.tar
+          rm html.tar
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
