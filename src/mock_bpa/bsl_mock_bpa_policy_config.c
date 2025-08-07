@@ -543,8 +543,8 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     BSL_HostEIDPattern_t eid_src_pat;
     if (policy_ignore)
     {
-        BSL_LOG_INFO("Creating src eid pattern ipn:0.0.0 - bundle should be ignored!");
-        eid_src_pat = mock_bpa_util_get_eid_pattern_from_text("ipn:0.0.0");
+        BSL_LOG_INFO("Creating src eid pattern to match none - bundle should be ignored!");
+        eid_src_pat = mock_bpa_util_get_eid_pattern_from_text("");
     }
     else
     {
