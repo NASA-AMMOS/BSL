@@ -132,7 +132,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
-    
+
     // after realloc, original was too small, we must re-encode
     if (encode_result > BSL_ASB_SMALL_BUFFER_SIZE)
     {
@@ -488,7 +488,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
-    
+
     // after realloc, original was too small, we must re-encode
     if (encode_result > BSL_ASB_SMALL_BUFFER_SIZE)
     {
