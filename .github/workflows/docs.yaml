@@ -47,10 +47,9 @@ jobs:
           sudo apt-get install -y \
               cmake ninja-build ruby build-essential \
               libssl-dev libjansson-dev \
-              doxygen graphviz plantuml dblatex \
+              doxygen graphviz plantuml \
+              dblatex texlive texlive-latex-extra texlive-font-utils \
               xmlstarlet aspell
-      - name: Cached texlive
-        uses: paolobrasolin/setup-texlive-action@v1
       - name: Dependency build
         run: ./build.sh deps
       - name: Prep
