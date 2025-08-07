@@ -77,7 +77,7 @@
 
 struct BSL_SecResult_s
 {
-    /// @brief Result ID, which is context depdendent, based on security context.
+    /// @brief Result ID, which is context dependent, based on security context.
     uint64_t result_id;
 
     /// @brief Context ID, put in here for convenience.

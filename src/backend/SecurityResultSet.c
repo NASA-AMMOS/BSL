@@ -20,7 +20,7 @@
  * subcontract 1700763.
  */
 /** @file
- * @brief SecurityResultSet implementation for result after application of security operations.
+ * @brief Security Result Set implementation for result after application of security operations.
  * @ingroup backend_dyn
  */
 #include "SecurityResultSet.h"

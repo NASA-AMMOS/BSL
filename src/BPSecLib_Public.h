@@ -45,14 +45,14 @@
 /// Forward declaration for BSL library context.
 typedef struct BSL_LibCtx_s BSL_LibCtx_t;
 
-/// @brief Forward declaration of SecurityResponseSet, which contains information for BSL and the host BPA to process
-/// the Bundle.
+/// @brief Forward declaration of ::BSL_SecurityResponseSet_s, which contains information for BSL and the host BPA to
+/// process the Bundle.
 typedef struct BSL_SecurityResponseSet_s BSL_SecurityResponseSet_t;
 
-/// @brief Forward declaration of PolicyActionSet, which contains information for BSL to process the Bundle.
+/// @brief Forward declaration of ::BSL_SecurityActionSet_s, which contains information for BSL to process the Bundle.
 typedef struct BSL_SecurityActionSet_s BSL_SecurityActionSet_t;
 
-/// @brief Forward-declaration for structure containing callbscks to a security context.
+/// @brief Forward-declaration for structure containing callbacks to a security context.
 typedef struct BSL_SecCtxDesc_s BSL_SecCtxDesc_t;
 
 /// @brief Forward-declaration for structure containing callbacks to  provider.
@@ -263,7 +263,7 @@ int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_
 BSL_REQUIRE_CHECK
 int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, BSL_PolicyDesc_t desc);
 
-/** @brief Query BSL to populate a `BSL_SecurityActionSet_t` containg security processing instructions.
+/** @brief Query BSL to populate a `BSL_SecurityActionSet_t` containing security processing instructions.
  *
  * @details
  * This executes a chain of events in the BSL. First by querying the policy provider, then checking with the security

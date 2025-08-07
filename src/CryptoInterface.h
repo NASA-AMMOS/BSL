@@ -29,28 +29,28 @@
  * 1. Initialize the HMAC generation context: BSL_AuthCtx_Init()
  * 2. Add data to the HMAC context. This can be done with a flat buffer: BSL_AuthCtx_DigestBuffer(),
  * or with a sequential reader: BSL_AuthCtx_DigestSeq()
- * 3. Fialize the HMAC context to get final tag: BSL_AuthCtx_Finalize()
+ * 3. Finalize the HMAC context to get final tag: BSL_AuthCtx_Finalize()
  * 4. Deinitialize the HMAC context: BSL_AuthCtx_Deinit()
  *
  * Crypto Operations:
  *
  * To encrypt plaintext,
- * 1. Initialize the cipher context, using BSL_CRYPTO_ENCRYPT as the enc parameter: BSL_Cipher_Init()
+ * 1. Initialize the cipher context, using ::BSL_CRYPTO_ENCRYPT as the enc parameter: BSL_Cipher_Init()
  * Also provide the initialization vector (IV), IV Length, and key ID
  * 2. (Optional) add additional authentication data (aad) with BSL_Cipher_AddAAD()
  * 3. Add data to the cipher context by calling BSL_Cipher_AddSeq()
  * 4. Finalize cipher operation: calling BSL_Cipher_FinalizeSeq()
  * 5. Get tag information: BSL_Cipher_GetTag()
- * 6. Deinitilize the cipher context: BSL_Cipher_Deinit()
+ * 6. Deinitialize the cipher context: BSL_Cipher_Deinit()
  *
  * To decrypt ciphertext:
- * 1. Initialize the cipher context, using BSL_CRYPTO_DENCRYPT as the enc parameter: BSL_Cipher_Init()
+ * 1. Initialize the cipher context, using ::BSL_CRYPTO_DECRYPT as the enc parameter: BSL_Cipher_Init()
  * Also provide the initialization vector (IV), IV Length, and key ID
  * 2. (Optional) add additional authentication data (aad) with BSL_Cipher_AddAAD()
  * 3. Add data to the cipher context by calling BSL_Cipher_AddSeq()
  * 4. Set tag information to be used to validate decryption: BSL_Cipher_SetTag()
  * 5. Finalize cipher operation: calling BSL_Cipher_FinalizeSeq()
- * 6. Deinitilize the cipher context: BSL_Cipher_Deinit()
+ * 6. Deinitialize the cipher context: BSL_Cipher_Deinit()
  *
  * @todo Significant perform tidying and housekeeping.
  */
@@ -243,7 +243,7 @@ int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, BSL_Data_t plaintext, BSL_Data_
  * Add data to encrypt or decrypt to the context sequentially
  * @param cipher_ctx pointer to context to add data to
  * @param[in] reader pointer to sequential reader - input to crypto operation is
- * @param[in,out] writer pointer to sequential writer - output of crypto operation will be writter
+ * @param[in,out] writer pointer to sequential writer - output of crypto operation will be writer
  * @return 0 if successful
  */
 int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer);
