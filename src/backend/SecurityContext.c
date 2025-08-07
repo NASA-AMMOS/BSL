@@ -34,7 +34,7 @@
 #include "SecOperation.h"
 #include "SecurityResultSet.h"
 
-#define BSL_ASB_SMALL_BUFFER_SIZE 2
+#define BSL_ASB_SMALL_BUFFER_SIZE 81920 // 10 KiB
 
 static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                              BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
