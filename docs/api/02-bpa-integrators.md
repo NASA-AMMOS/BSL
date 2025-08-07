@@ -70,10 +70,10 @@ digraph bpa_interaction {
     clin [ label="CLA\nReception" ];
     clout [ label="CLA\nForwarding" ];
 
-    appin -> process [ label="BSL Call" ];
-    process -> appout [ label="BSL Call" ];
-    clin -> process [ label="BSL Call" ];
-    process -> clout [ label="BSL Call" ];
+    appin -> process [ label="BSL Call\n(APPIN)" ];
+    process -> appout [ label="BSL Call\n(APPOUT)" ];
+    clin -> process [ label="BSL Call\n(CLIN)" ];
+    process -> clout [ label="BSL Call\n(CLOUT)" ];
 }
 @enddot
 
