@@ -44,9 +44,9 @@ Generally, functions returning `int`s indicate error codes.
  * A negative number ALWAYS indicates an error.
  * A positive number can be something else depending on context.
 
-## Enums
+## Enumerations
 
-Enums take the format of `BSL_EnumName_e` (with a typedef).
+Enumerations take the format of `BSL_EnumName_e` (with a typedef).
 
 Variants of the enum should be "namespaced" with the enum, to manage clutter.
 
@@ -74,7 +74,7 @@ More notes forthcoming.
  * A NULL pointer for almost any function argument is considered an anomaly and a programmer-error.
  * Note the \@nullable doxygen command to indicate whenever a parameter _may_ be NULL.
  * The public front-end API is more gracious to NULL arguments (returns error code). It is considered a runtime anomaly.
- * Code further in the backend is more `assert`-ive of NULL checks. A NULL argument here is not a runtime anomaly, but rather an indication the programmer made a mistake.
+ * Code further in the backend performs more `assert` checking for NULL values. A NULL argument here is not a runtime anomaly, but rather an indication the programmer made a mistake.
  * If you are not already familiar, see the ["Billion Dollar Mistake"](https://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare/).
  * \*Note: The `GetBlockMetadata` function does permit NULL arguments, as it only populates arguments that are requested.
  * \*Note: Certain functions that wrap OpenSSL functionality may also permit NULLs to be consistent with its interface.
@@ -104,7 +104,7 @@ More notes forthcoming.
  * Third party libraries providing containers may be more hassle and risk than they are worth.
 
 #### &raquo; M\*Lib structures should not be referenced in the Frontend API
- * Keep M\*Lib usage to the BSL backend, and use standard/primative structs for frontend API. The frontend should not include any M\*Lib headers.
+ * Keep M\*Lib usage to the BSL backend, and use standard/primitive structs for frontend API. The frontend should not include any M\*Lib headers.
 
 # Documentation
 
@@ -115,15 +115,14 @@ For reference, Doxygen comment blocks can contain complex markup based on a larg
 
 When M*LIB macros are used to declare type-safe containers, the Doxygen inspection of the macro-expanded code should be inhibited but there should also be a explicit Doxygen block to provide explanation of the purpose of the struct and a reference to the type of its contents.
 
-An example of this is below (corresponding to @ref BSL_PolicyActionIList_t).
+An example of this is below (corresponding to @ref BSL_SecCtxDict_t).
 
 @verbatim
-/** @struct BSL_PolocuActionIList
- * An [M-I-LIST](https://github.com/P-p-H-d/mlib/blob/master/README.md#m-i-list)
- * of ::BSL_PolicyAction_t items.
+/** @struct BSL_SecCtxDict_t
+ * Stable dict of security context descriptors (key: context id | value: descriptor struct)
  */
 /// @cond Doxygen_Suppress
-M_ILIST_DEF(BSL_PolicyActionList, BSL_PolicyAction_t)
+DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
 /// @endcond
 @endverbatim
 
@@ -188,7 +187,7 @@ Functions that can fail should have `int` return type and use the following comm
 **Zero**: Means success (unless clearly indicated otherwise in exceptional use-cases)
 **Positive**: Implies success, with some supplementary data. For example, a `_CreateBlock()` function, upon success, would return a positive integer containing the ID of the block just created.
 
-NOTE!! This pattern is being adapted. A negative value indicates error, zero indicates succes.
+NOTE!! This pattern is being adapted. A negative value indicates error, zero indicates success.
 There may be times when there may be meaningful context associated with a positive value (e.g., number of bytes written).
 
 # Structs and Functions
@@ -233,14 +232,14 @@ The precondition checks (on function parameters or on any other state generally)
 - [CHKVOID(cond)](@ref CHKVOID) when the function has an `void` return type
 - [CHKFALSE(cond)](@ref CHKFALSE) when the function has an `bool` return type
 
-# Enums
+# Enumerations
 
-Enums with explicit values must be justified with citations, for example the declarations of @ref BSL_BundleBlockTypeCode_e.
+Enumerations with explicit values must be justified with citations, for example the declarations of @ref BSL_BundleBlockTypeCode_e.
 Otherwise, they should not be given values.
 
-Whenever possible, enums starting with zero should be avoided (since many variables default to zero, we want to avoid the case of matching an enum variant with an uninitialized, zeroed-out, value)
+Whenever possible, enum values starting with zero should be avoided (since many variables default to zero, we want to avoid the case of matching an enum variant with an uninitialized, zeroed-out, value)
 
-Enums should be `typedef`-ed with a `_e` suffix.
+Enumerations should be `typedef`-ed with a `_e` suffix.
 Enum values should be full `SCREAMING_CASE` matching the name of the struct.
 @verbatim
 typedef enum {

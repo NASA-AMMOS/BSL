@@ -6,10 +6,10 @@
 .pydevproject
 
 # Build files
-deps/build
-build
-testroot
+/deps/build
+/build/
+/testroot/
+/venv/
 __pycache__
-/.pytest_cache/
-venv/
+.pytest_cache/
 mock-bpa-test/ccsds_bpsec_redbook_draft_734.5-R-2_requirements_implementation_guide.yaml

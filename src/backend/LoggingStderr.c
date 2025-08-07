@@ -20,7 +20,7 @@
  * subcontract 1700763.
  */
 /** @file
- * Implementation of event logging using stderr output stream.
+ * Implementation of event logging using @c stderr output stream.
  * @ingroup backend_dyn
  */
 #include <pthread.h>
@@ -85,7 +85,7 @@ static void BSL_LogEvent_event_deinit(BSL_LogEvent_event_t *obj)
 /// OPLIST for BSL_LogEvent_event_t
 #define M_OPL_BSL_LogEvent_event_t() (INIT(API_2(BSL_LogEvent_event_init)), CLEAR(API_2(BSL_LogEvent_event_deinit)))
 
-/// NOLINTBEGIN
+// NOLINTBEGIN
 /// @cond Doxygen_Suppress
 M_BUFFER_DEF(BSL_LogEvent_queue, BSL_LogEvent_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING)
 /// @endcond
@@ -96,7 +96,7 @@ static BSL_LogEvent_queue_t event_queue;
 static pthread_t thr_sink;
 /// True if ::thr_sink is valid
 static atomic_bool thr_valid = ATOMIC_VAR_INIT(false);
-/// NOLINTEND
+// NOLINTEND
 
 uint8_t *BSL_Log_DumpAsHexString(uint8_t *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen)
 {
@@ -115,7 +115,7 @@ uint8_t *BSL_Log_DumpAsHexString(uint8_t *dstbuf, size_t dstlen, const uint8_t *
     return dstbuf;
 }
 
-/// NOLINTBEGIN
+// NOLINTBEGIN
 static void write_log(const BSL_LogEvent_event_t *event)
 {
     ASSERT_ARG_NONNULL(event);
@@ -152,7 +152,7 @@ static void write_log(const BSL_LogEvent_event_t *event)
             string_get_cstr(event->message));
     fflush(stderr);
 }
-/// NOLINTEND
+// NOLINTEND
 
 static void *work_sink(void *arg _U_)
 {
