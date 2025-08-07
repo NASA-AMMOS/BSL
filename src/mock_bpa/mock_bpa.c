@@ -195,7 +195,7 @@ static void *work_over_rx(void *arg _U_)
             break;
         }
         BSL_LOG_INFO("over_rx");
-        mock_bpa_decode(&item, bsl);
+        mock_bpa_decode(&item);
 
         if (mock_bpa_process(BSL_POLICYLOCATION_APPIN, item.bundle_ref.data))
         {
@@ -226,7 +226,7 @@ static void *work_under_rx(void *arg _U_)
         }
 
         BSL_LOG_INFO("under_rx");
-        if (mock_bpa_decode(&item, bsl))
+        if (mock_bpa_decode(&item))
         {
             BSL_LOG_ERR("work_under_rx failed to decode bundle");
             mock_bpa_ctr_deinit(&item);
