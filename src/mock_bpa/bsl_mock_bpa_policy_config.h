@@ -60,31 +60,17 @@ extern "C" {
  *                                                              |         |     |   |
  *              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
  *                             10 - drop bundle, 11: undefined -|         |     |   |
-<<<<<<< HEAD
- *                                                    Target Block Type: -|     |   |
-=======
-<<<<<<< HEAD
  *                                                                        |     |   |
  *                          Target Block Type: 00 - primary, 01 payload  -|     |   |
  *                                             10 - bib, 11 - bundle age -|     |   |
  *                                                                              |   |
-=======
  *                                                    Target Block Type: -|     |   |
->>>>>>> main
->>>>>>> main
  *                                        Policy Location: 0 - CLOUT, 1 - CLIN -|   |
  *                                                                                  |
  *                                                Sec Block Type: 0 - BIB, 1 - BCB -|
-<<<<<<< HEAD
  *
  *
-<<<<<<< HEAD
-=======
-=======
- * @endcode
->>>>>>> main
->>>>>>> main
- */
+*/
 typedef uint32_t bsl_mock_policy_configuration_t;
 
 void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg);
