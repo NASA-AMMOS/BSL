@@ -135,3 +135,9 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self)
     ASSERT_PRECONDITION(self != NULL);
     return self->_service_type == BSL_SECBLOCKTYPE_BIB;
 }
+
+void BSL_SecOper_SetConclusion(BSL_SecOper_t *self, BSL_SecOper_ConclusionState_e new_conclusion)
+{
+    ASSERT_PRECONDITION(self != NULL);
+    self->conclusion = new_conclusion;
+}

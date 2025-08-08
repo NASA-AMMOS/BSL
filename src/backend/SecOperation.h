@@ -35,14 +35,6 @@
 
 #include "SecParam.h"
 
-typedef enum
-{
-    BSL_SECOP_CONCLUSION_PENDING = 1, 
-    BSL_SECOP_CONCLUSION_SUCCESS, 
-    BSL_SECOP_CONCLUSION_INVALID, 
-    BSL_SECOP_CONCLUSION_FAILURE
-} BSL_SecOper_ConclusionState_e;
-
 struct BSL_SecOper_s
 {
     /// @brief Security context ID

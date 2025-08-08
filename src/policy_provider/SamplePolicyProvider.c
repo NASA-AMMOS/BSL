@@ -84,6 +84,50 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
     return target_block_num;
 }
 
+void sec_op_list_insert(SecOpList *list, SecOpListNode *new_node) {
+    SecOpListNode **pp = &list->head;
+    SecOpListNode *cur = list->head;
+
+    while (cur) 
+    {
+        if (BSL_SecOper_GetTargetBlockNum(cur->sec_oper) == BSL_SecOper_GetTargetBlockNum(new_node->sec_oper))
+        {
+            // found sec op with same target
+            break;
+        }
+        pp = &cur->next;
+        cur = cur->next;
+    }
+
+    if (cur) 
+    {
+        bool before = !(BSL_SecOper_IsBIB(new_node->sec_oper) ^ BSL_SecOper_IsRoleSource(new_node->sec_oper));
+        if (!before) 
+        {
+            // insert SRC BCB after SRC BIB / ACC BIB after ACC BCB 
+            new_node->next = cur->next;
+            cur->next = new_node;
+        } 
+        else 
+        {
+            // insert SRC BIB before SRC BCB / ACC BCB before ACC BIB 
+            *pp = new_node;
+            new_node->next = cur;
+        }
+
+        // duplicate sec op
+        if (!(BSL_SecOper_IsBIB(new_node->sec_oper) ^ BSL_SecOper_IsBIB(cur->sec_oper)))
+        {
+            BSL_SecOper_SetConclusion(new_node->sec_oper, BSL_SECOP_CONCLUSION_INVALID);
+        }
+
+    } 
+    else 
+    {
+        *pp = new_node;
+    }
+}
+
 /**
  * Note that criticality is HIGH
  */
@@ -103,6 +147,9 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
 
     BSL_SecurityActionSet_Init(output_action_set);
     const size_t capacity = sizeof(self->rules) / sizeof(BSLP_PolicyRule_t);
+
+    SecOpList sec_op_list;
+    sec_op_list.head = NULL;
 
     for (size_t index = 0; index < self->rule_count && index < capacity; index++)
     {
@@ -124,17 +171,29 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
             continue;
         }
 
-        BSL_SecOper_t *sec_oper = calloc(BSL_SecurityActionSet_Sizeof(), 1);
+        BSL_SecOper_t *sec_oper = calloc(BSL_SecOper_Sizeof(), 1);
         if (BSLP_PolicyRule_EvaluateAsSecOper(rule, sec_oper, bundle, location) < 0)
         {
             BSL_SecurityActionSet_IncrError(output_action_set);
         }
         else
         {
-            BSL_SecurityActionSet_AppendSecOper(output_action_set, sec_oper);
+            SecOpListNode *n = BSL_MALLOC(sizeof(*n));
+            n->sec_oper = sec_oper;
+            n->next = NULL;
+            sec_op_list_insert(&sec_op_list, n);
         }
-        free(sec_oper);
         BSL_LOG_INFO("Created sec operation for rule `%s`", rule->description);
+    }
+
+    // Free nodes
+    SecOpListNode *cur = sec_op_list.head;
+    while (cur) {
+        SecOpListNode *tmp = cur;
+        BSL_SecurityActionSet_AppendSecOper(output_action_set, tmp->sec_oper);
+        free(tmp->sec_oper);
+        cur = cur->next;
+        free(tmp);
     }
 
     CHK_POSTCONDITION(BSL_SecurityActionSet_IsConsistent(output_action_set));
