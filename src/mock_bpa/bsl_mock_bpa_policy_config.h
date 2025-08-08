@@ -43,24 +43,23 @@
 extern "C" {
 #endif
 
-/// -----------------    Bitwise Diagram of the mock bpa config data structure    --------------------
-/*
- *                      uint32_t : bsl_mock_policy_configuration_t
- *
- *             [  x   x   x   x  |  x   x   x   x  |  x   x   x   x  |  x   x   x   x ]
- *             [ ------------- unused -------]  |     [---]   [---]     [---]   |   |
- *                                              |       |       |         |     |   |
- *                     Use Wrapped Key for BCB -|       |       |         |     |   |
- *              BSL Role: 00 - source, 01 - verifier,  -|       |         |     |   |
- *                        10 - acceptor, 11: undefined -|       |         |     |   |
- *              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
-                               10 - drop bundle, 11: undefined -|         |     |   |
-*                                                     Target Block Type: -|     |   |
- *                                        Policy Location: 0 - CLOUT, 1 - CLIN -|   |
- *                                                Sec Block Type: 0 - BIB, 1 - BCB -|
- *
- *
-*/
+/** Bitwise Diagram of the mock bpa config data structure:
+@verbatim
+                      uint32_t : bsl_mock_policy_configuration_t
+
+             [  x   x   x   x  |  x   x   x   x  |  x   x   x   x  |  x   x   x   x ]
+             [ ------------- unused -------]  |     [---]   [---]     [---]   |   |
+                                              |       |       |         |     |   |
+                     Use Wrapped Key for BCB -|       |       |         |     |   |
+              BSL Role: 00 - source, 01 - verifier,  -|       |         |     |   |
+                        10 - acceptor, 11: undefined -|       |         |     |   |
+              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
+                             10 - drop bundle, 11: undefined -|         |     |   |
+                                                    Target Block Type: -|     |   |
+                                        Policy Location: 0 - CLOUT, 1 - CLIN -|   |
+                                                Sec Block Type: 0 - BIB, 1 - BCB -|
+@endverbatim
+ */
 typedef uint32_t bsl_mock_policy_configuration_t;
 
 void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg);

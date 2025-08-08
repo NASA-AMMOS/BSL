@@ -29,7 +29,7 @@ The BSL proper is associated with the @ref frontend and @ref backend_dyn groups.
 The unit tests of the BSL use, where necessary, very minimal implementations of a PP to set up preconditons for test cases.
 
 The Mock BPA uses a more featureful PP implementation to meet the needs of the BSL acceptance tests.
-This PP uses a set of bit fields within an integer program argument to control policy options.
+This PP uses a set of bit fields within an integer program argument to control policy options; the fields are documented on ::bsl_mock_policy_configuration_t.
 It also allows multiple integer policy values to be configured in a single running Mock BPA.
 This PP is registered and used by the @ref mock-bpa for BSL testing.
 
