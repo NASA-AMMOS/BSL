@@ -58,17 +58,19 @@ jobs:
           -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF
           -DBUILD_DOCS_API=ON
       - name: Build
-        run: |
-          ./build.sh --target docs-api-html docs-api-pdf docs-api-misspelling
-          ./build.sh install --component docs-api
+        run: ./build.sh --target docs-api-html docs-api-pdf docs-api-misspelling
+      - name: Install
+        run: ./build.sh install --component docs-api
       - name: Compress
         working-directory: testroot/usr/share/doc/bsl
-        run: tar -cf api.tar html *.pdf
+        run: |
+          tar -cf html.tar html
+          rm -rf html
       - name: Archive
         uses: actions/upload-artifact@v4
         with:
           name: bsl-api
-          path: testroot/usr/share/doc/bsl/api.tar
+          path: testroot/usr/share/doc/bsl/
 
   deploy:
     # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -94,7 +96,9 @@ jobs:
           path: testroot/usr/share/doc/bsl/
       - name: Decompress
         working-directory: testroot/usr/share/doc/bsl
-        run: tar -xf api.tar && rm api.tar
+        run: |
+          tar -xf html.tar
+          rm html.tar
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
