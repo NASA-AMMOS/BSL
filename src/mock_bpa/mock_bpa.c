@@ -180,6 +180,9 @@ static void sig_stop(int signum _U_)
 {
     atomic_store(&stop_state, true);
     BSL_LOG_INFO("signal received %d", signum);
+
+    uint8_t buf    = 0;
+    write(tx_notify_w, &buf, sizeof(buf));
 }
 
 static void *work_over_rx(void *arg _U_)
@@ -194,7 +197,7 @@ static void *work_over_rx(void *arg _U_)
             mock_bpa_ctr_deinit(&item);
             break;
         }
-        BSL_LOG_INFO("over_rx");
+        BSL_LOG_INFO("over_rx item");
         mock_bpa_decode(&item);
 
         if (mock_bpa_process(BSL_POLICYLOCATION_APPIN, item.bundle_ref.data))
@@ -233,7 +236,7 @@ static void *work_under_rx(void *arg _U_)
             break;
         }
 
-        BSL_LOG_INFO("under_rx");
+        BSL_LOG_INFO("under_rx item");
         if (mock_bpa_decode(&item))
         {
             BSL_LOG_ERR("work_under_rx failed to decode bundle");
@@ -276,7 +279,7 @@ static void *work_deliver(void *arg _U_)
             mock_bpa_ctr_deinit(&item);
             break;
         }
-        BSL_LOG_INFO("deliver");
+        BSL_LOG_INFO("deliver item");
 
         if (mock_bpa_process(BSL_POLICYLOCATION_APPOUT, item.bundle_ref.data))
         {
@@ -297,7 +300,7 @@ static void *work_deliver(void *arg _U_)
         data_queue_push(over_tx, item);
         {
             uint8_t buf    = 0;
-            int     nbytes = write(tx_notify_w, &buf, sizeof(uint8_t));
+            int     nbytes = write(tx_notify_w, &buf, sizeof(buf));
             if (nbytes < 0)
             {
                 BSL_LOG_ERR("Failed to write: %ld", nbytes);
@@ -321,7 +324,7 @@ static void *work_forward(void *arg _U_)
             mock_bpa_ctr_deinit(&item);
             break;
         }
-        BSL_LOG_INFO("forward");
+        BSL_LOG_INFO("forward item");
 
         if (mock_bpa_process(BSL_POLICYLOCATION_CLOUT, item.bundle_ref.data))
         {
@@ -562,6 +565,7 @@ static int bpa_exec(void)
 
 static void bpa_cleanup(void)
 {
+    BSL_LOG_INFO("cleaning up");
     mock_bpa_ctr_t item;
 
     // join RX workers first

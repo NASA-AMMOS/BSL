@@ -227,6 +227,5 @@ class TestMockBPA(TestAgent):
 
     def test_start_stop_p00(self):
         self._start()
-        time.sleep(0.5)
         self.assertEqual(0, self._agent.stop())
         self._agent = None
