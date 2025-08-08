@@ -70,7 +70,7 @@ extern "C" {
  *                                                Sec Block Type: 0 - BIB, 1 - BCB -|
  *
  *
-*/
+ */
 typedef uint32_t bsl_mock_policy_configuration_t;
 
 void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg);
