@@ -506,7 +506,7 @@ class _RequirementsCases(_TestSet):
             ],
             # Ensure that the host interface returns an error code (since the block does not exist). Confirm that a log indicating this error is created.
             expected_output=(FAILURE_CODE, 0),  # doesn't specify an error code
-            policy_config='0x46',
+            policy_config='0x66',
             is_implemented=True,
             is_working=False,
             expect_success=False,
@@ -531,7 +531,7 @@ class _RequirementsCases(_TestSet):
             # confirm that no further security operation processing was taken (specifically, no BIB operations should be seen).
             expected_output=(FAILURE_CODE, 0),  # doesn't specify an error code
             #
-            policy_config='0x87',
+            policy_config='0xA7',
             is_implemented=True,
             is_working=False,
             expect_success=False,
