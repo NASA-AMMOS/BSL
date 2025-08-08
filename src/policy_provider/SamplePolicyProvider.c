@@ -139,7 +139,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     }
 
     CHK_POSTCONDITION(BSL_SecurityActionSet_IsConsistent(output_action_set));
-    return (int)BSL_SecurityActionSet_CountErrors(output_action_set);
+    return BSL_SUCCESS;
 }
 
 int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
