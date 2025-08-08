@@ -33,6 +33,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <m-array.h>
 
 #include <BPSecLib_Public.h>
 
@@ -46,7 +47,7 @@
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
-LIST_DEF(uint64_list, uint64_t)
+M_ARRAY_DEF(uint64_list, uint64_t)
 // NOLINTEND
 
 /** Represents the Abstract Security Block as defined in RFC9172

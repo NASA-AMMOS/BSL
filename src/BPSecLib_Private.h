@@ -42,6 +42,8 @@
 #include <string.h>
 #include <syslog.h>
 #include <time.h>
+#include <sys/types.h>
+#include <qcbor/UsefulBuf.h>
 
 #include "BPSecLib_Public.h"
 
@@ -940,12 +942,13 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
 
 /** Encodes this ASB into a CBOR string into the space pre-allocated indicated by the argument.
  *
- * @param[in,out] self This ASB.
- * @param[in] allocated_target A buffer with allocated space for the encoded CBOR
+ * @param[in] self This ASB.
+ * @param[in] buf A buffer with allocated space for the encoded CBOR
+ * or the ::SizeCalculateUsefulBuf value to get the real size.
  * @return Integer contains number of bytes written to buffer, negative indicates error.
  *
  */
-int BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t allocated_target);
+ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, UsefulBuf buf);
 
 /** Decodes and populates this ASB from a CBOR string.
  *

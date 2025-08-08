@@ -34,8 +34,6 @@
 #include "SecOperation.h"
 #include "SecurityResultSet.h"
 
-#define BSL_ASB_SMALL_BUFFER_SIZE 81920 // 10 KiB
-
 static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                              BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
 {
@@ -94,38 +92,20 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_AbsSecBlock_AddParam(&abs_sec_block, BSL_SecOutcome_GetParamAt(outcome, index));
     }
 
-    size_t est_asb_bytelen = BSL_ASB_SMALL_BUFFER_SIZE;
-    if (BSL_BundleCtx_ReallocBTSD(bundle, created_block_id, est_asb_bytelen) != BSL_SUCCESS)
-    {
-        BSL_LOG_ERR("Failed to prealloc sufficient BTSD space for ASB");
-        return BSL_ERR_HOST_CALLBACK_FAILED;
-    }
-
-    if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
-    {
-        BSL_LOG_ERR("Could not get BIB block (id=%lu)", created_block_id);
-        return BSL_ERR_SECURITY_OPERATION_FAILED;
-    }
-
-    CHK_PROPERTY(sec_blk.btsd != NULL);
-    CHK_PROPERTY(sec_blk.btsd_len > 0);
-
-    BSL_Data_t btsd_view;
-    BSL_Data_InitView(&btsd_view, sec_blk.btsd_len, sec_blk.btsd);
-    int encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, btsd_view);
-    if (encode_result <= BSL_SUCCESS)
+    ssize_t encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, SizeCalculateUsefulBuf);
+    if (encode_result <= 0)
     {
         BSL_LOG_ERR("Failed to encode ASB");
         return BSL_ERR_ENCODING;
     }
 
+    // Needed size returned to encode_result, realloc btsd
     if (BSL_BundleCtx_ReallocBTSD(bundle, created_block_id, (size_t)encode_result) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to realloc block ASB space");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
-
     if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get BIB block (id=%lu)", created_block_id);
@@ -133,17 +113,12 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
-    // after realloc, original was too small, we must re-encode
-    if (encode_result > BSL_ASB_SMALL_BUFFER_SIZE)
+    UsefulBuf btsd_view = { .len = sec_blk.btsd_len, .ptr = sec_blk.btsd};
+    encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, btsd_view);
+    if (encode_result <= BSL_SUCCESS)
     {
-        BSL_LOG_INFO("ASB (%d > %d) TOO SMALL, REALLOC NEEDED", encode_result, BSL_ASB_SMALL_BUFFER_SIZE);
-        BSL_Data_InitView(&btsd_view, sec_blk.btsd_len, sec_blk.btsd);
-        encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, btsd_view);
-        if (encode_result <= BSL_SUCCESS)
-        {
-            BSL_LOG_ERR("Failed to encode ASB");
-            return BSL_ERR_ENCODING;
-        }
+        BSL_LOG_ERR("Failed to encode ASB");
+        return BSL_ERR_ENCODING;
     }
 
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
@@ -229,8 +204,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
             // At this point we know that the encoded ASB into BTSD will be smaller than what exists
             // right now, since we removed a block.
             // SO encode over it, and then
-            BSL_Data_t block_btsd_data = { 0 };
-            BSL_Data_InitView(&block_btsd_data, sec_blk.btsd_len, sec_blk.btsd);
+            UsefulBuf block_btsd_data = { .len = sec_blk.btsd_len, .ptr = sec_blk.btsd};
             int nbytes = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, block_btsd_data);
             if (nbytes < 0)
             {
@@ -351,8 +325,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
             // At this point we know that the encoded ASB into BTSD will be smaller than what exists
             // right now, since we removed a block.
             // SO encode over it, and then
-            BSL_Data_t block_btsd_data = { 0 };
-            BSL_Data_InitView(&block_btsd_data, sec_blk.btsd_len, sec_blk.btsd);
+            UsefulBuf block_btsd_data = { .len = sec_blk.btsd_len, .ptr = sec_blk.btsd};
             int nbytes = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, block_btsd_data);
             if (nbytes < 0)
             {
@@ -447,27 +420,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_AbsSecBlock_AddParam(&abs_sec_block, param_ptr);
     }
 
-    // Over-allocate size for the ASB BTSD in the block
-    const size_t est_asb_bytelen = BSL_ASB_SMALL_BUFFER_SIZE;
-    if (BSL_BundleCtx_ReallocBTSD(bundle, sec_blk.block_num, est_asb_bytelen) != BSL_SUCCESS)
-    {
-        BSL_LOG_ERR("Failed to allocate space for ASB in BTSD");
-        return BSL_ERR_HOST_CALLBACK_FAILED;
-    }
-
-    // Refresh view of block after realloc-ing BTSD
-    if (BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk) != BSL_SUCCESS)
-    {
-        BSL_LOG_ERR("Failed to get security block");
-        return BSL_ERR_HOST_CALLBACK_FAILED;
-    }
-
-    // Encode into the over-sized buffer.
-    ASSERT_PROPERTY(sec_blk.btsd != NULL);
-    ASSERT_PROPERTY(sec_blk.btsd_len > 0);
-    BSL_Data_t btsd_view = { 0 };
-    BSL_Data_InitView(&btsd_view, sec_blk.btsd_len, sec_blk.btsd);
-    int encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, btsd_view);
+    ssize_t encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, SizeCalculateUsefulBuf);
     if (encode_result <= 0)
     {
         BSL_LOG_ERR("Failed to encode ASB");
@@ -481,7 +434,6 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
-
     if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get BIB block (id=%lu)", created_block_id);
@@ -489,17 +441,12 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
-    // after realloc, original was too small, we must re-encode
-    if (encode_result > BSL_ASB_SMALL_BUFFER_SIZE)
+    UsefulBuf btsd_view = { .len = sec_blk.btsd_len, .ptr = sec_blk.btsd};
+    encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, btsd_view);
+    if (encode_result <= 0)
     {
-        BSL_LOG_INFO("ASB (%d > %d) TOO SMALL, REALLOC NEEDED", encode_result, BSL_ASB_SMALL_BUFFER_SIZE);
-        BSL_Data_InitView(&btsd_view, sec_blk.btsd_len, sec_blk.btsd);
-        encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, btsd_view);
-        if (encode_result <= BSL_SUCCESS)
-        {
-            BSL_LOG_ERR("Failed to encode ASB");
-            return BSL_ERR_ENCODING;
-        }
+        BSL_LOG_ERR("Failed to encode ASB");
+        return BSL_ERR_ENCODING;
     }
 
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
