@@ -43,23 +43,47 @@
 extern "C" {
 #endif
 
-/// -----------------    Bitwise Diagram of the mock bpa config data structure    --------------------
-/*
+/** Bitwise Diagram of the mock bpa config data structure:
+ * @code{.unparsed}
  *                      uint32_t : bsl_mock_policy_configuration_t
  *
  *             [  x   x   x   x  |  x   x   x   x  |  x   x   x   x  |  x   x   x   x ]
- *             [ ------------- unused -------]  |     [---]   [---]     [---]   |   |
+ *             [ --------- unused -------]  |   |     [---]   [---]     [---]   |   |
+ *                                          |   |       |       |         |     |   |
+ *           "Don't care": set EIDs s.t.   -|   |       |       |         |     |   |
+ *           bundle doens't match any rule -|   |       |       |         |     |   |
  *                                              |       |       |         |     |   |
  *                     Use Wrapped Key for BCB -|       |       |         |     |   |
+ *                                                      |       |         |     |   |
  *              BSL Role: 00 - source, 01 - verifier,  -|       |         |     |   |
  *                        10 - acceptor, 11: undefined -|       |         |     |   |
+ *                                                              |         |     |   |
  *              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
  *                             10 - drop bundle, 11: undefined -|         |     |   |
+<<<<<<< HEAD
  *                                                    Target Block Type: -|     |   |
+=======
+<<<<<<< HEAD
+ *                                                                        |     |   |
+ *                          Target Block Type: 00 - primary, 01 payload  -|     |   |
+ *                                             10 - bib, 11 - bundle age -|     |   |
+ *                                                                              |   |
+=======
+ *                                                    Target Block Type: -|     |   |
+>>>>>>> main
+>>>>>>> main
  *                                        Policy Location: 0 - CLOUT, 1 - CLIN -|   |
+ *                                                                                  |
  *                                                Sec Block Type: 0 - BIB, 1 - BCB -|
+<<<<<<< HEAD
  *
  *
+<<<<<<< HEAD
+=======
+=======
+ * @endcode
+>>>>>>> main
+>>>>>>> main
  */
 typedef uint32_t bsl_mock_policy_configuration_t;
 
@@ -72,6 +96,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path);
 int mock_bpa_hexchar_to_int(char c);
 
 int mock_bpa_hexstring_to_bytes(const char *hexstr, uint8_t *out, size_t out_size);
+int bsl_mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len);
 
 #ifdef __cplusplus
 } // extern C

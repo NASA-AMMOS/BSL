@@ -58,7 +58,7 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
     BSL_LOG_INFO("ASB  context id: %lu", self->sec_context_id);
     for (size_t index = 0; index < uint64_list_size(self->targets); index++)
     {
-        BSL_LOG_INFO("ASB  target[%lu]: %lu", index, *uint64_list_get(self->targets, index));
+        BSL_LOG_INFO("ASB  target[%lu]: %lu", index, *uint64_list_cget(self->targets, index));
     }
 
     for (size_t index = 0; index < BSLB_SecParamList_size(self->params); index++)
@@ -231,22 +231,19 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
     return (int)things_removed;
 }
 
-int BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t allocated_target)
+ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, UsefulBuf buf)
 {
-    CHK_ARG_NONNULL(allocated_target.ptr);
-    CHK_ARG_EXPR(allocated_target.len > 0);
-
     CHK_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
 
     QCBOREncodeContext encoder;
-    UsefulBuf          allocated_buf = { .ptr = allocated_target.ptr, .len = allocated_target.len };
-    QCBOREncode_Init(&encoder, allocated_buf);
+    QCBOREncode_Init(&encoder, buf);
 
     {
         QCBOREncode_OpenArray(&encoder);
-        for (size_t target_index = 0; target_index < uint64_list_size(self->targets); target_index++)
+        uint64_list_it_t it;
+        for (uint64_list_it(it, self->targets); !uint64_list_end_p(it); uint64_list_next(it))
         {
-            QCBOREncode_AddUInt64(&encoder, *uint64_list_get(self->targets, target_index));
+            QCBOREncode_AddUInt64(&encoder, *uint64_list_cref(it));
         }
         QCBOREncode_CloseArray(&encoder);
     }
@@ -257,7 +254,11 @@ int BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t alloc
 
     {
         // TODO - Maybe this should be generated on-the-fly
-        uint64_t flags = BSLB_SecParamList_size(self->params) > 0 ? true : false;
+        uint64_t flags = 0;
+        if (BSLB_SecParamList_size(self->params) > 0)
+        {
+            flags |= 0x1;
+        }
         QCBOREncode_AddUInt64(&encoder, flags);
     }
 
@@ -265,6 +266,7 @@ int BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t alloc
 
     {
         QCBOREncode_OpenArray(&encoder);
+
         for (size_t param_index = 0; param_index < BSLB_SecParamList_size(self->params); param_index++)
         {
             const BSL_SecParam_t *param = BSLB_SecParamList_cget(self->params, param_index);
@@ -312,14 +314,15 @@ int BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t alloc
         QCBOREncode_CloseArray(&encoder);
     }
 
-    UsefulBufC output_buf;
-    QCBORError qcbor_err = QCBOREncode_Finish(&encoder, &output_buf);
+    size_t     encode_sz;
+    QCBORError qcbor_err = QCBOREncode_FinishGetSize(&encoder, &encode_sz);
+    BSL_LOG_INFO("QCBOR ENCODE SIZE: %zu", encode_sz);
     if (qcbor_err != QCBOR_SUCCESS)
     {
         BSL_LOG_ERR("Encoding ASB into BTSD failed: %s", qcbor_err_to_str(qcbor_err));
         return BSL_ERR_ENCODING;
     }
-    return (int)output_buf.len;
+    return (ssize_t)encode_sz;
 }
 
 int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, BSL_Data_t encoded_cbor)

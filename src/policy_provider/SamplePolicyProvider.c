@@ -142,6 +142,16 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     return (int)BSL_SecurityActionSet_CountErrors(output_action_set);
 }
 
+int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
+                        const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
+{
+    (void)user_data;
+    (void)output_action_set;
+    (void)response_output;
+    (void)bundle;
+    return 0;
+}
+
 void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self)
 {
     BSL_HostEIDPattern_Deinit(&self->dst_eid_pattern);

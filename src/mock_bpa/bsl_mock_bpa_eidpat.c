@@ -28,7 +28,7 @@ int bsl_eidpat_numrange_seg_cmp(const bsl_eidpat_numrange_seg_t *left, const bsl
     if (!left || !right)
     {
         // not valid
-        return 0;
+        return 0; // LCOV_EXCL_LINE
     }
     if (left->last < right->last)
     {
@@ -46,7 +46,7 @@ bool bsl_eidpat_numrange_seg_overlap(const bsl_eidpat_numrange_seg_t *left, cons
     if (!left || !right)
     {
         // not valid
-        return false;
+        return false; // LCOV_EXCL_LINE
     }
 
     uint64_t max_first = (left->first > right->first) ? left->first : right->first;
@@ -162,7 +162,6 @@ int bsl_eidpat_numcomp_from_text(bsl_eidpat_numcomp_t *obj, const char *curs, co
                 else
                 {
                     near_high = bsl_eidpat_numrage_cref(existing);
-                    // FIXME no bsl_eidpat_numrage_prev() function to go backward
                 }
             }
 
@@ -228,7 +227,7 @@ bool bsl_eidpat_numcomp_match(const bsl_eidpat_numcomp_t *obj, uint64_t val)
             return ((val >= found->first) && (val <= found->last));
         }
     }
-    return false;
+    return false; // LCOV_EXCL_LINE
 }
 
 void bsl_eidpat_ipn_ssp_init(bsl_eidpat_ipn_ssp_t *obj)
@@ -354,7 +353,7 @@ bool mock_bpa_eidpat_item_match(const bsl_mock_eidpat_item_t *item, const bsl_mo
 
     if (item->scheme != eid->scheme)
     {
-        // no possibility
+        // no possibility of match
         return false;
     }
 
@@ -376,7 +375,7 @@ int mock_bpa_eidpat_init(BSL_HostEIDPattern_t *pat, void *user_data _U_)
     pat->handle = BSL_MALLOC(sizeof(bsl_mock_eidpat_t));
     if (!(pat->handle))
     {
-        return 2;
+        return 2; // LCOV_EXCL_LINE
     }
     {
         memset(pat->handle, 0, sizeof(bsl_mock_eidpat_t));
@@ -412,38 +411,40 @@ int mock_bpa_eidpat_from_text(BSL_HostEIDPattern_t *pat, const char *text, void 
     CHKERR1(obj);
 
     // clean up if necessary
+    obj->match_all = false;
     bsl_mock_eidpat_item_list_reset(obj->items);
 
     const char *curs = text;
     const char *end  = curs + strlen(text);
     const char *pend;
 
-    bool match_all = false;
-    if (strcmp(curs, "*:**") == 0)
-    {
-        // leave items empty and finish
-        match_all = true;
-        curs += 4;
-    }
-
     while (curs < end)
     {
-        bsl_mock_eidpat_item_t *item = bsl_mock_eidpat_item_list_push_back_new(obj->items);
-        if (mock_bpa_eidpat_item_from_text(item, curs, &pend))
+        if (strncmp(curs, "*:**", 4) == 0)
         {
-            bsl_mock_eidpat_item_list_reset(obj->items);
-            return 3;
+            // leave items empty and finish
+            obj->match_all = true;
+            curs += 4;
         }
-        curs = pend;
+        else
+        {
+            bsl_mock_eidpat_item_t *item = bsl_mock_eidpat_item_list_push_back_new(obj->items);
+            if (mock_bpa_eidpat_item_from_text(item, curs, &pend))
+            {
+                bsl_mock_eidpat_item_list_reset(obj->items);
+                return 3;
+            }
+            curs = pend;
+        }
 
-        // FIXME could make more robust
         if (*curs == '|')
         {
             ++curs;
         }
     }
 
-    if (match_all ^ bsl_mock_eidpat_item_list_empty_p(obj->items))
+    // match-all cannot be combined with others
+    if (obj->match_all && !bsl_mock_eidpat_item_list_empty_p(obj->items))
     {
         return 6;
     }
@@ -461,7 +462,7 @@ bool mock_bpa_eidpat_match(const BSL_HostEIDPattern_t *pat, const BSL_HostEID_t 
     bsl_mock_eid_t    *eidobj = (bsl_mock_eid_t *)eid->handle;
 
     // any-scheme condition
-    if (bsl_mock_eidpat_item_list_empty_p(patobj->items))
+    if (patobj->match_all)
     {
         return true;
     }

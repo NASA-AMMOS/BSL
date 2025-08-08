@@ -21,8 +21,6 @@
  */
 #include <unity.h>
 
-#include <BPSecLib_Private.h>
-
 #include <bsl_mock_bpa.h>
 #include <bsl_mock_bpa_eid.h>
 #include <bsl_mock_bpa_eidpat.h>
@@ -84,31 +82,32 @@ TEST_CASE("ipn:50.10")
 TEST_CASE("ipn:0.0.0")
 TEST_CASE("ipn:1.2.3")
 TEST_CASE("ipn:4294967296.0") // authority present
-void test_BSL_HostEID_DecodeFromText_loopback(const char *text)
+void test_BSL_HostEID_DecodeFromText_valid(const char *text)
 {
     BSL_HostEID_t eid;
     TEST_ASSERT_EQUAL_INT(0, BSL_HostEID_Init(&eid));
 
-    TEST_ASSERT_EQUAL_INT(0, BSL_HostEID_DecodeFromText(&eid, text));
+    int res = BSL_HostEID_DecodeFromText(&eid, text);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "BSL_HostEID_DecodeFromText() failed");
     TEST_ASSERT_NOT_NULL(eid.handle);
 
-    string_t out;
-    string_init(out);
-    // TEST_ASSERT_EQUAL_INT(0, BSL_HostEID_EncodeToText(out, &eid));
-    // TEST_ASSERT_EQUAL_STRING(text, string_get_cstr(out));
-
-    string_clear(out);
     BSL_HostEID_Deinit(&eid);
 }
 
+TEST_CASE("", 0)
 TEST_CASE("*:**", 0)
 TEST_CASE("ipn:**", 1)
 TEST_CASE("ipn:*.*.10", 1)
+TEST_CASE("ipn:*.[1-3,5].10", 1)
+TEST_CASE("ipn:*.[5,1-3].10", 1)
+TEST_CASE("ipn:1.1.1|ipn:2.2.2", 2)
 void test_BSL_HostEIDPattern_DecodeFromText_valid(const char *text, size_t count)
 {
     BSL_HostEIDPattern_t pat;
     BSL_HostEIDPattern_Init(&pat);
-    TEST_ASSERT_EQUAL_INT(0, BSL_HostEIDPattern_DecodeFromText(&pat, text));
+
+    int res = BSL_HostEIDPattern_DecodeFromText(&pat, text);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "BSL_HostEIDPattern_DecodeFromText() failed");
     const bsl_mock_eidpat_t *obj = pat.handle;
     TEST_ASSERT_NOT_NULL(obj);
     TEST_ASSERT_EQUAL_INT(count, bsl_mock_eidpat_item_list_size(obj->items));
@@ -139,16 +138,30 @@ void test_BSL_HostEIDPattern_DecodeFromText_ipn_valid(const char *text, bsl_eidp
     BSL_HostEIDPattern_Deinit(&pat);
 }
 
-TEST_CASE("")
 TEST_CASE("any")
 TEST_CASE("other:hi")
 TEST_CASE("dtn://hi")
+TEST_CASE("*")
+TEST_CASE("**")
+TEST_CASE("*:")
+TEST_CASE("*:*")
 TEST_CASE("ipn:")
 TEST_CASE("ipn:a.b")
-TEST_CASE("ipn:0.0 ")           // space after
-TEST_CASE("ipn:0.0.0 ")         // space after
-TEST_CASE("ipn:0.[1-5,3-7].0 ") // overlapping range
-TEST_CASE("ipn:0.[3-7,1-5].0 ") // overlapping range
+TEST_CASE("ipn:1")
+TEST_CASE("ipn:1.")
+TEST_CASE("ipn:1.a")
+TEST_CASE("ipn:1.1.a")
+TEST_CASE("ipn:1.1.1.")
+TEST_CASE("ipn:1.1.1.a")
+TEST_CASE("ipn:0.0 ")            // space after
+TEST_CASE("ipn:0.0.0 ")          // space after
+TEST_CASE("ipn:0.[a-9].0 ")      // invalid number
+TEST_CASE("ipn:0.[0-b].0 ")      // invalid number
+TEST_CASE("ipn:0.[1-5,3-7].0 ")  // overlapping range
+TEST_CASE("ipn:0.[3-7,1-5].0 ")  // overlapping range
+TEST_CASE("ipn:1.1.1,ipn:2.2.2") // comma instead of pipe
+TEST_CASE("ipn:1.1.1|*:**")      // mix with match-all
+TEST_CASE("*:**|ipn:1.1.1")      // mix with match-all
 void test_BSL_HostEIDPattern_DecodeFromText_invalid(const char *text)
 {
     BSL_HostEIDPattern_t pat;
@@ -157,6 +170,7 @@ void test_BSL_HostEIDPattern_DecodeFromText_invalid(const char *text)
     BSL_HostEIDPattern_Deinit(&pat);
 }
 
+TEST_CASE("*:**", "ipn:0.0.0", true)
 TEST_CASE("ipn:0.0.0", "ipn:0.0.0", true)
 TEST_CASE("ipn:0.0.0", "ipn:0.0.1", false)
 TEST_CASE("ipn:0.0.0", "ipn:0.1.0", false)
