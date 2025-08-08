@@ -30,24 +30,8 @@ import threading
 from typing import List
 import queue
 
-class SearchableHandler(logging.Handler):
-    def __init__(self):
-        super().__init__()
-        self.records = []
-
-    def emit(self, record):
-        msg = self.format(record)
-        self.records.append(msg)
-
-    def search(self, text):
-        return [r for r in self.records if text in r]
-
 # Set up logging
 LOGGER = logging.getLogger(__name__)
-
-search_handler = SearchableHandler()
-search_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-LOGGER.addHandler(search_handler)
 
 
 def compose_args(args: List[str]) -> List[str]:
@@ -142,9 +126,6 @@ class CmdRunner:
         self._writer = None
 
         return ret
-    
-    def _log_contains(self, text):
-        return search_handler.search(text)
 
     def _read_stdout(self, stream):
         LOGGER.debug('Starting stdout thread')
@@ -164,14 +145,29 @@ class CmdRunner:
             stream.flush()
         LOGGER.debug('Stopping stdin thread')
 
-    def wait_for_line(self, timeout=5):
+    def wait_for_line(self, timeout:float=5) -> str:
+        ''' Wait for any received stdout line.
+
+        :param timeout: The total time to wait for this line.
+        :return The matching line.
+        :raise TimeoutError: If the line was not seen in time.
+        '''
         try:
             text = self._stdout_lines.get(timeout=timeout)
         except queue.Empty:
             raise TimeoutError('no lines received before timeout')
         return text
 
-    def wait_for_text(self, pattern, timeout=5):
+    def wait_for_text(self, pattern:str, timeout:float=5) -> str:
+        ''' Iterate through the received stdout lines until a specific
+        full matching line is seen.
+
+        :param pattern: The pattern which must match the full line.
+            Use prefix or suffix ".*" as needed.
+        :param timeout: The total time to wait for this line.
+        :return The matching line.
+        :raise TimeoutError: If the line was not seen in time.
+        '''
         expr = re.compile(pattern)
         LOGGER.debug('Waiting for pattern "%s" ...', pattern)
 
@@ -189,5 +185,10 @@ class CmdRunner:
             if expr.match(text) is not None:
                 return text
 
-    def send_stdin(self, text):
+    def send_stdin(self, text:str):
+        ''' Send an exact line of text to the process stdin.
+
+        :param text: The line to send, which should include a newline
+            at the endd.
+        '''
         self._stdin_lines.put(text)

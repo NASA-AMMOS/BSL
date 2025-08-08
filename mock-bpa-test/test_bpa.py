@@ -178,14 +178,14 @@ class TestAgent(unittest.TestCase):
             LOGGER.warning('Check log output to validate reason for no data!!')
 
             # Currently hard-coded for test case 19 but no other instances of DataFormat.NONE
-            case_19_str = "Delete bundle due to failed security operation"
+            case_19_str = r".*Delete bundle due to failed security operation"
 
             LOGGER.debug("Searching test runner logger for failure string: %s", case_19_str)
-            found = self._agent._log_contains(case_19_str)
+            found = self._agent.wait_for_text(case_19_str)
             for s in found:
                 LOGGER.debug("\nFOUND OCCURENCE: %s\n", s)
             self.assertTrue(len(found) > 0)
-            
+
         elif (testcase.expected_output_format == DataFormat.ERR):
             self._ul_sock.send(tx_data)
             LOGGER.debug('waiting')
@@ -198,10 +198,10 @@ class TestAgent(unittest.TestCase):
             LOGGER.warning('Check log output to validate expected error')
 
             # TBD - this logic is not used yet
-            err_case_str = "tbd"
+            err_case_str = r"tbd"
 
             LOGGER.debug("Searching test runner logger for error string: %s", err_case_str)
-            found = self._agent._log_contains(err_case_str)
+            found = self._agent.wait_for_text(err_case_str)
             for s in found:
                 LOGGER.debug("\nFOUND OCCURENCE: %s\n", s)
             self.assertTrue(len(found) > 0)
