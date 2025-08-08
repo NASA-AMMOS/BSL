@@ -69,7 +69,7 @@ extern "C" {
  *                                                                                  |
  *                                                Sec Block Type: 0 - BIB, 1 - BCB -|
  *
- *
+ * @endcode
  */
 typedef uint32_t bsl_mock_policy_configuration_t;
 
