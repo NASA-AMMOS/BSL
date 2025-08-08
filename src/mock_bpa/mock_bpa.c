@@ -182,7 +182,11 @@ static void sig_stop(int signum _U_)
     BSL_LOG_INFO("signal received %d", signum);
 
     uint8_t buf    = 0;
-    write(tx_notify_w, &buf, sizeof(buf));
+    int     nbytes = write(tx_notify_w, &buf, sizeof(buf));
+    if (nbytes < 0)
+    {
+        BSL_LOG_ERR("Failed to write: %ld", nbytes);
+    }
 }
 
 static void *work_over_rx(void *arg _U_)
