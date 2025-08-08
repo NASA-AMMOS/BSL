@@ -28,12 +28,12 @@ The BSL proper is associated with the @ref frontend and @ref backend_dyn groups.
 
 The unit tests of the BSL use, where necessary, very minimal implementations of a PP to set up preconditons for test cases.
 
-The Mock BPA uses a more featureful PP implementation to meet the needs of the BSL acceptance tests.
+The Mock BPA uses a PP implementation tailored to meet the needs of the BSL acceptance tests.
 This PP uses a set of bit fields within an integer program argument to control policy options; the fields are documented on ::bsl_mock_policy_configuration_t.
 It also allows multiple integer policy values to be configured in a single running Mock BPA.
 This PP is registered and used by the @ref mock-bpa for BSL testing.
 
-@todo A more full-featured example PP maintained as part of the BSL source is based on the JSON-encoded policy structure used in the earlier ION implementation of the Default Security Contexts @cite ion-bpsec-policy. This PP is not fully implemented for BSL v1.0.0 so is not considered part of this release.
+@todo A more full-featured draft PP maintained as part of the BSL source is based on the JSON-encoded policy structure used in the earlier ION implementation of the Default Security Contexts @cite ion-bpsec-policy. This PP is not fully implemented for BSL v1.0.0 so is not considered part of this release.
 
 Sources related to these example PPs are associated with the @ref example_pp group.
 
