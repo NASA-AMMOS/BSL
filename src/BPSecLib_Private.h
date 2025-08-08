@@ -944,7 +944,7 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
  *
  * @param[in] self This ASB.
  * @param[in] buf A buffer with allocated space for the encoded CBOR
- * or the ::SizeCalculateUsefulBuf value to get the real size.
+ * or the @c SizeCalculateUsefulBuf value to get the real size.
  * @return Integer contains number of bytes written to buffer, negative indicates error.
  *
  */
