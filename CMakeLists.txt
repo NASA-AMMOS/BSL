@@ -23,7 +23,7 @@ cmake_minimum_required(VERSION 3.10)
 
 option(BUILD_LIB "Build the library itself" ON)
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
-option(BUILD_DOCS_API "Enable API documentation building" ON)
+option(BUILD_DOCS_API "Enable API documentation building" OFF)
 option(BUILD_DOCS_MAN "Enable manpage building" OFF)
 option(BUILD_TESTING "Enable building unit tests" ON)
 option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
