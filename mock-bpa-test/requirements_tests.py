@@ -541,25 +541,19 @@ class _RequirementsCases(_TestSet):
         # BSL_43
         # Query Existing Block Types
         # The purpose of this test case is to verify that the BSL can use a BPA interface to query what block types exist in a bundle.
-        #
-        # TODO should this be  a unit test?
         self.cases["BSL_43"] = (_TestCase(
             # Create a bundle using the vector in RFC9173 Appendix A1.4.
             # Then the BSL will use the BPA host interface to show that there is a primary, payload, and BIB block present.
             input_data=[
-                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+
             ],
             # Result asserts there are three blocks present, each with the expected type.
             expected_output=[
-                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+               
             ],
             policy_config='0x46',
-            is_implemented=True,
-            is_working=True,
+            is_implemented=False,
+            is_working=False,
             expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
@@ -568,17 +562,22 @@ class _RequirementsCases(_TestSet):
         # BSL_44
         # Query Block Numbers
         # The purpose of this test case is to verify that the BSL can use a BPA interface to query what block numbers are present in a bundle.
-        #
-        # TODO should this be a unit test?
         self.cases["BSL_44"] = (_TestCase(
             # Create a bundle using the vector in RFC9173 Appendix A1.4. Then the BSL will use the BPA host interface to show that there is block 0, 1, and 2 present.
-            input_data=[],
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
             # Test code asserts there are three blocks present, each with the expected id.
-            # TODO ?
-            expected_output=[],
-            policy_config='0x86',
-            is_implemented=False,
-            is_working=False,
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            policy_config='0x46',
+            is_implemented=True,
+            is_working=True,
             expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
