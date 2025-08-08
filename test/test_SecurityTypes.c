@@ -67,7 +67,7 @@ void TestASBEncodeDecodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, uint
     // Confirm that when we encode it, we get the original.
     uint8_t encoded_cbor[asb_cbor_bytelen];
     memset(encoded_cbor, 0, sizeof(encoded_cbor));
-    UsefulBuf encoded_buf = { .len = asb_cbor_bytelen, .ptr = encoded_cbor};
+    UsefulBuf encoded_buf   = { .len = asb_cbor_bytelen, .ptr = encoded_cbor };
     const int encode_result = BSL_AbsSecBlock_EncodeToCBOR(asb, encoded_buf);
     TEST_ASSERT_GREATER_THAN(BSL_SUCCESS, encode_result);
 
