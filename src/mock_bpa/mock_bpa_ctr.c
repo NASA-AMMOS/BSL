@@ -31,6 +31,11 @@ void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr)
     memset(ctr, 0, sizeof(*ctr));
     BSL_Data_Init(&(ctr->encoded));
     ctr->bundle_ref.data = calloc(1, sizeof(MockBPA_Bundle_t));
+    // TODO : Just make a MockBPA_Bundle_Init function.
+    // HostEID_t's are initialized deeper into the decode function.
+
+    MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
+    bundle->retain           = true;
 }
 
 void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src)

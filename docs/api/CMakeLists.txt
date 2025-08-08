@@ -60,7 +60,6 @@ add_custom_target(
     COMMENT "Generating API documentation with Doxygen"
     USES_TERMINAL
 )
-include(GNUInstallDirs)
 install(
     FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/index.html
