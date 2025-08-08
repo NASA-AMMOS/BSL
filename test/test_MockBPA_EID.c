@@ -21,8 +21,6 @@
  */
 #include <unity.h>
 
-#include <BPSecLib_Private.h>
-
 #include <bsl_mock_bpa.h>
 #include <bsl_mock_bpa_eid.h>
 #include <bsl_mock_bpa_eidpat.h>
@@ -100,6 +98,8 @@ TEST_CASE("", 0)
 TEST_CASE("*:**", 0)
 TEST_CASE("ipn:**", 1)
 TEST_CASE("ipn:*.*.10", 1)
+TEST_CASE("ipn:*.[1-3,5].10", 1)
+TEST_CASE("ipn:*.[5,1-3].10", 1)
 TEST_CASE("ipn:1.1.1|ipn:2.2.2", 2)
 void test_BSL_HostEIDPattern_DecodeFromText_valid(const char *text, size_t count)
 {
