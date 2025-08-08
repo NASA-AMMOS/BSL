@@ -176,6 +176,9 @@ typedef struct {
     SecOpListNode *head;
 } SecOpList;
 
-void sec_op_list_insert(SecOpList *list, SecOpListNode *new_node);
+/**
+ * Insert @param new_node into @param list 
+ */
+void bsl_pp_sec_op_list_insert(SecOpList *list, SecOpListNode *new_node);
 
 #endif // BSLP_SAMPLE_POLICY_PROVIDER_H

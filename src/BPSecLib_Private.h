@@ -865,6 +865,18 @@ bool BSL_SecOper_IsRoleAcceptor(const BSL_SecOper_t *self);
  */
 bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self);
 
+/**
+ * Retrieve the conclusion state of a security operation
+ * @param[in] self The security operation
+ * @return the conclusion state
+ */
+BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(BSL_SecOper_t *self);
+
+/**
+ * Set the SecOp's conclusion state
+ * @param[in,out] self secop to change conclusion state of
+ * @param[in] new_conclusion new conclusion to set to
+ */
 void BSL_SecOper_SetConclusion(BSL_SecOper_t *self, BSL_SecOper_ConclusionState_e new_conclusion);
 
 /// Forward declaration of this struct
