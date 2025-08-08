@@ -20,24 +20,8 @@
 ## the prime contract 80NM0018D0004 between the Caltech and NASA under
 ## subcontract 1700763.
 ##
-
-#
-# From a fresh checkout perform pre-build steps on this project.
-#
 set -e
+SELFDIR=$(readlink -f $(dirname "${BASH_SOURCE[0]}"))
 
-if [ -z "$SELFDIR" ]
-then
-  echo "SELFDIR not defined"
-  exit 1
-fi
-
-cd $SELFDIR
-source ${SELFDIR}/setenv.sh
-
-cmake -S . -B ${SELFDIR}/build/default \
-  -DCMAKE_PREFIX_PATH=${DESTDIR}${PREFIX} \
-  -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
-  -DCMAKE_BUILD_TYPE=Debug \
-  -G Ninja \
-  "$@"
+cat ${SELFDIR}/dictionary.txt | sort | uniq >${SELFDIR}/dictionary-sort.txt
+mv ${SELFDIR}/dictionary-sort.txt ${SELFDIR}/dictionary.txt

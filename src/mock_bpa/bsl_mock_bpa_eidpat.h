@@ -80,9 +80,9 @@ typedef struct
     /// The component value interpreted according to #form
     union
     {
-        /// Used for BSL_EIDPAT_NUMCOMP_SINGLE
+        /// Used for ::BSL_EIDPAT_NUMCOMP_SINGLE
         uint64_t as_single;
-        /// Used for BSL_EIDPAT_NUMCOMP_RANGE
+        /// Used for ::BSL_EIDPAT_NUMCOMP_RANGE
         bsl_eidpat_numrage_t as_range;
     } val;
 } bsl_eidpat_numcomp_t;

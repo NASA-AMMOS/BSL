@@ -36,8 +36,10 @@ extern "C" {
 #endif
 
 // NOLINTBEGIN
+/** @struct BSL_SecCtxDict_t
+ * Stable dict of security context descriptors (key: context id | value: descriptor struct)
+ */
 /// @cond Doxygen_Suppress
-/// Stable dict of security context descriptors (key: context id | value: descriptor struct)
 DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
 /// @endcond
 // NOLINTEND

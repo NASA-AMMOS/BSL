@@ -1,4 +1,4 @@
-@page BSL Interface Specification
+@page bsl-sis BSL Interface Specification (SIS)
 <!--
 Copyright (c) 2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
@@ -20,9 +20,9 @@ Institute of Technology, sponsored by the United States Government under
 the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 -->
-This document functions as the AMMOS MiMTAR required interface specificaiton.
+This document functions as the AMMOS MiMTAR required interface specification.
 
-Bundle Protocol Security Library (BPSec Lib) Software Interface Specification
+Bundle Protocol Security Library (BPSec Lib) Software Interface Specification (SIS)
 =============================================================================
 
 ***Prepared By: The Johns Hopkins University Applied Physics Laboratory (JHU/APL)***
@@ -46,7 +46,7 @@ Bundle Protocol Security Library (BPSec Lib) Software Interface Specification
 | Configuration ID (CI)           | 681.2                               |
 | Element                         | Multi-Mission Control System (MMCS) |
 | Program Set                     | Bundle Protocol Security (BPSec)    |
-| Version                         | 0.0                                 |
+| Version                         | 1.0                                 |
 
 ## 1.2: Purpose
 
@@ -114,7 +114,7 @@ The BSL is regression-tested and targeted primarily toward a RHEL-9 platform on 
 
 The BSL defines a software interface written in C to maximize suitability for host applications regardless of their choice of programming language.
 
-The BSL is expected to operate on a host with FIPS 140-mode enabled and SE Linux enforcing. Developers must test in this environment otherwise undefined behaviour may occur.
+The BSL is expected to operate on a host with FIPS 140-mode enabled and SE Linux enforcing. Developers must test in this environment otherwise undefined behavior may occur.
 
 
 ## 2.2: Interface Medium and Characteristics
@@ -180,7 +180,7 @@ An example Policy Provider is included in the repository, as well as an implemen
 Refer to the doxygen-generated documentation in the repository for the relevant BSL initialization functions, that provision the library with the appropriate policy provider and security context.
 
 
-## 3.5:  BSL Bundle Lifecycles and Workflos
+## 3.5:  BSL Bundle Lifecycles and Workflows
 
 At each of the four points of contact between the BPA and BSL, the BPA invokes the BSL, which goes on to query the security policy provider, and returns an ordered list of security operations to be performed on the bundle according to local security policy.
 
@@ -188,7 +188,7 @@ The BPA then iterates through this list calling the relevant BSL functions to pe
 
 ## 3.6: Software Dependencies
 
-The BSL strives to avoid excessive reliance on third-party libraries and a long software supply chain. A few third-party libraries are required, however, to: provide dynamic data structures for this C codebase; provide a unit-test driver; provide a codec for CBOR-encoded Bundle blocks; and provide implementations of cryptographic algorithms. At the time of the Critical Design Review, these third-party open-source libraries respectively are MLib, Unity, QCBOR, and OpenSSL. 
+The BSL strives to avoid excessive reliance on third-party libraries and a long software supply chain. A few third-party libraries are required, however, to: provide dynamic data structures for this C codebase; provide a unit-test driver; provide a CODEC for CBOR-encoded Bundle blocks; and provide implementations of cryptographic algorithms. At the time of the Critical Design Review, these third-party open-source libraries respectively are MLib, Unity, QCBOR, and OpenSSL. 
 
 Note that specific library versions are detailed in Release Description Documents (RDD), which is produced with each release of BSL.
 

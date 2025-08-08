@@ -50,7 +50,7 @@ typedef struct
     uint64_t svc_num;
 } bsl_eid_ipn_ssp_t;
 
-/// Decodable schemes
+/// Decodeable schemes
 enum bsl_mock_eid_scheme_e
 {
     /// The "ipn" scheme
@@ -84,9 +84,6 @@ int MockBPA_EID_Init(void *user_data, BSL_HostEID_t *eid);
 
 /// Interface for BSL_HostDescriptors_t::eid_deinit
 void MockBPA_EID_Deinit(void *user_data, BSL_HostEID_t *eid);
-
-/// Interface for BSL_HostDescriptors_t::get_secsrc
-int mock_bpa_get_secsrc(BSL_HostEID_t *eid, void *user_data);
 
 /// Interface for BSL_HostDescriptors_t::eid_from_text
 int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data);

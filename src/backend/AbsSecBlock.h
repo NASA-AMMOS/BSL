@@ -64,7 +64,7 @@ struct BSL_AbsSecBlock_s
     /// @brief Source EID native representation, BSL host must take care of encoding/decoding.
     BSL_HostEID_t source_eid;
 
-    /// @brief List of pointers to security paramters
+    /// @brief List of pointers to security parameters
     BSLB_SecParamList_t params;
 
     /// @brief List of pointers to security results.

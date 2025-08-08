@@ -304,7 +304,7 @@ int BSL_TestUtils_EncodeBase16(string_t out, const BSL_Data_t *in, bool uppercas
     return 0;
 }
 
-/// Size of the BSL_TestUtils_DecodeBase16_table
+/// Size of the @c BSL_TestUtils_DecodeBase16_table
 static const size_t BSL_TestUtils_DecodeBase16_lim = 0x80;
 // clang-format off
 /// Decode table for base16

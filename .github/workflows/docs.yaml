@@ -42,17 +42,24 @@ jobs:
           submodules: recursive
       - name: Set up OS
         run: |
-          sudo apt-get update && sudo apt-get install -y \
-            cmake ninja-build ruby build-essential \
-            libssl-dev libjansson-dev \
-            doxygen graphviz plantuml texlive texlive-latex-extra dblatex
+          sudo rm /var/lib/man-db/auto-update
+          sudo apt-get update
+          sudo apt-get install -y \
+              cmake ninja-build ruby build-essential \
+              libssl-dev libjansson-dev \
+              doxygen graphviz plantuml \
+              dblatex texlive texlive-latex-extra texlive-font-utils \
+              xmlstarlet aspell
       - name: Dependency build
         run: ./build.sh deps
       - name: Prep
-        run: ./build.sh prep -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF -DBUILD_DOCS_API=ON
+        run: >
+          ./build.sh prep
+          -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF
+          -DBUILD_DOCS_API=ON
       - name: Build
         run: |
-          ./build.sh --target docs-api-html docs-api-pdf
+          ./build.sh --target docs-api-html docs-api-pdf docs-api-misspelling
           ./build.sh install --component docs-api
       - name: Compress
         working-directory: testroot/usr/share/doc/bsl

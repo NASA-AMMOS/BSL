@@ -45,14 +45,14 @@
 /// Forward declaration for BSL library context.
 typedef struct BSL_LibCtx_s BSL_LibCtx_t;
 
-/// @brief Forward declaration of SecurityResponseSet, which contains information for BSL and the host BPA to process
-/// the Bundle.
+/// @brief Forward declaration of ::BSL_SecurityResponseSet_s, which contains information for BSL and the host BPA to
+/// process the Bundle.
 typedef struct BSL_SecurityResponseSet_s BSL_SecurityResponseSet_t;
 
-/// @brief Forward declaration of PolicyActionSet, which contains information for BSL to process the Bundle.
+/// @brief Forward declaration of ::BSL_SecurityActionSet_s, which contains information for BSL to process the Bundle.
 typedef struct BSL_SecurityActionSet_s BSL_SecurityActionSet_t;
 
-/// @brief Forward-declaration for structure containing callbscks to a security context.
+/// @brief Forward-declaration for structure containing callbacks to a security context.
 typedef struct BSL_SecCtxDesc_s BSL_SecCtxDesc_t;
 
 /// @brief Forward-declaration for structure containing callbacks to  provider.
@@ -212,19 +212,24 @@ typedef struct
 
 /** Set the BPA descriptor (callbacks) for this process.
  *
+ * @warning This function is not thread safe and should be set before any
+ * ::BSL_LibCtx_t is initialized or other BSL interfaces used.
+ *
  * @param desc The descriptor to use for future BPA functions.
  * @return Zero if successful, negative on error.
  */
 int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc);
 
 /** Copy the BPA descriptor for this process.
+ * @note This function is not thread safe.
+ *
  * @param[out] desc The descriptor to copy into.
  */
 void BSL_HostDescriptors_Get(BSL_HostDescriptors_t *desc);
 
 /** @brief Initialize the BPSecLib (BSL) library context.
  *
- * @note This only needs to be done once per lifetime of the BPA
+ * @note This only needs to be done once per lifetime of the BSL.
  *
  * @param[in,out] bsl Pointer to allocated space for the library context.
  * @returns 0 on success, negative on error.
@@ -233,7 +238,7 @@ BSL_REQUIRE_CHECK
 int BSL_API_InitLib(BSL_LibCtx_t *bsl);
 
 /** @brief Deinitialize and release any resources held by the BSL.
- * @note This only needs to be run once per lifetime of the BPA.
+ * @note This only needs to be run once per lifetime of the BSL.
  *
  * @param[in,out] bsl Pointer to library context
  * @returns 0 on success, negative on error.
@@ -260,7 +265,7 @@ int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_
 BSL_REQUIRE_CHECK
 int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, BSL_PolicyDesc_t desc);
 
-/** @brief Query BSL to populate a `BSL_SecurityActionSet_t` containg security processing instructions.
+/** @brief Query BSL to populate a `BSL_SecurityActionSet_t` containing security processing instructions.
  *
  * @details
  * This executes a chain of events in the BSL. First by querying the policy provider, then checking with the security

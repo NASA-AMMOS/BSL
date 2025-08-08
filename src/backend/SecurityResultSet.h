@@ -20,7 +20,7 @@
  * subcontract 1700763.
  */
 /** @file
- * @brief SecurityResultSet implementation for result after application of security operations.
+ * @brief Security Result Set implementation for result after application of security operations.
  * @ingroup backend_dyn
  */
 #ifndef BSLB_SECURITYRESULTSET_H_
@@ -35,7 +35,7 @@
 /// @note This struct is still in-concept
 struct BSL_SecurityResponseSet_s
 {
-    /// @brief This maps to the sec_operations in BSL_SecurityActionSet,
+    /// @brief This maps to the BSL_SecurityActionSet_s::sec_operations,
     ///        and contains the result code of that security operation.
     int                results[BSL_SECURITYRESPONSESET_ARRAYLEN];
     char               err_msg[BSL_SECURITYRESPONSESET_STRLEN];

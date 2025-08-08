@@ -12,4 +12,4 @@ RUN --mount=type=cache,target=/var/cache/yum dnf install -y \
 
 RUN mkdir -p /usr/local/src/bsl
 WORKDIR /usr/local/src/bsl
-CMD ["./build.sh", "rpm-build"]
+CMD ["sh", "-c", "./build.sh rpm-prep && ./build.sh rpm-build && ./build.sh rpm-check"]

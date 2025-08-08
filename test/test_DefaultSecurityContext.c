@@ -27,7 +27,7 @@
  *  - These tests use constructs defined in the BSL to exercise the Default Security Context
  *  - It uses test inputs and vectors from RFC9173 Appendix A.
  *  - It does NOT use any of the "Plumbing" inside the BSL.
- *  - It only directly calls the interfaces exposed by the Default Securit Context.
+ *  - It only directly calls the interfaces exposed by the Default Security Context.
  *  - BCB internally is functionally complete, however it needs better integration with BPA to overwrite BTSD.
  *
  * @ingroup unit-tests
