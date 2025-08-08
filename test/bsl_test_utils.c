@@ -262,7 +262,7 @@ int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cb
     MockBPA_Bundle_t *bundle = test_ctx->mock_bpa_ctr.bundle_ref.data;
     assert(bundle != NULL);
 
-    int decode_status = mock_bpa_decode(&(test_ctx->mock_bpa_ctr), &(test_ctx->bsl));
+    int decode_status = mock_bpa_decode(&(test_ctx->mock_bpa_ctr));
     assert(bundle->primary_block.version == 7);
     assert(bundle->primary_block.timestamp.seq_num > 0);
     assert(bundle->primary_block.lifetime > 0);

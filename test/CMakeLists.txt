@@ -56,6 +56,9 @@ set(LIB_ORDERED bsl_front bsl_dynamic bsl_mock_bpa bsl_test_utils)
 # add_unity_test(SOURCE test_MockBPA_Codecs.c)
 # target_link_libraries(test_MockBPA_Codecs PUBLIC ${LIB_ORDERED})
 
+# add_unity_test(SOURCE test_mock_bpa_ctr.c)
+# target_link_libraries(test_mock_bpa_ctr PUBLIC ${LIB_ORDERED})
+
 # add_unity_test(SOURCE test_CryptoInterface.c)
 # target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
 

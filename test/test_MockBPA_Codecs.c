@@ -55,7 +55,7 @@ static void printencoded(const uint8_t *pEncoded, size_t nLen)
 void suiteSetUp(void)
 {
     BSL_openlog();
-    assert(0 == bsl_mock_bpa_init());
+    TEST_ASSERT_EQUAL_INT(0, bsl_mock_bpa_init());
 }
 
 int suiteTearDown(int failures)
@@ -383,12 +383,15 @@ void test_bsl_loopback_eid(const char *hexdata)
 TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850a182d000043010203ff")
 void test_bsl_loopback_bundle(const char *hexdata)
 {
-    string_t in_text;
-    string_init_set_str(in_text, hexdata);
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
+    {
+        string_t in_text;
+        string_init_set_str(in_text, hexdata);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
+                                      "BSL_TestUtils_DecodeBase16() failed");
+        string_clear(in_text);
+    }
 
     MockBPA_Bundle_t bundle = { 0 };
     {
@@ -417,8 +420,8 @@ void test_bsl_loopback_bundle(const char *hexdata)
     }
 
     TEST_ASSERT_EQUAL_MEMORY(in_data.ptr, out_data.ptr, in_data.len);
+
     MockBPA_Bundle_Deinit(&bundle);
     BSL_Data_Deinit(&out_data);
     BSL_Data_Deinit(&in_data);
-    string_clear(in_text);
 }

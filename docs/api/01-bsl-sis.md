@@ -1,4 +1,4 @@
-@page BSL Interface Specification
+@page bsl-sis BSL Interface Specification (SIS)
 <!--
 Copyright (c) 2025 The Johns Hopkins University Applied Physics
 Laboratory LLC.
@@ -22,7 +22,7 @@ subcontract 1700763.
 -->
 This document functions as the AMMOS MiMTAR required interface specification.
 
-Bundle Protocol Security Library (BPSec Lib) Software Interface Specification
+Bundle Protocol Security Library (BPSec Lib) Software Interface Specification (SIS)
 =============================================================================
 
 ***Prepared By: The Johns Hopkins University Applied Physics Laboratory (JHU/APL)***
@@ -46,7 +46,7 @@ Bundle Protocol Security Library (BPSec Lib) Software Interface Specification
 | Configuration ID (CI)           | 681.2                               |
 | Element                         | Multi-Mission Control System (MMCS) |
 | Program Set                     | Bundle Protocol Security (BPSec)    |
-| Version                         | 0.0                                 |
+| Version                         | 1.0                                 |
 
 ## 1.2: Purpose
 

@@ -164,44 +164,35 @@ class _RequirementsCases(_TestSet):
         #       3. Identical output with log showing verification
         #       4. Remove BIB
         #
-        # Bundle Primary EIDs:
-        #           src     dest
-        #       1.  [5.1,   6.1]
-        #       2.  [2.1,   5.1]
-        #       3.  [3.1,   5.1]
-        #       4.  [4.1,   5.1]
-        #
-        # Can use ONE policy config and "filters"
-        # (e.g. source role, BIB policyrule filter should be role src for src_eid=2.1, role ver for 3.1, etc.)
         self.cases["BSL_14a"] = (_TestCase(
             input_data=[
-                [7, 0, 0, [2, [6, 1]], [2, [5, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             #
             expected_output=[
-                [7, 0, 0, [2, [6, 1]], [2, [5, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             #
-            policy_config='0x82',
+            policy_config='0x280',
             is_implemented=True,
-            is_working=False,
+            is_working=True,
             expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
         self.cases["BSL_14b"] = (_TestCase(
             input_data=[
-                [7, 0, 0, [2, [5, 1]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             #
             expected_output=[
-                [7, 0, 0, [2, [5, 1]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
                 [11, 3, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
@@ -217,19 +208,19 @@ class _RequirementsCases(_TestSet):
         # 14c) need logs to show verification
         self.cases["BSL_14c"] = (_TestCase(
             input_data=[
-                [7, 0, 0, [2, [5, 1]], [2, [3, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             #
             expected_output=[
-                [7, 0, 0, [2, [5, 1]], [2, [3, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             #
             # policy_config = BIB_VERIFIER,
-            policy_config='0x42',
+            policy_config='0x62',
             is_implemented=True,
             is_working=True,
             expect_success=True,
@@ -238,17 +229,17 @@ class _RequirementsCases(_TestSet):
         ))
         self.cases["BSL_14d"] = (_TestCase(
             input_data=[
-                [7, 0, 0, [2, [5, 1]], [2, [4, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             #
             expected_output=[
-                [7, 0, 0, [2, [5, 1]], [2, [4, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             #
-            policy_config='0x82',
+            policy_config='0xA2',
             is_implemented=True,
             is_working=True,
             expect_success=True,
@@ -280,7 +271,7 @@ class _RequirementsCases(_TestSet):
             ],
             policy_config='0x5E',
             is_implemented=True,
-            is_working=False,
+            is_working=True,
             expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
@@ -420,12 +411,12 @@ class _RequirementsCases(_TestSet):
             ],
             expected_output=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [12, 2, 1, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
                 [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
-            policy_config='0x05',
+            policy_config='0x105',
             is_implemented=True,
-            is_working=False,
+            is_working=True,
             expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
@@ -444,12 +435,12 @@ class _RequirementsCases(_TestSet):
             ],
             expected_output=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [12, 2, 1, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
                 [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
-            policy_config='0x05',
+            policy_config='0x105',
             is_implemented=True,
-            is_working=False,
+            is_working=True,
             expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
@@ -684,7 +675,7 @@ class _RequirementsCases(_TestSet):
             #
             policy_config='0x105',
             is_implemented=True,
-            is_working=False,
+            is_working=True,
             expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY

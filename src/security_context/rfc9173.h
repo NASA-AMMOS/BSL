@@ -98,6 +98,7 @@ enum rfc9173_bcb_result_ids_e
 /// @brief https://www.rfc-editor.org/rfc/rfc9173.html#name-bpsec-bcb-aes-gcm-aad-scope
 enum rfc9173_bcb_aad_scope_flag_ids_e
 {
+    RFC9173_BCB_AADSCOPEFLAGID_INC_NONE            = 0,
     RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK      = 1,
     RFC9173_BCB_AADSCOPEFLAGID_INC_TARGET_HEADER   = 2,
     RFC9173_BCB_AADSCOPEFLAGID_INC_SECURITY_HEADER = 4,

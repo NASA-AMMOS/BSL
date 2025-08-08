@@ -44,8 +44,10 @@ function usage {
     echo "  install        - Install"
     echo "  lint           - Run clang-tidy code linter"
     echo "  prep [args...] - Generate makefiles with config options"
-    echo "  rpm-build      - Build RPM package"
-    echo "  rpm-container  - Build as RPM package inside container"
+    echo "  rpm-prep       - Prepare for RPM package building"
+    echo "  rpm-build      - Build RPM package after rpm-prep"
+    echo "  rpm-check      - Check RPM packages after rpm-build"
+    echo "  rpm-container  - Build and check RPM packages inside container"
     echo "  run [args...]  - Run a command with the environment vars"
 }
 
@@ -96,12 +98,20 @@ function cmd_prep {
     ./resources/prep.sh "$@"
 }
 
+function cmd_rpm_prep {
+    if ! git describe 2>/dev/null >/dev/null
+    then
+        git config --global --add safe.directory ${PWD}
+    fi
+    ./resources/prep.sh -DBUILD_LIB=OFF -DBUILD_TESTING=OFF -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_PACKAGE=ON
+}
+
 function cmd_rpm_build {
-    git config --global --add safe.directory ${PWD}
-    ./resources/prep.sh -DBUILD_LIB=NO -DBUILD_TESTING=NO -DBUILD_PACKAGE=YES
     cmake --build build/default --target package_srpm
     cmake --build build/default --target package_rpm
+}
 
+function cmd_rpm_check {
     # Package scanning
     cd build/default/pkg/rpmbuild
     for PKG in RPMS/x86_64/*.rpm
@@ -202,8 +212,14 @@ case "$1" in
     prep)
         cmd_prep "$@"
         ;;
+    rpm-prep)
+        cmd_rpm_prep
+        ;;
     rpm-build)
         cmd_rpm_build
+        ;;
+    rpm-check)
+        cmd_rpm_check
         ;;
     rpm-container)
         cmd_rpm_container
