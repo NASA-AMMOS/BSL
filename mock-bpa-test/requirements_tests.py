@@ -46,10 +46,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x1A6,0x1A7',
-            is_implemented=True,
-            is_working=False,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=False,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -69,10 +67,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x04',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -92,10 +88,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x86',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -115,10 +109,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x04',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -140,10 +132,8 @@ class _RequirementsCases(_TestSet):
             ],
             # policy_config = BIB_VERIFIER,
             policy_config='0x46',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -178,10 +168,8 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0x280',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
         self.cases["BSL_14b"] = (_TestCase(
@@ -199,10 +187,8 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0x04',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
         # 14c) need logs to show verification
@@ -221,10 +207,8 @@ class _RequirementsCases(_TestSet):
             #
             # policy_config = BIB_VERIFIER,
             policy_config='0x62',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
         self.cases["BSL_14d"] = (_TestCase(
@@ -240,10 +224,8 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0xA2',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -270,10 +252,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x5E',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -292,10 +272,8 @@ class _RequirementsCases(_TestSet):
             # No output because it was deleted, logs to indicate deletion.
             expected_output=r".*Delete bundle due to failed security operation",
             policy_config='0x62',
-            is_implemented=True,
-            is_working=True,
-            expect_success=False,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.NONE
         ))
 
@@ -321,10 +299,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x1A6,0x1A7',
-            is_implemented=False,
             is_working=False,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -346,10 +322,8 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0x04',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -370,10 +344,8 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0x04',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -397,10 +369,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             policy_config='0x04',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
         self.cases["BSL_27b"] = (_TestCase(
@@ -414,10 +384,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             policy_config='0x105',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -438,10 +406,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             policy_config='0x105',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -462,10 +428,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             policy_config='0x04',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -483,10 +447,8 @@ class _RequirementsCases(_TestSet):
             expected_output=r".*failed to decode bundle",
             # Execute as a BIB acceptor.
             policy_config='0x86',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.HEX,
+                        is_working=True,
+                        input_data_format=DataFormat.HEX,
             expected_output_format=DataFormat.ERR
         ))
 
@@ -505,10 +467,8 @@ class _RequirementsCases(_TestSet):
             # Ensure that the host interface returns an error code (since the block does not exist). Confirm that a log indicating this error is created.
             expected_output=r".*Deleting bundle due to block target num 99 security failure",
             policy_config='0x66',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.ERR
         ))
 
@@ -530,10 +490,8 @@ class _RequirementsCases(_TestSet):
             # confirm that no further security operation processing was taken (specifically, no BIB operations should be seen).
             expected_output=r".*Returning failure from BCB decrypt",
             policy_config='0x1A6,0x1A7',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.ERR
         ))
 
@@ -553,10 +511,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x0A',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
         self.cases["BSL_43b"] = (_TestCase(
@@ -573,10 +529,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x0A',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -598,10 +552,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             policy_config='0x46',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -625,10 +577,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x46',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -648,10 +598,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x04',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -672,10 +620,8 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0x96',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
@@ -697,9 +643,7 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0x105',
-            is_implemented=True,
-            is_working=True,
-            expect_success=True,
-            input_data_format=DataFormat.BUNDLEARRAY,
+                        is_working=True,
+                        input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))

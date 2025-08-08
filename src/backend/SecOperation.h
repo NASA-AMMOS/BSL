@@ -35,6 +35,14 @@
 
 #include "SecParam.h"
 
+typedef enum
+{
+    BSL_SECOP_CONCLUSION_PENDING = 1, 
+    BSL_SECOP_CONCLUSION_SUCCESS, 
+    BSL_SECOP_CONCLUSION_INVALID, 
+    BSL_SECOP_CONCLUSION_FAILURE
+} BSL_SecOper_ConclusionState_e;
+
 struct BSL_SecOper_s
 {
     /// @brief Security context ID
@@ -48,6 +56,8 @@ struct BSL_SecOper_s
 
     /// @brief Code for handing what to do to the block or bundle if security processing fails.
     BSL_PolicyAction_e failure_code;
+
+    BSL_SecOper_ConclusionState_e conclusion;
 
     /// @brief Private enumeration indicating the role (e.g., acceptor vs verifier)
     BSL_SecRole_e       _role;

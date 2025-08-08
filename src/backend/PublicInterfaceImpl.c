@@ -243,10 +243,10 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
             }
         }
 
-        if (must_drop)
-        {
+        // if (must_drop)
+        // {
             break;
-        }
+        // }
     }
 
     if (must_drop)
@@ -257,5 +257,5 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     }
 
     // TODO CHK_POSTCONDITION
-    return (must_drop) ? BSL_ERR_SECURITY_OPERATION_FAILED : BSL_SUCCESS;
+    return BSL_SUCCESS;
 }
