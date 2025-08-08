@@ -52,11 +52,12 @@ jobs:
           fetch-depth: 0
           submodules: recursive
       - name: Prep
-        run: ./build.sh prep -DBUILD_LIB=OFF -DBUILD_TESTING=OFF -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_PACKAGE=ON
+        run: ./build.sh rpm-prep
       - name: Build
-        run: |
-          ./build.sh rpm-build
-      - name: rpmlint Results
+        run: ./build.sh rpm-build
+      - name: Check
+        run: ./build.sh rpm-check
+      - name: Summarize Results
         if: always()
         run: |
           echo "## rpmlint results:" >> $GITHUB_STEP_SUMMARY

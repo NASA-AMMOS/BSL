@@ -212,19 +212,24 @@ typedef struct
 
 /** Set the BPA descriptor (callbacks) for this process.
  *
+ * @warning This function is not thread safe and should be set before any
+ * ::BSL_LibCtx_t is initialized or other BSL interfaces used.
+ *
  * @param desc The descriptor to use for future BPA functions.
  * @return Zero if successful, negative on error.
  */
 int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc);
 
 /** Copy the BPA descriptor for this process.
+ * @note This function is not thread safe.
+ *
  * @param[out] desc The descriptor to copy into.
  */
 void BSL_HostDescriptors_Get(BSL_HostDescriptors_t *desc);
 
 /** @brief Initialize the BPSecLib (BSL) library context.
  *
- * @note This only needs to be done once per lifetime of the BPA
+ * @note This only needs to be done once per lifetime of the BSL.
  *
  * @param[in,out] bsl Pointer to allocated space for the library context.
  * @returns 0 on success, negative on error.
@@ -233,7 +238,7 @@ BSL_REQUIRE_CHECK
 int BSL_API_InitLib(BSL_LibCtx_t *bsl);
 
 /** @brief Deinitialize and release any resources held by the BSL.
- * @note This only needs to be run once per lifetime of the BPA.
+ * @note This only needs to be run once per lifetime of the BSL.
  *
  * @param[in,out] bsl Pointer to library context
  * @returns 0 on success, negative on error.
