@@ -182,9 +182,8 @@ class TestAgent(unittest.TestCase):
 
             LOGGER.debug("Searching test runner logger for failure string: %s", case_19_str)
             found = self._agent.wait_for_text(case_19_str)
-            for s in found:
-                LOGGER.debug("\nFOUND OCCURENCE: %s\n", s)
-            self.assertTrue(len(found) > 0)
+            LOGGER.debug("\nFOUND OCCURENCE: %s", found)
+            self.assertTrue(found != "")
 
         elif (testcase.expected_output_format == DataFormat.ERR):
             self._ul_sock.send(tx_data)
@@ -202,9 +201,8 @@ class TestAgent(unittest.TestCase):
 
             LOGGER.debug("Searching test runner logger for error string: %s", err_case_str)
             found = self._agent.wait_for_text(err_case_str)
-            for s in found:
-                LOGGER.debug("\nFOUND OCCURENCE: %s\n", s)
-            self.assertTrue(len(found) > 0)
+            LOGGER.debug("\nFOUND OCCURENCE: %s", found)
+            self.assertTrue(found != "")
 
 
 # Below utilizes setattr to add methods to a child class of the TestAgent, which will in-turn give us unit tests
