@@ -316,13 +316,13 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, UsefulBuf bu
 
     size_t     encode_sz;
     QCBORError qcbor_err = QCBOREncode_FinishGetSize(&encoder, &encode_sz);
-    BSL_LOG_INFO("QCBOR ENCODE SIZE: %lu", encode_sz);
-    if (qcbor_err != QCBOR_ERR_BUFFER_TOO_SMALL && qcbor_err != QCBOR_SUCCESS) // FIXME
+    BSL_LOG_INFO("QCBOR ENCODE SIZE: %zu", encode_sz);
+    if (qcbor_err != QCBOR_SUCCESS)
     {
         BSL_LOG_ERR("Encoding ASB into BTSD failed: %s", qcbor_err_to_str(qcbor_err));
         return BSL_ERR_ENCODING;
     }
-    return (int)encode_sz;
+    return (ssize_t)encode_sz;
 }
 
 int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, BSL_Data_t encoded_cbor)
