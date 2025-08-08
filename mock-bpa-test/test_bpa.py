@@ -88,13 +88,14 @@ class TestAgent(unittest.TestCase):
         self._agent = CmdRunner(args, stderr=subprocess.STDOUT)
 
         # Bind underlayer messaging
-        self._ul_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._ul_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._ul_sock.bind(('localhost', 14556))
         self._ul_sock.connect(('localhost', 4556))
 
         # Bind overlayer messaging
-        self._ol_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._ol_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._ol_sock.bind(('localhost', 34556))
+        self._ol_sock.connect(('localhost', 24556))
 
     def tearDown(self):
 
@@ -107,11 +108,6 @@ class TestAgent(unittest.TestCase):
         if self._agent:
             # Exit cleanly if not already gone
             ret = self._agent.stop()
-
-            # TODO: fix this issue with runner not joining back
-            if (ret == -9):
-                ret = 0
-                LOGGER.warning('Runner proc unable to join cleanly - faking ret val for now')
 
             self.assertEqual(0, ret)
             self._agent = None
@@ -231,6 +227,6 @@ class TestMockBPA(TestAgent):
 
     def test_start_stop_p00(self):
         self._start()
-
+        time.sleep(0.5)
         self.assertEqual(0, self._agent.stop())
         self._agent = None
