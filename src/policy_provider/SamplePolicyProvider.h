@@ -163,4 +163,8 @@ void BSLP_Deinit(void *user_data);
 
 int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,
                      BSL_PolicyLocation_e location);
+
+int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
+                        const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
+
 #endif // BSLP_SAMPLE_POLICY_PROVIDER_H

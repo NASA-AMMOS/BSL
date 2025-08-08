@@ -25,16 +25,12 @@
 #include "bsl_mock_bpa_decode.h"
 #include "bsl_mock_bpa_encode.h"
 
-static const size_t SMALLBUF_SIZE = 1024;
-
 void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr)
 {
     CHKVOID(ctr);
     memset(ctr, 0, sizeof(*ctr));
     BSL_Data_Init(&(ctr->encoded));
     ctr->bundle_ref.data = calloc(1, sizeof(MockBPA_Bundle_t));
-    // TODO : Just make a MockBPA_Bundle_Init function.
-    // HostEID_t's are initialized deeper into the decode function.
 }
 
 void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src)
@@ -54,13 +50,12 @@ void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr)
     if (ctr->bundle_ref.data)
     {
         MockBPA_Bundle_Deinit(ctr->bundle_ref.data);
-        free(ctr->bundle_ref.data);
+        BSL_FREE(ctr->bundle_ref.data);
     }
 }
 
-int mock_bpa_decode(mock_bpa_ctr_t *ctr, BSL_LibCtx_t *bsl)
+int mock_bpa_decode(mock_bpa_ctr_t *ctr)
 {
-    (void)bsl;
     CHKERR1(ctr);
     MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
 
@@ -68,7 +63,7 @@ int mock_bpa_decode(mock_bpa_ctr_t *ctr, BSL_LibCtx_t *bsl)
     {
         for (size_t i = 0; i < bundle->block_count; i++)
         {
-            free(bundle->blocks[i].btsd);
+            BSL_FREE(bundle->blocks[i].btsd);
         }
     }
 
@@ -94,42 +89,32 @@ int mock_bpa_encode(mock_bpa_ctr_t *ctr)
 
     QCBOREncodeContext encoder;
 
-    // assume some small size and expand if necessary
-    uint8_t smallbuf[SMALLBUF_SIZE];
-    QCBOREncode_Init(&encoder, (UsefulBuf) { smallbuf, sizeof(smallbuf) });
+    // first round of encoding is to get the full size
+    QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
     if (bsl_mock_encode_bundle(&encoder, bundle))
     {
         return 2;
     }
-    size_t needlen;
-    if (QCBOR_SUCCESS != QCBOREncode_FinishGetSize(&encoder, &needlen))
+    size_t     need;
+    QCBORError res = QCBOREncode_FinishGetSize(&encoder, &need);
+    if (res != QCBOR_SUCCESS)
     {
         return 3;
     }
+    BSL_LOG_DEBUG("Encoder needs %zd bytes", need);
 
-    if (needlen < SMALLBUF_SIZE)
+    if (BSL_Data_Resize(&(ctr->encoded), need))
     {
-        if (BSL_Data_CopyFrom(&(ctr->encoded), needlen, smallbuf))
-        {
-            return 4;
-        }
+        return 4;
     }
-    else
+    QCBOREncode_Init(&encoder, (UsefulBuf) { ctr->encoded.ptr, ctr->encoded.len });
+    if (bsl_mock_encode_bundle(&encoder, bundle))
     {
-        if (BSL_Data_Resize(&(ctr->encoded), needlen))
-        {
-            return 4;
-        }
-        QCBOREncode_Init(&encoder, (UsefulBuf) { ctr->encoded.ptr, ctr->encoded.len });
-        if (bsl_mock_encode_bundle(&encoder, bundle))
-        {
-            return 2;
-        }
-        UsefulBufC final;
-        if (QCBOR_SUCCESS != QCBOREncode_Finish(&encoder, &final))
-        {
-            return 3;
-        }
+        return 2;
+    }
+    if (QCBOR_SUCCESS != QCBOREncode_FinishGetSize(&encoder, &need))
+    {
+        return 3;
     }
 
     BSL_LOG_INFO("Encoded bundle");

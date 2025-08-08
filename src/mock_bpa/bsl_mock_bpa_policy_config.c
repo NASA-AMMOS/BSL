@@ -392,6 +392,22 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     json_decref(root);
 }
 
+int bsl_mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len)
+{
+    if (len == 12) // IV
+    {
+        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+        memcpy(buf, iv, 12);
+    }
+    else // A3 KEY
+    {
+        uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
+                                    0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
+        memcpy(buf, rfc9173A3_key, len);
+    }
+    return 1;
+}
+
 static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t policy_bits, BSLP_PolicyProvider_t *policy,
                                      mock_bpa_policy_params_t *params)
 {
@@ -404,19 +420,15 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     uint32_t policy_action_type = (policy_bits >> 4) & 0x03;
     uint32_t sec_role           = (policy_bits >> 6) & 0x03;
     uint32_t use_wrapped_key    = (policy_bits >> 8) & 0x01;
-
-    BSL_LOG_INFO("Using wrapped key? %d", use_wrapped_key);
+    uint32_t policy_ignore      = (policy_bits >> 9) & 0x01;
 
     uint64_t sec_context;
-    uint8_t  iv_buf[12] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
 
     // Init params for BCB if equal to 1, otherwise BIB
     if (sec_block_type == 1)
     {
         BSL_SecParam_InitInt64(params->param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE,
-                               RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK);
-        BSL_Data_t iv = { .owned = 0, .ptr = iv_buf, .len = 12 };
-        BSL_SecParam_InitBytestr(params->param_init_vector, RFC9173_BCB_SECPARAM_IV, iv);
+                               RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
         BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
                                RFC9173_BCB_AES_VARIANT_A128GCM);
         if (use_wrapped_key)
@@ -528,11 +540,22 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
             break;
     }
 
+    BSL_HostEIDPattern_t eid_src_pat;
+    if (policy_ignore)
+    {
+        BSL_LOG_INFO("Creating src eid pattern to match none - bundle should be ignored!");
+        eid_src_pat = mock_bpa_util_get_eid_pattern_from_text("");
+    }
+    else
+    {
+        eid_src_pat = mock_bpa_util_get_eid_pattern_from_text("*:**");
+    }
+
     // Create a rule to verify security block at APP/CLA Ingress
     char policybits_str[100];
     sprintf(policybits_str, "Policy: %x", policy_bits);
     BSLP_PolicyPredicate_t *predicate_all_in = &policy->predicates[policy->predicate_count++];
-    BSLP_PolicyPredicate_Init(predicate_all_in, policy_loc_enum, mock_bpa_util_get_eid_pattern_from_text("*:**"),
+    BSLP_PolicyPredicate_Init(predicate_all_in, policy_loc_enum, eid_src_pat,
                               mock_bpa_util_get_eid_pattern_from_text("*:**"),
                               mock_bpa_util_get_eid_pattern_from_text("*:**"));
     BSLP_PolicyRule_t *rule_all_in = &policy->rules[policy->rule_count++];
@@ -542,22 +565,19 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     if (sec_block_emum == BSL_SECBLOCKTYPE_BCB)
     {
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_aes_variant);
-        BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key);
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_use_wrapped_key);
-        // BSLP_PolicyRule_AddParam(rule_all_in, params->param_key_enc_key);
         if (sec_role != BSL_SECROLE_SOURCE)
         {
             BSLP_PolicyRule_AddParam(rule_all_in, params->param_aad_scope_flag);
-            BSLP_PolicyRule_AddParam(rule_all_in, params->param_init_vector);
+            BSL_Crypto_SetRngGenerator(bsl_mock_bpa_rfc9173_bcb_cek);
         }
     }
     else
     {
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_sha_variant);
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_integ_scope_flag);
-        BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key);
-        // BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key_bad);
     }
+    BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key);
 }
 
 void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg)

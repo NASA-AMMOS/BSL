@@ -261,7 +261,6 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
     while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &decitem))
     {
         BSL_LOG_DEBUG("decoding canonical block (at %zd)...", QCBORDecode_Tell(dec));
-        //        if (decitem.val)
 
         MockBPA_CanonicalBlock_t blk = { 0 };
 
@@ -275,6 +274,7 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
         bundle->blocks[bundle->block_count++] = blk;
     }
 
+    BSL_LOG_DEBUG("exiting array (at %zd)", QCBORDecode_Tell(dec));
     QCBORDecode_ExitArray(dec);
     return 0;
 }

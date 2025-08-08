@@ -44,7 +44,7 @@ void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src);
 
 void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr);
 
-int mock_bpa_decode(mock_bpa_ctr_t *ctr, BSL_LibCtx_t *bsl);
+int mock_bpa_decode(mock_bpa_ctr_t *ctr);
 
 int mock_bpa_encode(mock_bpa_ctr_t *ctr);
 

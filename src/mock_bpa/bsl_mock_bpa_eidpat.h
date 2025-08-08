@@ -136,8 +136,9 @@ DEQUE_DEF(bsl_mock_eidpat_item_list, bsl_mock_eidpat_item_t)
 /// Struct to be used as a BSL_HostEIDPattern_t::handle
 typedef struct
 {
-    /** The list of pattern items, or an empty list to indicate
-     * the any-scheme pattern.
+    /// The match-all state
+    bool match_all;
+    /** The list of pattern items.
      */
     bsl_mock_eidpat_item_list_t items;
 } bsl_mock_eidpat_t;
