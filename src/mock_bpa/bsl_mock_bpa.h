@@ -76,6 +76,7 @@ typedef struct MockBPA_CanonicalBlock_s
 typedef struct MockBPA_Bundle_s
 {
     uint64_t                 id;
+    bool                     retain;
     MockBPA_PrimaryBlock_t   primary_block;
     MockBPA_CanonicalBlock_t blocks[MockBPA_BUNDLE_MAXBLOCKS];
     size_t                   block_count;
@@ -91,6 +92,7 @@ int MockBPA_GetBlockMetadata(const BSL_BundleRef_t *bundle_ref, uint64_t block_n
 int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t bytesize);
 int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, uint64_t *result_block_num);
 int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num);
+int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref);
 
 /** Register this mock BPA for the current process.
  * @return Zero if successful.
