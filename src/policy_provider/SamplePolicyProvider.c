@@ -121,7 +121,6 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         if (target_block_num == 0 && rule->target_block_type != BSL_BLOCK_TYPE_PRIMARY)
         {
             BSL_LOG_WARNING("Cannot find target block type = %lu", rule->target_block_type);
-            BSL_SecurityActionSet_IncrError(output_action_set);
             continue;
         }
 
@@ -139,7 +138,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     }
 
     CHK_POSTCONDITION(BSL_SecurityActionSet_IsConsistent(output_action_set));
-    return BSL_SUCCESS;
+    return (int)BSL_SecurityActionSet_CountErrors(output_action_set);
 }
 
 int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
