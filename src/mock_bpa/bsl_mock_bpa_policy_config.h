@@ -61,8 +61,8 @@ extern "C" {
  *              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
  *                             10 - drop bundle, 11: undefined -|         |     |   |
  *                                                                        |     |   |
- *                          Target Block Type: 00 - primary, 01 payload  -|     |   |
- *                                             10 - bib, 11 - bundle age -|     |   |
+ *                       Target Block Type: 00 - primary, 01 - payload,  -|     |   |
+ *                      10 - private/experimental (192), 11 - bundle age -|     |   |
  *                                                                              |   |
  *                                        Policy Location: 0 - CLOUT, 1 - CLIN -|   |
  *                                                                                  |

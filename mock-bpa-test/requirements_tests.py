@@ -541,23 +541,46 @@ class _RequirementsCases(_TestSet):
         # BSL_43
         # Query Existing Block Types
         # The purpose of this test case is to verify that the BSL can use a BPA interface to query what block types exist in a bundle.
-        self.cases["BSL_43"] = (_TestCase(
+        self.cases["BSL_43a"] = (_TestCase(
             # Create a bundle using the vector in RFC9173 Appendix A1.4.
             # Then the BSL will use the BPA host interface to show that there is a primary, payload, and BIB block present.
             input_data=[
-
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # Result asserts there are three blocks present, each with the expected type.
             expected_output=[
-               
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
-            policy_config='0x46',
-            is_implemented=False,
+            policy_config='0x0A',
+            is_implemented=True,
             is_working=False,
             expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
+        self.cases["BSL_43b"] = (_TestCase(
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+                [192, 2, 0, 0, bytes.fromhex('676f20647261676f6e666c7921')]
+            ],
+            # Result asserts there are three blocks present, each with the expected type.
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
+                [192, 2, 0, 0, bytes.fromhex('676f20647261676f6e666c7921')], 
+                [11, 3, 0, 0, bytes.fromhex('8102010182028202018282010782030081818201584037f54fd9c08b1b9225e74e821ef4ead35dc850ea98a2b944105447d12d145416dadb83c5123c44bab0e57c20196eff060ddcdc7412e948fd46527101e54c201e')],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0x0A',
+            is_implemented=True,
+            is_working=True,
+            expect_success=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
+
 
         # BSL_44
         # Query Block Numbers
