@@ -84,7 +84,7 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
     return target_block_num;
 }
 
-void bsl_pp_sec_op_list_insert(SecOpList *list, SecOpListNode *new_node) {
+void bslp_sec_op_list_insert(SecOpList *list, SecOpListNode *new_node) {
     SecOpListNode **pp = &list->head;
     SecOpListNode *cur = list->head;
 
@@ -181,7 +181,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
             SecOpListNode *n = BSL_MALLOC(sizeof(*n));
             n->sec_oper = sec_oper;
             n->next = NULL;
-            bsl_pp_sec_op_list_insert(&sec_op_list, n);
+            bslp_sec_op_list_insert(&sec_op_list, n);
         }
         BSL_LOG_INFO("Created sec operation for rule `%s`", rule->description);
     }

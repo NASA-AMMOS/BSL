@@ -49,6 +49,7 @@ struct BSL_SecOper_s
     /// @brief Code for handing what to do to the block or bundle if security processing fails.
     BSL_PolicyAction_e failure_code;
 
+    /// @brief Conclusion state of security operation processing
     BSL_SecOper_ConclusionState_e conclusion;
 
     /// @brief Private enumeration indicating the role (e.g., acceptor vs verifier)
