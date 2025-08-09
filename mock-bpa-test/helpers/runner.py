@@ -27,11 +27,11 @@ import signal
 import subprocess
 import time
 import threading
-from typing import List
+from typing import List, Optional
 import queue
 
+# Set up logging
 LOGGER = logging.getLogger(__name__)
-''' Logger for this module. '''
 
 
 def compose_args(args: List[str]) -> List[str]:
@@ -102,7 +102,7 @@ class CmdRunner:
         )
         self._writer.start()
 
-    def stop(self, timeout=5) -> int:
+    def stop(self, timeout=5) -> Optional[int]:
         if not self.proc:
             return None
 
@@ -112,6 +112,7 @@ class CmdRunner:
             try:
                 self.proc.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
+                LOGGER.error('Timed-out after SIGINT, killing process: %s', self._fmt_args())
                 self.proc.kill()
                 self.proc.wait(timeout=timeout)
 
@@ -145,14 +146,29 @@ class CmdRunner:
             stream.flush()
         LOGGER.debug('Stopping stdin thread')
 
-    def wait_for_line(self, timeout=5):
+    def wait_for_line(self, timeout:float=5) -> str:
+        ''' Wait for any received stdout line.
+
+        :param timeout: The total time to wait for this line.
+        :return The matching line.
+        :raise TimeoutError: If the line was not seen in time.
+        '''
         try:
             text = self._stdout_lines.get(timeout=timeout)
         except queue.Empty:
             raise TimeoutError('no lines received before timeout')
         return text
 
-    def wait_for_text(self, pattern, timeout=5):
+    def wait_for_text(self, pattern:str, timeout:float=5) -> str:
+        ''' Iterate through the received stdout lines until a specific
+        full matching line is seen.
+
+        :param pattern: The pattern which must match the full line.
+            Use prefix or suffix ".*" as needed.
+        :param timeout: The total time to wait for this line.
+        :return The matching line.
+        :raise TimeoutError: If the line was not seen in time.
+        '''
         expr = re.compile(pattern)
         LOGGER.debug('Waiting for pattern "%s" ...', pattern)
 
@@ -170,5 +186,10 @@ class CmdRunner:
             if expr.match(text) is not None:
                 return text
 
-    def send_stdin(self, text):
+    def send_stdin(self, text:str):
+        ''' Send an exact line of text to the process stdin.
+
+        :param text: The line to send, which should include a newline
+            at the endd.
+        '''
         self._stdin_lines.put(text)

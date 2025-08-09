@@ -93,25 +93,35 @@ git submodule update --init --recursive
 
 This will take about a minute to build and run the unit tests, there should be 100% success.
 
+Note: On earlier versions of CMake (<3.20), `./build.sh check` target may not run correctly.
+
 #### Optional Additional Build Targets
+
 Code Coverage
 ```
 ./build.sh coverage
+```
 
-# To open coverage report in a browser...
-xdg-open build/default/coverage/index.html
+The output HTML can be opened in a browser using:
+```
+xdg-open build/default/coverage-html/index.html
 ```
 
 Doxygen Documentation
 ```
 ./build.sh prep -DBUILD_DOCS_API=ON
 ./build.sh docs
+```
 
-# To open in a browser...
+The output HTML can be opened in a browser using:
+```
 xdg-open build/default/docs/api/html/index.html
 ```
 
-Note: On earlier versions of CMake (<3.20), `./build.sh check` target may not run correctly.
+To check for misspelling in the Doxygen output use the following, substituting the word/phrase you are looking for in the grep command
+```
+xmlstarlet tr build/default/docs/api/xml/combine.xslt build/default/docs/api/xml/index.xml | xmlstarlet tr docs/api/spellcheck.xsl | cat -n | grep -E 'bsl'
+```
 
 ## Testing with the Mock BPA
 

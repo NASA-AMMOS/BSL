@@ -227,7 +227,7 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
             }
             case BSL_POLICYACTION_DROP_BUNDLE:
             {
-                BSL_LOG_WARNING("Dropping bundle due to block target num %lu security failure",
+                BSL_LOG_WARNING("Deleting bundle due to block target num %lu security failure",
                                 policy_actions->sec_operations[oper_index].target_block_num);
                 must_drop = true;
                 break;
@@ -247,7 +247,9 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
 
     if (must_drop)
     {
-        BSL_LOG_ERR("TODO Drop bundle using host interface");
+        // Drop the bundle and return operation error
+        BSL_LOG_WARNING("***** Delete bundle due to failed security operation *******");
+        BSL_BundleCtx_DeleteBundle(bundle);
     }
 
     // TODO CHK_POSTCONDITION

@@ -88,13 +88,14 @@ class TestAgent(unittest.TestCase):
         self._agent = CmdRunner(args, stderr=subprocess.STDOUT)
 
         # Bind underlayer messaging
-        self._ul_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._ul_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._ul_sock.bind(('localhost', 14556))
         self._ul_sock.connect(('localhost', 4556))
 
         # Bind overlayer messaging
-        self._ol_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._ol_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._ol_sock.bind(('localhost', 34556))
+        self._ol_sock.connect(('localhost', 24556))
 
     def tearDown(self):
 
@@ -107,11 +108,6 @@ class TestAgent(unittest.TestCase):
         if self._agent:
             # Exit cleanly if not already gone
             ret = self._agent.stop()
-
-            # TODO: fix this issue with runner not joining back
-            if (ret == -9):
-                ret = 0
-                LOGGER.warning('Runner proc unable to join cleanly - faking ret val for now')
 
             self.assertEqual(0, ret)
             self._agent = None
@@ -174,7 +170,17 @@ class TestAgent(unittest.TestCase):
                 self._wait_for(self._ul_sock)
 
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
-            self.fail('Validate output')
+
+            LOGGER.warning('Check log output to validate reason for no data!!')
+
+            # Currently hard-coded for test case 19 but no other instances of DataFormat.NONE
+            case_19_str = r".*Delete bundle due to failed security operation"
+
+            LOGGER.debug("Searching test runner logger for failure string: %s", case_19_str)
+            found = self._agent.wait_for_text(case_19_str)
+            LOGGER.debug("\nFOUND OCCURENCE: %s", found)
+            self.assertTrue(found != "")
+
         elif (testcase.expected_output_format == DataFormat.ERR):
             self._ul_sock.send(tx_data)
             LOGGER.debug('waiting')
@@ -183,7 +189,16 @@ class TestAgent(unittest.TestCase):
                 self._wait_for(self._ul_sock)
 
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
-            self.fail('TODO handle err codes')
+
+            LOGGER.warning('Check log output to validate expected error')
+
+            # TBD - this logic is not used yet
+            err_case_str = r"tbd"
+
+            LOGGER.debug("Searching test runner logger for error string: %s", err_case_str)
+            found = self._agent.wait_for_text(err_case_str)
+            LOGGER.debug("\nFOUND OCCURENCE: %s", found)
+            self.assertTrue(found != "")
 
 
 # Below utilizes setattr to add methods to a child class of the TestAgent, which will in-turn give us unit tests
@@ -212,6 +227,5 @@ class TestMockBPA(TestAgent):
 
     def test_start_stop_p00(self):
         self._start()
-
         self.assertEqual(0, self._agent.stop())
         self._agent = None

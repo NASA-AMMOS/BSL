@@ -180,6 +180,13 @@ static void sig_stop(int signum _U_)
 {
     atomic_store(&stop_state, true);
     BSL_LOG_INFO("signal received %d", signum);
+
+    uint8_t buf    = 0;
+    int     nbytes = write(tx_notify_w, &buf, sizeof(buf));
+    if (nbytes < 0)
+    {
+        BSL_LOG_ERR("Failed to write: %ld", nbytes);
+    }
 }
 
 static void *work_over_rx(void *arg _U_)
@@ -194,12 +201,20 @@ static void *work_over_rx(void *arg _U_)
             mock_bpa_ctr_deinit(&item);
             break;
         }
-        BSL_LOG_INFO("over_rx");
+        BSL_LOG_INFO("over_rx item");
         mock_bpa_decode(&item);
 
         if (mock_bpa_process(BSL_POLICYLOCATION_APPIN, item.bundle_ref.data))
         {
             BSL_LOG_ERR("work_over_rx failed security processing");
+            mock_bpa_ctr_deinit(&item);
+            continue;
+        }
+
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (!bundle->retain)
+        {
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
@@ -225,7 +240,7 @@ static void *work_under_rx(void *arg _U_)
             break;
         }
 
-        BSL_LOG_INFO("under_rx");
+        BSL_LOG_INFO("under_rx item");
         if (mock_bpa_decode(&item))
         {
             BSL_LOG_ERR("work_under_rx failed to decode bundle");
@@ -236,6 +251,14 @@ static void *work_under_rx(void *arg _U_)
         if (mock_bpa_process(BSL_POLICYLOCATION_CLIN, item.bundle_ref.data))
         {
             BSL_LOG_ERR("work_under_rx failed security processing");
+            mock_bpa_ctr_deinit(&item);
+            continue;
+        }
+
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (!bundle->retain)
+        {
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
@@ -260,7 +283,7 @@ static void *work_deliver(void *arg _U_)
             mock_bpa_ctr_deinit(&item);
             break;
         }
-        BSL_LOG_INFO("deliver");
+        BSL_LOG_INFO("deliver item");
 
         if (mock_bpa_process(BSL_POLICYLOCATION_APPOUT, item.bundle_ref.data))
         {
@@ -269,11 +292,19 @@ static void *work_deliver(void *arg _U_)
             continue;
         }
 
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (!bundle->retain)
+        {
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
+            mock_bpa_ctr_deinit(&item);
+            continue;
+        }
+
         mock_bpa_encode(&item);
         data_queue_push(over_tx, item);
         {
             uint8_t buf    = 0;
-            int     nbytes = write(tx_notify_w, &buf, sizeof(uint8_t));
+            int     nbytes = write(tx_notify_w, &buf, sizeof(buf));
             if (nbytes < 0)
             {
                 BSL_LOG_ERR("Failed to write: %ld", nbytes);
@@ -297,11 +328,19 @@ static void *work_forward(void *arg _U_)
             mock_bpa_ctr_deinit(&item);
             break;
         }
-        BSL_LOG_INFO("forward");
+        BSL_LOG_INFO("forward item");
 
         if (mock_bpa_process(BSL_POLICYLOCATION_CLOUT, item.bundle_ref.data))
         {
             BSL_LOG_ERR("work_forward failed security processing");
+            mock_bpa_ctr_deinit(&item);
+            continue;
+        }
+
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (!bundle->retain)
+        {
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
@@ -530,6 +569,7 @@ static int bpa_exec(void)
 
 static void bpa_cleanup(void)
 {
+    BSL_LOG_INFO("cleaning up");
     mock_bpa_ctr_t item;
 
     // join RX workers first
