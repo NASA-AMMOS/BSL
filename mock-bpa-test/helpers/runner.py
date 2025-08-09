@@ -27,7 +27,7 @@ import signal
 import subprocess
 import time
 import threading
-from typing import List
+from typing import List, Optional
 import queue
 
 # Set up logging
@@ -102,7 +102,7 @@ class CmdRunner:
         )
         self._writer.start()
 
-    def stop(self, timeout=5) -> int:
+    def stop(self, timeout=5) -> Optional[int]:
         if not self.proc:
             return None
 
@@ -112,6 +112,7 @@ class CmdRunner:
             try:
                 self.proc.wait(timeout=timeout)
             except subprocess.TimeoutExpired:
+                LOGGER.error('Timed-out after SIGINT, killing process: %s', self._fmt_args())
                 self.proc.kill()
                 self.proc.wait(timeout=timeout)
 
