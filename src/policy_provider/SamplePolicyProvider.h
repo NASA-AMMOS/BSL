@@ -167,17 +167,19 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
 int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
                         const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
 
-typedef struct SecOpListNode {
-    BSL_SecOper_t *sec_oper;
+typedef struct SecOpListNode
+{
+    BSL_SecOper_t        *sec_oper;
     struct SecOpListNode *next;
 } SecOpListNode;
 
-typedef struct {
+typedef struct
+{
     SecOpListNode *head;
 } SecOpList;
 
 /**
- * Insert @param new_node into @param list 
+ * Insert @param new_node into @param list
  */
 void bslp_sec_op_list_insert(SecOpList *list, SecOpListNode *new_node);
 

@@ -148,7 +148,8 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                 }
                 else
                 {
-                    BSL_LOG_ERR("SecOper target (%d) not in this ASB (blk_num=%d,type=%d)", sec_oper->target_block_num, block.block_num, block.type_code);
+                    BSL_LOG_ERR("SecOper target (%d) not in this ASB (blk_num=%d,type=%d)", sec_oper->target_block_num,
+                                block.block_num, block.type_code);
                 }
             }
             else
@@ -245,7 +246,7 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
 
         // if (must_drop)
         // {
-            break;
+        break;
         // }
     }
 
