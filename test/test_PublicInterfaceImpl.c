@@ -786,5 +786,5 @@ void test_BSL_32(void)
     TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 3, &res_blk));
     TEST_ASSERT_EQUAL(12, res_blk.type_code);
     TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 4, &res_blk));
-    TEST_ASSERT_EQUAL(12, res_blk.type_code);    
+    TEST_ASSERT_EQUAL(12, res_blk.type_code);
 }
