@@ -87,7 +87,7 @@ class _RequirementsCases(_TestSet):
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
-            policy_config='0x86',
+            policy_config='0xA6',
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
@@ -131,7 +131,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # policy_config = BIB_VERIFIER,
-            policy_config='0x46',
+            policy_config='0x66',
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
@@ -167,7 +167,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             #
-            policy_config='0x280',
+            policy_config='0x2A0',
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
