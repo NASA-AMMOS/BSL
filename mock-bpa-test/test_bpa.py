@@ -173,11 +173,10 @@ class TestAgent(unittest.TestCase):
 
             LOGGER.warning('Check log output to validate reason for no data!!')
 
-            # Currently hard-coded for test case 19 but no other instances of DataFormat.NONE
-            case_19_str = r".*Delete bundle due to failed security operation"
+            output_str = testcase.expected_output
 
-            LOGGER.debug("Searching test runner logger for failure string: %s", case_19_str)
-            found = self._agent.wait_for_text(case_19_str)
+            LOGGER.debug("Searching test runner logger for failure string: %s", output_str)
+            found = self._agent.wait_for_text(output_str)
             LOGGER.debug("\nFOUND OCCURENCE: %s", found)
             self.assertTrue(found != "")
 
@@ -192,8 +191,7 @@ class TestAgent(unittest.TestCase):
 
             LOGGER.warning('Check log output to validate expected error')
 
-            # TBD - this logic is not used yet
-            err_case_str = r"tbd"
+            err_case_str = testcase.expected_output
 
             LOGGER.debug("Searching test runner logger for error string: %s", err_case_str)
             found = self._agent.wait_for_text(err_case_str)
@@ -208,7 +206,7 @@ def _add_tests(new_tests: _TestSet):
 
     def decorator(cls):
         for id, tc in new_tests.cases.items():
-            if tc.is_implemented and tc.is_working:
+            if tc.is_working:
 
                 def _test(cls, id=id):
                     cls._single_test(new_tests.cases[id])

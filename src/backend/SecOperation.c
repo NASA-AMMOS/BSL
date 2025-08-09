@@ -47,6 +47,8 @@ void BSL_SecOper_Init(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_
     self->_role            = sec_role;
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
+
+    self->conclusion = BSL_SECOP_CONCLUSION_PENDING;
 }
 
 void BSL_SecOper_Deinit(BSL_SecOper_t *self)
@@ -132,4 +134,16 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(self != NULL);
     return self->_service_type == BSL_SECBLOCKTYPE_BIB;
+}
+
+BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(self != NULL);
+    return self->conclusion;
+}
+
+void BSL_SecOper_SetConclusion(BSL_SecOper_t *self, BSL_SecOper_ConclusionState_e new_conclusion)
+{
+    ASSERT_PRECONDITION(self != NULL);
+    self->conclusion = new_conclusion;
 }

@@ -153,6 +153,14 @@ typedef enum
     BSL_POLICYACTION_DROP_BUNDLE    ///< Drop the entire bundle.
 } BSL_PolicyAction_e;
 
+typedef enum
+{
+    BSL_SECOP_CONCLUSION_PENDING = 1,
+    BSL_SECOP_CONCLUSION_SUCCESS,
+    BSL_SECOP_CONCLUSION_INVALID,
+    BSL_SECOP_CONCLUSION_FAILURE
+} BSL_SecOper_ConclusionState_e;
+
 /**
  * Helper function to print the ASCII encoding of a given byte stream to a given target buffer.
  *
@@ -856,6 +864,20 @@ bool BSL_SecOper_IsRoleAcceptor(const BSL_SecOper_t *self);
  * @return boolean
  */
 bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self);
+
+/**
+ * Retrieve the conclusion state of a security operation
+ * @param[in] self The security operation
+ * @return the conclusion state
+ */
+BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(BSL_SecOper_t *self);
+
+/**
+ * Set the security operation conclusion state
+ * @param[in,out] self security operation to change conclusion state of
+ * @param[in] new_conclusion new conclusion to set to
+ */
+void BSL_SecOper_SetConclusion(BSL_SecOper_t *self, BSL_SecOper_ConclusionState_e new_conclusion);
 
 /// Forward declaration of this struct
 typedef struct BSL_AbsSecBlock_s BSL_AbsSecBlock_t;
