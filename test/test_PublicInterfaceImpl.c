@@ -711,7 +711,8 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
     }
 }
 
-void ntest_BSL_6(void)
+// TODO fail pending unqiue check
+void n_test_BSL_6(void)
 {
     BSL_PrimaryBlock_t        primary_block = { 0 };
     BSL_SecurityResponseSet_t response_set  = { 0 };
@@ -745,7 +746,7 @@ void ntest_BSL_6(void)
     TEST_ASSERT_EQUAL(2, primary_block.block_count);
 }
 
-void ntest_BSL_32(void)
+void test_BSL_32(void)
 {
     BSL_PrimaryBlock_t        primary_block = { 0 };
     BSL_SecurityResponseSet_t response_set  = { 0 };
@@ -768,7 +769,7 @@ void ntest_BSL_32(void)
     query_result = BSL_API_QuerySecurity(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                          BSL_POLICYLOCATION_CLOUT);
     TEST_ASSERT_EQUAL(0, query_result);
-    TEST_ASSERT_EQUAL(1, action_set.sec_operations_count);
+    TEST_ASSERT_EQUAL(2, action_set.sec_operations_count);
 
     apply_result =
         BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
@@ -778,10 +779,12 @@ void ntest_BSL_32(void)
     BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
 
     // sourced sec blocks
-    TEST_ASSERT_EQUAL(3, primary_block.block_count);
+    TEST_ASSERT_EQUAL(4, primary_block.block_count);
 
     TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 2, &res_blk));
     TEST_ASSERT_EQUAL(11, res_blk.type_code);
     TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 3, &res_blk));
     TEST_ASSERT_EQUAL(12, res_blk.type_code);
+    TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 4, &res_blk));
+    TEST_ASSERT_EQUAL(12, res_blk.type_code);    
 }
