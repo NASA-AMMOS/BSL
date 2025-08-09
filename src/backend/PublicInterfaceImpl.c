@@ -244,10 +244,7 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
             }
         }
 
-        // if (must_drop)
-        // {
         break;
-        // }
     }
 
     if (must_drop)
