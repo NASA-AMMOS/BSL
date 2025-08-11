@@ -1067,7 +1067,7 @@ int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *
 
 size_t BSL_SecurityAction_CountSecOpers(const BSL_SecurityAction_t *self);
 
-const BSL_SecOper_t *BSL_SecurityAction_GetSecOperAtIndex(const BSL_SecurityAction_t *self, size_t index);
+BSL_SecOper_t *BSL_SecurityAction_GetSecOperAtIndex(const BSL_SecurityAction_t *self, size_t index);
 
 /** @brief Increment a security failure for this action set
  *

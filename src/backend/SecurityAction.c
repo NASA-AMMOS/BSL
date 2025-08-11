@@ -43,20 +43,72 @@ int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *
 {
     ASSERT_ARG_NONNULL(self);
 
+    BSL_LOG_INFO("APPENDING SECOP: %lu ; tgt=%d; sc=%d", sec_oper, BSL_SecOper_GetTargetBlockNum(sec_oper), BSL_SecOper_GetSecurityBlockNum(sec_oper));
+
     BSL_SecOperList_it_t it;
+    BSL_SecOperList_it_t it2;
+    bool first_it = true;
     for (BSL_SecOperList_it(it, self->sec_op_list); !BSL_SecOperList_end_p(it); BSL_SecOperList_next(it))
     {
+        // New sec block shares target with another sec block
         if (BSL_SecOper_GetTargetBlockNum(BSL_SecOperList_cref(it)) == BSL_SecOper_GetTargetBlockNum(sec_oper))
         {
+            bool before = !(BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsRoleSource(sec_oper));
+            if (before)
+            {
+                BSL_LOG_INFO("INSERTING NEW SEC OP BEFORE (tgt=%d)", BSL_SecOper_GetTargetBlockNum(BSL_SecOperList_cref(it)));
+                
+                // It seems the m*lib docs is incorrect here -
+                // it states that an uninitialized it2 = insert at front, but it was causing errors
+                // So, let's use a simple bool and check
+                if (first_it)
+                {
+                    BSL_SecOperList_push_back(self->sec_op_list, *sec_oper);
+                }
+                else
+                {
+                    BSL_SecOperList_insert(self->sec_op_list, it2, *sec_oper);
+                }
+            }
+            else
+            {
+                BSL_LOG_INFO("INSERTING NEW SEC OP AFTER (tgt=%d)", BSL_SecOper_GetTargetBlockNum(BSL_SecOperList_cref(it)));
+                BSL_SecOperList_insert(self->sec_op_list, it, *sec_oper);
+            }
+
             if (!(BSL_SecOper_IsBIB(BSL_SecOperList_cref(it)) ^ BSL_SecOper_IsBIB(sec_oper)))
             {
                 BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_INVALID);
             }
-            BSL_LOG_INFO("Inserting secop (tgt=%d) (ctx=%d) AFTER same target", sec_oper->target_block_num, sec_oper->context_id);
-            BSL_SecOperList_insert(self->sec_op_list, it, *sec_oper);
+           
             self->sec_op_list_length ++;
-            BSL_LOG_INFO("len struct %lu, len mlib %lu", self->sec_op_list_length, BSL_SecOperList_size(self->sec_op_list));
             return BSL_SUCCESS;
+        }
+
+        // New sec block is the target of another sec block
+        if (BSL_SecOper_GetTargetBlockNum(BSL_SecOperList_cref(it)) == BSL_SecOper_GetSecurityBlockNum(sec_oper))
+        {
+            BSL_LOG_INFO("NEW SEC OP IS TGT, INSERTING AFTER (ptr=%lu)(tgt=%d)", sec_oper, BSL_SecOper_GetTargetBlockNum(BSL_SecOperList_cref(it)));
+            if (first_it)
+            {
+                BSL_SecOperList_push_back(self->sec_op_list, *sec_oper);
+            }
+            else
+            {
+                BSL_SecOperList_insert(self->sec_op_list, it2, *sec_oper);
+            }
+            self->sec_op_list_length ++;
+            return BSL_SUCCESS;
+        }
+
+        if (first_it)
+        {
+            BSL_SecOperList_it(it2, self->sec_op_list);
+            first_it = false;
+        }
+        else
+        {
+            BSL_SecOperList_next(it2);
         }
     }
 
@@ -74,8 +126,8 @@ size_t BSL_SecurityAction_CountSecOpers(const BSL_SecurityAction_t *self)
     return self->sec_op_list_length;
 }
 
-const BSL_SecOper_t *BSL_SecurityAction_GetSecOperAtIndex(const BSL_SecurityAction_t *self, size_t index)
+BSL_SecOper_t *BSL_SecurityAction_GetSecOperAtIndex(const BSL_SecurityAction_t *self, size_t index)
 {
     ASSERT_ARG_NONNULL(self);
-    return BSL_SecOperList_cget(self->sec_op_list, index);
+    return BSL_SecOperList_get(self->sec_op_list, index);
 }
