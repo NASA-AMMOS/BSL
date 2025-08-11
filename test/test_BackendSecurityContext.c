@@ -86,7 +86,7 @@ void tearDown(void)
  *  - Common repeated patterns are in the process of being factored out
  *  - All values are drawn from RFC9173 Appendix A.
  */
-void ntest_SecurityContext_BIB_Source(void)
+void test_SecurityContext_BIB_Source(void)
 {
     TEST_ASSERT_EQUAL(
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
@@ -130,7 +130,7 @@ void ntest_SecurityContext_BIB_Source(void)
  *  - Common repeated patterns are in the process of being factored out
  *  - All values are drawn from RFC9173 Appendix A.
  */
-void ntest_SecurityContext_BIB_Verifier(void)
+void test_SecurityContext_BIB_Verifier(void)
 {
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
@@ -169,7 +169,7 @@ void ntest_SecurityContext_BIB_Verifier(void)
  * Notes:
  *  - Check more than return code, look deeper into outcome.
  */
-void ntest_SecurityContext_BIB_Verifier_Failure(void)
+void test_SecurityContext_BIB_Verifier_Failure(void)
 {
     // TODO(bvb) Note that this is basically identical to above except different key, they should be consolidated
     TEST_ASSERT_EQUAL(0,
@@ -208,7 +208,7 @@ void ntest_SecurityContext_BIB_Verifier_Failure(void)
  *  - Check that the BIB result was removed from the bundle (by making sure the encoding matches bundle in A1.1)
  *
  */
-void ntest_SecurityContext_BIB_Acceptor(void)
+void test_SecurityContext_BIB_Acceptor(void)
 {
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
@@ -250,7 +250,7 @@ cleanup:
 }
 
 // See RFC: https://www.rfc-editor.org/rfc/rfc9173.html#name-example-3-security-blocks-f
-void ntest_RFC9173_AppendixA_Example3_Acceptor(void)
+void test_RFC9173_AppendixA_Example3_Acceptor(void)
 {
     BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a4);
     const char *final_bundle = ("9f88070000820282010282028202018202820201820018281a000f4240850b0300"
@@ -310,7 +310,7 @@ void ntest_RFC9173_AppendixA_Example3_Acceptor(void)
     free(malloced_responseset);
 }
 
-void ntest_RFC9173_AppendixA_Example3_Source(void)
+void test_RFC9173_AppendixA_Example3_Source(void)
 {
     // See: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.3.1
     const char *plain_bundle = ("9f88070000820282010282028202018202820201820018281a000f424085070200"
@@ -487,9 +487,7 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     free(malloced_responseset);
 }
 
-// This is currently failing the BCB targets the BIB, but the BIB BTSD hasn't been filled yet. 
-// so, there is nothing to encrypt
-void ntest_RFC9173_AppendixA_Example4_Source(void)
+void test_RFC9173_AppendixA_Example4_Source(void)
 {
     BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a4);
     const char *original_bundle = ("9f88070000820282010282028202018202820201820018281a000f424085010100"
