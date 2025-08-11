@@ -102,8 +102,10 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     }
 
     BSL_SecurityActionSet_Init(output_action_set);
-    const size_t capacity = sizeof(self->rules) / sizeof(BSLP_PolicyRule_t);
 
+    BSL_SecurityAction_t *action = calloc(BSL_SecurityAction_Sizeof(), 1);
+
+    const size_t capacity = sizeof(self->rules) / sizeof(BSLP_PolicyRule_t);
     for (size_t index = 0; index < self->rule_count && index < capacity; index++)
     {
         const BSLP_PolicyRule_t *rule = &self->rules[index];
@@ -121,22 +123,24 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         if (target_block_num == 0 && rule->target_block_type != BSL_BLOCK_TYPE_PRIMARY)
         {
             BSL_LOG_WARNING("Cannot find target block type = %lu", rule->target_block_type);
-            BSL_SecurityActionSet_IncrError(output_action_set);
             continue;
         }
 
-        BSL_SecOper_t *sec_oper = calloc(BSL_SecurityActionSet_Sizeof(), 1);
+        BSL_SecOper_t *sec_oper = calloc(BSL_SecOper_Sizeof(), 1);
         if (BSLP_PolicyRule_EvaluateAsSecOper(rule, sec_oper, bundle, location) < 0)
         {
-            BSL_SecurityActionSet_IncrError(output_action_set);
+            BSL_SecurityAction_IncrError(action);
         }
         else
         {
-            BSL_SecurityActionSet_AppendSecOper(output_action_set, sec_oper);
+            BSL_SecurityAction_AppendSecOper(action, sec_oper);
         }
         free(sec_oper);
         BSL_LOG_INFO("Created sec operation for rule `%s`", rule->description);
     }
+
+    BSL_SecurityActionSet_AppendAction(output_action_set, action);
+    free(action);
 
     CHK_POSTCONDITION(BSL_SecurityActionSet_IsConsistent(output_action_set));
     return (int)BSL_SecurityActionSet_CountErrors(output_action_set);

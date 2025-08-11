@@ -45,6 +45,7 @@ void BSL_SecOper_Init(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_
     self->failure_code     = failure_code;
     self->_service_type    = sec_type;
     self->_role            = sec_role;
+    self->conclusion       = BSL_SECOP_CONCLUSION_PENDING;
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
@@ -53,7 +54,6 @@ void BSL_SecOper_Deinit(BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     BSLB_SecParamList_clear(self->_param_list);
-    memset(self, 0, sizeof(*self));
 }
 
 size_t BSL_SecOper_CountParams(const BSL_SecOper_t *self)
@@ -74,6 +74,7 @@ bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self)
     CHK_AS_BOOL(self->_role == BSL_SECROLE_ACCEPTOR || self->_role == BSL_SECROLE_VERIFIER
                 || self->_role == BSL_SECROLE_SOURCE);
     CHK_AS_BOOL(BSLB_SecParamList_size(self->_param_list) < 1000);
+    CHK_AS_BOOL(self->conclusion >= BSL_SECOP_CONCLUSION_PENDING && self->conclusion <= BSL_SECOP_CONCLUSION_FAILURE);
     // NOLINTEND
     return true;
 }
@@ -97,6 +98,8 @@ uint64_t BSL_SecOper_GetSecurityBlockNum(const BSL_SecOper_t *self)
 
 uint64_t BSL_SecOper_GetTargetBlockNum(const BSL_SecOper_t *self)
 {
+    BSL_LOG_INFO("GET TARGET BLOCK NUM (SEC_OPER %lu) %d", self, self->target_block_num);
+
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
     return self->target_block_num;
@@ -112,24 +115,37 @@ const BSL_SecParam_t *BSL_SecOper_GetParamAt(const BSL_SecOper_t *self, size_t i
 
 bool BSL_SecOper_IsRoleSource(const BSL_SecOper_t *self)
 {
-    ASSERT_PRECONDITION(self != NULL);
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     return self->_role == BSL_SECROLE_SOURCE;
 }
 
 bool BSL_SecOper_IsRoleAcceptor(const BSL_SecOper_t *self)
 {
-    ASSERT_PRECONDITION(self != NULL);
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     return self->_role == BSL_SECROLE_ACCEPTOR;
 }
 
 bool BSL_SecOper_IsRoleVerifier(const BSL_SecOper_t *self)
 {
-    ASSERT_PRECONDITION(self != NULL);
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     return self->_role == BSL_SECROLE_VERIFIER;
 }
 
 bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self)
 {
-    ASSERT_PRECONDITION(self != NULL);
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     return self->_service_type == BSL_SECBLOCKTYPE_BIB;
+}
+
+BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    return self->conclusion;
+}
+
+void BSL_SecOper_SetConclusion(BSL_SecOper_t *self, BSL_SecOper_ConclusionState_e new_conclusion)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    self->conclusion = new_conclusion;
+    ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }

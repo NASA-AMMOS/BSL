@@ -84,11 +84,11 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
 BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context)
 {
     BSL_SecurityActionSet_t *action_set = calloc(sizeof(BSL_SecurityActionSet_t), 1);
-    // Populate a PolicyActionSet with one action, of the appendix A1 BIB
-    action_set->arrays_capacity      = sizeof(action_set->sec_operations) / sizeof(BSL_SecOper_t);
-    action_set->sec_operations_count = 1;
-    BSL_SecOper_t *bib_oper          = &action_set->sec_operations[0];
-    *bib_oper                        = bib_context->sec_oper;
+    BSL_SecurityActionSet_Init(action_set);    
+    BSL_SecurityAction_t *act = calloc(sizeof(BSL_SecurityAction_t), 1);
+    BSL_SecurityAction_Init(act);
+    BSL_SecurityAction_AppendSecOper(act, &bib_context->sec_oper);
+    BSL_SecurityActionSet_AppendAction(action_set, act);
     return action_set;
 }
 

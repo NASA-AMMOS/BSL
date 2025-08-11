@@ -857,6 +857,20 @@ bool BSL_SecOper_IsRoleAcceptor(const BSL_SecOper_t *self);
  */
 bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self);
 
+/**
+ * Retrieve the conclusion state of a security operation
+ * @param[in] self The security operation
+ * @return the conclusion state
+ */
+BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(const BSL_SecOper_t *self);
+
+/**
+ * Set the security operation conclusion state
+ * @param[in,out] self security operation to change conclusion state of
+ * @param[in] new_conclusion new conclusion to set to
+ */
+void BSL_SecOper_SetConclusion(BSL_SecOper_t *self, BSL_SecOper_ConclusionState_e new_conclusion);
+
 /// Forward declaration of this struct
 typedef struct BSL_AbsSecBlock_s BSL_AbsSecBlock_t;
 
@@ -1041,6 +1055,33 @@ const BSL_SecParam_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, si
 /// @return
 bool BSL_SecOutcome_IsInAbsSecBlock(const BSL_SecOutcome_t *self, const BSL_AbsSecBlock_t *abs_sec_block);
 
+size_t BSL_SecurityAction_Sizeof(void);
+
+bool BSL_SecurityAction_IsConsistent(const BSL_SecurityAction_t *self);
+
+void BSL_SecurityAction_Init(BSL_SecurityAction_t *self);
+
+void BSL_SecurityAction_Deinit(BSL_SecurityAction_t *self);
+
+int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *sec_oper);
+
+size_t BSL_SecurityAction_CountSecOpers(const BSL_SecurityAction_t *self);
+
+const BSL_SecOper_t *BSL_SecurityAction_GetSecOperAtIndex(const BSL_SecurityAction_t *self, size_t index);
+
+/** @brief Increment a security failure for this action set
+ *
+ * @param[in,out] self Pointer to this security action set.
+ */
+void BSL_SecurityAction_IncrError(BSL_SecurityAction_t *self);
+
+/** @brief Returns count of failures after processing this action
+ *
+ * @param[in] self Pointer to this security action.
+ * @return Count of errors.
+ */
+size_t BSL_SecurityAction_CountErrors(const BSL_SecurityAction_t *self);
+
 /// @brief Returns size of the struct, helpful for dynamic allocation.
 /// @return Size of the struct
 size_t BSL_SecurityActionSet_Sizeof(void);
@@ -1051,19 +1092,6 @@ size_t BSL_SecurityActionSet_Sizeof(void);
  */
 void BSL_SecurityActionSet_Init(BSL_SecurityActionSet_t *self);
 
-/** @brief Increment a security failure for this action set
- *
- * @param[in,out] self Pointer to this security action set.
- */
-void BSL_SecurityActionSet_IncrError(BSL_SecurityActionSet_t *self);
-
-/** @brief Returns count of failures after processing this action set
- *
- * @param[in] self Pointer to this security action set.
- * @return Count of errors.
- */
-size_t BSL_SecurityActionSet_CountErrors(const BSL_SecurityActionSet_t *self);
-
 /** Zeroize, clear, and release itself and any owned resources.
  *
  * @param[in,out] self This action set.
@@ -1073,10 +1101,10 @@ void BSL_SecurityActionSet_Deinit(BSL_SecurityActionSet_t *self);
 /** @brief Append a security operation to the security action set
  *
  * @param[in,out] self This security action set.
- * @param[in] sec_oper Security operation to include.
+ * @param[in] action Action to include.
  * @return 0 on success, negative on error
  */
-int BSL_SecurityActionSet_AppendSecOper(BSL_SecurityActionSet_t *self, const BSL_SecOper_t *sec_oper);
+int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_SecurityAction_t *action);
 
 /** Return true if internal sanity and consistency checks pass
  *
@@ -1088,24 +1116,24 @@ bool BSL_SecurityActionSet_IsConsistent(const BSL_SecurityActionSet_t *self);
 /** Count number of security operations present in this policy action set.
  *
  * @param[in] self This action set.
- * @return Number of operations, 0 indicates no policy matched.
+ * @return Number of actions, 0 indicates no policy matched.
  */
-size_t BSL_SecurityActionSet_CountSecOpers(const BSL_SecurityActionSet_t *self);
+size_t BSL_SecurityActionSet_CountActions(const BSL_SecurityActionSet_t *self);
 
 /** Returns the Security Operation at the given index.
  *
  * @param[in] self This action set
  * @param[in] index index
- * @return pointer to security operation at given index, asserting false if not in bound
+ * @return pointer to action at given index, asserting false if not in bound
  */
-const BSL_SecOper_t *BSL_SecurityActionSet_GetSecOperAtIndex(const BSL_SecurityActionSet_t *self, size_t index);
+const BSL_SecurityAction_t *BSL_SecurityActionSet_GetActionAtIndex(const BSL_SecurityActionSet_t *self, size_t index);
 
-/** Get the error code after querying (inspecting) policy actions. Non-zero indicates error
+/** @brief Returns count of failures after processing this action set
  *
- * @param[in] self this action set
- * @return Anomaly on non-zero
+ * @param[in] self Pointer to this security action set.
+ * @return Count of errors.
  */
-int BSL_SecurityActionSet_GetErrCode(const BSL_SecurityActionSet_t *self);
+size_t BSL_SecurityActionSet_CountErrors(const BSL_SecurityActionSet_t *self);
 
 /// @brief Returns size of this struct type
 size_t BSL_SecurityResponseSet_Sizeof(void);

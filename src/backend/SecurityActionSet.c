@@ -27,24 +27,7 @@
 
 bool BSL_SecurityActionSet_IsConsistent(const BSL_SecurityActionSet_t *self)
 {
-    CHK_AS_BOOL(self != NULL);
-    CHK_AS_BOOL(self->sec_operations_count <= self->arrays_capacity);
-    if (self->arrays_capacity > 0)
-    {
-        CHK_AS_BOOL(self->arrays_capacity == sizeof(self->sec_operations) / sizeof(BSL_SecOper_t));
-    }
-
-    // Make sure the arrays are in sync (have equal lengths)
-    // 0 means unused.
-    for (size_t i = 0; i < self->arrays_capacity; i++)
-    {
-        if (self->new_block_ids[i] == 0)
-        {
-            CHK_AS_BOOL(self->new_block_types[i] == 0);
-        }
-    }
-    // TODO, make sure every element in the array that
-    // is not a sec oper is set to all zeros.
+    (void) self;
     return true;
 }
 
@@ -56,70 +39,43 @@ size_t BSL_SecurityActionSet_Sizeof(void)
 void BSL_SecurityActionSet_Init(BSL_SecurityActionSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-
-    memset(self, 0, sizeof(*self));
-    self->arrays_capacity = sizeof(self->sec_operations) / sizeof(BSL_SecOper_t);
-
-    ASSERT_POSTCONDITION(BSL_SecurityActionSet_IsConsistent(self));
-}
-
-void BSL_SecurityActionSet_IncrError(BSL_SecurityActionSet_t *self)
-{
-    ASSERT_PRECONDITION(BSL_SecurityActionSet_IsConsistent(self));
-    self->err_code++;
-}
-
-size_t BSL_SecurityActionSet_CountErrors(const BSL_SecurityActionSet_t *self)
-{
-    ASSERT_PRECONDITION(BSL_SecurityActionSet_IsConsistent(self));
-
-    return self->err_code;
+    BSL_SecActionList_init(self->actions);
+    self->action_count = 0;
+    self->err_count = 0;
 }
 
 void BSL_SecurityActionSet_Deinit(BSL_SecurityActionSet_t *self)
 {
-    ASSERT_PRECONDITION(BSL_SecurityActionSet_IsConsistent(self));
-
-    for (size_t operation_index = 0; operation_index < self->arrays_capacity; operation_index++)
-    {
-        BSL_SecOper_Deinit(&(self->sec_operations[operation_index]));
-    }
-    memset(self, 0, sizeof(*self));
+    ASSERT_ARG_NONNULL(self);
+    BSL_SecActionList_clear(self->actions);
+    self->err_count = 0;
+    self->action_count = 0;
 }
 
-int BSL_SecurityActionSet_AppendSecOper(BSL_SecurityActionSet_t *self, const BSL_SecOper_t *sec_oper)
+int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_SecurityAction_t *action)
 {
-    CHK_PRECONDITION(BSL_SecurityActionSet_IsConsistent(self));
-    CHK_PRECONDITION(BSL_SecOper_IsConsistent(sec_oper));
-    CHK_PRECONDITION(self->sec_operations_count < self->arrays_capacity - 1);
+    ASSERT_ARG_NONNULL(self);
+    BSL_SecActionList_push_back(self->actions, *action);
+    self->err_count += action->err_ct;
+    self->action_count++;
 
-    self->sec_operations[self->sec_operations_count++] = *sec_oper;
-
-    CHK_POSTCONDITION(BSL_SecurityActionSet_IsConsistent(self));
     return BSL_SUCCESS;
 }
 
-size_t BSL_SecurityActionSet_CountSecOpers(const BSL_SecurityActionSet_t *self)
+size_t BSL_SecurityActionSet_CountActions(const BSL_SecurityActionSet_t *self)
 {
-    ASSERT_PRECONDITION(BSL_SecurityActionSet_IsConsistent(self));
-    return self->sec_operations_count;
+    ASSERT_ARG_NONNULL(self);
+    return self->action_count;
 }
 
-const BSL_SecOper_t *BSL_SecurityActionSet_GetSecOperAtIndex(const BSL_SecurityActionSet_t *self, size_t index)
+const BSL_SecurityAction_t *BSL_SecurityActionSet_GetActionAtIndex(const BSL_SecurityActionSet_t *self, size_t index)
 {
-    ASSERT_PRECONDITION(BSL_SecurityActionSet_IsConsistent(self));
-    ASSERT_PRECONDITION(index < BSL_SecurityActionSet_CountSecOpers(self));
-    ASSERT_PRECONDITION(index < self->arrays_capacity);
-
-    const BSL_SecOper_t *sec_oper = &self->sec_operations[index];
-
-    // The return security operation should be valid
-    ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(sec_oper));
-    return sec_oper;
+    ASSERT_ARG_NONNULL(self);
+    return BSL_SecActionList_cget(self->actions, index);
 }
 
-int BSL_SecurityActionSet_GetErrCode(const BSL_SecurityActionSet_t *self)
+size_t BSL_SecurityActionSet_CountErrors(const BSL_SecurityActionSet_t *self)
 {
-    CHK_PRECONDITION(BSL_SecurityActionSet_IsConsistent(self));
-    return self->err_code;
+    ASSERT_ARG_NONNULL(self);
+    return self->err_count;
 }

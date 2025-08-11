@@ -52,6 +52,8 @@ typedef struct BSL_SecurityResponseSet_s BSL_SecurityResponseSet_t;
 /// @brief Forward declaration of ::BSL_SecurityActionSet_s, which contains information for BSL to process the Bundle.
 typedef struct BSL_SecurityActionSet_s BSL_SecurityActionSet_t;
 
+typedef struct BSL_SecurityAction_s BSL_SecurityAction_t;
+
 /// @brief Forward-declaration for structure containing callbacks to a security context.
 typedef struct BSL_SecCtxDesc_s BSL_SecCtxDesc_t;
 
@@ -76,6 +78,21 @@ typedef enum
     /// @brief Bundle egress to CLA
     BSL_POLICYLOCATION_CLOUT
 } BSL_PolicyLocation_e;
+
+/**
+ * @brief Indicates the conclusion state of a security operation
+ */
+typedef enum
+{
+    /// @brief Security operation is still pending action
+    BSL_SECOP_CONCLUSION_PENDING = 1,
+    /// @brief Security operation has concluded and succeeded
+    BSL_SECOP_CONCLUSION_SUCCESS,
+    /// @brief Security operation is invalid
+    BSL_SECOP_CONCLUSION_INVALID,
+    /// @brief Security operation has concluded and failed
+    BSL_SECOP_CONCLUSION_FAILURE
+} BSL_SecOper_ConclusionState_e;
 
 /** Block CRC types.
  * Defined in Section 4.2.1 of RFC 9171 @cite rfc9171.

@@ -83,8 +83,11 @@ void test_PolicyProvider_InspectEmptyRuleset(void)
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,
                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
-    TEST_ASSERT_EQUAL(0, BSL_SecurityActionSet_CountSecOpers(&action_set));
-    TEST_ASSERT_EQUAL(0, BSL_SecurityActionSet_GetErrCode(&action_set));
+    TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_CountActions(&action_set));
+    const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0);
+    TEST_ASSERT_EQUAL(0, BSL_SecurityAction_CountSecOpers(act));
+
+    BSL_SecurityActionSet_Deinit(&action_set);
 }
 
 /**
@@ -116,8 +119,10 @@ void test_PolicyProvider_InspectSingleBIBRuleset(void)
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,
                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
-    TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_CountSecOpers(&action_set));
-    TEST_ASSERT_EQUAL(0, BSL_SecurityActionSet_GetErrCode(&action_set));
+    TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_CountActions(&action_set));
+    TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)->sec_op_list_length);
+
+    BSL_SecurityActionSet_Deinit(&action_set);
 }
 
 /**
@@ -147,9 +152,9 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,
                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
-    TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_CountSecOpers(&action_set));
-    TEST_ASSERT_EQUAL(0, BSL_SecurityActionSet_GetErrCode(&action_set));
-    TEST_ASSERT_EQUAL(3, BSL_SecOper_CountParams(BSL_SecurityActionSet_GetSecOperAtIndex(&action_set, 0)));
+    const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0);
+    TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(act));
+    TEST_ASSERT_EQUAL(3, BSL_SecOper_CountParams(BSL_SecurityAction_GetSecOperAtIndex(act, 0)));
 
     BSL_SecurityActionSet_Deinit(&action_set);
 }

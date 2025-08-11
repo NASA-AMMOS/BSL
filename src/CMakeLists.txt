@@ -128,6 +128,7 @@ set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOutcome.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecParam.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecResult.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityAction.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityActionSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.c
