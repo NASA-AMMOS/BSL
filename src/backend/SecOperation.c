@@ -75,7 +75,7 @@ bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self)
     CHK_AS_BOOL(self->_role == BSL_SECROLE_ACCEPTOR || self->_role == BSL_SECROLE_VERIFIER
                 || self->_role == BSL_SECROLE_SOURCE);
     CHK_AS_BOOL(BSLB_SecParamList_size(self->_param_list) < 1000);
-    CHK_AS_BOOL(self->conclusion >= BSL_SECOP_CONCLUSION_PENDING &&  self->conclusion <= BSL_SECOP_CONCLUSION_FAILURE);
+    CHK_AS_BOOL(self->conclusion >= BSL_SECOP_CONCLUSION_PENDING && self->conclusion <= BSL_SECOP_CONCLUSION_FAILURE);
     // NOLINTEND
     return true;
 }
