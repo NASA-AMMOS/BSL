@@ -1113,6 +1113,8 @@ int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_
  */
 bool BSL_SecurityActionSet_IsConsistent(const BSL_SecurityActionSet_t *self);
 
+size_t BSL_SecurityActionSet_CountOperations(const BSL_SecurityActionSet_t *self);
+
 /** Count number of security operations present in this policy action set.
  *
  * @param[in] self This action set.

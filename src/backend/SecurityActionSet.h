@@ -38,6 +38,7 @@ struct BSL_SecurityActionSet_s
     BSL_SecActionList_t actions;
     size_t action_count;
     size_t err_count;
+    size_t operation_count;
 };
 
 #endif /* BSLB_SECACTIONSET_H_ */

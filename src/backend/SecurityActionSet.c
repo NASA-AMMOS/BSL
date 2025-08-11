@@ -50,6 +50,7 @@ void BSL_SecurityActionSet_Deinit(BSL_SecurityActionSet_t *self)
     BSL_SecActionList_clear(self->actions);
     self->err_count = 0;
     self->action_count = 0;
+    self->operation_count = 0;
 }
 
 int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_SecurityAction_t *action)
@@ -58,6 +59,7 @@ int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_
     BSL_SecActionList_push_back(self->actions, *action);
     self->err_count += action->err_ct;
     self->action_count++;
+    self->operation_count += action->sec_op_list_length;
 
     return BSL_SUCCESS;
 }
@@ -66,6 +68,12 @@ size_t BSL_SecurityActionSet_CountActions(const BSL_SecurityActionSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     return self->action_count;
+}
+
+size_t BSL_SecurityActionSet_CountOperations(const BSL_SecurityActionSet_t *self)
+{
+    ASSERT_ARG_NONNULL(self);
+    return self->operation_count;
 }
 
 const BSL_SecurityAction_t *BSL_SecurityActionSet_GetActionAtIndex(const BSL_SecurityActionSet_t *self, size_t index)

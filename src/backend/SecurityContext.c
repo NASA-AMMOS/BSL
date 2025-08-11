@@ -467,7 +467,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
     CHK_PRECONDITION(BSL_SecurityActionSet_IsConsistent(action_set));
     // NOLINTEND
 
-    BSL_SecurityResponseSet_Init(output_response, BSL_SecurityActionSet_CountActions(action_set), 0);
+    BSL_SecurityResponseSet_Init(output_response, BSL_SecurityActionSet_CountOperations(action_set), 0);
     /**
      * Notes:
      *  - It should evaluate every security operation, even if earlier ones failed.
@@ -485,11 +485,13 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
         BSL_SecOperList_it_t secop_it;
         for (BSL_SecOperList_it(secop_it, act->sec_op_list); !BSL_SecOperList_end_p(secop_it); BSL_SecOperList_next(secop_it))
         {
+            memset(outcome, 0, BSL_SecOutcome_Sizeof());
+
             BSL_SecOper_t *sec_oper = BSL_SecOperList_ref(secop_it);
             const BSL_SecCtxDesc_t *sec_ctx = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
             ASSERT_PROPERTY(sec_ctx != NULL);
 
-            memset(outcome, 0, BSL_SecOutcome_Sizeof());
+            BSL_SecOutcome_Init(outcome, sec_oper, 100000);
 
             BSL_LOG_INFO("SC ABOUT TO ENTER CTX (SEC_OPER %lu) (ACTION %lu)", sec_oper, act);
 

@@ -52,8 +52,10 @@ int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *
             {
                 BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_INVALID);
             }
+            BSL_LOG_INFO("Inserting secop (tgt=%d) (ctx=%d) AFTER same target", sec_oper->target_block_num, sec_oper->context_id);
             BSL_SecOperList_insert(self->sec_op_list, it, *sec_oper);
             self->sec_op_list_length ++;
+            BSL_LOG_INFO("len struct %lu, len mlib %lu", self->sec_op_list_length, BSL_SecOperList_size(self->sec_op_list));
             return BSL_SUCCESS;
         }
     }
