@@ -98,8 +98,6 @@ uint64_t BSL_SecOper_GetSecurityBlockNum(const BSL_SecOper_t *self)
 
 uint64_t BSL_SecOper_GetTargetBlockNum(const BSL_SecOper_t *self)
 {
-    BSL_LOG_INFO("GET TARGET BLOCK NUM (SEC_OPER %lu) %d", self, self->target_block_num);
-
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
     return self->target_block_num;

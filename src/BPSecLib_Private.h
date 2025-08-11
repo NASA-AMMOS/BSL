@@ -1055,18 +1055,44 @@ const BSL_SecParam_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, si
 /// @return
 bool BSL_SecOutcome_IsInAbsSecBlock(const BSL_SecOutcome_t *self, const BSL_AbsSecBlock_t *abs_sec_block);
 
+/**
+ * @return size of security operation
+ */
 size_t BSL_SecurityAction_Sizeof(void);
 
+/**
+ * @return true if security action @param self is consistent
+ */
 bool BSL_SecurityAction_IsConsistent(const BSL_SecurityAction_t *self);
 
+/**
+ * Initialize security action
+ * @param self security action
+ */
 void BSL_SecurityAction_Init(BSL_SecurityAction_t *self);
 
+/**
+ * De-initialize security action
+ * @param self security action
+ */
 void BSL_SecurityAction_Deinit(BSL_SecurityAction_t *self);
 
+/**
+ * Add security operation to security action, with deterministic ordering
+ * @param self action to add security operation to
+ * @param sec_oper new security operation to add
+ * @return 0 if successful
+ */
 int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *sec_oper);
 
+/**
+ * @return number of security operation in the @param self action
+ */
 size_t BSL_SecurityAction_CountSecOpers(const BSL_SecurityAction_t *self);
 
+/**
+ * @return the security operation at @param index index in @param self security action
+ */
 BSL_SecOper_t *BSL_SecurityAction_GetSecOperAtIndex(const BSL_SecurityAction_t *self, size_t index);
 
 /** @brief Increment a security failure for this action set
@@ -1113,6 +1139,9 @@ int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_
  */
 bool BSL_SecurityActionSet_IsConsistent(const BSL_SecurityActionSet_t *self);
 
+/**
+ * @return the total number of operations within each of the actions of @param self action set
+ */
 size_t BSL_SecurityActionSet_CountOperations(const BSL_SecurityActionSet_t *self);
 
 /** Count number of security operations present in this policy action set.

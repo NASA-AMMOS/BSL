@@ -354,8 +354,6 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
 {
     (void)lib;
 
-    BSL_LOG_INFO("SC BACKEND SOURCE (SEC_OPER %lu) (OUTCOME %lu)", sec_oper, outcome);
-
     CHK_ARG_NONNULL(sec_context_fn);
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
@@ -492,8 +490,6 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             ASSERT_PROPERTY(sec_ctx != NULL);
 
             BSL_SecOutcome_Init(outcome, sec_oper, 100000);
-
-            BSL_LOG_INFO("SC ABOUT TO ENTER CTX (SEC_OPER %lu) (ACTION %lu)", sec_oper, act);
 
             int errcode = -1;
             if (BSL_SecOper_IsBIB(sec_oper))

@@ -43,8 +43,6 @@ int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *
 {
     ASSERT_ARG_NONNULL(self);
 
-    BSL_LOG_INFO("APPENDING SECOP: %lu ; tgt=%d; sc=%d", sec_oper, BSL_SecOper_GetTargetBlockNum(sec_oper), BSL_SecOper_GetSecurityBlockNum(sec_oper));
-
     BSL_SecOperList_it_t it;
     BSL_SecOperList_it_t it2;
     bool first_it = true;
@@ -55,9 +53,7 @@ int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *
         {
             bool before = !(BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsRoleSource(sec_oper));
             if (before)
-            {
-                BSL_LOG_INFO("INSERTING NEW SEC OP BEFORE (tgt=%d)", BSL_SecOper_GetTargetBlockNum(BSL_SecOperList_cref(it)));
-                
+            {                
                 // It seems the m*lib docs is incorrect here -
                 // it states that an uninitialized it2 = insert at front, but it was causing errors
                 // So, let's use a simple bool and check
@@ -72,7 +68,6 @@ int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *
             }
             else
             {
-                BSL_LOG_INFO("INSERTING NEW SEC OP AFTER (tgt=%d)", BSL_SecOper_GetTargetBlockNum(BSL_SecOperList_cref(it)));
                 BSL_SecOperList_insert(self->sec_op_list, it, *sec_oper);
             }
 
@@ -88,7 +83,6 @@ int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *
         // New sec block is the target of another sec block
         if (BSL_SecOper_GetTargetBlockNum(BSL_SecOperList_cref(it)) == BSL_SecOper_GetSecurityBlockNum(sec_oper))
         {
-            BSL_LOG_INFO("NEW SEC OP IS TGT, INSERTING AFTER (ptr=%lu)(tgt=%d)", sec_oper, BSL_SecOper_GetTargetBlockNum(BSL_SecOperList_cref(it)));
             if (first_it)
             {
                 BSL_SecOperList_push_back(self->sec_op_list, *sec_oper);

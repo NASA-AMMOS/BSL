@@ -563,8 +563,6 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
 {
     (void)lib;
 
-    BSL_LOG_INFO("SC BCB SOURCE (SEC_OPER %lu) (OUTCOME %lu)", sec_oper, sec_outcome);
-
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
     CHK_ARG_NONNULL(sec_outcome);
