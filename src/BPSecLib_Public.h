@@ -77,6 +77,21 @@ typedef enum
     BSL_POLICYLOCATION_CLOUT
 } BSL_PolicyLocation_e;
 
+/**
+ * @brief Indicates the conclusion state of a security operation
+ */
+typedef enum
+{
+    /// @brief Securuty operation is still pending action
+    BSL_SECOP_CONCLUSION_PENDING = 1,
+    /// @brief Securuty operation has concluded and succeeded
+    BSL_SECOP_CONCLUSION_SUCCESS,
+     /// @brief Securuty operation is invalid
+    BSL_SECOP_CONCLUSION_INVALID,
+     /// @brief Securuty operation has concluded and failed
+    BSL_SECOP_CONCLUSION_FAILURE
+} BSL_SecOper_ConclusionState_e;
+
 /** Block CRC types.
  * Defined in Section 4.2.1 of RFC 9171 @cite rfc9171.
  */
