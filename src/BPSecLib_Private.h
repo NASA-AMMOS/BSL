@@ -862,7 +862,7 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self);
  * @param[in] self The security operation
  * @return the conclusion state
  */
-BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(BSL_SecOper_t *self);
+BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(const BSL_SecOper_t *self);
 
 /**
  * Set the security operation conclusion state
