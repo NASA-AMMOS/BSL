@@ -82,13 +82,13 @@ typedef enum
  */
 typedef enum
 {
-    /// @brief Securuty operation is still pending action
+    /// @brief Security operation is still pending action
     BSL_SECOP_CONCLUSION_PENDING = 1,
-    /// @brief Securuty operation has concluded and succeeded
+    /// @brief Security operation has concluded and succeeded
     BSL_SECOP_CONCLUSION_SUCCESS,
-     /// @brief Securuty operation is invalid
+    /// @brief Security operation is invalid
     BSL_SECOP_CONCLUSION_INVALID,
-     /// @brief Securuty operation has concluded and failed
+    /// @brief Security operation has concluded and failed
     BSL_SECOP_CONCLUSION_FAILURE
 } BSL_SecOper_ConclusionState_e;
 
