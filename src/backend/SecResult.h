@@ -71,7 +71,7 @@
 
 #include <stdint.h>
 
-#include <m-list.h>
+#include <m-array.h>
 
 #include <BPSecLib_Private.h>
 
@@ -93,9 +93,13 @@ struct BSL_SecResult_s
     size_t _bytelen;
 };
 
-// TODO(BVB) - Doxygen suppress and annotate.
+/** @struct BSLB_SecResultList_t
+ * Defines a basic list of Security Results (::BSL_SecResult_t).
+ */
 // NOLINTBEGIN
-LIST_DEF(BSLB_SecResultList, BSL_SecResult_t, M_POD_OPLIST)
+/// @cond Doxygen_Suppress
+M_ARRAY_DEF(BSLB_SecResultList, BSL_SecResult_t, M_POD_OPLIST)
+/// @endcond
 // NOLINTEND
 
 #endif /* BSLB_SECRESULT_H_ */

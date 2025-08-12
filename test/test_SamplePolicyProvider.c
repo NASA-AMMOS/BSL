@@ -96,6 +96,7 @@ void test_SamplePolicyProvider_WildcardPolicyRuleVerifiesBIB(void)
     // Now evaluate the rule to get as a SecOper
     // This populates it with actual parameters.
     BSL_SecOper_t sec_oper;
+    BSL_SecOper_Init(&sec_oper);
     TEST_ASSERT_EQUAL(0, BSLP_PolicyRule_EvaluateAsSecOper(&rule, &sec_oper, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
 

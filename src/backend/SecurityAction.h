@@ -24,7 +24,7 @@
 #include "SecOperation.h"
 
 // NOLINTBEGIN
-ARRAY_DEF(BSL_SecOperList, BSL_SecOper_t, M_OPEXTEND(M_POD_OPLIST, CLEAR(API_2(BSL_SecOper_Deinit))))
+M_ARRAY_DEF(BSL_SecOperList, BSL_SecOper_t, M_OPL_BSL_SecOper_t())
 // NOLINTEND
 
 struct BSL_SecurityAction_s

@@ -127,6 +127,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         }
 
         BSL_SecOper_t *sec_oper = calloc(BSL_SecOper_Sizeof(), 1);
+        BSL_SecOper_Init(sec_oper);
         if (BSLP_PolicyRule_EvaluateAsSecOper(rule, sec_oper, bundle, location) < 0)
         {
             BSL_SecurityAction_IncrError(action);
@@ -140,6 +141,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     }
 
     BSL_SecurityActionSet_AppendAction(output_action_set, action);
+    BSL_SecurityAction_Deinit(action);
     free(action);
 
     CHK_POSTCONDITION(BSL_SecurityActionSet_IsConsistent(output_action_set));
@@ -288,9 +290,9 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    // It's found, so initialize the security operation from the rule and bundle.
-    BSL_SecOper_Init(sec_oper, self->context_id, target_block_num, 0, self->sec_block_type, self->role,
-                     self->failure_action_code);
+    // It's found, so populate the security operation from the rule and bundle.
+    BSL_SecOper_Populate(sec_oper, self->context_id, target_block_num, 0, self->sec_block_type, self->role,
+                         self->failure_action_code);
 
     // Next, append all the parameters from the matched rule.
     for (size_t index = 0; index < self->nparams; index++)

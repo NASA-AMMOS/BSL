@@ -29,7 +29,9 @@
 #include <BPSecLib_Private.h>
 #include "SecurityAction.h"
 
-LIST_DEF(BSL_SecActionList, BSL_SecurityAction_t, M_OPEXTEND(M_POD_OPLIST, CLEAR(API_2(BSL_SecurityAction_Deinit))))
+M_ARRAY_DEF(BSL_SecActionList, BSL_SecurityAction_t,
+            (INIT(API_2(BSL_SecurityAction_Init)), INIT_SET(API_6(BSL_SecurityAction_InitSet)), SET(0),
+             CLEAR(API_2(BSL_SecurityAction_Deinit))))
 
 /// @brief Contains the populated security operations for this bundle.
 /// @note This is intended to be a write-once, read-only struct

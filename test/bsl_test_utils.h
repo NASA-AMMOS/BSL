@@ -85,6 +85,8 @@ typedef struct
     BSL_SecOper_t sec_oper;
 } BIBTestContext;
 
+void BIBTestContext_Deinit(BIBTestContext *obj);
+
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id);
 
 static const uint8_t ApxA2_InitVec[]       = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };

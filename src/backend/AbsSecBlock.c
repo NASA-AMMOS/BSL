@@ -120,7 +120,7 @@ bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t targ
 {
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
     for
-        M_EACH(target_num, self->targets, LIST_OPLIST(uint64_list))
+        M_EACH(target_num, self->targets, M_ARRAY_OPLIST(uint64_list))
         {
             if (*target_num == target_block_num)
             {

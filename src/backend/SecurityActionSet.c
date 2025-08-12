@@ -56,6 +56,7 @@ void BSL_SecurityActionSet_Deinit(BSL_SecurityActionSet_t *self)
 int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_SecurityAction_t *action)
 {
     ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(action);
     BSL_SecActionList_push_back(self->actions, *action);
     self->err_count += action->err_ct;
     self->action_count++;

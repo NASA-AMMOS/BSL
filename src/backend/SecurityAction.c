@@ -40,6 +40,14 @@ void BSL_SecurityAction_Init(BSL_SecurityAction_t *self)
     self->err_ct = 0;
 }
 
+void BSL_SecurityAction_InitSet(BSL_SecurityAction_t *self, const BSL_SecurityAction_t *src)
+{
+    ASSERT_ARG_NONNULL(self);
+
+    BSL_SecOperList_init_set(self->sec_op_list, src->sec_op_list);
+    self->err_ct = src->err_ct;
+}
+
 void BSL_SecurityAction_Deinit(BSL_SecurityAction_t *self)
 {
     ASSERT_ARG_NONNULL(self);
@@ -62,7 +70,9 @@ size_t BSL_SecurityAction_CountErrors(const BSL_SecurityAction_t *self)
 int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *sec_oper)
 {
     ASSERT_ARG_NONNULL(self);
-    ASSERT_ARG_NONNULL(self->sec_op_list);
+    ASSERT_ARG_NONNULL(sec_oper);
+
+
     size_t i;
     for (i = 0; i < BSL_SecOperList_size(self->sec_op_list); i++)
     {
@@ -122,6 +132,9 @@ int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *
     {
         BSL_SecOperList_push_back(self->sec_op_list, *sec_oper);
     }
+
+    //TODO: better served by moving above
+    BSL_SecOper_Deinit(sec_oper);
 
     return BSL_SUCCESS;
 }

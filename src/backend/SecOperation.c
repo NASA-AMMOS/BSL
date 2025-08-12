@@ -32,13 +32,58 @@ size_t BSL_SecOper_Sizeof(void)
     return sizeof(BSL_SecOper_t);
 }
 
-void BSL_SecOper_Init(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
-                      BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e failure_code)
+void BSL_SecOper_Init(BSL_SecOper_t *self)
 {
     ASSERT_ARG_NONNULL(self);
 
     memset(self, 0, sizeof(*self));
     BSLB_SecParamList_init(self->_param_list);
+
+    ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
+}
+
+void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
+{
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(src);
+
+    memset(self, 0, sizeof(*self));
+    self->context_id = src->context_id;
+    self->target_block_num = src->target_block_num;
+    self->sec_block_num = src->sec_block_num;
+    self->failure_code = src->failure_code;
+    self->conclusion = src->conclusion;
+    self->_role = src->_role;
+    self->_service_type = src->_service_type;
+    BSLB_SecParamList_init_set(self->_param_list, src->_param_list);
+
+    ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
+}
+
+void BSL_SecOper_Deinit(BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    BSLB_SecParamList_clear(self->_param_list);
+}
+
+void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+
+    self->context_id = src->context_id;
+    self->target_block_num = src->target_block_num;
+    self->sec_block_num = src->sec_block_num;
+    self->failure_code = src->failure_code;
+    self->conclusion = src->conclusion;
+    self->_role = src->_role;
+    self->_service_type = src->_service_type;
+    BSLB_SecParamList_set(self->_param_list, src->_param_list);
+}
+
+void BSL_SecOper_Populate(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
+                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e failure_code)
+{
+    ASSERT_ARG_NONNULL(self);
     self->context_id       = context_id;
     self->target_block_num = target_block_num;
     self->sec_block_num    = sec_block_num;
@@ -48,12 +93,6 @@ void BSL_SecOper_Init(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_
     self->conclusion       = BSL_SECOP_CONCLUSION_PENDING;
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
-}
-
-void BSL_SecOper_Deinit(BSL_SecOper_t *self)
-{
-    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
-    BSLB_SecParamList_clear(self->_param_list);
 }
 
 size_t BSL_SecOper_CountParams(const BSL_SecOper_t *self)

@@ -774,17 +774,18 @@ typedef struct BSL_SecOper_s BSL_SecOper_t;
 
 size_t BSL_SecOper_Sizeof(void);
 
-/** Populate a pre-allocated Security Operation with the given values.
+/** Initialize a newly allocated structure.
  *
- * @param[in,out] self Non-NULL pointer to this security operation.
- * @param[in] context_id ID of the security context
- * @param[in] target_block_num Block ID of security target block
- * @param[in] sec_block_num Block ID of security block.
- * @param[in] sec_type Member of ::BSL_SecBlockType_e enum indicating BIB or BCB
- * @param[in] sec_role Member of ::BSL_SecRole_e enum indicating role.
+ * @param[in,out] self Non-NULL pointer to this security operation
  */
-void BSL_SecOper_Init(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
-                      BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e failure_code);
+void BSL_SecOper_Init(BSL_SecOper_t *self);
+
+/** Initialize from a copy.
+ *
+ * @param[in,out] self Non-NULL pointer to this security operation
+ * @param[in] src Non-NULL pointer to this source to copy from.
+ */
+void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src);
 
 /** Empty and release any resources used internally by this structure.
  *
@@ -794,6 +795,29 @@ void BSL_SecOper_Init(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_
  * @param[in,out] self Non-NULL pointer to this security operation
  */
 void BSL_SecOper_Deinit(BSL_SecOper_t *self);
+
+/** Set from a copy.
+ *
+ * @param[in,out] self Non-NULL pointer to this security operation
+ * @param[in] src Non-NULL pointer to this source to copy from.
+ */
+void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src);
+
+/// OPLIST for ::BSL_SecOper_t
+#define M_OPL_BSL_SecOper_t() \
+    (INIT(API_2(BSL_SecOper_Init)), INIT_SET(API_6(BSL_SecOper_InitSet)), SET(API_6(BSL_SecOper_Set)), CLEAR(API_2(BSL_SecOper_Deinit)))
+
+/** Populate an initialized Security Operation with the given values.
+ *
+ * @param[in,out] self Non-NULL pointer to this security operation.
+ * @param[in] context_id ID of the security context
+ * @param[in] target_block_num Block ID of security target block
+ * @param[in] sec_block_num Block ID of security block.
+ * @param[in] sec_type Member of ::BSL_SecBlockType_e enum indicating BIB or BCB
+ * @param[in] sec_role Member of ::BSL_SecRole_e enum indicating role.
+ */
+void BSL_SecOper_Populate(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
+                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e failure_code);
 
 /** Returns true if internal consistency and sanity checks pass
  *
@@ -1072,20 +1096,27 @@ bool BSL_SecurityAction_IsConsistent(const BSL_SecurityAction_t *self);
 
 /**
  * Initialize security action
- * @param self security action
+ * @param[out] self security action
  */
 void BSL_SecurityAction_Init(BSL_SecurityAction_t *self);
 
+/** Initialize from a copy.
+ *
+ * @param[out] self security action
+ * @param[in] src The source of the copy.
+ */
+void BSL_SecurityAction_InitSet(BSL_SecurityAction_t *self, const BSL_SecurityAction_t *src);
+
 /**
  * De-initialize security action
- * @param self security action
+ * @param[in,out] self security action
  */
 void BSL_SecurityAction_Deinit(BSL_SecurityAction_t *self);
 
 /**
  * Add security operation to security action, with deterministic ordering
  * @param[in,out] self action to add security operation to
- * @param[in] sec_oper new security operation to add
+ * @param[in,out] sec_oper new security operation to add and move from.
  * @return 0 if successful
  */
 int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *sec_oper);
