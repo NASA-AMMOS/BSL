@@ -649,7 +649,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
 
         if (!retval)
         {
-            const size_t  k_len = m_bstring_size(k_data);
+            const size_t   k_len = m_bstring_size(k_data);
             const uint8_t *k_ptr = m_bstring_view(k_data, 0, k_len);
 
             retval = BSL_Crypto_AddRegistryKey(kid_str, k_ptr, k_len);
