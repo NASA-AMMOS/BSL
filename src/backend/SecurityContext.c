@@ -480,12 +480,11 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
     for (BSL_SecActionList_it(act_it, action_set->actions); !BSL_SecActionList_end_p(act_it); BSL_SecActionList_next(act_it))
     {
         BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
-        BSL_SecOperList_it_t secop_it;
-        for (BSL_SecOperList_it(secop_it, act->sec_op_list); !BSL_SecOperList_end_p(secop_it); BSL_SecOperList_next(secop_it))
+        for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i ++)
         {
             memset(outcome, 0, BSL_SecOutcome_Sizeof());
 
-            BSL_SecOper_t *sec_oper = BSL_SecOperList_ref(secop_it);
+            BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
             const BSL_SecCtxDesc_t *sec_ctx = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
             ASSERT_PROPERTY(sec_ctx != NULL);
 

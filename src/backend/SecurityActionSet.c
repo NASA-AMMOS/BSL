@@ -59,7 +59,7 @@ int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_
     BSL_SecActionList_push_back(self->actions, *action);
     self->err_count += action->err_ct;
     self->action_count++;
-    self->operation_count += action->sec_op_list_length;
+    self->operation_count += BSL_SecurityAction_CountSecOpers(action);
 
     return BSL_SUCCESS;
 }

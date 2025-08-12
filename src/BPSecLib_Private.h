@@ -1046,6 +1046,11 @@ void BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self, const BSL_SecParam_t *pa
  */
 size_t BSL_SecOutcome_CountParams(const BSL_SecOutcome_t *self);
 
+/** Get the security parameter from the security outcome at the provided index
+ * @param[in] self security outcome
+ * @param[in] index index to retrieve security parameter from
+ * @return Security parameter
+ */
 const BSL_SecParam_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, size_t index);
 
 /// @brief Returns true if this (the parameters and results) is contained within the given ASK
@@ -1079,19 +1084,24 @@ void BSL_SecurityAction_Deinit(BSL_SecurityAction_t *self);
 
 /**
  * Add security operation to security action, with deterministic ordering
- * @param self action to add security operation to
- * @param sec_oper new security operation to add
+ * @param[in,out] self action to add security operation to
+ * @param[in] sec_oper new security operation to add
  * @return 0 if successful
  */
 int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *sec_oper);
 
+/** Order the Security operations such that execution will be successful
+ * @param[in, out] self action to sort
+ */
+int BSL_SecurityAction_OrderSecOps(BSL_SecurityAction_t *self);
+
 /**
- * @return number of security operation in the @param self action
+ * @return number of security operation in the @param[in] self action
  */
 size_t BSL_SecurityAction_CountSecOpers(const BSL_SecurityAction_t *self);
 
 /**
- * @return the security operation at @param index index in @param self security action
+ * @return the security operation at @param[in] index index in @param[in] self security action
  */
 BSL_SecOper_t *BSL_SecurityAction_GetSecOperAtIndex(const BSL_SecurityAction_t *self, size_t index);
 

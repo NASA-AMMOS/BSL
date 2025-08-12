@@ -16,7 +16,6 @@ void BSL_SecurityAction_Init(BSL_SecurityAction_t *self)
     ASSERT_ARG_NONNULL(self);
 
     BSL_SecOperList_init(self->sec_op_list);
-    self->sec_op_list_length = 0;
     self->err_ct = 0;
 }
 
@@ -42,83 +41,73 @@ size_t BSL_SecurityAction_CountErrors(const BSL_SecurityAction_t *self)
 int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *sec_oper)
 {
     ASSERT_ARG_NONNULL(self);
-
-    BSL_SecOperList_it_t it;
-
-    for (BSL_SecOperList_it(it, self->sec_op_list); !BSL_SecOperList_end_p(it); BSL_SecOperList_next(it))
+    ASSERT_ARG_NONNULL(self->sec_op_list);
+    size_t i;
+    for (i = 0 ; i < BSL_SecOperList_size(self->sec_op_list); i ++)
     {
-        // New sec block shares target with another sec block
-        if (BSL_SecOper_GetTargetBlockNum(BSL_SecOperList_cref(it)) == BSL_SecOper_GetTargetBlockNum(sec_oper))
+        BSL_SecOper_t *comp = BSL_SecOperList_get(self->sec_op_list, i);
+        if (BSL_SecOper_GetTargetBlockNum(comp) == BSL_SecOper_GetTargetBlockNum(sec_oper))
         {
-            bool before = !(BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsRoleSource(sec_oper));
-            if (before)
-            {                
-                // It seems the m*lib docs is incorrect here -
-                // it states that an uninitialized it2 = insert at front, but it was causing errors
-                // So, let's use a simple bool and check
-
-                // TODO BEFORE
-                BSL_SecOperList_previous(it);
-                BSL_SecOperList_push_after(BSL_SecOperList_ref(it), sec_oper);
-                BSL_SecOperList_next(it);
+            // SOURCE BIB or ACCEPT BCB should come first
+            // true if ACC BIB or SRC BCB
+            if (BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsRoleSource(sec_oper))
+            {
+                BSL_SecOperList_push_at(self->sec_op_list, i+1, *sec_oper);
             }
             else
             {
-                BSL_SecOperList_push_after(BSL_SecOperList_ref(it), sec_oper);
+                BSL_SecOperList_push_at(self->sec_op_list, i, *sec_oper);
             }
+            break;
+        }
 
-            if (!(BSL_SecOper_IsBIB(BSL_SecOperList_cref(it)) ^ BSL_SecOper_IsBIB(sec_oper)))
+        // security operation in list targets security operation
+        if (BSL_SecOper_GetTargetBlockNum(comp) == BSL_SecOper_GetSecurityBlockNum(sec_oper))
+        {
+            BSL_SecOperList_push_at(self->sec_op_list, i, *sec_oper);
+            break;
+        }
+
+        // new security operation targets security operation in list
+        if (BSL_SecOper_GetTargetBlockNum(sec_oper) == BSL_SecOper_GetSecurityBlockNum(comp))
+        {
+            BSL_SecOperList_push_at(self->sec_op_list, i+1, *sec_oper);
+            break;
+        }
+
+        // same security block number, order by target
+        if (BSL_SecOper_GetSecurityBlockNum(sec_oper) == BSL_SecOper_GetSecurityBlockNum(comp))
+        {
+            if (BSL_SecOper_GetTargetBlockNum(comp) - BSL_SecOper_GetTargetBlockNum(sec_oper))
             {
-                BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_INVALID);
+                BSL_SecOperList_push_at(self->sec_op_list, i, *sec_oper);
             }
-           
-            self->sec_op_list_length ++;
-            return BSL_SUCCESS;
-        }
-
-        // New sec block is the target of another sec block
-        if (BSL_SecOper_GetTargetBlockNum(BSL_SecOperList_cref(it)) == BSL_SecOper_GetSecurityBlockNum(sec_oper))
-        {
-            BSL_SecOperList_previous(it);
-            BSL_SecOperList_push_after(BSL_SecOperList_ref(it), sec_oper);
-            BSL_SecOperList_next(it);
-            self->sec_op_list_length ++;
-            return BSL_SUCCESS;
-        }
-
-        // New sec block targets a block already in list
-        if (BSL_SecOper_GetTargetBlockNum(sec_oper) == BSL_SecOper_GetSecurityBlockNum(BSL_SecOperList_cref(it)))
-        {
-            BSL_SecOperList_push_after(BSL_SecOperList_ref(it), sec_oper);
-            self->sec_op_list_length ++;
-            return BSL_SUCCESS;
+            else
+            {
+                BSL_SecOperList_push_at(self->sec_op_list, i+1, *sec_oper);
+            }
+            break;
         }
     }
 
-    // Target not shared, order doesn't matter
-    BSL_SecOperList_push_back(self->sec_op_list, sec_oper);
-    self->sec_op_list_length ++;
-
+    if (i >= BSL_SecOperList_size(self->sec_op_list))
+    {
+        BSL_SecOperList_push_back(self->sec_op_list, *sec_oper);
+    }
+    
     return BSL_SUCCESS;
 }
 
 size_t BSL_SecurityAction_CountSecOpers(const BSL_SecurityAction_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    return self->sec_op_list_length;
+    ASSERT_ARG_NONNULL(self->sec_op_list);
+    return BSL_SecOperList_size(self->sec_op_list);
 }
 
 BSL_SecOper_t *BSL_SecurityAction_GetSecOperAtIndex(const BSL_SecurityAction_t *self, size_t index)
 {
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(self->sec_op_list);
-    size_t n = 0;
-    for M_EACH(item, self->sec_op_list, ILIST_OPLIST(BSL_SecOperList)) {
-        if (n == index)
-        {
-            return item;
-        }
-        n++;
-    }
-    return NULL;
+    return BSL_SecOperList_get(self->sec_op_list, index);
 }

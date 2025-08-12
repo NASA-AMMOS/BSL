@@ -133,10 +133,9 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
         for (BSL_SecActionList_it(act_it, output_action_set->actions); !BSL_SecActionList_end_p(act_it); BSL_SecActionList_next(act_it))
         {
             BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
-            BSL_SecOperList_it_t secop_it;
-            for (BSL_SecOperList_it(secop_it, act->sec_op_list); !BSL_SecOperList_end_p(secop_it); BSL_SecOperList_next(secop_it))
+            for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j ++)
             {
-                BSL_SecOper_t *sec_oper = BSL_SecOperList_ref(secop_it);
+                BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, j);
                 if (block.type_code != sec_oper->_service_type)
                 {
                     continue;
@@ -203,10 +202,9 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     for (BSL_SecActionList_it(act_it, policy_actions->actions); !BSL_SecActionList_end_p(act_it); BSL_SecActionList_next(act_it))
     {
         BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
-        BSL_SecOperList_it_t secop_it;
-        for (BSL_SecOperList_it(secop_it, act->sec_op_list); !BSL_SecOperList_end_p(secop_it); BSL_SecOperList_next(secop_it))
+        for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i ++)
         {
-            BSL_SecOper_t *sec_oper = BSL_SecOperList_ref(secop_it);
+            BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
 
             BSL_SecOper_ConclusionState_e conclusion = BSL_SecOper_GetConclusion(sec_oper);
 

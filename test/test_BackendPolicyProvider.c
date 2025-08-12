@@ -120,7 +120,7 @@ void test_PolicyProvider_InspectSingleBIBRuleset(void)
                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
     TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_CountActions(&action_set));
-    TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)->sec_op_list_length);
+    TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
 
     BSL_SecurityActionSet_Deinit(&action_set);
 }

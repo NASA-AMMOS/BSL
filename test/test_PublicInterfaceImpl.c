@@ -150,7 +150,7 @@ void test_SourceSimpleBIB(void)
         TEST_ASSERT_EQUAL(0, query_result);
         // We know that it contains one operation (Add a BIB block to payload)
         TEST_ASSERT_EQUAL(1, action_set.action_count);
-        TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)->sec_op_list_length);
+        TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
     }
 
     {
@@ -204,7 +204,7 @@ void test_API_RemoveFailedBlock(void)
 
     TEST_ASSERT_EQUAL(0, query_result);
     TEST_ASSERT_EQUAL(1, action_set.action_count);
-    TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)->sec_op_list_length);
+    TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
 
 
     // We know that we should expect one failure in the result.

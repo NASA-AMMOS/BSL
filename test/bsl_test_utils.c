@@ -88,6 +88,7 @@ BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bi
     BSL_SecurityAction_t *act = calloc(sizeof(BSL_SecurityAction_t), 1);
     BSL_SecurityAction_Init(act);
     BSL_SecurityAction_AppendSecOper(act, &bib_context->sec_oper);
+    //BSL_SecurityAction_OrderSecOps(act);
     BSL_SecurityActionSet_AppendAction(action_set, act);
     free(act);
     return action_set;

@@ -294,6 +294,7 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
     BSL_SecurityAction_AppendSecOper(malloced_action, &bib_oper_ext_block);
     BSL_SecurityAction_AppendSecOper(malloced_action, &bcb_oper);
 
+    //BSL_SecurityAction_OrderSecOps(malloced_action);
     BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
@@ -370,6 +371,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecurityAction_AppendSecOper(malloced_action, &bib_oper_ext_block);
     BSL_SecurityAction_AppendSecOper(malloced_action, &bcb_oper);
 
+    //BSL_SecurityAction_OrderSecOps(malloced_action);
     BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
@@ -463,6 +465,7 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_SecurityAction_AppendSecOper(malloced_action, &bcb_op_tgt_payload);
     BSL_SecurityAction_AppendSecOper(malloced_action, &bcb_op_tgt_bib);
 
+    //BSL_SecurityAction_OrderSecOps(malloced_action);
     BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
@@ -542,6 +545,7 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecurityAction_AppendSecOper(malloced_action, &bcb_op_tgt_bib);
     BSL_SecurityAction_AppendSecOper(malloced_action, &bib_oper_payload);
 
+    //BSL_SecurityAction_OrderSecOps(malloced_action);
     BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
