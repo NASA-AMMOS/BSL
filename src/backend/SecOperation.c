@@ -48,13 +48,13 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     ASSERT_ARG_NONNULL(src);
 
     memset(self, 0, sizeof(*self));
-    self->context_id = src->context_id;
+    self->context_id       = src->context_id;
     self->target_block_num = src->target_block_num;
-    self->sec_block_num = src->sec_block_num;
-    self->failure_code = src->failure_code;
-    self->conclusion = src->conclusion;
-    self->_role = src->_role;
-    self->_service_type = src->_service_type;
+    self->sec_block_num    = src->sec_block_num;
+    self->failure_code     = src->failure_code;
+    self->conclusion       = src->conclusion;
+    self->_role            = src->_role;
+    self->_service_type    = src->_service_type;
     BSLB_SecParamList_init_set(self->_param_list, src->_param_list);
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
@@ -70,13 +70,13 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
-    self->context_id = src->context_id;
+    self->context_id       = src->context_id;
     self->target_block_num = src->target_block_num;
-    self->sec_block_num = src->sec_block_num;
-    self->failure_code = src->failure_code;
-    self->conclusion = src->conclusion;
-    self->_role = src->_role;
-    self->_service_type = src->_service_type;
+    self->sec_block_num    = src->sec_block_num;
+    self->failure_code     = src->failure_code;
+    self->conclusion       = src->conclusion;
+    self->_role            = src->_role;
+    self->_service_type    = src->_service_type;
     BSLB_SecParamList_set(self->_param_list, src->_param_list);
 }
 

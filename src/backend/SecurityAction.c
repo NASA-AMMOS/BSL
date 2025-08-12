@@ -72,7 +72,6 @@ int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(sec_oper);
 
-
     size_t i;
     for (i = 0; i < BSL_SecOperList_size(self->sec_op_list); i++)
     {
@@ -133,7 +132,7 @@ int BSL_SecurityAction_AppendSecOper(BSL_SecurityAction_t *self, BSL_SecOper_t *
         BSL_SecOperList_push_back(self->sec_op_list, *sec_oper);
     }
 
-    //TODO: better served by moving above
+    // TODO: better served by moving above
     BSL_SecOper_Deinit(sec_oper);
 
     return BSL_SUCCESS;
