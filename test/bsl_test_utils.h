@@ -29,8 +29,6 @@
 #include <backend/SecParam.h>
 #include <backend/SecResult.h>
 #include <backend/SecurityActionSet.h>
-//#include <backend/SecurityAction.h>
-
 #include <mock_bpa/mock_bpa_ctr.h>
 
 /// @brief Key ID for the Appendix A1 key in OpenSSL
