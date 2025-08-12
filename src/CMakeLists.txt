@@ -135,7 +135,6 @@ set(BSL_DYNAMIC_C
 )
 
 add_library(bsl_dynamic)
-add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h)
 target_sources(bsl_dynamic PUBLIC ${BSL_DYNAMIC_H})
 target_sources(bsl_dynamic PRIVATE ${BSL_DYNAMIC_C})
 set_target_properties(bsl_dynamic
