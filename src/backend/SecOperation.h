@@ -29,7 +29,7 @@
 
 #include <stdint.h>
 
-#include <m-list.h>
+#include <m-i-list.h>
 
 #include <BPSecLib_Private.h>
 
@@ -56,6 +56,8 @@ struct BSL_SecOper_s
     BSL_SecRole_e       _role;
     BSL_SecBlockType_e  _service_type;
     BSLB_SecParamList_t _param_list;
+
+    ILIST_INTERFACE (BSL_SecOperList, struct BSL_SecOper_s);
 };
 
 #endif /* BSLB_SECOPERATIONS_H_ */
