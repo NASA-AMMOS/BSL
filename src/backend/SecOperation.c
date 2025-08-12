@@ -47,6 +47,8 @@ void BSL_SecOper_Init(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_
     self->_role            = sec_role;
     self->conclusion       = BSL_SECOP_CONCLUSION_PENDING;
 
+    M_ILIST_INIT_FIELD(BSL_SecOperList, *self);
+
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
 
