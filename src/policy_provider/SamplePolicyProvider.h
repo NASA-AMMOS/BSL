@@ -33,7 +33,7 @@
 #include <BPSecLib_Private.h>
 
 // NOLINTBEGIN
-M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t*, M_PTR_OPLIST)
+M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t *, M_PTR_OPLIST)
 // NOLINTEND
 
 /**
