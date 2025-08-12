@@ -10,3 +10,7 @@
 	path = deps/QCBOR
 	url = https://github.com/laurencelundblade/QCBOR.git
 	branch = master
+[submodule "deps/fuzztest"]
+	path = deps/fuzztest
+	url = https://github.com/google/fuzztest.git
+	branch = main

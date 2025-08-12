@@ -28,6 +28,7 @@ option(BUILD_DOCS_MAN "Enable manpage building" OFF)
 option(BUILD_TESTING "Enable building unit tests" ON)
 option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
 option(TEST_COVERAGE "Enable test runtime coverage logging" ON)
+option(TEST_FUZZ "Enable fuzz testing" OFF)
 option(BUILD_PACKAGE "Enable building package outputs" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -162,6 +163,10 @@ if(BUILD_TESTING)
       BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
     )
   endif(TEST_COVERAGE)
+  if(TEST_FUZZ)
+    add_subdirectory(deps/fuzztest)
+    fuzztest_setup_fuzzing_flags()
+  endif(TEST_FUZZ)
 
   include(CTest)
   set(CMAKE_CTEST_ARGUMENTS
