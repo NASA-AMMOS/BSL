@@ -26,7 +26,7 @@
  *
  * @details
  *
- * The details from the RFC are as follows:
+ * The details from the RFC Section 3.6 @cite rfc9172 are as follows:
  *
  * <blockquote>
  * This field captures one or more security context parameters that should be used
@@ -46,8 +46,6 @@
  * Section 3.10.
  *
  * </blockquote>
- *
- * @cite  https://www.rfc-editor.org/rfc/rfc9172.html#section-3.6-3.10.1
  *
  * @author Bill.Van.Besien@jhuapl.edu
  */

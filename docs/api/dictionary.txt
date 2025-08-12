@@ -22,9 +22,12 @@ backends
 Backends
 BCB
 BCBs
+Berners
 BIB's
+Birkholz
 Birrane
 Bitwise
+Bormann
 bpa
 BPA's
 BPSec
@@ -43,10 +46,12 @@ bytestream
 bytestring
 bytestrings
 callee's
+Carsten
 CBOR
 cek
 centric
 CFE
+Christoph
 ciphertext
 CLA
 clin
@@ -91,6 +96,7 @@ frontend
 Frontend
 GCM
 Heiner
+Henk
 hmac
 html
 IANA
@@ -103,6 +109,7 @@ ipn
 IPN
 IPPT
 IsInt
+isspace
 JHU
 Josefsson
 JPL
@@ -114,6 +121,7 @@ lifecycle
 Lifecycles
 malloc
 MALLOC
+Masinter
 McKeever
 md
 mem
@@ -191,6 +199,7 @@ validator
 verifier
 Verifier
 VERIFIER
+Vigano
 VxWorks
 whitespace
 Whitespace
