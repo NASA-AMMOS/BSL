@@ -25,7 +25,7 @@
  * @ingroup mock_bpa
  */
 
-#include "bsl_mock_bpa_policy_config.h"
+#include "policy_config.h"
 
 int mock_bpa_hexchar_to_int(char c)
 {

@@ -37,7 +37,7 @@
 #include <security_context/rfc9173.h>
 #include <CryptoInterface.h>
 
-#include "mock_bpa_policy_registry.h"
+#include "policy_registry.h"
 
 #ifdef __cplusplus
 extern "C" {

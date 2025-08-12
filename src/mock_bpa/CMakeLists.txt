@@ -25,35 +25,30 @@ target_compile_options(bsl_mock_bpa PRIVATE -Wshadow -Wpointer-arith -Wstrict-pr
 
 target_sources(
   bsl_mock_bpa PUBLIC 
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_crc.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_eid.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_eidpat.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_encode.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_decode.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_policy_config.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_policy_params.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_policy_registry.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_ctr.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_MockBPA.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/agent.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/crc.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/eid.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/eidpat.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/encode.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/decode.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_config.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_params.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_registry.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/ctr.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/MockBPA.h
 )
 target_sources(
   bsl_mock_bpa PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_crc.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_eid.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_eidpat.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_encode.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_decode.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl_mock_bpa_policy_config.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_policy_params.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_policy_registry.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa_ctr.c
-)
-target_include_directories(
-  bsl_mock_bpa PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/bsl>
+  ${CMAKE_CURRENT_SOURCE_DIR}/agent.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/eid.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/eidpat.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/encode.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/decode.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_config.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_params.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_registry.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/ctr.c
 )
 set_target_properties(bsl_mock_bpa
     PROPERTIES

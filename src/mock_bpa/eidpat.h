@@ -34,7 +34,7 @@
 
 #include <BPSecLib_Private.h>
 
-#include "bsl_mock_bpa_eid.h"
+#include "eid.h"
 
 #ifdef __cplusplus
 extern "C" {

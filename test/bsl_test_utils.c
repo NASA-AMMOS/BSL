@@ -25,7 +25,7 @@
 
 #include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
-#include <BPSecLib_MockBPA.h>
+#include <mock_bpa/MockBPA.h>
 
 #include <backend/SecParam.h>
 #include <backend/SecurityActionSet.h>

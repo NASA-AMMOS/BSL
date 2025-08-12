@@ -34,7 +34,7 @@
 
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
-#include <BPSecLib_MockBPA.h>
+#include <mock_bpa/MockBPA.h>
 
 #include <policy_provider/SamplePolicyProvider.h>
 
@@ -46,7 +46,7 @@ void setUp(void)
 {
     BSL_openlog();
     memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
-    assert(0 == bsl_mock_bpa_init());
+    assert(0 == bsl_mock_bpa_agent_init());
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
     TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
 
@@ -64,7 +64,7 @@ void tearDown(void)
 {
     mock_bpa_ctr_deinit(&LocalTestCtx.mock_bpa_ctr);
     TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));
-    bsl_mock_bpa_deinit();
+    bsl_mock_bpa_agent_deinit();
     BSL_closelog();
 }
 

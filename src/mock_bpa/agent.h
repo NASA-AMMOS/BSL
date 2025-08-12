@@ -97,11 +97,11 @@ int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref);
 /** Register this mock BPA for the current process.
  * @return Zero if successful.
  */
-int bsl_mock_bpa_init(void);
+int bsl_mock_bpa_agent_init(void);
 
 /** Clean up the mock BPA for the current process.
  */
-void bsl_mock_bpa_deinit(void);
+void bsl_mock_bpa_agent_deinit(void);
 
 #ifdef __cplusplus
 } // extern C
