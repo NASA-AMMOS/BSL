@@ -31,6 +31,7 @@ target_sources(
   ${CMAKE_CURRENT_SOURCE_DIR}/eidpat.h
   ${CMAKE_CURRENT_SOURCE_DIR}/encode.h
   ${CMAKE_CURRENT_SOURCE_DIR}/decode.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/text_util.h
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_config.h
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_params.h
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_registry.h
@@ -45,6 +46,7 @@ target_sources(
   ${CMAKE_CURRENT_SOURCE_DIR}/eidpat.c
   ${CMAKE_CURRENT_SOURCE_DIR}/encode.c
   ${CMAKE_CURRENT_SOURCE_DIR}/decode.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/text_util.c
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_config.c
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_params.c
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_registry.c
@@ -58,11 +60,11 @@ set_target_properties(bsl_mock_bpa
 target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
 target_link_libraries(bsl_mock_bpa PUBLIC QCBOR::qcbor)
 target_link_libraries(bsl_mock_bpa PUBLIC Jansson::Jansson)
-target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_default_sc bsl_sample_pp)
+target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_sample_pp)
 
 add_executable(bsl-mock-bpa)
 target_sources(bsl-mock-bpa PRIVATE mock_bpa.c)
-target_link_libraries(bsl-mock-bpa PUBLIC bsl_mock_bpa bsl_dynamic bsl_default_sc bsl_sample_pp bsl_crypto)
+target_link_libraries(bsl-mock-bpa PUBLIC bsl_mock_bpa bsl_crypto)
 target_link_libraries(bsl-mock-bpa PUBLIC Threads::Threads)
 
 # Installation config
