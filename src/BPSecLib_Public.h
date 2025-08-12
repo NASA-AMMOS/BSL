@@ -49,9 +49,10 @@ typedef struct BSL_LibCtx_s BSL_LibCtx_t;
 /// process the Bundle.
 typedef struct BSL_SecurityResponseSet_s BSL_SecurityResponseSet_t;
 
-/// @brief Forward declaration of ::BSL_SecurityActionSet_s, which contains information for BSL to process the Bundle.
+/// @brief Forward declaration of ::BSL_SecurityActionSet_s, which contains actions for BSL to process the Bundle.
 typedef struct BSL_SecurityActionSet_s BSL_SecurityActionSet_t;
 
+/// @brief Forward declaration of ::BSL_SecurityAction_s, which contains security operations for BSL to process the Bundle.
 typedef struct BSL_SecurityAction_s BSL_SecurityAction_t;
 
 /// @brief Forward-declaration for structure containing callbacks to a security context.

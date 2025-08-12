@@ -160,6 +160,8 @@ RTEMS
 ruleset
 sc
 SCs
+SecurityAction
+SecurityActionSet
 SHA
 sipos
 speciality
