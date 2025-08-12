@@ -97,7 +97,6 @@ BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bi
     BSL_SecurityAction_AppendSecOper(act, &bib_context->sec_oper);
     // ensure consistent context state
     BSL_SecOper_Init(&bib_context->sec_oper);
-    // BSL_SecurityAction_OrderSecOps(act);
     BSL_SecurityActionSet_AppendAction(action_set, act);
     BSL_SecurityAction_Deinit(act);
     free(act);

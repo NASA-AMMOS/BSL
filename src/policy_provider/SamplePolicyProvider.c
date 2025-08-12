@@ -103,7 +103,9 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
 
     BSL_SecurityActionSet_Init(output_action_set);
 
-    BSL_SecurityAction_t *action = calloc(BSL_SecurityAction_Sizeof(), 1);
+    BSL_SecurityAction_t *action = BSL_CALLOC(BSL_SecurityAction_Sizeof(), 1);
+    BSLP_SecOperPtrList_t secops;
+    BSLP_SecOperPtrList_init(secops);
 
     const size_t capacity = sizeof(self->rules) / sizeof(BSLP_PolicyRule_t);
     for (size_t index = 0; index < self->rule_count && index < capacity; index++)
@@ -126,7 +128,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
             continue;
         }
 
-        BSL_SecOper_t *sec_oper = calloc(BSL_SecOper_Sizeof(), 1);
+        BSL_SecOper_t *sec_oper = BSL_CALLOC(BSL_SecOper_Sizeof(), 1);
         BSL_SecOper_Init(sec_oper);
         if (BSLP_PolicyRule_EvaluateAsSecOper(rule, sec_oper, bundle, location) < 0)
         {
@@ -134,15 +136,83 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         }
         else
         {
-            BSL_SecurityAction_AppendSecOper(action, sec_oper);
+            size_t i;
+            for (i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
+            {
+                BSL_SecOper_t **comp = BSLP_SecOperPtrList_get(secops, i);
+                BSL_LOG_INFO("NEW SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(sec_oper), BSL_SecOper_IsBIB(sec_oper), BSL_SecOper_GetSecurityBlockNum(sec_oper));
+                BSL_LOG_INFO("comp SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(*comp), BSL_SecOper_IsBIB(*comp), BSL_SecOper_GetSecurityBlockNum(*comp));
+                if (BSL_SecOper_GetTargetBlockNum(*comp) == BSL_SecOper_GetTargetBlockNum(sec_oper))
+                {
+                    // Both BIBs or BCBs
+                    if (!(BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsBIB(*comp)))
+                    {
+                        BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_INVALID);
+                    }
+                    // SOURCE BIB or ACCEPT BCB should come first
+                    // true if ACC BIB or SRC BCB
+                    if (BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsRoleSource(sec_oper))
+                    {
+                        BSL_LOG_INFO("NEW OP AFTER COMP");
+                        BSLP_SecOperPtrList_push_at(secops, i + 1, sec_oper);
+                    }
+                    else
+                    {
+                        BSL_LOG_INFO("NEW OP BEFORE COMP");
+                        BSLP_SecOperPtrList_push_at(secops, i, sec_oper);
+                    }
+                    break;
+                }
+
+                // security operation in list targets security operation
+                if (BSL_SecOper_GetTargetBlockNum(*comp) == BSL_SecOper_GetSecurityBlockNum(sec_oper))
+                {
+                    BSLP_SecOperPtrList_push_at(secops, i, sec_oper);
+                    break;
+                }
+
+                // new security operation targets security operation in list
+                if (BSL_SecOper_GetTargetBlockNum(sec_oper) == BSL_SecOper_GetSecurityBlockNum(*comp))
+                {
+                    BSLP_SecOperPtrList_push_at(secops, i + 1, sec_oper);
+                    break;
+                }
+
+                // same security block number, order by target
+                if (BSL_SecOper_GetSecurityBlockNum(sec_oper) == BSL_SecOper_GetSecurityBlockNum(*comp))
+                {
+                    if (BSL_SecOper_GetTargetBlockNum(*comp) - BSL_SecOper_GetTargetBlockNum(sec_oper))
+                    {
+                        BSLP_SecOperPtrList_push_at(secops, i, sec_oper);
+                    }
+                    else
+                    {
+                        BSLP_SecOperPtrList_push_at(secops, i + 1, sec_oper);
+                    }
+                    break;
+                }
+            }
+
+            if (i >= BSLP_SecOperPtrList_size(secops))
+            {
+                BSL_LOG_INFO("append to end");
+                BSLP_SecOperPtrList_push_back(secops, sec_oper);
+            }
         }
-        free(sec_oper);
         BSL_LOG_INFO("Created sec operation for rule `%s`", rule->description);
     }
 
+    for (size_t i = 0 ; i < BSLP_SecOperPtrList_size(secops); i ++)
+    {
+        BSL_SecOper_t **secop = BSLP_SecOperPtrList_get(secops, i);
+        BSL_SecurityAction_AppendSecOper(action, *secop);
+        BSL_FREE(*secop);
+    }
+    BSLP_SecOperPtrList_clear(secops);
+
     BSL_SecurityActionSet_AppendAction(output_action_set, action);
     BSL_SecurityAction_Deinit(action);
-    free(action);
+    BSL_FREE(action);
 
     CHK_POSTCONDITION(BSL_SecurityActionSet_IsConsistent(output_action_set));
     return (int)BSL_SecurityActionSet_CountErrors(output_action_set);
@@ -238,7 +308,7 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
     // TODO(bvb) assert Role in expected range
     self->failure_action_code = failure_action_code;
     self->role                = role;
-    self->params              = calloc(BSL_SecParam_Sizeof() * 10, 1);
+    self->params              = BSL_CALLOC(BSL_SecParam_Sizeof() * 10, 1);
     self->nparams             = 0;
     assert(BSLP_PolicyRule_IsConsistent(self));
     return BSL_SUCCESS;
@@ -248,7 +318,7 @@ void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
     assert(BSLP_PolicyRule_IsConsistent(self));
     BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%lu", self->description, self->nparams);
-    free(self->params);
+    BSL_FREE(self->params);
     memset(self, 0, sizeof(*self));
 }
 

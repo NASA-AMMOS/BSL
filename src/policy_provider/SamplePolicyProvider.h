@@ -29,8 +29,12 @@
 #define BSLP_SAMPLE_POLICY_PROVIDER_H
 
 #include <stdint.h>
-
+#include <m-array.h>
 #include <BPSecLib_Private.h>
+
+// NOLINTBEGIN
+M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t*, M_PTR_OPLIST)
+// NOLINTEND
 
 /**
  * THE key function that matches a bundle against a rule to provide the output action and specific parameters to use for

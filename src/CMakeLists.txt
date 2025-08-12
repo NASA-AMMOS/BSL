@@ -110,6 +110,7 @@ set_target_properties(bsl_sample_pp
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
+target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H
