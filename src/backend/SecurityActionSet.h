@@ -36,9 +36,9 @@ LIST_DEF(BSL_SecActionList, BSL_SecurityAction_t, M_OPEXTEND(M_POD_OPLIST, CLEAR
 struct BSL_SecurityActionSet_s
 {
     BSL_SecActionList_t actions;
-    size_t action_count;
-    size_t err_count;
-    size_t operation_count;
+    size_t              action_count;
+    size_t              err_count;
+    size_t              operation_count;
 };
 
 #endif /* BSLB_SECACTIONSET_H_ */

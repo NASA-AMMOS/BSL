@@ -206,7 +206,6 @@ void test_API_RemoveFailedBlock(void)
     TEST_ASSERT_EQUAL(1, action_set.action_count);
     TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
 
-
     // We know that we should expect one failure in the result.
     BSL_SecurityResponseSet_t response_set = { 0 };
 

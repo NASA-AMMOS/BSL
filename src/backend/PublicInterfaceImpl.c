@@ -130,10 +130,11 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
             continue;
         }
         BSL_SecActionList_it_t act_it;
-        for (BSL_SecActionList_it(act_it, output_action_set->actions); !BSL_SecActionList_end_p(act_it); BSL_SecActionList_next(act_it))
+        for (BSL_SecActionList_it(act_it, output_action_set->actions); !BSL_SecActionList_end_p(act_it);
+             BSL_SecActionList_next(act_it))
         {
             BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
-            for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j ++)
+            for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j++)
             {
                 BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, j);
                 if (block.type_code != sec_oper->_service_type)
@@ -199,10 +200,11 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     bool must_drop = false;
 
     BSL_SecActionList_it_t act_it;
-    for (BSL_SecActionList_it(act_it, policy_actions->actions); !BSL_SecActionList_end_p(act_it); BSL_SecActionList_next(act_it))
+    for (BSL_SecActionList_it(act_it, policy_actions->actions); !BSL_SecActionList_end_p(act_it);
+         BSL_SecActionList_next(act_it))
     {
         BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
-        for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i ++)
+        for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i++)
         {
             BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
 
@@ -235,7 +237,8 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
                 }
                 case BSL_POLICYACTION_DROP_BUNDLE:
                 {
-                    BSL_LOG_WARNING("Deleting bundle due to block target num %lu security failure", sec_oper->target_block_num);
+                    BSL_LOG_WARNING("Deleting bundle due to block target num %lu security failure",
+                                    sec_oper->target_block_num);
                     must_drop = true;
                     break;
                 }

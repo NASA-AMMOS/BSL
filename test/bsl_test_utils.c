@@ -84,11 +84,11 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
 BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context)
 {
     BSL_SecurityActionSet_t *action_set = calloc(sizeof(BSL_SecurityActionSet_t), 1);
-    BSL_SecurityActionSet_Init(action_set);    
+    BSL_SecurityActionSet_Init(action_set);
     BSL_SecurityAction_t *act = calloc(sizeof(BSL_SecurityAction_t), 1);
     BSL_SecurityAction_Init(act);
     BSL_SecurityAction_AppendSecOper(act, &bib_context->sec_oper);
-    //BSL_SecurityAction_OrderSecOps(act);
+    // BSL_SecurityAction_OrderSecOps(act);
     BSL_SecurityActionSet_AppendAction(action_set, act);
     free(act);
     return action_set;

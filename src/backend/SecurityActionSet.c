@@ -27,7 +27,7 @@
 
 bool BSL_SecurityActionSet_IsConsistent(const BSL_SecurityActionSet_t *self)
 {
-    (void) self;
+    (void)self;
     return true;
 }
 
@@ -41,15 +41,15 @@ void BSL_SecurityActionSet_Init(BSL_SecurityActionSet_t *self)
     ASSERT_ARG_NONNULL(self);
     BSL_SecActionList_init(self->actions);
     self->action_count = 0;
-    self->err_count = 0;
+    self->err_count    = 0;
 }
 
 void BSL_SecurityActionSet_Deinit(BSL_SecurityActionSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     BSL_SecActionList_clear(self->actions);
-    self->err_count = 0;
-    self->action_count = 0;
+    self->err_count       = 0;
+    self->action_count    = 0;
     self->operation_count = 0;
 }
 

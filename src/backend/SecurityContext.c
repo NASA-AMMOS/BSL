@@ -477,15 +477,16 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
     BSL_SecOutcome_t *outcome    = calloc(BSL_SecOutcome_Sizeof(), 1);
 
     BSL_SecActionList_it_t act_it;
-    for (BSL_SecActionList_it(act_it, action_set->actions); !BSL_SecActionList_end_p(act_it); BSL_SecActionList_next(act_it))
+    for (BSL_SecActionList_it(act_it, action_set->actions); !BSL_SecActionList_end_p(act_it);
+         BSL_SecActionList_next(act_it))
     {
         BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
-        for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i ++)
+        for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i++)
         {
             memset(outcome, 0, BSL_SecOutcome_Sizeof());
 
-            BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
-            const BSL_SecCtxDesc_t *sec_ctx = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
+            BSL_SecOper_t          *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
+            const BSL_SecCtxDesc_t *sec_ctx  = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
             ASSERT_PROPERTY(sec_ctx != NULL);
 
             BSL_SecOutcome_Init(outcome, sec_oper, 100000);
@@ -494,8 +495,8 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             if (BSL_SecOper_IsBIB(sec_oper))
             {
                 errcode = BSL_SecOper_IsRoleSource(sec_oper) == true
-                            ? BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome)
-                            : BSL_ExecBIBAccept(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                              ? BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome)
+                              : BSL_ExecBIBAccept(sec_ctx->execute, lib, bundle, sec_oper, outcome);
             }
             else
             {
