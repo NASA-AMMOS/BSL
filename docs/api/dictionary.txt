@@ -160,6 +160,9 @@ RTEMS
 ruleset
 sc
 SCs
+SecOper
+SecParam
+SecResult
 SecurityAction
 SecurityActionSet
 SHA
