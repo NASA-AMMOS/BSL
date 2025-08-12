@@ -33,6 +33,7 @@ BPv
 BSL
 BSLs
 BSLX
+bstr
 BTSD
 BundleCtx
 Burleigh
@@ -173,13 +174,19 @@ SWaP
 syslog
 Todo
 TODO
+tstr
 typedef
 UDPCL
 uint
 un
 Uncategorized
 underlayer
+Unescape
+unicode
 unix
+uri
+URI
+url
 validator
 verifier
 Verifier
