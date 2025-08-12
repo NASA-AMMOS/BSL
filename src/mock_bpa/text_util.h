@@ -21,6 +21,7 @@
  */
 /** @file
  * This file contains definitions for text CODEC functions.
+ * @ingroup mock_bpa
  */
 #ifndef MOCK_BPA_TEXT_UTIL_H_
 #define MOCK_BPA_TEXT_UTIL_H_
