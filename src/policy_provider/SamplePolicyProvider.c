@@ -70,12 +70,16 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
     uint64_t target_block_num = 0;
 
     BSL_PrimaryBlock_t res_prim_blk;
-    BSL_BundleCtx_GetBundleMetadata(bundle, &res_prim_blk);
-
+    if (BSL_BundleCtx_GetBundleMetadata(bundle, &res_prim_blk) != BSL_SUCCESS)
+    {
+        BSL_LOG_ERR("Failed to get bundle metadata");
+        return target_block_num;
+    }
     uint64_t block_ids_arr[res_prim_blk.block_count];
     size_t res_ct;
     if (BSL_BundleCtx_GetBlockIds(bundle, res_prim_blk.block_count, block_ids_arr, &res_ct) != BSL_SUCCESS)
     {
+        BSL_LOG_ERR("Failed to get bundle block ids");
         return target_block_num;
     }
 
