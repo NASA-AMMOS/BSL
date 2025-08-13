@@ -84,50 +84,6 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
     return target_block_num;
 }
 
-void bslp_sec_op_list_insert(SecOpList *list, SecOpListNode *new_node)
-{
-    SecOpListNode **pp  = &list->head;
-    SecOpListNode  *cur = list->head;
-
-    while (cur)
-    {
-        if (BSL_SecOper_GetTargetBlockNum(cur->sec_oper) == BSL_SecOper_GetTargetBlockNum(new_node->sec_oper))
-        {
-            // found sec op with same target
-            break;
-        }
-        pp  = &cur->next;
-        cur = cur->next;
-    }
-
-    if (cur)
-    {
-        bool before = !(BSL_SecOper_IsBIB(new_node->sec_oper) ^ BSL_SecOper_IsRoleSource(new_node->sec_oper));
-        if (!before)
-        {
-            // insert SRC BCB after SRC BIB / ACC BIB after ACC BCB
-            new_node->next = cur->next;
-            cur->next      = new_node;
-        }
-        else
-        {
-            // insert SRC BIB before SRC BCB / ACC BCB before ACC BIB
-            *pp            = new_node;
-            new_node->next = cur;
-        }
-
-        // duplicate sec op case
-        if (!(BSL_SecOper_IsBIB(new_node->sec_oper) ^ BSL_SecOper_IsBIB(cur->sec_oper)))
-        {
-            BSL_SecOper_SetConclusion(new_node->sec_oper, BSL_SECOP_CONCLUSION_INVALID);
-        }
-    }
-    else
-    {
-        *pp = new_node;
-    }
-}
-
 /**
  * Note that criticality is HIGH
  */
@@ -184,9 +140,9 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
             for (i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
             {
                 BSL_SecOper_t **comp = BSLP_SecOperPtrList_get(secops, i);
-                BSL_LOG_INFO("NEW SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(sec_oper),
+                BSL_LOG_DEBUG("NEW SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(sec_oper),
                              BSL_SecOper_IsBIB(sec_oper), BSL_SecOper_GetSecurityBlockNum(sec_oper));
-                BSL_LOG_INFO("comp SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(*comp),
+                BSL_LOG_DEBUG("comp SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(*comp),
                              BSL_SecOper_IsBIB(*comp), BSL_SecOper_GetSecurityBlockNum(*comp));
                 if (BSL_SecOper_GetTargetBlockNum(*comp) == BSL_SecOper_GetTargetBlockNum(sec_oper))
                 {
@@ -199,12 +155,12 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
                     // true if ACC BIB or SRC BCB
                     if (BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsRoleSource(sec_oper))
                     {
-                        BSL_LOG_INFO("NEW OP AFTER COMP");
+                        BSL_LOG_DEBUG("NEW OP AFTER COMP");
                         BSLP_SecOperPtrList_push_at(secops, i + 1, sec_oper);
                     }
                     else
                     {
-                        BSL_LOG_INFO("NEW OP BEFORE COMP");
+                        BSL_LOG_DEBUG("NEW OP BEFORE COMP");
                         BSLP_SecOperPtrList_push_at(secops, i, sec_oper);
                     }
                     break;
