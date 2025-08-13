@@ -67,29 +67,16 @@ static bool BSLP_PolicyRule_IsConsistent(const BSLP_PolicyRule_t *self)
 
 static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t target_block_type)
 {
-    // Returns zero if target block type not found.
     uint64_t target_block_num = 0;
 
-    size_t block_ids_arr_len = 100;
-    uint64_t *block_ids_arr = BSL_CALLOC(block_ids_arr_len, sizeof(uint64_t));
+    BSL_PrimaryBlock_t res_prim_blk;
+    BSL_BundleCtx_GetBundleMetadata(bundle, &res_prim_blk);
+
+    uint64_t block_ids_arr[res_prim_blk.block_count];
     size_t res_ct;
-    if (BSL_BundleCtx_GetBlockIds(bundle, block_ids_arr_len, block_ids_arr, &res_ct) != BSL_SUCCESS)
+    if (BSL_BundleCtx_GetBlockIds(bundle, res_prim_blk.block_count, block_ids_arr, &res_ct) != BSL_SUCCESS)
     {
-        if (res_ct > block_ids_arr_len) // list too small
-        {
-            block_ids_arr_len = res_ct;
-            block_ids_arr = BSL_REALLOC(block_ids_arr, block_ids_arr_len*sizeof(uint64_t));
-            if (BSL_BundleCtx_GetBlockIds(bundle, block_ids_arr_len, block_ids_arr, &res_ct) != BSL_SUCCESS)
-            {
-                free(block_ids_arr);
-                return target_block_num;
-            }
-        }
-        else
-        {
-            free(block_ids_arr);
-            return target_block_num;
-        }
+        return target_block_num;
     }
 
     for (uint64_t i = 0; i < res_ct; i++)
@@ -104,7 +91,8 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
             }
         }
     }
-    free(block_ids_arr);
+
+    // Returns zero if target block type not found.
     return target_block_num;
 }
 

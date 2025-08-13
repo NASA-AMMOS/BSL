@@ -87,8 +87,8 @@ int MockBPA_GetBlockNums(const BSL_BundleRef_t *bundle_ref, size_t block_id_arra
         return -1;
     }
 
+    *result_count = 0;
     MockBPA_Bundle_t *bundle = bundle_ref->data;
-    *result_count = bundle->block_count;
     for (size_t i = 0; i < bundle->block_count; i++)
     {
         if (i >= block_id_array_capacity)
@@ -99,6 +99,7 @@ int MockBPA_GetBlockNums(const BSL_BundleRef_t *bundle_ref, size_t block_id_arra
 
         block_id_array_result[i] = bundle->blocks[i].blk_num;
     }
+    *result_count = bundle->block_count;
     return 0;
 }
 
