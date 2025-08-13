@@ -29,7 +29,7 @@
 #include <backend/SecParam.h>
 #include <backend/SecResult.h>
 #include <backend/SecurityActionSet.h>
-#include <mock_bpa/mock_bpa_ctr.h>
+#include <mock_bpa/ctr.h>
 
 /// @brief Key ID for the Appendix A1 key in OpenSSL
 #define RFC9173_EXAMPLE_A1_KEY "9100"

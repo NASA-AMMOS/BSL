@@ -24,7 +24,7 @@
  * @ingroup mock_bpa
  * Definitions for EID handling.
  */
-#include "bsl_mock_bpa_eid.h"
+#include "eid.h"
 #include <BSLConfig.h>
 #include <BPSecLib_Private.h>
 

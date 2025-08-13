@@ -39,10 +39,10 @@
 #include <BPSecLib_Public.h>
 #include <CryptoInterface.h>
 
-#include "bsl_mock_bpa.h"
-#include "mock_bpa_ctr.h"
-#include "bsl_mock_bpa_policy_config.h"
-#include "mock_bpa_policy_registry.h"
+#include "agent.h"
+#include "ctr.h"
+#include "policy_config.h"
+#include "policy_registry.h"
 
 static atomic_bool stop_state;
 
@@ -635,7 +635,7 @@ int main(int argc, char **argv)
 
     atomic_init(&stop_state, false);
 
-    if (bsl_mock_bpa_init())
+    if (bsl_mock_bpa_agent_init())
     {
         BSL_LOG_ERR("Failed to initialize mock BPA");
         retval = 2;
@@ -773,7 +773,7 @@ int main(int argc, char **argv)
     }
 
     BSL_CryptoDeinit();
-    bsl_mock_bpa_deinit();
+    bsl_mock_bpa_agent_deinit();
     BSL_closelog();
     free(bsl);
     return retval;

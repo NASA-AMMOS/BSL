@@ -23,11 +23,10 @@
 #include <unity.h>
 
 #include <BPSecLib_Private.h>
-#include <bsl_mock_bpa.h>
-#include <bsl_mock_bpa_decode.h>
-#include <bsl_mock_bpa_encode.h>
+#include <mock_bpa/agent.h>
+#include <mock_bpa/decode.h>
+#include <mock_bpa/encode.h>
 
-#include "bsl_mock_bpa.h"
 #include "bsl_test_utils.h"
 
 // allow parameterized cases
@@ -55,12 +54,12 @@ static void printencoded(const uint8_t *pEncoded, size_t nLen)
 void suiteSetUp(void)
 {
     BSL_openlog();
-    TEST_ASSERT_EQUAL_INT(0, bsl_mock_bpa_init());
+    TEST_ASSERT_EQUAL_INT(0, bsl_mock_bpa_agent_init());
 }
 
 int suiteTearDown(int failures)
 {
-    bsl_mock_bpa_deinit();
+    bsl_mock_bpa_agent_deinit();
     BSL_closelog();
     return failures;
 }

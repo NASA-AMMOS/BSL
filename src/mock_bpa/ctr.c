@@ -21,9 +21,9 @@
  */
 #include <BPSecLib_Private.h>
 
-#include "mock_bpa_ctr.h"
-#include "bsl_mock_bpa_decode.h"
-#include "bsl_mock_bpa_encode.h"
+#include "ctr.h"
+#include "decode.h"
+#include "encode.h"
 
 void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr)
 {

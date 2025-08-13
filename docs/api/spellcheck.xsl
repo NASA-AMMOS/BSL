@@ -27,6 +27,7 @@
   <xsl:template match="verbatim"/>
   <xsl:template match="programlisting"/>
   <xsl:template match="dot"/>
+  <xsl:template match="ulink"/>
   <!-- remove characters that aspell cannot handle -->
   <xsl:template match="para/text()">
     <xsl:value-of select="translate(., '&#8217;', '')"/>

@@ -37,7 +37,7 @@
 #include <unity.h>
 
 #include <BPSecLib_Private.h>
-#include <BPSecLib_MockBPA.h>
+#include <mock_bpa/MockBPA.h>
 #include <CryptoInterface.h>
 
 #include <backend/PublicInterfaceImpl.h>
@@ -52,12 +52,12 @@ static BSL_TestContext_t LocalTestCtx;
 void suiteSetUp(void)
 {
     BSL_openlog();
-    assert(0 == bsl_mock_bpa_init());
+    assert(0 == bsl_mock_bpa_agent_init());
 }
 
 int suiteTearDown(int failures)
 {
-    bsl_mock_bpa_deinit();
+    bsl_mock_bpa_agent_deinit();
     BSL_closelog();
     return failures;
 }

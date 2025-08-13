@@ -25,7 +25,7 @@
  * Declarations for BPv7 block CRC handling.
  */
 
-#include "bsl_mock_bpa_crc.h"
+#include "crc.h"
 #include <arpa/inet.h>
 #include <inttypes.h>
 #include <BPSecLib_Public.h>
