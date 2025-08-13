@@ -342,9 +342,9 @@ void test_bsl_loopback_eid(const char *hexdata)
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
                                   "BSL_TestUtils_DecodeBase16() failed");
 
-    BSL_HostEID_t eid = { 0 };
+    BSL_HostEID_t eid;
     BSL_HostEID_Init(&eid);
-    TEST_ASSERT_TRUE(eid.handle != NULL);
+    TEST_ASSERT_NOT_NULL(eid.handle);
     {
         QCBORDecodeContext decoder;
         QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);
@@ -354,7 +354,6 @@ void test_bsl_loopback_eid(const char *hexdata)
 
     BSL_Data_t out_data;
     BSL_Data_Init(&out_data);
-    TEST_ASSERT_TRUE(eid.handle != NULL);
     {
         QCBOREncodeContext encoder;
         size_t             needlen;

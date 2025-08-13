@@ -55,7 +55,7 @@ jobs:
       - name: Prep
         run: >
           ./build.sh prep
-          -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DTEST_COVERAGE=OFF
+          -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=OFF
           -DBUILD_DOCS_API=ON
       - name: Build
         run: ./build.sh --target docs-api-html docs-api-pdf docs-api-misspelling

@@ -41,7 +41,7 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
-              rsync cmake git ninja-build gcc ruby \
+              rsync cmake git ninja-build gcc gcc-c++ ccache ruby \
               openssl-devel jansson-devel \
               doxygen graphviz plantuml texlive-bibtex \
               asciidoctor \
@@ -51,6 +51,10 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
       - name: Prep
         run: ./build.sh rpm-prep
       - name: Build

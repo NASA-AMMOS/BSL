@@ -25,9 +25,10 @@ option(BUILD_LIB "Build the library itself" ON)
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_DOCS_API "Enable API documentation building" OFF)
 option(BUILD_DOCS_MAN "Enable manpage building" OFF)
-option(BUILD_TESTING "Enable building unit tests" ON)
+option(BUILD_UNITTEST "Enable building unit tests" ON)
 option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
-option(TEST_COVERAGE "Enable test runtime coverage logging" ON)
+option(BUILD_COVERAGE "Enable runtime coverage logging and reporting" OFF)
+option(BUILD_FUZZING "Enable building fuzzing executables" OFF)
 option(BUILD_PACKAGE "Enable building package outputs" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -59,7 +60,7 @@ STRING(REPLACE "-" "." GIT_TAG_MOD ${GIT_TAG_MOD})
 message(STATUS "Using version marking ${GIT_TAG_VERS} - ${GIT_TAG_MOD}")
 
 project(bsl
-    LANGUAGES C
+    LANGUAGES C CXX
     VERSION ${GIT_TAG_VERS}
 )
 
@@ -75,21 +76,19 @@ add_definitions(
 # Generic warn/error options
 add_compile_options(
     -Wall
-    -Wextra
-    -Wpedantic
-    -Werror
+    $<$<COMPILE_LANGUAGE:C>:-Wextra>
+    $<$<COMPILE_LANGUAGE:C>:-Wpedantic>
+    $<$<COMPILE_LANGUAGE:C>:-Werror>
     -Wshadow -Wpointer-arith -Wstrict-prototypes
     -Wmissing-prototypes -Wredundant-decls -Wcast-align
-    -Wformat=2 -Wswitch-enum
+    -Wformat=2
     -fno-strict-aliasing -Werror=format-security -fno-common
     -Wstrict-aliasing=2
     # -Wconversion
-)
-add_compile_options(
     -ffunction-sections
     -fdata-sections
     -fno-omit-frame-pointer
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
+    $<$<COMPILE_LANGUAGE:C>:-Wswitch-enum>
 )
 if(CMAKE_C_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
@@ -127,7 +126,7 @@ include(CheckTypeSize)
 check_type_size("int" SIZE_INT LANGUAGE C)
 check_type_size("size_t" SIZE_SIZET LANGUAGE C)
 
-if(BUILD_TESTING)
+if(BUILD_UNITTEST)
   if(TEST_MEMCHECK)
     find_program(MEMCHECK_CMD valgrind)
     message(STATUS "Using valgrind memcheck for tests: ${MEMCHECK_CMD}")
@@ -142,33 +141,36 @@ if(BUILD_TESTING)
     # Arguments as list into global scope for Findunitytools.cmake
     set(TEST_EXEC_PREFIX "${MEMCHECK_CMD}" ${MEMCHECK_OPTIONS})
   endif(TEST_MEMCHECK)
-  if(TEST_COVERAGE)
-    include(CodeCoverage)
-    append_coverage_compiler_flags()
+endif(BUILD_UNITTEST)
+if(BUILD_FUZZING)
+  find_package(libfuzzer)
+endif(BUILD_FUZZING)
+if(BUILD_COVERAGE)
+  include(CodeCoverage)
+  append_coverage_compiler_flags()
 
-    set(COVERAGE_EXCLUDES
-      "${CMAKE_CURRENT_SOURCE_DIR}/deps/*"
-      "${CMAKE_CURRENT_SOURCE_DIR}/testroot/*"
-      "${CMAKE_CURRENT_BINARY_DIR}/test/*"
-    )
-    set(GCOVR_ADDITIONAL_ARGS
-    )
-    setup_target_for_coverage_gcovr_xml(
-      NAME coverage-xml
-      BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    )
-    setup_target_for_coverage_gcovr_html(
-      NAME coverage-html
-      BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    )
-  endif(TEST_COVERAGE)
-
-  include(CTest)
-  set(CMAKE_CTEST_ARGUMENTS
-    --output-junit testresults.xml
-    --output-on-failure
+  set(COVERAGE_EXCLUDES
+    "${CMAKE_CURRENT_SOURCE_DIR}/deps/*"
+    "${CMAKE_CURRENT_SOURCE_DIR}/testroot/*"
+    "${CMAKE_CURRENT_BINARY_DIR}/test/*"
   )
-endif(BUILD_TESTING)
+  set(GCOVR_ADDITIONAL_ARGS
+  )
+  setup_target_for_coverage_gcovr_xml(
+    NAME coverage-xml
+    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  )
+  setup_target_for_coverage_gcovr_html(
+    NAME coverage-html
+    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  )
+endif(BUILD_COVERAGE)
+
+include(CTest)
+set(CMAKE_CTEST_ARGUMENTS
+  --output-junit testresults.xml
+  --output-on-failure
+)
 
 # Install config used by tall targets
 include(GNUInstallDirs)
@@ -176,11 +178,9 @@ include(GNUInstallDirs)
 if(BUILD_LIB)
     add_subdirectory(src)
 endif(BUILD_LIB)
-if(BUILD_TESTING)
-    message(STATUS "Building tests")
-    set(TEST_INSTALL_PREFIX "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}")
-    add_subdirectory(test)
-endif(BUILD_TESTING)
+
+set(TEST_INSTALL_PREFIX "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}")
+add_subdirectory(test)
 add_subdirectory(docs)
 
 if(BUILD_PACKAGE)
