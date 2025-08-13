@@ -106,9 +106,7 @@ jobs:
           name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
           path: build/default/coverage*
       - name: Report coverage
-        run: |
-          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/packages/package[@name="src"]/@line-rate * 100)' -n build/default/coverage-xml.xml)
-          echo "Source coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
+        run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
 
   mock-bpa-test:
     strategy:
@@ -178,6 +176,4 @@ jobs:
           name: ${{github.job}}-${{matrix.os}}-gcc-coverage
           path: build/default/coverage*
       - name: Report coverage
-        run: |
-          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/packages/package[@name="src"]/@line-rate * 100)' -n build/default/coverage-xml.xml)
-          echo "Source coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
+        run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
