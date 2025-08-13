@@ -249,7 +249,9 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
                 }
             }
 
-        break;
+            // DO NOT continue processing if a security operation has failed
+            break;
+        }
     }
 
     if (must_drop)

@@ -186,16 +186,3 @@ void BSL_SecOper_SetConclusion(BSL_SecOper_t *self, BSL_SecOper_ConclusionState_
     self->conclusion = new_conclusion;
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
-
-BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(const BSL_SecOper_t *self)
-{
-    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
-    return self->conclusion;
-}
-
-void BSL_SecOper_SetConclusion(BSL_SecOper_t *self, BSL_SecOper_ConclusionState_e new_conclusion)
-{
-    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
-    self->conclusion = new_conclusion;
-    ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
-}

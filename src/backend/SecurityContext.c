@@ -521,8 +521,6 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             }
             BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_SUCCESS);
         }
-
-        sec_oper->conclusion = BSL_SECOP_CONCLUSION_SUCCESS;
     }
     free(outcome);
 
