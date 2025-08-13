@@ -214,7 +214,7 @@ void test_API_RemoveFailedBlock(void)
 
     TEST_ASSERT_EQUAL(0, apply_result);
     // We purposely made a failing BIB block.
-    // TEST_ASSERT_EQUAL(1, response_set.failure_count);
+    TEST_ASSERT_EQUAL(BSL_SecurityAction_GetSecOperAtIndex(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0), 0)->conclusion, BSL_SECOP_CONCLUSION_FAILURE);
 
     // Now, make sure there are no blocks! The security operation was stripped AND the target block that
     // could not be verified was stripped.
