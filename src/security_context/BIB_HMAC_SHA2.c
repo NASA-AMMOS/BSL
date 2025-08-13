@@ -286,7 +286,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
 error:
     BSL_AuthCtx_Deinit(&hmac_ctx);
     BSL_LOG_ERR("%s failed bsl_crypto code=%ld", __func__, res);
-    return BSL_ERR_SECURITY_OPERATION_FAILED;
+    return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
 }
 
 int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,

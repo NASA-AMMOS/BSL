@@ -119,10 +119,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     CHK_PRECONDITION(bcb_context->iv.ptr != NULL);
     CHK_PRECONDITION(bcb_context->iv.len > 0);
 
-    // Wrapped key must come in from the params
-    // CHK_PRECONDITION(bcb_context->wrapped_key.ptr != NULL);
-    // CHK_PRECONDITION(bcb_context->wrapped_key.len > 0);
-
     bool                         is_aes128 = bcb_context->aes_variant == RFC9173_BCB_AES_VARIANT_A128GCM;
     BSL_CryptoCipherAESVariant_e aes_mode  = is_aes128 ? BSL_CRYPTO_AES_128 : BSL_CRYPTO_AES_256;
 
@@ -136,7 +132,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != unwrap_result)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
-            goto error;
+            BSL_Data_Deinit(&content_enc_key);
+            return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
     else
@@ -147,7 +144,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
                                           &content_enc_key.len))
         {
             BSL_LOG_ERR("Failed to load key");
-            goto error;
+            BSL_Data_Deinit(&content_enc_key);
+            return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
 
@@ -160,13 +158,17 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
-        goto error;
+        BSL_Data_Deinit(&content_enc_key);
+        BSL_Cipher_Deinit(&cipher);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
     if (BSL_SUCCESS != BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
     {
         BSL_LOG_ERR("Failed to add AAD");
-        goto error;
+        BSL_Data_Deinit(&content_enc_key);
+        BSL_Cipher_Deinit(&cipher);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
     BSL_Data_t plaintext_data = { 0 };
@@ -175,7 +177,9 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (nbytes < 0)
     {
         BSL_LOG_ERR("Decrypting BTSD ciphertext failed");
-        goto error;
+        BSL_Data_Deinit(&content_enc_key);
+        BSL_Cipher_Deinit(&cipher);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     const size_t plaintext_len = (size_t)nbytes;
 
@@ -184,7 +188,9 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, bcb_context->authtag.ptr))
     {
         BSL_LOG_ERR("Failed to set auth tag");
-        goto error;
+        BSL_Data_Deinit(&content_enc_key);
+        BSL_Cipher_Deinit(&cipher);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
     uint8_t aes_extra[BSLX_MAX_AES_PAD];
@@ -195,24 +201,17 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (finalize_bytes < 0)
     {
         BSL_LOG_ERR("Failed to check auth tag");
-        goto error;
+        BSL_Data_Deinit(&content_enc_key);
+        BSL_Cipher_Deinit(&cipher);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     const size_t extra_bytes = (size_t)finalize_bytes;
-    assert(extra_bytes == 0);
+    ASSERT_POSTCONDITION(extra_bytes == 0);
     BSL_Data_Resize(&bcb_context->btsd_replacement, plaintext_len + extra_bytes);
 
-    BSL_Data_Deinit(&bcb_context->authtag);
     BSL_Data_Deinit(&content_enc_key);
     BSL_Cipher_Deinit(&cipher);
-    assert(bcb_context->authtag.len == 0);
     return BSL_SUCCESS;
-
-error:
-    BSL_Data_Deinit(&bcb_context->authtag);
-    BSL_Data_Deinit(&content_enc_key);
-    BSL_Cipher_Deinit(&cipher);
-    BSL_LOG_ERR("Returning failure from BCB decrypt");
-    return BSL_ERR_NOT_IMPLEMENTED;
 }
 
 int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
@@ -251,7 +250,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != BSL_Data_InitBuffer(&content_enc_key, BSLX_MAX_KEYLEN))
     {
         BSL_LOG_ERR("Cannot allocate space for key");
-        goto error;
+        BSL_Data_Deinit(&content_enc_key);
+        return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
     // Generated the CEK, using keywrap when needed
@@ -266,7 +266,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
                                           &content_enc_key.len))
         {
             BSL_LOG_ERR("Cannot get registry key");
-            goto error;
+            BSL_Data_Deinit(&content_enc_key);
+            return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         ASSERT_PROPERTY(content_enc_key.len > 0);
         ASSERT_PROPERTY(content_enc_key.ptr == NULL);
@@ -281,21 +282,24 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != BSL_Crypto_GenKey(content_enc_key.ptr, keysize))
         {
             BSL_LOG_ERR("Failed to generate AES key");
-            goto error;
+            BSL_Data_Deinit(&content_enc_key);
+            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
         content_enc_key.len = keysize;
 
         if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, BSLX_MAX_KEYLEN))
         {
             BSL_LOG_ERR("Failed to allocate wrapped key");
-            goto error;
+            BSL_Data_Deinit(&content_enc_key);
+            return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
 
         int wrap_result = BSL_Crypto_WrapKey(&bcb_context->wrapped_key, content_enc_key, bcb_context->key_id, aes_mode);
         if (BSL_SUCCESS != wrap_result)
         {
             BSL_LOG_ERR("Failed to wrap AES key");
-            goto error;
+            BSL_Data_Deinit(&content_enc_key);
+            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
     }
 
@@ -305,13 +309,17 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
-        goto error;
+        BSL_Data_Deinit(&content_enc_key);
+        BSL_Cipher_Deinit(&cipher);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
     if (BSL_SUCCESS != BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
     {
         BSL_LOG_ERR("Failed to add AAD");
-        goto error;
+        BSL_Data_Deinit(&content_enc_key);
+        BSL_Cipher_Deinit(&cipher);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
     BSL_Data_t plaintext_data = { 0 };
@@ -320,7 +328,9 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (nbytes < 0)
     {
         BSL_LOG_ERR("Encrypting plaintext BTSD failed");
-        goto error;
+        BSL_Data_Deinit(&content_enc_key);
+        BSL_Cipher_Deinit(&cipher);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     const size_t ciphertext_len = (size_t)nbytes;
     ASSERT_PROPERTY(ciphertext_len >= plaintext_data.len);
@@ -334,7 +344,9 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (extra_bytes < 0)
     {
         BSL_LOG_ERR("Finalizing AES failed");
-        goto error;
+        BSL_Data_Deinit(&content_enc_key);
+        BSL_Cipher_Deinit(&cipher);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     const size_t extra_bytelen = (size_t)extra_bytes;
 
@@ -347,7 +359,9 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, (void **)&bcb_context->authtag.ptr))
     {
         BSL_LOG_ERR("Failed to get authentication tag");
-        goto error;
+        BSL_Data_Deinit(&content_enc_key);
+        BSL_Cipher_Deinit(&cipher);
+        return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
     CHK_POSTCONDITION(bcb_context->btsd_replacement.ptr != NULL);
@@ -356,11 +370,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     BSL_Data_Deinit(&content_enc_key);
     BSL_Cipher_Deinit(&cipher);
     return BSL_SUCCESS;
-    // Do any releasing
-error:
-    BSL_Data_Deinit(&content_enc_key);
-    BSL_Cipher_Deinit(&cipher);
-    return BSL_ERR_SECURITY_CONTEXT_FAILED;
 }
 
 int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, const BSL_SecOper_t *sec_oper)
@@ -384,7 +393,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
         {
             case RFC9173_BCB_SECPARAM_IV:
             {
-                assert(!is_int);
+                ASSERT_PRECONDITION(!is_int);
                 BSL_Data_t as_data;
                 if (BSL_SecParam_GetAsBytestr(param, &as_data) < 0)
                 {
@@ -401,7 +410,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             case RFC9173_BCB_SECPARAM_AESVARIANT:
             {
                 BSL_LOG_DEBUG("BCB parsing AES variant (optid=%lu)", param_id);
-                assert(is_int);
+                ASSERT_PRECONDITION(is_int);
                 bcb_context->aes_variant = BSL_SecParam_GetAsUInt64(param);
                 if (bcb_context->aes_variant < RFC9173_BCB_AES_VARIANT_A128GCM
                     || bcb_context->aes_variant > RFC9173_BCB_AES_VARIANT_A256GCM)
@@ -414,7 +423,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             case RFC9173_BCB_SECPARAM_WRAPPEDKEY:
             {
                 BSL_LOG_DEBUG("BCB parsing Wrapped key parameter (optid=%lu)", param_id);
-                assert(!is_int);
+                ASSERT_PRECONDITION(!is_int);
                 BSL_Data_t as_data;
                 if (BSL_SecParam_GetAsBytestr(param, &as_data) < 0)
                 {
@@ -431,7 +440,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             }
             case RFC9173_BCB_SECPARAM_AADSCOPE:
             {
-                assert(is_int);
+                ASSERT_PRECONDITION(is_int);
                 uint64_t aad_scope = BSL_SecParam_GetAsUInt64(param);
                 BSL_LOG_DEBUG("Param[%lu]: AAD_SCOPE value = %lu", param_id, aad_scope);
                 bcb_context->aad_scope = aad_scope;
@@ -454,9 +463,9 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             }
             case BSL_SECPARAM_TYPE_KEY_ID:
             {
-                assert(!is_int);
+                ASSERT_PRECONDITION(!is_int);
                 BSL_Data_t res;
-                assert(BSL_SUCCESS == BSL_SecParam_GetAsBytestr(param, &res));
+                ASSERT_POSTCONDITION(BSL_SUCCESS == BSL_SecParam_GetAsBytestr(param, &res));
                 bcb_context->key_id = (char *)res.ptr;
                 BSL_LOG_DEBUG("Param[%lu]: KEY_ID value = %s", param_id, bcb_context->key_id);
                 break;
