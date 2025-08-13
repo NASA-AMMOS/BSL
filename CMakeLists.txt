@@ -127,8 +127,6 @@ include(CheckTypeSize)
 check_type_size("int" SIZE_INT LANGUAGE C)
 check_type_size("size_t" SIZE_SIZET LANGUAGE C)
 
-add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/src/BSLConfig.h)
-
 if(BUILD_TESTING)
   if(TEST_MEMCHECK)
     find_program(MEMCHECK_CMD valgrind)
