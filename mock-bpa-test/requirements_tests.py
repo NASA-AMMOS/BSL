@@ -488,7 +488,7 @@ class _RequirementsCases(_TestSet):
             ],
             # The security operation will return an error code indicating failure. Additionally, using the telemetry counters and logs,
             # confirm that no further security operation processing was taken (specifically, no BIB operations should be seen).
-            expected_output=r".*Returning failure from BCB decrypt",
+            expected_output=r".*Failed to perform cryptographic action",
             policy_config='0x1A6,0x1A7',
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
