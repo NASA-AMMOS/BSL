@@ -82,9 +82,10 @@ jobs:
       - name: Dependencies
         run: ./build.sh deps
       - name: Prep
-        run: |
-          ./build.sh prep \
-              -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_UNITTEST=ON
+        run: >
+          ./build.sh prep
+          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+          -DBUILD_UNITTEST=ON -DBUILD_COVERAGE=ON
       - name: Build
         run: ./build.sh
       - name: Install
@@ -153,7 +154,10 @@ jobs:
       - name: Dependencies
         run: ./build.sh deps
       - name: Prep
-        run: ./build.sh prep -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_UNITTEST=OFF
+        run: >
+          ./build.sh prep
+          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+          -DBUILD_UNITTEST=OFF -DBUILD_COVERAGE=ON
       - name: Build
         run: ./build.sh
       - name: Install

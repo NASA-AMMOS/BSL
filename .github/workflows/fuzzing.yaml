@@ -19,7 +19,7 @@
 ## the prime contract 80NM0018D0004 between the Caltech and NASA under
 ## subcontract 1700763.
 ##
-name: Build and run fuzzing tools
+name: Build and run fuzzing
 on:
   schedule:
     - cron: '0 0 * * 0'
@@ -36,7 +36,7 @@ jobs:
       matrix:
         os: ['ubuntu-24.04', 'centos-9']
         compiler: ['clang']
-    name: Unit Test (${{matrix.os}} ${{matrix.compiler}})
+    name: Fuzzing (${{matrix.os}} ${{matrix.compiler}})
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
     permissions:
