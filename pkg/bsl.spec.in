@@ -58,7 +58,7 @@ from the API with Doxygen.
 ./build.sh deps
 
 %cmake -DCMAKE_PREFIX_PATH=${PWD}/testroot/usr \
-       -DBUILD_TESTING=YES -DTEST_MEMCHECK=NO -DTEST_COVERAGE=NO \
+       -DBUILD_UNITTEST=YES -DTEST_MEMCHECK=NO -DTEST_COVERAGE=NO \
        -DBUILD_DOCS_MAN=YES %{?with_apidoc:-DBUILD_DOCS_API=YES}
 
 %build

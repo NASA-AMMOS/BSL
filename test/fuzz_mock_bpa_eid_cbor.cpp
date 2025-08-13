@@ -19,7 +19,7 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include <mock_bpa/BPSecLib_MockBPA.h>
+#include <mock_bpa/MockBPA.h>
 #include "bsl_test_utils.h"
 #include <cinttypes>
 
@@ -35,11 +35,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 extern "C" int LLVMFuzzerInitialize(int *argc _U_, char ***argv _U_)
 {
     BSL_openlog();
-    bsl_mock_bpa_init();
+    bsl_mock_bpa_agent_init();
     return 0;
 }
 /* No cleanup:
-    bsl_mock_bpa_deinit();
+    bsl_mock_bpa_agent_deinit();
     BSL_closelog();
 */
 
