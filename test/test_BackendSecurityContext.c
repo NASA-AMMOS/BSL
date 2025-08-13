@@ -188,11 +188,13 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
     BSL_SecurityActionSet_t   *malloced_actionset   = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
 
-    TEST_ASSERT_EQUAL(BSL_SUCCESS,
-                          BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
-                                                            &mock_bpa_ctr->bundle_ref, malloced_actionset));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
+                                                                     &mock_bpa_ctr->bundle_ref, malloced_actionset));
 
-    TEST_ASSERT_EQUAL(BSL_SecurityAction_GetSecOperAtIndex(BSL_SecurityActionSet_GetActionAtIndex(malloced_actionset, 0), 0)->conclusion, BSL_SECOP_CONCLUSION_FAILURE);
+    TEST_ASSERT_EQUAL(
+        BSL_SecurityAction_GetSecOperAtIndex(BSL_SecurityActionSet_GetActionAtIndex(malloced_actionset, 0), 0)
+            ->conclusion,
+        BSL_SECOP_CONCLUSION_FAILURE);
 
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     free(malloced_actionset);
