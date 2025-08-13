@@ -94,4 +94,7 @@ endif(BUILD_UNITTEST)
 if(BUILD_FUZZING)
   add_fuzz_test(SOURCE fuzz_mock_bpa_eid_cbor.cpp)
   target_link_libraries(fuzz_mock_bpa_eid_cbor PUBLIC ${LIB_ORDERED})
+
+  add_fuzz_test(SOURCE fuzz_mock_bpa_bpv7_cbor.cpp)
+  target_link_libraries(fuzz_mock_bpa_bpv7_cbor PUBLIC ${LIB_ORDERED})
 endif(BUILD_FUZZING)
