@@ -96,7 +96,7 @@ int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
             const size_t begin = QCBORDecode_Tell(dec);
             QCBORDecode_VGetNextConsume(dec, &decitem);
             const size_t end = QCBORDecode_Tell(dec);
-            if (end > begin)
+            if ((begin != UINT32_MAX) && (end != UINT32_MAX) && (end > begin))
             {
                 BSL_Data_t *raw = &(obj->ssp.as_raw);
                 assert(raw != NULL);

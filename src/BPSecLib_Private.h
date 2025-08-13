@@ -47,6 +47,10 @@
 
 #include "BPSecLib_Public.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @brief Catalog of error code
  *
  * @note BSL error codes are negative, such that a caller can check `if (BSL_MyFunc(...) < 0)` for errors.
@@ -553,7 +557,7 @@ int BSL_BundleCtx_GetBundleMetadata(const BSL_BundleRef_t *bundle, BSL_PrimaryBl
  * @param[out] result_count Contains the number of elements put into the array
  * @return 0 on success, negative on error
  */
-int BSL_BundleCtx_GetBlockIds(const BSL_BundleRef_t *bundle, size_t array_count, uint64_t block_ids_array[array_count],
+int BSL_BundleCtx_GetBlockIds(const BSL_BundleRef_t *bundle, size_t array_count, uint64_t *block_ids_array,
                               size_t *result_count);
 
 /** @brief Returns information about the bundle Canonical block
@@ -1328,4 +1332,9 @@ struct BSL_SecCtxDesc_s
     BSL_SecCtx_Execute_f execute;
 };
 
+#ifdef __cplusplus
+} // extern C
+#endif
+
 #endif /* BSL_BPSECLIB_PRIVATE_H_ */
+

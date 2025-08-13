@@ -60,7 +60,7 @@ STRING(REPLACE "-" "." GIT_TAG_MOD ${GIT_TAG_MOD})
 message(STATUS "Using version marking ${GIT_TAG_VERS} - ${GIT_TAG_MOD}")
 
 project(bsl
-    LANGUAGES C
+    LANGUAGES C CXX
     VERSION ${GIT_TAG_VERS}
 )
 
@@ -76,21 +76,19 @@ add_definitions(
 # Generic warn/error options
 add_compile_options(
     -Wall
-    -Wextra
-    -Wpedantic
-    -Werror
+    $<$<COMPILE_LANGUAGE:C>:-Wextra>
+    $<$<COMPILE_LANGUAGE:C>:-Wpedantic>
+    $<$<COMPILE_LANGUAGE:C>:-Werror>
     -Wshadow -Wpointer-arith -Wstrict-prototypes
     -Wmissing-prototypes -Wredundant-decls -Wcast-align
-    -Wformat=2 -Wswitch-enum
+    -Wformat=2
     -fno-strict-aliasing -Werror=format-security -fno-common
     -Wstrict-aliasing=2
     # -Wconversion
-)
-add_compile_options(
     -ffunction-sections
     -fdata-sections
     -fno-omit-frame-pointer
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
+    $<$<COMPILE_LANGUAGE:C>:-Wswitch-enum>
 )
 if(CMAKE_C_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
