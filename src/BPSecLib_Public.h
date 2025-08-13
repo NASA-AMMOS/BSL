@@ -35,6 +35,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "BSLConfig.h"
+
 /// This annotation on a function requires the caller to capture and inspect the return value.
 #if defined(__GNUC__) || defined(__clang__)
 #define BSL_REQUIRE_CHECK __attribute__((warn_unused_result))
