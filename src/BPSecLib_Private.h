@@ -803,11 +803,6 @@ void BSL_SecOper_Deinit(BSL_SecOper_t *self);
  */
 void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src);
 
-/// OPLIST for ::BSL_SecOper_t
-#define M_OPL_BSL_SecOper_t()                                                                          \
-    (INIT(API_2(BSL_SecOper_Init)), INIT_SET(API_6(BSL_SecOper_InitSet)), SET(API_6(BSL_SecOper_Set)), \
-     CLEAR(API_2(BSL_SecOper_Deinit)))
-
 /** Populate an initialized Security Operation with the given values.
  *
  * @param[in,out] self Non-NULL pointer to this security operation.

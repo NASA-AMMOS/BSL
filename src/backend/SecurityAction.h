@@ -23,6 +23,11 @@
 #include <BPSecLib_Private.h>
 #include "SecOperation.h"
 
+/// OPLIST for ::BSL_SecOper_t
+#define M_OPL_BSL_SecOper_t()                                                                          \
+    (INIT(API_2(BSL_SecOper_Init)), INIT_SET(API_6(BSL_SecOper_InitSet)), SET(API_6(BSL_SecOper_Set)), \
+     CLEAR(API_2(BSL_SecOper_Deinit)))
+
 // NOLINTBEGIN
 M_ARRAY_DEF(BSL_SecOperList, BSL_SecOper_t, M_OPL_BSL_SecOper_t())
 // NOLINTEND
