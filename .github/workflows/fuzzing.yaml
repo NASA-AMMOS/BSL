@@ -84,7 +84,8 @@ jobs:
       - name: Prep
         run: >
           ./build.sh prep
-          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_UNITTEST=OFF -DBUILD_FUZZING=ON
+          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+          -DBUILD_UNITTEST=OFF -DBUILD_FUZZING=ON -DBUILD_COVERAGE=ON
       - name: Build
         run: ./build.sh
       - name: Install
@@ -99,6 +100,4 @@ jobs:
           name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
           path: build/default/coverage*
       - name: Report coverage
-        run: |
-          SRC_COV_PERC=$(xmlstarlet sel -t -v 'floor(/coverage/packages/package[@name="src"]/@line-rate * 100)' -n build/default/coverage-xml.xml)
-          echo "Source coverage: ${SRC_COV_PERC}%" >> $GITHUB_STEP_SUMMARY
+        run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
