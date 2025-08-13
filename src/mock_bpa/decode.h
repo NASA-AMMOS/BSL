@@ -21,40 +21,47 @@
  */
 
 /** @file
- * Data structure and calls for the mock bpa policy registry memory pool
+ * Declarations for bundle and block decoding.
  * @ingroup mock_bpa
  */
+#ifndef BSL_MOCK_BPA_DECODE_H_
+#define BSL_MOCK_BPA_DECODE_H_
 
-#ifndef MOCK_BPA_POLICY_REGISTRY_H_
-#define MOCK_BPA_POLICY_REGISTRY_H_
-
+#include "agent.h"
+#include "eid.h"
 #include <BPSecLib_Private.h>
-
-#include "mock_bpa_policy_params.h"
+#include <qcbor/qcbor_decode.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define MOCK_BPA_MAX_POLICIES 100
+/** Encode a single EID.
+ *
+ * @param[in] dec The decoder.
+ * @param[in] eid The EID value.
+ * The struct must already be initialized.
+ */
+int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid);
 
-typedef struct mock_bpa_policy_registry
-{
-    mock_bpa_policy_params_t registry_params[MOCK_BPA_MAX_POLICIES];
-    bool                     in_use[MOCK_BPA_MAX_POLICIES];
-    int                      registry_count;
-} mock_bpa_policy_registry_t;
+/**
+ * Encode primary block to a CBOR bytestring.
+ *
+ * @param[in] dec The decoder.
+ * @param[in,out] blk The primary block structure to decode into.
+ * The struct must already be initialized.
+ * @returns 0 if successful
+ */
+int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk);
 
-void mock_bpa_policy_registry_init(mock_bpa_policy_registry_t *registry);
+/// @overload
+int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t *blk);
 
-int mock_bpa_policy_registry_size(mock_bpa_policy_registry_t *registry);
-
-mock_bpa_policy_params_t *mock_bpa_policy_registry_get(mock_bpa_policy_registry_t *registry);
-
-void mock_bpa_policy_registry_deinit(mock_bpa_policy_registry_t *registry);
+/// @overload
+int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif // MOCK_BPA_POLICY_REGISTRY_H_
+#endif // BSL_MOCK_BPA_DECODE_H_

@@ -25,7 +25,7 @@
  * @ingroup mock_bpa
  */
 
-#include "mock_bpa_policy_registry.h"
+#include "policy_registry.h"
 
 void mock_bpa_policy_registry_init(mock_bpa_policy_registry_t *registry)
 {

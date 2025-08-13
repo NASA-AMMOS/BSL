@@ -26,9 +26,9 @@
  */
 #include <BPSecLib_Private.h>
 
-#include "bsl_mock_bpa.h"
-#include "bsl_mock_bpa_encode.h"
-#include "bsl_mock_bpa_crc.h"
+#include "encode.h"
+#include "agent.h"
+#include "crc.h"
 
 int bsl_mock_encode_eid(QCBOREncodeContext *enc, const BSL_HostEID_t *eid)
 {

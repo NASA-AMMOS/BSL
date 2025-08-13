@@ -25,7 +25,7 @@
  * @ingroup mock_bpa
  */
 
-#include "mock_bpa_policy_params.h"
+#include "policy_params.h"
 
 void mock_bpa_policy_params_init(mock_bpa_policy_params_t *params, int policy_num)
 {

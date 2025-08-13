@@ -128,7 +128,7 @@ DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLI
 
 ## Citations and References
 
-For definitions from rfc's and other sources, `@cite [source]` in the Doxygen header.
+For definitions from IETF RFCs and other sources, `@cite [source]` in the Doxygen header.
 If possible (e.g. for RFCs) include the document number in the text for convenience, as in ```RFC XXXX @cite rfcXXXX```.
 
 # File Naming
