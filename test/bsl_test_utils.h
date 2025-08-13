@@ -31,6 +31,10 @@
 #include <backend/SecurityActionSet.h>
 #include <mock_bpa/ctr.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// @brief Key ID for the Appendix A1 key in OpenSSL
 #define RFC9173_EXAMPLE_A1_KEY "9100"
 
@@ -338,5 +342,9 @@ int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a2_kek(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a2_cek(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

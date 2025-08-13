@@ -80,7 +80,7 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
 }
 
 int MockBPA_GetBlockNums(const BSL_BundleRef_t *bundle_ref, size_t block_id_array_capacity,
-                         uint64_t block_id_array_result[block_id_array_capacity], size_t *result_count)
+                         uint64_t *block_id_array_result, size_t *result_count)
 {
     if (!bundle_ref || !bundle_ref->data || block_id_array_capacity == 0 || !block_id_array_result || !result_count)
     {

@@ -19,7 +19,7 @@
 ## the prime contract 80NM0018D0004 between the Caltech and NASA under
 ## subcontract 1700763.
 ##
-name: Build and run tests
+name: Build and run fuzzing
 on:
   schedule:
     - cron: '0 0 * * 0'
@@ -30,13 +30,13 @@ on:
   pull_request: {} # any target
 
 jobs:
-  unit-test:
+  fuzzing:
     strategy:
       fail-fast: false
       matrix:
         os: ['ubuntu-24.04', 'centos-9']
-        compiler: ['gcc']
-    name: Unit Test (${{matrix.os}} ${{matrix.compiler}})
+        compiler: ['clang']
+    name: Fuzzing (${{matrix.os}} ${{matrix.compiler}})
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
     permissions:
@@ -57,6 +57,7 @@ jobs:
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
               libssl-dev libjansson-dev \
               valgrind gcovr xmlstarlet
+          sudo gem install cbor-diag
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
@@ -70,6 +71,7 @@ jobs:
               openssl-devel jansson-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
+          gem install cbor-diag
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -85,99 +87,21 @@ jobs:
         run: >
           ./build.sh prep
           -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
-          -DBUILD_UNITTEST=ON -DBUILD_COVERAGE=ON
+          -DBUILD_UNITTEST=OFF -DBUILD_FUZZING=ON -DBUILD_COVERAGE=ON
       - name: Build
         run: ./build.sh
       - name: Install
         run: ./build.sh install
-      - name: Check symbols
-        run: |
-          ./check_symbols.py bsl_front bsl_dynamic --prefix bsl_
-          ./check_symbols.py bsl_crypto --prefix bsl_ bslb_
-          ./check_symbols.py bsl_default_sc --prefix bslx_
-          ./check_symbols.py bsl_sample_pp --prefix bslp_
-          ./check_symbols.py bsl_mock_bpa --prefix MockBPA_ bsl_eidpat_ bsl_mock_ mock_bpa_
       - name: Test
         run: ./build.sh check
+      - name: Report corpus
+        run: for FN in $(find test/*cbor*corpus -type f); do echo $FN; cborseq2diag.rb <$FN; done
       - name: Collect coverage
         run: ./build.sh coverage
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
           name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
-          path: build/default/coverage*
-      - name: Report coverage
-        run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
-
-  mock-bpa-test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ['ubuntu-24.04', 'centos-9']
-    name: Mock BPA Test (${{matrix.os}} gcc)
-    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
-    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
-    permissions:
-      contents: read
-      actions: write
-    steps:
-      - name: Set up OS
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo rm /var/lib/man-db/auto-update
-          sudo apt-get update
-          sudo apt-get install -y \
-              cmake ninja-build ruby gcc g++ ccache patch \
-              libssl-dev libjansson-dev \
-              valgrind gcovr xmlstarlet
-      - name: Set up OS
-        if: startsWith(matrix.os, 'centos')
-        run: |
-          dnf config-manager --set-enabled crb
-          dnf install -y epel-release
-          dnf install -y \
-              git rsync \
-              cmake ninja-build \
-              ruby pkg-config gcc gcc-c++ ccache patch \
-              openssl-devel jansson-devel \
-              valgrind xmlstarlet python3-pip
-          pip3 install gcovr
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          create-symlink: true
-      - name: Dependencies
-        run: ./build.sh deps
-      - name: Prep
-        run: >
-          ./build.sh prep
-          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
-          -DBUILD_UNITTEST=OFF -DBUILD_COVERAGE=ON
-      - name: Build
-        run: ./build.sh
-      - name: Install
-        run: ./build.sh install
-      - name: Test Prep
-        run: |
-          sudo apt-get update && sudo apt-get install -y \
-              python3 python3-pip
-          pip3 install --upgrade pip
-          pip3 install -r mock-bpa-test/requirements.txt
-      - name: Test
-        env:
-          TEST_MEMCHECK: '1'
-        run: python3 -m pytest mock-bpa-test
-      - name: Collect coverage
-        run: ./build.sh coverage
-      - name: Archive coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{github.job}}-${{matrix.os}}-gcc-coverage
           path: build/default/coverage*
       - name: Report coverage
         run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
