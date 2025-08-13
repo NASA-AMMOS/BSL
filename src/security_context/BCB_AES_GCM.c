@@ -617,7 +617,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (BSL_SUCCESS != BSLX_BCB_ComputeAAD(&bcb_context))
     {
         BSL_LOG_ERR("Failed to compute AAD");
-       BSLX_BCB_Deinit(&bcb_context);
+        BSLX_BCB_Deinit(&bcb_context);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
