@@ -76,7 +76,7 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
         return target_block_num;
     }
     uint64_t block_ids_arr[res_prim_blk.block_count];
-    size_t res_ct;
+    size_t   res_ct;
     if (BSL_BundleCtx_GetBlockIds(bundle, res_prim_blk.block_count, block_ids_arr, &res_ct) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to get bundle block ids");

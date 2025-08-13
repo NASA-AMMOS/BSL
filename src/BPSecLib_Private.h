@@ -74,8 +74,8 @@ typedef enum
     BSL_ERR_SECURITY_CONTEXT_FAILED       = -200, ///< General error code for errors arising from a Security Context.
     BSL_ERR_SECURITY_CONTEXT_PARTIAL_FAIL = -201, ///< General code where at least some security operations failed.
     BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED = -202, ///< Indicates security context validate failed
-    BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED = -203, ///< Indicates an HMAC Auth failed
-    BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED = -204 ///< Indicates a cryptographic operation failed (encrypt/decrypt)
+    BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED       = -203, ///< Indicates an HMAC Auth failed
+    BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED     = -204  ///< Indicates a cryptographic operation failed (encrypt/decrypt)
 } BSL_ErrCodes_e;
 
 /** Mark an unused parameter Within a function definition.
