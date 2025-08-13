@@ -27,11 +27,11 @@
 #include <BPSecLib_Public.h>
 #include <BPSecLib_Private.h>
 #include <assert.h>
-#include "bsl_mock_bpa.h"
-#include "bsl_mock_bpa_eid.h"
-#include "bsl_mock_bpa_eidpat.h"
-#include "bsl_mock_bpa_encode.h"
-#include "bsl_mock_bpa_decode.h"
+#include "agent.h"
+#include "eid.h"
+#include "eidpat.h"
+#include "encode.h"
+#include "decode.h"
 
 int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle)
 {
@@ -261,7 +261,7 @@ int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref)
     return 0;
 }
 
-int bsl_mock_bpa_init(void)
+int bsl_mock_bpa_agent_init(void)
 {
     uint8_t *state = BSL_MALLOC(999);
 
@@ -292,7 +292,7 @@ int bsl_mock_bpa_init(void)
     return BSL_HostDescriptors_Set(bpa);
 }
 
-void bsl_mock_bpa_deinit(void)
+void bsl_mock_bpa_agent_deinit(void)
 {
     BSL_HostDescriptors_t bpa;
     BSL_HostDescriptors_Get(&bpa);

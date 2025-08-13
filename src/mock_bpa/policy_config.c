@@ -25,40 +25,8 @@
  * @ingroup mock_bpa
  */
 
-#include "bsl_mock_bpa_policy_config.h"
-
-int mock_bpa_hexchar_to_int(char c)
-{
-    if ('0' <= c && c <= '9')
-        return c - '0';
-    if ('a' <= c && c <= 'f')
-        return c - 'a' + 10;
-    if ('A' <= c && c <= 'F')
-        return c - 'A' + 10;
-    return -1;
-}
-
-int mock_bpa_hexstring_to_bytes(const char *hexstr, uint8_t *out, size_t out_size)
-{
-    size_t len = strlen(hexstr);
-    if (len % 2 != 0 || out_size < len / 2)
-    {
-        return -1;
-    }
-
-    for (size_t i = 0; i < len / 2; ++i)
-    {
-        int high = mock_bpa_hexchar_to_int(hexstr[2 * i]);
-        int low  = mock_bpa_hexchar_to_int(hexstr[2 * i + 1]);
-        if (high == -1 || low == -1)
-        {
-            return -1;
-        }
-        out[i] = (high << 4) | low;
-    }
-
-    return (int)(len / 2);
-}
+#include "policy_config.h"
+#include "text_util.h"
 
 static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *text)
 {
@@ -633,7 +601,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
     size_t n = json_array_size(keys);
     printf("Found %zu key objects\n\n", n);
 
-    for (size_t i = 0; i < n; ++i)
+    for (size_t i = 0; !retval && (i < n); ++i)
     {
         json_t *key_obj = json_array_get(keys, i);
         if (!json_is_object(key_obj))
@@ -672,28 +640,22 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         const char *k_str = json_string_value(k);
         BSL_LOG_DEBUG("k: %s\n", k_str);
 
-        uint8_t key_buf[strlen(k_str) / 2];
-        mock_bpa_hexstring_to_bytes(k_str, key_buf, sizeof(key_buf));
+        m_string_t k_text;
+        m_string_init_set_cstr(k_text, k_str);
+        m_bstring_t k_data;
+        m_bstring_init(k_data);
 
-        retval = BSL_Crypto_AddRegistryKey(kid_str, key_buf, strlen(k_str) / 2);
+        retval = mock_bpa_base64_decode(k_data, k_text);
 
-        // char cmd[100];
-        // sprintf(cmd,"echo \"%s\" | basenc --decode --base64url | basenc --base16 --wrap=0", k_str);
-        // FILE *pipe = popen(cmd, "r");
-        // if (pipe == NULL)
-        // {
-        //     BSL_LOG_ERR("Failed to establish pipe");
-        //     return 1;
-        // }
+        if (!retval)
+        {
+            const size_t   k_len = m_bstring_size(k_data);
+            const uint8_t *k_ptr = m_bstring_view(k_data, 0, k_len);
 
-        // uint8_t kstr_buf[1024];
-        // while (fgets((char *) kstr_buf, sizeof(kstr_buf), pipe) != NULL)
-        // {
-        //     BSL_LOG_DEBUG("%s", kstr_buf);
-
-        //     retval = BSL_Crypto_AddRegistryKey(kid_str, kstr_buf, sizeof(kstr_buf));
-        // }
-        // pclose(pipe);
+            retval = BSL_Crypto_AddRegistryKey(kid_str, k_ptr, k_len);
+        }
+        m_bstring_clear(k_data);
+        m_string_clear(k_text);
     }
 
     json_decref(root);

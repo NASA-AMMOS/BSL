@@ -107,7 +107,7 @@ bool BSL_SecParam_IsConsistent(const BSL_SecParam_t *self)
 {
     CHK_AS_BOOL(self != NULL);
     CHK_AS_BOOL(self->param_id > 0);
-    CHK_AS_BOOL(self->_type > BSL_SECPARAM_TYPE_UNKNOWN && self->_type <= BSL_SECPARAM_TYPE_BYTESTR);
+    CHK_AS_BOOL(self->_type > BSL_SECPARAM_TYPE_UNKNOWN && self->_type <= BSL_SECPARAM_TYPE_STR);
 
     if (self->_type == BSL_SECPARAM_TYPE_INT64)
     {

@@ -28,11 +28,7 @@
 #define BSLB_SECOPERATIONS_H_
 
 #include <stdint.h>
-
-#include <m-list.h>
-
 #include <BPSecLib_Private.h>
-
 #include "SecParam.h"
 
 struct BSL_SecOper_s
@@ -57,10 +53,5 @@ struct BSL_SecOper_s
     BSL_SecBlockType_e  _service_type;
     BSLB_SecParamList_t _param_list;
 };
-
-// NOLINTBEGIN
-/// @todo - replace with forward declaration. Use new policy structure.
-LIST_DEF(BSLB_SecOperList, BSL_SecOper_t, M_POD_OPLIST)
-// NOLINTEND
 
 #endif /* BSLB_SECOPERATIONS_H_ */

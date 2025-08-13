@@ -562,6 +562,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
                      BSL_SecOutcome_t *sec_outcome)
 {
     (void)lib;
+
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
     CHK_ARG_NONNULL(sec_outcome);

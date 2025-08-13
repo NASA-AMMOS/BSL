@@ -36,7 +36,7 @@
 #include <unity.h>
 
 #include <BPSecLib_Private.h>
-#include <BPSecLib_MockBPA.h>
+#include <mock_bpa/MockBPA.h>
 #include <CryptoInterface.h>
 #include <security_context/rfc9173.h>
 
@@ -47,12 +47,12 @@ static BSL_TestContext_t LocalTestCtx;
 void suiteSetUp(void)
 {
     BSL_openlog();
-    assert(0 == bsl_mock_bpa_init());
+    assert(0 == bsl_mock_bpa_agent_init());
 }
 
 int suiteTearDown(int failures)
 {
-    bsl_mock_bpa_deinit();
+    bsl_mock_bpa_agent_deinit();
     BSL_closelog();
     return failures;
 }
@@ -110,9 +110,10 @@ void test_SecurityContext_BIB_Source(void)
         (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib, mock_bpa_ctr->encoded));
 
     BSL_SecurityResponseSet_Deinit(malloced_responseset);
-    BSL_SecurityActionSet_Deinit(malloced_actionset);
     free(malloced_responseset);
+    BSL_SecurityActionSet_Deinit(malloced_actionset);
     free(malloced_actionset);
+    BIBTestContext_Deinit(&bib_test_context);
 
     TEST_ASSERT_TRUE(is_expected);
 }
@@ -149,9 +150,10 @@ void test_SecurityContext_BIB_Verifier(void)
         (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib, mock_bpa_ctr->encoded));
 
     BSL_SecurityActionSet_Deinit(malloced_actionset);
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
     free(malloced_actionset);
+    BSL_SecurityResponseSet_Deinit(malloced_responseset);
     free(malloced_responseset);
+    BIBTestContext_Deinit(&bib_test_context);
 
     TEST_ASSERT_TRUE(is_match);
 }
@@ -190,10 +192,11 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
                           BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
                                                             &mock_bpa_ctr->bundle_ref, malloced_actionset));
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     free(malloced_actionset);
+    BSL_SecurityResponseSet_Deinit(malloced_responseset);
     free(malloced_responseset);
+    BIBTestContext_Deinit(&bib_test_context);
 }
 
 /**
@@ -239,10 +242,11 @@ void test_SecurityContext_BIB_Acceptor(void)
         goto cleanup;
 
 cleanup:
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     free(malloced_actionset);
+    BSL_SecurityResponseSet_Deinit(malloced_responseset);
     free(malloced_responseset);
+    BIBTestContext_Deinit(&bib_test_context);
 
     TEST_ASSERT_EQUAL(0, sec_context_result);
     TEST_ASSERT_EQUAL(0, encode_result);
@@ -270,26 +274,34 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
 
     BSL_SecParam_t param_key = { 0 };
     BSL_SecParam_InitStr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_SecOper_t bib_oper_primary = { 0 };
-    BSL_SecOper_Init(&bib_oper_primary, 1, 0, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
-                     BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bib_oper_primary;
+    BSL_SecOper_Init(&bib_oper_primary);
+    BSL_SecOper_Populate(&bib_oper_primary, 1, 0, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
+                         BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bib_oper_primary, &param_key);
-    BSL_SecOper_t bib_oper_ext_block = { 0 };
-    BSL_SecOper_Init(&bib_oper_ext_block, 1, 2, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
-                     BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bib_oper_ext_block;
+    BSL_SecOper_Init(&bib_oper_ext_block);
+    BSL_SecOper_Populate(&bib_oper_ext_block, 1, 2, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
+                         BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &param_key);
 
     BSL_SecParam_t bcb_param_key = { 0 };
     BSL_SecParam_InitStr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A3_KEY);
-    BSL_SecOper_t bcb_oper = { 0 };
-    BSL_SecOper_Init(&bcb_oper, 2, 1, 4, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR, BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bcb_oper;
+    BSL_SecOper_Init(&bcb_oper);
+    BSL_SecOper_Populate(&bcb_oper, 2, 1, 4, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR, BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bcb_oper, &bcb_param_key);
 
     BSL_SecurityActionSet_t *malloced_actionset = calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(malloced_actionset);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bib_oper_primary);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bib_oper_ext_block);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bcb_oper);
+
+    BSL_SecurityAction_t *malloced_action = calloc(1, BSL_SecurityAction_Sizeof());
+    BSL_SecurityAction_Init(malloced_action);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bib_oper_ext_block);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bcb_oper);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bib_oper_primary);
+
+    BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
 
@@ -297,10 +309,11 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
                                                               &mock_bpa_ctr->bundle_ref, malloced_actionset);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_result);
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    BSL_SecurityAction_Deinit(malloced_action);
+    free(malloced_action);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
-
     free(malloced_actionset);
+    BSL_SecurityResponseSet_Deinit(malloced_responseset);
     free(malloced_responseset);
 }
 
@@ -327,15 +340,18 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecParam_t param_integ_scope = { 0 };
     BSL_SecParam_InitInt64(&param_integ_scope, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
 
-    BSL_SecOper_t bib_oper_primary = { 0 };
-    BSL_SecOper_Init(&bib_oper_primary, 1, 0, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bib_oper_primary;
+    BSL_SecOper_Init(&bib_oper_primary);
+    BSL_SecOper_Populate(&bib_oper_primary, 1, 0, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
+                         BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bib_oper_primary, &param_key);
     BSL_SecOper_AppendParam(&bib_oper_primary, &param_sha_var);
     BSL_SecOper_AppendParam(&bib_oper_primary, &param_integ_scope);
 
-    BSL_SecOper_t bib_oper_ext_block = { 0 };
-    BSL_SecOper_Init(&bib_oper_ext_block, 1, 2, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
-                     BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bib_oper_ext_block;
+    BSL_SecOper_Init(&bib_oper_ext_block);
+    BSL_SecOper_Populate(&bib_oper_ext_block, 1, 2, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
+                         BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &param_key);
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &param_sha_var);
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &param_integ_scope);
@@ -349,17 +365,23 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecParam_t aes_variant = { 0 };
     BSL_SecParam_InitInt64(&aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, 1);
 
-    BSL_SecOper_t bcb_oper = { 0 };
-    BSL_SecOper_Init(&bcb_oper, 2, 1, 4, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bcb_oper;
+    BSL_SecOper_Init(&bcb_oper);
+    BSL_SecOper_Populate(&bcb_oper, 2, 1, 4, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bcb_oper, &bcb_param_key);
     BSL_SecOper_AppendParam(&bcb_oper, &bcb_scope);
     BSL_SecOper_AppendParam(&bcb_oper, &aes_variant);
 
     BSL_SecurityActionSet_t *malloced_actionset = calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(malloced_actionset);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bib_oper_primary);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bib_oper_ext_block);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bcb_oper);
+
+    BSL_SecurityAction_t *malloced_action = calloc(1, BSL_SecurityAction_Sizeof());
+    BSL_SecurityAction_Init(malloced_action);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bib_oper_primary);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bib_oper_ext_block);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bcb_oper);
+
+    BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
 
@@ -375,10 +397,11 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     const size_t response_count = BSL_SecurityResponseSet_CountResponses(malloced_responseset);
     TEST_ASSERT_EQUAL(3, response_count);
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    BSL_SecurityAction_Deinit(malloced_action);
+    free(malloced_action);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
-
     free(malloced_actionset);
+    BSL_SecurityResponseSet_Deinit(malloced_responseset);
     free(malloced_responseset);
 }
 
@@ -415,15 +438,18 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_SecParam_t aes_variant = { 0 };
     BSL_SecParam_InitInt64(&aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
 
-    BSL_SecOper_t bcb_op_tgt_payload = { 0 };
-    BSL_SecOper_Init(&bcb_op_tgt_payload, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
-                     BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bcb_op_tgt_payload;
+    BSL_SecOper_Init(&bcb_op_tgt_payload);
+    BSL_SecOper_Populate(&bcb_op_tgt_payload, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
+                         BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &bcb_param_key);
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &aes_variant);
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &bcb_scope);
 
-    BSL_SecOper_t bcb_op_tgt_bib = { 0 };
-    BSL_SecOper_Init(&bcb_op_tgt_bib, 2, 3, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR, BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bcb_op_tgt_bib;
+    BSL_SecOper_Init(&bcb_op_tgt_bib);
+    BSL_SecOper_Populate(&bcb_op_tgt_bib, 2, 3, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
+                         BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &bcb_param_key);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &aes_variant);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &bcb_scope);
@@ -435,18 +461,24 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_SecParam_t scope_flag = { 0 };
     BSL_SecParam_InitInt64(&scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0x07);
 
-    BSL_SecOper_t bib_oper_payload = { 0 };
-    BSL_SecOper_Init(&bib_oper_payload, 1, 1, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
-                     BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bib_oper_payload;
+    BSL_SecOper_Init(&bib_oper_payload);
+    BSL_SecOper_Populate(&bib_oper_payload, 1, 1, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
+                         BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bib_oper_payload, &param_key);
     BSL_SecOper_AppendParam(&bib_oper_payload, &sha_variant);
     BSL_SecOper_AppendParam(&bib_oper_payload, &scope_flag);
 
     BSL_SecurityActionSet_t *malloced_actionset = calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(malloced_actionset);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bcb_op_tgt_payload);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bcb_op_tgt_bib);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bib_oper_payload);
+
+    BSL_SecurityAction_t *malloced_action = calloc(1, BSL_SecurityAction_Sizeof());
+    BSL_SecurityAction_Init(malloced_action);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bcb_op_tgt_payload);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bcb_op_tgt_bib);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bib_oper_payload);
+
+    BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
 
@@ -462,10 +494,11 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     TEST_ASSERT_EQUAL(0, mock_bpa_encode(mock_bpa_ctr));
     TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(expected_processed_bundle, mock_bpa_ctr->encoded));
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    BSL_SecurityAction_Deinit(malloced_action);
+    free(malloced_action);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
-
     free(malloced_actionset);
+    BSL_SecurityResponseSet_Deinit(malloced_responseset);
     free(malloced_responseset);
 }
 
@@ -489,8 +522,10 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecParam_t scope_flag = { 0 };
     BSL_SecParam_InitInt64(&scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0x07);
 
-    BSL_SecOper_t bib_oper_payload = { 0 };
-    BSL_SecOper_Init(&bib_oper_payload, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bib_oper_payload;
+    BSL_SecOper_Init(&bib_oper_payload);
+    BSL_SecOper_Populate(&bib_oper_payload, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
+                         BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bib_oper_payload, &param_key);
     BSL_SecOper_AppendParam(&bib_oper_payload, &sha_variant);
     BSL_SecOper_AppendParam(&bib_oper_payload, &scope_flag);
@@ -502,24 +537,32 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecParam_t aes_variant = { 0 };
     BSL_SecParam_InitInt64(&aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
 
-    BSL_SecOper_t bcb_op_tgt_payload = { 0 };
-    BSL_SecOper_Init(&bcb_op_tgt_payload, 2, 1, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
-                     BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bcb_op_tgt_payload;
+    BSL_SecOper_Init(&bcb_op_tgt_payload);
+    BSL_SecOper_Populate(&bcb_op_tgt_payload, 2, 1, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
+                         BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &bcb_param_key);
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &aes_variant);
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &bcb_scope);
 
-    BSL_SecOper_t bcb_op_tgt_bib = { 0 };
-    BSL_SecOper_Init(&bcb_op_tgt_bib, 2, 2, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_t bcb_op_tgt_bib;
+    BSL_SecOper_Init(&bcb_op_tgt_bib);
+    BSL_SecOper_Populate(&bcb_op_tgt_bib, 2, 2, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
+                         BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &bcb_param_key);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &aes_variant);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &bcb_scope);
 
     BSL_SecurityActionSet_t *malloced_actionset = calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(malloced_actionset);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bcb_op_tgt_payload);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bcb_op_tgt_bib);
-    BSL_SecurityActionSet_AppendSecOper(malloced_actionset, &bib_oper_payload);
+
+    BSL_SecurityAction_t *malloced_action = calloc(1, BSL_SecurityAction_Sizeof());
+    BSL_SecurityAction_Init(malloced_action);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bib_oper_payload);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bcb_op_tgt_payload);
+    BSL_SecurityAction_AppendSecOper(malloced_action, &bcb_op_tgt_bib);
+
+    BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
 
@@ -531,9 +574,10 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &prim_blk);
     TEST_ASSERT_TRUE(prim_blk.block_count >= 3 && prim_blk.block_count <= 4);
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
+    BSL_SecurityAction_Deinit(malloced_action);
+    free(malloced_action);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
-
     free(malloced_actionset);
+    BSL_SecurityResponseSet_Deinit(malloced_responseset);
     free(malloced_responseset);
 }

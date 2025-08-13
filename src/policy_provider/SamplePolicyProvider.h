@@ -29,8 +29,12 @@
 #define BSLP_SAMPLE_POLICY_PROVIDER_H
 
 #include <stdint.h>
-
+#include <m-array.h>
 #include <BPSecLib_Private.h>
+
+// NOLINTBEGIN
+M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t *, M_PTR_OPLIST)
+// NOLINTEND
 
 /**
  * THE key function that matches a bundle against a rule to provide the output action and specific parameters to use for
@@ -77,6 +81,8 @@ void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
 bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
                                   BSL_HostEID_t src_eid, BSL_HostEID_t dst_eid);
 
+// FIXME remove hard limit on params
+#define BSL_PP_POLICYRULE_PARAM_MAX_COUNT 10
 /**
  * @brief Represents a policy rule
  *

@@ -110,6 +110,7 @@ set_target_properties(bsl_sample_pp
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
+target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H
@@ -128,6 +129,7 @@ set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOutcome.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecParam.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecResult.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityAction.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityActionSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.c
@@ -135,7 +137,6 @@ set(BSL_DYNAMIC_C
 )
 
 add_library(bsl_dynamic)
-add_compile_options(-include ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h)
 target_sources(bsl_dynamic PUBLIC ${BSL_DYNAMIC_H})
 target_sources(bsl_dynamic PRIVATE ${BSL_DYNAMIC_C})
 set_target_properties(bsl_dynamic

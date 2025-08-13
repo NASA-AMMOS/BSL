@@ -22,7 +22,7 @@
 #include <inttypes.h>
 #include <unity.h>
 #include "bsl_test_utils.h"
-#include <mock_bpa_ctr.h>
+#include <mock_bpa/ctr.h>
 
 // allow parameterized cases
 #define TEST_CASE(...)
@@ -30,12 +30,12 @@
 void suiteSetUp(void)
 {
     BSL_openlog();
-    TEST_ASSERT_EQUAL_INT(0, bsl_mock_bpa_init());
+    TEST_ASSERT_EQUAL_INT(0, bsl_mock_bpa_agent_init());
 }
 
 int suiteTearDown(int failures)
 {
-    bsl_mock_bpa_deinit();
+    bsl_mock_bpa_agent_deinit();
     BSL_closelog();
     return failures;
 }

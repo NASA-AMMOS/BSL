@@ -50,6 +50,9 @@ install(
 
 set(LIB_ORDERED bsl_front bsl_dynamic bsl_mock_bpa bsl_test_utils)
 
+add_unity_test(SOURCE test_MockBPA_text_util.c)
+target_link_libraries(test_MockBPA_text_util PUBLIC bsl_mock_bpa)
+
 add_unity_test(SOURCE test_MockBPA_EID.c)
 target_link_libraries(test_MockBPA_EID PUBLIC ${LIB_ORDERED})
 

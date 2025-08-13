@@ -35,6 +35,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "BSLConfig.h"
+
 /// This annotation on a function requires the caller to capture and inspect the return value.
 #if defined(__GNUC__) || defined(__clang__)
 #define BSL_REQUIRE_CHECK __attribute__((warn_unused_result))
@@ -49,8 +51,12 @@ typedef struct BSL_LibCtx_s BSL_LibCtx_t;
 /// process the Bundle.
 typedef struct BSL_SecurityResponseSet_s BSL_SecurityResponseSet_t;
 
-/// @brief Forward declaration of ::BSL_SecurityActionSet_s, which contains information for BSL to process the Bundle.
+/// @brief Forward declaration of ::BSL_SecurityActionSet_s, which contains actions for BSL to process the Bundle.
 typedef struct BSL_SecurityActionSet_s BSL_SecurityActionSet_t;
+
+/// @brief Forward declaration of ::BSL_SecurityAction_s, which contains security operations for BSL to process the
+/// Bundle.
+typedef struct BSL_SecurityAction_s BSL_SecurityAction_t;
 
 /// @brief Forward-declaration for structure containing callbacks to a security context.
 typedef struct BSL_SecCtxDesc_s BSL_SecCtxDesc_t;

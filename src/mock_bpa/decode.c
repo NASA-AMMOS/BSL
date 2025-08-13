@@ -24,9 +24,9 @@
  * Definitions for bundle and block decoding.
  * @ingroup mock_bpa
  */
-#include "bsl_mock_bpa.h"
-#include "bsl_mock_bpa_decode.h"
-#include "bsl_mock_bpa_crc.h"
+#include "decode.h"
+#include "agent.h"
+#include "crc.h"
 #include <BPSecLib_Public.h>
 #include <BPSecLib_Private.h>
 

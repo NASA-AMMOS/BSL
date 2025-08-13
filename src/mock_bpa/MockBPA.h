@@ -19,36 +19,13 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#ifndef TEST_BPA_MOCK_BPA_CTR_H_
-#define TEST_BPA_MOCK_BPA_CTR_H_
+#ifndef _BSL_MockBPA_MockBPA_H_
+#define _BSL_MockBPA_MockBPA_H_
 
-#include <m-core.h>
+#include "crc.h"
+#include "encode.h"
+#include "decode.h"
+#include "agent.h"
+#include "eidpat.h"
 
-#include <BPSecLib_Private.h>
-#include <BPSecLib_Public.h>
-#include "bsl_mock_bpa.h"
-
-/// A container for encoded and decoded bundle data
-typedef struct
-{
-    /// Encoded PDU
-    BSL_Data_t encoded;
-    /// The decoded bundle
-    BSL_BundleRef_t bundle_ref;
-    // MockBPA_Bundle_t *bundle;
-} mock_bpa_ctr_t;
-
-void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr);
-
-void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src);
-
-void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr);
-
-int mock_bpa_decode(mock_bpa_ctr_t *ctr);
-
-int mock_bpa_encode(mock_bpa_ctr_t *ctr);
-
-#define M_OPL_mock_bpa_ctr_t() \
-    (INIT(API_2(mock_bpa_ctr_init)), INIT_MOVE(API_6(mock_bpa_ctr_init_move)), CLEAR(API_2(mock_bpa_ctr_deinit)))
-
-#endif /* TEST_BPA_MOCK_BPA_CTR_H_ */
+#endif //_BSL_MockBPA_MockBPA_H_
