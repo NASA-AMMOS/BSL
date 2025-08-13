@@ -129,30 +129,36 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
             BSL_LOG_WARNING("Failed to get block number %lu", blocks_array[i]);
             continue;
         }
-        for (size_t sec_op_index = 0; sec_op_index < output_action_set->sec_operations_count; sec_op_index++)
+        BSL_SecActionList_it_t act_it;
+        for (BSL_SecActionList_it(act_it, output_action_set->actions); !BSL_SecActionList_end_p(act_it);
+             BSL_SecActionList_next(act_it))
         {
-            BSL_SecOper_t *sec_oper = &output_action_set->sec_operations[sec_op_index];
-            if (block.type_code != sec_oper->_service_type)
+            BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
+            for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j++)
             {
-                continue;
-            }
-            // Now set it's sec_block
-            BSL_AbsSecBlock_t *abs_sec_block = calloc(1, BSL_AbsSecBlock_Sizeof());
-            BSL_Data_t         block_btsd    = { 0 };
-            BSL_Data_InitView(&block_btsd, block.btsd_len, block.btsd);
-            if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, block_btsd) == 0)
-            {
-                if (BSL_AbsSecBlock_ContainsTarget(abs_sec_block, sec_oper->target_block_num))
+                BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, j);
+                if (block.type_code != sec_oper->_service_type)
                 {
-                    sec_oper->sec_block_num = block.block_num;
+                    continue;
                 }
+                // Now set it's sec_block
+                BSL_AbsSecBlock_t *abs_sec_block = calloc(1, BSL_AbsSecBlock_Sizeof());
+                BSL_Data_t         block_btsd    = { 0 };
+                BSL_Data_InitView(&block_btsd, block.btsd_len, block.btsd);
+                if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, block_btsd) == 0)
+                {
+                    if (BSL_AbsSecBlock_ContainsTarget(abs_sec_block, sec_oper->target_block_num))
+                    {
+                        sec_oper->sec_block_num = block.block_num;
+                    }
+                }
+                else
+                {
+                    BSL_LOG_WARNING("Failed to parse ASB from BTSD");
+                }
+                BSL_AbsSecBlock_Deinit(abs_sec_block);
+                free(abs_sec_block);
             }
-            else
-            {
-                BSL_LOG_WARNING("Failed to parse ASB from BTSD");
-            }
-            BSL_AbsSecBlock_Deinit(abs_sec_block);
-            free(abs_sec_block);
         }
     }
 
@@ -188,60 +194,65 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
-    // There should be as many responses as there were sec operations
-    ASSERT_PROPERTY(response_output->total_operations == policy_actions->sec_operations_count);
-
     int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);
     BSL_LOG_INFO("Completed finalize: status=%d", finalize_status);
 
     bool must_drop = false;
-    for (size_t oper_index = 0; oper_index < policy_actions->sec_operations_count; oper_index++)
+
+    BSL_SecActionList_it_t act_it;
+    for (BSL_SecActionList_it(act_it, policy_actions->actions); !BSL_SecActionList_end_p(act_it);
+         BSL_SecActionList_next(act_it))
     {
-        // First, get the error code for the security operation ()
-        int                block_err_code  = response_output->results[oper_index];
-        BSL_PolicyAction_e err_action_code = policy_actions->sec_operations[oper_index].failure_code;
-
-        // When the operation was a success, there's nothing further to do.
-        if (block_err_code == BSL_SUCCESS)
+        BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
+        for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i++)
         {
-            BSL_LOG_DEBUG("Security operation [%lu] success, target block num = %lu", oper_index,
-                          policy_actions->sec_operations[oper_index].target_block_num);
-            continue;
-        }
+            BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
 
-        // Now handle a specific error
-        switch (err_action_code)
-        {
-            case BSL_POLICYACTION_NOTHING:
+            BSL_SecOper_ConclusionState_e conclusion = BSL_SecOper_GetConclusion(sec_oper);
+
+            // When the operation was a success, there's nothing further to do.
+            if (conclusion == BSL_SECOP_CONCLUSION_SUCCESS)
             {
-                // Do nothing, per policy (Indicate in telemetry.)
-                BSL_LOG_WARNING("Instructed to do nothing for failed security operation");
+                BSL_LOG_DEBUG("Security operation success, target block num = %lu", sec_oper->target_block_num);
+                continue;
+            }
+
+            BSL_PolicyAction_e err_action_code = sec_oper->failure_code;
+
+            // Now handle a specific error
+            switch (err_action_code)
+            {
+                case BSL_POLICYACTION_NOTHING:
+                {
+                    // Do nothing, per policy (Indicate in telemetry.)
+                    BSL_LOG_WARNING("Instructed to do nothing for failed security operation");
+                    break;
+                }
+                case BSL_POLICYACTION_DROP_BLOCK:
+                {
+                    // Drop the failed target block, but otherwise continue
+                    BSL_LOG_WARNING("***** Dropping block over which security operation failed *******");
+                    BSL_BundleCtx_RemoveBlock(bundle, sec_oper->target_block_num);
+                    break;
+                }
+                case BSL_POLICYACTION_DROP_BUNDLE:
+                {
+                    BSL_LOG_WARNING("Deleting bundle due to block target num %lu security failure",
+                                    sec_oper->target_block_num);
+                    must_drop = true;
+                    break;
+                }
+                case BSL_POLICYACTION_UNDEFINED:
+                default:
+                {
+                    BSL_LOG_ERR("Unhandled policy action: %lu", err_action_code);
+                }
+            }
+
+            if (must_drop)
+            {
                 break;
             }
-            case BSL_POLICYACTION_DROP_BLOCK:
-            {
-                // Drop the failed target block, but otherwise continue
-                BSL_LOG_WARNING("***** Dropping block over which security operation failed *******");
-                BSL_BundleCtx_RemoveBlock(bundle, policy_actions->sec_operations[oper_index].target_block_num);
-                break;
-            }
-            case BSL_POLICYACTION_DROP_BUNDLE:
-            {
-                BSL_LOG_WARNING("Deleting bundle due to block target num %lu security failure",
-                                policy_actions->sec_operations[oper_index].target_block_num);
-                must_drop = true;
-                break;
-            }
-            case BSL_POLICYACTION_UNDEFINED:
-            default:
-            {
-                BSL_LOG_ERR("Unhandled policy action: %lu", err_action_code);
-            }
-        }
-
-        if (must_drop)
-        {
-            break;
         }
     }
 

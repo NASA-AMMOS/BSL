@@ -67,6 +67,12 @@ const char * bsl_version(void);
 #define BSL_FREE free
 #endif /* BSL_FREE */
 
+#ifndef BSL_CALLOC
+/** Uses the same function signature as C99 calloc().
+ */
+#define BSL_CALLOC calloc
+#endif /* BSL_CALLOC */
+
 /** Define to override value/struct allocation.
  * See m-core.h for details.
  */

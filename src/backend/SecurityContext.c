@@ -32,6 +32,7 @@
 #include "AbsSecBlock.h"
 #include "PublicInterfaceImpl.h"
 #include "SecOperation.h"
+#include "SecurityActionSet.h"
 #include "SecurityResultSet.h"
 
 static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
@@ -352,6 +353,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
                              BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
 {
     (void)lib;
+
     CHK_ARG_NONNULL(sec_context_fn);
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
@@ -463,7 +465,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
     CHK_PRECONDITION(BSL_SecurityActionSet_IsConsistent(action_set));
     // NOLINTEND
 
-    BSL_SecurityResponseSet_Init(output_response, BSL_SecurityActionSet_CountSecOpers(action_set), 0);
+    BSL_SecurityResponseSet_Init(output_response, BSL_SecurityActionSet_CountOperations(action_set), 0);
     /**
      * Notes:
      *  - It should evaluate every security operation, even if earlier ones failed.
@@ -473,44 +475,51 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
      */
     size_t            fail_count = 0;
     BSL_SecOutcome_t *outcome    = calloc(BSL_SecOutcome_Sizeof(), 1);
-    for (size_t sec_oper_index = 0; sec_oper_index < BSL_SecurityActionSet_CountSecOpers(action_set); sec_oper_index++)
+
+    BSL_SecActionList_it_t act_it;
+    for (BSL_SecActionList_it(act_it, action_set->actions); !BSL_SecActionList_end_p(act_it);
+         BSL_SecActionList_next(act_it))
     {
-        memset(outcome, 0, BSL_SecOutcome_Sizeof());
-        // TODO Const correctness below
-        BSL_SecOper_t *sec_oper = (BSL_SecOper_t *)BSL_SecurityActionSet_GetSecOperAtIndex(action_set, sec_oper_index);
-        const BSL_SecCtxDesc_t *sec_ctx = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
-        ASSERT_PROPERTY(sec_ctx != NULL);
-
-        // TODO: This is not even used, it does not need to be allocated
-        BSL_SecOutcome_Init(outcome, sec_oper, 100000);
-
-        int errcode = -1;
-        if (BSL_SecOper_IsBIB(sec_oper))
+        BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
+        for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i++)
         {
-            errcode = BSL_SecOper_IsRoleSource(sec_oper) == true
-                          ? BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome)
-                          : BSL_ExecBIBAccept(sec_ctx->execute, lib, bundle, sec_oper, outcome);
-        }
-        else
-        {
-            if (BSL_SecOper_IsRoleSource(sec_oper))
+            memset(outcome, 0, BSL_SecOutcome_Sizeof());
+
+            BSL_SecOper_t          *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
+            const BSL_SecCtxDesc_t *sec_ctx  = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
+            ASSERT_PROPERTY(sec_ctx != NULL);
+
+            BSL_SecOutcome_Init(outcome, sec_oper, 100000);
+
+            int errcode = -1;
+            if (BSL_SecOper_IsBIB(sec_oper))
             {
-                errcode = BSL_ExecBCBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                errcode = BSL_SecOper_IsRoleSource(sec_oper) == true
+                              ? BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome)
+                              : BSL_ExecBIBAccept(sec_ctx->execute, lib, bundle, sec_oper, outcome);
             }
             else
             {
-                errcode = BSL_ExecBCBAcceptor(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                if (BSL_SecOper_IsRoleSource(sec_oper))
+                {
+                    errcode = BSL_ExecBCBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                }
+                else
+                {
+                    errcode = BSL_ExecBCBAcceptor(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                }
             }
-        }
 
-        BSL_SecOutcome_Deinit(outcome);
+            BSL_SecOutcome_Deinit(outcome);
 
-        if (errcode != 0)
-        {
-            fail_count += 1;
-            BSL_LOG_ERR("Security Op failed: %d", errcode);
-            output_response->results[sec_oper_index] = -1;
-            continue;
+            if (errcode != 0)
+            {
+                fail_count += 1;
+                BSL_LOG_ERR("Security Op failed: %d", errcode);
+                BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_FAILURE);
+                continue;
+            }
+            BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_SUCCESS);
         }
     }
     free(outcome);

@@ -39,6 +39,11 @@
     field.len = sizeof(tgt);   \
     field.ptr = (uint8_t *)tgt
 
+void BIBTestContext_Deinit(BIBTestContext *obj)
+{
+    BSL_SecOper_Deinit(&obj->sec_oper);
+}
+
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id)
 {
     quick_data(context->hmac, ApxA1_HMAC);
@@ -48,7 +53,8 @@ void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e rol
     BSL_SecParam_InitInt64(&context->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
     BSL_SecParam_InitBytestr(&context->param_hmac, BSL_SECPARAM_TYPE_AUTH_TAG, context->hmac);
 
-    BSL_SecOper_Init(&context->sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_Init(&context->sec_oper);
+    BSL_SecOper_Populate(&context->sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BLOCK);
 
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_sha_variant);
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_scope_flags);
@@ -70,7 +76,8 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
     BSL_SecParam_InitBytestr(&context->param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, context->auth_tag);
     BSL_SecParam_InitBytestr(&context->param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, context->wrapped_key);
 
-    BSL_SecOper_Init(&context->sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_NOTHING);
+    BSL_SecOper_Init(&context->sec_oper);
+    BSL_SecOper_Populate(&context->sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_NOTHING);
 
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_init_vec);
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_aes_variant);
@@ -84,11 +91,15 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
 BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context)
 {
     BSL_SecurityActionSet_t *action_set = calloc(sizeof(BSL_SecurityActionSet_t), 1);
-    // Populate a PolicyActionSet with one action, of the appendix A1 BIB
-    action_set->arrays_capacity      = sizeof(action_set->sec_operations) / sizeof(BSL_SecOper_t);
-    action_set->sec_operations_count = 1;
-    BSL_SecOper_t *bib_oper          = &action_set->sec_operations[0];
-    *bib_oper                        = bib_context->sec_oper;
+    BSL_SecurityActionSet_Init(action_set);
+    BSL_SecurityAction_t *act = calloc(sizeof(BSL_SecurityAction_t), 1);
+    BSL_SecurityAction_Init(act);
+    BSL_SecurityAction_AppendSecOper(act, &bib_context->sec_oper);
+    // ensure consistent context state
+    BSL_SecOper_Init(&bib_context->sec_oper);
+    BSL_SecurityActionSet_AppendAction(action_set, act);
+    BSL_SecurityAction_Deinit(act);
+    free(act);
     return action_set;
 }
 

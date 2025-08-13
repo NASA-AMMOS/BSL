@@ -46,6 +46,8 @@ bytestream
 bytestring
 bytestrings
 callee's
+calloc
+CALLOC
 Carsten
 CBOR
 cek
@@ -169,6 +171,11 @@ RTEMS
 ruleset
 sc
 SCs
+SecOper
+SecParam
+SecResult
+SecurityAction
+SecurityActionSet
 SHA
 sipos
 speciality

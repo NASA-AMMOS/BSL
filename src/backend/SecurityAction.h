@@ -19,30 +19,21 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-/** @file
- * @brief Security Result Set implementation for result after application of security operations.
- * @ingroup backend_dyn
- */
-#ifndef BSLB_SECURITYRESULTSET_H_
-#define BSLB_SECURITYRESULTSET_H_
-
+#include <m-array.h>
 #include <BPSecLib_Private.h>
+#include "SecOperation.h"
 
-#define BSL_SECURITYRESPONSESET_ARRAYLEN (10)
-#define BSL_SECURITYRESPONSESET_STRLEN   (256)
+/// OPLIST for ::BSL_SecOper_t
+#define M_OPL_BSL_SecOper_t()                                                                          \
+    (INIT(API_2(BSL_SecOper_Init)), INIT_SET(API_6(BSL_SecOper_InitSet)), SET(API_6(BSL_SecOper_Set)), \
+     CLEAR(API_2(BSL_SecOper_Deinit)))
 
-/// @brief Contains the results and outcomes after performing the security operations.
-/// @note This struct is still in-concept
-struct BSL_SecurityResponseSet_s
+// NOLINTBEGIN
+M_ARRAY_DEF(BSL_SecOperList, BSL_SecOper_t, M_OPL_BSL_SecOper_t())
+// NOLINTEND
+
+struct BSL_SecurityAction_s
 {
-    /// @brief This maps to the Security Action sec_op_list,
-    ///        and contains the result code of that security operation.
-    int                results[BSL_SECURITYRESPONSESET_ARRAYLEN];
-    char               err_msg[BSL_SECURITYRESPONSESET_STRLEN];
-    BSL_PolicyAction_e err_action_codes[BSL_SECURITYRESPONSESET_ARRAYLEN];
-    int                err_code;
-    size_t             total_operations;
-    size_t             failure_count;
+    BSL_SecOperList_t sec_op_list;
+    size_t            err_ct;
 };
-
-#endif /* BSLB_SECURITYRESULTSET_H_ */

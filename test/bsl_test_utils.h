@@ -29,7 +29,6 @@
 #include <backend/SecParam.h>
 #include <backend/SecResult.h>
 #include <backend/SecurityActionSet.h>
-
 #include <mock_bpa/ctr.h>
 
 /// @brief Key ID for the Appendix A1 key in OpenSSL
@@ -85,6 +84,8 @@ typedef struct
 
     BSL_SecOper_t sec_oper;
 } BIBTestContext;
+
+void BIBTestContext_Deinit(BIBTestContext *obj);
 
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id);
 

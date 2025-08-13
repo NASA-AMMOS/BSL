@@ -48,6 +48,7 @@
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 M_ARRAY_DEF(uint64_list, uint64_t)
+/// @endcond
 // NOLINTEND
 
 /** Represents the Abstract Security Block as defined in RFC9172

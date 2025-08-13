@@ -28,11 +28,7 @@
 #define BSLB_SECOPERATIONS_H_
 
 #include <stdint.h>
-
-#include <m-list.h>
-
 #include <BPSecLib_Private.h>
-
 #include "SecParam.h"
 
 struct BSL_SecOper_s
@@ -49,15 +45,13 @@ struct BSL_SecOper_s
     /// @brief Code for handing what to do to the block or bundle if security processing fails.
     BSL_PolicyAction_e failure_code;
 
+    /// @brief Conclusion state of security operation processing
+    BSL_SecOper_ConclusionState_e conclusion;
+
     /// @brief Private enumeration indicating the role (e.g., acceptor vs verifier)
     BSL_SecRole_e       _role;
     BSL_SecBlockType_e  _service_type;
     BSLB_SecParamList_t _param_list;
 };
-
-// NOLINTBEGIN
-/// @todo - replace with forward declaration. Use new policy structure.
-LIST_DEF(BSLB_SecOperList, BSL_SecOper_t, M_POD_OPLIST)
-// NOLINTEND
 
 #endif /* BSLB_SECOPERATIONS_H_ */

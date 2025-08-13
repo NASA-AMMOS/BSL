@@ -27,22 +27,20 @@
 #define BSLB_SECACTIONSET_H_
 
 #include <BPSecLib_Private.h>
+#include "SecurityAction.h"
 
-#include "SecOperation.h"
-
-#define BSL_SECURITYACTIONSET_MAX_OPS (10)
+M_ARRAY_DEF(BSL_SecActionList, BSL_SecurityAction_t,
+            (INIT(API_2(BSL_SecurityAction_Init)), INIT_SET(API_6(BSL_SecurityAction_InitSet)), SET(0),
+             CLEAR(API_2(BSL_SecurityAction_Deinit))))
 
 /// @brief Contains the populated security operations for this bundle.
 /// @note This is intended to be a write-once, read-only struct
 struct BSL_SecurityActionSet_s
 {
-    BSL_SecOper_t sec_operations[BSL_SECURITYACTIONSET_MAX_OPS]; ///< Fixed array of security operations (for simpler
-                                                                 ///< mem management)
-    size_t   sec_operations_count;                               ///< Count of sec_operations
-    uint64_t new_block_ids[BSL_SECURITYACTIONSET_MAX_OPS];       ///< Array for IDs of blocks to be created
-    uint64_t new_block_types[BSL_SECURITYACTIONSET_MAX_OPS]; ///< Array for block type codes of blocks to be created.
-    size_t   arrays_capacity;                                ///< Capacity of sec_operations
-    int      err_code;                                       ///< General error code
+    BSL_SecActionList_t actions;
+    size_t              action_count;
+    size_t              err_count;
+    size_t              operation_count;
 };
 
 #endif /* BSLB_SECACTIONSET_H_ */
