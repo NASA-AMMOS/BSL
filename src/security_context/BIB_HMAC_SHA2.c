@@ -44,7 +44,6 @@ bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const B
     // Note: Internal API distinction.
     // Called before the `_execute` function. This checks ahead of time whether it contains the necessary info in order
     // to perform the execution.
-    assert(0);
     (void)lib;
     (void)bundle;
     (void)sec_oper;
@@ -53,7 +52,6 @@ bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const B
 
 bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
 {
-    assert(0);
     (void)lib;
     (void)bundle;
     (void)sec_oper;
@@ -106,8 +104,8 @@ static ssize_t map_rfc9173_sha_variant_to_crypto(size_t rfc9173_sha_variant)
  */
 int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
 {
-    assert(self != NULL);
-    assert(sec_oper != NULL);
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(sec_oper);
     memset(self, 0, sizeof(*self));
     self->sha_variant           = -1;
     self->integrity_scope_flags = -1;
@@ -125,32 +123,31 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
 
         if (param_id == BSL_SECPARAM_TYPE_KEY_ID)
         {
-            assert(!is_int);
+            ASSERT_PRECONDITION(!is_int);
             BSL_Data_t res;
             BSL_SecParam_GetAsBytestr(param, &res);
             self->key_id = (char *)res.ptr;
         }
         else if (param_id == BSL_SECPARAM_TYPE_INT_FIXED_KEY)
         {
-            assert(0);
-            assert(!is_int);
+            ASSERT_PRECONDITION(!is_int);
             BSL_Data_t bytestr_data = BSLX_Bytestr_AsData(&self->override_key);
             BSL_SecParam_GetAsBytestr(param, &bytestr_data);
             self->override_key.bytelen = bytestr_data.len;
         }
         else if (param_id == RFC9173_BIB_PARAMID_SHA_VARIANT)
         {
-            assert(is_int);
+            ASSERT_PRECONDITION(is_int);
             self->sha_variant = int_val;
         }
         else if (param_id == RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG)
         {
-            assert(is_int);
+            ASSERT_PRECONDITION(is_int);
             self->integrity_scope_flags = int_val;
         }
         else if (param_id == RFC9173_BIB_PARAMID_WRAPPED_KEY)
         {
-            assert(!is_int);
+            ASSERT_PRECONDITION(!is_int);
             BSL_Data_t bytestr_data = BSLX_Bytestr_AsData(&self->wrapped_key);
             BSL_SecParam_GetAsBytestr(param, &bytestr_data);
             self->wrapped_key.bytelen = bytestr_data.len;
@@ -188,9 +185,9 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
  */
 int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
 {
-    assert(self != NULL);
-    assert(ippt_space.len > 0);
-    assert(ippt_space.ptr != NULL);
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_EXPR(ippt_space.len > 0);
+    ASSERT_ARG_NONNULL(ippt_space.ptr);
 
     QCBOREncodeContext encoder;
     QCBORError         cbor_err  = QCBOR_ERR_UNSUPPORTED;
@@ -278,7 +275,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         BSL_LOG_ERR("bsl_hmac_ctx_deinit failed with code %d", res);
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
-    assert(hmaclen > 0);
+    ASSERT_POSTCONDITION(hmaclen > 0);
     return (int)hmaclen;
 }
 
@@ -345,7 +342,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         BSL_Data_Deinit(&scratch_buffer);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
-    assert(ippt_len > 0);
+    ASSERT_POSTCONDITION(ippt_len > 0);
     ippt_space.len = (size_t)ippt_len;
 
     const int hmac_nbytes = BSLX_BIB_GenHMAC(&bib_context, ippt_space);
