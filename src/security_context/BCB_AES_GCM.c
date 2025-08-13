@@ -132,6 +132,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != unwrap_result)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
+            BSL_Data_Deinit(&bcb_context->authtag);
             BSL_Data_Deinit(&content_enc_key);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
@@ -144,6 +145,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
                                           &content_enc_key.len))
         {
             BSL_LOG_ERR("Failed to load key");
+            BSL_Data_Deinit(&bcb_context->authtag);
             BSL_Data_Deinit(&content_enc_key);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
@@ -158,6 +160,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
+        BSL_Data_Deinit(&bcb_context->authtag);
         BSL_Data_Deinit(&content_enc_key);
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -166,6 +169,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
     {
         BSL_LOG_ERR("Failed to add AAD");
+        BSL_Data_Deinit(&bcb_context->authtag);
         BSL_Data_Deinit(&content_enc_key);
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -177,6 +181,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (nbytes < 0)
     {
         BSL_LOG_ERR("Decrypting BTSD ciphertext failed");
+        BSL_Data_Deinit(&bcb_context->authtag);
         BSL_Data_Deinit(&content_enc_key);
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -188,6 +193,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, bcb_context->authtag.ptr))
     {
         BSL_LOG_ERR("Failed to set auth tag");
+        BSL_Data_Deinit(&bcb_context->authtag);
         BSL_Data_Deinit(&content_enc_key);
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -201,6 +207,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (finalize_bytes < 0)
     {
         BSL_LOG_ERR("Failed to check auth tag");
+        BSL_Data_Deinit(&bcb_context->authtag);
         BSL_Data_Deinit(&content_enc_key);
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -209,8 +216,10 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     ASSERT_POSTCONDITION(extra_bytes == 0);
     BSL_Data_Resize(&bcb_context->btsd_replacement, plaintext_len + extra_bytes);
 
+    BSL_Data_Deinit(&bcb_context->authtag);
     BSL_Data_Deinit(&content_enc_key);
     BSL_Cipher_Deinit(&cipher);
+    ASSERT_POSTCONDITION(bcb_context->authtag.len == 0);
     return BSL_SUCCESS;
 }
 
