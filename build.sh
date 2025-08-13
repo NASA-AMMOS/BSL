@@ -111,7 +111,7 @@ function cmd_rpm_prep {
     then
         git config --global --add safe.directory ${PWD}
     fi
-    ./resources/prep.sh -DBUILD_LIB=OFF -DBUILD_TESTING=OFF -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_PACKAGE=ON
+    ./resources/prep.sh -DBUILD_LIB=OFF -DBUILD_UNITTEST=OFF -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_PACKAGE=ON
 }
 
 function cmd_rpm_build {

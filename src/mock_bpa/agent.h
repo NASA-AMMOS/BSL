@@ -86,7 +86,7 @@ int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle_ref);
 
 int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBlock_t *result_primary_block);
 int MockBPA_GetBlockNums(const BSL_BundleRef_t *bundle_ref, size_t block_id_array_capacity,
-                         uint64_t block_id_array_result[block_id_array_capacity], size_t *result_count);
+                         uint64_t *block_id_array_result, size_t *result_count);
 int MockBPA_GetBlockMetadata(const BSL_BundleRef_t *bundle_ref, uint64_t block_num,
                              BSL_CanonicalBlock_t *result_canonical_block);
 int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t bytesize);

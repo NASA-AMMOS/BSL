@@ -38,7 +38,7 @@ if [[ "$#" -ne 0 ]]
 then
     ARGS="$@"
 else
-    ARGS=$(find src test -iname '*.h' -o -iname '*.c')
+    ARGS=$(find src test -iname '*.h' -o -iname '*.c' -o -iname '*.cpp')
 fi
 
 clang-format --style=file -i $ARGS

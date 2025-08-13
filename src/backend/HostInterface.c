@@ -79,7 +79,7 @@ int BSL_BundleCtx_GetBlockMetadata(const BSL_BundleRef_t *bundle, uint64_t block
     return (result == 0) ? BSL_SUCCESS : BSL_ERR_HOST_CALLBACK_FAILED;
 }
 
-int BSL_BundleCtx_GetBlockIds(const BSL_BundleRef_t *bundle, size_t array_count, uint64_t block_ids_array[array_count],
+int BSL_BundleCtx_GetBlockIds(const BSL_BundleRef_t *bundle, size_t array_count, uint64_t *block_ids_array,
                               size_t *result_count)
 {
     CHK_ARG_NONNULL(bundle);

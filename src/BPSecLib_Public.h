@@ -37,6 +37,10 @@
 
 #include "BSLConfig.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// This annotation on a function requires the caller to capture and inspect the return value.
 #if defined(__GNUC__) || defined(__clang__)
 #define BSL_REQUIRE_CHECK __attribute__((warn_unused_result))
@@ -193,8 +197,8 @@ typedef struct
     int (*bundle_metadata_fn)(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBlock_t *result_primary_block);
 
     /// @brief Host BPA function to populate a pre-allocated array with canonical block IDs
-    int (*bundle_get_block_ids)(const BSL_BundleRef_t *bundle_ref, size_t array_count,
-                                uint64_t array_block_ids[array_count], size_t *result_count);
+    int (*bundle_get_block_ids)(const BSL_BundleRef_t *bundle_ref, size_t array_count, uint64_t *array_block_ids,
+                                size_t *result_count);
 
     /// @brief Host BPA function to populate a Canonical Block struct for a given block number.
     int (*block_metadata_fn)(const BSL_BundleRef_t *bundle_ref, uint64_t block_num, BSL_CanonicalBlock_t *result_block);
@@ -320,5 +324,9 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
 BSL_REQUIRE_CHECK
 int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
                           const BSL_SecurityActionSet_t *policy_actions);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* BSL_BPSECLIB_PUBLIC_H_ */
