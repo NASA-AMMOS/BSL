@@ -68,18 +68,34 @@ static bool BSLP_PolicyRule_IsConsistent(const BSLP_PolicyRule_t *self)
 static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t target_block_type)
 {
     uint64_t target_block_num = 0;
-    for (uint64_t block_index = 1; block_index < 100; block_index++)
+
+    BSL_PrimaryBlock_t res_prim_blk;
+    if (BSL_BundleCtx_GetBundleMetadata(bundle, &res_prim_blk) != BSL_SUCCESS)
+    {
+        BSL_LOG_ERR("Failed to get bundle metadata");
+        return target_block_num;
+    }
+    uint64_t block_ids_arr[res_prim_blk.block_count];
+    size_t   res_ct;
+    if (BSL_BundleCtx_GetBlockIds(bundle, res_prim_blk.block_count, block_ids_arr, &res_ct) != BSL_SUCCESS)
+    {
+        BSL_LOG_ERR("Failed to get bundle block ids");
+        return target_block_num;
+    }
+
+    for (uint64_t i = 0; i < res_ct; i++)
     {
         BSL_CanonicalBlock_t test_block = { 0 };
-        if (BSL_SUCCESS == BSL_BundleCtx_GetBlockMetadata(bundle, block_index, &test_block))
+        if (BSL_SUCCESS == BSL_BundleCtx_GetBlockMetadata(bundle, block_ids_arr[i], &test_block))
         {
             if (test_block.type_code == target_block_type)
             {
-                target_block_num = block_index;
+                target_block_num = block_ids_arr[i];
                 break;
             }
         }
     }
+
     // Returns zero if target block type not found.
     return target_block_num;
 }
