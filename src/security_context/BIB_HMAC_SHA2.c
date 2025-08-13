@@ -192,7 +192,6 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
     assert(ippt_space.len > 0);
     assert(ippt_space.ptr != NULL);
 
-    int                res = BSL_ERR_FAILURE;
     QCBOREncodeContext encoder;
     QCBORError         cbor_err  = QCBOR_ERR_UNSUPPORTED;
     UsefulBuf          result_ub = { .ptr = ippt_space.ptr, ippt_space.len };
@@ -233,13 +232,9 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
     if (cbor_err != QCBOR_SUCCESS)
     {
         BSL_LOG_ERR("CBOR encoding IPPT failed, code=%" PRIu32 " (%s)", cbor_err, qcbor_err_to_str(cbor_err));
-        res = BSL_ERR_ENCODING;
-        goto error;
+        return BSL_ERR_ENCODING;
     }
     return (int)(ippt_result.len);
-
-error:;
-    return res;
 }
 
 /**
@@ -258,12 +253,14 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
     if ((res = BSL_AuthCtx_Init(&hmac_ctx, self->key_id, self->sha_variant)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_init failed with code %d", res);
-        goto error;
+        BSL_AuthCtx_Deinit(&hmac_ctx);
+        return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
     if ((res = BSL_AuthCtx_DigestBuffer(&hmac_ctx, ippt_data.ptr, ippt_data.len)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_input_data_buffer failed with code %d", res);
-        goto error;
+        BSL_AuthCtx_Deinit(&hmac_ctx);
+        return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
 
     void  *hmac_result_ptr = (void *)&self->hmac_result_val._bytes[0];
@@ -271,22 +268,18 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
     if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, &hmac_result_ptr, &hmaclen)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_finalize failed with code %d", res);
-        goto error;
+        BSL_AuthCtx_Deinit(&hmac_ctx);
+        return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
     self->hmac_result_val.bytelen = hmaclen;
 
     if ((res = BSL_AuthCtx_Deinit(&hmac_ctx)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_deinit failed with code %d", res);
-        goto error;
+        return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
     assert(hmaclen > 0);
     return (int)hmaclen;
-
-error:
-    BSL_AuthCtx_Deinit(&hmac_ctx);
-    BSL_LOG_ERR("%s failed bsl_crypto code=%ld", __func__, res);
-    return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
 }
 
 int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
@@ -319,7 +312,8 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &bib_context.primary_block))
     {
         BSL_LOG_ERR("Failed to get bundle data");
-        goto error;
+        BSL_Data_Deinit(&scratch_buffer);
+        return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
     const uint64_t target_blk_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
@@ -329,7 +323,8 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, target_blk_num, &bib_context.target_block))
         {
             BSL_LOG_ERR("Failed to get block data");
-            goto error;
+            BSL_Data_Deinit(&scratch_buffer);
+            return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
 
@@ -347,7 +342,8 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (ippt_len <= 0)
     {
         BSL_LOG_ERR("GenIPPT returned %d", ippt_len);
-        goto error;
+        BSL_Data_Deinit(&scratch_buffer);
+        return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
     assert(ippt_len > 0);
     ippt_space.len = (size_t)ippt_len;
@@ -356,7 +352,8 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (hmac_nbytes < BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to generate BIB HMAC");
-        goto error;
+        BSL_Data_Deinit(&scratch_buffer);
+        return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
     // This gets all the parameters that need to be placed in the output
@@ -378,9 +375,4 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
 
     BSL_Data_Deinit(&scratch_buffer);
     return BSL_SUCCESS;
-
-error:
-
-    BSL_Data_Deinit(&scratch_buffer);
-    return BSL_ERR_SECURITY_CONTEXT_FAILED;
 }
