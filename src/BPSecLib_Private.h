@@ -1337,4 +1337,3 @@ struct BSL_SecCtxDesc_s
 #endif
 
 #endif /* BSL_BPSECLIB_PRIVATE_H_ */
-
