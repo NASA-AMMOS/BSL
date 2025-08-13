@@ -57,6 +57,7 @@ jobs:
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
               libssl-dev libjansson-dev \
               valgrind gcovr xmlstarlet
+          sudo gem install cbor-diag
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
@@ -70,6 +71,7 @@ jobs:
               openssl-devel jansson-devel \
               valgrind xmlstarlet python3-pip
           pip3 install gcovr
+          gem install cbor-diag
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -92,6 +94,8 @@ jobs:
         run: ./build.sh install
       - name: Test
         run: ./build.sh check
+      - name: Report corpus
+        run: for FN in $(find test/*cbor*corpus -type f); do echo $FN; cborseq2diag.rb <$FN; done
       - name: Collect coverage
         run: ./build.sh coverage
       - name: Archive coverage
