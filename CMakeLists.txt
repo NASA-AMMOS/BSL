@@ -28,7 +28,7 @@ option(BUILD_DOCS_MAN "Enable manpage building" OFF)
 option(BUILD_TESTING "Enable building unit tests" ON)
 option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
 option(TEST_COVERAGE "Enable test runtime coverage logging" ON)
-option(TEST_FUZZ "Enable fuzz testing" OFF)
+option(BUILD_FUZZING "Enable building fuzzing executables" OFF)
 option(BUILD_PACKAGE "Enable building package outputs" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -161,17 +161,17 @@ if(BUILD_TESTING)
       BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
     )
   endif(TEST_COVERAGE)
-  if(TEST_FUZZ)
-    add_subdirectory(deps/fuzztest)
-    fuzztest_setup_fuzzing_flags()
-  endif(TEST_FUZZ)
-
-  include(CTest)
-  set(CMAKE_CTEST_ARGUMENTS
-    --output-junit testresults.xml
-    --output-on-failure
-  )
 endif(BUILD_TESTING)
+
+if(BUILD_FUZZING)
+  find_package(libfuzzer)
+endif(BUILD_FUZZING)
+
+include(CTest)
+set(CMAKE_CTEST_ARGUMENTS
+  --output-junit testresults.xml
+  --output-on-failure
+)
 
 # Install config used by tall targets
 include(GNUInstallDirs)
@@ -179,11 +179,9 @@ include(GNUInstallDirs)
 if(BUILD_LIB)
     add_subdirectory(src)
 endif(BUILD_LIB)
-if(BUILD_TESTING)
-    message(STATUS "Building tests")
-    set(TEST_INSTALL_PREFIX "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}")
-    add_subdirectory(test)
-endif(BUILD_TESTING)
+
+set(TEST_INSTALL_PREFIX "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}")
+add_subdirectory(test)
 add_subdirectory(docs)
 
 if(BUILD_PACKAGE)

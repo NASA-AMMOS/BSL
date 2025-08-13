@@ -50,6 +50,7 @@ install(
 
 set(LIB_ORDERED bsl_front bsl_dynamic bsl_mock_bpa bsl_test_utils)
 
+if(BUILD_TESTING)
 add_unity_test(SOURCE test_MockBPA_text_util.c)
 target_link_libraries(test_MockBPA_text_util PUBLIC bsl_mock_bpa)
 
@@ -87,17 +88,9 @@ target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
 # Exercises the MockBPA using the publicly exposed BSL front end
 add_unity_test(SOURCE test_PublicInterfaceImpl.c)
 target_link_libraries(test_PublicInterfaceImpl PUBLIC ${LIB_ORDERED})
+endif(BUILD_TESTING)
 
-if(TEST_FUZZ)
-  add_executable(
-    fuzz_mock_bpa
-    fuzz_mock_bpa.cpp
-  )
-  target_link_libraries(fuzz_mock_bpa PUBLIC ${LIB_ORDERED})
-  link_fuzztest(fuzz_mock_bpa)
-
-  add_test(
-    NAME fuzz_mock_bpa
-    COMMAND ${TEST_EXEC_PREFIX} "${CMAKE_CURRENT_BINARY_DIR}/fuzz_mock_bpa"
-  )
-endif(TEST_FUZZ)
+if(BUILD_FUZZING)
+  add_fuzz_test(SOURCE fuzz_mock_bpa_eid_cbor.cpp)
+  target_link_libraries(fuzz_mock_bpa_eid_cbor PUBLIC ${LIB_ORDERED})
+endif(BUILD_FUZZING)
