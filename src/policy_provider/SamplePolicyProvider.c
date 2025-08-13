@@ -310,7 +310,7 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
     // TODO(bvb) assert Role in expected range
     self->failure_action_code = failure_action_code;
     self->role                = role;
-    self->params              = BSL_CALLOC(BSL_SecParam_Sizeof() * 10, 1);
+    self->params              = BSL_CALLOC(BSL_SecParam_Sizeof() * BSL_PP_POLICYRULE_PARAM_MAX_COUNT, 1);
     self->nparams             = 0;
     assert(BSLP_PolicyRule_IsConsistent(self));
     return BSL_SUCCESS;
@@ -330,7 +330,7 @@ void BSLP_PolicyRule_AddParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *par
     assert(BSLP_PolicyRule_IsConsistent(self));
 
     // TODO(bvb) - BOUNDS CHECKING
-    assert(self->nparams < 10);
+    assert(self->nparams < BSL_PP_POLICYRULE_PARAM_MAX_COUNT);
 
     size_t offset = self->nparams * BSL_SecParam_Sizeof();
     memcpy(&((uint8_t *)self->params)[offset], param, BSL_SecParam_Sizeof());

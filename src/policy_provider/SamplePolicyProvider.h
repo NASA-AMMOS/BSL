@@ -81,6 +81,8 @@ void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
 bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
                                   BSL_HostEID_t src_eid, BSL_HostEID_t dst_eid);
 
+// FIXME remove hard limit on params
+#define BSL_PP_POLICYRULE_PARAM_MAX_COUNT 10
 /**
  * @brief Represents a policy rule
  *
