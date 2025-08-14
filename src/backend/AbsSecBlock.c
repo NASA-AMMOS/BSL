@@ -39,7 +39,7 @@ bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self)
 {
     // NOLINTBEGIN
     CHK_AS_BOOL(self != NULL);
-    //CHK_AS_BOOL(self->sec_context_id > 0);
+    // CHK_AS_BOOL(self->sec_context_id > 0);
     CHK_AS_BOOL(self->source_eid.handle != NULL);
     CHK_AS_BOOL(BSLB_SecParamList_size(self->params) < 10000);
 

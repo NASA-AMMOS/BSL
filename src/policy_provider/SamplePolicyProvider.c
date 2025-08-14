@@ -249,22 +249,23 @@ int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *ou
             {
                 case BSL_SECOP_CONCLUSION_PENDING:
                 {
-                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %"PRIu64" at index %"PRIu64": STILL PENDING", i, j);
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %" PRIu64 " at index %" PRIu64 ": STILL PENDING", i,
+                                 j);
                     break;
                 }
                 case BSL_SECOP_CONCLUSION_SUCCESS:
                 {
-                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %"PRIu64" at index %"PRIu64": SUCCESS", i, j);
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %" PRIu64 " at index %" PRIu64 ": SUCCESS", i, j);
                     break;
                 }
                 case BSL_SECOP_CONCLUSION_INVALID:
                 {
-                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %"PRIu64" at index %"PRIu64": INVALID", i, j);
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %" PRIu64 " at index %" PRIu64 ": INVALID", i, j);
                     break;
                 }
                 case BSL_SECOP_CONCLUSION_FAILURE:
                 {
-                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %"PRIu64" at index %"PRIu64": FAIL", i, j);
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %" PRIu64 " at index %" PRIu64 ": FAIL", i, j);
                     break;
                 }
             }
