@@ -180,12 +180,17 @@ static void write_log(const BSL_LogEvent_event_t *event)
 
 static void *work_sink(void *arg _U_)
 {
-    while (true)
+    bool running = true;
+    while (running)
     {
         BSL_LogEvent_event_t event;
         BSL_LogEvent_event_init(&event);
         BSL_LogEvent_queue_pop(&event, event_queue);
-        if (!string_empty_p(event.message))
+        if (string_empty_p(event.message))
+        {
+            running = false;
+        }
+        else
         {
             write_log(&event);
         }
