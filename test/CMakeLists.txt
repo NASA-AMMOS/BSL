@@ -52,39 +52,39 @@ if(BUILD_UNITTEST)
   set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
   find_package(unitytools)
 
-#   add_unity_test(SOURCE test_MockBPA_text_util.c)
-#   target_link_libraries(test_MockBPA_text_util PUBLIC bsl_mock_bpa)
+  add_unity_test(SOURCE test_MockBPA_text_util.c)
+  target_link_libraries(test_MockBPA_text_util PUBLIC bsl_mock_bpa)
   
-#   add_unity_test(SOURCE test_MockBPA_EID.c)
-#   target_link_libraries(test_MockBPA_EID PUBLIC ${LIB_ORDERED})
+  add_unity_test(SOURCE test_MockBPA_EID.c)
+  target_link_libraries(test_MockBPA_EID PUBLIC ${LIB_ORDERED})
   
-#   add_unity_test(SOURCE test_MockBPA_Codecs.c)
-#   target_link_libraries(test_MockBPA_Codecs PUBLIC ${LIB_ORDERED})
+  add_unity_test(SOURCE test_MockBPA_Codecs.c)
+  target_link_libraries(test_MockBPA_Codecs PUBLIC ${LIB_ORDERED})
   
-#   add_unity_test(SOURCE test_mock_bpa_ctr.c)
-#   target_link_libraries(test_mock_bpa_ctr PUBLIC ${LIB_ORDERED})
+  add_unity_test(SOURCE test_mock_bpa_ctr.c)
+  target_link_libraries(test_mock_bpa_ctr PUBLIC ${LIB_ORDERED})
   
-#   add_unity_test(SOURCE test_CryptoInterface.c)
-#   target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
+  add_unity_test(SOURCE test_CryptoInterface.c)
+  target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
   
-#   add_unity_test(SOURCE test_SecurityTypes.c)
-#   target_link_libraries(test_SecurityTypes PUBLIC ${LIB_ORDERED})
+  add_unity_test(SOURCE test_SecurityTypes.c)
+  target_link_libraries(test_SecurityTypes PUBLIC ${LIB_ORDERED})
   
-#   # Exercises the portion of the backend that interacts with the policy providers
-#   add_unity_test(SOURCE test_BackendSecurityContext.c)
-#   target_link_libraries(test_BackendSecurityContext PUBLIC ${LIB_ORDERED})
+  # Exercises the portion of the backend that interacts with the policy providers
+  add_unity_test(SOURCE test_BackendSecurityContext.c)
+  target_link_libraries(test_BackendSecurityContext PUBLIC ${LIB_ORDERED})
   
-#   # Exercises the portion of the backend that interacts with the security contexts
-#   add_unity_test(SOURCE test_BackendPolicyProvider.c)
-#   target_link_libraries(test_BackendPolicyProvider PUBLIC ${LIB_ORDERED})
+  # Exercises the portion of the backend that interacts with the security contexts
+  add_unity_test(SOURCE test_BackendPolicyProvider.c)
+  target_link_libraries(test_BackendPolicyProvider PUBLIC ${LIB_ORDERED})
   
-#   # Specific unit tests for ONLY the "Sample Policy Provider" module (Offered as example provider)
-#   add_unity_test(SOURCE test_SamplePolicyProvider.c)
-#   target_link_libraries(test_SamplePolicyProvider PUBLIC ${LIB_ORDERED})
+  # Specific unit tests for ONLY the "Sample Policy Provider" module (Offered as example provider)
+  add_unity_test(SOURCE test_SamplePolicyProvider.c)
+  target_link_libraries(test_SamplePolicyProvider PUBLIC ${LIB_ORDERED})
   
-#   # Specific tests for ONLY the "Default Security Context" module (Implementation of RFC9173)
-#   add_unity_test(SOURCE test_DefaultSecurityContext.c)
-#   target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
+  # Specific tests for ONLY the "Default Security Context" module (Implementation of RFC9173)
+  add_unity_test(SOURCE test_DefaultSecurityContext.c)
+  target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
   
   # Exercises the MockBPA using the publicly exposed BSL front end
   add_unity_test(SOURCE test_PublicInterfaceImpl.c)
