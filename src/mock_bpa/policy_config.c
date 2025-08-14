@@ -32,7 +32,7 @@ static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *
 {
     BSL_HostEIDPattern_t pat;
     BSL_HostEIDPattern_Init(&pat);
-    assert(0 == BSL_HostEIDPattern_DecodeFromText(&pat, text));
+    ASSERT_PROPERTY(0 == BSL_HostEIDPattern_DecodeFromText(&pat, text));
     return pat;
 }
 

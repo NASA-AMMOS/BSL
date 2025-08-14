@@ -653,19 +653,19 @@ int main(int argc, char **argv)
                                           .query_fn    = BSLP_QueryPolicy,
                                           .finalize_fn = BSLP_FinalizePolicy,
                                           .user_data   = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t)) };
-    assert(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(bsl, policy_callbacks));
+    ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(bsl, policy_callbacks));
 
     BSL_CryptoInit();
 
     BSL_SecCtxDesc_t bib_sec_desc;
     bib_sec_desc.execute  = BSLX_BIB_Execute;
     bib_sec_desc.validate = BSLX_BIB_Validate;
-    assert(0 == BSL_API_RegisterSecurityContext(bsl, 1, bib_sec_desc));
+    ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(bsl, 1, bib_sec_desc));
 
     BSL_SecCtxDesc_t bcb_sec_desc;
     bcb_sec_desc.execute  = BSLX_BCB_Execute;
     bcb_sec_desc.validate = BSLX_BCB_Validate;
-    assert(0 == BSL_API_RegisterSecurityContext(bsl, 2, bcb_sec_desc));
+    ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(bsl, 2, bcb_sec_desc));
 
     BSL_HostEID_Init(&app_eid);
     BSL_HostEID_Init(&sec_eid);

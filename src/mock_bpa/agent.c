@@ -35,7 +35,7 @@
 
 int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle)
 {
-    assert(bundle != NULL);
+    ASSERT_ARG_NONNULL(bundle);
     BSL_HostEID_Deinit(&bundle->primary_block.src_node_id);
     BSL_HostEID_Deinit(&bundle->primary_block.dest_eid);
     BSL_HostEID_Deinit(&bundle->primary_block.report_to_eid);
