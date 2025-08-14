@@ -92,6 +92,15 @@ static void BSL_LogEvent_event_init_set(BSL_LogEvent_event_t *obj, const BSL_Log
     string_init_set(obj->message, src->message);
 }
 
+static void BSL_LogEvent_event_init_move(BSL_LogEvent_event_t *obj, BSL_LogEvent_event_t *src)
+{
+    obj->thread    = src->thread;
+    obj->timestamp = src->timestamp;
+    obj->severity  = src->severity;
+    string_init_move(obj->context, src->context);
+    string_init_move(obj->message, src->message);
+}
+
 static void BSL_LogEvent_event_set(BSL_LogEvent_event_t *obj, const BSL_LogEvent_event_t *src)
 {
     obj->thread    = src->thread;
@@ -104,11 +113,13 @@ static void BSL_LogEvent_event_set(BSL_LogEvent_event_t *obj, const BSL_LogEvent
 /// OPLIST for BSL_LogEvent_event_t
 #define M_OPL_BSL_LogEvent_event_t()                                                     \
     (INIT(API_2(BSL_LogEvent_event_init)), INIT_SET(API_6(BSL_LogEvent_event_init_set)), \
-     SET(API_6(BSL_LogEvent_event_set)), CLEAR(API_2(BSL_LogEvent_event_deinit)))
+     INIT_MOVE(API_6(BSL_LogEvent_event_init_move)), SET(API_6(BSL_LogEvent_event_set)), \
+     CLEAR(API_2(BSL_LogEvent_event_deinit)))
 
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
-M_BUFFER_DEF(BSL_LogEvent_queue, BSL_LogEvent_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING)
+M_BUFFER_DEF(BSL_LogEvent_queue, BSL_LogEvent_event_t, BSL_LOG_QUEUE_SIZE,
+             M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING | M_BUFFER_PUSH_INIT_POP_MOVE)
 /// @endcond
 
 /// Shared least severity
@@ -184,7 +195,6 @@ static void *work_sink(void *arg _U_)
     while (running)
     {
         BSL_LogEvent_event_t event;
-        BSL_LogEvent_event_init(&event);
         BSL_LogEvent_queue_pop(&event, event_queue);
         if (string_empty_p(event.message))
         {
@@ -242,6 +252,9 @@ void BSL_closelog(void)
     {
         atomic_store(&thr_valid, false);
     }
+
+    // no consumer after join above
+    BSL_LogEvent_queue_clear(event_queue);
 }
 
 int BSL_LogGetSeverity(int *severity, const char *name)
