@@ -35,6 +35,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "BSLConfig.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// This annotation on a function requires the caller to capture and inspect the return value.
 #if defined(__GNUC__) || defined(__clang__)
 #define BSL_REQUIRE_CHECK __attribute__((warn_unused_result))
@@ -49,8 +55,12 @@ typedef struct BSL_LibCtx_s BSL_LibCtx_t;
 /// process the Bundle.
 typedef struct BSL_SecurityResponseSet_s BSL_SecurityResponseSet_t;
 
-/// @brief Forward declaration of ::BSL_SecurityActionSet_s, which contains information for BSL to process the Bundle.
+/// @brief Forward declaration of ::BSL_SecurityActionSet_s, which contains actions for BSL to process the Bundle.
 typedef struct BSL_SecurityActionSet_s BSL_SecurityActionSet_t;
+
+/// @brief Forward declaration of ::BSL_SecurityAction_s, which contains security operations for BSL to process the
+/// Bundle.
+typedef struct BSL_SecurityAction_s BSL_SecurityAction_t;
 
 /// @brief Forward-declaration for structure containing callbacks to a security context.
 typedef struct BSL_SecCtxDesc_s BSL_SecCtxDesc_t;
@@ -76,6 +86,21 @@ typedef enum
     /// @brief Bundle egress to CLA
     BSL_POLICYLOCATION_CLOUT
 } BSL_PolicyLocation_e;
+
+/**
+ * @brief Indicates the conclusion state of a security operation
+ */
+typedef enum
+{
+    /// @brief Security operation is still pending action
+    BSL_SECOP_CONCLUSION_PENDING = 1,
+    /// @brief Security operation has concluded and succeeded
+    BSL_SECOP_CONCLUSION_SUCCESS,
+    /// @brief Security operation is invalid
+    BSL_SECOP_CONCLUSION_INVALID,
+    /// @brief Security operation has concluded and failed
+    BSL_SECOP_CONCLUSION_FAILURE
+} BSL_SecOper_ConclusionState_e;
 
 /** Block CRC types.
  * Defined in Section 4.2.1 of RFC 9171 @cite rfc9171.
@@ -172,8 +197,8 @@ typedef struct
     int (*bundle_metadata_fn)(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBlock_t *result_primary_block);
 
     /// @brief Host BPA function to populate a pre-allocated array with canonical block IDs
-    int (*bundle_get_block_ids)(const BSL_BundleRef_t *bundle_ref, size_t array_count,
-                                uint64_t array_block_ids[array_count], size_t *result_count);
+    int (*bundle_get_block_ids)(const BSL_BundleRef_t *bundle_ref, size_t array_count, uint64_t *array_block_ids,
+                                size_t *result_count);
 
     /// @brief Host BPA function to populate a Canonical Block struct for a given block number.
     int (*block_metadata_fn)(const BSL_BundleRef_t *bundle_ref, uint64_t block_num, BSL_CanonicalBlock_t *result_block);
@@ -299,5 +324,9 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
 BSL_REQUIRE_CHECK
 int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
                           const BSL_SecurityActionSet_t *policy_actions);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* BSL_BPSECLIB_PUBLIC_H_ */

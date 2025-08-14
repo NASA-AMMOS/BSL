@@ -24,7 +24,7 @@
  * @ingroup mock_bpa
  * Definitions for EID handling.
  */
-#include "bsl_mock_bpa_eid.h"
+#include "eid.h"
 #include <BSLConfig.h>
 #include <BPSecLib_Private.h>
 
@@ -147,7 +147,7 @@ int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data
         }
 
         bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
-        assert(eid->handle != NULL);
+        ASSERT_ARG_NONNULL(eid->handle);
         obj->scheme     = BSL_MOCK_EID_IPN;
         obj->ssp.as_ipn = ipn_ssp;
     }

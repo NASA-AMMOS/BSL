@@ -27,26 +27,26 @@
 #include <BPSecLib_Public.h>
 #include <BPSecLib_Private.h>
 #include <assert.h>
-#include "bsl_mock_bpa.h"
-#include "bsl_mock_bpa_eid.h"
-#include "bsl_mock_bpa_eidpat.h"
-#include "bsl_mock_bpa_encode.h"
-#include "bsl_mock_bpa_decode.h"
+#include "agent.h"
+#include "eid.h"
+#include "eidpat.h"
+#include "encode.h"
+#include "decode.h"
 
 int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle)
 {
-    assert(bundle != NULL);
+    ASSERT_ARG_NONNULL(bundle);
     BSL_HostEID_Deinit(&bundle->primary_block.src_node_id);
     BSL_HostEID_Deinit(&bundle->primary_block.dest_eid);
     BSL_HostEID_Deinit(&bundle->primary_block.report_to_eid);
     for (size_t i = 0; i < bundle->block_count; i++)
     {
-        free(bundle->blocks[i].btsd);
+        BSL_FREE(bundle->blocks[i].btsd);
         memset(&bundle->blocks[i], 0, sizeof(bundle->blocks[i]));
     }
     if (bundle->primary_block.cbor)
     {
-        free(bundle->primary_block.cbor);
+        BSL_FREE(bundle->primary_block.cbor);
     }
     memset(bundle, 0, sizeof(*bundle));
     return 0;
@@ -80,7 +80,7 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
 }
 
 int MockBPA_GetBlockNums(const BSL_BundleRef_t *bundle_ref, size_t block_id_array_capacity,
-                         uint64_t block_id_array_result[block_id_array_capacity], size_t *result_count)
+                         uint64_t *block_id_array_result, size_t *result_count)
 {
     if (!bundle_ref || !bundle_ref->data || block_id_array_capacity == 0 || !block_id_array_result || !result_count)
     {
@@ -91,6 +91,12 @@ int MockBPA_GetBlockNums(const BSL_BundleRef_t *bundle_ref, size_t block_id_arra
     MockBPA_Bundle_t *bundle = bundle_ref->data;
     for (size_t i = 0; i < bundle->block_count; i++)
     {
+        if (i >= block_id_array_capacity)
+        {
+            BSL_LOG_ERR("MOCKBPA_GETBLOCKNUMS: Result array too small");
+            return -2;
+        }
+
         block_id_array_result[i] = bundle->blocks[i].blk_num;
     }
     *result_count = bundle->block_count;
@@ -155,12 +161,12 @@ int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t 
 
     if (found_block->btsd == NULL)
     {
-        found_block->btsd     = calloc(1, bytesize);
+        found_block->btsd     = BSL_CALLOC(1, bytesize);
         found_block->btsd_len = bytesize;
     }
     else
     {
-        found_block->btsd     = realloc(found_block->btsd, bytesize);
+        found_block->btsd     = BSL_REALLOC(found_block->btsd, bytesize);
         found_block->btsd_len = bytesize;
     }
 
@@ -227,7 +233,7 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
     // Deinit and clear the target block for removal
     if (found_block->btsd != NULL)
     {
-        free(found_block->btsd);
+        BSL_FREE(found_block->btsd);
     }
     memset(found_block, 0, sizeof(*found_block));
 
@@ -235,8 +241,8 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
     {
         for (size_t dst_index = found_index; dst_index < bundle->block_count - 1; dst_index++)
         {
-            printf("Shifting block[%lu] (id=%lu, type=%lu) left", dst_index + 1, bundle->blocks[dst_index + 1].blk_num,
-                   bundle->blocks[dst_index + 1].blk_type);
+            printf("Shifting block[%zu] (id=%" PRIu64 ", type=%" PRIu64 ") left", dst_index + 1,
+                   bundle->blocks[dst_index + 1].blk_num, bundle->blocks[dst_index + 1].blk_type);
             memcpy(&bundle->blocks[dst_index], &bundle->blocks[dst_index + 1], sizeof(MockBPA_CanonicalBlock_t));
             memset(&bundle->blocks[dst_index + 1], 0, sizeof(MockBPA_CanonicalBlock_t));
         }
@@ -261,7 +267,7 @@ int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref)
     return 0;
 }
 
-int bsl_mock_bpa_init(void)
+int bsl_mock_bpa_agent_init(void)
 {
     uint8_t *state = BSL_MALLOC(999);
 
@@ -292,7 +298,7 @@ int bsl_mock_bpa_init(void)
     return BSL_HostDescriptors_Set(bpa);
 }
 
-void bsl_mock_bpa_deinit(void)
+void bsl_mock_bpa_agent_deinit(void)
 {
     BSL_HostDescriptors_t bpa;
     BSL_HostDescriptors_Get(&bpa);

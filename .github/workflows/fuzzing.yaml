@@ -1,0 +1,107 @@
+##
+## Copyright (c) 2025 The Johns Hopkins University Applied Physics
+## Laboratory LLC.
+##
+## This file is part of the Bundle Protocol Security Library (BSL).
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##     http://www.apache.org/licenses/LICENSE-2.0
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## This work was performed for the Jet Propulsion Laboratory, California
+## Institute of Technology, sponsored by the United States Government under
+## the prime contract 80NM0018D0004 between the Caltech and NASA under
+## subcontract 1700763.
+##
+name: Build and run fuzzing
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  push:
+    branches:
+      - main
+      - 'apl-fy[0-9][0-9]'
+  pull_request: {} # any target
+
+jobs:
+  fuzzing:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-24.04', 'centos-9']
+        compiler: ['clang']
+    name: Fuzzing (${{matrix.os}} ${{matrix.compiler}})
+    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
+    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+    permissions:
+      contents: read
+      actions: write
+    env:
+      CC: ${{matrix.compiler=='clang' && 'clang' || 'gcc'}}
+      CXX: ${{matrix.compiler=='clang' && 'clang++' || 'g++'}}
+    steps:
+      - name: Set up OS
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo rm /var/lib/man-db/auto-update
+          sudo apt-get update
+          sudo apt-get install -y \
+              cmake ninja-build \
+              ruby pkg-config ccache patch \
+              ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
+              libssl-dev libjansson-dev \
+              valgrind gcovr xmlstarlet
+          sudo gem install cbor-diag
+      - name: Set up OS
+        if: startsWith(matrix.os, 'centos')
+        run: |
+          dnf install -y epel-release
+          crb enable
+          dnf install -y \
+              git rsync \
+              cmake ninja-build \
+              ruby pkg-config ccache patch \
+              ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
+              openssl-devel jansson-devel \
+              valgrind xmlstarlet python3-pip
+          pip3 install gcovr
+          gem install cbor-diag
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
+      - name: Dependencies
+        run: ./build.sh deps
+      - name: Prep
+        run: >
+          ./build.sh prep
+          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+          -DBUILD_UNITTEST=OFF -DBUILD_FUZZING=ON -DBUILD_COVERAGE=ON
+      - name: Build
+        run: ./build.sh
+      - name: Install
+        run: ./build.sh install
+      - name: Test
+        run: ./build.sh check
+      - name: Report corpus
+        run: for FN in $(find test/*cbor*corpus -type f); do echo $FN; cborseq2diag.rb <$FN; done
+      - name: Collect coverage
+        run: ./build.sh coverage
+      - name: Archive coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
+          path: build/default/coverage*
+      - name: Report coverage
+        run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY

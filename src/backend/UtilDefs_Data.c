@@ -111,7 +111,7 @@ int BSL_Data_CopyFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src)
         int ecode = BSL_Data_Resize(data, len);
         if (ecode < 0)
         {
-            BSL_LOG_ERR("Failed to resize data to %lu bytes", len);
+            BSL_LOG_ERR("Failed to resize data to %zu bytes", len);
             return ecode;
         }
     }

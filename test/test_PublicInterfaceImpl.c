@@ -38,12 +38,12 @@ static BSL_SecurityActionSet_t action_set   = { 0 };
 void suiteSetUp(void)
 {
     BSL_openlog();
-    assert(0 == bsl_mock_bpa_init());
+    assert(0 == bsl_mock_bpa_agent_init());
 }
 
 int suiteTearDown(int failures)
 {
-    bsl_mock_bpa_deinit();
+    bsl_mock_bpa_agent_deinit();
     BSL_closelog();
     return failures;
 }
@@ -58,7 +58,7 @@ void setUp(void)
 
     /// Register the policy provider with some rules
     BSL_PolicyDesc_t policy_desc = { 0 };
-    policy_desc.user_data        = calloc(sizeof(BSLP_PolicyProvider_t), 1);
+    policy_desc.user_data        = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
     policy_desc.query_fn         = BSLP_QueryPolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
     policy_desc.finalize_fn      = BSLP_FinalizePolicy;
@@ -735,12 +735,16 @@ void n_test_BSL_6(void)
     query_result = BSL_API_QuerySecurity(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                          BSL_POLICYLOCATION_CLOUT);
     TEST_ASSERT_EQUAL(0, query_result);
-    TEST_ASSERT_EQUAL(1, action_set.sec_operations_count);
+    TEST_ASSERT_EQUAL(1, action_set.action_count);
+    TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
 
     apply_result =
         BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
     TEST_ASSERT_EQUAL(0, apply_result);
-    TEST_ASSERT_EQUAL(1, response_set.failure_count); // bib already there!
+    // We purposely made a failing BIB block.
+    TEST_ASSERT_EQUAL(
+        BSL_SecurityAction_GetSecOperAtIndex(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0), 0)->conclusion,
+        BSL_SECOP_CONCLUSION_FAILURE);
 
     BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(2, primary_block.block_count);

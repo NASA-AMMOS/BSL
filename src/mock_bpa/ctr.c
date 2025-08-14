@@ -21,16 +21,16 @@
  */
 #include <BPSecLib_Private.h>
 
-#include "mock_bpa_ctr.h"
-#include "bsl_mock_bpa_decode.h"
-#include "bsl_mock_bpa_encode.h"
+#include "ctr.h"
+#include "decode.h"
+#include "encode.h"
 
 void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr)
 {
     CHKVOID(ctr);
     memset(ctr, 0, sizeof(*ctr));
     BSL_Data_Init(&(ctr->encoded));
-    ctr->bundle_ref.data = calloc(1, sizeof(MockBPA_Bundle_t));
+    ctr->bundle_ref.data = BSL_CALLOC(1, sizeof(MockBPA_Bundle_t));
     // TODO : Just make a MockBPA_Bundle_Init function.
     // HostEID_t's are initialized deeper into the decode function.
 

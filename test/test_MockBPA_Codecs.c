@@ -23,11 +23,10 @@
 #include <unity.h>
 
 #include <BPSecLib_Private.h>
-#include <bsl_mock_bpa.h>
-#include <bsl_mock_bpa_decode.h>
-#include <bsl_mock_bpa_encode.h>
+#include <mock_bpa/agent.h>
+#include <mock_bpa/decode.h>
+#include <mock_bpa/encode.h>
 
-#include "bsl_mock_bpa.h"
 #include "bsl_test_utils.h"
 
 // allow parameterized cases
@@ -55,12 +54,12 @@ static void printencoded(const uint8_t *pEncoded, size_t nLen)
 void suiteSetUp(void)
 {
     BSL_openlog();
-    TEST_ASSERT_EQUAL_INT(0, bsl_mock_bpa_init());
+    TEST_ASSERT_EQUAL_INT(0, bsl_mock_bpa_agent_init());
 }
 
 int suiteTearDown(int failures)
 {
-    bsl_mock_bpa_deinit();
+    bsl_mock_bpa_agent_deinit();
     BSL_closelog();
     return failures;
 }
@@ -195,7 +194,7 @@ void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
     blk.blk_num                  = 45;
     blk.flags                    = 0;
     blk.crc_type                 = crc_type;
-    blk.btsd                     = malloc(dummy_size);
+    blk.btsd                     = BSL_MALLOC(dummy_size);
     blk.btsd_len                 = dummy_size;
     memcpy(blk.btsd, dummy_btsd, dummy_size);
 
@@ -209,7 +208,7 @@ void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
     TEST_ASSERT_EQUAL_INT(expect_data.len, encoded.len);
     TEST_ASSERT_EQUAL_MEMORY(expect_data.ptr, encoded.ptr, expect_data.len);
 
-    free(blk.btsd);
+    BSL_FREE(blk.btsd);
     BSL_Data_Deinit(&expect_data);
     string_clear(expect_text);
 }
@@ -240,7 +239,7 @@ void test_bsl_mock_encode_bundle(void)
         blk.blk_num                  = 45;
         blk.flags                    = 0;
         blk.crc_type                 = 0;
-        blk.btsd                     = calloc(1, dummy_size);
+        blk.btsd                     = BSL_CALLOC(1, dummy_size);
         blk.btsd_len                 = dummy_size;
         memcpy(blk.btsd, dummy_btsd, dummy_size);
         bundle.blocks[bundle.block_count++] = blk;
@@ -343,9 +342,9 @@ void test_bsl_loopback_eid(const char *hexdata)
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
                                   "BSL_TestUtils_DecodeBase16() failed");
 
-    BSL_HostEID_t eid = { 0 };
+    BSL_HostEID_t eid;
     BSL_HostEID_Init(&eid);
-    TEST_ASSERT_TRUE(eid.handle != NULL);
+    TEST_ASSERT_NOT_NULL(eid.handle);
     {
         QCBORDecodeContext decoder;
         QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);
@@ -355,7 +354,6 @@ void test_bsl_loopback_eid(const char *hexdata)
 
     BSL_Data_t out_data;
     BSL_Data_Init(&out_data);
-    TEST_ASSERT_TRUE(eid.handle != NULL);
     {
         QCBOREncodeContext encoder;
         size_t             needlen;

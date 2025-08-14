@@ -29,8 +29,11 @@
 #include <backend/SecParam.h>
 #include <backend/SecResult.h>
 #include <backend/SecurityActionSet.h>
+#include <mock_bpa/ctr.h>
 
-#include <mock_bpa/mock_bpa_ctr.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /// @brief Key ID for the Appendix A1 key in OpenSSL
 #define RFC9173_EXAMPLE_A1_KEY "9100"
@@ -85,6 +88,8 @@ typedef struct
 
     BSL_SecOper_t sec_oper;
 } BIBTestContext;
+
+void BIBTestContext_Deinit(BIBTestContext *obj);
 
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id);
 
@@ -372,5 +377,9 @@ int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a2_kek(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a2_cek(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

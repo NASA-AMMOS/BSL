@@ -35,7 +35,7 @@
 /// @note This struct is still in-concept
 struct BSL_SecurityResponseSet_s
 {
-    /// @brief This maps to the BSL_SecurityActionSet_s::sec_operations,
+    /// @brief This maps to the Security Action sec_op_list,
     ///        and contains the result code of that security operation.
     int                results[BSL_SECURITYRESPONSESET_ARRAYLEN];
     char               err_msg[BSL_SECURITYRESPONSESET_STRLEN];

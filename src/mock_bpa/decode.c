@@ -24,9 +24,9 @@
  * Definitions for bundle and block decoding.
  * @ingroup mock_bpa
  */
-#include "bsl_mock_bpa.h"
-#include "bsl_mock_bpa_decode.h"
-#include "bsl_mock_bpa_crc.h"
+#include "decode.h"
+#include "agent.h"
+#include "crc.h"
 #include <BPSecLib_Public.h>
 #include <BPSecLib_Private.h>
 
@@ -34,11 +34,11 @@
 
 int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
 {
-    assert(dec != NULL);
-    assert(eid != NULL);
-    assert(eid->handle != NULL);
+    ASSERT_ARG_NONNULL(dec);
+    ASSERT_ARG_NONNULL(eid);
+    ASSERT_ARG_NONNULL(eid->handle);
     bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
-    assert(obj != NULL);
+    ASSERT_ARG_NONNULL(obj);
     CHKERR1(dec);
     CHKERR1(obj);
 
@@ -59,7 +59,7 @@ int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
         case BSL_MOCK_EID_IPN:
         {
             bsl_eid_ipn_ssp_t *ipn = &(obj->ssp.as_ipn);
-            assert(ipn != NULL);
+            ASSERT_ARG_NONNULL(ipn);
             QCBORDecode_EnterArray(dec, &decitem);
             if (decitem.val.uCount == 2)
             {
@@ -96,13 +96,16 @@ int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
             const size_t begin = QCBORDecode_Tell(dec);
             QCBORDecode_VGetNextConsume(dec, &decitem);
             const size_t end = QCBORDecode_Tell(dec);
-            if (end > begin)
+
+            if ((QCBOR_SUCCESS == QCBORDecode_GetError(dec)) && (end > begin))
             {
+                const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
+
                 BSL_Data_t *raw = &(obj->ssp.as_raw);
-                assert(raw != NULL);
+                ASSERT_ARG_NONNULL(raw);
                 BSL_Data_Init(raw);
                 // FIXME expose this from the decoder
-                BSL_Data_CopyFrom(raw, end - begin, (uint8_t *)dec->InBuf.UB.ptr + begin);
+                BSL_Data_CopyFrom(raw, end - begin, (const uint8_t *)buf.ptr + begin);
             }
             break;
         }
@@ -160,7 +163,7 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     {
         case BSL_BUNDLECRCTYPE_16:
         case BSL_BUNDLECRCTYPE_32:
-            // just ignore the bytes
+            // just ignore the bytes, CRC check will use the encoded buffer
             QCBORDecode_GetByteString(dec, &view);
             break;
         default:
@@ -169,16 +172,21 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     }
 
     QCBORDecode_ExitArray(dec);
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+    {
+        return 2;
+    }
     const size_t end = QCBORDecode_Tell(dec);
 
-    if (!mock_bpa_crc_check(QCBORDecode_RetrieveUndecodedInput(dec), begin, end, blk->crc_type))
+    const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
+    if (!mock_bpa_crc_check(buf, begin, end, blk->crc_type))
     {
         return 4;
     }
 
     blk->cbor_len = end - begin;
-    blk->cbor     = calloc(1, blk->cbor_len);
-    memcpy(blk->cbor, &((uint8_t *)dec->InBuf.UB.ptr)[begin], blk->cbor_len);
+    blk->cbor     = BSL_MALLOC(blk->cbor_len);
+    memcpy(blk->cbor, (const uint8_t *)buf.ptr + begin, blk->cbor_len);
 
     return 0;
 }
@@ -200,14 +208,19 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
     QCBORDecode_GetByteString(dec, &view);
     if (QCBOR_SUCCESS == QCBORDecode_GetError(dec))
     {
-        if (blk->btsd == NULL)
+        if (blk->btsd)
         {
-            blk->btsd     = calloc(1, view.len);
-            blk->btsd_len = view.len;
+            BSL_FREE(blk->btsd);
+            blk->btsd = NULL;
         }
-        assert(blk->btsd != NULL);
-        assert(blk->btsd_len > 0);
-        memcpy(blk->btsd, view.ptr, view.len);
+
+        blk->btsd_len = view.len;
+        if (blk->btsd_len > 0)
+        {
+            blk->btsd = BSL_MALLOC(view.len);
+            ASSERT_ARG_NONNULL(blk->btsd);
+            memcpy(blk->btsd, view.ptr, view.len);
+        }
     }
 
     switch (blk->crc_type)
@@ -223,6 +236,10 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
     }
 
     QCBORDecode_ExitArray(dec);
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+    {
+        return 2;
+    }
     const size_t end = QCBORDecode_Tell(dec);
 
     if (!mock_bpa_crc_check(QCBORDecode_RetrieveUndecodedInput(dec), begin, end, blk->crc_type))
@@ -268,7 +285,7 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
         if (res || QCBORDecode_GetError(dec))
         {
             BSL_LOG_ERR("failed in canonical block");
-            free(blk.btsd);
+            BSL_FREE(blk.btsd);
             return 3;
         }
         bundle->blocks[bundle->block_count++] = blk;

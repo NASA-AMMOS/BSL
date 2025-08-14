@@ -152,12 +152,13 @@ def add_bcb_to_bundle_over_x(bundle, x):
 
 b = [
     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-    [1, 1, 0, 0, '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
+    [1, 1, 0, 0, '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164'],
+    [192, 2, 0, 0, '676f20647261676f6e666c7921']
 ]
 
 
 print (f"ORIGINAL BUNDLE: {b}")
-b = add_bib_to_bundle_over_x(b, 0)
+b = add_bib_to_bundle_over_x(b, 2)
 print(f'BUNDLE AFTER BIB: {b}')
 #b = add_bcb_to_bundle_over_x(b, 1)
 print(f'FINAL BUNDLE: {b}')

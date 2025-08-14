@@ -26,7 +26,7 @@
  *
  * @details
  *
- * The details from the RFC are as follows:
+ * The details from the RFC Section 3.6 @cite rfc9172 are as follows:
  *
  * <blockquote>
  * This field captures one or more security context parameters that should be used
@@ -47,8 +47,6 @@
  *
  * </blockquote>
  *
- * @cite  https://www.rfc-editor.org/rfc/rfc9172.html#section-3.6-3.10.1
- *
  * @author Bill.Van.Besien@jhuapl.edu
  */
 /** @file
@@ -60,7 +58,7 @@
 
 #include <stdint.h>
 
-#include <m-list.h>
+#include <m-array.h>
 
 #include <BPSecLib_Private.h>
 
@@ -83,11 +81,13 @@ struct BSL_SecParam_s
     size_t _bytelen;
 };
 
-// NOLINTBEGIN
-/**
- * Defines a MLib basic list of Security Parameters.
+/** @struct BSLB_SecParamList_t
+ * Defines a basic list of Security Parameters (::BSL_SecParam_t).
  */
-LIST_DEF(BSLB_SecParamList, BSL_SecParam_t, M_POD_OPLIST)
+// NOLINTBEGIN
+/// @cond Doxygen_Suppress
+M_ARRAY_DEF(BSLB_SecParamList, BSL_SecParam_t, M_POD_OPLIST)
+/// @endcond
 // NOLINTEND
 
 #endif /* BSLB_SECPARAM_H_ */

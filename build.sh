@@ -75,6 +75,14 @@ function cmd_coverage {
     cmake --build ${BUILDDIR} -j1 --target \
         coverage-html coverage-xml
 }
+function cmd_coverage_summary {
+    for DIRNAME in backend crypto policy_provider security_context mock_bpa
+    do
+	COV_XPATH="format-number(/coverage/packages/package[@name='src.${DIRNAME}']/@line-rate * 100, '#.0')"
+        COV_PERC=$(xmlstarlet sel -t -v "${COV_XPATH}" -n build/default/coverage-xml.xml 2>/dev/null)
+        echo "Source ${DIRNAME} coverage: ${COV_PERC}%"
+    done
+}
 
 function cmd_deps {
     ./resources/deps.sh
@@ -103,7 +111,7 @@ function cmd_rpm_prep {
     then
         git config --global --add safe.directory ${PWD}
     fi
-    ./resources/prep.sh -DBUILD_LIB=OFF -DBUILD_TESTING=OFF -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_PACKAGE=ON
+    ./resources/prep.sh -DBUILD_LIB=OFF -DBUILD_UNITTEST=OFF -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_PACKAGE=ON
 }
 
 function cmd_rpm_build {
@@ -193,6 +201,9 @@ case "$1" in
         ;;
     coverage)
         cmd_coverage
+        ;;
+    coverage-summary)
+        cmd_coverage_summary
         ;;
     deps)
         cmd_deps

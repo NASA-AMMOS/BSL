@@ -37,7 +37,7 @@
 #include <security_context/rfc9173.h>
 #include <CryptoInterface.h>
 
-#include "mock_bpa_policy_registry.h"
+#include "policy_registry.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,13 +61,14 @@ extern "C" {
  *              Policy Action: 00 - nothing, 01 - drop block,  -|         |     |   |
  *                             10 - drop bundle, 11: undefined -|         |     |   |
  *                                                                        |     |   |
- *                          Target Block Type: 00 - primary, 01 payload  -|     |   |
- *                                             10 - bib, 11 - bundle age -|     |   |
+ *                       Target Block Type: 00 - primary, 01 - payload,  -|     |   |
+ *                      10 - private/experimental (192), 11 - bundle age -|     |   |
  *                                                                              |   |
  *                                                    Target Block Type: -|     |   |
  *                                        Policy Location: 0 - CLOUT, 1 - CLIN -|   |
  *                                                                                  |
  *                                                Sec Block Type: 0 - BIB, 1 - BCB -|
+ *
  *
  * @endcode
  */
@@ -79,9 +80,6 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
 
 int mock_bpa_key_registry_init(const char *pp_cfg_file_path);
 
-int mock_bpa_hexchar_to_int(char c);
-
-int mock_bpa_hexstring_to_bytes(const char *hexstr, uint8_t *out, size_t out_size);
 int bsl_mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len);
 
 #ifdef __cplusplus
