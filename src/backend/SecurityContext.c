@@ -65,7 +65,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     BSL_CanonicalBlock_t sec_blk = { 0 };
     if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Could not get BIB block (id=%"PRIu64")", created_block_id);
+        BSL_LOG_ERR("Could not get BIB block (id=%" PRIu64 ")", created_block_id);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
@@ -109,7 +109,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     }
     if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Could not get BIB block (id=%"PRIu64")", created_block_id);
+        BSL_LOG_ERR("Could not get BIB block (id=%" PRIu64 ")", created_block_id);
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
@@ -365,7 +365,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_LOG_ERR("Failed to create BCB block");
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
-    BSL_LOG_INFO("Created new BCB block id = %"PRIu64, created_block_id);
+    BSL_LOG_INFO("Created new BCB block id = %" PRIu64, created_block_id);
 
     sec_oper->sec_block_num = created_block_id;
     const int res           = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
@@ -438,7 +438,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     }
     if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Could not get BIB block (id=%"PRIu64")", created_block_id);
+        BSL_LOG_ERR("Could not get BIB block (id=%" PRIu64 ")", created_block_id);
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }

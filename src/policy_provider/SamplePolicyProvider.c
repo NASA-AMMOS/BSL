@@ -140,7 +140,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         uint64_t target_block_num = get_target_block_id(bundle, rule->target_block_type);
         if (target_block_num == 0 && rule->target_block_type != BSL_BLOCK_TYPE_PRIMARY)
         {
-            BSL_LOG_WARNING("Cannot find target block type = %"PRIu64, rule->target_block_type);
+            BSL_LOG_WARNING("Cannot find target block type = %" PRIu64, rule->target_block_type);
             continue;
         }
 
@@ -374,7 +374,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
     uint64_t target_block_num = get_target_block_id(bundle, self->target_block_type);
     if (target_block_num == 0 && self->target_block_type != BSL_BLOCK_TYPE_PRIMARY)
     {
-        BSL_LOG_WARNING("Cannot find target block type = %"PRIu64, self->target_block_type);
+        BSL_LOG_WARNING("Cannot find target block type = %" PRIu64, self->target_block_type);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 

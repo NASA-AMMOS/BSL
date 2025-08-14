@@ -42,7 +42,8 @@ void BSLX_EncodeHeader(const BSL_CanonicalBlock_t *block, QCBOREncodeContext *en
 {
     ASSERT_ARG_NONNULL(block);
     ASSERT_ARG_NONNULL(encoder);
-    BSL_LOG_INFO("  >>> AAD Encoding: %"PRIu64", %"PRIu64", %"PRIu64, block->type_code, block->block_num, block->flags);
+    BSL_LOG_INFO("  >>> AAD Encoding: %" PRIu64 ", %" PRIu64 ", %" PRIu64, block->type_code, block->block_num,
+                 block->flags);
     QCBOREncode_AddUInt64(encoder, block->type_code);
     QCBOREncode_AddUInt64(encoder, block->block_num);
     QCBOREncode_AddUInt64(encoder, block->flags);

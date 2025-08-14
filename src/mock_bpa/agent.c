@@ -241,8 +241,8 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
     {
         for (size_t dst_index = found_index; dst_index < bundle->block_count - 1; dst_index++)
         {
-            printf("Shifting block[%zu] (id=%"PRIu64", type=%"PRIu64") left", dst_index + 1, bundle->blocks[dst_index + 1].blk_num,
-                   bundle->blocks[dst_index + 1].blk_type);
+            printf("Shifting block[%zu] (id=%" PRIu64 ", type=%" PRIu64 ") left", dst_index + 1,
+                   bundle->blocks[dst_index + 1].blk_num, bundle->blocks[dst_index + 1].blk_type);
             memcpy(&bundle->blocks[dst_index], &bundle->blocks[dst_index + 1], sizeof(MockBPA_CanonicalBlock_t));
             memset(&bundle->blocks[dst_index + 1], 0, sizeof(MockBPA_CanonicalBlock_t));
         }

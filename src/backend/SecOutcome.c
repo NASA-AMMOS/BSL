@@ -184,7 +184,8 @@ bool BSL_SecOutcome_IsInAbsSecBlock(const BSL_SecOutcome_t *self, const BSL_AbsS
         }
         else
         {
-            BSL_LOG_ERR("Security operation mismatch - ASB does NOT contain block %"PRIu64, actual_res->target_block_num);
+            BSL_LOG_ERR("Security operation mismatch - ASB does NOT contain block %" PRIu64,
+                        actual_res->target_block_num);
         }
     }
     BSL_LOG_DEBUG("Checking results: %zu expected, %zu found", expected_matches, found_matches);

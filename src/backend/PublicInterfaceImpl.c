@@ -126,7 +126,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
         BSL_CanonicalBlock_t block = { 0 };
         if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, blocks_array[i], &block))
         {
-            BSL_LOG_WARNING("Failed to get block number %"PRIu64, blocks_array[i]);
+            BSL_LOG_WARNING("Failed to get block number %" PRIu64, blocks_array[i]);
             continue;
         }
         BSL_SecActionList_it_t act_it;
@@ -213,7 +213,7 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
             // When the operation was a success, there's nothing further to do.
             if (conclusion == BSL_SECOP_CONCLUSION_SUCCESS)
             {
-                BSL_LOG_DEBUG("Security operation success, target block num = %"PRIu64, sec_oper->target_block_num);
+                BSL_LOG_DEBUG("Security operation success, target block num = %" PRIu64, sec_oper->target_block_num);
                 continue;
             }
 
@@ -237,7 +237,7 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
                 }
                 case BSL_POLICYACTION_DROP_BUNDLE:
                 {
-                    BSL_LOG_WARNING("Deleting bundle due to block target num %"PRIu64" security failure",
+                    BSL_LOG_WARNING("Deleting bundle due to block target num %" PRIu64 " security failure",
                                     sec_oper->target_block_num);
                     must_drop = true;
                     break;
@@ -245,7 +245,7 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
                 case BSL_POLICYACTION_UNDEFINED:
                 default:
                 {
-                    BSL_LOG_ERR("Unhandled policy action: %"PRIu64, err_action_code);
+                    BSL_LOG_ERR("Unhandled policy action: %" PRIu64, err_action_code);
                 }
             }
 

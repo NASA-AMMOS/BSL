@@ -154,7 +154,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
         }
         else
         {
-            BSL_LOG_WARNING("Unknown param id: %"PRIu64, param_id);
+            BSL_LOG_WARNING("Unknown param id: %" PRIu64, param_id);
             return BSL_ERR_PROPERTY_CHECK_FAILED;
         }
     }
