@@ -145,8 +145,8 @@ static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
     (void)loc;
     (void)bundle;
     BSL_LOG_INFO("Mock BPA: Invoking mock_bpa_process");
-    BSL_SecurityActionSet_t   *malloced_action_set   = calloc(BSL_SecurityActionSet_Sizeof(), 1);
-    BSL_SecurityResponseSet_t *malloced_response_set = calloc(BSL_SecurityResponseSet_Sizeof(), 1);
+    BSL_SecurityActionSet_t   *malloced_action_set   = BSL_CALLOC(BSL_SecurityActionSet_Sizeof(), 1);
+    BSL_SecurityResponseSet_t *malloced_response_set = BSL_CALLOC(BSL_SecurityResponseSet_Sizeof(), 1);
     int                        returncode            = -1;
 
     BSL_BundleRef_t bundle_ref = { 0 };
@@ -171,8 +171,8 @@ static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
 
 cleanup:
     BSL_SecurityActionSet_Deinit(malloced_action_set);
-    free(malloced_action_set);
-    free(malloced_response_set);
+    BSL_FREE(malloced_action_set);
+    BSL_FREE(malloced_response_set);
     return returncode;
 }
 
@@ -642,7 +642,7 @@ int main(int argc, char **argv)
     }
 
     // TODO XXX FIX BEFORE MERGE!!
-    bsl = calloc(50000, 1);
+    bsl = BSL_CALLOC(50000, 1);
     if (BSL_API_InitLib(bsl))
     {
         BSL_LOG_ERR("Failed to initialize BSL");
@@ -652,7 +652,7 @@ int main(int argc, char **argv)
     BSL_PolicyDesc_t policy_callbacks = { .deinit_fn   = BSLP_Deinit,
                                           .query_fn    = BSLP_QueryPolicy,
                                           .finalize_fn = BSLP_FinalizePolicy,
-                                          .user_data   = calloc(sizeof(BSLP_PolicyProvider_t), 1) };
+                                          .user_data   = BSL_CALLOC(sizeof(BSLP_PolicyProvider_t), 1) };
     assert(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(bsl, policy_callbacks));
 
     BSL_CryptoInit();
@@ -775,6 +775,6 @@ int main(int argc, char **argv)
     BSL_CryptoDeinit();
     bsl_mock_bpa_agent_deinit();
     BSL_closelog();
-    free(bsl);
+    BSL_FREE(bsl);
     return retval;
 }

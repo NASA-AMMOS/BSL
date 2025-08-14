@@ -90,22 +90,22 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
 
 BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context)
 {
-    BSL_SecurityActionSet_t *action_set = calloc(sizeof(BSL_SecurityActionSet_t), 1);
+    BSL_SecurityActionSet_t *action_set = BSL_CALLOC(sizeof(BSL_SecurityActionSet_t), 1);
     BSL_SecurityActionSet_Init(action_set);
-    BSL_SecurityAction_t *act = calloc(sizeof(BSL_SecurityAction_t), 1);
+    BSL_SecurityAction_t *act = BSL_CALLOC(sizeof(BSL_SecurityAction_t), 1);
     BSL_SecurityAction_Init(act);
     BSL_SecurityAction_AppendSecOper(act, &bib_context->sec_oper);
     // ensure consistent context state
     BSL_SecOper_Init(&bib_context->sec_oper);
     BSL_SecurityActionSet_AppendAction(action_set, act);
     BSL_SecurityAction_Deinit(act);
-    free(act);
+    BSL_FREE(act);
     return action_set;
 }
 
 BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void)
 {
-    return calloc(BSL_SecurityResponseSet_Sizeof(), 1);
+    return BSL_CALLOC(BSL_SecurityResponseSet_Sizeof(), 1);
 }
 
 int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len)
@@ -223,7 +223,7 @@ bool BSL_TestUtils_IsB16StrEqualTo(const char *b16_string, BSL_Data_t encoded_va
     BSL_TestUtils_PrintHexToBuffer("expected str: ", in_data.ptr, in_data.len);
     if (encoded_val.len != in_data.len)
     {
-        BSL_LOG_ERR("Mismatch, got %lu bytes, expected %lu bytes", encoded_val.len, in_data.len);
+        BSL_LOG_ERR("Mismatch, got %zu bytes, expected %zu bytes", encoded_val.len, in_data.len);
         BSL_Data_Deinit(&in_data);
         return false;
     }
@@ -236,7 +236,7 @@ bool BSL_TestUtils_IsB16StrEqualTo(const char *b16_string, BSL_Data_t encoded_va
 void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t bufflen)
 {
 
-    uint8_t *ascii_buf = malloc(bufflen * 2 + 10);
+    uint8_t *ascii_buf = BSL_MALLOC(bufflen * 2 + 10);
     memset(ascii_buf, 0, bufflen * 2 + 10);
     const char hex_digits[] = "0123456789abcdef";
     size_t     i;
@@ -246,7 +246,7 @@ void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t b
         ascii_buf[(i * 2) + 1] = hex_digits[buff[i] & 0x0F];
     }
     BSL_LOG_INFO("%s :: %s", message, ascii_buf);
-    free(ascii_buf);
+    BSL_FREE(ascii_buf);
 }
 
 int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cbor_seq)

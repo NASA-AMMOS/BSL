@@ -285,7 +285,7 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
         if (res || QCBORDecode_GetError(dec))
         {
             BSL_LOG_ERR("failed in canonical block");
-            free(blk.btsd);
+            BSL_FREE(blk.btsd);
             return 3;
         }
         bundle->blocks[bundle->block_count++] = blk;

@@ -42,7 +42,7 @@ void BSLX_EncodeHeader(const BSL_CanonicalBlock_t *block, QCBOREncodeContext *en
 {
     ASSERT_ARG_NONNULL(block);
     ASSERT_ARG_NONNULL(encoder);
-    BSL_LOG_INFO("  >>> AAD Encoding: %lu, %lu, %lu", block->type_code, block->block_num, block->flags);
+    BSL_LOG_INFO("  >>> AAD Encoding: %"PRIu64", %"PRIu64", %"PRIu64, block->type_code, block->block_num, block->flags);
     QCBOREncode_AddUInt64(encoder, block->type_code);
     QCBOREncode_AddUInt64(encoder, block->block_num);
     QCBOREncode_AddUInt64(encoder, block->flags);
@@ -50,8 +50,8 @@ void BSLX_EncodeHeader(const BSL_CanonicalBlock_t *block, QCBOREncodeContext *en
 
 void *BSLX_ScratchSpace_take(BSLX_ScratchSpace_t *scratch, size_t len)
 {
-    assert(scratch != NULL);
-    assert(scratch->position + len < scratch->size);
+    ASSERT_ARG_NONNULL(scratch);
+    ASSERT_ARG_EXPR(scratch->position + len < scratch->size);
 
     uint8_t *target = &scratch->buffer[scratch->position];
     memset(target, 0, len);
