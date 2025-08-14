@@ -88,7 +88,7 @@ static void BSL_LogEvent_event_init_set(BSL_LogEvent_event_t *obj, const BSL_Log
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
     obj->severity  = src->severity;
-    string_init_set(obj->context, src->message);
+    string_init_set(obj->context, src->context);
     string_init_set(obj->message, src->message);
 }
 
@@ -97,7 +97,7 @@ static void BSL_LogEvent_event_set(BSL_LogEvent_event_t *obj, const BSL_LogEvent
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
     obj->severity  = src->severity;
-    string_set(obj->context, src->message);
+    string_set(obj->context, src->context);
     string_set(obj->message, src->message);
 }
 
