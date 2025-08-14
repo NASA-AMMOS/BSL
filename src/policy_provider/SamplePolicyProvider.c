@@ -156,10 +156,10 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
             for (i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
             {
                 BSL_SecOper_t **comp = BSLP_SecOperPtrList_get(secops, i);
-                BSL_LOG_INFO("NEW SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(sec_oper),
-                             BSL_SecOper_IsBIB(sec_oper), BSL_SecOper_GetSecurityBlockNum(sec_oper));
-                BSL_LOG_INFO("comp SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(*comp),
-                             BSL_SecOper_IsBIB(*comp), BSL_SecOper_GetSecurityBlockNum(*comp));
+                BSL_LOG_DEBUG("NEW SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(sec_oper),
+                              BSL_SecOper_IsBIB(sec_oper), BSL_SecOper_GetSecurityBlockNum(sec_oper));
+                BSL_LOG_DEBUG("comp SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(*comp),
+                              BSL_SecOper_IsBIB(*comp), BSL_SecOper_GetSecurityBlockNum(*comp));
                 if (BSL_SecOper_GetTargetBlockNum(*comp) == BSL_SecOper_GetTargetBlockNum(sec_oper))
                 {
                     // Both BIBs or BCBs
@@ -171,12 +171,12 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
                     // true if ACC BIB or SRC BCB
                     if (BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsRoleSource(sec_oper))
                     {
-                        BSL_LOG_INFO("NEW OP AFTER COMP");
+                        BSL_LOG_DEBUG("NEW OP AFTER COMP");
                         BSLP_SecOperPtrList_push_at(secops, i + 1, sec_oper);
                     }
                     else
                     {
-                        BSL_LOG_INFO("NEW OP BEFORE COMP");
+                        BSL_LOG_DEBUG("NEW OP BEFORE COMP");
                         BSLP_SecOperPtrList_push_at(secops, i, sec_oper);
                     }
                     break;

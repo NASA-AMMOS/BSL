@@ -473,8 +473,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
      *  - BCB will be a special case, since it actively manipulates the BTSD
      *
      */
-    size_t            fail_count = 0;
-    BSL_SecOutcome_t *outcome    = calloc(BSL_SecOutcome_Sizeof(), 1);
+    BSL_SecOutcome_t *outcome = calloc(BSL_SecOutcome_Sizeof(), 1);
 
     BSL_SecActionList_it_t act_it;
     for (BSL_SecActionList_it(act_it, action_set->actions); !BSL_SecActionList_end_p(act_it);
@@ -514,19 +513,16 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
 
             if (errcode != 0)
             {
-                fail_count += 1;
                 BSL_LOG_ERR("Security Op failed: %d", errcode);
                 BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_FAILURE);
-                continue;
+                break; // stop processing secops if there is a failure
             }
             BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_SUCCESS);
         }
     }
     free(outcome);
 
-    output_response->failure_count = fail_count;
-
-    return fail_count == 0 ? BSL_SUCCESS : BSL_ERR_SECURITY_CONTEXT_PARTIAL_FAIL;
+    return BSL_SUCCESS;
 }
 
 bool BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
