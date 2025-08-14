@@ -197,8 +197,6 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);
     BSL_LOG_INFO("Completed finalize: status=%d", finalize_status);
 
-    bool must_drop = false;
-
     BSL_SecActionList_it_t act_it;
     for (BSL_SecActionList_it(act_it, policy_actions->actions); !BSL_SecActionList_end_p(act_it);
          BSL_SecActionList_next(act_it))
@@ -239,7 +237,9 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
                 {
                     BSL_LOG_WARNING("Deleting bundle due to block target num %" PRIu64 " security failure",
                                     sec_oper->target_block_num);
-                    must_drop = true;
+                    // Drop the bundle and return operation error
+                    BSL_LOG_WARNING("***** Delete bundle due to failed security operation *******");
+                    BSL_BundleCtx_DeleteBundle(bundle);
                     break;
                 }
                 case BSL_POLICYACTION_UNDEFINED:
@@ -248,21 +248,9 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
                     BSL_LOG_ERR("Unhandled policy action: %" PRIu64, err_action_code);
                 }
             }
-
-            if (must_drop)
-            {
-                break;
-            }
         }
     }
 
-    if (must_drop)
-    {
-        // Drop the bundle and return operation error
-        BSL_LOG_WARNING("***** Delete bundle due to failed security operation *******");
-        BSL_BundleCtx_DeleteBundle(bundle);
-    }
-
     // TODO CHK_POSTCONDITION
-    return (must_drop) ? BSL_ERR_SECURITY_OPERATION_FAILED : BSL_SUCCESS;
+    return BSL_SUCCESS;
 }

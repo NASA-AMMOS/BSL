@@ -36,9 +36,9 @@ class _RequirementsCases(_TestSet):
             # A bundle with BIB and BCB both targeting the **payload** block, policy to accept both the blocks
             input_data=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')],
                 [11, 3, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-                [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')]
+                [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
+                [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             # A bundle with just the **payload** block
             expected_output=[
@@ -46,9 +46,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x1A6,0x1A7',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -69,9 +67,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x04',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -91,10 +87,8 @@ class _RequirementsCases(_TestSet):
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
-            policy_config='0x86',
-            is_implemented=True,
+            policy_config='0xA6',
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -115,9 +109,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x04',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -139,10 +131,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # policy_config = BIB_VERIFIER,
-            policy_config='0x46',
-            is_implemented=True,
+            policy_config='0x66',
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -177,10 +167,8 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             #
-            policy_config='0x280',
-            is_implemented=True,
+            policy_config='0x2A0',
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -199,9 +187,7 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0x04',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -221,9 +207,7 @@ class _RequirementsCases(_TestSet):
             #
             # policy_config = BIB_VERIFIER,
             policy_config='0x62',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -240,9 +224,7 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0xA2',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -270,9 +252,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x5E',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -290,11 +270,9 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # No output because it was deleted, logs to indicate deletion.
-            expected_output=(NO_OUTPUT, DELETION),
+            expected_output=r".*Delete bundle due to failed security operation",
             policy_config='0x62',
-            is_implemented=True,
             is_working=True,
-            expect_success=False,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.NONE
         ))
@@ -311,19 +289,17 @@ class _RequirementsCases(_TestSet):
         self.cases["BSL_23"] = (_TestCase(
             input_data=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')],
                 [11, 3, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-                [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')]
+                [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
+                [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             # A bundle with just the **payload** block
             expected_output=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
-            policy_config='0x186,0x187',
-            is_implemented=True,
+            policy_config='0x1A6,0x1A7',
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -346,9 +322,7 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0x04',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -363,7 +337,6 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             # Satisfied by validation for SSF-4-0, as performing the security operations must assemble key material.
-            # TODO ???
             expected_output=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
@@ -371,9 +344,7 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0x04',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -398,9 +369,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             policy_config='0x04',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -415,9 +384,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             policy_config='0x105',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -439,9 +406,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             policy_config='0x105',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -463,9 +428,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             policy_config='0x04',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -481,12 +444,10 @@ class _RequirementsCases(_TestSet):
                                         '1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e185010100005823526561647920746f2067656e657' \
                                         '261746520612033322d62797465207061796c6f6164ff'),
             # Confirm that the operations fails and returns a Reason Code 8.
-            expected_output=(FAILURE_CODE, 8),
+            expected_output=r".*failed to decode bundle",
             # Execute as a BIB acceptor.
             policy_config='0x86',
-            is_implemented=True,
-            is_working=False,
-            expect_success=False,
+            is_working=True,
             input_data_format=DataFormat.HEX,
             expected_output_format=DataFormat.ERR
         ))
@@ -500,16 +461,13 @@ class _RequirementsCases(_TestSet):
             # Using the Bundle from RFC 9173 Appendix A1.4, change the the block ID of the payload to number 99
             input_data=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                # assuming "block id" here means block num; if block type was 99, it would be invalid bundle (no payload)
-                [1, 99, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
-                [11, 2, 0, 0, bytes.fromhex('8101010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')]
+                [11, 2, 0, 0, bytes.fromhex('8101010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 99, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # Ensure that the host interface returns an error code (since the block does not exist). Confirm that a log indicating this error is created.
-            expected_output=(FAILURE_CODE, 0),  # doesn't specify an error code
-            policy_config='0x46',
-            is_implemented=True,
-            is_working=False,
-            expect_success=False,
+            expected_output=r".*Deleting bundle due to block target num 99 security failure",
+            policy_config='0x66',
+            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.ERR
         ))
@@ -524,17 +482,15 @@ class _RequirementsCases(_TestSet):
             # This will cause decryption to fail.
             input_data=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 3, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
                 [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
                 [1, 1, 0, 0, bytes.fromhex('000000000000000000009c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             # The security operation will return an error code indicating failure. Additionally, using the telemetry counters and logs,
             # confirm that no further security operation processing was taken (specifically, no BIB operations should be seen).
-            expected_output=(FAILURE_CODE, 0),  # doesn't specify an error code
-            #
-            policy_config='0x87',
-            is_implemented=True,
-            is_working=False,
-            expect_success=False,
+            expected_output=r".*Failed to perform cryptographic action",
+            policy_config='0x1A6,0x1A7',
+            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.ERR
         ))
@@ -542,42 +498,61 @@ class _RequirementsCases(_TestSet):
         # BSL_43
         # Query Existing Block Types
         # The purpose of this test case is to verify that the BSL can use a BPA interface to query what block types exist in a bundle.
-        #
-        # TODO should this be  a unit test?
-        self.cases["BSL_43"] = (_TestCase(
+        self.cases["BSL_43a"] = (_TestCase(
             # Create a bundle using the vector in RFC9173 Appendix A1.4.
             # Then the BSL will use the BPA host interface to show that there is a primary, payload, and BIB block present.
             input_data=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [11, 2, 0, 0, bytes.fromhex('8101010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # Result asserts there are three blocks present, each with the expected type.
-            # TODO ?
-            expected_output=[],
-            policy_config='0x87',
-            is_implemented=False,
-            is_working=False,
-            expect_success=True,
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0x0A',
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
+        self.cases["BSL_43b"] = (_TestCase(
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [192, 2, 0, 0, bytes.fromhex('676f20647261676f6e666c7921')],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # Result asserts there are three blocks present, each with the expected type.
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
+                [192, 2, 0, 0, bytes.fromhex('676f20647261676f6e666c7921')], 
+                [11, 3, 0, 0, bytes.fromhex('8102010182028202018282010782030081818201584037f54fd9c08b1b9225e74e821ef4ead35dc850ea98a2b944105447d12d145416dadb83c5123c44bab0e57c20196eff060ddcdc7412e948fd46527101e54c201e')],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0x0A',
+            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
 
+
         # BSL_44
         # Query Block Numbers
         # The purpose of this test case is to verify that the BSL can use a BPA interface to query what block numbers are present in a bundle.
-        #
-        # TODO should this be a unit test?
         self.cases["BSL_44"] = (_TestCase(
             # Create a bundle using the vector in RFC9173 Appendix A1.4. Then the BSL will use the BPA host interface to show that there is block 0, 1, and 2 present.
-            input_data=[],
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
             # Test code asserts there are three blocks present, each with the expected id.
-            # TODO ?
-            expected_output=[],
-            policy_config='0x86',
-            is_implemented=False,
-            is_working=False,
-            expect_success=True,
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            policy_config='0x46',
+            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -602,9 +577,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x46',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -625,9 +598,7 @@ class _RequirementsCases(_TestSet):
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x04',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -649,9 +620,7 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0x96',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -674,9 +643,7 @@ class _RequirementsCases(_TestSet):
             ],
             #
             policy_config='0x105',
-            is_implemented=True,
             is_working=True,
-            expect_success=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
