@@ -39,7 +39,6 @@ size_t BSL_LibCtx_Sizeof(void)
     return sizeof(BSL_LibCtx_t);
 }
 
-
 int BSL_API_InitLib(BSL_LibCtx_t *lib)
 {
     CHK_ARG_NONNULL(lib);
