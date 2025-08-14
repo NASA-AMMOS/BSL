@@ -473,8 +473,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
      *  - BCB will be a special case, since it actively manipulates the BTSD
      *
      */
-    size_t            fail_count = 0;
-    BSL_SecOutcome_t *outcome    = calloc(BSL_SecOutcome_Sizeof(), 1);
+    BSL_SecOutcome_t *outcome    = BSL_CALLOC(BSL_SecOutcome_Sizeof(), 1);
 
     BSL_SecActionList_it_t act_it;
     for (BSL_SecActionList_it(act_it, action_set->actions); !BSL_SecActionList_end_p(act_it);
