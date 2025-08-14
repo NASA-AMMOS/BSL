@@ -488,27 +488,48 @@ void tearDown(void)
 
 #define TEST_BOTH_BIB_BCB 99
 
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.1", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.2", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1) // PASS
-//TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.3", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1) // FAIL pending #13
-//TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.4", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1) // FAIL pending #13
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.5", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.6", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.7", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.8", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.9", NULL, NULL, BSL_SECROLE_ACCEPTOR, 99, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, true, 2, 2) // PASS
-TEST_CASE(BSL_POLICYLOCATION_CLOUT, NULL, "ipn:1.1", NULL, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_CLOUT, NULL, "ipn:1.5", NULL, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_CLOUT, NULL, "ipn:1.9", NULL, BSL_SECROLE_SOURCE, 99, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 2, 2) // PASS
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.1", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.2", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.3", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.4", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.5", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.6", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.7", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1) // PASS
-TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.8", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1) // PASS
-//TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.9", NULL, BSL_SECROLE_VERIFIER, 99, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 2, 2) // FAIL
+TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.1", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.2", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1) // PASS
+// TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.3", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB,
+// BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1) // FAIL pending #13
+// TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.4", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB,
+// BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1) // FAIL pending #13
+TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.5", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.6", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.7", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.8", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.9", NULL, NULL, BSL_SECROLE_ACCEPTOR, 99, BSL_BLOCK_TYPE_PAYLOAD,
+          BSL_POLICYACTION_NOTHING, true, 2, 2) // PASS
+TEST_CASE(BSL_POLICYLOCATION_CLOUT, NULL, "ipn:1.1", NULL, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_CLOUT, NULL, "ipn:1.5", NULL, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_CLOUT, NULL, "ipn:1.9", NULL, BSL_SECROLE_SOURCE, 99, BSL_BLOCK_TYPE_PAYLOAD,
+          BSL_POLICYACTION_DROP_BLOCK, true, 2, 2) // PASS
+TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.1", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.2", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.3", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.4", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.5", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.6", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE, false, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.7", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1) // PASS
+TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.8", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB,
+          BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1) // PASS
+// TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.9", NULL, BSL_SECROLE_VERIFIER, 99, BSL_BLOCK_TYPE_PAYLOAD,
+// BSL_POLICYACTION_DROP_BLOCK, true, 2, 2) // FAIL
 void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, const char *dest_eid,
                         const char *secsrc_eid, BSL_SecRole_e sec_role, int sec_block_type, uint8_t target_block,
                         BSL_PolicyAction_e policy_act, bool good_key, int sec_blks_ct, int expected_act_ct)
@@ -587,24 +608,26 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             {
                 // accepted sec blocks
                 TEST_ASSERT_EQUAL(1, primary_block.block_count);
-                for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i ++)
+                for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i++)
                 {
                     const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, i);
-                    for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j ++)
+                    for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j++)
                     {
-                        TEST_ASSERT_EQUAL(BSL_SECOP_CONCLUSION_SUCCESS, BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)));
+                        TEST_ASSERT_EQUAL(BSL_SECOP_CONCLUSION_SUCCESS,
+                                          BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)));
                     }
                 }
             }
             else
             {
                 size_t fail_ct = 0;
-                for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i ++)
+                for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i++)
                 {
                     const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, i);
-                    for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j ++)
+                    for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j++)
                     {
-                        if (BSL_SECOP_CONCLUSION_FAILURE == BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)))
+                        if (BSL_SECOP_CONCLUSION_FAILURE
+                            == BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)))
                         {
                             fail_ct++;
                         }
@@ -648,24 +671,26 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             {
                 // verified sec blocks
                 TEST_ASSERT_EQUAL(1 + sec_blks_ct, primary_block.block_count);
-                for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i ++)
+                for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i++)
                 {
                     const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, i);
-                    for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j ++)
+                    for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j++)
                     {
-                        TEST_ASSERT_EQUAL(BSL_SECOP_CONCLUSION_SUCCESS, BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)));
+                        TEST_ASSERT_EQUAL(BSL_SECOP_CONCLUSION_SUCCESS,
+                                          BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)));
                     }
                 }
             }
             else
             {
                 size_t fail_ct = 0;
-                for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i ++)
+                for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i++)
                 {
                     const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, i);
-                    for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j ++)
+                    for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j++)
                     {
-                        if (BSL_SECOP_CONCLUSION_FAILURE == BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)))
+                        if (BSL_SECOP_CONCLUSION_FAILURE
+                            == BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)))
                         {
                             fail_ct++;
                         }
@@ -714,12 +739,13 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             // sourced sec blocks
             TEST_ASSERT_EQUAL(1 + sec_blks_ct, primary_block.block_count);
 
-            for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i ++)
+            for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i++)
             {
                 const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, i);
-                for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j ++)
+                for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j++)
                 {
-                    TEST_ASSERT_EQUAL(BSL_SECOP_CONCLUSION_SUCCESS, BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)));
+                    TEST_ASSERT_EQUAL(BSL_SECOP_CONCLUSION_SUCCESS,
+                                      BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)));
                 }
             }
 
@@ -773,7 +799,8 @@ void n_test_BSL_6(void)
     apply_result =
         BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
     TEST_ASSERT_EQUAL(0, apply_result);
-    TEST_ASSERT_EQUAL(BSL_SECOP_CONCLUSION_FAILURE, 
+    TEST_ASSERT_EQUAL(
+        BSL_SECOP_CONCLUSION_FAILURE,
         BSL_SecurityAction_GetSecOperAtIndex(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0), 0)->conclusion);
 
     BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
@@ -810,12 +837,13 @@ void test_BSL_32(void)
         BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
     TEST_ASSERT_EQUAL(0, apply_result);
 
-    for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i ++)
+    for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i++)
     {
         const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, i);
-        for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j ++)
+        for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j++)
         {
-            TEST_ASSERT_EQUAL(BSL_SECOP_CONCLUSION_SUCCESS, BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)));
+            TEST_ASSERT_EQUAL(BSL_SECOP_CONCLUSION_SUCCESS,
+                              BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)));
         }
     }
 
