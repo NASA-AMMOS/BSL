@@ -194,7 +194,7 @@ void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
     blk.blk_num                  = 45;
     blk.flags                    = 0;
     blk.crc_type                 = crc_type;
-    blk.btsd                     = malloc(dummy_size);
+    blk.btsd                     = BSL_MALLOC(dummy_size);
     blk.btsd_len                 = dummy_size;
     memcpy(blk.btsd, dummy_btsd, dummy_size);
 
@@ -208,7 +208,7 @@ void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
     TEST_ASSERT_EQUAL_INT(expect_data.len, encoded.len);
     TEST_ASSERT_EQUAL_MEMORY(expect_data.ptr, encoded.ptr, expect_data.len);
 
-    free(blk.btsd);
+    BSL_FREE(blk.btsd);
     BSL_Data_Deinit(&expect_data);
     string_clear(expect_text);
 }
@@ -239,7 +239,7 @@ void test_bsl_mock_encode_bundle(void)
         blk.blk_num                  = 45;
         blk.flags                    = 0;
         blk.crc_type                 = 0;
-        blk.btsd                     = calloc(1, dummy_size);
+        blk.btsd                     = BSL_CALLOC(1, dummy_size);
         blk.btsd_len                 = dummy_size;
         memcpy(blk.btsd, dummy_btsd, dummy_size);
         bundle.blocks[bundle.block_count++] = blk;

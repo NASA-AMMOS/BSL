@@ -35,32 +35,32 @@
 
 static bool BSLP_PolicyProvider_IsConsistent(const BSLP_PolicyProvider_t *self)
 {
-    assert(self != NULL);
-    assert(strlen(self->name) < sizeof(self->name)); // TODO - Safer strlen since no strnlen
-    assert(self->rule_count < (sizeof(self->rules) / sizeof(BSLP_PolicyRule_t)));
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_EXPR(strlen(self->name) < sizeof(self->name)); // TODO - Safer strlen since no strnlen
+    ASSERT_ARG_EXPR(self->rule_count < (sizeof(self->rules) / sizeof(BSLP_PolicyRule_t)));
     return true;
 }
 
 static bool BSLP_PolicyPredicate_IsConsistent(const BSLP_PolicyPredicate_t *self)
 {
-    assert(self != NULL);
-    assert(self->location > 0);
-    assert(self->dst_eid_pattern.handle != NULL);
-    assert(self->src_eid_pattern.handle != NULL);
-    assert(self->secsrc_eid_pattern.handle != NULL);
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_EXPR(self->location > 0);
+    ASSERT_ARG_NONNULL(self->dst_eid_pattern.handle);
+    ASSERT_ARG_NONNULL(self->src_eid_pattern.handle);
+    ASSERT_ARG_NONNULL(self->secsrc_eid_pattern.handle);
     return true;
 }
 
 static bool BSLP_PolicyRule_IsConsistent(const BSLP_PolicyRule_t *self)
 {
-    assert(self != NULL);
-    assert(strlen(self->description) < sizeof(self->description));
-    assert(self->params != NULL);
-    assert(BSL_SECROLE_ISVALID(self->role));
-    assert(self->sec_block_type > 0);
-    assert(self->context_id > 0);
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_EXPR(strlen(self->description) < sizeof(self->description));
+    ASSERT_ARG_NONNULL(self->params);
+    ASSERT_ARG_EXPR(BSL_SECROLE_ISVALID(self->role));
+    ASSERT_ARG_EXPR(self->sec_block_type > 0);
+    ASSERT_ARG_EXPR(self->context_id > 0);
     // NOLINTBEGIN
-    assert(BSLP_PolicyPredicate_IsConsistent(self->predicate));
+    ASSERT_ARG_EXPR(BSLP_PolicyPredicate_IsConsistent(self->predicate));
     // NOLINTEND
     return true;
 }
@@ -108,7 +108,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
 {
     // This is an output struct. The caller only provides the allocation for it (which must be zero)
     const BSLP_PolicyProvider_t *self = user_data;
-    assert(BSLP_PolicyProvider_IsConsistent(self));
+    ASSERT_ARG_EXPR(BSLP_PolicyProvider_IsConsistent(self));
 
     BSL_PrimaryBlock_t primary_block = { 0 };
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
@@ -119,7 +119,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
 
     BSL_SecurityActionSet_Init(output_action_set);
 
-    BSL_SecurityAction_t *action = BSL_CALLOC(BSL_SecurityAction_Sizeof(), 1);
+    BSL_SecurityAction_t *action = BSL_CALLOC(1, BSL_SecurityAction_Sizeof());
     BSLP_SecOperPtrList_t secops;
     BSLP_SecOperPtrList_init(secops);
 
@@ -140,11 +140,11 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         uint64_t target_block_num = get_target_block_id(bundle, rule->target_block_type);
         if (target_block_num == 0 && rule->target_block_type != BSL_BLOCK_TYPE_PRIMARY)
         {
-            BSL_LOG_WARNING("Cannot find target block type = %lu", rule->target_block_type);
+            BSL_LOG_WARNING("Cannot find target block type = %" PRIu64, rule->target_block_type);
             continue;
         }
 
-        BSL_SecOper_t *sec_oper = BSL_CALLOC(BSL_SecOper_Sizeof(), 1);
+        BSL_SecOper_t *sec_oper = BSL_CALLOC(1, BSL_SecOper_Sizeof());
         BSL_SecOper_Init(sec_oper);
         if (BSLP_PolicyRule_EvaluateAsSecOper(rule, sec_oper, bundle, location) < 0)
         {
@@ -239,11 +239,43 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
 int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
                         const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
 {
+    for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(output_action_set); i++)
+    {
+        const BSL_SecurityAction_t *action = BSL_SecurityActionSet_GetActionAtIndex(output_action_set, i);
+        for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(action); j++)
+        {
+            const BSL_SecOper_t *secop = BSL_SecurityAction_GetSecOperAtIndex(action, j);
+            switch (BSL_SecOper_GetConclusion(secop))
+            {
+                case BSL_SECOP_CONCLUSION_PENDING:
+                {
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %" PRIu64 " at index %" PRIu64 ": STILL PENDING", i,
+                                 j);
+                    break;
+                }
+                case BSL_SECOP_CONCLUSION_SUCCESS:
+                {
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %" PRIu64 " at index %" PRIu64 ": SUCCESS", i, j);
+                    break;
+                }
+                case BSL_SECOP_CONCLUSION_INVALID:
+                {
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %" PRIu64 " at index %" PRIu64 ": INVALID", i, j);
+                    break;
+                }
+                case BSL_SECOP_CONCLUSION_FAILURE:
+                {
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %" PRIu64 " at index %" PRIu64 ": FAIL", i, j);
+                    break;
+                }
+            }
+        }
+    }
     (void)user_data;
     (void)output_action_set;
     (void)response_output;
     (void)bundle;
-    return 0;
+    return BSL_SUCCESS;
 }
 
 void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self)
@@ -257,10 +289,10 @@ void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self)
 void BSLP_Deinit(void *user_data)
 {
     BSLP_PolicyProvider_t *self = user_data;
-    assert(BSLP_PolicyProvider_IsConsistent(self));
+    ASSERT_ARG_EXPR(BSLP_PolicyProvider_IsConsistent(self));
     for (size_t index = 0; index < self->rule_count; index++)
     {
-        BSL_LOG_INFO("Sample Policy Provider deinit rule index %lu", index);
+        BSL_LOG_INFO("Sample Policy Provider deinit rule index %zu", index);
         BSLP_PolicyRule_Deinit(&self->rules[index]);
     }
 
@@ -276,7 +308,7 @@ void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_
                                BSL_HostEIDPattern_t dst_eid_pattern)
 {
     // todo - eid patterns should be pointers since they are non-trivial copyable.
-    assert(self != NULL);
+    ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
 
     self->location           = location;
@@ -284,13 +316,13 @@ void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_
     self->secsrc_eid_pattern = secsrc_eid_pattern;
     self->dst_eid_pattern    = dst_eid_pattern;
 
-    assert(BSLP_PolicyPredicate_IsConsistent(self));
+    ASSERT_POSTCONDITION(BSLP_PolicyPredicate_IsConsistent(self));
 }
 
 bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
                                   BSL_HostEID_t src_eid, BSL_HostEID_t dst_eid)
 {
-    assert(BSLP_PolicyPredicate_IsConsistent(self));
+    ASSERT_ARG_EXPR(BSLP_PolicyPredicate_IsConsistent(self));
 
     bool is_location_match    = location == self->location;
     bool is_src_pattern_match = BSL_HostEIDPattern_IsMatch(&self->src_eid_pattern, &src_eid);
@@ -316,7 +348,7 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
                          uint64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type,
                          BSL_BundleBlockTypeCode_e target_block_type, BSL_PolicyAction_e failure_action_code)
 {
-    assert(self != NULL);
+    ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
     strncpy(self->description, desc, sizeof(self->description) - 1);
     self->sec_block_type    = sec_block_type;
@@ -326,33 +358,33 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
     // TODO(bvb) assert Role in expected range
     self->failure_action_code = failure_action_code;
     self->role                = role;
-    self->params              = BSL_CALLOC(BSL_SecParam_Sizeof() * BSL_PP_POLICYRULE_PARAM_MAX_COUNT, 1);
+    self->params              = BSL_CALLOC(BSL_PP_POLICYRULE_PARAM_MAX_COUNT, BSL_SecParam_Sizeof());
     self->nparams             = 0;
-    assert(BSLP_PolicyRule_IsConsistent(self));
+    ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
     return BSL_SUCCESS;
 }
 
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
-    assert(BSLP_PolicyRule_IsConsistent(self));
-    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%lu", self->description, self->nparams);
+    ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
+    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", self->description, self->nparams);
     BSL_FREE(self->params);
     memset(self, 0, sizeof(*self));
 }
 
 void BSLP_PolicyRule_AddParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *param)
 {
-    assert(BSL_SecParam_IsConsistent(param));
-    assert(BSLP_PolicyRule_IsConsistent(self));
+    ASSERT_ARG_EXPR(BSL_SecParam_IsConsistent(param));
+    ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
 
     // TODO(bvb) - BOUNDS CHECKING
-    assert(self->nparams < BSL_PP_POLICYRULE_PARAM_MAX_COUNT);
+    ASSERT_ARG_EXPR(self->nparams < BSL_PP_POLICYRULE_PARAM_MAX_COUNT);
 
     size_t offset = self->nparams * BSL_SecParam_Sizeof();
     memcpy(&((uint8_t *)self->params)[offset], param, BSL_SecParam_Sizeof());
     self->nparams++;
 
-    assert(BSLP_PolicyRule_IsConsistent(self));
+    ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
 }
 
 int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper_t *sec_oper,
@@ -374,7 +406,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
     uint64_t target_block_num = get_target_block_id(bundle, self->target_block_type);
     if (target_block_num == 0 && self->target_block_type != BSL_BLOCK_TYPE_PRIMARY)
     {
-        BSL_LOG_WARNING("Cannot find target block type = %lu", self->target_block_type);
+        BSL_LOG_WARNING("Cannot find target block type = %" PRIu64, self->target_block_type);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 

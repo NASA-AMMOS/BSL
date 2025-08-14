@@ -50,7 +50,7 @@ void TestASBEncodeDecodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, uint
 {
     BSL_Data_t asb_cbor_data = { 0 };
     BSL_Data_InitView(&asb_cbor_data, asb_cbor_bytelen, asb_cbor);
-    BSL_AbsSecBlock_t *asb = calloc(1, BSL_AbsSecBlock_Sizeof());
+    BSL_AbsSecBlock_t *asb = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
 
     const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, asb_cbor_data);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, decode_result);
@@ -77,7 +77,7 @@ void TestASBEncodeDecodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, uint
     TEST_ASSERT_EQUAL_MEMORY(asb_cbor, encoded_cbor, asb_cbor_bytelen);
 
     BSL_AbsSecBlock_Deinit(asb);
-    free(asb);
+    BSL_FREE(asb);
 }
 
 void test_AbsSecBlock_RFC9173_AppendixA_Example1(void)

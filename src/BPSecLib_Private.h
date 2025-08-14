@@ -289,6 +289,11 @@ typedef struct BSL_Data_s
         .owned = false, .ptr = NULL, .len = 0 \
     }
 
+/**
+ * Return size of library context
+ */
+size_t BSL_LibCtx_Sizeof(void);
+
 /** Initialize an empty data struct.
  *
  * @param[in,out] data The data to initialize, which must not be NULL.
@@ -911,7 +916,7 @@ size_t BSL_AbsSecBlock_Sizeof(void);
  * @param[in] sec_context_id Security Context ID
  * @param[in] source_eid Source EID in format native to host BPA.
  */
-void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self, uint64_t sec_context_id, BSL_HostEID_t source_eid);
+void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self, int64_t sec_context_id, BSL_HostEID_t source_eid);
 
 /** Checks internal consistency and sanity of this structure.
  * @param[in] self This ASB

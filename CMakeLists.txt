@@ -79,6 +79,7 @@ add_compile_options(
     $<$<COMPILE_LANGUAGE:C>:-Wextra>
     $<$<COMPILE_LANGUAGE:C>:-Wpedantic>
     $<$<COMPILE_LANGUAGE:C>:-Werror>
+    $<$<COMPILE_LANGUAGE:C>:-Wformat>
     -Wshadow -Wpointer-arith -Wstrict-prototypes
     -Wmissing-prototypes -Wredundant-decls -Wcast-align
     -Wformat=2

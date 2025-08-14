@@ -35,18 +35,18 @@
 
 int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle)
 {
-    assert(bundle != NULL);
+    ASSERT_ARG_NONNULL(bundle);
     BSL_HostEID_Deinit(&bundle->primary_block.src_node_id);
     BSL_HostEID_Deinit(&bundle->primary_block.dest_eid);
     BSL_HostEID_Deinit(&bundle->primary_block.report_to_eid);
     for (size_t i = 0; i < bundle->block_count; i++)
     {
-        free(bundle->blocks[i].btsd);
+        BSL_FREE(bundle->blocks[i].btsd);
         memset(&bundle->blocks[i], 0, sizeof(bundle->blocks[i]));
     }
     if (bundle->primary_block.cbor)
     {
-        free(bundle->primary_block.cbor);
+        BSL_FREE(bundle->primary_block.cbor);
     }
     memset(bundle, 0, sizeof(*bundle));
     return 0;
@@ -161,12 +161,12 @@ int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t 
 
     if (found_block->btsd == NULL)
     {
-        found_block->btsd     = calloc(1, bytesize);
+        found_block->btsd     = BSL_CALLOC(1, bytesize);
         found_block->btsd_len = bytesize;
     }
     else
     {
-        found_block->btsd     = realloc(found_block->btsd, bytesize);
+        found_block->btsd     = BSL_REALLOC(found_block->btsd, bytesize);
         found_block->btsd_len = bytesize;
     }
 
@@ -233,7 +233,7 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
     // Deinit and clear the target block for removal
     if (found_block->btsd != NULL)
     {
-        free(found_block->btsd);
+        BSL_FREE(found_block->btsd);
     }
     memset(found_block, 0, sizeof(*found_block));
 
@@ -241,8 +241,8 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
     {
         for (size_t dst_index = found_index; dst_index < bundle->block_count - 1; dst_index++)
         {
-            printf("Shifting block[%lu] (id=%lu, type=%lu) left", dst_index + 1, bundle->blocks[dst_index + 1].blk_num,
-                   bundle->blocks[dst_index + 1].blk_type);
+            printf("Shifting block[%zu] (id=%" PRIu64 ", type=%" PRIu64 ") left", dst_index + 1,
+                   bundle->blocks[dst_index + 1].blk_num, bundle->blocks[dst_index + 1].blk_type);
             memcpy(&bundle->blocks[dst_index], &bundle->blocks[dst_index + 1], sizeof(MockBPA_CanonicalBlock_t));
             memset(&bundle->blocks[dst_index + 1], 0, sizeof(MockBPA_CanonicalBlock_t));
         }

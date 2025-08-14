@@ -145,8 +145,8 @@ static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
     (void)loc;
     (void)bundle;
     BSL_LOG_INFO("Mock BPA: Invoking mock_bpa_process");
-    BSL_SecurityActionSet_t   *malloced_action_set   = calloc(BSL_SecurityActionSet_Sizeof(), 1);
-    BSL_SecurityResponseSet_t *malloced_response_set = calloc(BSL_SecurityResponseSet_Sizeof(), 1);
+    BSL_SecurityActionSet_t   *malloced_action_set   = BSL_CALLOC(1, BSL_SecurityActionSet_Sizeof());
+    BSL_SecurityResponseSet_t *malloced_response_set = BSL_CALLOC(1, BSL_SecurityResponseSet_Sizeof());
     int                        returncode            = -1;
 
     BSL_BundleRef_t bundle_ref = { 0 };
@@ -171,8 +171,8 @@ static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
 
 cleanup:
     BSL_SecurityActionSet_Deinit(malloced_action_set);
-    free(malloced_action_set);
-    free(malloced_response_set);
+    BSL_FREE(malloced_action_set);
+    BSL_FREE(malloced_response_set);
     return returncode;
 }
 
@@ -642,7 +642,7 @@ int main(int argc, char **argv)
     }
 
     // TODO XXX FIX BEFORE MERGE!!
-    bsl = calloc(50000, 1);
+    bsl = BSL_CALLOC(1, BSL_LibCtx_Sizeof());
     if (BSL_API_InitLib(bsl))
     {
         BSL_LOG_ERR("Failed to initialize BSL");
@@ -652,20 +652,20 @@ int main(int argc, char **argv)
     BSL_PolicyDesc_t policy_callbacks = { .deinit_fn   = BSLP_Deinit,
                                           .query_fn    = BSLP_QueryPolicy,
                                           .finalize_fn = BSLP_FinalizePolicy,
-                                          .user_data   = calloc(sizeof(BSLP_PolicyProvider_t), 1) };
-    assert(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(bsl, policy_callbacks));
+                                          .user_data   = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t)) };
+    ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(bsl, policy_callbacks));
 
     BSL_CryptoInit();
 
     BSL_SecCtxDesc_t bib_sec_desc;
     bib_sec_desc.execute  = BSLX_BIB_Execute;
     bib_sec_desc.validate = BSLX_BIB_Validate;
-    assert(0 == BSL_API_RegisterSecurityContext(bsl, 1, bib_sec_desc));
+    ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(bsl, 1, bib_sec_desc));
 
     BSL_SecCtxDesc_t bcb_sec_desc;
     bcb_sec_desc.execute  = BSLX_BCB_Execute;
     bcb_sec_desc.validate = BSLX_BCB_Validate;
-    assert(0 == BSL_API_RegisterSecurityContext(bsl, 2, bcb_sec_desc));
+    ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(bsl, 2, bcb_sec_desc));
 
     BSL_HostEID_Init(&app_eid);
     BSL_HostEID_Init(&sec_eid);
@@ -775,6 +775,6 @@ int main(int argc, char **argv)
     BSL_CryptoDeinit();
     bsl_mock_bpa_agent_deinit();
     BSL_closelog();
-    free(bsl);
+    BSL_FREE(bsl);
     return retval;
 }

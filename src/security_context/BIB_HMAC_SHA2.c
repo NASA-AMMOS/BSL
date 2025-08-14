@@ -90,10 +90,10 @@ static ssize_t map_rfc9173_sha_variant_to_crypto(size_t rfc9173_sha_variant)
     }
     else
     {
-        BSL_LOG_ERR("Unknown RFC9173 SHA variant index: %lu", rfc9173_sha_variant);
+        BSL_LOG_ERR("Unknown RFC9173 SHA variant index: %zu", rfc9173_sha_variant);
         crypto_sha_variant = BSL_ERR_PROPERTY_CHECK_FAILED;
     }
-    BSL_LOG_DEBUG("Mapping RFC9173 SHA Variant %lu -> %ld", rfc9173_sha_variant, crypto_sha_variant);
+    BSL_LOG_DEBUG("Mapping RFC9173 SHA Variant %zu -> %zd", rfc9173_sha_variant, crypto_sha_variant);
     return crypto_sha_variant;
 }
 
@@ -115,7 +115,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
         const BSL_SecParam_t *param    = BSL_SecOper_GetParamAt(sec_oper, param_index);
         uint64_t              param_id = BSL_SecParam_GetId(param);
         bool                  is_int   = BSL_SecParam_IsInt64(param);
-        uint64_t              int_val  = -1;
+        int64_t               int_val  = -1;
         if (is_int)
         {
             int_val = BSL_SecParam_GetAsUInt64(param);
@@ -154,7 +154,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
         }
         else
         {
-            BSL_LOG_WARNING("Unknown param id: %lu", param_id);
+            BSL_LOG_WARNING("Unknown param id: %" PRIu64, param_id);
             return BSL_ERR_PROPERTY_CHECK_FAILED;
         }
     }

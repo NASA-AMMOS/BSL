@@ -104,7 +104,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     BIBTestContext bib_test_context;
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_SOURCE, RFC9173_EXAMPLE_A1_KEY);
 
-    BSL_SecOutcome_t *sec_outcome = calloc(BSL_SecOutcome_Sizeof(), 1);
+    BSL_SecOutcome_t *sec_outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
     BSL_SecOutcome_Init(sec_outcome, &bib_test_context.sec_oper, 100000);
 
     /// Confirm running BIB as source executes without error
@@ -127,7 +127,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
 
     BSL_SecOutcome_Deinit(sec_outcome);
     BSL_SecOper_Deinit(&bib_test_context.sec_oper);
-    free(sec_outcome);
+    BSL_FREE(sec_outcome);
 }
 
 // /// @brief Purpose: Exercise BIB verifying a security block.
@@ -161,7 +161,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     BCBTestContext bcb_test_context;
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_SOURCE);
 
-    BSL_SecOutcome_t *outcome = calloc(BSL_SecOutcome_Sizeof(), 1);
+    BSL_SecOutcome_t *outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
     BSL_SecOutcome_Init(outcome, &bcb_test_context.sec_oper, 10000);
 
     // Execute BCB as source, confirm result is 0 (success)
@@ -191,7 +191,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
 
     BSL_SecOutcome_Deinit(outcome);
     BSL_SecOper_Deinit(&bcb_test_context.sec_oper);
-    free(outcome);
+    BSL_FREE(outcome);
 }
 
 void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
@@ -203,7 +203,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     BCBTestContext bcb_test_context;
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_ACCEPTOR);
 
-    BSL_SecOutcome_t *outcome = calloc(BSL_SecOutcome_Sizeof(), 1);
+    BSL_SecOutcome_t *outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
     BSL_SecOutcome_Init(outcome, &bcb_test_context.sec_oper, 10000);
 
     /// Confirm that BCB executes with SUCCESS
@@ -228,7 +228,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
 
     BSL_SecOutcome_Deinit(outcome);
     BSL_SecOper_Deinit(&bcb_test_context.sec_oper);
-    free(outcome);
+    BSL_FREE(outcome);
 }
 
 // /// @brief Purpose: Exercises BCB as a security acceptor
