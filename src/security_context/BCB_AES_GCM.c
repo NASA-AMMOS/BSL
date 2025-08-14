@@ -199,8 +199,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
-    uint64_t errcode = BSL_SUCCESS;
-
     uint8_t aes_extra[BSLX_MAX_AES_PAD];
     memset(aes_extra, 0, sizeof(aes_extra));
     BSL_Data_t remainder_data = { 0 };

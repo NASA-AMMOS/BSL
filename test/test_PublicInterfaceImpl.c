@@ -598,7 +598,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             query_result = BSL_API_QuerySecurity(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                  policy_loc);
             TEST_ASSERT_EQUAL(0, query_result);
-            TEST_ASSERT_EQUAL(expected_act_ct, action_set.sec_operations_count);
+            TEST_ASSERT_EQUAL(expected_act_ct, BSL_SecurityActionSet_CountOperations(&action_set));
 
             apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set,
                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
@@ -637,7 +637,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             query_result = BSL_API_QuerySecurity(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                  policy_loc);
             TEST_ASSERT_EQUAL(0, query_result);
-            TEST_ASSERT_EQUAL(expected_act_ct, action_set.sec_operations_count);
+            TEST_ASSERT_EQUAL(expected_act_ct, BSL_SecurityActionSet_CountOperations(&action_set));
 
             apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set,
                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
@@ -681,7 +681,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             query_result = BSL_API_QuerySecurity(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                  policy_loc);
             TEST_ASSERT_EQUAL(0, query_result);
-            TEST_ASSERT_EQUAL(expected_act_ct, action_set.sec_operations_count);
+            TEST_ASSERT_EQUAL(expected_act_ct, BSL_SecurityActionSet_CountOperations(&action_set));
 
             apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set,
                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
@@ -773,7 +773,7 @@ void test_BSL_32(void)
     query_result = BSL_API_QuerySecurity(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                          BSL_POLICYLOCATION_CLOUT);
     TEST_ASSERT_EQUAL(0, query_result);
-    TEST_ASSERT_EQUAL(2, action_set.sec_operations_count);
+    TEST_ASSERT_EQUAL(2, BSL_SecurityActionSet_CountOperations(&action_set));
 
     apply_result =
         BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);

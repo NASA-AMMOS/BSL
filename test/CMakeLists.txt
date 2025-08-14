@@ -48,37 +48,53 @@ endif(BUILD_UNITTEST OR BUILD_FUZZING)
 
 set(LIB_ORDERED bsl_front bsl_dynamic bsl_mock_bpa bsl_test_utils)
 
-# add_unity_test(SOURCE test_MockBPA_EID.c)
-# target_link_libraries(test_MockBPA_EID PUBLIC ${LIB_ORDERED})
+if(BUILD_UNITTEST)
+  set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
+  find_package(unitytools)
 
-# add_unity_test(SOURCE test_MockBPA_Codecs.c)
-# target_link_libraries(test_MockBPA_Codecs PUBLIC ${LIB_ORDERED})
+#   add_unity_test(SOURCE test_MockBPA_text_util.c)
+#   target_link_libraries(test_MockBPA_text_util PUBLIC bsl_mock_bpa)
+  
+#   add_unity_test(SOURCE test_MockBPA_EID.c)
+#   target_link_libraries(test_MockBPA_EID PUBLIC ${LIB_ORDERED})
+  
+#   add_unity_test(SOURCE test_MockBPA_Codecs.c)
+#   target_link_libraries(test_MockBPA_Codecs PUBLIC ${LIB_ORDERED})
+  
+#   add_unity_test(SOURCE test_mock_bpa_ctr.c)
+#   target_link_libraries(test_mock_bpa_ctr PUBLIC ${LIB_ORDERED})
+  
+#   add_unity_test(SOURCE test_CryptoInterface.c)
+#   target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
+  
+#   add_unity_test(SOURCE test_SecurityTypes.c)
+#   target_link_libraries(test_SecurityTypes PUBLIC ${LIB_ORDERED})
+  
+#   # Exercises the portion of the backend that interacts with the policy providers
+#   add_unity_test(SOURCE test_BackendSecurityContext.c)
+#   target_link_libraries(test_BackendSecurityContext PUBLIC ${LIB_ORDERED})
+  
+#   # Exercises the portion of the backend that interacts with the security contexts
+#   add_unity_test(SOURCE test_BackendPolicyProvider.c)
+#   target_link_libraries(test_BackendPolicyProvider PUBLIC ${LIB_ORDERED})
+  
+#   # Specific unit tests for ONLY the "Sample Policy Provider" module (Offered as example provider)
+#   add_unity_test(SOURCE test_SamplePolicyProvider.c)
+#   target_link_libraries(test_SamplePolicyProvider PUBLIC ${LIB_ORDERED})
+  
+#   # Specific tests for ONLY the "Default Security Context" module (Implementation of RFC9173)
+#   add_unity_test(SOURCE test_DefaultSecurityContext.c)
+#   target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
+  
+  # Exercises the MockBPA using the publicly exposed BSL front end
+  add_unity_test(SOURCE test_PublicInterfaceImpl.c)
+  target_link_libraries(test_PublicInterfaceImpl PUBLIC ${LIB_ORDERED})
+endif(BUILD_UNITTEST)
 
-# add_unity_test(SOURCE test_mock_bpa_ctr.c)
-# target_link_libraries(test_mock_bpa_ctr PUBLIC ${LIB_ORDERED})
+if(BUILD_FUZZING)
+  add_fuzz_test(SOURCE fuzz_mock_bpa_eid_cbor.cpp)
+  target_link_libraries(fuzz_mock_bpa_eid_cbor PUBLIC ${LIB_ORDERED})
 
-# add_unity_test(SOURCE test_CryptoInterface.c)
-# target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
-
-# add_unity_test(SOURCE test_SecurityTypes.c)
-# target_link_libraries(test_SecurityTypes PUBLIC ${LIB_ORDERED})
-
-# # Exercises the portion of the backend that interacts with the policy providers
-# add_unity_test(SOURCE test_BackendSecurityContext.c)
-# target_link_libraries(test_BackendSecurityContext PUBLIC ${LIB_ORDERED})
-
-# # Exercises the portion of the backend that interacts with the security contexts
-# add_unity_test(SOURCE test_BackendPolicyProvider.c)
-# target_link_libraries(test_BackendPolicyProvider PUBLIC ${LIB_ORDERED})
-
-# # Specific unit tests for ONLY the "Sample Policy Provider" module (Offered as example provider)
-# add_unity_test(SOURCE test_SamplePolicyProvider.c)
-# target_link_libraries(test_SamplePolicyProvider PUBLIC ${LIB_ORDERED})
-
-# # Specific tests for ONLY the "Default Security Context" module (Implementation of RFC9173)
-# add_unity_test(SOURCE test_DefaultSecurityContext.c)
-# target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
-
-# Exercises the MockBPA using the publicly exposed BSL front end
-add_unity_test(SOURCE test_PublicInterfaceImpl.c)
-target_link_libraries(test_PublicInterfaceImpl PUBLIC ${LIB_ORDERED})
+  add_fuzz_test(SOURCE fuzz_mock_bpa_bpv7_cbor.cpp)
+  target_link_libraries(fuzz_mock_bpa_bpv7_cbor PUBLIC ${LIB_ORDERED})
+endif(BUILD_FUZZING)
