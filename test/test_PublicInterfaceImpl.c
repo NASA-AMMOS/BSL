@@ -54,7 +54,7 @@ void setUp(void)
 
     /// Register the policy provider with some rules
     BSL_PolicyDesc_t policy_desc = { 0 };
-    policy_desc.user_data        = BSL_CALLOC(sizeof(BSLP_PolicyProvider_t), 1);
+    policy_desc.user_data        = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
     policy_desc.query_fn         = BSLP_QueryPolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
     policy_desc.finalize_fn      = BSLP_FinalizePolicy;

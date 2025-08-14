@@ -119,7 +119,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
 
     BSL_SecurityActionSet_Init(output_action_set);
 
-    BSL_SecurityAction_t *action = BSL_CALLOC(BSL_SecurityAction_Sizeof(), 1);
+    BSL_SecurityAction_t *action = BSL_CALLOC(1, BSL_SecurityAction_Sizeof());
     BSLP_SecOperPtrList_t secops;
     BSLP_SecOperPtrList_init(secops);
 
@@ -144,7 +144,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
             continue;
         }
 
-        BSL_SecOper_t *sec_oper = BSL_CALLOC(BSL_SecOper_Sizeof(), 1);
+        BSL_SecOper_t *sec_oper = BSL_CALLOC(1, BSL_SecOper_Sizeof());
         BSL_SecOper_Init(sec_oper);
         if (BSLP_PolicyRule_EvaluateAsSecOper(rule, sec_oper, bundle, location) < 0)
         {
@@ -239,11 +239,42 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
 int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
                         const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
 {
+    for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(output_action_set); i++)
+    {
+        const BSL_SecurityAction_t *action = BSL_SecurityActionSet_GetActionAtIndex(output_action_set, i);
+        for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(action); j++)
+        {
+            const BSL_SecOper_t *secop = BSL_SecurityAction_GetSecOperAtIndex(action, j);
+            switch (BSL_SecOper_GetConclusion(secop))
+            {
+                case BSL_SECOP_CONCLUSION_PENDING:
+                {
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %"PRIu64" at index %"PRIu64": STILL PENDING", i, j);
+                    break;
+                }
+                case BSL_SECOP_CONCLUSION_SUCCESS:
+                {
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %"PRIu64" at index %"PRIu64": SUCCESS", i, j);
+                    break;
+                }
+                case BSL_SECOP_CONCLUSION_INVALID:
+                {
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %"PRIu64" at index %"PRIu64": INVALID", i, j);
+                    break;
+                }
+                case BSL_SECOP_CONCLUSION_FAILURE:
+                {
+                    BSL_LOG_INFO("PP FINALIZE: Sec Oper from action %"PRIu64" at index %"PRIu64": FAIL", i, j);
+                    break;
+                }
+            }
+        }
+    }
     (void)user_data;
     (void)output_action_set;
     (void)response_output;
     (void)bundle;
-    return 0;
+    return BSL_SUCCESS;
 }
 
 void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self)
@@ -326,7 +357,7 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
     // TODO(bvb) assert Role in expected range
     self->failure_action_code = failure_action_code;
     self->role                = role;
-    self->params              = BSL_CALLOC(BSL_SecParam_Sizeof() * BSL_PP_POLICYRULE_PARAM_MAX_COUNT, 1);
+    self->params              = BSL_CALLOC(BSL_PP_POLICYRULE_PARAM_MAX_COUNT, BSL_SecParam_Sizeof());
     self->nparams             = 0;
     ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
     return BSL_SUCCESS;

@@ -90,9 +90,9 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
 
 BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context)
 {
-    BSL_SecurityActionSet_t *action_set = BSL_CALLOC(sizeof(BSL_SecurityActionSet_t), 1);
+    BSL_SecurityActionSet_t *action_set = BSL_CALLOC(1, sizeof(BSL_SecurityActionSet_t));
     BSL_SecurityActionSet_Init(action_set);
-    BSL_SecurityAction_t *act = BSL_CALLOC(sizeof(BSL_SecurityAction_t), 1);
+    BSL_SecurityAction_t *act = BSL_CALLOC(1, sizeof(BSL_SecurityAction_t));
     BSL_SecurityAction_Init(act);
     BSL_SecurityAction_AppendSecOper(act, &bib_context->sec_oper);
     // ensure consistent context state
@@ -105,7 +105,7 @@ BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bi
 
 BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void)
 {
-    return BSL_CALLOC(BSL_SecurityResponseSet_Sizeof(), 1);
+    return BSL_CALLOC(1, BSL_SecurityResponseSet_Sizeof());
 }
 
 int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len)

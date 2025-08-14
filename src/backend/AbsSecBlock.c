@@ -39,7 +39,7 @@ bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self)
 {
     // NOLINTBEGIN
     CHK_AS_BOOL(self != NULL);
-    CHK_AS_BOOL(self->sec_context_id > 0);
+    //CHK_AS_BOOL(self->sec_context_id > 0);
     CHK_AS_BOOL(self->source_eid.handle != NULL);
     CHK_AS_BOOL(BSLB_SecParamList_size(self->params) < 10000);
 
@@ -55,7 +55,7 @@ bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self)
 void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
 {
     BSL_StaticString_t str;
-    BSL_LOG_INFO("ASB  context id: %" PRIu64, self->sec_context_id);
+    BSL_LOG_INFO("ASB  context id: %" PRId64, self->sec_context_id);
     for (size_t index = 0; index < uint64_list_size(self->targets); index++)
     {
         BSL_LOG_INFO("ASB  target[%zu]: %" PRIu64, index, *uint64_list_cget(self->targets, index));
@@ -86,7 +86,7 @@ void BSL_AbsSecBlock_InitEmpty(BSL_AbsSecBlock_t *self)
     uint64_list_init(self->targets);
 }
 
-void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self, uint64_t sec_context_id, BSL_HostEID_t source_eid)
+void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self, int64_t sec_context_id, BSL_HostEID_t source_eid)
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
@@ -249,7 +249,7 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, UsefulBuf bu
     }
 
     {
-        QCBOREncode_AddUInt64(&encoder, self->sec_context_id);
+        QCBOREncode_AddInt64(&encoder, self->sec_context_id);
     }
 
     {
@@ -347,7 +347,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, BSL_Data_t encoded_c
         QCBORDecode_GetUInt64(&asbdec, &tgt_num);
         BSL_LOG_DEBUG("got tgt %" PRIu64 "", tgt_num);
         uint64_list_push_back(self->targets, tgt_num);
-        // FIXME
+        // TODO better error handling
         ASSERT_PROPERTY(quit++ < 20);
     }
     QCBORDecode_ExitArray(&asbdec);

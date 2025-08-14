@@ -29,13 +29,13 @@
 
 void mock_bpa_policy_params_init(mock_bpa_policy_params_t *params, int policy_num)
 {
-    params->param_integ_scope_flag = BSL_CALLOC(BSL_SecParam_Sizeof(), 1);
-    params->param_sha_variant      = BSL_CALLOC(BSL_SecParam_Sizeof(), 1);
-    params->param_aad_scope_flag   = BSL_CALLOC(BSL_SecParam_Sizeof(), 1);
-    params->param_init_vector      = BSL_CALLOC(BSL_SecParam_Sizeof(), 1);
-    params->param_aes_variant      = BSL_CALLOC(BSL_SecParam_Sizeof(), 1);
-    params->param_test_key         = BSL_CALLOC(BSL_SecParam_Sizeof(), 1);
-    params->param_use_wrapped_key  = BSL_CALLOC(BSL_SecParam_Sizeof(), 1);
+    params->param_integ_scope_flag = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_sha_variant      = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_aad_scope_flag   = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_init_vector      = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_aes_variant      = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_test_key         = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_use_wrapped_key  = BSL_CALLOC(1, BSL_SecParam_Sizeof());
 
     params->active = true;
 
