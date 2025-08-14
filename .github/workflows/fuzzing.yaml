@@ -87,7 +87,8 @@ jobs:
         run: >
           ./build.sh prep
           -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
-          -DBUILD_UNITTEST=OFF -DBUILD_FUZZING=ON -DBUILD_COVERAGE=ON
+          -DBUILD_MOCK_BPA=OFF -DBUILD_UNITTEST=OFF
+          -DBUILD_FUZZING=ON -DBUILD_COVERAGE=ON
       - name: Build
         run: ./build.sh
       - name: Install
