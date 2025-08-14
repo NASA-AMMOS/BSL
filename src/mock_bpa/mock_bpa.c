@@ -642,7 +642,7 @@ int main(int argc, char **argv)
     }
 
     // TODO XXX FIX BEFORE MERGE!!
-    bsl = BSL_CALLOC(1, 50000);
+    bsl = BSL_CALLOC(1, BSL_LibCtx_Sizeof());
     if (BSL_API_InitLib(bsl))
     {
         BSL_LOG_ERR("Failed to initialize BSL");

@@ -289,6 +289,11 @@ typedef struct BSL_Data_s
         .owned = false, .ptr = NULL, .len = 0 \
     }
 
+/**
+ * Return size of library context
+ */
+size_t BSL_LibCtx_Sizeof(void);
+
 /** Initialize an empty data struct.
  *
  * @param[in,out] data The data to initialize, which must not be NULL.
