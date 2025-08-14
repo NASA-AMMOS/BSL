@@ -184,6 +184,32 @@ void BSL_openlog(void);
  */
 void BSL_closelog(void);
 
+/** Interpret a text name as a severity level.
+ *
+ * @param[out] severity The associated severity level.
+ * @param[in] name The text name, which is case insensitive.
+ * @return Zero if successful.
+ */
+int BSL_LogGetSeverity(int *severity, const char *name);
+
+/** Set the least severity enabled for logging.
+ * Other events will be dropped by the logging facility.
+ * This function is multi-thread safe.
+ *
+ * @param severity The severity from a subset of the POSIX syslog values.
+ * @sa BSL_log_is_enabled_for()
+ */
+void BSL_LogSetLeastSeverity(int severity);
+
+/** Determine if a particular severity is being logged.
+ * This function is multi-thread safe.
+ *
+ * @param severity The severity from a subset of the POSIX syslog values.
+ * @return True if the severity level will be logged.
+ * @sa BSL_log_set_least_severity()
+ */
+bool BSL_LogIsEnabledFor(int severity);
+
 /** Log an event.
  *
  * @param severity The severity from a subset of the POSIX syslog values.

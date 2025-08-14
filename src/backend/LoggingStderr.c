@@ -35,6 +35,7 @@
 
 #include <m-buffer.h>
 #include <m-string.h>
+#include <m-atomic.h>
 
 /// Number of events to buffer to I/O thread
 #define BSL_LOG_QUEUE_SIZE 100
@@ -82,13 +83,36 @@ static void BSL_LogEvent_event_deinit(BSL_LogEvent_event_t *obj)
     string_clear(obj->context);
 }
 
+static void BSL_LogEvent_event_init_set(BSL_LogEvent_event_t *obj, const BSL_LogEvent_event_t *src)
+{
+    obj->thread    = src->thread;
+    obj->timestamp = src->timestamp;
+    obj->severity  = src->severity;
+    string_init_set(obj->context, src->message);
+    string_init_set(obj->message, src->message);
+}
+
+static void BSL_LogEvent_event_set(BSL_LogEvent_event_t *obj, const BSL_LogEvent_event_t *src)
+{
+    obj->thread    = src->thread;
+    obj->timestamp = src->timestamp;
+    obj->severity  = src->severity;
+    string_set(obj->context, src->message);
+    string_set(obj->message, src->message);
+}
+
 /// OPLIST for BSL_LogEvent_event_t
-#define M_OPL_BSL_LogEvent_event_t() (INIT(API_2(BSL_LogEvent_event_init)), CLEAR(API_2(BSL_LogEvent_event_deinit)))
+#define M_OPL_BSL_LogEvent_event_t()                                                     \
+    (INIT(API_2(BSL_LogEvent_event_init)), INIT_SET(API_6(BSL_LogEvent_event_init_set)), \
+     SET(API_6(BSL_LogEvent_event_set)), CLEAR(API_2(BSL_LogEvent_event_deinit)))
 
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 M_BUFFER_DEF(BSL_LogEvent_queue, BSL_LogEvent_event_t, BSL_LOG_QUEUE_SIZE, M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING)
 /// @endcond
+
+/// Shared least severity
+static atomic_int least_severity = LOG_DEBUG;
 
 /// Shared safe queue
 static BSL_LogEvent_queue_t event_queue;
@@ -159,14 +183,12 @@ static void *work_sink(void *arg _U_)
     while (true)
     {
         BSL_LogEvent_event_t event;
+        BSL_LogEvent_event_init(&event);
         BSL_LogEvent_queue_pop(&event, event_queue);
-        if (string_empty_p(event.message))
+        if (!string_empty_p(event.message))
         {
-            BSL_LogEvent_event_deinit(&event);
-            break;
+            write_log(&event);
         }
-
-        write_log(&event);
         BSL_LogEvent_event_deinit(&event);
     }
     return NULL;
@@ -198,6 +220,7 @@ void BSL_closelog(void)
     BSL_LogEvent_event_t event;
     BSL_LogEvent_event_init(&event);
     BSL_LogEvent_queue_push(event_queue, event);
+    BSL_LogEvent_event_deinit(&event);
 
     int res = pthread_join(thr_sink, NULL);
     if (res)
@@ -216,10 +239,54 @@ void BSL_closelog(void)
     }
 }
 
+int BSL_LogGetSeverity(int *severity, const char *name)
+{
+    CHKERR1(severity)
+    CHKERR1(name)
+
+    for (size_t ix = 0; ix < sizeof(sev_names) / sizeof(const char *); ++ix)
+    {
+        if (!sev_names[ix])
+        {
+            continue;
+        }
+        if (strcasecmp(sev_names[ix], name) == 0)
+        {
+            *severity = (int)ix;
+            return 0;
+        }
+    }
+    return 2;
+}
+
+void BSL_LogSetLeastSeverity(int severity)
+{
+    if ((severity < 0) || (severity > LOG_DEBUG))
+    {
+        return;
+    }
+
+    atomic_store(&least_severity, severity);
+}
+
+bool BSL_LogIsEnabledFor(int severity)
+{
+    if ((severity < 0) || (severity > LOG_DEBUG))
+    {
+        return false;
+    }
+
+    const int limit = atomic_load(&least_severity);
+    // lower severity has higher define value
+    const bool enabled = (limit >= severity);
+
+    return enabled;
+}
+
 // NOLINTBEGIN
 void BSL_LogEvent(int severity, const char *filename, int lineno, const char *funcname, const char *format, ...)
 {
-    if ((severity < 0) || (severity > LOG_DEBUG))
+    if (!BSL_LogIsEnabledFor(severity))
     {
         return;
     }
@@ -251,28 +318,25 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
         va_end(val);
     }
 
-    if (string_empty_p(event.message))
+    // ignore empty messages
+    if (!string_empty_p(event.message))
     {
-        // ignore empty messages
-        BSL_LogEvent_event_deinit(&event);
-        return;
-    }
+        if (atomic_load(&thr_valid))
+        {
+            BSL_LogEvent_queue_push(event_queue, event);
+        }
+        else
+        {
+            BSL_LogEvent_event_t manual;
+            BSL_LogEvent_event_init(&manual);
+            manual.severity = LOG_CRIT;
+            string_set_str(manual.message, "BSL_LogEvent() called before BSL_openlog()");
+            write_log(&manual);
+            BSL_LogEvent_event_deinit(&manual);
 
-    if (atomic_load(&thr_valid))
-    {
-        BSL_LogEvent_queue_push(event_queue, event);
+            write_log(&event);
+        }
     }
-    else
-    {
-        BSL_LogEvent_event_t manual;
-        BSL_LogEvent_event_init(&manual);
-        manual.severity = LOG_CRIT;
-        string_set_str(manual.message, "BSL_LogEvent() called before BSL_openlog()");
-        write_log(&manual);
-        BSL_LogEvent_event_deinit(&manual);
-
-        write_log(&event);
-        BSL_LogEvent_event_deinit(&event);
-    }
+    BSL_LogEvent_event_deinit(&event);
 }
 // NOLINTEND
