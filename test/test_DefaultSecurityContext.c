@@ -105,7 +105,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_SOURCE, RFC9173_EXAMPLE_A1_KEY);
 
     BSL_SecOutcome_t *sec_outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(sec_outcome, &bib_test_context.sec_oper, 100000);
+    BSL_SecOutcome_Init(sec_outcome, &bib_test_context.sec_oper, BSL_SecOutcome_Sizeof());
 
     /// Confirm running BIB as source executes without error
     int bib_exec_status =

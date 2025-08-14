@@ -348,7 +348,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, BSL_Data_t encoded_c
         BSL_LOG_DEBUG("got tgt %" PRIu64 "", tgt_num);
         uint64_list_push_back(self->targets, tgt_num);
         // TODO better error handling
-        ASSERT_PROPERTY(quit++ < 20);
+        assert(quit++ < 20);
     }
     QCBORDecode_ExitArray(&asbdec);
 
