@@ -60,7 +60,7 @@ struct BSL_AbsSecBlock_s
     uint64_list_t targets;
 
     /// @brief Security context id
-    uint64_t sec_context_id;
+    int64_t sec_context_id;
 
     /// @brief Source EID native representation, BSL host must take care of encoding/decoding.
     BSL_HostEID_t source_eid;

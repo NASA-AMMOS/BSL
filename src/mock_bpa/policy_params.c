@@ -29,13 +29,13 @@
 
 void mock_bpa_policy_params_init(mock_bpa_policy_params_t *params, int policy_num)
 {
-    params->param_integ_scope_flag = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_sha_variant      = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_aad_scope_flag   = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_init_vector      = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_aes_variant      = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_test_key         = calloc(BSL_SecParam_Sizeof(), 1);
-    params->param_use_wrapped_key  = calloc(BSL_SecParam_Sizeof(), 1);
+    params->param_integ_scope_flag = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_sha_variant      = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_aad_scope_flag   = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_init_vector      = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_aes_variant      = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_test_key         = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_use_wrapped_key  = BSL_CALLOC(1, BSL_SecParam_Sizeof());
 
     params->active = true;
 
@@ -44,13 +44,13 @@ void mock_bpa_policy_params_init(mock_bpa_policy_params_t *params, int policy_nu
 
 void mock_bpa_policy_params_deinit(mock_bpa_policy_params_t *params, int policy_num)
 {
-    free(params->param_integ_scope_flag);
-    free(params->param_sha_variant);
-    free(params->param_aad_scope_flag);
-    free(params->param_init_vector);
-    free(params->param_aes_variant);
-    free(params->param_test_key);
-    free(params->param_use_wrapped_key);
+    BSL_FREE(params->param_integ_scope_flag);
+    BSL_FREE(params->param_sha_variant);
+    BSL_FREE(params->param_aad_scope_flag);
+    BSL_FREE(params->param_init_vector);
+    BSL_FREE(params->param_aes_variant);
+    BSL_FREE(params->param_test_key);
+    BSL_FREE(params->param_use_wrapped_key);
 
     params->active = false;
 

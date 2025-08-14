@@ -86,7 +86,7 @@ int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_ke
 {
     const EVP_CIPHER *cipher = (aes_variant == BSL_CRYPTO_AES_128) ? EVP_aes_128_wrap() : EVP_aes_256_wrap();
     EVP_CIPHER_CTX   *ctx    = EVP_CIPHER_CTX_new();
-    assert(ctx != NULL);
+    ASSERT_ARG_NONNULL(ctx);
 
     // Give the actual key extra margin on each side.
     uint8_t  keybuf[128];
@@ -94,11 +94,14 @@ int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_ke
     memset(keybuf, 0, sizeof(keybuf));
 
     size_t keylen = 0;
-    assert(BSLB_Crypto_GetRegistryKey(key_id, (const uint8_t **)&key, &keylen) == 0);
-    assert(keylen > 0);
+    if (BSL_SUCCESS != BSLB_Crypto_GetRegistryKey(key_id, (const uint8_t **)&key, &keylen))
+    {
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    ASSERT_POSTCONDITION(keylen > 0);
 
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, key, NULL);
-    assert(dec_result == 1);
+    ASSERT_POSTCONDITION(dec_result == 1);
     EVP_CIPHER_CTX_set_padding(ctx, 0);
 
     int unwrapped_key_len = 16;
@@ -145,8 +148,8 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *kek_
     // TODO(bvb) replace w error checking
     int got_crypto_key = BSLB_Crypto_GetRegistryKey(kek_id, (const uint8_t **)&key, &keylen);
 
-    assert(got_crypto_key == 0);
-    assert(keylen > 0);
+    ASSERT_POSTCONDITION(got_crypto_key == 0);
+    ASSERT_POSTCONDITION(keylen > 0);
 
     int enc_result = EVP_EncryptInit_ex(ctx, cipher, NULL, key, NULL);
     if (!enc_result)
@@ -224,7 +227,7 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const char *keyid, BSL_CryptoCiphe
 
 int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t data_len)
 {
-    assert(data != NULL);
+    ASSERT_ARG_NONNULL(data);
     int res = EVP_DigestSignUpdate(hmac_ctx->libhandle, data, data_len);
     CHK_PROPERTY(res == 1);
 
@@ -267,10 +270,10 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
                     const void *init_vec, int iv_len, BSL_Data_t content_enc_key)
 {
-    assert(cipher_ctx != NULL);
-    assert(init_vec != NULL);
-    assert(content_enc_key.ptr != NULL);
-    assert(content_enc_key.len > 0);
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(init_vec);
+    ASSERT_ARG_NONNULL(content_enc_key.ptr);
+    ASSERT_ARG_EXPR(content_enc_key.len > 0);
 
     cipher_ctx->libhandle   = EVP_CIPHER_CTX_new();
     cipher_ctx->enc         = enc;
@@ -316,7 +319,7 @@ int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len)
 
 int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, BSL_Data_t plaintext, BSL_Data_t ciphertext)
 {
-    assert(cipher_ctx != NULL);
+    ASSERT_ARG_NONNULL(cipher_ctx);
     int cipherlen = (int)ciphertext.len;
     if (EVP_CipherUpdate(cipher_ctx->libhandle, ciphertext.ptr, &cipherlen, plaintext.ptr, (int)plaintext.len) != 1)
     {
@@ -368,7 +371,7 @@ int BSL_Cipher_FinalizeData(BSL_Cipher_t *cipher_ctx, BSL_Data_t *extra)
     uint8_t buf[EVP_CIPHER_CTX_block_size(cipher_ctx->libhandle)];
     CHK_PRECONDITION(extra->len >= sizeof(buf));
 
-    BSL_LOG_DEBUG("extra: ptr=0x%p len=%lu", extra->ptr, extra->len);
+    BSL_LOG_DEBUG("extra: ptr=0x%p len=%zu", extra->ptr, extra->len);
 
     int len = 0;
     int res = EVP_CipherFinal_ex(cipher_ctx->libhandle, buf, &len);
@@ -377,7 +380,7 @@ int BSL_Cipher_FinalizeData(BSL_Cipher_t *cipher_ctx, BSL_Data_t *extra)
         BSL_LOG_ERR("%s", ERR_error_string(ERR_get_error(), NULL));
     }
     CHK_PROPERTY(res == 1);
-    BSL_LOG_DEBUG("extra->len = %lu", extra->len);
+    BSL_LOG_DEBUG("extra->len = %zu", extra->len);
     memset(extra->ptr, 0, extra->len);
     BSL_LOG_INFO("Completed EVP_CipherFinal_ex");
     if (len > 0)

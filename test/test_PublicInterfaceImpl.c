@@ -54,7 +54,7 @@ void setUp(void)
 
     /// Register the policy provider with some rules
     BSL_PolicyDesc_t policy_desc = { 0 };
-    policy_desc.user_data        = calloc(sizeof(BSLP_PolicyProvider_t), 1);
+    policy_desc.user_data        = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
     policy_desc.query_fn         = BSLP_QueryPolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
     policy_desc.finalize_fn      = BSLP_FinalizePolicy;
@@ -214,7 +214,9 @@ void test_API_RemoveFailedBlock(void)
 
     TEST_ASSERT_EQUAL(0, apply_result);
     // We purposely made a failing BIB block.
-    TEST_ASSERT_EQUAL(1, response_set.failure_count);
+    TEST_ASSERT_EQUAL(
+        BSL_SecurityAction_GetSecOperAtIndex(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0), 0)->conclusion,
+        BSL_SECOP_CONCLUSION_FAILURE);
 
     // Now, make sure there are no blocks! The security operation was stripped AND the target block that
     // could not be verified was stripped.

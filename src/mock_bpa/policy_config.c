@@ -32,7 +32,7 @@ static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *
 {
     BSL_HostEIDPattern_t pat;
     BSL_HostEIDPattern_Init(&pat);
-    assert(0 == BSL_HostEIDPattern_DecodeFromText(&pat, text));
+    ASSERT_PROPERTY(0 == BSL_HostEIDPattern_DecodeFromText(&pat, text));
     return pat;
 }
 
@@ -455,8 +455,8 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
             BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: PAYLOAD", policy_bits);
             break;
         case 2:
-            bundle_block_enum = BSL_BLOCK_TYPE_BIB;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: BIB", policy_bits);
+            bundle_block_enum = 192;
+            BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: PRIVATE (192)", policy_bits);
             break;
         case 3:
             bundle_block_enum = BSL_BLOCK_TYPE_BUNDLE_AGE;
