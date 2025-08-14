@@ -21,6 +21,8 @@
  */
 #include <mock_bpa/MockBPA.h>
 #include "bsl_test_utils.h"
+#include <m-bstring.h>
+#include <m-string.h>
 #include <cinttypes>
 
 #define EXPECT_EQ(expect, got)         \
@@ -47,55 +49,32 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     int retval = 0;
 
-    BSL_HostEID_t eid;
-    BSL_HostEID_Init(&eid);
+    m_bstring_t buf;
+    m_bstring_init(buf);
+    if (size)
     {
-        QCBORDecodeContext decoder;
-        QCBORDecode_Init(&decoder, (UsefulBufC) { data, size }, QCBOR_DECODE_MODE_NORMAL);
-        int res_eid  = BSL_HostEID_DecodeFromCBOR(&eid, &decoder);
-        int res_cbor = QCBORDecode_Finish(&decoder);
-        if (res_eid || (res_cbor != QCBOR_SUCCESS))
-        {
-            retval = -1;
-        }
+        m_bstring_push_back_bytes(buf, size, data);
+    }
+    m_bstring_push_back(buf, '\0');
+
+    size_t      buf_size = m_bstring_size(buf);
+    const char *buf_ptr  = (const char *)m_bstring_view(buf, 0, buf_size);
+
+    if (!m_str1ng_utf8_valid_str_p(buf_ptr))
+    {
+        m_bstring_clear(buf);
+        return -1;
     }
 
-    BSL_Data_t out_data;
-    BSL_Data_Init(&out_data);
-    if (!retval)
+    BSL_HostEIDPattern_t pat;
+    BSL_HostEIDPattern_Init(&pat);
+    int res_dec = BSL_HostEIDPattern_DecodeFromText(&pat, buf_ptr);
+    if (res_dec)
     {
-        QCBOREncodeContext encoder;
-        size_t             needlen;
-
-        QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
-        EXPECT_EQ(0, BSL_HostEID_EncodeToCBOR(&eid, &encoder));
-        assert(QCBOR_SUCCESS == QCBOREncode_FinishGetSize(&encoder, &needlen));
-
-        EXPECT_EQ(0, BSL_Data_Resize(&out_data, needlen));
-        QCBOREncode_Init(&encoder, (UsefulBuf) { out_data.ptr, out_data.len });
-        EXPECT_EQ(0, bsl_mock_encode_eid(&encoder, &eid));
-
-        UsefulBufC out;
-        EXPECT_EQ(QCBOR_SUCCESS, QCBOREncode_Finish(&encoder, &out));
+        retval = -1;
     }
 
-    if (!retval)
-    {
-        // output may be a subset
-        if (size != out_data.len)
-        {
-            // CBOR tags on input will not be carried
-            // BSL_LOG_ERR("Bad re-encoding size, expect %" PRIu64 " got %" PRIu64 ", for scheme %" PRIu64, size,
-            // out_data.len, ((bsl_mock_eid_t*)eid.handle)->scheme);
-            retval = -1;
-        }
-        if (0 != memcmp(data, out_data.ptr, out_data.len))
-        {
-            retval = -1;
-        }
-    }
-
-    BSL_Data_Deinit(&out_data);
-    BSL_HostEID_Deinit(&eid);
+    BSL_HostEIDPattern_Deinit(&pat);
+    m_bstring_clear(buf);
     return retval;
 }

@@ -159,11 +159,11 @@ int BSL_Host_GetSecSrcEID(BSL_HostEID_t *eid)
     return HostDescriptorTable.get_host_eid_fn(HostDescriptorTable.user_data, eid);
 }
 
-int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, void *user_data)
+int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, void *encoder)
 {
     CHK_ARG_NONNULL(eid);
-    CHK_ARG_NONNULL(user_data);
-    return HostDescriptorTable.eid_to_cbor(user_data, eid);
+    CHK_ARG_NONNULL(encoder);
+    return HostDescriptorTable.eid_to_cbor(encoder, eid);
 }
 
 int BSL_HostEID_DecodeFromCBOR(BSL_HostEID_t *eid, void *decoder)
@@ -181,8 +181,7 @@ int BSL_HostEID_DecodeFromText(BSL_HostEID_t *eid, const char *text)
     CHK_ARG_NONNULL(eid);
     CHK_ARG_NONNULL(text);
 
-    // Basic sanity check, may need to remove.
-    CHK_PRECONDITION(strlen(text) < 100);
+    CHK_PRECONDITION(eid->handle != NULL);
     CHK_PRECONDITION(HostDescriptorTable.eid_from_text != NULL);
 
     return HostDescriptorTable.eid_from_text(eid, text, HostDescriptorTable.user_data);
@@ -205,7 +204,6 @@ int BSL_HostEIDPattern_DecodeFromText(BSL_HostEIDPattern_t *pat, const char *tex
 {
     CHK_ARG_NONNULL(pat);
     CHK_ARG_NONNULL(text);
-    CHK_ARG_EXPR(strlen(text) < 100);
     CHK_PRECONDITION(HostDescriptorTable.eidpat_from_text != NULL);
     return HostDescriptorTable.eidpat_from_text(pat, text, HostDescriptorTable.user_data);
 }
