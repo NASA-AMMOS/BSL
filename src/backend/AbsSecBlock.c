@@ -344,7 +344,8 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, BSL_Data_t encoded_c
     QCBORError tgt_array_err = QCBORDecode_GetError(&asbdec);
     if (QCBOR_SUCCESS != tgt_array_err)
     {
-        BSL_LOG_ERR("ASB decoding: Failed to enter target array ; error %" PRIu32 " (%s)", tgt_array_err, qcbor_err_to_str(tgt_array_err));
+        BSL_LOG_ERR("ASB decoding: Failed to enter target array ; error %" PRIu32 " (%s)", tgt_array_err,
+                    qcbor_err_to_str(tgt_array_err));
         return BSL_ERR_DECODING;
     }
 
