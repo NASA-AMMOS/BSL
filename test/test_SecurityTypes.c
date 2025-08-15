@@ -52,7 +52,7 @@ void TestASBEncodeDecodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, uint
     BSL_Data_InitView(&asb_cbor_data, asb_cbor_bytelen, asb_cbor);
     BSL_AbsSecBlock_t *asb = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
 
-    const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, asb_cbor_data);
+    const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, &asb_cbor_data);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, decode_result);
 
     // Confirm its in a valid state
@@ -157,7 +157,7 @@ void test_AbsSecBlock_RFC9173_AppendixA_Example4_BIB_Ciphertext_failure(void)
     BSL_Data_t asb_cbor_data;
     BSL_Data_InitView(&asb_cbor_data, sizeof(asb_cbor_encrypted), asb_cbor_encrypted);
     BSL_AbsSecBlock_t *asb           = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
-    const int          decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, asb_cbor_data);
+    const int          decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, &asb_cbor_data);
     TEST_ASSERT_EQUAL(decode_result, BSL_ERR_DECODING);
     BSL_Data_Deinit(&asb_cbor_data);
     BSL_FREE(asb);

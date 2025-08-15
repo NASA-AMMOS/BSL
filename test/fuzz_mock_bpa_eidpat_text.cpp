@@ -28,7 +28,7 @@
 #define EXPECT_EQ(expect, got)         \
     if ((expect) != (got))             \
     {                                  \
-        BSL_LOG_ERR("EXPECT failure"); \
+        BSL_LOG_CRIT("EXPECT failure"); \
     }
 
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv);

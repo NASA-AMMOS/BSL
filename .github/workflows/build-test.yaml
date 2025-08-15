@@ -164,7 +164,8 @@ jobs:
         run: ./build.sh install
       - name: Test Prep
         run: |
-          sudo apt-get update && sudo apt-get install -y \
+          sudo apt-get update
+          sudo apt-get install -y \
               python3 python3-pip
           pip3 install --upgrade pip
           pip3 install -r mock-bpa-test/requirements.txt
