@@ -338,17 +338,23 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, BSL_Data_t encoded_c
     QCBORDecode_Init(&asbdec, useful_encoded_cbor, QCBOR_DECODE_MODE_NORMAL);
     QCBORItem asbitem;
 
-    size_t quit = 0;
     QCBORDecode_EnterArray(&asbdec, NULL);
+
+    // Make sure actually entered an array - otherwise, the following while loop could be infinite 
+    QCBORError tgt_array_err = QCBORDecode_GetError(&asbdec);
+    if (QCBOR_SUCCESS != tgt_array_err)
+    {
+        BSL_LOG_INFO("Failed to enter target array");
+        BSL_LOG_WARNING("ASB decoding error %" PRIu32 " (%s)", tgt_array_err, qcbor_err_to_str(tgt_array_err));
+        return BSL_ERR_DECODING;
+    }
+
     while (QCBOR_SUCCESS == QCBORDecode_PeekNext(&asbdec, &asbitem))
     {
-        // WARNING - This loop is liable to enter infinite loops.
         uint64_t tgt_num = 0;
         QCBORDecode_GetUInt64(&asbdec, &tgt_num);
         BSL_LOG_DEBUG("got tgt %" PRIu64 "", tgt_num);
         uint64_list_push_back(self->targets, tgt_num);
-        // TODO better error handling
-        assert(quit++ < 20);
     }
     QCBORDecode_ExitArray(&asbdec);
 
