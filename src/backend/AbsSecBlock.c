@@ -420,8 +420,9 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *en
             {
                 UsefulBufC target_buf;
                 QCBORDecode_GetByteString(&asbdec, &target_buf);
-                BSL_LOG_DEBUG("ASB: Parsed Param[%" PRIu64 "] (ByteStr) = %zu bytes at %p", item_id, target_buf.len, target_buf.ptr);
-                BSL_Data_t     data_view;
+                BSL_LOG_DEBUG("ASB: Parsed Param[%" PRIu64 "] (ByteStr) = %zu bytes at %p", item_id, target_buf.len,
+                              target_buf.ptr);
+                BSL_Data_t data_view;
                 BSL_Data_InitView(&data_view, target_buf.len, (BSL_DataPtr_t)target_buf.ptr);
                 BSL_SecParam_t param;
                 BSL_SecParam_InitBytestr(&param, item_id, data_view);

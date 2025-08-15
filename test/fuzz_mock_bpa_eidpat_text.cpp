@@ -25,9 +25,9 @@
 #include <m-string.h>
 #include <cinttypes>
 
-#define EXPECT_EQ(expect, got)         \
-    if ((expect) != (got))             \
-    {                                  \
+#define EXPECT_EQ(expect, got)          \
+    if ((expect) != (got))              \
+    {                                   \
         BSL_LOG_CRIT("EXPECT failure"); \
     }
 
