@@ -145,7 +145,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     BSL_AbsSecBlock_InitEmpty(&abs_sec_block);
     BSL_Data_t btsd_data = { 0 };
     BSL_Data_InitView(&btsd_data, sec_blk.btsd_len, sec_blk.btsd);
-    if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, btsd_data) != BSL_SUCCESS)
+    if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_data) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
@@ -257,7 +257,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
     BSL_AbsSecBlock_InitEmpty(&abs_sec_block);
     BSL_Data_t btsd_data = { 0 };
     BSL_Data_InitView(&btsd_data, sec_blk.btsd_len, sec_blk.btsd);
-    if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, btsd_data) != BSL_SUCCESS)
+    if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_data) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
@@ -399,7 +399,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     {
         BSL_Data_t btsd_data = { 0 };
         BSL_Data_InitView(&btsd_data, sec_blk.btsd_len, sec_blk.btsd);
-        if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, btsd_data) != BSL_SUCCESS)
+        if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_data) != BSL_SUCCESS)
         {
             BSL_LOG_ERR("Failed to parse ASB CBOR");
             return BSL_ERR_DECODING;

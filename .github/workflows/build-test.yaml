@@ -129,7 +129,9 @@ jobs:
           sudo apt-get install -y \
               cmake ninja-build ruby gcc g++ ccache patch \
               libssl-dev libjansson-dev \
-              valgrind gcovr xmlstarlet
+              valgrind xmlstarlet \
+              python3 python3-pip
+          pip3 install gcovr
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
@@ -140,7 +142,8 @@ jobs:
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch \
               openssl-devel jansson-devel \
-              valgrind xmlstarlet python3-pip
+              valgrind xmlstarlet \
+              python3 python3-pip
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -164,8 +167,6 @@ jobs:
         run: ./build.sh install
       - name: Test Prep
         run: |
-          sudo apt-get update && sudo apt-get install -y \
-              python3 python3-pip
           pip3 install --upgrade pip
           pip3 install -r mock-bpa-test/requirements.txt
       - name: Test

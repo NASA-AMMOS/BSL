@@ -150,7 +150,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                 BSL_AbsSecBlock_t *abs_sec_block = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
                 BSL_Data_t         block_btsd    = { 0 };
                 BSL_Data_InitView(&block_btsd, block.btsd_len, block.btsd);
-                if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, block_btsd) == 0)
+                if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, &block_btsd) == 0)
                 {
                     if (BSL_AbsSecBlock_ContainsTarget(abs_sec_block, sec_oper->target_block_num))
                     {

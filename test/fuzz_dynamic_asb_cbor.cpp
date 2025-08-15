@@ -19,10 +19,8 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include <mock_bpa/MockBPA.h>
+#include <BPSecLib_Private.h>
 #include "bsl_test_utils.h"
-#include <m-bstring.h>
-#include <m-string.h>
 #include <cinttypes>
 
 #define EXPECT_EQ(expect, got)          \
@@ -37,6 +35,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 extern "C" int LLVMFuzzerInitialize(int *argc _U_, char ***argv _U_)
 {
     BSL_openlog();
+    BSL_LogSetLeastSeverity(LOG_CRIT);
     bsl_mock_bpa_agent_init();
     return 0;
 }
@@ -49,32 +48,48 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     int retval = 0;
 
-    m_bstring_t buf;
-    m_bstring_init(buf);
-    if (size)
-    {
-        m_bstring_push_back_bytes(buf, size, data);
-    }
-    m_bstring_push_back(buf, '\0');
+    BSL_AbsSecBlock_t *asb = (BSL_AbsSecBlock_t *)BSL_MALLOC(BSL_AbsSecBlock_Sizeof());
+    BSL_AbsSecBlock_InitEmpty(asb);
 
-    size_t      buf_size = m_bstring_size(buf);
-    const char *buf_ptr  = (const char *)m_bstring_view(buf, 0, buf_size);
-
-    if (!m_str1ng_utf8_valid_str_p(buf_ptr))
     {
-        m_bstring_clear(buf);
-        return -1;
+        BSL_Data_t buf;
+        BSL_Data_InitView(&buf, size, (BSL_DataPtr_t)data);
+        int res = BSL_AbsSecBlock_DecodeFromCBOR(asb, &buf);
+        BSL_Data_Deinit(&buf);
+        if (res)
+        {
+            retval = -1;
+        }
     }
 
-    BSL_HostEIDPattern_t pat;
-    BSL_HostEIDPattern_Init(&pat);
-    int res_dec = BSL_HostEIDPattern_DecodeFromText(&pat, buf_ptr);
-    if (res_dec)
+    BSL_Data_t out_data;
+    BSL_Data_Init(&out_data);
+    if (!retval)
     {
-        retval = -1;
+        ssize_t needlen = BSL_AbsSecBlock_EncodeToCBOR(asb, SizeCalculateUsefulBuf);
+        assert(needlen > 0);
+
+        EXPECT_EQ(0, BSL_Data_Resize(&out_data, (size_t)needlen));
+        ssize_t usedlen = BSL_AbsSecBlock_EncodeToCBOR(asb, (UsefulBuf) { out_data.ptr, out_data.len });
+        EXPECT_EQ(needlen, usedlen);
     }
 
-    BSL_HostEIDPattern_Deinit(&pat);
-    m_bstring_clear(buf);
+    if (!retval)
+    {
+        // output may be a subset
+        // CBOR tags on input will not be carried
+        if (size >= out_data.len)
+        {
+            if (0 != memcmp(data, out_data.ptr, out_data.len))
+            {
+                retval = -1;
+            }
+        }
+    }
+
+    BSL_Data_Deinit(&out_data);
+    BSL_AbsSecBlock_Deinit(asb);
+    BSL_FREE(asb);
+
     return retval;
 }

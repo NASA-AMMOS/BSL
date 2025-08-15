@@ -1034,7 +1034,7 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, UsefulBuf bu
  * @param[in] encoded_cbor A buffer containing a CBOR string representing the ASB
  * @return Negative on error
  */
-int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, BSL_Data_t encoded_cbor);
+int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *encoded_cbor);
 
 /** @brief Represents the output following execution of a security operation.
  */
