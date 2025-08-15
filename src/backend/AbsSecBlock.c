@@ -340,7 +340,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, BSL_Data_t encoded_c
 
     QCBORDecode_EnterArray(&asbdec, NULL);
 
-    // Make sure actually entered an array - otherwise, the following while loop could be infinite 
+    // Make sure actually entered an array - otherwise, the following while loop could be infinite
     QCBORError tgt_array_err = QCBORDecode_GetError(&asbdec);
     if (QCBOR_SUCCESS != tgt_array_err)
     {
