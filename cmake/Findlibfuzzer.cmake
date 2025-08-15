@@ -9,6 +9,11 @@ if(NOT CMAKE_C_COMPILER_ID MATCHES "Clang"
   message(FATAL "Can only fuzz with clang compiler")
 endif()
 
+# Options for all compilation units
+add_compile_options(
+  -fsanitize=fuzzer-no-link
+)
+
 function(add_fuzz_test)
   set(options OPTIONAL )
   set(oneValueArgs TARGET MAIN_NAME RUNS_COUNT)

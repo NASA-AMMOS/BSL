@@ -89,6 +89,10 @@ void bsl_eidpat_numcomp_set_form(bsl_eidpat_numcomp_t *obj, bsl_eidpat_numcomp_f
 
 static int one_uint64_from_text(uint64_t *val, const char *curs, const char **endptr)
 {
+    if (isspace(*curs))
+    {
+        return 2;
+    }
     char *pend;
     *val = strtoul(curs, &pend, 10);
     if (pend == curs)

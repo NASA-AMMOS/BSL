@@ -89,45 +89,70 @@ int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data
     CHKERR1(eid);
     CHKERR1(text);
 
-    // clean up if necessary
-    // bsl_mock_eid_deinit(eid->handle);
-
-    const char *curs = text;
-    const char *end  = curs + strlen(text);
-    char       *pend = strchr(text, ':');
-    if (pend == NULL)
+    // any spaces are invalid URI
+    // agrees with isspace()
+    if (strcspn(text, " \f\n\r\t\v") < strlen(text))
     {
         return 2;
     }
-    size_t scheme_len = pend - text;
 
-    if (strncasecmp(text, "ipn", scheme_len) == 0)
+    const char *curs = text;
+    char       *pend = strchr(text, ':');
+    if ((pend == NULL) || (pend == curs))
+    {
+        return 4;
+    }
+
+    if (strncasecmp(text, "ipn", 3) == 0)
     {
         curs = pend + 1;
 
-        uint64_t p1, p2, p3;
-        int      len1, len2;
-        // use scanf to handle two or three component case
-        int res = sscanf(curs, "%" PRIu64 ".%" PRIu64 "%n.%" PRIu64 "%n", &p1, &p2, &len1, &p3, &len2);
+        int      count = 0;
+        uint64_t p1, p2, p3 = 0;
+        // scanf can overflow on integer without error, don't use it
+
+        p1 = strtoul(curs, &pend, 10);
+        ++count;
+        curs = pend;
+        if (*curs != '.')
+        {
+            return 2;
+        }
+        ++curs;
+
+        p2 = strtoul(curs, &pend, 10);
+        ++count;
+        curs = pend;
+        if (*curs == '.')
+        {
+            ++curs;
+
+            // third element present
+            p3 = strtoul(curs, &pend, 10);
+            ++count;
+            curs = pend;
+        }
+        if (*curs != '\0')
+        {
+            return 5;
+        }
 
         bsl_eid_ipn_ssp_t ipn_ssp;
-        if (res == 2)
+        if (count == 2)
         {
             // two components
             ipn_ssp.ncomp    = 2;
             ipn_ssp.auth_num = p1 >> 32;
             ipn_ssp.node_num = p1 & 0xFFFFFFFF;
             ipn_ssp.svc_num  = p2;
-            curs += len1;
         }
-        else if (res == 3)
+        else if (count == 3)
         {
             // three components
             ipn_ssp.ncomp    = 3;
             ipn_ssp.auth_num = p1;
             ipn_ssp.node_num = p2;
             ipn_ssp.svc_num  = p3;
-            curs += len2;
 
             if ((ipn_ssp.auth_num > UINT32_MAX) || (ipn_ssp.node_num > UINT32_MAX))
             {
@@ -138,12 +163,6 @@ int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data
         else
         {
             return 4;
-        }
-
-        if (curs < end)
-        {
-            // extra text
-            return 5;
         }
 
         bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
