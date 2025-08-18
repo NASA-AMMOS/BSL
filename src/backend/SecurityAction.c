@@ -38,7 +38,7 @@ void BSL_SecurityAction_Init(BSL_SecurityAction_t *self)
 
     BSL_SecOperList_init(self->sec_op_list);
     self->err_ct = 0;
-    self->pp_id = 0;
+    self->pp_id  = 0;
 }
 
 void BSL_SecurityAction_InitSet(BSL_SecurityAction_t *self, const BSL_SecurityAction_t *src)
@@ -47,7 +47,7 @@ void BSL_SecurityAction_InitSet(BSL_SecurityAction_t *self, const BSL_SecurityAc
 
     BSL_SecOperList_init_set(self->sec_op_list, src->sec_op_list);
     self->err_ct = src->err_ct;
-    self->pp_id = src->pp_id;
+    self->pp_id  = src->pp_id;
 }
 
 void BSL_SecurityAction_Deinit(BSL_SecurityAction_t *self)
