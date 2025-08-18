@@ -53,7 +53,8 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
     CHK_ARG_NONNULL(lib);
 
     BSL_PolicyDict_it_t policy_reg_it;
-    for (BSL_PolicyDict_it(policy_reg_it, lib->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it); BSL_PolicyDict_next(policy_reg_it))
+    for (BSL_PolicyDict_it(policy_reg_it, lib->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it);
+         BSL_PolicyDict_next(policy_reg_it))
     {
         BSL_PolicyDesc_t policy = (BSL_PolicyDict_ref(policy_reg_it))->value;
         if (policy.deinit_fn != NULL)

@@ -37,7 +37,8 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
     CHK_ARG_NONNULL(bundle);
 
     BSL_PolicyDict_it_t policy_reg_it;
-    for (BSL_PolicyDict_it(policy_reg_it, bsl->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it); BSL_PolicyDict_next(policy_reg_it))
+    for (BSL_PolicyDict_it(policy_reg_it, bsl->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it);
+         BSL_PolicyDict_next(policy_reg_it))
     {
         BSL_PolicyDesc_t policy = (BSL_PolicyDict_ref(policy_reg_it))->value;
         CHK_PRECONDITION(policy.query_fn != NULL);
@@ -60,7 +61,8 @@ int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_Securi
     CHK_ARG_NONNULL(bundle);
 
     BSL_PolicyDict_it_t policy_reg_it;
-    for (BSL_PolicyDict_it(policy_reg_it, bsl->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it); BSL_PolicyDict_next(policy_reg_it))
+    for (BSL_PolicyDict_it(policy_reg_it, bsl->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it);
+         BSL_PolicyDict_next(policy_reg_it))
     {
         BSL_PolicyDesc_t policy = (BSL_PolicyDict_ref(policy_reg_it))->value;
         CHK_PRECONDITION(policy.finalize_fn != NULL);
