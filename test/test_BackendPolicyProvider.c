@@ -55,7 +55,7 @@ void setUp(void)
     policy_desc.query_fn         = BSLP_QueryPolicy;
     policy_desc.finalize_fn      = BSLP_FinalizePolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
-    assert(BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, policy_desc) == 0);
+    assert(BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, BSL_SAMPLE_PP_ID, policy_desc) == 0);
 
     mock_bpa_ctr_init(&LocalTestCtx.mock_bpa_ctr);
 }
@@ -73,7 +73,7 @@ void tearDown(void)
  */
 void test_PolicyProvider_InspectEmptyRuleset(void)
 {
-    BSLP_PolicyProvider_t *policy = LocalTestCtx.bsl.policy_registry.user_data;
+    BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
 
     strncpy(policy->name, "Unit Test Policy Provider!", sizeof(policy->name));
     TEST_ASSERT_EQUAL(0,
@@ -99,7 +99,7 @@ void test_PolicyProvider_InspectEmptyRuleset(void)
 void test_PolicyProvider_InspectSingleBIBRuleset(void)
 {
     {
-        BSLP_PolicyProvider_t *policy = LocalTestCtx.bsl.policy_registry.user_data;
+        BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
         strncpy(policy->name, "Unit Test Policy Provider!", sizeof(policy->name));
 
         BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
@@ -130,7 +130,7 @@ void test_PolicyProvider_InspectSingleBIBRuleset(void)
  */
 void test_PolicyProvider_Inspect_RFC9173_BIB(void)
 {
-    BSLP_PolicyProvider_t *policy = LocalTestCtx.bsl.policy_registry.user_data;
+    BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
     strncpy(policy->name, "Unit Test Policy Provider!", sizeof(policy->name));
 
     BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];

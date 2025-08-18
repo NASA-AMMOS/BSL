@@ -62,9 +62,9 @@ void setUp(void)
     policy_desc.query_fn         = BSLP_QueryPolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
     policy_desc.finalize_fn      = BSLP_FinalizePolicy;
-    TEST_ASSERT_EQUAL(0, BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, policy_desc));
+    TEST_ASSERT_EQUAL(0, BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, BSL_SAMPLE_PP_ID, policy_desc));
 
-    BSLP_PolicyProvider_t *policy = LocalTestCtx.bsl.policy_registry.user_data;
+    BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
     strncpy(policy->name, "Unit Test Policy Provider!", sizeof(policy->name));
 
     BSL_SecParam_t param_scope_flag = { 0 };

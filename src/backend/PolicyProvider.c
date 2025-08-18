@@ -31,22 +31,44 @@
 int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set,
                                       const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location)
 {
-    // TODO - this should just check the policy_registry to see what is there,.
-    // and if it's present then just call the callbacks and pass through the arguments.
     CHK_ARG_NONNULL(bsl);
+    CHK_ARG_NONNULL(bsl->policy_reg);
     CHK_ARG_NONNULL(output_action_set);
     CHK_ARG_NONNULL(bundle);
-    CHK_PRECONDITION(bsl->policy_registry.query_fn != NULL);
-    return bsl->policy_registry.query_fn(bsl->policy_registry.user_data, output_action_set, bundle, location);
+
+    BSL_PolicyDict_it_t policy_reg_it;
+    for (BSL_PolicyDict_it(policy_reg_it, bsl->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it); BSL_PolicyDict_next(policy_reg_it))
+    {
+        BSL_PolicyDesc_t policy = (BSL_PolicyDict_ref(policy_reg_it))->value;
+        CHK_PRECONDITION(policy.query_fn != NULL);
+        if (BSL_SUCCESS != policy.query_fn(policy.user_data, output_action_set, bundle, location))
+        {
+            return BSL_ERR_POLICY_FINAL;
+        }
+    }
+
+    return BSL_SUCCESS;
 }
 
 int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions,
                                        const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
 {
     CHK_ARG_NONNULL(bsl);
+    CHK_ARG_NONNULL(bsl->policy_reg);
     CHK_ARG_NONNULL(policy_actions);
     CHK_ARG_NONNULL(response_output);
     CHK_ARG_NONNULL(bundle);
-    CHK_PRECONDITION(bsl->policy_registry.finalize_fn != NULL);
-    return bsl->policy_registry.finalize_fn(bsl->policy_registry.user_data, policy_actions, bundle, response_output);
+
+    BSL_PolicyDict_it_t policy_reg_it;
+    for (BSL_PolicyDict_it(policy_reg_it, bsl->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it); BSL_PolicyDict_next(policy_reg_it))
+    {
+        BSL_PolicyDesc_t policy = (BSL_PolicyDict_ref(policy_reg_it))->value;
+        CHK_PRECONDITION(policy.finalize_fn != NULL);
+        if (BSL_SUCCESS != policy.finalize_fn(policy.user_data, policy_actions, bundle, response_output))
+        {
+            return BSL_ERR_POLICY_FINAL;
+        }
+    }
+
+    return BSL_SUCCESS;
 }

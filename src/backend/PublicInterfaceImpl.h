@@ -41,6 +41,7 @@ extern "C" {
  */
 /// @cond Doxygen_Suppress
 DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
+DICT_DEF2(BSL_PolicyDict, uint64_t, M_BASIC_OPLIST, BSL_PolicyDesc_t, M_POD_OPLIST)
 /// @endcond
 // NOLINTEND
 
@@ -48,7 +49,7 @@ DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLI
  */
 struct BSL_LibCtx_s
 {
-    BSL_PolicyDesc_t policy_registry;
+    BSL_PolicyDict_t policy_reg;
     BSL_SecCtxDict_t sc_reg;
 };
 
