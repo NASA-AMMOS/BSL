@@ -61,9 +61,6 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
         {
             // Call the policy deinit function
             (policy->deinit_fn)(policy->user_data);
-
-            // TODO - We should not assume this is dynamically allocated.
-            BSL_FREE(policy->user_data);
         }
         else
         {

@@ -41,7 +41,6 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
          BSL_PolicyDict_next(policy_reg_it))
     {
         const BSL_PolicyDesc_t *policy = BSL_PolicyDict_cref(policy_reg_it)->value_ptr;
-        CHK_PRECONDITION(policy->query_fn != NULL);
         if (BSL_SUCCESS != policy->query_fn(policy->user_data, output_action_set, bundle, location))
         {
             return BSL_ERR_POLICY_FINAL;
@@ -65,7 +64,6 @@ int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_Securi
          BSL_PolicyDict_next(policy_reg_it))
     {
         const BSL_PolicyDesc_t *policy = BSL_PolicyDict_cref(policy_reg_it)->value_ptr;
-        CHK_PRECONDITION(policy->finalize_fn != NULL);
         if (BSL_SUCCESS != policy->finalize_fn(policy->user_data, policy_actions, bundle, response_output))
         {
             return BSL_ERR_POLICY_FINAL;
