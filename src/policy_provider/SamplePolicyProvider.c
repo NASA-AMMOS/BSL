@@ -117,8 +117,6 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
-    BSL_SecurityActionSet_Init(output_action_set);
-
     BSL_SecurityAction_t *action = BSL_CALLOC(1, BSL_SecurityAction_Sizeof());
     BSLP_SecOperPtrList_t secops;
     BSLP_SecOperPtrList_init(secops);

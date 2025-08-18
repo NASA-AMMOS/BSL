@@ -1184,6 +1184,10 @@ void BSL_SecurityAction_IncrError(BSL_SecurityAction_t *self);
  */
 size_t BSL_SecurityAction_CountErrors(const BSL_SecurityAction_t *self);
 
+/** @brief Returns Policy Provider ID of @param[in] self action
+ */
+uint64_t BSL_SecurityAction_GetPPID(const BSL_SecurityAction_t *self);
+
 /// @brief Returns size of the struct, helpful for dynamic allocation.
 /// @return Size of the struct
 size_t BSL_SecurityActionSet_Sizeof(void);
