@@ -56,14 +56,14 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
     for (BSL_PolicyDict_it(policy_reg_it, lib->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it);
          BSL_PolicyDict_next(policy_reg_it))
     {
-        BSL_PolicyDesc_t policy = (BSL_PolicyDict_ref(policy_reg_it))->value;
-        if (policy.deinit_fn != NULL)
+        const BSL_PolicyDesc_t *policy = BSL_PolicyDict_cref(policy_reg_it)->value_ptr;
+        if (policy->deinit_fn != NULL)
         {
             // Call the policy deinit function
-            (policy.deinit_fn)(policy.user_data);
+            (policy->deinit_fn)(policy->user_data);
 
             // TODO - We should not assume this is dynamically allocated.
-            BSL_FREE(policy.user_data);
+            BSL_FREE(policy->user_data);
         }
         else
         {
