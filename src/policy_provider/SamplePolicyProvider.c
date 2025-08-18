@@ -301,6 +301,7 @@ void BSLP_Deinit(void *user_data)
         BSLP_PolicyPredicate_Deinit(&self->predicates[index]);
     }
     memset(self, 0, sizeof(*self));
+    BSL_FREE(user_data);
 }
 
 void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
