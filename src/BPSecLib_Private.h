@@ -1273,21 +1273,21 @@ size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *s
  * @todo Doxygen
  * 
  */
-void BSL_TlmHandler_ResetCounters(void);
+size_t BSL_TlmHandler_ResetCounters(const BSL_LibCtx_t *bsl);
 
 /** /// @brief Callback interface to retrieve count through the telemetry handler
  *
  * @todo Doxygen
  * 
  */
-size_t BSL_TlmHandler_RetrieveCounter(BSL_TelemetryType_e tlm_type);
+size_t BSL_TlmHandler_RetrieveCounter(const BSL_LibCtx_t *bsl, BSL_TelemetryType_e tlm_type);
 
 /** /// @brief Callback interface to increment count through the telemetry handler
  *
  * @todo Doxygen 
  * 
  */
-void BSL_TlmHandler_IncrementCounter(BSL_TelemetryType_e tlm_type);
+size_t BSL_TlmHandler_IncrementCounter(const BSL_LibCtx_t *bsl, BSL_TelemetryType_e tlm_type);
 
 /** Signature for Telemetry Handler to reset counters
  *

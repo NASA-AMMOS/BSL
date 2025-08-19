@@ -293,6 +293,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (BSL_SUCCESS != BSL_Data_InitBuffer(&scratch_buffer, 4096 * 4))
     {
         BSL_LOG_ERR("Failed to allocate scratch space");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_INSUFFICIENT_SPACE;
     }
 
@@ -310,6 +311,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     {
         BSL_LOG_ERR("Failed to get bundle data");
         BSL_Data_Deinit(&scratch_buffer);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
@@ -321,6 +323,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         {
             BSL_LOG_ERR("Failed to get block data");
             BSL_Data_Deinit(&scratch_buffer);
+            BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
@@ -340,6 +343,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     {
         BSL_LOG_ERR("GenIPPT returned %d", ippt_len);
         BSL_Data_Deinit(&scratch_buffer);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
     ASSERT_POSTCONDITION(ippt_len > 0);
@@ -350,6 +354,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     {
         BSL_LOG_ERR("Failed to generate BIB HMAC");
         BSL_Data_Deinit(&scratch_buffer);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
@@ -371,5 +376,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
 
     BSL_Data_Deinit(&scratch_buffer);
+    BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_SUCCESS);
+
     return BSL_SUCCESS;
 }

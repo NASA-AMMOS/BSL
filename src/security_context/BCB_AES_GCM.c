@@ -591,6 +591,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &target_block))
     {
         BSL_LOG_ERR("Failed to get block data");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
@@ -602,6 +603,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     {
         BSL_LOG_ERR("Failed to initialize BCB context");
         BSLX_BCB_Deinit(&bcb_context);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
@@ -610,6 +612,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     {
         BSL_LOG_ERR("Failed to get BCB parameters");
         BSLX_BCB_Deinit(&bcb_context);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
@@ -618,6 +621,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     {
         BSL_LOG_ERR("Failed to compute AAD");
         BSLX_BCB_Deinit(&bcb_context);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
@@ -629,6 +633,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     {
         BSL_LOG_ERR("Failed to perform cryptographic action");
         BSLX_BCB_Deinit(&bcb_context);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
@@ -641,6 +646,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         {
             BSL_LOG_ERR("Failed to replace target BTSD");
             BSLX_BCB_Deinit(&bcb_context);
+            BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
 
@@ -650,6 +656,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         {
             BSL_LOG_ERR("Failed to get block data");
             BSLX_BCB_Deinit(&bcb_context);
+            BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         ASSERT_PROPERTY(target_block.btsd_len == bcb_context.btsd_replacement.len);
@@ -669,6 +676,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
             BSL_LOG_ERR("Failed to append BCB auth tag");
             BSL_FREE(auth_tag);
             BSLX_BCB_Deinit(&bcb_context);
+            BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
@@ -687,6 +695,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
             BSL_LOG_ERR("Failed to append BCB source IV");
             BSL_FREE(iv_param);
             BSLX_BCB_Deinit(&bcb_context);
+            BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
@@ -703,6 +712,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         BSL_LOG_ERR("Failed to append BCB AES param");
         BSL_FREE(aes_param);
         BSLX_BCB_Deinit(&bcb_context);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
     else
@@ -722,6 +732,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
             BSL_LOG_ERR("Failed to append BCB wrapped key param");
             BSL_FREE(aes_wrapped_key_param);
             BSLX_BCB_Deinit(&bcb_context);
+            BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
@@ -738,6 +749,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         BSL_LOG_ERR("Failed to append BCB scope flag param");
         BSL_FREE(scope_flag_param);
         BSLX_BCB_Deinit(&bcb_context);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
     else
@@ -748,5 +760,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     BSL_FREE(scope_flag_param);
 
     BSLX_BCB_Deinit(&bcb_context);
+    BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_SUCCESS);
+    
     return BSL_SUCCESS;
 }

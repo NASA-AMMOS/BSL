@@ -170,6 +170,7 @@ static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
     BSL_LOG_INFO("Mock BPA: mock_bpa_process SUCCESS (code=0)");
 
 cleanup:
+    BSL_LOG_INFO("\nTELEMETRY ---- SUCESSES COUNT: %lu ---- FAIL COUNT: %lu", BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_SUCCESS), BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_FAIL));
     BSL_SecurityActionSet_Deinit(malloced_action_set);
     BSL_FREE(malloced_action_set);
     BSL_FREE(malloced_response_set);
