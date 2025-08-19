@@ -186,6 +186,32 @@ void BSL_openlog(void);
  */
 void BSL_closelog(void);
 
+/** Interpret a text name as a severity level.
+ *
+ * @param[out] severity The associated severity level.
+ * @param[in] name The text name, which is case insensitive.
+ * @return Zero if successful.
+ */
+int BSL_LogGetSeverity(int *severity, const char *name);
+
+/** Set the least severity enabled for logging.
+ * Other events will be dropped by the logging facility.
+ * This function is multi-thread safe.
+ *
+ * @param severity The severity from a subset of the POSIX syslog values.
+ * @sa BSL_log_is_enabled_for()
+ */
+void BSL_LogSetLeastSeverity(int severity);
+
+/** Determine if a particular severity is being logged.
+ * This function is multi-thread safe.
+ *
+ * @param severity The severity from a subset of the POSIX syslog values.
+ * @return True if the severity level will be logged.
+ * @sa BSL_log_set_least_severity()
+ */
+bool BSL_LogIsEnabledFor(int severity);
+
 /** Log an event.
  *
  * @param severity The severity from a subset of the POSIX syslog values.
@@ -288,6 +314,11 @@ typedef struct BSL_Data_s
     {                                         \
         .owned = false, .ptr = NULL, .len = 0 \
     }
+
+/**
+ * Return size of library context
+ */
+size_t BSL_LibCtx_Sizeof(void);
 
 /** Initialize an empty data struct.
  *
@@ -911,7 +942,7 @@ size_t BSL_AbsSecBlock_Sizeof(void);
  * @param[in] sec_context_id Security Context ID
  * @param[in] source_eid Source EID in format native to host BPA.
  */
-void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self, uint64_t sec_context_id, BSL_HostEID_t source_eid);
+void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self, int64_t sec_context_id, BSL_HostEID_t source_eid);
 
 /** Checks internal consistency and sanity of this structure.
  * @param[in] self This ASB
@@ -1003,7 +1034,7 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, UsefulBuf bu
  * @param[in] encoded_cbor A buffer containing a CBOR string representing the ASB
  * @return Negative on error
  */
-int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, BSL_Data_t encoded_cbor);
+int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *encoded_cbor);
 
 /** @brief Represents the output following execution of a security operation.
  */

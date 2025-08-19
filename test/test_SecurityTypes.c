@@ -50,9 +50,9 @@ void TestASBEncodeDecodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, uint
 {
     BSL_Data_t asb_cbor_data = { 0 };
     BSL_Data_InitView(&asb_cbor_data, asb_cbor_bytelen, asb_cbor);
-    BSL_AbsSecBlock_t *asb = calloc(1, BSL_AbsSecBlock_Sizeof());
+    BSL_AbsSecBlock_t *asb = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
 
-    const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, asb_cbor_data);
+    const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, &asb_cbor_data);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, decode_result);
 
     // Confirm its in a valid state
@@ -77,7 +77,7 @@ void TestASBEncodeDecodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, uint
     TEST_ASSERT_EQUAL_MEMORY(asb_cbor, encoded_cbor, asb_cbor_bytelen);
 
     BSL_AbsSecBlock_Deinit(asb);
-    free(asb);
+    BSL_FREE(asb);
 }
 
 void test_AbsSecBlock_RFC9173_AppendixA_Example1(void)
@@ -143,4 +143,22 @@ void test_AbsSecBlock_RFC9173_AppendixA_Example4_BCB(void)
                            0x9e, 0xcc, 0x60, 0x99, 0x1d, 0xd7, 0x8b, 0x29, 0x81, 0x82, 0x01, 0x50, 0xd2, 0xc5, 0x1c,
                            0xb2, 0x48, 0x17, 0x92, 0xda, 0xe8, 0xb2, 0x1d, 0x84, 0x8c, 0xed, 0xe9, 0x9b };
     TestASBEncodeDecodeClosure(asb_cbor, sizeof(asb_cbor), 3);
+}
+
+void test_AbsSecBlock_RFC9173_AppendixA_Example4_BIB_Ciphertext_failure(void)
+{
+    uint8_t asb_cbor_encrypted[] = {
+        0x43, 0x8e, 0xd6, 0x20, 0x8e, 0xb1, 0xc1, 0xff, 0xb9, 0x4d, 0x95, 0x21, 0x75, 0x16, 0x7d, 0xf0, 0x90, 0x29,
+        0x02, 0x06, 0x4a, 0x29, 0x83, 0x91, 0x0c, 0x4f, 0xb2, 0x34, 0x07, 0x90, 0xbf, 0x42, 0x0a, 0x7d, 0x19, 0x21,
+        0xd5, 0xbf, 0x7c, 0x47, 0x21, 0xe0, 0x2a, 0xb8, 0x7a, 0x93, 0xab, 0x1e, 0x0b, 0x75, 0xcf, 0x62, 0xe4, 0x94,
+        0x87, 0x27, 0xc8, 0xb5, 0xda, 0xe4, 0x6e, 0xd2, 0xaf, 0x05, 0x43, 0x9b, 0x88, 0x02, 0x91, 0x91
+    };
+
+    BSL_Data_t asb_cbor_data;
+    BSL_Data_InitView(&asb_cbor_data, sizeof(asb_cbor_encrypted), asb_cbor_encrypted);
+    BSL_AbsSecBlock_t *asb           = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
+    const int          decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, &asb_cbor_data);
+    TEST_ASSERT_EQUAL(decode_result, BSL_ERR_DECODING);
+    BSL_Data_Deinit(&asb_cbor_data);
+    BSL_FREE(asb);
 }

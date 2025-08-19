@@ -66,6 +66,7 @@ TEST_CASE("other:hi")
 TEST_CASE("dtn://hi")
 TEST_CASE("ipn:")
 TEST_CASE("ipn:a.b")
+TEST_CASE("ipn: 10.   10")
 TEST_CASE("ipn:0.0 ")           // space after
 TEST_CASE("ipn:4294967296.0.0") // component too large
 TEST_CASE("ipn:0.4294967296.0") // component too large
@@ -153,6 +154,9 @@ TEST_CASE("ipn:1.a")
 TEST_CASE("ipn:1.1.a")
 TEST_CASE("ipn:1.1.1.")
 TEST_CASE("ipn:1.1.1.a")
+TEST_CASE("ipn:1 0.10.10")       // space within number
+TEST_CASE("ipn: 10.10.10")       // space before number
+TEST_CASE("ipn:0.0")             // only two
 TEST_CASE("ipn:0.0 ")            // space after
 TEST_CASE("ipn:0.0.0 ")          // space after
 TEST_CASE("ipn:0.[a-9].0 ")      // invalid number

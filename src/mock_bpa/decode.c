@@ -34,11 +34,11 @@
 
 int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
 {
-    assert(dec != NULL);
-    assert(eid != NULL);
-    assert(eid->handle != NULL);
+    ASSERT_ARG_NONNULL(dec);
+    ASSERT_ARG_NONNULL(eid);
+    ASSERT_ARG_NONNULL(eid->handle);
     bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
-    assert(obj != NULL);
+    ASSERT_ARG_NONNULL(obj);
     CHKERR1(dec);
     CHKERR1(obj);
 
@@ -59,7 +59,7 @@ int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
         case BSL_MOCK_EID_IPN:
         {
             bsl_eid_ipn_ssp_t *ipn = &(obj->ssp.as_ipn);
-            assert(ipn != NULL);
+            ASSERT_ARG_NONNULL(ipn);
             QCBORDecode_EnterArray(dec, &decitem);
             if (decitem.val.uCount == 2)
             {
@@ -102,7 +102,7 @@ int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
                 const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
 
                 BSL_Data_t *raw = &(obj->ssp.as_raw);
-                assert(raw != NULL);
+                ASSERT_ARG_NONNULL(raw);
                 BSL_Data_Init(raw);
                 // FIXME expose this from the decoder
                 BSL_Data_CopyFrom(raw, end - begin, (const uint8_t *)buf.ptr + begin);
@@ -218,7 +218,7 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
         if (blk->btsd_len > 0)
         {
             blk->btsd = BSL_MALLOC(view.len);
-            assert(blk->btsd != NULL);
+            ASSERT_ARG_NONNULL(blk->btsd);
             memcpy(blk->btsd, view.ptr, view.len);
         }
     }
@@ -285,7 +285,7 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
         if (res || QCBORDecode_GetError(dec))
         {
             BSL_LOG_ERR("failed in canonical block");
-            free(blk.btsd);
+            BSL_FREE(blk.btsd);
             return 3;
         }
         bundle->blocks[bundle->block_count++] = blk;

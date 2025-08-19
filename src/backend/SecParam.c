@@ -35,12 +35,15 @@ int BSL_SecParam_InitStr(BSL_SecParam_t *self, uint64_t param_id, const char *va
 {
     CHK_ARG_NONNULL(self);
     CHK_ARG_EXPR(value != NULL);
+    size_t value_strlen = strlen(value);
+    CHK_ARG_EXPR(value_strlen < sizeof(self->_bytes) - 1);
 
     memset(self, 0, sizeof(*self));
     self->param_id = param_id;
     self->_type    = BSL_SECPARAM_TYPE_STR;
-    self->_bytelen = strlen(value);
-    memcpy(self->_bytes, value, strlen(value));
+    // include trailing null
+    self->_bytelen = value_strlen + 1;
+    memcpy(self->_bytes, value, self->_bytelen);
 
     return BSL_SUCCESS;
 }
@@ -50,14 +53,16 @@ int BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t
     CHK_ARG_NONNULL(self);
 
     CHK_ARG_EXPR(value.ptr != NULL);
-    CHK_ARG_EXPR(value.len > 0);
-    CHK_ARG_EXPR(value.len < sizeof(self->_bytes) - 1);
+    CHK_ARG_EXPR(value.len < sizeof(self->_bytes));
 
     memset(self, 0, sizeof(*self));
     self->param_id = param_id;
     self->_type    = BSL_SECPARAM_TYPE_BYTESTR;
     self->_bytelen = value.len;
-    memcpy(self->_bytes, value.ptr, self->_bytelen);
+    if (self->_bytelen)
+    {
+        memcpy(self->_bytes, value.ptr, self->_bytelen);
+    }
 
     return BSL_SUCCESS;
 }
@@ -115,7 +120,6 @@ bool BSL_SecParam_IsConsistent(const BSL_SecParam_t *self)
     }
     else
     {
-        CHK_AS_BOOL(self->_bytelen > 0);
         CHK_AS_BOOL(self->_bytelen <= sizeof(self->_bytes));
         CHK_AS_BOOL(self->_uint_value == 0);
     }

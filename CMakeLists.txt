@@ -25,6 +25,7 @@ option(BUILD_LIB "Build the library itself" ON)
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(BUILD_DOCS_API "Enable API documentation building" OFF)
 option(BUILD_DOCS_MAN "Enable manpage building" OFF)
+option(BUILD_MOCK_BPA "Enable building the Mock BPA executable" ON)
 option(BUILD_UNITTEST "Enable building unit tests" ON)
 option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
 option(BUILD_COVERAGE "Enable runtime coverage logging and reporting" OFF)
@@ -79,6 +80,7 @@ add_compile_options(
     $<$<COMPILE_LANGUAGE:C>:-Wextra>
     $<$<COMPILE_LANGUAGE:C>:-Wpedantic>
     $<$<COMPILE_LANGUAGE:C>:-Werror>
+    $<$<COMPILE_LANGUAGE:C>:-Wformat>
     -Wshadow -Wpointer-arith -Wstrict-prototypes
     -Wmissing-prototypes -Wredundant-decls -Wcast-align
     -Wformat=2

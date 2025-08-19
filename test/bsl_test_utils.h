@@ -274,6 +274,30 @@ static const RFC9173_TestVectorsA2 RFC9173_TestVectors_AppendixA2 = {
      "e73e9a")
 };
 
+// A4, but BCB only targets payload, not BIB
+static const struct RFC9173_TestVectors_A4_Modified
+{
+    const char *cbor_bundle_original;
+    const char *cbor_bundle_final;
+
+} RFC9173_TestVectors_AppendixA4 = {
+    .cbor_bundle_original = ("9f88070000820282010282028202018202820201820018"
+                             "281A000F424085010100005823526561647920746F2067"
+                             "656E657261746520612033322D62797465207061796C6F"
+                             "6164ff"),
+    .cbor_bundle_final    = ("9f88070000820282010282028202018202820201820018"
+                             "281A000F4240850B030000585681010101820282020182"
+                             "8201078203008181820158403BDC69B3A34A2B5D3A8554"
+                             "368BD1E808F606219D2A10A846EAE3886AE4ECC83C4EE5"
+                             "50FDFB1CC636B904E2F1A73E303DCD4B6CCECE003E95E8"
+                             "164DCC89A156E1850C0201005850810102018202820201"
+                             "8482014C5477656C766531323132313282020182035818"
+                             "69C411276FECDDC4780DF42C8A2AF89296FABF34D7FAE7"
+                             "008204008181820150EFA4B5AC0108E3816C5606479801"
+                             "BC04850101000058233A09C1E63FE23A7F66A59C730383"
+                             "7241E070B02619FC59C5214A22F08CD70795E73E9Aff"),
+};
+
 typedef struct
 {
     BSL_SecParam_t sha_variant;
@@ -337,6 +361,18 @@ int BSL_TestUtils_EncodeBase16(string_t output, const BSL_Data_t *input, bool up
  * @return Zero upon success.
  */
 int BSL_TestUtils_DecodeBase16(BSL_Data_t *output, const string_t input);
+
+/**
+ * Modify bundle's source eid, destination eid, and report-to eid
+ * @param[in, out] input_bundle bundle to modify
+ * @param[in] src_eid EID to set bundle source EID to. Set to NULL if bundle source EID should remain unchanged.
+ * @param[in] dest_eid EID to set bundle destination EID to. Set to NULL if bundle destination EID should remain
+ * unchanged.
+ * @param[in] report_to_eid EID to set bundle report-to EID to. Set to NULL if bundle report-to EID should remain
+ * unchanged.
+ */
+int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid,
+                             const char *report_to_eid);
 
 int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a2_kek(unsigned char *buf, int len);

@@ -69,6 +69,7 @@ typedef struct BSLX_BIB_s
     BSL_CanonicalBlock_t sec_block;
     int64_t              integrity_scope_flags;
     int64_t              sha_variant;
+    uint64_t             sha_variant_uint;
     int64_t              _crypto_sha_variant;
     BSLX_Bytestr_t       wrapped_key;
     BSLX_Bytestr_t       override_key;

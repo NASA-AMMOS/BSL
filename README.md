@@ -131,12 +131,16 @@ Details of the Mock BPA are found in the Doxygen documentation.
 
 #### Mock BPA System Test
 
-These instructions are from CI, and may need to be updated.
+To execute the Mock BPA tests of the BSL libraries as-built, first prepare a Pythong virtualenv using:
 ```
 python3 -m venv venv
 source venv/bin/activate
 pip install -r mock-bpa-test/requirements.txt
-python3 -m pytest mock-bpa-test --capture=no --log-cli-level=debug
+```
+
+Then execute the test suite using:
+```
+python3 -m pytest mock-bpa-test --log-cli-level=info
 ```
 
 ### Running with Wireshark and Local Sockets

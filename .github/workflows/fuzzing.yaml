@@ -87,7 +87,8 @@ jobs:
         run: >
           ./build.sh prep
           -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
-          -DBUILD_UNITTEST=OFF -DBUILD_FUZZING=ON -DBUILD_COVERAGE=ON
+          -DBUILD_MOCK_BPA=OFF -DBUILD_UNITTEST=OFF
+          -DBUILD_FUZZING=ON -DBUILD_COVERAGE=ON
       - name: Build
         run: ./build.sh
       - name: Install
@@ -95,7 +96,7 @@ jobs:
       - name: Test
         run: ./build.sh check
       - name: Report corpus
-        run: for FN in $(find test/*cbor*corpus -type f); do echo $FN; cborseq2diag.rb <$FN; done
+        run: for FN in $(find test/*cbor*corpus -type f); do echo $FN; cborseq2diag.rb <$FN || true; done
       - name: Collect coverage
         run: ./build.sh coverage
       - name: Archive coverage

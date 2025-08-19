@@ -19,7 +19,7 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include <mock_bpa/MockBPA.h>
+#include <BPSecLib_Private.h>
 #include "bsl_test_utils.h"
 #include <cinttypes>
 
@@ -35,6 +35,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 extern "C" int LLVMFuzzerInitialize(int *argc _U_, char ***argv _U_)
 {
     BSL_openlog();
+    BSL_LogSetLeastSeverity(LOG_CRIT);
     bsl_mock_bpa_agent_init();
     return 0;
 }
@@ -47,14 +48,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     int retval = 0;
 
-    BSL_HostEID_t eid;
-    BSL_HostEID_Init(&eid);
+    BSL_AbsSecBlock_t *asb = (BSL_AbsSecBlock_t *)BSL_MALLOC(BSL_AbsSecBlock_Sizeof());
+    BSL_AbsSecBlock_InitEmpty(asb);
+
     {
-        QCBORDecodeContext decoder;
-        QCBORDecode_Init(&decoder, (UsefulBufC) { data, size }, QCBOR_DECODE_MODE_NORMAL);
-        int res_eid  = BSL_HostEID_DecodeFromCBOR(&eid, &decoder);
-        int res_cbor = QCBORDecode_Finish(&decoder);
-        if (res_eid || (res_cbor != QCBOR_SUCCESS))
+        BSL_Data_t buf;
+        BSL_Data_InitView(&buf, size, (BSL_DataPtr_t)data);
+        int res = BSL_AbsSecBlock_DecodeFromCBOR(asb, &buf);
+        BSL_Data_Deinit(&buf);
+        if (res)
         {
             retval = -1;
         }
@@ -64,19 +66,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_Data_Init(&out_data);
     if (!retval)
     {
-        QCBOREncodeContext encoder;
-        size_t             needlen;
+        ssize_t needlen = BSL_AbsSecBlock_EncodeToCBOR(asb, SizeCalculateUsefulBuf);
+        assert(needlen > 0);
 
-        QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
-        EXPECT_EQ(0, BSL_HostEID_EncodeToCBOR(&eid, &encoder));
-        assert(QCBOR_SUCCESS == QCBOREncode_FinishGetSize(&encoder, &needlen));
-
-        EXPECT_EQ(0, BSL_Data_Resize(&out_data, needlen));
-        QCBOREncode_Init(&encoder, (UsefulBuf) { out_data.ptr, out_data.len });
-        EXPECT_EQ(0, bsl_mock_encode_eid(&encoder, &eid));
-
-        UsefulBufC out;
-        EXPECT_EQ(QCBOR_SUCCESS, QCBOREncode_Finish(&encoder, &out));
+        EXPECT_EQ(0, BSL_Data_Resize(&out_data, (size_t)needlen));
+        ssize_t usedlen = BSL_AbsSecBlock_EncodeToCBOR(asb, (UsefulBuf) { out_data.ptr, out_data.len });
+        EXPECT_EQ(needlen, usedlen);
     }
 
     if (!retval)
@@ -93,6 +88,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     BSL_Data_Deinit(&out_data);
-    BSL_HostEID_Deinit(&eid);
+    BSL_AbsSecBlock_Deinit(asb);
+    BSL_FREE(asb);
+
     return retval;
 }

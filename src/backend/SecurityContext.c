@@ -65,7 +65,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     BSL_CanonicalBlock_t sec_blk = { 0 };
     if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Could not get BIB block (id=%lu)", created_block_id);
+        BSL_LOG_ERR("Could not get BIB block (id=%" PRIu64 ")", created_block_id);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
@@ -109,7 +109,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     }
     if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Could not get BIB block (id=%lu)", created_block_id);
+        BSL_LOG_ERR("Could not get BIB block (id=%" PRIu64 ")", created_block_id);
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
@@ -145,7 +145,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     BSL_AbsSecBlock_InitEmpty(&abs_sec_block);
     BSL_Data_t btsd_data = { 0 };
     BSL_Data_InitView(&btsd_data, sec_blk.btsd_len, sec_blk.btsd);
-    if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, btsd_data) != BSL_SUCCESS)
+    if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_data) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
@@ -257,7 +257,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
     BSL_AbsSecBlock_InitEmpty(&abs_sec_block);
     BSL_Data_t btsd_data = { 0 };
     BSL_Data_InitView(&btsd_data, sec_blk.btsd_len, sec_blk.btsd);
-    if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, btsd_data) != BSL_SUCCESS)
+    if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_data) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
@@ -365,7 +365,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_LOG_ERR("Failed to create BCB block");
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
-    BSL_LOG_INFO("Created new BCB block id = %lu", created_block_id);
+    BSL_LOG_INFO("Created new BCB block id = %" PRIu64, created_block_id);
 
     sec_oper->sec_block_num = created_block_id;
     const int res           = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
@@ -399,7 +399,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     {
         BSL_Data_t btsd_data = { 0 };
         BSL_Data_InitView(&btsd_data, sec_blk.btsd_len, sec_blk.btsd);
-        if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, btsd_data) != BSL_SUCCESS)
+        if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_data) != BSL_SUCCESS)
         {
             BSL_LOG_ERR("Failed to parse ASB CBOR");
             return BSL_ERR_DECODING;
@@ -438,7 +438,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     }
     if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Could not get BIB block (id=%lu)", created_block_id);
+        BSL_LOG_ERR("Could not get BIB block (id=%" PRIu64 ")", created_block_id);
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
@@ -473,7 +473,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
      *  - BCB will be a special case, since it actively manipulates the BTSD
      *
      */
-    BSL_SecOutcome_t *outcome = calloc(BSL_SecOutcome_Sizeof(), 1);
+    BSL_SecOutcome_t *outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
 
     BSL_SecActionList_it_t act_it;
     for (BSL_SecActionList_it(act_it, action_set->actions); !BSL_SecActionList_end_p(act_it);
@@ -520,7 +520,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_SUCCESS);
         }
     }
-    free(outcome);
+    BSL_FREE(outcome);
 
     return BSL_SUCCESS;
 }

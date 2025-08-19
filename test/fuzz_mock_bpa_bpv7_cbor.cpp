@@ -23,10 +23,10 @@
 #include "bsl_test_utils.h"
 #include <cinttypes>
 
-#define EXPECT_EQ(expect, got)         \
-    if ((expect) != (got))             \
-    {                                  \
-        BSL_LOG_ERR("EXPECT failure"); \
+#define EXPECT_EQ(expect, got)          \
+    if ((expect) != (got))              \
+    {                                   \
+        BSL_LOG_CRIT("EXPECT failure"); \
     }
 
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv);
@@ -35,6 +35,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 extern "C" int LLVMFuzzerInitialize(int *argc _U_, char ***argv _U_)
 {
     BSL_openlog();
+    BSL_LogSetLeastSeverity(LOG_CRIT);
     bsl_mock_bpa_agent_init();
     return 0;
 }
@@ -82,16 +83,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (!retval)
     {
         // output may be a subset
-        if (size != out_data.len)
+        // CBOR tags on input will not be carried
+        if (size >= out_data.len)
         {
-            // CBOR tags on input will not be carried
-            // BSL_LOG_ERR("Bad re-encoding size, expect %" PRIu64 " got %" PRIu64 ", for scheme %" PRIu64, size,
-            // out_data.len, ((bsl_mock_eid_t*)eid.handle)->scheme);
-            retval = -1;
-        }
-        if (0 != memcmp(data, out_data.ptr, out_data.len))
-        {
-            retval = -1;
+            if (0 != memcmp(data, out_data.ptr, out_data.len))
+            {
+                retval = -1;
+            }
         }
     }
 
