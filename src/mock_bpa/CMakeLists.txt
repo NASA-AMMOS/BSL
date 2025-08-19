@@ -60,7 +60,7 @@ set_target_properties(bsl_mock_bpa
 target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
 target_link_libraries(bsl_mock_bpa PUBLIC QCBOR::qcbor)
 target_link_libraries(bsl_mock_bpa PUBLIC Jansson::Jansson)
-target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_sample_pp)
+target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_sample_pp bsl_tlm_handler)
 
 add_executable(bsl-mock-bpa)
 target_sources(bsl-mock-bpa PRIVATE mock_bpa.c)

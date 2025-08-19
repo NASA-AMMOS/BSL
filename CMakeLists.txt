@@ -103,8 +103,8 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
 endif()
 
 add_custom_target(clang-tidy
-  COMMAND clang-tidy -quiet --config-file=.clang-tidy src/*.h src/backend/*.h src/security_context/*.h src/policy_provider/*.h -- -I src -I deps/mlib -I deps/QCBOR/inc 
-          && clang-tidy -quiet --config-file=.clang-tidy src/backend/*.c src/security_context/*.c src/policy_provider/*.c -- -I src -I deps/mlib -I deps/QCBOR/inc 
+  COMMAND clang-tidy -quiet --config-file=.clang-tidy src/*.h src/backend/*.h src/security_context/*.h src/policy_provider/*.h src/telemetry_handler/*.h -- -I src -I deps/mlib -I deps/QCBOR/inc 
+          && clang-tidy -quiet --config-file=.clang-tidy src/backend/*.c src/security_context/*.c src/policy_provider/*.c src/telemetry_handler/*.c -- -I src -I deps/mlib -I deps/QCBOR/inc 
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMENT "Running clang-tidy..."
 )

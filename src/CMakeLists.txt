@@ -112,6 +112,26 @@ set_target_properties(bsl_sample_pp
 target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
 
+# Example Telemetry Handler library
+set(BSL_SAMPLE_TLM_H
+  ${CMAKE_CURRENT_SOURCE_DIR}/telemetry_handler/TelemetryHandler.h
+)
+
+set(BSL_SAMPLE_TLM_C
+  ${CMAKE_CURRENT_SOURCE_DIR}/telemetry_handler/TelemetryHandler.c
+)
+
+add_library(bsl_tlm_handler)
+target_sources(bsl_tlm_handler PUBLIC ${BSL_SAMPLE_TLM_H})
+target_sources(bsl_tlm_handler PRIVATE ${BSL_SAMPLE_TLM_C})
+set_target_properties(bsl_tlm_handler
+    PROPERTIES
+        VERSION ${CMAKE_PROJECT_VERSION}
+        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+)
+target_link_libraries(bsl_tlm_handler PUBLIC bsl_front)
+
+
 # Dynamic backend library
 set(BSL_DYNAMIC_H
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
@@ -166,7 +186,7 @@ endif()
 
 # Installation config
 install(
-    TARGETS bsl_front bsl_dynamic bsl_default_sc bsl_sample_pp bsl_crypto
+    TARGETS bsl_front bsl_dynamic bsl_default_sc bsl_sample_pp bsl_tlm_handler bsl_crypto
     RUNTIME
         COMPONENT runtime
     LIBRARY

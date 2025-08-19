@@ -63,6 +63,17 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
     return BSL_SUCCESS;
 }
 
+int BSL_API_RegisterTelemetryHandler(BSL_LibCtx_t *lib, BSL_TlmHandler_t handler)
+{
+    CHK_ARG_NONNULL(lib);
+    CHK_ARG_EXPR(handler.reset_fn != NULL);
+    CHK_ARG_EXPR(handler.retrieve_fn != NULL);
+    CHK_ARG_EXPR(handler.increment_fn != NULL);
+
+    lib->tlm_handler = handler;
+    return BSL_SUCCESS;
+}
+
 int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_SecCtxDesc_t desc)
 {
     CHK_ARG_NONNULL(lib);

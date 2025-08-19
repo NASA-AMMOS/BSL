@@ -19,42 +19,24 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-/** @file
- * Private interface for the dynamic backend library context.
- * @ingroup backend_dyn
- */
-#ifndef BSL_CTX_DYN_H_
-#define BSL_CTX_DYN_H_
 
-#include <m-dict.h>
+/**
+ * @file
+ * @brief Spec of locally-defined data structures.
+ * @ingroup tlm_handler
+ */
+#ifndef BSLP_TELEMETRY_HANDLER_H
+#define BSLP_TELEMETRY_HANDLER_H
+
+#include <stdint.h>
 
 #include <BPSecLib_Private.h>
-#include <BPSecLib_Public.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-// NOLINTBEGIN
-/** @struct BSL_SecCtxDict_t
- * Stable dict of security context descriptors (key: context id | value: descriptor struct)
- */
-/// @cond Doxygen_Suppress
-DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
-/// @endcond
-// NOLINTEND
+void BSLT_ResetTelemetryCounters(void);
 
-/** Concrete definition of library context.
- */
-struct BSL_LibCtx_s
-{
-    BSL_TlmHandler_t tlm_handler;
-    BSL_PolicyDesc_t policy_registry;
-    BSL_SecCtxDict_t sc_reg;
-};
+size_t BSLT_RetrieveTelemetryCount(BSL_TelemetryType_e counter_type);
 
-#ifdef __cplusplus
-} // extern C
-#endif
+void BSLT_IncrementTelemetryCount(BSL_TelemetryType_e counter_type);
 
-#endif // BSL_CTX_DYN_H_
+#endif // BSLP_TELEMETRY_HANDLER_H

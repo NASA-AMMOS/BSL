@@ -627,6 +627,7 @@ static void show_usage(const char *argv0)
 
 #include <security_context/DefaultSecContext.h>
 #include <policy_provider/SamplePolicyProvider.h>
+#include <telemetry_handler/TelemetryHandler.h>
 
 int main(int argc, char **argv)
 {
@@ -648,6 +649,11 @@ int main(int argc, char **argv)
         BSL_LOG_ERR("Failed to initialize BSL");
         retval = 2;
     }
+
+    BSL_TlmHandler_t tlm_callbacks = {  .reset_fn = BSLT_ResetTelemetryCounters,
+                                        .retrieve_fn = BSLT_RetrieveTelemetryCount,
+                                        .increment_fn = BSLT_IncrementTelemetryCount };
+    assert(BSL_SUCCESS == BSL_API_RegisterTelemetryHandler(bsl, tlm_callbacks));
 
     BSL_PolicyDesc_t policy_callbacks = { .deinit_fn   = BSLP_Deinit,
                                           .query_fn    = BSLP_QueryPolicy,
