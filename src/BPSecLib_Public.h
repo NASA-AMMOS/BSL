@@ -62,6 +62,9 @@ typedef struct BSL_SecurityActionSet_s BSL_SecurityActionSet_t;
 /// Bundle.
 typedef struct BSL_SecurityAction_s BSL_SecurityAction_t;
 
+/// @brief Forward-declaration for structure containing callbacks to telemetry handler.
+typedef struct BSL_TlmHandler_s BSL_TlmHandler_t;
+
 /// @brief Forward-declaration for structure containing callbacks to a security context.
 typedef struct BSL_SecCtxDesc_s BSL_SecCtxDesc_t;
 
@@ -114,6 +117,15 @@ typedef enum
     /// @brief CRC-32C
     BSL_BUNDLECRCTYPE_32 = 2,
 } BSL_BundleCRCType_e;
+
+/** Types of telemetry counters.
+ * This could be extensible to more types of telemetry.
+ */
+typedef enum
+{
+    BSL_TELEMETRY_SUCCESS = 0,
+    BSL_TELEMETRY_FAIL    = 1
+} BSL_TelemetryType_e;
 
 /** @brief Opaque pointer to BPA-specific Endpoint ID storage.
  *
@@ -292,6 +304,15 @@ int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_
  */
 BSL_REQUIRE_CHECK
 int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, BSL_PolicyDesc_t desc);
+
+/** @brief Register a Telemetry Handler with the BSL.
+ * @note The Telemetry Handler interface is defined by the handler descriptor.
+ *
+ * @param[in,out] lib   Pointer to BSL context.
+ * @param[in]     handler  Telemetry Handler callbacks.
+ */
+BSL_REQUIRE_CHECK
+int BSL_API_RegisterTelemetryHandler(BSL_LibCtx_t *lib, BSL_TlmHandler_t handler);
 
 /** @brief Query BSL to populate a `BSL_SecurityActionSet_t` containing security processing instructions.
  *

@@ -50,6 +50,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (created_result != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to create BIB block, error=%d", created_result);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_BUNDLE_OPERATION_FAILED;
     }
 
@@ -59,6 +60,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (bib_result != 0) // || outcome->is_success == false)
     {
         BSL_LOG_ERR("BIB Source failed!");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
@@ -66,6 +68,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get BIB block (id=%" PRIu64 ")", created_block_id);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
@@ -75,6 +78,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (BSL_Host_GetSecSrcEID(&sec_source_eid) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get local security source EID");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
     BSL_AbsSecBlock_t abs_sec_block = { 0 };
@@ -97,6 +101,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (encode_result <= 0)
     {
         BSL_LOG_ERR("Failed to encode ASB");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_ENCODING;
     }
 
@@ -105,12 +110,14 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     {
         BSL_LOG_ERR("Failed to realloc block ASB space");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
     if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get BIB block (id=%" PRIu64 ")", created_block_id);
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
@@ -119,10 +126,12 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (encode_result <= BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to encode ASB");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_ENCODING;
     }
 
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
+    BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_SUCCESS);
     return BSL_SUCCESS;
 }
 
@@ -138,6 +147,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get block metadata");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
@@ -149,6 +159,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_DECODING;
     }
 
@@ -166,12 +177,14 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     {
         BSL_LOG_ERR("BIB Acceptor failed!");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
     bool auth_success = BSL_SecOutcome_IsInAbsSecBlock(outcome, &abs_sec_block);
     if (!auth_success)
     {
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         BSL_LOG_ERR("BIB Accepting failed");
     }
 
@@ -186,6 +199,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         {
             BSL_LOG_ERR("Failure to strip ASB of results");
             BSL_AbsSecBlock_Deinit(&abs_sec_block);
+            BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
             return BSL_ERR_FAILURE;
         }
 
@@ -195,6 +209,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
             {
                 BSL_LOG_ERR("Failed to remove block when ASB is empty");
                 BSL_AbsSecBlock_Deinit(&abs_sec_block);
+                BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
                 return BSL_ERR_HOST_CALLBACK_FAILED;
             }
         }
@@ -211,12 +226,14 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
             {
                 BSL_LOG_ERR("Failed to re-encode ASB into sec block BTSD");
                 BSL_AbsSecBlock_Deinit(&abs_sec_block);
+                BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
                 return BSL_ERR_ENCODING;
             }
             if (BSL_SUCCESS != BSL_BundleCtx_ReallocBTSD(bundle, sec_blk.block_num, (size_t)nbytes))
             {
                 BSL_LOG_ERR("Failed to realloc BTSD");
                 BSL_AbsSecBlock_Deinit(&abs_sec_block);
+                BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
                 return BSL_ERR_HOST_CALLBACK_FAILED;
             }
         }
@@ -227,10 +244,12 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     // TODO(bvb) Check postconditions that the block actually was removed
     if (auth_success)
     {
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_SUCCESS);
         BSL_LOG_INFO("BIB Accept SUCCESS");
     }
     else
     {
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         BSL_LOG_ERR("BIB Accept FAIL");
     }
 
@@ -250,6 +269,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
     if (BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get block metadata");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
@@ -261,6 +281,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_DECODING;
     }
 
@@ -293,6 +314,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
     {
         BSL_LOG_ERR("BCB Acceptor failed!");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
@@ -307,6 +329,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
         {
             BSL_LOG_ERR("Failure to strip ASB of results");
             BSL_AbsSecBlock_Deinit(&abs_sec_block);
+            BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
             return BSL_ERR_FAILURE;
         }
 
@@ -316,6 +339,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
             {
                 BSL_LOG_ERR("Failed to remove block when ASB is empty");
                 BSL_AbsSecBlock_Deinit(&abs_sec_block);
+                BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
                 return BSL_ERR_HOST_CALLBACK_FAILED;
             }
         }
@@ -332,12 +356,14 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
             {
                 BSL_LOG_ERR("Failed to re-encode ASB into sec block BTSD");
                 BSL_AbsSecBlock_Deinit(&abs_sec_block);
+                BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
                 return BSL_ERR_ENCODING;
             }
             if (BSL_SUCCESS != BSL_BundleCtx_ReallocBTSD(bundle, sec_blk.block_num, (size_t)nbytes))
             {
                 BSL_LOG_ERR("Failed to realloc BTSD");
                 BSL_AbsSecBlock_Deinit(&abs_sec_block);
+                BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
                 return BSL_ERR_HOST_CALLBACK_FAILED;
             }
         }
@@ -346,6 +372,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
 
     // TODO(bvb) Check postconditions that the block actually was removed
+    BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_SUCCESS);
     return BSL_SUCCESS;
 }
 
@@ -363,6 +390,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (BSL_SUCCESS != BSL_BundleCtx_CreateBlock(bundle, BSL_SECBLOCKTYPE_BCB, &created_block_id))
     {
         BSL_LOG_ERR("Failed to create BCB block");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
     BSL_LOG_INFO("Created new BCB block id = %" PRIu64, created_block_id);
@@ -372,6 +400,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (res != 0) // || outcome->is_success == false)
     {
         BSL_LOG_ERR("BCB Source failed!");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
     BSL_LOG_INFO("BCB SOURCE operation success.");
@@ -380,6 +409,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to get security block");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
@@ -391,6 +421,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         if (BSL_SUCCESS != BSL_Host_GetSecSrcEID(&src_eid))
         {
             BSL_LOG_ERR("Failed to get host EID");
+            BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
             return BSL_ERR_HOST_CALLBACK_FAILED;
         }
         BSL_AbsSecBlock_Init(&abs_sec_block, sec_oper->context_id, src_eid);
@@ -402,6 +433,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_data) != BSL_SUCCESS)
         {
             BSL_LOG_ERR("Failed to parse ASB CBOR");
+            BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
             return BSL_ERR_DECODING;
         }
     }
@@ -426,6 +458,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (encode_result <= 0)
     {
         BSL_LOG_ERR("Failed to encode ASB");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_ENCODING;
     }
 
@@ -434,12 +467,14 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     {
         BSL_LOG_ERR("Failed to realloc block ASB space");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
     if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_id, &sec_blk) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get BIB block (id=%" PRIu64 ")", created_block_id);
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
@@ -448,10 +483,12 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (encode_result <= 0)
     {
         BSL_LOG_ERR("Failed to encode ASB");
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         return BSL_ERR_ENCODING;
     }
 
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
+    BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_SUCCESS);
     return BSL_SUCCESS;
 }
 

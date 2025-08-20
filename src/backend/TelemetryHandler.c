@@ -19,42 +19,34 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-/** @file
- * Private interface for the dynamic backend library context.
+/**
+ * @file
  * @ingroup backend_dyn
+ * @brief Defines interactions with an external Telemetry Handler.
  */
-#ifndef BSL_CTX_DYN_H_
-#define BSL_CTX_DYN_H_
-
-#include <m-dict.h>
-
 #include <BPSecLib_Private.h>
-#include <BPSecLib_Public.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "PublicInterfaceImpl.h"
 
-// NOLINTBEGIN
-/** @struct BSL_SecCtxDict_t
- * Stable dict of security context descriptors (key: context id | value: descriptor struct)
- */
-/// @cond Doxygen_Suppress
-DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
-/// @endcond
-// NOLINTEND
-
-/** Concrete definition of library context.
- */
-struct BSL_LibCtx_s
+size_t BSL_TlmHandler_ResetCounters(const BSL_LibCtx_t *bsl)
 {
-    BSL_TlmHandler_t tlm_handler;
-    BSL_PolicyDesc_t policy_registry;
-    BSL_SecCtxDict_t sc_reg;
-};
+    CHK_ARG_NONNULL(bsl);
+    CHK_PRECONDITION(bsl->tlm_handler.reset_fn != NULL);
+    bsl->tlm_handler.reset_fn();
+    return BSL_SUCCESS;
+}
 
-#ifdef __cplusplus
-} // extern C
-#endif
+size_t BSL_TlmHandler_RetrieveCounter(const BSL_LibCtx_t *bsl, BSL_TelemetryType_e tlm_type)
+{
+    CHK_ARG_NONNULL(bsl);
+    CHK_PRECONDITION(bsl->tlm_handler.retrieve_fn != NULL);
+    return bsl->tlm_handler.retrieve_fn(tlm_type);
+}
 
-#endif // BSL_CTX_DYN_H_
+size_t BSL_TlmHandler_IncrementCounter(const BSL_LibCtx_t *bsl, BSL_TelemetryType_e tlm_type)
+{
+    CHK_ARG_NONNULL(bsl);
+    CHK_PRECONDITION(bsl->tlm_handler.increment_fn != NULL);
+    bsl->tlm_handler.increment_fn(tlm_type);
+    return BSL_SUCCESS;
+}

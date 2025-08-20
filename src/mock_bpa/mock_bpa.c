@@ -140,6 +140,16 @@ static int bind_udp(int *sock, const struct sockaddr_in *addr)
     return 0;
 }
 
+static void mock_bpa_dump_telemetry(void)
+{
+    BSL_LOG_INFO("---------------------------------------------------------");
+    BSL_LOG_INFO("---------------------TELEMETRY INFO----------------------");
+    BSL_LOG_INFO("      SUCESSES COUNT: %lu ---- FAIL COUNT: %lu",
+                 BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_SUCCESS),
+                 BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_FAIL));
+    BSL_LOG_INFO("---------------------------------------------------------");
+}
+
 static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
 {
     (void)loc;
@@ -170,6 +180,9 @@ static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
     BSL_LOG_INFO("Mock BPA: mock_bpa_process SUCCESS (code=0)");
 
 cleanup:
+    // Example telemetry dump to console - this can/should be changed
+    mock_bpa_dump_telemetry();
+
     BSL_SecurityActionSet_Deinit(malloced_action_set);
     BSL_FREE(malloced_action_set);
     BSL_FREE(malloced_response_set);
@@ -627,6 +640,7 @@ static void show_usage(const char *argv0)
 
 #include <security_context/DefaultSecContext.h>
 #include <policy_provider/SamplePolicyProvider.h>
+#include <telemetry_handler/TelemetryHandler.h>
 
 int main(int argc, char **argv)
 {
@@ -648,6 +662,11 @@ int main(int argc, char **argv)
         BSL_LOG_ERR("Failed to initialize BSL");
         retval = 2;
     }
+
+    BSL_TlmHandler_t tlm_callbacks = { .reset_fn     = BSLT_ResetTelemetryCounters,
+                                       .retrieve_fn  = BSLT_RetrieveTelemetryCount,
+                                       .increment_fn = BSLT_IncrementTelemetryCount };
+    assert(BSL_SUCCESS == BSL_API_RegisterTelemetryHandler(bsl, tlm_callbacks));
 
     BSL_PolicyDesc_t policy_callbacks = { .deinit_fn   = BSLP_Deinit,
                                           .query_fn    = BSLP_QueryPolicy,
