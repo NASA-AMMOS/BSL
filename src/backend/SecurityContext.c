@@ -131,6 +131,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     }
 
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
+    BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_SUCCESS);
     return BSL_SUCCESS;
 }
 
@@ -183,6 +184,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     bool auth_success = BSL_SecOutcome_IsInAbsSecBlock(outcome, &abs_sec_block);
     if (!auth_success)
     {
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
         BSL_LOG_ERR("BIB Accepting failed");
     }
 
@@ -242,6 +244,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     // TODO(bvb) Check postconditions that the block actually was removed
     if (auth_success)
     {
+        BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_SUCCESS);
         BSL_LOG_INFO("BIB Accept SUCCESS");
     }
     else
@@ -369,6 +372,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
 
     // TODO(bvb) Check postconditions that the block actually was removed
+    BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_SUCCESS);
     return BSL_SUCCESS;
 }
 
@@ -484,6 +488,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     }
 
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
+    BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_SUCCESS);
     return BSL_SUCCESS;
 }
 
@@ -547,7 +552,6 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             {
                 BSL_LOG_ERR("Security Op failed: %d", errcode);
                 BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_FAILURE);
-                BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_FAIL);
                 break; // stop processing secops if there is a failure
             }
             BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_SUCCESS);

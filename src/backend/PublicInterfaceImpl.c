@@ -124,7 +124,6 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
     {
         BSL_LOG_ERR("Cannot get bundle primary block");
-        BSL_TlmHandler_IncrementCounter(bsl, BSL_TELEMETRY_FAIL);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
@@ -133,7 +132,6 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
     if (BSL_SUCCESS != BSL_BundleCtx_GetBlockIds(bundle, primary_block.block_count, blocks_array, &total_blocks))
     {
         BSL_LOG_ERR("Failed to get block indices");
-        BSL_TlmHandler_IncrementCounter(bsl, BSL_TELEMETRY_FAIL);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
@@ -144,7 +142,6 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
         BSL_CanonicalBlock_t block = { 0 };
         if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, blocks_array[i], &block))
         {
-            BSL_TlmHandler_IncrementCounter(bsl, BSL_TELEMETRY_FAIL);
             BSL_LOG_WARNING("Failed to get block number %" PRIu64, blocks_array[i]);
             continue;
         }
@@ -173,7 +170,6 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                 }
                 else
                 {
-                    BSL_TlmHandler_IncrementCounter(bsl, BSL_TELEMETRY_FAIL);
                     BSL_LOG_WARNING("Failed to parse ASB from BTSD");
                 }
                 BSL_AbsSecBlock_Deinit(abs_sec_block);
@@ -185,7 +181,6 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
     if (BSL_SecCtx_ValidatePolicyActionSet((BSL_LibCtx_t *)bsl, bundle, output_action_set) == false)
     {
         query_status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
-        BSL_TlmHandler_IncrementCounter(bsl, BSL_TELEMETRY_FAIL);
         BSL_LOG_WARNING("Security Context validation failed");
     }
 
@@ -205,7 +200,6 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     int exec_code = BSL_SecCtx_ExecutePolicyActionSet((BSL_LibCtx_t *)bsl, response_output, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)
     {
-        BSL_TlmHandler_IncrementCounter(bsl, BSL_TELEMETRY_FAIL);
         BSL_LOG_ERR("Failed to execute policy action set");
     }
 
@@ -213,7 +207,6 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
     {
         BSL_LOG_ERR("Failed to get bundle metadata");
-        BSL_TlmHandler_IncrementCounter(bsl, BSL_TELEMETRY_FAIL);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
@@ -268,7 +261,6 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
                 case BSL_POLICYACTION_UNDEFINED:
                 default:
                 {
-                    BSL_TlmHandler_IncrementCounter(bsl, BSL_TELEMETRY_FAIL);
                     BSL_LOG_ERR("Unhandled policy action: %" PRIu64, err_action_code);
                 }
             }

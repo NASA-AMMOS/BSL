@@ -140,6 +140,14 @@ static int bind_udp(int *sock, const struct sockaddr_in *addr)
     return 0;
 }
 
+static void mock_bpa_dump_telemetry(void)
+{   
+    BSL_LOG_INFO("---------------------------------------------------------");
+    BSL_LOG_INFO("---------------------TELEMETRY INFO----------------------");
+    BSL_LOG_INFO("      SUCESSES COUNT: %lu ---- FAIL COUNT: %lu", BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_SUCCESS), BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_FAIL));
+    BSL_LOG_INFO("---------------------------------------------------------");
+}
+
 static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
 {
     (void)loc;
@@ -170,8 +178,7 @@ static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
     BSL_LOG_INFO("Mock BPA: mock_bpa_process SUCCESS (code=0)");
 
 cleanup:
-    BSL_LOG_INFO("\nTELEMETRY ---- SUCESSES COUNT: %lu ---- FAIL COUNT: %lu", BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_SUCCESS), BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_FAIL));
-    BSL_SecurityActionSet_Deinit(malloced_action_set);
+    mock_bpa_dump_telemetry();
     BSL_FREE(malloced_action_set);
     BSL_FREE(malloced_response_set);
     return returncode;
