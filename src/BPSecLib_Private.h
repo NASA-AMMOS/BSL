@@ -1269,7 +1269,7 @@ bool BSL_SecurityResponseSet_IsConsistent(const BSL_SecurityResponseSet_t *self)
 size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *self);
 
 /** /// @brief Callback interface to reset telemetry counters
- * 
+ *
  * @param[in] bsl This BSL context
  */
 size_t BSL_TlmHandler_ResetCounters(const BSL_LibCtx_t *bsl);
