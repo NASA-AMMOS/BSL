@@ -180,7 +180,9 @@ static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
     BSL_LOG_INFO("Mock BPA: mock_bpa_process SUCCESS (code=0)");
 
 cleanup:
+    // Example telemetry dump to console - this can/should be changed
     mock_bpa_dump_telemetry();
+
     BSL_SecurityActionSet_Deinit(malloced_action_set);
     BSL_FREE(malloced_action_set);
     BSL_FREE(malloced_response_set);

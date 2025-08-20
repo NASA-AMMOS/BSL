@@ -118,6 +118,9 @@ typedef enum
     BSL_BUNDLECRCTYPE_32 = 2,
 } BSL_BundleCRCType_e;
 
+/** Types of telemetry counters.
+ * This could be extensible to more tyes of telemetry.
+ */
 typedef enum
 {
     BSL_TELEMETRY_SUCCESS = 0,
