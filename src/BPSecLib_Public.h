@@ -62,7 +62,7 @@ typedef struct BSL_SecurityActionSet_s BSL_SecurityActionSet_t;
 /// Bundle.
 typedef struct BSL_SecurityAction_s BSL_SecurityAction_t;
 
-/// @brief Forward declaration of ::BSL_TlmHandler_t, which handles the telemetry counters.
+/// @brief Forward-declaration for structure containing callbacks to telemetry handler.
 typedef struct BSL_TlmHandler_s BSL_TlmHandler_t;
 
 /// @brief Forward-declaration for structure containing callbacks to a security context.
@@ -119,7 +119,7 @@ typedef enum
 } BSL_BundleCRCType_e;
 
 /** Types of telemetry counters.
- * This could be extensible to more tyes of telemetry.
+ * This could be extensible to more types of telemetry.
  */
 typedef enum
 {

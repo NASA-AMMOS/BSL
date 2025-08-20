@@ -1313,7 +1313,7 @@ struct BSL_TlmHandler_s
     void *user_data;
     /// @brief Callback to reset the telemetry counters
     BSL_TlmHandler_Reset_f reset_fn;
-    /// @brief Callback to retrieve telemetry counts from bsl context
+    /// @brief Callback to retrieve a telemetry count
     BSL_TlmHandler_Retrieve_f retrieve_fn;
     /// @brief Callback to increment a telemetry counter
     BSL_TlmHandler_Increment_f increment_fn;
