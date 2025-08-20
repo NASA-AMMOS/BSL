@@ -10,15 +10,20 @@
     },
     "spec": {
       "svc": "bib-integrity",
-      "sc_id": 2,
+      "sc_id": 1,
       "sc_parms": [
         {
           "id": "key_name",
-          "value": "key1"
+          "value": "9100"
+        },
+        {
+          "id": "aes_variant",
+          "value": "3"
         }
       ]
     },
-    "es_ref": "d_integrity"
+    "es_ref": "d_integrity",
+    "_temp_not_ion_spec_policy_action_on_fail": "delete_bundle"
   },
   "event_set": {
     "es_ref": "d_integrity",

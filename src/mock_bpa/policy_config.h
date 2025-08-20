@@ -76,7 +76,7 @@ typedef uint32_t bsl_mock_policy_configuration_t;
 
 void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg);
 
-void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy);
+void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy, mock_bpa_policy_params_t *params);
 
 int mock_bpa_key_registry_init(const char *pp_cfg_file_path);
 

@@ -36,37 +36,26 @@ static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *
     return pat;
 }
 
-// TODO: JSON PARSING IN PROGRESS, THIS DOESN'T DO ANYTHING YET
-void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy)
+/**
+ * @todo Allow JSON files to have multiple rules
+ * @todo Handle ION events as policy actions - dependent on other BSL issues/ future changes
+ */
+void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy, mock_bpa_policy_params_t *params)
 {
 
     uint32_t             sec_block_type;
     uint32_t             sec_ctx_id;
     BSL_SecRole_e        sec_role;
-    uint32_t             bundle_block_type;
-    uint32_t             policy_action_type;
+    uint32_t             target_block_type;
     BSL_PolicyLocation_e policy_loc_enum;
+    BSL_PolicyAction_e   policy_action_enum;
 
-    const char          *src_str     = "";
-    const char          *dest_str    = "";
-    const char          *sec_src_str = "";
+    const char          *src_str;
+    const char          *dest_str;
+    const char          *sec_src_str;
     BSL_HostEIDPattern_t src_eid;
     BSL_HostEIDPattern_t dest_eid;
     BSL_HostEIDPattern_t sec_src_eid;
-
-    (void)policy;
-    (void)sec_block_type;
-    (void)sec_ctx_id;
-    (void)sec_role;
-    (void)bundle_block_type;
-    (void)policy_action_type;
-    (void)policy_loc_enum;
-    (void)src_str;
-    (void)dest_str;
-    (void)sec_src_str;
-    (void)src_eid;
-    (void)dest_eid;
-    (void)sec_src_eid;
 
     json_t      *root;
     json_error_t err;
@@ -141,6 +130,11 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             BSL_LOG_DEBUG("     src    : %s\n", src_str);
             src_eid = mock_bpa_util_get_eid_pattern_from_text(src_str);
         }
+        else
+        {
+            src_eid = mock_bpa_util_get_eid_pattern_from_text("*:**");
+
+        }
 
         json_t *dest = json_object_get(filter, "dest");
         if (dest)
@@ -148,6 +142,10 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             dest_str = json_string_value(dest);
             BSL_LOG_DEBUG("     dest    : %s\n", dest_str);
             dest_eid = mock_bpa_util_get_eid_pattern_from_text(dest_str);
+        }
+        else
+        {
+            dest_eid = mock_bpa_util_get_eid_pattern_from_text("*:**");
         }
 
         json_t *sec_src = json_object_get(filter, "sec_src");
@@ -157,14 +155,9 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             BSL_LOG_DEBUG("     sec_src    : %s\n", sec_src_str);
             sec_src_eid = mock_bpa_util_get_eid_pattern_from_text(sec_src_str);
         }
-
-        // must have at least 1 EID for valid filter (for ION)
-        // do we care about this for BSL? TODO
-        if (!dest && !src && !sec_src)
+        else
         {
-            BSL_LOG_ERR("No EIDs set, INVALID RULE\n");
-            json_decref(root);
-            return;
+            sec_src_eid = mock_bpa_util_get_eid_pattern_from_text("*:**");
         }
 
         // check tgt (target block type)
@@ -178,7 +171,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         const long tgt_l = json_integer_value(tgt);
         BSL_LOG_DEBUG("     tgt    : %" JSON_INTEGER_FORMAT "\n", tgt_l);
 
-        bundle_block_type = tgt_l;
+        target_block_type = tgt_l;
 
         // check loc (sec location )
         json_t *loc = json_object_get(filter, "loc");
@@ -215,10 +208,17 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         }
 
         json_t *sc_id   = json_object_get(filter, "sc_id");
+        if (!sc_id || !json_is_integer(sc_id))
+        {
+            BSL_LOG_DEBUG("NO SEC CTX ID");
+            json_decref(root);
+            return;
+        }
         long    sc_id_l = json_integer_value(sc_id);
         BSL_LOG_DEBUG("     scid    : %" JSON_INTEGER_FORMAT "\n", sc_id_l);
 
         sec_ctx_id = sc_id_l;
+        sec_block_type = (sec_ctx_id == 1) ? BSL_SECBLOCKTYPE_BIB : BSL_SECBLOCKTYPE_BCB;
     }
 
     // es_ref
@@ -227,6 +227,37 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     {
         BSL_LOG_DEBUG("NO ES REF");
     }
+
+    // _temp_not_ion_spec_policy_action_on_fail
+    json_t *policy_action_on_fail = json_object_get(policyrule, "_temp_not_ion_spec_policy_action_on_fail");
+    if (!policy_action_on_fail || !json_is_string(policy_action_on_fail))
+    {
+        BSL_LOG_ERR("NO POLICY ACTION");
+        json_decref(root);
+        return;
+    }
+
+    const char *policy_act_str = json_string_value(policy_action_on_fail);
+    if (!strcmp(policy_act_str, "delete_bundle"))
+    {
+        policy_action_enum = BSL_POLICYACTION_DROP_BUNDLE;
+    }
+    else if (!strcmp(policy_act_str, "drop_block"))
+    {
+        policy_action_enum = BSL_POLICYACTION_DROP_BLOCK;
+    }
+    else if (!strcmp(policy_act_str, "nothing"))
+    {
+        policy_action_enum = BSL_POLICYACTION_NOTHING;
+    }
+    else
+    {
+        BSL_LOG_ERR("INVALID POLICY ACTION ENUM %s\n", policy_act_str);
+        json_decref(root);
+        return;
+    }
+
+    uint64_t params_got = 0x0;
 
     // spec attr
     json_t *spec = json_object_get(policyrule, "spec");
@@ -272,11 +303,35 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
                 {
                     case 1:
                         if (!strcmp(id_str, "key_name"))
-                        {}
+                        {
+                            BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
+                            params_got |= 0x1;
+                        }
                         else if (!strcmp(id_str, "sha_variant"))
-                        {}
+                        {
+                            rfc9173_bib_sha_variantid_e sha_var;
+                            if (strcmp(value_str, "5"))
+                            {
+                                sha_var = RFC9173_BIB_SHA_HMAC256;
+                            } 
+                            else if (strcmp(value_str, "6"))
+                            {
+                                sha_var = RFC9173_BIB_SHA_HMAC384;
+                            } 
+                            else
+                            {
+                                sha_var = RFC9173_BIB_SHA_HMAC512;
+                            }
+                            
+                            BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, sha_var);
+                            params_got |= 0x2;
+                        }
                         else if (!strcmp(id_str, "scope_flags"))
-                        {}
+                        {
+                            uint64_t flag = strtol(value_str, NULL, 10); // FIXME
+                            BSL_SecParam_InitInt64(params->param_aad_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, flag);
+                            params_got |= 0x4;
+                        }
                         else
                         {
                             BSL_LOG_ERR("INVALID KEY FOR SC ID %d\n", sc_id_l);
@@ -286,13 +341,37 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
                         break;
                     case 2:
                         if (!strcmp(id_str, "key_name"))
-                        {}
+                        {
+                            BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
+                            params_got |= 0x1;
+                        }
                         else if (!strcmp(id_str, "iv"))
-                        {}
+                        {
+                            // TODO
+                            // BSL_SecParam_InitBytestr(params->param_aes_variant, RFC9173_BCB_SECPARAM_IV, aes_var);
+                            params_got |= 0x2;
+                        }
                         else if (!strcmp(id_str, "aes_variant"))
-                        {}
+                        {
+                            rfc9173_bcb_aes_variant_e aes_var;
+                            if (strcmp(value_str, "1"))
+                            {
+                                aes_var = RFC9173_BCB_AES_VARIANT_A128GCM;
+                            } 
+                            else
+                            {
+                                aes_var = RFC9173_BCB_AES_VARIANT_A256GCM;
+                            }
+                            
+                            BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, aes_var);
+                            params_got |= 0x4;
+                        }
                         else if (!strcmp(id_str, "aad_scope"))
-                        {}
+                        {
+                            uint64_t flag = strtol(value_str, NULL, 10); // FIXME
+                            BSL_SecParam_InitInt64(params->param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE, flag);
+                            params_got |= 0x8;
+                        }
                         else
                         {
                             BSL_LOG_ERR("INVALID KEY FOR SC ID %d\n", sc_id_l);
@@ -308,6 +387,9 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             }
         }
     }
+
+    // TODO validate params_got
+    (void) params_got;
 
     // event set
     json_t *event_set = json_object_get(root, "event_set");
@@ -356,6 +438,13 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
             }
         }
     }
+
+    BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
+    BSLP_PolicyPredicate_Init(predicate, policy_loc_enum, src_eid, sec_src_eid, dest_eid);
+
+    BSLP_PolicyRule_t *rule = &policy->rules[policy->rule_count++];
+    BSLP_PolicyRule_Init(rule, pp_cfg_file_path, predicate, sec_ctx_id, sec_role, sec_block_type,
+                         target_block_type, policy_action_enum);
 
     json_decref(root);
 }
@@ -534,7 +623,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     {
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_aes_variant);
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_use_wrapped_key);
-        if (sec_role != BSL_SECROLE_SOURCE)
+        if (sec_role_enum == BSL_SECROLE_SOURCE)
         {
             BSLP_PolicyRule_AddParam(rule_all_in, params->param_aad_scope_flag);
             BSL_Crypto_SetRngGenerator(bsl_mock_bpa_rfc9173_bcb_cek);
