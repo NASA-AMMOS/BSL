@@ -85,6 +85,7 @@ void test_PolicyProvider_InspectEmptyRuleset(void)
                                                            BSL_POLICYLOCATION_APPIN));
     TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_CountActions(&action_set));
     const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0);
+    TEST_ASSERT_EQUAL(BSL_SAMPLE_PP_ID, act->pp_id);
     TEST_ASSERT_EQUAL(0, BSL_SecurityAction_CountSecOpers(act));
 
     BSL_SecurityActionSet_Deinit(&action_set);
@@ -153,6 +154,7 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
     const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0);
+    TEST_ASSERT_EQUAL(BSL_SAMPLE_PP_ID, act->pp_id);
     TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(act));
     TEST_ASSERT_EQUAL(3, BSL_SecOper_CountParams(BSL_SecurityAction_GetSecOperAtIndex(act, 0)));
 

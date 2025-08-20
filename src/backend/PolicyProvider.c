@@ -27,6 +27,7 @@
 #include <BPSecLib_Private.h>
 
 #include "PublicInterfaceImpl.h"
+#include "SecurityActionSet.h"
 
 int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set,
                                       const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location)
@@ -40,10 +41,20 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
     for (BSL_PolicyDict_it(policy_reg_it, bsl->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it);
          BSL_PolicyDict_next(policy_reg_it))
     {
+
+        size_t act_ct = BSL_SecurityActionSet_CountActions(output_action_set);
+
         const BSL_PolicyDesc_t *policy = BSL_PolicyDict_cref(policy_reg_it)->value_ptr;
         if (BSL_SUCCESS != policy->query_fn(policy->user_data, output_action_set, bundle, location))
         {
             return BSL_ERR_POLICY_FINAL;
+        }
+
+        size_t new_act_ct = BSL_SecurityActionSet_CountActions(output_action_set);
+        for (size_t i = act_ct; i < new_act_ct; i ++)
+        {
+            BSL_SecurityAction_t * act = BSL_SecActionList_get(output_action_set->actions, i);
+            act->pp_id = *BSL_PolicyDict_cref(policy_reg_it)->key_ptr;
         }
     }
 

@@ -1149,7 +1149,7 @@ void BSL_SecurityAction_InitSet(BSL_SecurityAction_t *self, const BSL_SecurityAc
 void BSL_SecurityAction_Deinit(BSL_SecurityAction_t *self);
 
 /**
- * Add security operation to security action, with deterministic ordering
+ * Add security operation to security action
  * @param[in,out] self action to add security operation to
  * @param[in,out] sec_oper new security operation to add and move from.
  * @return 0 if successful

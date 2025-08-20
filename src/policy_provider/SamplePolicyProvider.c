@@ -118,6 +118,8 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     }
 
     BSL_SecurityAction_t *action = BSL_CALLOC(1, BSL_SecurityAction_Sizeof());
+    BSL_SecurityAction_Init(action);
+
     BSLP_SecOperPtrList_t secops;
     BSLP_SecOperPtrList_init(secops);
 
