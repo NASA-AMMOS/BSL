@@ -181,6 +181,7 @@ static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
 
 cleanup:
     mock_bpa_dump_telemetry();
+    BSL_SecurityActionSet_Deinit(malloced_action_set);
     BSL_FREE(malloced_action_set);
     BSL_FREE(malloced_response_set);
     return returncode;

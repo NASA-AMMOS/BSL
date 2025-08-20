@@ -302,11 +302,11 @@ int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_
 BSL_REQUIRE_CHECK
 int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, BSL_PolicyDesc_t desc);
 
-/** @brief Register a Policy Provider module with the BSL.
- * @note The Policy Provider interface is defined by the policy provider descriptor.
+/** @brief Register a Telemetry Handler with the BSL.
+ * @note The Telemetry Handler interface is defined by the handler descriptor.
  *
  * @param[in,out] lib   Pointer to BSL context.
- * @param[in]     desc  Policy Provider callbacks.
+ * @param[in]     handler  Telemetry Handler callbacks.
  */
 BSL_REQUIRE_CHECK
 int BSL_API_RegisterTelemetryHandler(BSL_LibCtx_t *lib, BSL_TlmHandler_t handler);
