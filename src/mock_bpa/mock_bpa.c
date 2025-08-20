@@ -141,10 +141,12 @@ static int bind_udp(int *sock, const struct sockaddr_in *addr)
 }
 
 static void mock_bpa_dump_telemetry(void)
-{   
+{
     BSL_LOG_INFO("---------------------------------------------------------");
     BSL_LOG_INFO("---------------------TELEMETRY INFO----------------------");
-    BSL_LOG_INFO("      SUCESSES COUNT: %lu ---- FAIL COUNT: %lu", BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_SUCCESS), BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_FAIL));
+    BSL_LOG_INFO("      SUCESSES COUNT: %lu ---- FAIL COUNT: %lu",
+                 BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_SUCCESS),
+                 BSL_TlmHandler_RetrieveCounter(bsl, BSL_TELEMETRY_FAIL));
     BSL_LOG_INFO("---------------------------------------------------------");
 }
 
@@ -658,9 +660,9 @@ int main(int argc, char **argv)
         retval = 2;
     }
 
-    BSL_TlmHandler_t tlm_callbacks = {  .reset_fn = BSLT_ResetTelemetryCounters,
-                                        .retrieve_fn = BSLT_RetrieveTelemetryCount,
-                                        .increment_fn = BSLT_IncrementTelemetryCount };
+    BSL_TlmHandler_t tlm_callbacks = { .reset_fn     = BSLT_ResetTelemetryCounters,
+                                       .retrieve_fn  = BSLT_RetrieveTelemetryCount,
+                                       .increment_fn = BSLT_IncrementTelemetryCount };
     assert(BSL_SUCCESS == BSL_API_RegisterTelemetryHandler(bsl, tlm_callbacks));
 
     BSL_PolicyDesc_t policy_callbacks = { .deinit_fn   = BSLP_Deinit,

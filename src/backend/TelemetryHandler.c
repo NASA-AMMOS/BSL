@@ -28,7 +28,6 @@
 
 #include "PublicInterfaceImpl.h"
 
-
 size_t BSL_TlmHandler_ResetCounters(const BSL_LibCtx_t *bsl)
 {
     CHK_ARG_NONNULL(bsl);

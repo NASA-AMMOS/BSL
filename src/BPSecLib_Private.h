@@ -1268,45 +1268,40 @@ bool BSL_SecurityResponseSet_IsConsistent(const BSL_SecurityResponseSet_t *self)
  */
 size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *self);
 
-/** /// @brief Callback interface to reset counters
- *
- * @todo Doxygen
+/** /// @brief Callback interface to reset telemetry counters
  * 
+ * @param[in] bsl This BSL context
  */
 size_t BSL_TlmHandler_ResetCounters(const BSL_LibCtx_t *bsl);
 
 /** /// @brief Callback interface to retrieve count through the telemetry handler
  *
- * @todo Doxygen
- * 
+ * @param[in] bsl This BSL context
+ * @param[out] size_t number tallied in the associated counter
  */
 size_t BSL_TlmHandler_RetrieveCounter(const BSL_LibCtx_t *bsl, BSL_TelemetryType_e tlm_type);
 
 /** /// @brief Callback interface to increment count through the telemetry handler
  *
- * @todo Doxygen 
- * 
+ * @param[in] bsl This BSL context
+ * @param[in] tlm_type The type of telemetry counter to increment
  */
 size_t BSL_TlmHandler_IncrementCounter(const BSL_LibCtx_t *bsl, BSL_TelemetryType_e tlm_type);
 
 /** Signature for Telemetry Handler to reset counters
- *
- * @todo Doxygen
- * 
  */
 typedef void (*BSL_TlmHandler_Reset_f)(void);
 
 /** Signature for Telemetry Handler to retrieve count by telemetry type
  *
- * @todo Doxygen
- * 
+ * @param[in] tlm_type The type of telemetry counter to increment
+ * @param[out] size_t number tallied in the associated counter
  */
 typedef size_t (*BSL_TlmHandler_Retrieve_f)(BSL_TelemetryType_e tlm_type);
 
 /** Signature for Telemetry Handler to increment counter by telemetry type
  *
- * @todo Doxygen
- * 
+ * @param[in] tlm_type The type of telemetry counter to increment
  */
 typedef void (*BSL_TlmHandler_Increment_f)(BSL_TelemetryType_e tlm_type);
 

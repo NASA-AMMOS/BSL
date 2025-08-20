@@ -118,9 +118,10 @@ typedef enum
     BSL_BUNDLECRCTYPE_32 = 2,
 } BSL_BundleCRCType_e;
 
-typedef enum {
+typedef enum
+{
     BSL_TELEMETRY_SUCCESS = 0,
-    BSL_TELEMETRY_FAIL = 1
+    BSL_TELEMETRY_FAIL    = 1
 } BSL_TelemetryType_e;
 
 /** @brief Opaque pointer to BPA-specific Endpoint ID storage.

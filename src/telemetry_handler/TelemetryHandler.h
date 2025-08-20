@@ -32,7 +32,6 @@
 
 #include <BPSecLib_Private.h>
 
-
 void BSLT_ResetTelemetryCounters(void);
 
 size_t BSLT_RetrieveTelemetryCount(BSL_TelemetryType_e counter_type);

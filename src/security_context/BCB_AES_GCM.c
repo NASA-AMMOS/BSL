@@ -761,6 +761,6 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
 
     BSLX_BCB_Deinit(&bcb_context);
     BSL_TlmHandler_IncrementCounter(lib, BSL_TELEMETRY_SUCCESS);
-    
+
     return BSL_SUCCESS;
 }

@@ -34,28 +34,30 @@
 
 #include "TelemetryHandler.h"
 
-
-typedef struct {
+typedef struct
+{
     atomic_uint_least64_t success;
     atomic_uint_least64_t fail;
 } BSLT_InternalCounters_t;
 
 static BSLT_InternalCounters_t tlm_counters;
-static pthread_once_t tlm_once = PTHREAD_ONCE_INIT;
+static pthread_once_t          tlm_once = PTHREAD_ONCE_INIT;
 
-
-static void BSLT_TelemetryCounters_Init_Once(void) {
+static void BSLT_TelemetryCounters_Init_Once(void)
+{
 
     atomic_init(&tlm_counters.success, 0u);
     atomic_init(&tlm_counters.fail, 0u);
 }
 
-static inline void BSLT_TelemetryCounters_Check_Init(void) {
+static inline void BSLT_TelemetryCounters_Check_Init(void)
+{
 
     (void)pthread_once(&tlm_once, BSLT_TelemetryCounters_Init_Once);
 }
 
-void BSLT_ResetTelemetryCounters(void) {
+void BSLT_ResetTelemetryCounters(void)
+{
 
     BSLT_TelemetryCounters_Check_Init();
 
@@ -63,30 +65,36 @@ void BSLT_ResetTelemetryCounters(void) {
     atomic_store_explicit(&tlm_counters.fail, 0u, memory_order_release);
 }
 
-size_t BSLT_RetrieveTelemetryCount(BSL_TelemetryType_e counter_type) {
+size_t BSLT_RetrieveTelemetryCount(BSL_TelemetryType_e counter_type)
+{
 
     BSLT_TelemetryCounters_Check_Init();
 
     size_t val;
 
-    if (counter_type == BSL_TELEMETRY_FAIL) {
+    if (counter_type == BSL_TELEMETRY_FAIL)
+    {
         val = atomic_load_explicit(&tlm_counters.fail, memory_order_acquire);
     }
-    else {
+    else
+    {
         val = atomic_load_explicit(&tlm_counters.success, memory_order_acquire);
     }
 
     return val;
 }
 
-void BSLT_IncrementTelemetryCount(BSL_TelemetryType_e counter_type) {
+void BSLT_IncrementTelemetryCount(BSL_TelemetryType_e counter_type)
+{
 
     BSLT_TelemetryCounters_Check_Init();
 
-    if (counter_type == BSL_TELEMETRY_FAIL) {
+    if (counter_type == BSL_TELEMETRY_FAIL)
+    {
         atomic_fetch_add_explicit(&tlm_counters.fail, 1u, memory_order_relaxed);
     }
-    else {
+    else
+    {
         atomic_fetch_add_explicit(&tlm_counters.success, 1u, memory_order_relaxed);
     }
 }
