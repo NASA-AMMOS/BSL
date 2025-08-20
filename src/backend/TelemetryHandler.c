@@ -31,6 +31,7 @@
 size_t BSL_TlmHandler_ResetCounters(const BSL_LibCtx_t *bsl)
 {
     CHK_ARG_NONNULL(bsl);
+    CHK_PRECONDITION(bsl->tlm_handler.reset_fn != NULL);
     bsl->tlm_handler.reset_fn();
     return BSL_SUCCESS;
 }
@@ -38,12 +39,14 @@ size_t BSL_TlmHandler_ResetCounters(const BSL_LibCtx_t *bsl)
 size_t BSL_TlmHandler_RetrieveCounter(const BSL_LibCtx_t *bsl, BSL_TelemetryType_e tlm_type)
 {
     CHK_ARG_NONNULL(bsl);
+    CHK_PRECONDITION(bsl->tlm_handler.retrieve_fn != NULL);
     return bsl->tlm_handler.retrieve_fn(tlm_type);
 }
 
 size_t BSL_TlmHandler_IncrementCounter(const BSL_LibCtx_t *bsl, BSL_TelemetryType_e tlm_type)
 {
     CHK_ARG_NONNULL(bsl);
+    CHK_PRECONDITION(bsl->tlm_handler.increment_fn != NULL);
     bsl->tlm_handler.increment_fn(tlm_type);
     return BSL_SUCCESS;
 }
