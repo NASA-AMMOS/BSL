@@ -30,6 +30,7 @@
 
 #include <stdint.h>
 #include <m-array.h>
+#include <m-string.h>
 #include <BPSecLib_Private.h>
 
 // NOLINTBEGIN
@@ -98,7 +99,7 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
  */
 typedef struct BSLP_PolicyRule_s
 {
-    BSL_StaticString_t        description;
+    string_t                description;
     BSLP_PolicyPredicate_t   *predicate;
     BSL_SecRole_e             role;
     BSL_BundleBlockTypeCode_e target_block_type;
@@ -158,7 +159,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
 /// @brief Concrete definition of a policy provider
 typedef struct BSLP_PolicyProvider_s
 {
-    BSL_StaticString_t     name;
+    string_t             name;
     BSLP_PolicyPredicate_t predicates[BSLP_POLICYPREDICATE_ARRAY_CAPACITY];
     size_t                 predicate_count;
     BSLP_PolicyRule_t      rules[BSLP_POLICYPREDICATE_ARRAY_CAPACITY];
