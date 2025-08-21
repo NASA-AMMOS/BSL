@@ -41,10 +41,10 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
     for (BSL_PolicyDict_it(policy_reg_it, bsl->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it);
          BSL_PolicyDict_next(policy_reg_it))
     {
-
         size_t act_ct = BSL_SecurityActionSet_CountActions(output_action_set);
 
         const BSL_PolicyDesc_t *policy = BSL_PolicyDict_cref(policy_reg_it)->value_ptr;
+        BSL_LOG_INFO("Inspecting PP (id %"PRIu64")", *BSL_PolicyDict_cref(policy_reg_it)->key_ptr);
         if (BSL_SUCCESS != policy->query_fn(policy->user_data, output_action_set, bundle, location))
         {
             return BSL_ERR_POLICY_FINAL;
@@ -70,11 +70,12 @@ int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_Securi
     CHK_ARG_NONNULL(response_output);
     CHK_ARG_NONNULL(bundle);
 
-    BSL_PolicyDict_it_t policy_reg_it;
-    for (BSL_PolicyDict_it(policy_reg_it, bsl->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it);
-         BSL_PolicyDict_next(policy_reg_it))
+    size_t act_ct = BSL_SecurityActionSet_CountActions(policy_actions);
+    for (size_t i = 0; i < act_ct; i ++)
     {
-        const BSL_PolicyDesc_t *policy = BSL_PolicyDict_cref(policy_reg_it)->value_ptr;
+        BSL_SecurityAction_t * act = BSL_SecActionList_get(policy_actions->actions, i);
+
+        const BSL_PolicyDesc_t *policy = BSL_PolicyDict_get(bsl->policy_reg, act->pp_id);
         if (BSL_SUCCESS != policy->finalize_fn(policy->user_data, policy_actions, bundle, response_output))
         {
             return BSL_ERR_POLICY_FINAL;
