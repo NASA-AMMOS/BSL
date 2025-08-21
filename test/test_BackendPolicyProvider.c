@@ -178,11 +178,11 @@ void test_MultiplePolicyProviders(void)
     TEST_ASSERT_EQUAL(0, BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, BSL_SAMPLE_PP_ID_2, policy_desc_2));
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
-    policy->pp_id = BSL_SAMPLE_PP_ID;
+    policy->pp_id                 = BSL_SAMPLE_PP_ID;
     strncpy(policy->name, "Unit Test Policy Provider 1!", sizeof(policy->name));
 
     BSLP_PolicyProvider_t *policy2 = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID_2)->user_data;
-    policy2->pp_id = BSL_SAMPLE_PP_ID_2;
+    policy2->pp_id                 = BSL_SAMPLE_PP_ID_2;
     strncpy(policy2->name, "Unit Test Policy Provider 2!", sizeof(policy2->name));
 
     BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
@@ -209,17 +209,17 @@ void test_MultiplePolicyProviders(void)
     BSLP_PolicyRule_AddParam(rule2, &bib_params2.scope_flags);
     BSLP_PolicyRule_AddParam(rule2, &bib_params2.test_key_id);
 
-    TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
+    TEST_ASSERT_EQUAL(
+        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
 
     BSL_SecurityActionSet_t action_set = { 0 };
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,
                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
-                                                           
+
     TEST_ASSERT_EQUAL(2, BSL_SecurityActionSet_CountActions(&action_set));
-    
-    for (size_t i = 0; i < action_set.action_count; i ++)
+
+    for (size_t i = 0; i < action_set.action_count; i++)
     {
         const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, i);
         TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(act));
@@ -241,7 +241,8 @@ void test_MultiplePolicyProviders(void)
 
     BSL_SecurityResponseSet_t *response_set = BSL_TestUtils_MallocEmptyPolicyResponse();
 
-    TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_FinalizeActions(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, response_set));
+    TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_FinalizeActions(&LocalTestCtx.bsl, &action_set,
+                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref, response_set));
 
     BSL_SecurityActionSet_Deinit(&action_set);
     BSL_FREE(response_set);

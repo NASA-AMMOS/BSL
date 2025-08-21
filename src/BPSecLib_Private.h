@@ -1306,7 +1306,8 @@ int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_Securi
 typedef int (*BSL_PolicyInspect_f)(const void *user_data, BSL_SecurityActionSet_t *output_action_set,
                                    const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location);
 
-/// @brief Callback interface to finalize policy provider over the action set. Finalize should ignore actions from different policy providers
+/// @brief Callback interface to finalize policy provider over the action set. Finalize should ignore actions from
+/// different policy providers
 typedef int (*BSL_PolicyFinalize_f)(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
                                     const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
 

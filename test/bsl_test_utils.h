@@ -48,7 +48,7 @@ extern "C" {
 #define RFC9173_EXAMPLE_A4_BCB_KEY "9104"
 
 /// @brief Sample policy provider ID
-#define BSL_SAMPLE_PP_ID 1
+#define BSL_SAMPLE_PP_ID   1
 #define BSL_SAMPLE_PP_ID_2 2
 
 #define quick_data_t(field, tgt) \
