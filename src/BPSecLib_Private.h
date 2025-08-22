@@ -529,9 +529,9 @@ int BSL_BundleCtx_DeleteBundle(BSL_BundleRef_t *bundle);
  */
 int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t bytesize);
 
-BSL_SeqReader_t * BSL_BundleCtx_ReadBTSD(BSL_BundleRef_t *bundle, uint64_t block_num);
+BSL_SeqReader_t *BSL_BundleCtx_ReadBTSD(BSL_BundleRef_t *bundle, uint64_t block_num);
 
-BSL_SeqWriter_t * BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num);
+BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num);
 
 #define BSL_DEFAULT_BYTESTR_LEN (128)
 
