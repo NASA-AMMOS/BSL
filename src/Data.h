@@ -100,4 +100,8 @@ int BSL_Data_CopyFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src);
  */
 int BSL_Data_AppendFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src);
 
+#ifdef __cplusplus
+} // extern C
+#endif
+
 #endif /* BSL_DATA_H_ */

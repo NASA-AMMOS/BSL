@@ -82,6 +82,7 @@ deinit
 Deinit
 deinitialize
 Deinitializes
+dereference
 dir
 DocID
 doxygen

@@ -237,7 +237,7 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
 
     QCBOREncodeContext encoder;
 
-    UsefulBuf qcbor_buf = buf->ptr ? (UsefulBuf){ .ptr = buf->ptr, .len = buf->len } : SizeCalculateUsefulBuf;
+    UsefulBuf qcbor_buf = buf->ptr ? (UsefulBuf) { .ptr = buf->ptr, .len = buf->len } : SizeCalculateUsefulBuf;
     QCBOREncode_Init(&encoder, qcbor_buf);
 
     {
