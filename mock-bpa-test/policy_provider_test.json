@@ -4,9 +4,9 @@
     "filter": {
       "rule_id": "1",
       "role": "s",
-      "src": "ipn:2.1",
       "tgt": 1,
-      "loc": "appin"
+      "loc": "clin",
+      "sc_id": 1
     },
     "spec": {
       "svc": "bib-integrity",
@@ -17,8 +17,12 @@
           "value": "9100"
         },
         {
-          "id": "aes_variant",
-          "value": "3"
+          "id": "sha_variant",
+          "value": "7"
+        },
+        {
+          "id": "scope_flags",
+          "value": "0"
         }
       ]
     },

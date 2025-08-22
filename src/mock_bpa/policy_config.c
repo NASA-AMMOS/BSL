@@ -184,19 +184,19 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
         const char *loc_str = json_string_value(loc);
         BSL_LOG_DEBUG("     loc    : %s\n", loc_str);
 
-        if (strcmp(loc_str, "appin"))
+        if (!strcmp(loc_str, "appin"))
         {
             policy_loc_enum = BSL_POLICYLOCATION_APPIN;
         }
-        else if (strcmp(loc_str, "appout"))
+        else if (!strcmp(loc_str, "appout"))
         {
             policy_loc_enum = BSL_POLICYLOCATION_APPOUT;
         }
-        else if (strcmp(loc_str, "clin"))
+        else if (!strcmp(loc_str, "clin"))
         {
             policy_loc_enum = BSL_POLICYLOCATION_CLIN;
         }
-        else if (strcmp(loc_str, "clout"))
+        else if (!strcmp(loc_str, "clout"))
         {
             policy_loc_enum = BSL_POLICYLOCATION_CLOUT;
         }
@@ -310,11 +310,11 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                         else if (!strcmp(id_str, "sha_variant"))
                         {
                             rfc9173_bib_sha_variantid_e sha_var;
-                            if (strcmp(value_str, "5"))
+                            if (!strcmp(value_str, "5"))
                             {
                                 sha_var = RFC9173_BIB_SHA_HMAC256;
                             } 
-                            else if (strcmp(value_str, "6"))
+                            else if (!strcmp(value_str, "6"))
                             {
                                 sha_var = RFC9173_BIB_SHA_HMAC384;
                             } 
@@ -323,13 +323,13 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                                 sha_var = RFC9173_BIB_SHA_HMAC512;
                             }
                             
-                            BSL_SecParam_InitInt64(params->param_aes_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, sha_var);
+                            BSL_SecParam_InitInt64(params->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, sha_var);
                             params_got |= 0x2;
                         }
                         else if (!strcmp(id_str, "scope_flags"))
                         {
                             uint64_t flag = strtol(value_str, NULL, 10); // FIXME
-                            BSL_SecParam_InitInt64(params->param_aad_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, flag);
+                            BSL_SecParam_InitInt64(params->param_integ_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, flag);
                             params_got |= 0x4;
                         }
                         else
@@ -347,14 +347,14 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                         }
                         else if (!strcmp(id_str, "iv"))
                         {
-                            // TODO
-                            // BSL_SecParam_InitBytestr(params->param_aes_variant, RFC9173_BCB_SECPARAM_IV, aes_var);
+                            // TODO covert value_str to bstring
+                            // BSL_SecParam_InitBytestr(params->param_init_vector, RFC9173_BCB_SECPARAM_IV, );
                             params_got |= 0x2;
                         }
                         else if (!strcmp(id_str, "aes_variant"))
                         {
                             rfc9173_bcb_aes_variant_e aes_var;
-                            if (strcmp(value_str, "1"))
+                            if (!strcmp(value_str, "1"))
                             {
                                 aes_var = RFC9173_BCB_AES_VARIANT_A128GCM;
                             } 
@@ -387,9 +387,6 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
             }
         }
     }
-
-    // TODO validate params_got
-    (void) params_got;
 
     // event set
     json_t *event_set = json_object_get(root, "event_set");
@@ -440,11 +437,32 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
     }
 
     BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
+    BSL_LOG_INFO("init w policy loc %d, ", policy_loc_enum);
     BSLP_PolicyPredicate_Init(predicate, policy_loc_enum, src_eid, sec_src_eid, dest_eid);
 
     BSLP_PolicyRule_t *rule = &policy->rules[policy->rule_count++];
     BSLP_PolicyRule_Init(rule, pp_cfg_file_path, predicate, sec_ctx_id, sec_role, sec_block_type,
                          target_block_type, policy_action_enum);
+
+    // TODO validate params_got
+    (void) params_got;
+
+    if (sec_ctx_id == 2) // BCB
+    {
+        BSLP_PolicyRule_AddParam(rule, params->param_aes_variant);
+        BSLP_PolicyRule_AddParam(rule, params->param_use_wrapped_key);
+        if (sec_role == BSL_SECROLE_SOURCE)
+        {
+            BSLP_PolicyRule_AddParam(rule, params->param_aad_scope_flag);
+            BSL_Crypto_SetRngGenerator(bsl_mock_bpa_rfc9173_bcb_cek);
+        }
+    }
+    else
+    {
+        BSLP_PolicyRule_AddParam(rule, params->param_sha_variant);
+        BSLP_PolicyRule_AddParam(rule, params->param_integ_scope_flag);
+    }
+    BSLP_PolicyRule_AddParam(rule, params->param_test_key);
 
     json_decref(root);
 }

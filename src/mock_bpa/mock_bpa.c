@@ -673,7 +673,7 @@ int main(int argc, char **argv)
     if (!retval)
     {
         int opt;
-        while ((opt = getopt(argc, argv, "ha:o:a:u:r:e:s:p:k:")) != -1)
+        while ((opt = getopt(argc, argv, "ha:o:a:u:r:e:s:p:k:j:")) != -1)
         {
             switch (opt)
             {
@@ -709,11 +709,12 @@ int main(int argc, char **argv)
                 case 'p':
                     mock_bpa_policy_registry_init(&policy_registry);
                     mock_bpa_handle_policy_config(optarg, policy_callbacks.user_data, &policy_registry);
-
-                    // TODO JSON parsing
-                    // // mock_bpa_handle_policy_config_from_json("src/mock_bpa/policy_provider_test.json",
-                    // policy_callbacks.user_data);
-
+                    policy_configured = true;
+                    break;
+                case 'j':
+                    mock_bpa_policy_registry_init(&policy_registry);
+                    mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(&policy_registry);
+                    mock_bpa_register_policy_from_json(optarg, policy_callbacks.user_data, params);
                     policy_configured = true;
                     break;
                 case 'k':
