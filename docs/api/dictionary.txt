@@ -78,6 +78,7 @@ decrypt
 DECRYPT
 decrypted
 DefaultSecuritContext's
+deallocated
 deinit
 Deinit
 deinitialize
