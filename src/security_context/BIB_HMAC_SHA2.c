@@ -180,6 +180,13 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
     return BSL_SUCCESS;
 }
 
+void BSLX_BIB_Deinit(BSLX_BIB_t *self)
+{
+    ASSERT_ARG_NONNULL(self);
+
+    BSL_PrimaryBlock_deinit(&self->primary_block);
+}
+
 /**
  * Computes the Integrity-Protected Plaintext (IPPT) for a canonical bundle block (non-primary)
  */
@@ -309,6 +316,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &bib_context.primary_block))
     {
         BSL_LOG_ERR("Failed to get bundle data");
+        BSLX_BIB_Deinit(&bib_context);
         BSL_Data_Deinit(&scratch_buffer);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
@@ -320,6 +328,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, target_blk_num, &bib_context.target_block))
         {
             BSL_LOG_ERR("Failed to get block data");
+            BSLX_BIB_Deinit(&bib_context);
             BSL_Data_Deinit(&scratch_buffer);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
@@ -339,6 +348,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (ippt_len <= 0)
     {
         BSL_LOG_ERR("GenIPPT returned %d", ippt_len);
+        BSLX_BIB_Deinit(&bib_context);
         BSL_Data_Deinit(&scratch_buffer);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
@@ -349,6 +359,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (hmac_nbytes < BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to generate BIB HMAC");
+        BSLX_BIB_Deinit(&bib_context);
         BSL_Data_Deinit(&scratch_buffer);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
@@ -370,6 +381,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
                        BSL_SecOper_GetTargetBlockNum(sec_oper), BSLX_Bytestr_AsData(&bib_context.hmac_result_val));
     BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
 
+    BSLX_BIB_Deinit(&bib_context);
     BSL_Data_Deinit(&scratch_buffer);
     return BSL_SUCCESS;
 }

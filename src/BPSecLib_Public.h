@@ -158,10 +158,25 @@ typedef struct BSL_PrimaryBlock_s
     uint64_t      field_lifetime;             ///< CBOR-decoded lifetime
     uint64_t      field_frag_offset;          ///< CBOR-decoded fragment offset (warning, may not be implemented yet).
     uint64_t      field_adu_length;           ///< CBOR-decoded field of ADU length
-    size_t        block_count; ///< Helpful count of total canonical blocks in bundle, not a field of the header.
+
+    /// Helpful count of total canonical blocks in bundle, not a field of the header.
+    size_t        block_count;
+    /** Array of size #block_count containing canonical block numbers in
+     * the same order in which they appear in the bundle.
+     * Use BSL_FREE() upon deinit of this struct.
+     */
+    uint64_t     *block_numbers;
+
+    // TODO replace with ::BSL_Data_t view
     uint8_t      *cbor;
     size_t        cbor_len;
 } BSL_PrimaryBlock_t;
+
+/** Deinitialize the use of a primary block metadata.
+ *
+ * @param[in,out] obj The instance to deinit.
+ */
+void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj);
 
 /** @brief Structure containing parsed Canonical Block fields.
  *
@@ -172,7 +187,7 @@ typedef struct BSL_CanonicalBlock_s
     uint64_t block_num; ///< CBOR-decoded block number (should always be > 0)
     uint64_t type_code; ///< CBOR-decoded block type code (should be > 0)
     uint64_t flags;     ///< CBOR-decoded flags field
-    uint64_t crc;       ///< CBOR-decoded block CRC
+    uint64_t crc_type;       ///< CBOR-decoded block CRC Type
     void    *btsd;      ///< Pointer to BTSD owned by the host BPA
     size_t   btsd_len;  ///< Length in bytes of the BTSD pointer.
 } BSL_CanonicalBlock_t;
@@ -195,10 +210,6 @@ typedef struct
 
     /// @brief Host BPA function to populate a Primary Block struct.
     int (*bundle_metadata_fn)(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBlock_t *result_primary_block);
-
-    /// @brief Host BPA function to populate a pre-allocated array with canonical block IDs
-    int (*bundle_get_block_ids)(const BSL_BundleRef_t *bundle_ref, size_t array_count, uint64_t *array_block_ids,
-                                size_t *result_count);
 
     /// @brief Host BPA function to populate a Canonical Block struct for a given block number.
     int (*block_metadata_fn)(const BSL_BundleRef_t *bundle_ref, uint64_t block_num, BSL_CanonicalBlock_t *result_block);

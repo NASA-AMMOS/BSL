@@ -89,6 +89,12 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, BSL_PolicyDesc_t desc)
     return BSL_SUCCESS;
 }
 
+void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    BSL_FREE(obj->block_numbers);
+}
+
 int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set,
                           const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location)
 {
@@ -116,22 +122,12 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
-    uint64_t blocks_array[primary_block.block_count];
-    size_t   total_blocks = 0;
-    if (BSL_SUCCESS != BSL_BundleCtx_GetBlockIds(bundle, primary_block.block_count, blocks_array, &total_blocks))
-    {
-        BSL_LOG_ERR("Failed to get block indices");
-        return BSL_ERR_HOST_CALLBACK_FAILED;
-    }
-
-    CHK_PROPERTY(total_blocks == primary_block.block_count);
-
-    for (size_t i = 0; i < total_blocks; i++)
+    for (size_t ix = 0; ix < primary_block.block_count; ix++)
     {
         BSL_CanonicalBlock_t block = { 0 };
-        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, blocks_array[i], &block))
+        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, primary_block.block_numbers[ix], &block))
         {
-            BSL_LOG_WARNING("Failed to get block number %" PRIu64, blocks_array[i]);
+            BSL_LOG_WARNING("Failed to get block number %" PRIu64, primary_block.block_numbers[ix]);
             continue;
         }
         BSL_SecActionList_it_t act_it;
@@ -166,6 +162,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
             }
         }
     }
+    BSL_PrimaryBlock_deinit(&primary_block);
 
     if (BSL_SecCtx_ValidatePolicyActionSet((BSL_LibCtx_t *)bsl, bundle, output_action_set) == false)
     {
@@ -190,13 +187,6 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     if (exec_code < BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to execute policy action set");
-    }
-
-    BSL_PrimaryBlock_t primary_block = { 0 };
-    if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
-    {
-        BSL_LOG_ERR("Failed to get bundle metadata");
-        return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
     int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);

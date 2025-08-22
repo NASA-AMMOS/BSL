@@ -30,25 +30,22 @@ static BSL_HostDescriptors_t HostDescriptorTable = { 0 };
 
 int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
 {
-    // Note, these used to assert non-NULL
-    // However, this was causing problems in Ubuntu environments
-    (void)(desc.eid_init);
-    (void)(desc.get_host_eid_fn);
-    (void)(desc.eid_deinit);
-    (void)(desc.bundle_metadata_fn);
-    (void)(desc.bundle_get_block_ids);
-    (void)(desc.block_metadata_fn);
-    (void)(desc.block_create_fn);
-    (void)(desc.block_remove_fn);
-    (void)(desc.block_realloc_btsd_fn);
+    CHK_PRECONDITION(desc.eid_init);
+    CHK_PRECONDITION(desc.get_host_eid_fn);
+    CHK_PRECONDITION(desc.eid_deinit);
+    CHK_PRECONDITION(desc.bundle_metadata_fn);
+    CHK_PRECONDITION(desc.block_metadata_fn);
+    CHK_PRECONDITION(desc.block_create_fn);
+    CHK_PRECONDITION(desc.block_remove_fn);
+    CHK_PRECONDITION(desc.block_realloc_btsd_fn);
 
     // Old-style callbacks
-    (void)(desc.eid_from_cbor);
-    (void)(desc.eid_from_text);
-    (void)(desc.eidpat_init);
-    (void)(desc.eidpat_deinit);
-    (void)(desc.eidpat_from_text);
-    (void)(desc.eidpat_match);
+    CHK_PRECONDITION(desc.eid_from_cbor);
+    CHK_PRECONDITION(desc.eid_from_text);
+    CHK_PRECONDITION(desc.eidpat_init);
+    CHK_PRECONDITION(desc.eidpat_deinit);
+    CHK_PRECONDITION(desc.eidpat_from_text);
+    CHK_PRECONDITION(desc.eidpat_match);
 
     HostDescriptorTable = desc;
     return BSL_SUCCESS;
@@ -77,20 +74,6 @@ int BSL_BundleCtx_GetBlockMetadata(const BSL_BundleRef_t *bundle, uint64_t block
     memset(result_block, 0, sizeof(*result_block));
     int result = HostDescriptorTable.block_metadata_fn(bundle, block_num, result_block);
     return (result == 0) ? BSL_SUCCESS : BSL_ERR_HOST_CALLBACK_FAILED;
-}
-
-int BSL_BundleCtx_GetBlockIds(const BSL_BundleRef_t *bundle, size_t array_count, uint64_t *block_ids_array,
-                              size_t *result_count)
-{
-    CHK_ARG_NONNULL(bundle);
-    CHK_ARG_EXPR(array_count > 0);
-    CHK_ARG_NONNULL(block_ids_array);
-    CHK_ARG_NONNULL(result_count);
-
-    *result_count = 0;
-    CHK_PRECONDITION(HostDescriptorTable.bundle_get_block_ids != NULL);
-    int returncode = HostDescriptorTable.bundle_get_block_ids(bundle, array_count, block_ids_array, result_count);
-    return (returncode == BSL_SUCCESS) ? 0 : BSL_ERR_HOST_CALLBACK_FAILED;
 }
 
 int BSL_BundleCtx_CreateBlock(BSL_BundleRef_t *bundle, uint64_t block_type_code, uint64_t *block_num)

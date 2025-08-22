@@ -563,7 +563,7 @@ int BSLX_BCB_Init(BSLX_BCB_t *bcb_context, const BSL_BundleRef_t *bundle, const 
     return BSL_SUCCESS;
 }
 
-static void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context)
+void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context)
 {
     ASSERT_ARG_NONNULL(bcb_context);
 
@@ -573,14 +573,14 @@ static void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context)
     BSL_Data_Deinit(&bcb_context->authtag);
     BSL_Data_Deinit(&bcb_context->iv);
     BSL_Data_Deinit(&bcb_context->wrapped_key);
+    BSL_PrimaryBlock_deinit(&bcb_context->primary_block);
+
     memset(bcb_context, 0, sizeof(*bcb_context));
 }
 
-int BSLX_BCB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
                      BSL_SecOutcome_t *sec_outcome)
 {
-    (void)lib;
-
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
     CHK_ARG_NONNULL(sec_outcome);

@@ -319,6 +319,7 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
     BSL_FREE(malloced_actionset);
     BSL_SecurityResponseSet_Deinit(malloced_responseset);
     BSL_FREE(malloced_responseset);
+    BSL_PrimaryBlock_deinit(&primary_block);
 }
 
 void test_RFC9173_AppendixA_Example3_Source(void)
@@ -392,6 +393,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
                                                               &mock_bpa_ctr->bundle_ref, malloced_actionset);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_result);
+    BSL_PrimaryBlock_deinit(&primary_block);
 
     // Should have created a new security block
     BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &primary_block);
@@ -407,6 +409,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_FREE(malloced_actionset);
     BSL_SecurityResponseSet_Deinit(malloced_responseset);
     BSL_FREE(malloced_responseset);
+    BSL_PrimaryBlock_deinit(&primary_block);
 }
 
 void test_RFC9173_AppendixA_Example4_Acceptor(void)
@@ -504,6 +507,7 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_FREE(malloced_actionset);
     BSL_SecurityResponseSet_Deinit(malloced_responseset);
     BSL_FREE(malloced_responseset);
+    BSL_PrimaryBlock_deinit(&primary_block);
 }
 
 void test_RFC9173_AppendixA_Example4_Source(void)
@@ -573,10 +577,11 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
                                                               &mock_bpa_ctr->bundle_ref, malloced_actionset);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_result);
+    BSL_PrimaryBlock_deinit(&primary_block);
 
-    BSL_PrimaryBlock_t prim_blk;
-    BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &prim_blk);
-    TEST_ASSERT_TRUE(prim_blk.block_count >= 3 && prim_blk.block_count <= 4);
+    BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &primary_block);
+    TEST_ASSERT_TRUE(primary_block.block_count >= 3);
+    TEST_ASSERT_TRUE(primary_block.block_count <= 4);
 
     BSL_SecurityAction_Deinit(malloced_action);
     BSL_FREE(malloced_action);
@@ -584,4 +589,5 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_FREE(malloced_actionset);
     BSL_SecurityResponseSet_Deinit(malloced_responseset);
     BSL_FREE(malloced_responseset);
+    BSL_PrimaryBlock_deinit(&primary_block);
 }

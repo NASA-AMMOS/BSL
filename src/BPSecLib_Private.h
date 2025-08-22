@@ -387,7 +387,7 @@ int BSL_Data_CopyFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src);
 int BSL_Data_AppendFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src);
 
 /// @brief Forward declaration for file-like sequential reader.
-typedef struct BSL_SeqReader BSL_SeqReader_t;
+typedef struct BSL_SeqReader_s BSL_SeqReader_t;
 
 /** Release resources from a sequential reader.
  *
@@ -407,7 +407,7 @@ int BSL_SeqReader_Deinit(BSL_SeqReader_t *obj);
 int BSL_SeqReader_Get(BSL_SeqReader_t *obj, uint8_t *buf, size_t *bufsize);
 
 /// @brief Forward-declaration for file-like interface for a sequential writer.
-typedef struct BSL_SeqWriter BSL_SeqWriter_t;
+typedef struct BSL_SeqWriter_s BSL_SeqWriter_t;
 
 /** Release resources from a sequential writer.
  *
@@ -582,17 +582,6 @@ typedef enum
  */
 int BSL_BundleCtx_GetBundleMetadata(const BSL_BundleRef_t *bundle, BSL_PrimaryBlock_t *result_primary_block);
 
-/** @brief Returns an array in which each element contains the id of the corresponding block.abort
- *
- * @param[in] bundle    Bundle context
- * @param[in] array_count   Number of elements in `block_id_index_array`
- * @param[out] block_id_index_array Array of `array_count` elements for results
- * @param[out] result_count Contains the number of elements put into the array
- * @return 0 on success, negative on error
- */
-int BSL_BundleCtx_GetBlockIds(const BSL_BundleRef_t *bundle, size_t array_count, uint64_t *block_ids_array,
-                              size_t *result_count);
-
 /** @brief Returns information about the bundle Canonical block
  *
  * @param[in] bundle Context bundle
@@ -637,6 +626,10 @@ int BSL_BundleCtx_DeleteBundle(BSL_BundleRef_t *bundle);
  * @return 0 on success, negative on failure.
  */
 int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t bytesize);
+
+BSL_SeqReader_t * BSL_BundleCtx_ReadBTSD(BSL_BundleRef_t *bundle, uint64_t block_num);
+
+BSL_SeqWriter_t * BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num);
 
 #define BSL_DEFAULT_BYTESTR_LEN (128)
 
