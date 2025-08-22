@@ -268,23 +268,28 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
 
     BSL_LOG_DEBUG("decoding primary block...");
     int res = bsl_mock_decode_primary(dec, &(bundle->primary_block));
-    if (res || QCBORDecode_GetError(dec))
+    if (res || (QCBOR_SUCCESS != QCBORDecode_GetError(dec)))
     {
-        BSL_LOG_ERR("failed in primary block");
+        BSL_LOG_ERR("failed decoding primary block");
         return 2;
     }
 
     // iterate until failure of CBOR, not block decoder
     while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &decitem))
     {
+        if (bundle->block_count >= MockBPA_BUNDLE_MAXBLOCKS)
+        {
+            BSL_LOG_ERR("number of canonical blocks exceeded limit %zd", MockBPA_BUNDLE_MAXBLOCKS);
+            return 3;
+        }
         BSL_LOG_DEBUG("decoding canonical block (at %zd)...", QCBORDecode_Tell(dec));
 
         MockBPA_CanonicalBlock_t blk = { 0 };
 
         res = bsl_mock_decode_canonical(dec, &blk);
-        if (res || QCBORDecode_GetError(dec))
+        if (res || (QCBOR_SUCCESS != QCBORDecode_GetError(dec)))
         {
-            BSL_LOG_ERR("failed in canonical block");
+            BSL_LOG_ERR("failed decoding canonical block");
             BSL_FREE(blk.btsd);
             return 3;
         }
