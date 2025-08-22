@@ -248,14 +248,16 @@ int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
     return 0;
 }
 
-int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
+int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *data)
 {
     size_t req = 0;
     int    res = EVP_DigestSignFinal(hmac_ctx->libhandle, NULL, &req);
     CHK_PROPERTY(res == 1);
 
-    *hmac_len = req;
-    res       = EVP_DigestSignFinal(hmac_ctx->libhandle, *hmac, hmac_len);
+    res = BSL_Data_Resize(data, req);
+    CHK_PROPERTY(res == 0);
+
+    res = EVP_DigestSignFinal(hmac_ctx->libhandle, data->ptr, &req);
     CHK_PROPERTY(res == 1);
 
     return 0;

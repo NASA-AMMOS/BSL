@@ -179,11 +179,10 @@ int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader);
 /**
  * Finalize HMAC tag
  * @param[in,out] hmac_ctx pointer to hmac context struct to add data to
- * @param[out] hmac ptr to hmac tag
- * @param[out] hmac_len ptr to tag length
+ * @param[out] hmac The allocated tag output.
  * @return 0 if successful
  */
-int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len);
+int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *hmac);
 
 /**
  * Deinitialize HMAC context resources

@@ -326,17 +326,17 @@ void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_
         default:
             TEST_ABORT();
     }
-    uint8_t hmac_buf[hmac_sz];
-    void   *hmac_buf_ptr = hmac_buf;
-    size_t  hmac_len;
-    TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Finalize(&hmac, &hmac_buf_ptr, &hmac_len));
-    TEST_ASSERT_EQUAL(hmac_sz, hmac_len);
 
-    TEST_ASSERT_EQUAL_INT(hmac_len, expected_data.len);
-    TEST_ASSERT_EQUAL_MEMORY(hmac_buf_ptr, expected_data.ptr, expected_data.len);
+    BSL_Data_t hmac_data = BSL_DATA_INIT_NULL;
+    TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Finalize(&hmac, &hmac_data));
+    TEST_ASSERT_EQUAL(hmac_sz, hmac_data.len);
+
+    TEST_ASSERT_EQUAL_INT(hmac_data.len, expected_data.len);
+    TEST_ASSERT_EQUAL_MEMORY(expected_data.ptr, hmac_data.ptr, expected_data.len);
 
     TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Deinit(&hmac));
 
+    BSL_Data_Deinit(&hmac_data);
     BSL_Data_Deinit(&expected_data);
     BSL_Data_Deinit(&pt_in_data);
     string_clear(exp_txt);

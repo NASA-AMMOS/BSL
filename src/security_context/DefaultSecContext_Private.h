@@ -51,15 +51,6 @@ typedef struct BSLX_BlockMetadata_s
     BSL_Data_t btsd;
 } BSLX_BlockMetadata_t;
 
-typedef struct BSLX_Bytestr_s
-{
-    uint8_t _bytes[BSL_DEFAULT_BYTESTR_LEN + 1];
-    size_t  bytelen;
-} BSLX_Bytestr_t;
-
-size_t     BSLX_Bytestr_GetCapacity(void);
-BSL_Data_t BSLX_Bytestr_AsData(BSLX_Bytestr_t *self);
-
 typedef struct BSLX_BIB_s
 {
     /// @brief set to external pointer which will outlive the BIB context
@@ -71,16 +62,16 @@ typedef struct BSLX_BIB_s
     int64_t              sha_variant;
     uint64_t             sha_variant_uint;
     int64_t              _crypto_sha_variant;
-    BSLX_Bytestr_t       wrapped_key;
-    BSLX_Bytestr_t       override_key;
+    BSL_Data_t           wrapped_key;
+    BSL_Data_t           override_key;
     uint64_t             hmac_result_id;
-    BSLX_Bytestr_t       hmac_result_val;
+    BSL_Data_t           hmac_result_val;
 } BSLX_BIB_t;
 
 int  BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper);
 void BSLX_BIB_Deinit(BSLX_BIB_t *self);
-int  BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space);
-int  BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data);
+int  BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space);
+int  BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data);
 
 /**
  * BCB encryption context with crypto primitives.

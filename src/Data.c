@@ -144,6 +144,7 @@ int BSL_Data_Resize(BSL_Data_t *data, size_t len)
 
     if (!data->owned)
     {
+        // this was a view, but will no longer be
         data->ptr = NULL;
     }
     BSL_DataPtr_t got = BSL_REALLOC(data->ptr, len);

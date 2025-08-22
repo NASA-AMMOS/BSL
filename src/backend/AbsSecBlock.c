@@ -280,7 +280,7 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
             }
             else
             {
-                BSL_Data_t bytestr;
+                BSL_Data_t bytestr = BSL_DATA_INIT_NULL;
                 BSL_SecParam_GetAsBytestr(param, &bytestr);
                 UsefulBufC bytestr_buf = { .ptr = bytestr.ptr, .len = bytestr.len };
                 QCBOREncode_AddBytes(&encoder, bytestr_buf);

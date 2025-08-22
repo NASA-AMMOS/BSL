@@ -98,6 +98,7 @@ int BSL_SecParam_GetAsBytestr(const BSL_SecParam_t *self, BSL_Data_t *result)
     CHK_ARG_NONNULL(result);
     CHK_PRECONDITION(BSL_SecParam_IsConsistent(self));
 
+    BSL_Data_Deinit(result);
     return BSL_Data_InitView(result, self->_bytelen, (uint8_t *)self->_bytes);
 }
 

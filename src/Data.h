@@ -59,6 +59,7 @@ typedef struct BSL_Data_s
  * @sa BSL_Data_Init()
  */
 #define BSL_DATA_INIT_NULL                    \
+    (BSL_Data_t)                              \
     {                                         \
         .owned = false, .ptr = NULL, .len = 0 \
     }

@@ -403,7 +403,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             case RFC9173_BCB_SECPARAM_IV:
             {
                 ASSERT_PRECONDITION(!is_int);
-                BSL_Data_t as_data;
+                BSL_Data_t as_data = BSL_DATA_INIT_NULL;
                 if (BSL_SecParam_GetAsBytestr(param, &as_data) < 0)
                 {
                     bcb_context->err_count++;
@@ -473,8 +473,9 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             case BSL_SECPARAM_TYPE_KEY_ID:
             {
                 ASSERT_PRECONDITION(!is_int);
-                BSL_Data_t res;
+                BSL_Data_t res = BSL_DATA_INIT_NULL;
                 ASSERT_POSTCONDITION(BSL_SUCCESS == BSL_SecParam_GetAsBytestr(param, &res));
+                // TODO this cannot assume null-terminated text
                 bcb_context->key_id = (char *)res.ptr;
                 BSL_LOG_DEBUG("Param[%" PRIu64 "]: KEY_ID value = %s", param_id, bcb_context->key_id);
                 break;

@@ -58,18 +58,6 @@ bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const B
     return false;
 }
 
-size_t BSLX_Bytestr_GetCapacity(void)
-{
-    return BSL_DEFAULT_BYTESTR_LEN;
-}
-
-BSL_Data_t BSLX_Bytestr_AsData(BSLX_Bytestr_t *self)
-{
-    BSL_Data_t result;
-    BSL_Data_InitView(&result, self->bytelen, (BSL_DataPtr_t)(self->_bytes));
-    return result;
-}
-
 /**
  * Provides the mapping from the security-context-specific ID defined in RFC9173
  * to the local ID of the SHA variant used by the crypto engine (OpenSSL).
@@ -108,8 +96,12 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(sec_oper);
     memset(self, 0, sizeof(*self));
+
     self->sha_variant           = -1;
     self->integrity_scope_flags = -1;
+    self->wrapped_key           = BSL_DATA_INIT_NULL;
+    self->override_key          = BSL_DATA_INIT_NULL;
+    self->hmac_result_val       = BSL_DATA_INIT_NULL;
 
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
     {
@@ -125,16 +117,15 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
         if (param_id == BSL_SECPARAM_TYPE_KEY_ID)
         {
             ASSERT_PRECONDITION(!is_int);
-            BSL_Data_t res;
+            BSL_Data_t res = BSL_DATA_INIT_NULL;
             BSL_SecParam_GetAsBytestr(param, &res);
+            // TODO this cannot assume null-terminated text
             self->key_id = (char *)res.ptr;
         }
         else if (param_id == BSL_SECPARAM_TYPE_INT_FIXED_KEY)
         {
             ASSERT_PRECONDITION(!is_int);
-            BSL_Data_t bytestr_data = BSLX_Bytestr_AsData(&self->override_key);
-            BSL_SecParam_GetAsBytestr(param, &bytestr_data);
-            self->override_key.bytelen = bytestr_data.len;
+            BSL_SecParam_GetAsBytestr(param, &self->override_key);
         }
         else if (param_id == RFC9173_BIB_PARAMID_SHA_VARIANT)
         {
@@ -149,9 +140,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
         else if (param_id == RFC9173_BIB_PARAMID_WRAPPED_KEY)
         {
             ASSERT_PRECONDITION(!is_int);
-            BSL_Data_t bytestr_data = BSLX_Bytestr_AsData(&self->wrapped_key);
-            BSL_SecParam_GetAsBytestr(param, &bytestr_data);
-            self->wrapped_key.bytelen = bytestr_data.len;
+            BSL_SecParam_GetAsBytestr(param, &self->wrapped_key);
         }
         else
         {
@@ -186,20 +175,23 @@ void BSLX_BIB_Deinit(BSLX_BIB_t *self)
     ASSERT_ARG_NONNULL(self);
 
     BSL_PrimaryBlock_deinit(&self->primary_block);
+    BSL_Data_Deinit(&self->wrapped_key);
+    BSL_Data_Deinit(&self->override_key);
+    BSL_Data_Deinit(&self->hmac_result_val);
 }
 
 /**
  * Computes the Integrity-Protected Plaintext (IPPT) for a canonical bundle block (non-primary)
  */
-int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
+int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
 {
     ASSERT_ARG_NONNULL(self);
-    ASSERT_ARG_EXPR(ippt_space.len > 0);
-    ASSERT_ARG_NONNULL(ippt_space.ptr);
+    ASSERT_ARG_EXPR(ippt_space->len > 0);
+    ASSERT_ARG_NONNULL(ippt_space->ptr);
 
     QCBOREncodeContext encoder;
     QCBORError         cbor_err  = QCBOR_ERR_UNSUPPORTED;
-    UsefulBuf          result_ub = { .ptr = ippt_space.ptr, ippt_space.len };
+    UsefulBuf          result_ub = { .ptr = ippt_space->ptr, ippt_space->len };
     QCBOREncode_Init(&encoder, result_ub);
     QCBOREncode_AddInt64(&encoder, self->integrity_scope_flags);
 
@@ -245,6 +237,7 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
         BSL_LOG_ERR("CBOR encoding IPPT failed, code=%" PRIu32 " (%s)", cbor_err, qcbor_err_to_str(cbor_err));
         return BSL_ERR_ENCODING;
     }
+    ippt_space->len = ippt_result.len;
     return (int)(ippt_result.len);
 }
 
@@ -254,7 +247,7 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
  * Negative indicates error.
  * NOTE: This does NOT resize the result, the caller must do so.
  */
-int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
+int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
 {
     CHK_ARG_NONNULL(self);
 
@@ -267,30 +260,27 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         BSL_AuthCtx_Deinit(&hmac_ctx);
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
-    if ((res = BSL_AuthCtx_DigestBuffer(&hmac_ctx, ippt_data.ptr, ippt_data.len)) != 0)
+    if ((res = BSL_AuthCtx_DigestBuffer(&hmac_ctx, ippt_data->ptr, ippt_data->len)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_input_data_buffer failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
 
-    void  *hmac_result_ptr = (void *)&self->hmac_result_val._bytes[0];
-    size_t hmaclen         = 0;
-    if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, &hmac_result_ptr, &hmaclen)) != 0)
+    if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, &self->hmac_result_val)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_finalize failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
-    self->hmac_result_val.bytelen = hmaclen;
 
     if ((res = BSL_AuthCtx_Deinit(&hmac_ctx)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_deinit failed with code %d", res);
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
-    ASSERT_POSTCONDITION(hmaclen > 0);
-    return (int)hmaclen;
+    ASSERT_POSTCONDITION(self->hmac_result_val.len > 0);
+    return (int)self->hmac_result_val.len;
 }
 
 int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
@@ -315,6 +305,8 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     scratch.size     = scratch_buffer.len;
     scratch.position = 1;
 
+    // TODO remove this magic number, use two-pass encoding to determine length
+    // see BSL_AbsSecBlock_EncodeToCBOR() for example
     BSL_Data_t ippt_space = { .ptr = BSLX_ScratchSpace_take(&scratch, 5000), .len = 5000 };
 
     BSLX_BIB_t bib_context = { 0 };
@@ -351,7 +343,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         BSL_LOG_WARNING("Failed to get security block data");
     }
 
-    const int ippt_len = BSLX_BIB_GenIPPT(&bib_context, ippt_space);
+    const int ippt_len = BSLX_BIB_GenIPPT(&bib_context, &ippt_space);
     if (ippt_len <= 0)
     {
         BSL_LOG_ERR("GenIPPT returned %d", ippt_len);
@@ -360,9 +352,8 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
     ASSERT_POSTCONDITION(ippt_len > 0);
-    ippt_space.len = (size_t)ippt_len;
 
-    const int hmac_nbytes = BSLX_BIB_GenHMAC(&bib_context, ippt_space);
+    const int hmac_nbytes = BSLX_BIB_GenHMAC(&bib_context, &ippt_space);
     if (hmac_nbytes < BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to generate BIB HMAC");
@@ -383,10 +374,9 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         }
     }
 
-    BSL_SecResult_t *bib_result   = BSLX_ScratchSpace_take(&scratch, BSL_SecResult_Sizeof());
-    BSL_Data_t       bytestr_data = BSLX_Bytestr_AsData(&bib_context.hmac_result_val);
+    BSL_SecResult_t *bib_result = BSLX_ScratchSpace_take(&scratch, BSL_SecResult_Sizeof());
     BSL_SecResult_Init(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
-                       BSL_SecOper_GetTargetBlockNum(sec_oper), &bytestr_data);
+                       BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
     BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
 
     BSLX_BIB_Deinit(&bib_context);
