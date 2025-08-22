@@ -105,12 +105,11 @@ void test_PolicyProvider_InspectSingleBIBRuleset(void)
 
     BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
-                                BSL_TestUtils_GetEidPatternFromText("*:**"),
-                                BSL_TestUtils_GetEidPatternFromText("*:**"));
+                              BSL_TestUtils_GetEidPatternFromText("*:**"), BSL_TestUtils_GetEidPatternFromText("*:**"));
 
     BSLP_PolicyRule_t *rule = &policy->rules[policy->rule_count++];
     BSLP_PolicyRule_Init(rule, "Verify BIB on APPIN from anywhere", predicate, 1, BSL_SECROLE_VERIFIER,
-                            BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
+                         BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
 
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
