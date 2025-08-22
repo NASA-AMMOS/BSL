@@ -43,7 +43,6 @@
 #include <syslog.h>
 #include <time.h>
 #include <sys/types.h>
-#include <qcbor/UsefulBuf.h>
 
 #include "BPSecLib_Public.h"
 
@@ -574,7 +573,7 @@ typedef struct BSL_SecResult_s BSL_SecResult_t;
  * @return 0 on success, negative on error
  */
 int BSL_SecResult_Init(BSL_SecResult_t *self, uint64_t result_id, uint64_t context_id, uint64_t target_block_num,
-                       BSL_Data_t content);
+                       const BSL_Data_t *content);
 
 /** Return true when internal invariant checks pass
  *
@@ -918,19 +917,19 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
  *
  * @param[in] self This ASB.
  * @param[in] buf A buffer with allocated space for the encoded CBOR
- * or the @c SizeCalculateUsefulBuf value to get the real size.
+ * or a zero-length buffer to calculate the needed size.
  * @return Integer contains number of bytes written to buffer, negative indicates error.
  *
  */
-ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, UsefulBuf buf);
+ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *buf);
 
 /** Decodes and populates this ASB from a CBOR string.
  *
  * @param[in,out] self This allocated, but uninitialized ASB to populate.
- * @param[in] encoded_cbor A buffer containing a CBOR string representing the ASB
+ * @param[in] buf A buffer containing a CBOR string representing the ASB
  * @return Negative on error
  */
-int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *encoded_cbor);
+int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *buf);
 
 /** @brief Represents the output following execution of a security operation.
  */

@@ -34,7 +34,6 @@ static void bsl_data_int_reset(BSL_Data_t *data)
     data->owned = false;
     data->ptr   = NULL;
     data->len   = 0;
-    memset(data, 0, sizeof(*data));
 }
 
 static void bsl_data_int_free(BSL_Data_t *data)

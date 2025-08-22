@@ -71,7 +71,8 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
     result_primary_block->field_frag_offset          = bundle->primary_block.frag_offset;
     result_primary_block->field_adu_length           = bundle->primary_block.adu_length;
 
-    BSL_Data_InitView(&result_primary_block->encoded, bundle->primary_block.encoded.len, bundle->primary_block.encoded.ptr);
+    BSL_Data_InitView(&result_primary_block->encoded, bundle->primary_block.encoded.len,
+                      bundle->primary_block.encoded.ptr);
 
     result_primary_block->block_count   = bundle->block_count;
     result_primary_block->block_numbers = BSL_CALLOC(bundle->block_count, sizeof(uint64_t));

@@ -664,7 +664,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, const BSL_BundleRef_t *bundle, const
         BSL_SecResult_t *auth_tag = BSL_CALLOC(1, BSL_SecResult_Sizeof());
         if (BSL_SUCCESS
             != BSL_SecResult_Init(auth_tag, RFC9173_BCB_RESULTID_AUTHTAG, RFC9173_CONTEXTID_BCB_AES_GCM,
-                                  BSL_SecOper_GetTargetBlockNum(sec_oper), bcb_context.authtag))
+                                  BSL_SecOper_GetTargetBlockNum(sec_oper), &bcb_context.authtag))
         {
             BSL_LOG_ERR("Failed to append BCB auth tag");
             BSL_FREE(auth_tag);

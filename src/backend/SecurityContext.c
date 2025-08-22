@@ -93,7 +93,10 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_AbsSecBlock_AddParam(&abs_sec_block, BSL_SecOutcome_GetParamAt(outcome, index));
     }
 
-    ssize_t encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, SizeCalculateUsefulBuf);
+    BSL_Data_t asb_data;
+    BSL_Data_Init(&asb_data);
+    ssize_t encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, &asb_data);
+    BSL_Data_Deinit(&asb_data);
     if (encode_result <= 0)
     {
         BSL_LOG_ERR("Failed to encode ASB");
@@ -114,8 +117,9 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
-    UsefulBuf btsd_view = { .len = sec_blk.btsd_len, .ptr = sec_blk.btsd };
-    encode_result       = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, btsd_view);
+    BSL_Data_InitView(&asb_data, sec_blk.btsd_len, sec_blk.btsd);
+    encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, &asb_data);
+    BSL_Data_Deinit(&asb_data);
     if (encode_result <= BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to encode ASB");
@@ -205,8 +209,10 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
             // At this point we know that the encoded ASB into BTSD will be smaller than what exists
             // right now, since we removed a block.
             // SO encode over it, and then
-            UsefulBuf block_btsd_data = { .len = sec_blk.btsd_len, .ptr = sec_blk.btsd };
-            int       nbytes          = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, block_btsd_data);
+            BSL_Data_t asb_data;
+            BSL_Data_InitView(&asb_data, sec_blk.btsd_len, sec_blk.btsd);
+            ssize_t nbytes = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, &asb_data);
+            BSL_Data_Deinit(&asb_data);
             if (nbytes < 0)
             {
                 BSL_LOG_ERR("Failed to re-encode ASB into sec block BTSD");
@@ -326,8 +332,10 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
             // At this point we know that the encoded ASB into BTSD will be smaller than what exists
             // right now, since we removed a block.
             // SO encode over it, and then
-            UsefulBuf block_btsd_data = { .len = sec_blk.btsd_len, .ptr = sec_blk.btsd };
-            int       nbytes          = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, block_btsd_data);
+            BSL_Data_t asb_data;
+            BSL_Data_InitView(&asb_data, sec_blk.btsd_len, sec_blk.btsd);
+            ssize_t nbytes = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, &asb_data);
+            BSL_Data_Deinit(&asb_data);
             if (nbytes < 0)
             {
                 BSL_LOG_ERR("Failed to re-encode ASB into sec block BTSD");
@@ -422,7 +430,10 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_AbsSecBlock_AddParam(&abs_sec_block, param_ptr);
     }
 
-    ssize_t encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, SizeCalculateUsefulBuf);
+    BSL_Data_t asb_data;
+    BSL_Data_Init(&asb_data);
+    ssize_t encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, &asb_data);
+    BSL_Data_Deinit(&asb_data);
     if (encode_result <= 0)
     {
         BSL_LOG_ERR("Failed to encode ASB");
@@ -443,8 +454,9 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
-    UsefulBuf btsd_view = { .len = sec_blk.btsd_len, .ptr = sec_blk.btsd };
-    encode_result       = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, btsd_view);
+    BSL_Data_InitView(&asb_data, sec_blk.btsd_len, sec_blk.btsd);
+    encode_result = BSL_AbsSecBlock_EncodeToCBOR(&abs_sec_block, &asb_data);
+    BSL_Data_Deinit(&asb_data);
     if (encode_result <= 0)
     {
         BSL_LOG_ERR("Failed to encode ASB");

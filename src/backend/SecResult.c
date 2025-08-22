@@ -26,19 +26,19 @@
 #include "SecResult.h"
 
 int BSL_SecResult_Init(BSL_SecResult_t *self, uint64_t result_id, uint64_t context_id, uint64_t target_block_num,
-                       BSL_Data_t content)
+                       const BSL_Data_t *content)
 {
     CHK_ARG_NONNULL(self);
-    CHK_ARG_EXPR(content.len > 0);
-    CHK_ARG_NONNULL(content.ptr);
+    CHK_ARG_EXPR(content->len > 0);
+    CHK_ARG_NONNULL(content->ptr);
 
     memset(self, 0, sizeof(*self));
     self->result_id        = result_id;
     self->context_id       = context_id;
     self->target_block_num = target_block_num;
-    CHK_PROPERTY(content.len < sizeof(self->_bytes));
-    self->_bytelen = content.len;
-    memcpy(self->_bytes, content.ptr, self->_bytelen);
+    CHK_PROPERTY(content->len < sizeof(self->_bytes));
+    self->_bytelen = content->len;
+    memcpy(self->_bytes, content->ptr, self->_bytelen);
 
     CHK_POSTCONDITION(BSL_SecResult_IsConsistent(self));
     return BSL_SUCCESS;

@@ -68,6 +68,16 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
     return BSL_SUCCESS;
 }
 
+void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+
+    BSL_FREE(obj->block_numbers);
+    obj->block_numbers = NULL;
+
+    BSL_Data_Deinit(&obj->encoded);
+}
+
 int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_SecCtxDesc_t desc)
 {
     CHK_ARG_NONNULL(lib);
@@ -87,16 +97,6 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, BSL_PolicyDesc_t desc)
 
     lib->policy_registry = desc;
     return BSL_SUCCESS;
-}
-
-void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
-{
-    ASSERT_ARG_NONNULL(obj);
-
-    BSL_FREE(obj->block_numbers);
-    obj->block_numbers = NULL;
-
-    BSL_Data_Deinit(&obj->encoded);
 }
 
 int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set,

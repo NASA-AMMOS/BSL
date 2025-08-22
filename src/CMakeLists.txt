@@ -40,7 +40,6 @@ set(BSL_FRONT_C
 add_library(bsl_front)
 target_sources(bsl_front PUBLIC ${BSL_FRONT_H})
 target_sources(bsl_front PRIVATE ${BSL_FRONT_C})
-target_link_libraries(bsl_front PUBLIC QCBOR::qcbor)
 
 set_target_properties(bsl_front
     PROPERTIES

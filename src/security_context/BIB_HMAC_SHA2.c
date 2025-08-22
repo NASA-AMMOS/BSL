@@ -65,7 +65,8 @@ size_t BSLX_Bytestr_GetCapacity(void)
 
 BSL_Data_t BSLX_Bytestr_AsData(BSLX_Bytestr_t *self)
 {
-    BSL_Data_t result = { .owned = false, .len = self->bytelen, .ptr = self->_bytes };
+    BSL_Data_t result;
+    BSL_Data_InitView(&result, self->bytelen, (BSL_DataPtr_t)(self->_bytes));
     return result;
 }
 
@@ -382,9 +383,10 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         }
     }
 
-    BSL_SecResult_t *bib_result = BSLX_ScratchSpace_take(&scratch, BSL_SecResult_Sizeof());
+    BSL_SecResult_t *bib_result   = BSLX_ScratchSpace_take(&scratch, BSL_SecResult_Sizeof());
+    BSL_Data_t       bytestr_data = BSLX_Bytestr_AsData(&bib_context.hmac_result_val);
     BSL_SecResult_Init(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
-                       BSL_SecOper_GetTargetBlockNum(sec_oper), BSLX_Bytestr_AsData(&bib_context.hmac_result_val));
+                       BSL_SecOper_GetTargetBlockNum(sec_oper), &bytestr_data);
     BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
 
     BSLX_BIB_Deinit(&bib_context);
