@@ -66,11 +66,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_Data_Init(&out_data);
     if (!retval)
     {
-        ssize_t needlen = BSL_AbsSecBlock_EncodeToCBOR(asb, SizeCalculateUsefulBuf);
+        ssize_t needlen = BSL_AbsSecBlock_EncodeToCBOR(asb, &out_data);
         assert(needlen > 0);
 
         EXPECT_EQ(0, BSL_Data_Resize(&out_data, (size_t)needlen));
-        ssize_t usedlen = BSL_AbsSecBlock_EncodeToCBOR(asb, (UsefulBuf) { out_data.ptr, out_data.len });
+        ssize_t usedlen = BSL_AbsSecBlock_EncodeToCBOR(asb, &out_data);
         EXPECT_EQ(needlen, usedlen);
     }
 
