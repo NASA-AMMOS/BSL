@@ -19,6 +19,10 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+/** @file
+ * @ingroup frontend
+ * Managed memory interface using only C99 types and functions.
+ */
 #ifndef BSL_DATA_H_
 #define BSL_DATA_H_
 
@@ -35,11 +39,15 @@ typedef uint8_t *BSL_DataPtr_t;
 /// Pointer to constant data for BSL_Data_t
 typedef const uint8_t *BSL_DataConstPtr_t;
 
-/** Heap data storage and views.
+/** Optional heap data storage and views.
  */
 typedef struct BSL_Data_s
 {
-    /// @brief True if this data is a copy
+    /** Determine if the data is owned by this instance.
+     * True if this data is allocated and deallocated with the lifetime
+     * of this struct instance.
+     * False if this data is a view onto some other, externally-managed data.
+     */
     bool owned;
     /// @brief Pointer to the front of the buffer
     BSL_DataPtr_t ptr;
