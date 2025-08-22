@@ -73,26 +73,20 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
         BSL_LOG_ERR("Failed to get bundle metadata");
         return target_block_num;
     }
-    uint64_t block_ids_arr[res_prim_blk.block_count];
-    size_t   res_ct;
-    if (BSL_BundleCtx_GetBlockIds(bundle, res_prim_blk.block_count, block_ids_arr, &res_ct) != BSL_SUCCESS)
-    {
-        BSL_LOG_ERR("Failed to get bundle block ids");
-        return target_block_num;
-    }
 
-    for (uint64_t i = 0; i < res_ct; i++)
+    for (uint64_t ix = 0; ix < res_prim_blk.block_count; ix++)
     {
         BSL_CanonicalBlock_t test_block = { 0 };
-        if (BSL_SUCCESS == BSL_BundleCtx_GetBlockMetadata(bundle, block_ids_arr[i], &test_block))
+        if (BSL_SUCCESS == BSL_BundleCtx_GetBlockMetadata(bundle, res_prim_blk.block_numbers[ix], &test_block))
         {
             if (test_block.type_code == target_block_type)
             {
-                target_block_num = block_ids_arr[i];
+                target_block_num = res_prim_blk.block_numbers[ix];
                 break;
             }
         }
     }
+    BSL_PrimaryBlock_deinit(&res_prim_blk);
 
     // Returns zero if target block type not found.
     return target_block_num;
@@ -217,6 +211,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         }
         BSL_LOG_INFO("Created sec operation for rule `%s`", rule->description);
     }
+    BSL_PrimaryBlock_deinit(&primary_block);
 
     for (size_t i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
     {
@@ -400,6 +395,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
         BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block);
         CHK_PRECONDITION(BSLP_PolicyPredicate_IsMatch(self->predicate, location, primary_block.field_src_node_id,
                                                       primary_block.field_dest_eid));
+        BSL_PrimaryBlock_deinit(&primary_block);
     }
 
     // The rule gives us the target block TYPE, now we have to find the ID of the block with that type.

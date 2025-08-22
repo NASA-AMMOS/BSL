@@ -6,7 +6,7 @@
 
 if(NOT CMAKE_C_COMPILER_ID MATCHES "Clang"
    OR NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  message(FATAL "Can only fuzz with clang compiler")
+  message(FATAL_ERROR "Can only fuzz with clang compiler")
 endif()
 
 # Options for all compilation units

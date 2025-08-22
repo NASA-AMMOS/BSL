@@ -232,12 +232,14 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
     return (int)things_removed;
 }
 
-ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, UsefulBuf buf)
+ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *buf)
 {
     CHK_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
 
     QCBOREncodeContext encoder;
-    QCBOREncode_Init(&encoder, buf);
+
+    UsefulBuf qcbor_buf = buf->ptr ? (UsefulBuf) { .ptr = buf->ptr, .len = buf->len } : SizeCalculateUsefulBuf;
+    QCBOREncode_Init(&encoder, qcbor_buf);
 
     {
         QCBOREncode_OpenArray(&encoder);
@@ -326,17 +328,18 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, UsefulBuf bu
     return (ssize_t)encode_sz;
 }
 
-int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *encoded_cbor)
+int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *buf)
 {
     CHK_ARG_NONNULL(self);
-    CHK_ARG_EXPR(encoded_cbor->len > 0);
-    CHK_ARG_EXPR(encoded_cbor->ptr != NULL);
+    CHK_ARG_EXPR(buf->len > 0);
+    CHK_ARG_EXPR(buf->ptr != NULL);
 
     BSL_AbsSecBlock_InitEmpty(self);
 
     QCBORDecodeContext asbdec;
-    UsefulBufC         useful_encoded_cbor = { .ptr = encoded_cbor->ptr, .len = encoded_cbor->len };
-    QCBORDecode_Init(&asbdec, useful_encoded_cbor, QCBOR_DECODE_MODE_NORMAL);
+
+    UsefulBufC qcbor_buf = { .ptr = buf->ptr, .len = buf->len };
+    QCBORDecode_Init(&asbdec, qcbor_buf, QCBOR_DECODE_MODE_NORMAL);
     QCBORItem asbitem;
 
     QCBORDecode_EnterArray(&asbdec, NULL);
@@ -486,11 +489,13 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *en
 
             if (asbitem.uDataType == QCBOR_TYPE_BYTE_STRING)
             {
-                UsefulBufC buf;
-                QCBORDecode_GetByteString(&asbdec, &buf);
-                BSL_Data_t      bufdata = { .owned = 0, .ptr = (uint8_t *)buf.ptr, .len = buf.len };
+                UsefulBufC bstr_qcbor_buf;
+                QCBORDecode_GetByteString(&asbdec, &bstr_qcbor_buf);
+                BSL_Data_t bstr_buf;
+                BSL_Data_InitView(&bstr_buf, bstr_qcbor_buf.len, (BSL_DataPtr_t)bstr_qcbor_buf.ptr);
+
                 BSL_SecResult_t result;
-                int result_code = BSL_SecResult_Init(&result, item_id, self->sec_context_id, target_id, bufdata);
+                int result_code = BSL_SecResult_Init(&result, item_id, self->sec_context_id, target_id, &bstr_buf);
                 ASSERT_PROPERTY(result_code == 0);
                 BSL_LOG_DEBUG("ASB: Parsed Result (target_block=%" PRIu64 ", len=%zu)", result.target_block_num,
                               result._bytelen);

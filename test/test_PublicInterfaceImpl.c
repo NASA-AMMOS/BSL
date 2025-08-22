@@ -605,6 +605,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set,
                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
             TEST_ASSERT_EQUAL(0, apply_result);
+            BSL_PrimaryBlock_deinit(&primary_block);
 
             BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
             if (good_key)
@@ -652,6 +653,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                     TEST_ASSERT_EQUAL(false, ((MockBPA_Bundle_t *)LocalTestCtx.mock_bpa_ctr.bundle_ref.data)->retain);
                 }
             }
+            BSL_PrimaryBlock_deinit(&primary_block);
 
             break;
         }
@@ -668,6 +670,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set,
                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
             TEST_ASSERT_EQUAL(0, apply_result);
+            BSL_PrimaryBlock_deinit(&primary_block);
 
             BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
             if (good_key)
@@ -720,6 +723,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                     TEST_ASSERT_EQUAL(false, ((MockBPA_Bundle_t *)LocalTestCtx.mock_bpa_ctr.bundle_ref.data)->retain);
                 }
             }
+            BSL_PrimaryBlock_deinit(&primary_block);
 
             break;
         }
@@ -736,11 +740,13 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set,
                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
             TEST_ASSERT_EQUAL(0, apply_result);
+            BSL_PrimaryBlock_deinit(&primary_block);
 
             BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
 
             // sourced sec blocks
             TEST_ASSERT_EQUAL(1 + sec_blks_ct, primary_block.block_count);
+            BSL_PrimaryBlock_deinit(&primary_block);
 
             for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i++)
             {
@@ -808,6 +814,8 @@ void n_test_BSL_6(void)
 
     BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(2, primary_block.block_count);
+
+    BSL_PrimaryBlock_deinit(&primary_block);
 }
 
 // Recreate MockBPA test BSL_43
@@ -849,6 +857,7 @@ void test_BSL_32(void)
                               BSL_SecOper_GetConclusion(BSL_SecurityAction_GetSecOperAtIndex(act, j)));
         }
     }
+    BSL_PrimaryBlock_deinit(&primary_block);
 
     BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
 
@@ -861,4 +870,6 @@ void test_BSL_32(void)
     TEST_ASSERT_EQUAL(12, res_blk.type_code);
     TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 4, &res_blk));
     TEST_ASSERT_EQUAL(12, res_blk.type_code);
+
+    BSL_PrimaryBlock_deinit(&primary_block);
 }

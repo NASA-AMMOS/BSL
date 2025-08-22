@@ -58,8 +58,9 @@ typedef struct MockBPA_PrimaryBlock_s
     uint64_t                  lifetime;
     uint64_t                  frag_offset;
     uint64_t                  adu_length;
-    uint8_t                  *cbor;
-    size_t                    cbor_len;
+
+    /// Encoded form owned by this struct
+    BSL_Data_t encoded;
 } MockBPA_PrimaryBlock_t;
 
 typedef struct MockBPA_CanonicalBlock_s

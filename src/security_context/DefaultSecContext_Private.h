@@ -77,9 +77,10 @@ typedef struct BSLX_BIB_s
     BSLX_Bytestr_t       hmac_result_val;
 } BSLX_BIB_t;
 
-int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper);
-int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space);
-int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data);
+int  BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper);
+void BSLX_BIB_Deinit(BSLX_BIB_t *self);
+int  BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space);
+int  BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data);
 
 /**
  * BCB encryption context with crypto primitives.
@@ -134,6 +135,7 @@ void *BSLX_ScratchSpace_take(BSLX_ScratchSpace_t *scratch, size_t len);
 int   BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, const BSL_SecOper_t *sec_oper);
 
 int  BSLX_BCB_Init(BSLX_BCB_t *bcb_context, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
+void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context);
 int  BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context);
 int  BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context);
 void BSLX_EncodeHeader(const BSL_CanonicalBlock_t *block, QCBOREncodeContext *encoder);
