@@ -184,9 +184,8 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
         return 4;
     }
 
-    blk->cbor_len = end - begin;
-    blk->cbor     = BSL_MALLOC(blk->cbor_len);
-    memcpy(blk->cbor, (const uint8_t *)buf.ptr + begin, blk->cbor_len);
+    BSL_Data_InitBuffer(&blk->encoded, end - begin);
+    memcpy(blk->encoded.ptr, (const uint8_t *)buf.ptr + begin, blk->encoded.len);
 
     return 0;
 }

@@ -25,14 +25,16 @@ configure_file(BSLConfig.c.in BSLConfig.c @ONLY)
 
 # Frontend library
 set(BSL_FRONT_H
+  ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
   ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Private.h
   ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Public.h
-  ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h
   ${CMAKE_CURRENT_SOURCE_DIR}/CryptoInterface.h
 )
 
 set(BSL_FRONT_C
   ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/Data.c
 )
 
 add_library(bsl_front)
@@ -120,7 +122,6 @@ set(BSL_DYNAMIC_H
 
 set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_Data.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/HostInterface.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/LoggingStderr.c

@@ -44,10 +44,8 @@ int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle)
         BSL_FREE(bundle->blocks[i].btsd);
         memset(&bundle->blocks[i], 0, sizeof(bundle->blocks[i]));
     }
-    if (bundle->primary_block.cbor)
-    {
-        BSL_FREE(bundle->primary_block.cbor);
-    }
+    BSL_Data_Deinit(&bundle->primary_block.encoded);
+
     memset(bundle, 0, sizeof(*bundle));
     return 0;
 }
@@ -72,10 +70,10 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
     result_primary_block->field_lifetime             = bundle->primary_block.lifetime;
     result_primary_block->field_frag_offset          = bundle->primary_block.frag_offset;
     result_primary_block->field_adu_length           = bundle->primary_block.adu_length;
-    result_primary_block->cbor                       = bundle->primary_block.cbor;
-    result_primary_block->cbor_len                   = bundle->primary_block.cbor_len;
 
-    result_primary_block->block_count                = bundle->block_count;
+    BSL_Data_InitView(&result_primary_block->encoded, bundle->primary_block.encoded.len, bundle->primary_block.encoded.ptr);
+
+    result_primary_block->block_count   = bundle->block_count;
     result_primary_block->block_numbers = BSL_CALLOC(bundle->block_count, sizeof(uint64_t));
     if (!result_primary_block->block_numbers)
     {

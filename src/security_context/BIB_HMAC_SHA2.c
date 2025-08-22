@@ -207,7 +207,8 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
         // Now begin process of computing IPPT
         if (self->integrity_scope_flags & RFC9173_BIB_INTEGSCOPEFLAG_INC_PRIM)
         {
-            UsefulBufC prim_encoded = { .ptr = self->primary_block.cbor, .len = self->primary_block.cbor_len };
+            UsefulBufC prim_encoded = { .ptr = self->primary_block.encoded.ptr,
+                                        .len = self->primary_block.encoded.len };
             QCBOREncode_AddEncoded(&encoder, prim_encoded);
         }
         if (self->integrity_scope_flags & RFC9173_BIB_INTEGSCOPEFLAG_INC_TARGET_HDR)
@@ -221,14 +222,19 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
         BSLX_EncodeHeader(&self->sec_block, &encoder);
     }
 
-    const uint8_t *target_cbor     = self->primary_block.cbor;
-    size_t         target_cbor_len = self->primary_block.cbor_len;
-
+    const uint8_t *target_cbor;
+    size_t         target_cbor_len;
     if (self->target_block.block_num > 0)
     {
         target_cbor     = self->target_block.btsd;
         target_cbor_len = self->target_block.btsd_len;
     }
+    else
+    {
+        target_cbor     = self->primary_block.encoded.ptr;
+        target_cbor_len = self->primary_block.encoded.len;
+    }
+
     UsefulBufC target_blk_btsd = { .ptr = target_cbor, .len = target_cbor_len };
     QCBOREncode_AddBytes(&encoder, target_blk_btsd);
     UsefulBufC ippt_result;

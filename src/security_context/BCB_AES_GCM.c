@@ -67,8 +67,8 @@ int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
     if (flags & 0x01UL)
     {
         BSL_LOG_DEBUG("Adding primary block to AAD");
-        UsefulBufC prim_blk_encoded = { .ptr = bcb_context->primary_block.cbor,
-                                        .len = bcb_context->primary_block.cbor_len };
+        UsefulBufC prim_blk_encoded = { .ptr = bcb_context->primary_block.encoded.ptr,
+                                        .len = bcb_context->primary_block.encoded.len };
         QCBOREncode_AddEncoded(&aad_enc, prim_blk_encoded);
     }
     if (flags & 0x02UL)

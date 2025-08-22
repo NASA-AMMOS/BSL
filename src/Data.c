@@ -20,12 +20,12 @@
  * subcontract 1700763.
  */
 /** @file
- * @ingroup backend_dyn
+ * @ingroup frontend
  * Implementation of the data containers for handling variable-sized buffers and ownership.
  */
+#include "Data.h"
+#include "BPSecLib_Private.h"
 #include <string.h>
-
-#include <BPSecLib_Private.h>
 
 static void bsl_data_int_reset(BSL_Data_t *data)
 {

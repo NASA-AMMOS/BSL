@@ -36,6 +36,7 @@
 #include <stdint.h>
 
 #include "BSLConfig.h"
+#include "Data.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +51,11 @@ extern "C" {
 
 /// Forward declaration for BSL library context.
 typedef struct BSL_LibCtx_s BSL_LibCtx_t;
+
+/**
+ * Return size of library context
+ */
+size_t BSL_LibCtx_Sizeof(void);
 
 /// @brief Forward declaration of ::BSL_SecurityResponseSet_s, which contains information for BSL and the host BPA to
 /// process the Bundle.
@@ -134,7 +140,7 @@ typedef struct BSL_HostEIDPattern_s
 
 /** @brief Reference to a Bundle owned and stored in the host BPA
  *
- * @note The BSL internally never attempts to parse the opaque pointer contained here.
+ * @note The BSL internally never attempts to dereference the opaque pointer contained here.
  */
 typedef struct BSL_BundleRef_s
 {
@@ -144,6 +150,9 @@ typedef struct BSL_BundleRef_s
 /** @brief Contains Bundle Primary Block fields and metadata.
  *
  *  @note This contains a *snapshot* of the fields at the time it was queried. It is not a pointer.
+ *
+ * Instances are initialized as part of BSL_BundleCtx_GetBundleMetadata().
+ * Instances are de-initialized with BSL_PrimaryBlock_deinit().
  */
 typedef struct BSL_PrimaryBlock_s
 {
@@ -160,16 +169,15 @@ typedef struct BSL_PrimaryBlock_s
     uint64_t      field_adu_length;           ///< CBOR-decoded field of ADU length
 
     /// Helpful count of total canonical blocks in bundle, not a field of the header.
-    size_t        block_count;
+    size_t block_count;
     /** Array of size #block_count containing canonical block numbers in
      * the same order in which they appear in the bundle.
-     * Use BSL_FREE() upon deinit of this struct.
      */
-    uint64_t     *block_numbers;
+    uint64_t *block_numbers;
 
-    // TODO replace with ::BSL_Data_t view
-    uint8_t      *cbor;
-    size_t        cbor_len;
+    /** The encoded form of the primary block as contiguous data.
+     */
+    BSL_Data_t encoded;
 } BSL_PrimaryBlock_t;
 
 /** Deinitialize the use of a primary block metadata.
@@ -187,7 +195,7 @@ typedef struct BSL_CanonicalBlock_s
     uint64_t block_num; ///< CBOR-decoded block number (should always be > 0)
     uint64_t type_code; ///< CBOR-decoded block type code (should be > 0)
     uint64_t flags;     ///< CBOR-decoded flags field
-    uint64_t crc_type;       ///< CBOR-decoded block CRC Type
+    uint64_t crc_type;  ///< CBOR-decoded block CRC Type
     void    *btsd;      ///< Pointer to BTSD owned by the host BPA
     size_t   btsd_len;  ///< Length in bytes of the BTSD pointer.
 } BSL_CanonicalBlock_t;
