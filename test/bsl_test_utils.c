@@ -235,18 +235,9 @@ bool BSL_TestUtils_IsB16StrEqualTo(const char *b16_string, BSL_Data_t encoded_va
 
 void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t bufflen)
 {
-
-    uint8_t *ascii_buf = BSL_MALLOC(bufflen * 2 + 10);
-    memset(ascii_buf, 0, bufflen * 2 + 10);
-    const char hex_digits[] = "0123456789abcdef";
-    size_t     i;
-    for (i = 0; i < bufflen; i++)
-    {
-        ascii_buf[(i * 2)]     = hex_digits[(buff[i] >> 4) & 0x0F];
-        ascii_buf[(i * 2) + 1] = hex_digits[buff[i] & 0x0F];
-    }
+    uint8_t ascii_buf[2*bufflen+1];
+    BSL_Log_DumpAsHexString(ascii_buf, sizeof(ascii_buf), buff, bufflen);
     BSL_LOG_INFO("%s :: %s", message, ascii_buf);
-    BSL_FREE(ascii_buf);
 }
 
 int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cbor_seq)
