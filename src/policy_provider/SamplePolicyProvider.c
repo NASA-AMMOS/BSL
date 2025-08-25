@@ -343,8 +343,7 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
-    string_init(self->description);
-    string_set_str(self->description, desc);
+    string_init_set_str(self->description, desc);
     self->sec_block_type    = sec_block_type;
     self->target_block_type = target_block_type;
     self->predicate         = predicate;
