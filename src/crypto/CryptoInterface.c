@@ -91,7 +91,14 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
     EVP_CIPHER_CTX   *ctx    = EVP_CIPHER_CTX_new();
     ASSERT_ARG_NONNULL(ctx);
 
+    BSL_LOG_INFO("init-ing CEK buff with %zu", kek->raw.len);
     BSL_Data_InitBuffer(&cek->raw, kek->raw.len);
+
+    BSL_LOG_INFO("wrapped key! %zu", wrapped_key->len);
+    for (size_t i = 0 ; i < wrapped_key->len; i ++)
+    {
+        BSL_LOG_INFO("%02x", wrapped_key->ptr[i]);
+    }
 
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     ASSERT_POSTCONDITION(dec_result == 1);
@@ -114,6 +121,12 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
         return -1;
     }
     cek->raw.len += (size_t)final_len;
+
+    BSL_LOG_INFO("cek now %zu,", cek->raw.len);
+    for (size_t i = 0 ; i < cek->raw.len; i ++)
+    {
+        BSL_LOG_INFO("%02x", cek->raw.ptr[i]);
+    }
 
     EVP_CIPHER_CTX_free(ctx);
 
@@ -286,6 +299,12 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     ASSERT_ARG_NONNULL(key_handle);
 
     BSLB_CryptoKey_t *key = (BSLB_CryptoKey_t *) key_handle;
+
+    BSL_LOG_INFO("cipher init wit key: %zu ", key->raw.len);
+    for (size_t i = 0 ; i < key->raw.len; i ++)
+    {
+        BSL_LOG_INFO("%02x", key->raw.ptr[i]);
+    }
 
     cipher_ctx->libhandle   = EVP_CIPHER_CTX_new();
     cipher_ctx->enc         = enc;

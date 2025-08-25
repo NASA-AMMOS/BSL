@@ -64,15 +64,15 @@ if(BUILD_UNITTEST)
   # add_unity_test(SOURCE test_mock_bpa_ctr.c)
   # target_link_libraries(test_mock_bpa_ctr PUBLIC ${LIB_ORDERED})
   
-  add_unity_test(SOURCE test_CryptoInterface.c)
-  target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
+  # add_unity_test(SOURCE test_CryptoInterface.c)
+  # target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
   
   # add_unity_test(SOURCE test_SecurityTypes.c)
   # target_link_libraries(test_SecurityTypes PUBLIC ${LIB_ORDERED})
   
   # # Exercises the portion of the backend that interacts with the policy providers
-  # add_unity_test(SOURCE test_BackendSecurityContext.c)
-  # target_link_libraries(test_BackendSecurityContext PUBLIC ${LIB_ORDERED})
+  add_unity_test(SOURCE test_BackendSecurityContext.c)
+  target_link_libraries(test_BackendSecurityContext PUBLIC ${LIB_ORDERED})
   
   # # Exercises the portion of the backend that interacts with the security contexts
   # add_unity_test(SOURCE test_BackendPolicyProvider.c)

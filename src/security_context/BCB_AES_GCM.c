@@ -133,7 +133,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    bcb_context->skip_keywrap = (bcb_context->wrapped_key.len > 0);
+    bcb_context->skip_keywrap = !(bcb_context->wrapped_key.len > 0);
 
     if (bcb_context->skip_keywrap)
     {
@@ -230,7 +230,11 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     BSL_Data_Resize(&bcb_context->btsd_replacement, plaintext_len + extra_bytes);
 
     BSL_Data_Deinit(&bcb_context->authtag);
-    BSL_FREE((void *) cipher_key);
+    
+    if (!bcb_context->skip_keywrap)
+    {
+        BSL_FREE((void *) cipher_key);
+    }
     BSL_Cipher_Deinit(&cipher);
     ASSERT_POSTCONDITION(bcb_context->authtag.len == 0);
     return BSL_SUCCESS;
