@@ -111,9 +111,9 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
-    BSL_SecurityActionSet_Init(output_action_set);
-
     BSL_SecurityAction_t *action = BSL_CALLOC(1, BSL_SecurityAction_Sizeof());
+    BSL_SecurityAction_Init(action);
+
     BSLP_SecOperPtrList_t secops;
     BSLP_SecOperPtrList_init(secops);
 
@@ -234,9 +234,18 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
 int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
                         const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
 {
+    const BSLP_PolicyProvider_t *self = user_data;
+    ASSERT_ARG_EXPR(BSLP_PolicyProvider_IsConsistent(self));
+
     for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(output_action_set); i++)
     {
         const BSL_SecurityAction_t *action = BSL_SecurityActionSet_GetActionAtIndex(output_action_set, i);
+
+        if (BSL_SecurityAction_GetPPID(action) != self->pp_id)
+        {
+            continue;
+        }
+
         for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(action); j++)
         {
             const BSL_SecOper_t *secop = BSL_SecurityAction_GetSecOperAtIndex(action, j);
@@ -296,6 +305,7 @@ void BSLP_Deinit(void *user_data)
         BSLP_PolicyPredicate_Deinit(&self->predicates[index]);
     }
     memset(self, 0, sizeof(*self));
+    BSL_FREE(user_data);
 }
 
 void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,

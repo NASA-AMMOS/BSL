@@ -44,7 +44,12 @@ extern "C" {
 /// @brief Key ID for the Appendix A3 key in OpenSSL
 #define RFC9173_EXAMPLE_A3_KEY "9103"
 
+/// @brief Key ID for the Appendix A4 key in OpenSSL
 #define RFC9173_EXAMPLE_A4_BCB_KEY "9104"
+
+/// @brief Sample policy provider ID
+#define BSL_SAMPLE_PP_ID   1
+#define BSL_SAMPLE_PP_ID_2 2
 
 #define quick_data_t(field, tgt) \
     field.len = sizeof(tgt);     \

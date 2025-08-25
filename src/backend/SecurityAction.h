@@ -36,4 +36,5 @@ struct BSL_SecurityAction_s
 {
     BSL_SecOperList_t sec_op_list;
     size_t            err_ct;
+    uint64_t          pp_id;
 };
