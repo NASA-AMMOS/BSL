@@ -195,8 +195,7 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 /**
  * @todo Doxygen
  */
-int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *key_id,
-                         size_t aes_variant);
+int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, void* cek_handle, const char *kek_id, size_t aes_variant);
 
 /**
  * @todo Doxygen
@@ -219,11 +218,10 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
 /** Get pointers to an existing key, if present.
  *
  * @param keyid The key to search for.
- * @param[out] secret Pointer to the stored secret buffer, if successful.
- * @param[out] secret_len Pointer to the stored secret length, if successful.
+ * @param[in, out] key_handle pointer to pointer for new key handle
  * @return Zero upon success.
  */
-int BSLB_Crypto_GetRegistryKey(const char *keyid, const uint8_t **secret, size_t *secret_len);
+int BSLB_Crypto_GetRegistryKey(const char *keyid, void **key_handle);
 
 /**
  * Add additional authenticated data (AAD) to cipher context
@@ -282,7 +280,12 @@ int BSL_Cipher_FinalizeData(BSL_Cipher_t *cipher_ctx, BSL_Data_t *extra);
  */
 int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
 
-int BSL_Crypto_GenKey(uint8_t *key_buffer, size_t key_length);
+/**
+ * Generate a new cryptographic key
+ * @param[in] key_length length of new key. Should be 16 or 32
+ * @param[in, out] key_out pointer to pointer for new key handle
+ */
+int BSL_Crypto_GenKey(size_t key_length, void **key_out);
 
 /**
  * Generate initialization vector (IV) for AES-GCM for BCBs

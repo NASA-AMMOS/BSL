@@ -255,13 +255,9 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    BSL_Data_t content_enc_key = { 0 };
-    if (BSL_SUCCESS != BSL_Data_InitBuffer(&content_enc_key, BSLX_MAX_KEYLEN))
-    {
-        BSL_LOG_ERR("Cannot allocate space for key");
-        BSL_Data_Deinit(&content_enc_key);
-        return BSL_ERR_SECURITY_CONTEXT_FAILED;
-    }
+    void *key_handle;
+    BSL_Cipher_t cipher = { 0 };
+    int cipher_init;
 
     // Generated the CEK, using keywrap when needed
     if (bcb_context->skip_keywrap)
@@ -271,54 +267,42 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_LOG_WARNING("Skipping keywrap (this is not advised)");
         // Directly load key_id into content enc key
         if (BSL_SUCCESS
-            != BSLB_Crypto_GetRegistryKey(bcb_context->key_id, (const uint8_t **)&content_enc_key.ptr,
-                                          &content_enc_key.len))
+            != BSLB_Crypto_GetRegistryKey(bcb_context->key_id, &key_handle))
         {
             BSL_LOG_ERR("Cannot get registry key");
-            BSL_Data_Deinit(&content_enc_key);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
-        ASSERT_PROPERTY(content_enc_key.len > 0);
-        ASSERT_PROPERTY(content_enc_key.ptr == NULL);
     }
     else
     {
-        // FIXME the key bytes shouldn't be copied outside of crypto library.
-        // possible alternative:
-        // GenKey should instead return a keyid and add generated key to registry
         const size_t keysize = is_aes128 ? 16 : 32;
         BSL_LOG_DEBUG("Generating %zu bit AES key", keysize * 8);
-        if (BSL_SUCCESS != BSL_Crypto_GenKey(content_enc_key.ptr, keysize))
+        
+        if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &key_handle))
         {
             BSL_LOG_ERR("Failed to generate AES key");
-            BSL_Data_Deinit(&content_enc_key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
-        content_enc_key.len = keysize;
 
         if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, BSLX_MAX_KEYLEN))
         {
             BSL_LOG_ERR("Failed to allocate wrapped key");
-            BSL_Data_Deinit(&content_enc_key);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
 
-        int wrap_result = BSL_Crypto_WrapKey(&bcb_context->wrapped_key, content_enc_key, bcb_context->key_id, aes_mode);
+        int wrap_result = BSL_Crypto_WrapKey(&bcb_context->wrapped_key, key_handle, bcb_context->key_id, aes_mode);
         if (BSL_SUCCESS != wrap_result)
         {
             BSL_LOG_ERR("Failed to wrap AES key");
-            BSL_Data_Deinit(&content_enc_key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
     }
 
-    BSL_Cipher_t cipher = { 0 };
-    int cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, aes_mode, bcb_context->iv.ptr, bcb_context->iv.len,
+    cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, aes_mode, bcb_context->iv.ptr, bcb_context->iv.len,
                                       content_enc_key);
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
-        BSL_Data_Deinit(&content_enc_key);
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
