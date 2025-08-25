@@ -164,6 +164,7 @@ typedef struct BSLP_PolicyProvider_s
     size_t                 predicate_count;
     BSLP_PolicyRule_t      rules[BSLP_POLICYPREDICATE_ARRAY_CAPACITY];
     size_t                 rule_count;
+    uint64_t               pp_id;
 } BSLP_PolicyProvider_t;
 
 void BSLP_Deinit(void *user_data);
