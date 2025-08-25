@@ -38,13 +38,18 @@ extern "C" {
 
 // NOLINTBEGIN
 /** @struct BSL_SecCtxDict_t
- *  Stable dict of security context descriptors (key: context ID | value: security context descriptor struct)
- *  @struct BSL_PolicyDict_t
- *  Stable dict of policy provider descriptors (key: policy provider ID | value: policy provider descriptor struct).
- * Policy provider IDs arbitrary, unique, and control the order of use
+ *  Stable dict of security context descriptors (key: context ID | value: security context descriptor struct.
  */
 /// @cond Doxygen_Suppress
 DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
+/// @endcond
+
+/**
+ * @struct BSL_PolicyDict_t
+ * Stable dict of policy provider descriptors (key: policy provider ID | value: policy provider descriptor struct).
+ * Policy provider IDs are arbitrary, unique, and control the order of use.
+ */
+/// @cond Doxygen_Suppress
 BPTREE_DEF2(BSL_PolicyDict, 4, uint64_t, M_BASIC_OPLIST, BSL_PolicyDesc_t, M_POD_OPLIST)
 /// @endcond
 // NOLINTEND
