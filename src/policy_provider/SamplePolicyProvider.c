@@ -36,7 +36,6 @@
 static bool BSLP_PolicyProvider_IsConsistent(const BSLP_PolicyProvider_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    ASSERT_ARG_EXPR(strlen(self->name) < sizeof(self->name)); // TODO - Safer strlen since no strnlen
     ASSERT_ARG_EXPR(self->rule_count < (sizeof(self->rules) / sizeof(BSLP_PolicyRule_t)));
     return true;
 }
@@ -54,7 +53,6 @@ static bool BSLP_PolicyPredicate_IsConsistent(const BSLP_PolicyPredicate_t *self
 static bool BSLP_PolicyRule_IsConsistent(const BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    ASSERT_ARG_EXPR(strlen(self->description) < sizeof(self->description));
     ASSERT_ARG_NONNULL(self->params);
     ASSERT_ARG_EXPR(BSL_SECROLE_ISVALID(self->role));
     ASSERT_ARG_EXPR(self->sec_block_type > 0);
@@ -355,7 +353,7 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
-    strncpy(self->description, desc, sizeof(self->description) - 1);
+    string_init_set_str(self->description, desc);
     self->sec_block_type    = sec_block_type;
     self->target_block_type = target_block_type;
     self->predicate         = predicate;
@@ -373,6 +371,7 @@ void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
     BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", self->description, self->nparams);
+    string_clear(self->description);
     BSL_FREE(self->params);
     memset(self, 0, sizeof(*self));
 }

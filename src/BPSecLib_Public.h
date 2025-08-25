@@ -74,9 +74,6 @@ typedef struct BSL_SecCtxDesc_s BSL_SecCtxDesc_t;
 /// @brief Forward-declaration for structure containing callbacks to  provider.
 typedef struct BSL_PolicyDesc_s BSL_PolicyDesc_t;
 
-#define BSL_DEFAULT_STRLEN (128)
-typedef char BSL_StaticString_t[BSL_DEFAULT_STRLEN];
-
 /** @brief Indicates where in the lifecycle of the BPA the bundle is querying for security policy.
  *
  * @note The numeric values of the enum are arbitrary. We avoid using 0 as defaults.
