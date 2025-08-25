@@ -1,0 +1,44 @@
+{ 
+  "policyrule_set": [
+  {
+      "policyrule": {
+      "desc": "Confidentiality source rule",
+      "filter": {
+        "rule_id": "2",
+        "role": "a",
+        "tgt": 11,
+        "loc": "clin",
+        "sc_id": 2
+      },
+      "spec": {
+        "svc": "bcb-confidentiality",
+        "sc_id": 2,
+        "sc_parms": [
+          {
+            "id": "key_name",
+            "value": "9103"
+          },
+          {
+            "id": "aes_variant",
+            "value": "1"
+          },
+          {
+            "id": "aad_scope",
+            "value": "0"
+          }
+        ]
+      },
+      "es_ref": "d_confidentiality",
+      "_temp_not_ion_spec_policy_action_on_fail": "delete_bundle"
+    },
+    "event_set": {
+      "es_ref": "d_confidentiality",
+      "events": [
+        {
+          "event_id": "sop_processed",
+          "actions": ["remove_all_target_sops"]
+        }
+      ]
+    }
+  }]
+}

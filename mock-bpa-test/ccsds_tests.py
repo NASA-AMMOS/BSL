@@ -35,7 +35,7 @@ class _CCSDS_Cases(_TestSet):
         requirements = yaml.safe_load(s)['requirements']
         for item in requirements:
             if 'tests' not in item.keys():
-                print(f'CCSDS | Skipping item {item["item"]}: No tests specified.')
+                print(f'CCSDS | Test {t["test"]}: Skipping item - No test(s) specified.')
                 continue
 
             for t in item['tests']:
@@ -44,32 +44,36 @@ class _CCSDS_Cases(_TestSet):
                     input = t['incoming_bundle']['hex'][2:].replace(" ", "")[:-1]
                     b_input = binascii.unhexlify(input)
                     cbor_input = cbor2.loads(b_input)
+                    input_format = DataFormat.HEX
 
                     output = t['outgoing_bundle']['hex'][2:].replace(" ", "")[:-1]
                     b_output = binascii.unhexlify(output)
                     output = cbor2.loads(b_output)
-                    output_format = DataFormat.BUNDLEARRAY
+                    output_format = DataFormat.HEX
                 else:
                     try:
                         input = t['incoming_bundle']['hex'][2:].replace(" ", "")[:-1]
                         b_input = binascii.unhexlify(input)
                         cbor_input = cbor2.loads(b_input)
+                        input_format = DataFormat.HEX
                     except Exception:
-                        print(f'CCSDS | Test {t["test"]}: Bundle hex not specified, TODO yaml should be filled in.')
+                        print(f'CCSDS | Test {t["test"]}: Bundle hex not specified.')
                         continue
 
-                    output = (FAILURE_CODE, 0)
-                    output_format = DataFormat.ERR
+                    output=r".*failed to decode bundle",
+                    output_format=DataFormat.ERR
+
+                policy=t['rules']['description']
+                if not policy.endswith(".json"):
+                    print(f'CCSDS | Test {t["test"]}: Policy JSON not configured.')
+                    continue
                     
                 self.cases['ccsds_' + str(t['test'])] = _TestCase(
                     input_data = cbor_input,
                     expected_output = output,
-                    policy_config = "1", #TODO CRITICAL, 
-                    # this will probably require modifying the YAML / creating a Policy JSON config since policies are currently written descriptions
-                    
-                    expect_success = outcome,
-                    is_implemented = True,
-                    input_data_format = DataFormat.BUNDLEARRAY,
+                    policy_config = "ccsds_json/"+policy,                    
+                    is_working = True,
+                    input_data_format = input_format,
                     expected_output_format = output_format
                 )
-                print(f'CCSDS | Adding test {t["test"]}...')
+                print(f'CCSDS | Test {t["test"]}: Appending case.')
