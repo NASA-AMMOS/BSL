@@ -380,12 +380,9 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
     BSL_Cipher_t   ctx;
-    const uint8_t *ekey;
-    size_t         ekeylen = 0;
-    TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &ekey, &ekeylen));
-    BSL_Data_t key_data;
-    BSL_Data_InitView(&key_data, ekeylen, (uint8_t *)ekey);
-    res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_ENCRYPT, aes_var, iv, iv_len, key_data);
+    const void *ekey;
+    TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &ekey));
+    res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_ENCRYPT, aes_var, iv, iv_len, ekey);
     TEST_ASSERT_EQUAL(0, res);
 
     uint8_t aad[2] = { 0x00, 0x01 };
@@ -410,8 +407,8 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     uint8_t plaintext[ct_size];
     int     plaintext_len;
 
-    const uint8_t *key;
-    TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key, NULL));
+    const void *key;
+    TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key));
     TEST_ASSERT_NOT_NULL(key);
 
     const EVP_CIPHER *cipher = (0 == strcmp(keyid, "Key8")) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
@@ -447,8 +444,8 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     uint8_t tag[16];
     int     ciphertext_len;
 
-    const uint8_t *key;
-    TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key, NULL));
+    const void *key;
+    TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key));
     TEST_ASSERT_NOT_NULL(key);
 
     const EVP_CIPHER *cipher = (0 == strcmp(keyid, "Key8")) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
@@ -470,13 +467,10 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
 
     int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
-    const uint8_t *ckey;
-    size_t         ckeylen;
-    TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &ckey, &ckeylen));
-    BSL_Data_t key_data;
-    BSL_Data_InitView(&key_data, ckeylen, (uint8_t *)ckey);
+    const void *ckey;
+    TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &ckey));
     BSL_Cipher_t ctx;
-    res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_DECRYPT, aes_var, iv, iv_len, key_data);
+    res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_DECRYPT, aes_var, iv, iv_len, ckey);
     TEST_ASSERT_EQUAL(0, res);
 
     res = BSL_Cipher_AddAAD(&ctx, aad, 2);

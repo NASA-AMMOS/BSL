@@ -81,32 +81,23 @@ void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn)
     rand_bytes_generator = rand_gen_fn;
 }
 
-int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *key_id,
-                         size_t aes_variant)
+int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t *wrapped_key, const void **cek_handle)
 {
+    BSLB_CryptoKey_t *kek = (BSLB_CryptoKey_t *) kek_handle;
+    
+    BSLB_CryptoKey_t *cek = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
+
     const EVP_CIPHER *cipher = (aes_variant == BSL_CRYPTO_AES_128) ? EVP_aes_128_wrap() : EVP_aes_256_wrap();
     EVP_CIPHER_CTX   *ctx    = EVP_CIPHER_CTX_new();
     ASSERT_ARG_NONNULL(ctx);
 
-    // Give the actual key extra margin on each side.
-    uint8_t  keybuf[128];
-    uint8_t *key = &keybuf[16];
-    memset(keybuf, 0, sizeof(keybuf));
+    BSL_Data_InitBuffer(&cek->raw, kek->raw.len);
 
-    size_t keylen = 0;
-    if (BSL_SUCCESS != BSLB_Crypto_GetRegistryKey(key_id, (const uint8_t **)&key, &keylen))
-    {
-        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-    }
-    ASSERT_POSTCONDITION(keylen > 0);
-
-    int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, key, NULL);
+    int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     ASSERT_POSTCONDITION(dec_result == 1);
     EVP_CIPHER_CTX_set_padding(ctx, 0);
 
-    int unwrapped_key_len = 16;
-    int decrypt_res = EVP_DecryptUpdate(ctx, unwrapped_key_output->ptr, &unwrapped_key_len, wrapped_key_plaintext.ptr,
-                                        (int)wrapped_key_plaintext.len);
+    int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, (int *) &cek->raw.len, wrapped_key->ptr, wrapped_key->len);
     if (decrypt_res != 1)
     {
         BSL_LOG_ERR("EVP_DecryptUpdate: %s", ERR_error_string(ERR_get_error(), NULL));
@@ -114,25 +105,35 @@ int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_ke
         return -1;
     }
 
-    unwrapped_key_output->len = (size_t)unwrapped_key_len;
-
     int final_len = 0;
-    int res       = EVP_DecryptFinal_ex(ctx, &unwrapped_key_output->ptr[unwrapped_key_output->len], &final_len);
+    int res       = EVP_DecryptFinal_ex(ctx, &wrapped_key->ptr[wrapped_key->len], &final_len);
     if (res != 1)
     {
         BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
         EVP_CIPHER_CTX_free(ctx);
         return -1;
     }
-    unwrapped_key_output->len += (size_t)final_len;
+    cek->raw.len += (size_t)final_len;
 
     EVP_CIPHER_CTX_free(ctx);
+
+    EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
+    res = EVP_PKEY_keygen_init(pctx);
+    CHK_PROPERTY(res == 1);
+
+    cek->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, cek->raw.ptr, cek->raw.len);
+    EVP_PKEY_CTX_free(pctx);
+    
+    *cek_handle = cek;
     return 0;
 }
 
-int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, void* cek_handle, const char *kek_id, size_t aes_variant)
+int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *cek_handle, BSL_Data_t *wrapped_key, const void **wrapped_key_handle)
 {
     BSLB_CryptoKey_t *cek = (BSLB_CryptoKey_t *) cek_handle;
+    BSLB_CryptoKey_t *kek = (BSLB_CryptoKey_t *) kek_handle;
+
+    BSLB_CryptoKey_t *new_wrapped_key_handle = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
 
     const EVP_CIPHER *cipher = (aes_variant == BSL_CRYPTO_AES_128) ? EVP_aes_128_wrap() : EVP_aes_256_wrap();
     EVP_CIPHER_CTX   *ctx    = EVP_CIPHER_CTX_new();
@@ -142,18 +143,7 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, void* cek_handle, const char *ke
         return -1;
     }
 
-    uint8_t  keybuf[128];
-    uint8_t *key = &keybuf[16];
-    memset(keybuf, 0, sizeof(keybuf));
-    size_t keylen = 64;
-
-    // TODO(bvb) replace w error checking
-    int got_crypto_key = BSLB_Crypto_GetRegistryKey(kek_id, (const uint8_t **)&key, &keylen);
-
-    ASSERT_POSTCONDITION(got_crypto_key == 0);
-    ASSERT_POSTCONDITION(keylen > 0);
-
-    int enc_result = EVP_EncryptInit_ex(ctx, cipher, NULL, key, NULL);
+    int enc_result = EVP_EncryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     if (!enc_result)
     {
         EVP_CIPHER_CTX_free(ctx);
@@ -176,13 +166,33 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, void* cek_handle, const char *ke
     }
     wrapped_key->len += (size_t)final_len;
     EVP_CIPHER_CTX_free(ctx);
+
+    EVP_PKEY_CTX    *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
+    int              res = EVP_PKEY_keygen_init(pctx);
+    CHK_PROPERTY(res == 1);
+
+    new_wrapped_key_handle->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, wrapped_key->len);
+    EVP_PKEY_CTX_free(pctx);
+
+    BSL_Data_Init(&new_wrapped_key_handle->raw);
+
+    int ecode = 0;
+    if ((ecode = BSL_Data_CopyFrom(&new_wrapped_key_handle->raw, wrapped_key->len, wrapped_key->ptr)) < 0)
+    {
+        BSL_LOG_ERR("Failed to copy key");
+        return ecode;
+    }
+
+    *wrapped_key_handle = new_wrapped_key_handle;
+    EVP_PKEY_CTX_free(pctx);
+
     return 0;
 }
 
 int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const char *keyid, BSL_CryptoCipherSHAVariant_e sha_var)
 {
     CHK_ARG_NONNULL(hmac_ctx);
-
+    
     hmac_ctx->libhandle = EVP_MD_CTX_new();
     CHK_PRECONDITION(hmac_ctx->libhandle != NULL);
 
@@ -201,7 +211,7 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const char *keyid, BSL_CryptoCiphe
             sha = EVP_sha512();
             break;
         default:
-            BSL_LOG_ERR("Invalid SHA variant");
+            BSL_LOG_ERR("Invalid SHA variant %d", sha_var);
             return BSL_ERR_FAILURE;
     }
 
@@ -269,13 +279,13 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
     return 0;
 }
 
-int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
-                    const void *init_vec, int iv_len, BSL_Data_t content_enc_key)
+int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var, const void *init_vec, int iv_len, const void *key_handle)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(init_vec);
-    ASSERT_ARG_NONNULL(content_enc_key.ptr);
-    ASSERT_ARG_EXPR(content_enc_key.len > 0);
+    ASSERT_ARG_NONNULL(key_handle);
+
+    BSLB_CryptoKey_t *key = (BSLB_CryptoKey_t *) key_handle;
 
     cipher_ctx->libhandle   = EVP_CIPHER_CTX_new();
     cipher_ctx->enc         = enc;
@@ -304,7 +314,7 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_IVLEN, iv_len, NULL);
     CHK_PROPERTY(res == 1);
 
-    res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, content_enc_key.ptr, init_vec, -1);
+    res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, key->raw.ptr, init_vec, -1);
     CHK_PROPERTY(res == 1);
 
     return 0;
@@ -421,16 +431,15 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
 
 int BSL_Crypto_GenKey(size_t key_length, void **key_out)
 {
+    BSLB_CryptoKey_t *new_key = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
+    
     CHK_ARG_NONNULL(key_out);
     CHK_ARG_EXPR(key_length == 16 || key_length == 32);
 
-    BSLB_CryptoKey_t *new_key = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
-
-    int key_length_int = (int)key_length;
-    uint8_t key_buffer[key_length_int];
-    if (rand_bytes_generator(key_buffer, key_length_int) != 1)
+    BSL_Data_InitBuffer(&new_key->raw, key_length);
+    
+    if (rand_bytes_generator(new_key->raw.ptr, (int) new_key->raw.len) != 1)
     {
-        memset(key_buffer, 0, key_length_int);
         return -2;
     }
 
@@ -438,17 +447,8 @@ int BSL_Crypto_GenKey(size_t key_length, void **key_out)
     int              res = EVP_PKEY_keygen_init(ctx);
     CHK_PROPERTY(res == 1);
 
-    new_key->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, key_buffer, key_length_int);
+    new_key->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, new_key->raw.ptr, (int) new_key->raw.len);
     EVP_PKEY_CTX_free(ctx);
-
-    BSL_Data_Init(&new_key->raw);
-
-    int ecode = 0;
-    if ((ecode = BSL_Data_CopyFrom(&new_key->raw, key_length_int, key_buffer)) < 0)
-    {
-        BSL_LOG_ERR("Failed to copy key");
-        return ecode;
-    }
 
     *key_out = new_key;
     return BSL_SUCCESS;
@@ -499,7 +499,7 @@ int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t s
     return 0;
 }
 
-int BSLB_Crypto_GetRegistryKey(const char *keyid, void **key_handle)
+int BSLB_Crypto_GetRegistryKey(const char *keyid, const void **key_handle)
 {
     CHK_ARG_NONNULL(key_handle);
 

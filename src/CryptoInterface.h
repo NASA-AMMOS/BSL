@@ -195,12 +195,12 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 /**
  * @todo Doxygen
  */
-int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, void* cek_handle, const char *kek_id, size_t aes_variant);
+int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *cek_handle, BSL_Data_t *wrapped_key, const void **wrapped_key_handle);
 
 /**
  * @todo Doxygen
  */
-int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *content_key_id, size_t aes_variant);
+int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t *wrapped_key, const void **cek_handle);
 
 /**
  * Initialize crypto context resources and set as encoding or decoding
@@ -209,11 +209,10 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *cont
  * @param enc enum for BSL_CRYPTO_ENCRYPT or BSL_CRYPTO_DECRYPT
  * @param init_vec pointer to initialization vector (IV) data
  * @param iv_len length of IV data
- * @param content_enc_key AES key to use as Content Encryption Key.
+ * @param key_handle key handle to use
  * @return 0 if successful
  */
-int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
-                    const void *init_vec, int iv_len, BSL_Data_t content_enc_key);
+int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var, const void *init_vec, int iv_len, const void *key_handle);
 
 /** Get pointers to an existing key, if present.
  *
@@ -221,7 +220,7 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
  * @param[in, out] key_handle pointer to pointer for new key handle
  * @return Zero upon success.
  */
-int BSLB_Crypto_GetRegistryKey(const char *keyid, void **key_handle);
+int BSLB_Crypto_GetRegistryKey(const char *keyid, const void **key_handle);
 
 /**
  * Add additional authenticated data (AAD) to cipher context
