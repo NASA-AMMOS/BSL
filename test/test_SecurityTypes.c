@@ -65,17 +65,18 @@ void TestASBEncodeDecodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, uint
     TEST_ASSERT_FALSE(BSL_AbsSecBlock_ContainsTarget(asb, 999999));
 
     // Confirm that when we encode it, we get the original.
-    uint8_t encoded_cbor[asb_cbor_bytelen];
-    memset(encoded_cbor, 0, sizeof(encoded_cbor));
-    UsefulBuf encoded_buf   = { .len = asb_cbor_bytelen, .ptr = encoded_cbor };
-    const int encode_result = BSL_AbsSecBlock_EncodeToCBOR(asb, encoded_buf);
+    BSL_Data_t encoded_cbor;
+    BSL_Data_InitBuffer(&encoded_cbor, asb_cbor_bytelen);
+
+    const int encode_result = BSL_AbsSecBlock_EncodeToCBOR(asb, &encoded_cbor);
     TEST_ASSERT_GREATER_THAN(BSL_SUCCESS, encode_result);
 
     // Make sure the lengths match and then make sure the bytes match
     const size_t nbytes = (size_t)encode_result;
     TEST_ASSERT_EQUAL_INT(asb_cbor_bytelen, nbytes);
-    TEST_ASSERT_EQUAL_MEMORY(asb_cbor, encoded_cbor, asb_cbor_bytelen);
+    TEST_ASSERT_EQUAL_MEMORY(asb_cbor, encoded_cbor.ptr, asb_cbor_bytelen);
 
+    BSL_Data_Deinit(&encoded_cbor);
     BSL_AbsSecBlock_Deinit(asb);
     BSL_FREE(asb);
 }

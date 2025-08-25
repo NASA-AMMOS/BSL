@@ -65,7 +65,8 @@ size_t BSLX_Bytestr_GetCapacity(void)
 
 BSL_Data_t BSLX_Bytestr_AsData(BSLX_Bytestr_t *self)
 {
-    BSL_Data_t result = { .owned = false, .len = self->bytelen, .ptr = self->_bytes };
+    BSL_Data_t result;
+    BSL_Data_InitView(&result, self->bytelen, (BSL_DataPtr_t)(self->_bytes));
     return result;
 }
 
@@ -180,6 +181,13 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
     return BSL_SUCCESS;
 }
 
+void BSLX_BIB_Deinit(BSLX_BIB_t *self)
+{
+    ASSERT_ARG_NONNULL(self);
+
+    BSL_PrimaryBlock_deinit(&self->primary_block);
+}
+
 /**
  * Computes the Integrity-Protected Plaintext (IPPT) for a canonical bundle block (non-primary)
  */
@@ -200,7 +208,8 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
         // Now begin process of computing IPPT
         if (self->integrity_scope_flags & RFC9173_BIB_INTEGSCOPEFLAG_INC_PRIM)
         {
-            UsefulBufC prim_encoded = { .ptr = self->primary_block.cbor, .len = self->primary_block.cbor_len };
+            UsefulBufC prim_encoded = { .ptr = self->primary_block.encoded.ptr,
+                                        .len = self->primary_block.encoded.len };
             QCBOREncode_AddEncoded(&encoder, prim_encoded);
         }
         if (self->integrity_scope_flags & RFC9173_BIB_INTEGSCOPEFLAG_INC_TARGET_HDR)
@@ -214,14 +223,19 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
         BSLX_EncodeHeader(&self->sec_block, &encoder);
     }
 
-    const uint8_t *target_cbor     = self->primary_block.cbor;
-    size_t         target_cbor_len = self->primary_block.cbor_len;
-
+    const uint8_t *target_cbor;
+    size_t         target_cbor_len;
     if (self->target_block.block_num > 0)
     {
         target_cbor     = self->target_block.btsd;
         target_cbor_len = self->target_block.btsd_len;
     }
+    else
+    {
+        target_cbor     = self->primary_block.encoded.ptr;
+        target_cbor_len = self->primary_block.encoded.len;
+    }
+
     UsefulBufC target_blk_btsd = { .ptr = target_cbor, .len = target_cbor_len };
     QCBOREncode_AddBytes(&encoder, target_blk_btsd);
     UsefulBufC ippt_result;
@@ -309,6 +323,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &bib_context.primary_block))
     {
         BSL_LOG_ERR("Failed to get bundle data");
+        BSLX_BIB_Deinit(&bib_context);
         BSL_Data_Deinit(&scratch_buffer);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
@@ -320,6 +335,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, target_blk_num, &bib_context.target_block))
         {
             BSL_LOG_ERR("Failed to get block data");
+            BSLX_BIB_Deinit(&bib_context);
             BSL_Data_Deinit(&scratch_buffer);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
@@ -339,6 +355,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (ippt_len <= 0)
     {
         BSL_LOG_ERR("GenIPPT returned %d", ippt_len);
+        BSLX_BIB_Deinit(&bib_context);
         BSL_Data_Deinit(&scratch_buffer);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
@@ -349,6 +366,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     if (hmac_nbytes < BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to generate BIB HMAC");
+        BSLX_BIB_Deinit(&bib_context);
         BSL_Data_Deinit(&scratch_buffer);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
@@ -365,11 +383,13 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         }
     }
 
-    BSL_SecResult_t *bib_result = BSLX_ScratchSpace_take(&scratch, BSL_SecResult_Sizeof());
+    BSL_SecResult_t *bib_result   = BSLX_ScratchSpace_take(&scratch, BSL_SecResult_Sizeof());
+    BSL_Data_t       bytestr_data = BSLX_Bytestr_AsData(&bib_context.hmac_result_val);
     BSL_SecResult_Init(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
-                       BSL_SecOper_GetTargetBlockNum(sec_oper), BSLX_Bytestr_AsData(&bib_context.hmac_result_val));
+                       BSL_SecOper_GetTargetBlockNum(sec_oper), &bytestr_data);
     BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
 
+    BSLX_BIB_Deinit(&bib_context);
     BSL_Data_Deinit(&scratch_buffer);
     return BSL_SUCCESS;
 }

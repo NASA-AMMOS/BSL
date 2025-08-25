@@ -43,7 +43,6 @@
 #include <syslog.h>
 #include <time.h>
 #include <sys/types.h>
-#include <qcbor/UsefulBuf.h>
 
 #include "BPSecLib_Public.h"
 
@@ -291,105 +290,8 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 
 #define ASSERT_POSTCONDITION(expr) ASSERT_TEMPL(expr, "Panic: Precondition failed to satisfy")
 
-// TODO(Bvb): These can be moved to backend, or removed.
-/// Data pointer for BSL_Data_t
-typedef uint8_t *BSL_DataPtr_t;
-/// Pointer to constant data for BSL_Data_t
-typedef const uint8_t *BSL_DataConstPtr_t;
-
-/** Heap data storage and views.
- */
-typedef struct BSL_Data_s
-{
-    /// @brief True if this data is a copy
-    bool owned;
-    /// @brief Pointer to the front of the buffer
-    BSL_DataPtr_t ptr;
-    /// @brief Size of the data buffer
-    size_t len;
-} BSL_Data_t;
-
-/** Static initializer for a data store.
- * @sa BSL_Data_Init()
- */
-#define BSL_DATA_INIT_NULL                    \
-    {                                         \
-        .owned = false, .ptr = NULL, .len = 0 \
-    }
-
-/**
- * Return size of library context
- */
-size_t BSL_LibCtx_Sizeof(void);
-
-/** Initialize an empty data struct.
- *
- * @param[in,out] data The data to initialize, which must not be NULL.
- * @return Zero upon success.
- * @sa BSL_DATA_INIT_NULL
- */
-int BSL_Data_Init(BSL_Data_t *data);
-
-/** Initialize with an owned buffer of size bytelen
- *
- * @todo Clarify to indicate this calls MALLOC.
- *
- * @param[in,out] data The data to initialize.
- * @param[in] bytelen Length of buffer to allocate.
- * @return Zero upon success.
- */
-int BSL_Data_InitBuffer(BSL_Data_t *data, size_t bytelen);
-
-/** Initialize a data struct as an overlay on optional external data.
- *
- * @param[in,out] data The data to initialize, which must not be NULL.
- * @param[in] len The total length to allocate, which may be zero.
- * @param[in] src An optional source buffer to point to.
- * @return Zero upon success.
- */
-int BSL_Data_InitView(BSL_Data_t *data, size_t len, BSL_DataPtr_t src);
-
-/// @overload
-void BSL_Data_InitMove(BSL_Data_t *data, BSL_Data_t *src);
-
-/** De-initialize a data struct, freeing if necessary.
- *
- * @param[in,out] data The data to de-initialize, which must not be NULL.
- * @return Zero upon success.
- * @post The struct must be initialized before using again.
- */
-int BSL_Data_Deinit(BSL_Data_t *data);
-
-/** Resize the data, copying if necessary.
- *
- * @param[in,out] data The data to resize, which must not be NULL.
- * @param[in] len The new total size.
- * @return Zero upon success.
- */
-int BSL_Data_Resize(BSL_Data_t *data, size_t len);
-
-/** Set an initialized data struct to a given size.
- *
- * @param[in,out] data The data to copy into, which must not be NULL.
- * @param[in] len The total length to allocate, which may be non-zero.
- * @param[in] src An optional source buffer to copy from, from which @c len
- * bytes will be copied.
- * @return Zero upon success.
- */
-int BSL_Data_CopyFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src);
-
-/** Append an initialized data struct with a given size.
- *
- * @param[in,out] data The data to copy into, which must not be NULL.
- * @param[in] len The total length to allocate, which may be non-zero.
- * @param[in] src An optional source buffer to copy from, from which @c len
- * bytes will be copied.
- * @return Zero upon success.
- */
-int BSL_Data_AppendFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src);
-
 /// @brief Forward declaration for file-like sequential reader.
-typedef struct BSL_SeqReader BSL_SeqReader_t;
+typedef struct BSL_SeqReader_s BSL_SeqReader_t;
 
 /** Release resources from a sequential reader.
  *
@@ -409,7 +311,7 @@ int BSL_SeqReader_Deinit(BSL_SeqReader_t *obj);
 int BSL_SeqReader_Get(BSL_SeqReader_t *obj, uint8_t *buf, size_t *bufsize);
 
 /// @brief Forward-declaration for file-like interface for a sequential writer.
-typedef struct BSL_SeqWriter BSL_SeqWriter_t;
+typedef struct BSL_SeqWriter_s BSL_SeqWriter_t;
 
 /** Release resources from a sequential writer.
  *
@@ -584,17 +486,6 @@ typedef enum
  */
 int BSL_BundleCtx_GetBundleMetadata(const BSL_BundleRef_t *bundle, BSL_PrimaryBlock_t *result_primary_block);
 
-/** @brief Returns an array in which each element contains the id of the corresponding block.abort
- *
- * @param[in] bundle    Bundle context
- * @param[in] array_count   Number of elements in `block_id_index_array`
- * @param[out] block_id_index_array Array of `array_count` elements for results
- * @param[out] result_count Contains the number of elements put into the array
- * @return 0 on success, negative on error
- */
-int BSL_BundleCtx_GetBlockIds(const BSL_BundleRef_t *bundle, size_t array_count, uint64_t *block_ids_array,
-                              size_t *result_count);
-
 /** @brief Returns information about the bundle Canonical block
  *
  * @param[in] bundle Context bundle
@@ -640,6 +531,10 @@ int BSL_BundleCtx_DeleteBundle(BSL_BundleRef_t *bundle);
  */
 int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t bytesize);
 
+BSL_SeqReader_t *BSL_BundleCtx_ReadBTSD(BSL_BundleRef_t *bundle, uint64_t block_num);
+
+BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num);
+
 #define BSL_DEFAULT_BYTESTR_LEN (128)
 
 /** @brief Security role of an operation
@@ -680,7 +575,7 @@ typedef struct BSL_SecResult_s BSL_SecResult_t;
  * @return 0 on success, negative on error
  */
 int BSL_SecResult_Init(BSL_SecResult_t *self, uint64_t result_id, uint64_t context_id, uint64_t target_block_num,
-                       BSL_Data_t content);
+                       const BSL_Data_t *content);
 
 /** Return true when internal invariant checks pass
  *
@@ -1024,19 +919,19 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
  *
  * @param[in] self This ASB.
  * @param[in] buf A buffer with allocated space for the encoded CBOR
- * or the @c SizeCalculateUsefulBuf value to get the real size.
+ * or a zero-length buffer to calculate the needed size.
  * @return Integer contains number of bytes written to buffer, negative indicates error.
  *
  */
-ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, UsefulBuf buf);
+ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *buf);
 
 /** Decodes and populates this ASB from a CBOR string.
  *
  * @param[in,out] self This allocated, but uninitialized ASB to populate.
- * @param[in] encoded_cbor A buffer containing a CBOR string representing the ASB
+ * @param[in] buf A buffer containing a CBOR string representing the ASB
  * @return Negative on error
  */
-int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *encoded_cbor);
+int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *buf);
 
 /** @brief Represents the output following execution of a security operation.
  */

@@ -44,10 +44,8 @@ int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle)
         BSL_FREE(bundle->blocks[i].btsd);
         memset(&bundle->blocks[i], 0, sizeof(bundle->blocks[i]));
     }
-    if (bundle->primary_block.cbor)
-    {
-        BSL_FREE(bundle->primary_block.cbor);
-    }
+    BSL_Data_Deinit(&bundle->primary_block.encoded);
+
     memset(bundle, 0, sizeof(*bundle));
     return 0;
 }
@@ -61,7 +59,6 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
 
     MockBPA_Bundle_t *bundle = bundle_ref->data;
     memset(result_primary_block, 0, sizeof(*result_primary_block));
-    result_primary_block->block_count                = bundle->block_count;
     result_primary_block->field_version              = bundle->primary_block.version;
     result_primary_block->field_flags                = bundle->primary_block.flags;
     result_primary_block->field_crc_type             = bundle->primary_block.crc_type;
@@ -73,33 +70,21 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
     result_primary_block->field_lifetime             = bundle->primary_block.lifetime;
     result_primary_block->field_frag_offset          = bundle->primary_block.frag_offset;
     result_primary_block->field_adu_length           = bundle->primary_block.adu_length;
-    result_primary_block->cbor                       = bundle->primary_block.cbor;
-    result_primary_block->cbor_len                   = bundle->primary_block.cbor_len;
 
-    return 0;
-}
+    BSL_Data_InitView(&result_primary_block->encoded, bundle->primary_block.encoded.len,
+                      bundle->primary_block.encoded.ptr);
 
-int MockBPA_GetBlockNums(const BSL_BundleRef_t *bundle_ref, size_t block_id_array_capacity,
-                         uint64_t *block_id_array_result, size_t *result_count)
-{
-    if (!bundle_ref || !bundle_ref->data || block_id_array_capacity == 0 || !block_id_array_result || !result_count)
+    result_primary_block->block_count   = bundle->block_count;
+    result_primary_block->block_numbers = BSL_CALLOC(bundle->block_count, sizeof(uint64_t));
+    if (!result_primary_block->block_numbers)
     {
-        return -1;
+        return -2;
+    }
+    for (size_t ix = 0; ix < bundle->block_count; ix++)
+    {
+        result_primary_block->block_numbers[ix] = bundle->blocks[ix].blk_num;
     }
 
-    *result_count            = 0;
-    MockBPA_Bundle_t *bundle = bundle_ref->data;
-    for (size_t i = 0; i < bundle->block_count; i++)
-    {
-        if (i >= block_id_array_capacity)
-        {
-            BSL_LOG_ERR("MOCKBPA_GETBLOCKNUMS: Result array too small");
-            return -2;
-        }
-
-        block_id_array_result[i] = bundle->blocks[i].blk_num;
-    }
-    *result_count = bundle->block_count;
     return 0;
 }
 
@@ -130,7 +115,7 @@ int MockBPA_GetBlockMetadata(const BSL_BundleRef_t *bundle_ref, uint64_t block_n
 
     result_canonical_block->block_num = found_block->blk_num;
     result_canonical_block->flags     = found_block->flags;
-    result_canonical_block->crc       = found_block->crc_type;
+    result_canonical_block->crc_type  = found_block->crc_type;
     result_canonical_block->type_code = found_block->blk_type;
     result_canonical_block->btsd      = found_block->btsd;
     result_canonical_block->btsd_len  = found_block->btsd_len;
@@ -277,7 +262,6 @@ int bsl_mock_bpa_agent_init(void)
         .get_host_eid_fn       = MockBPA_GetEid,
         .bundle_metadata_fn    = MockBPA_GetBundleMetadata,
         .block_metadata_fn     = MockBPA_GetBlockMetadata,
-        .bundle_get_block_ids  = MockBPA_GetBlockNums,
         .block_create_fn       = MockBPA_CreateBlock,
         .block_remove_fn       = MockBPA_RemoveBlock,
         .bundle_delete_fn      = MockBPA_DeleteBundle,
