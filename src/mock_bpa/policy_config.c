@@ -37,7 +37,6 @@ static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *
 }
 
 /**
- * @todo Allow JSON files to have multiple rules
  * @todo Handle ION events as policy actions - dependent on other BSL issues/ future changes
  */
 void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy, mock_bpa_policy_params_t *params)
@@ -56,6 +55,8 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
     BSL_HostEIDPattern_t src_eid;
     BSL_HostEIDPattern_t dest_eid;
     BSL_HostEIDPattern_t sec_src_eid;
+
+    const char *rule_id_str;
 
     json_t      *root;
     json_error_t err;
@@ -107,7 +108,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                 BSL_LOG_ERR("No rule ID \n");
                 continue;
             }
-            const char *rule_id_str = json_string_value(rule_id);
+            rule_id_str = json_string_value(rule_id);
             BSL_LOG_DEBUG("     rule_id: %s\n", rule_id_str);
 
             // get sec role
@@ -326,6 +327,8 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                             if (!strcmp(id_str, "key_name"))
                             {
                                 BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
+                                // FIXME add attr?
+                                BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_TYPE_INT_USE_WRAPPED_KEY, 1);
                                 params_got |= 0x1;
                             }
                             else if (!strcmp(id_str, "sha_variant"))
@@ -363,6 +366,8 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                             if (!strcmp(id_str, "key_name"))
                             {
                                 BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
+                                // FIXME add attr?
+                                BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_TYPE_INT_USE_WRAPPED_KEY, 1);
                                 params_got |= 0x1;
                             }
                             else if (!strcmp(id_str, "iv"))
@@ -461,11 +466,10 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
         }
 
         BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
-        BSL_LOG_INFO("init w policy loc %d, ", policy_loc_enum);
         BSLP_PolicyPredicate_Init(predicate, policy_loc_enum, src_eid, sec_src_eid, dest_eid);
 
         BSLP_PolicyRule_t *rule = &policy->rules[policy->rule_count++];
-        BSLP_PolicyRule_Init(rule, pp_cfg_file_path, predicate, sec_ctx_id, sec_role, sec_block_type,
+        BSLP_PolicyRule_Init(rule, rule_id_str, predicate, sec_ctx_id, sec_role, sec_block_type,
                             target_block_type, policy_action_enum);
 
         // TODO validate params_got
