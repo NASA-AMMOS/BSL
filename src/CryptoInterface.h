@@ -194,27 +194,29 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 
 /**
  * Deinit and free key handle data
- * @param[in] keyhandle key handle to clear. Assumed to be allocated with `BSL_MALLOC`.
+ * @param[in] keyhandle key handle to clear. Assumed to be allocated with ::BSL_MALLOC().
  */
 int BSL_Crypto_ClearKeyHandle(void *keyhandle);
 
 /**
  * Perform key wrap
+ * KEK and CEK sizes must match
  * @param[in] kek_handle key encryption key handle (encryption key)
  * @param[in] aes_variant AES variant to use for encryption
  * @param[in] cek_handle content encryption key handle (encryption data)
  * @param[in,out] wrapped_key output wrapped key (ciphertext) bytes
- * @param[in,out] wrapped_key_handle output wrapped key (ciphertext) handle, allocated with `BSL_MALLOC`
+ * @param[in,out] wrapped_key_handle output wrapped key (ciphertext) handle, allocated with ::BSL_MALLOC()
  */
 int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *cek_handle, BSL_Data_t *wrapped_key,
                        const void **wrapped_key_handle);
 
 /**
  * Perform key unwrap
+ * CEK size expected to match size of KEK
  * @param[in] kek_handle key encryption key handle (decryption key)
  * @param[in] aes_variant AES variant to use for decryption
  * @param[in] wrapped_key input wrapped key (ciphertext) bytes
- * @param[in,out] cek_handle output content encryption key (plaintext) handle, allocated with `BSL_MALLOC`
+ * @param[in,out] cek_handle output content encryption key (plaintext) handle, allocated with ::BSL_MALLOC()
  */
 int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t *wrapped_key, const void **cek_handle);
 
@@ -299,7 +301,7 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
 /**
  * Generate a new cryptographic key
  * @param[in] key_length length of new key. Should be 16 or 32
- * @param[in, out] key_out pointer to pointer for new key handle, allocated with `BSL_MALLOC`
+ * @param[in, out] key_out pointer to pointer for new key handle, allocated with ::BSL_MALLOC()
  */
 int BSL_Crypto_GenKey(size_t key_length, const void **key_out);
 

@@ -127,8 +127,9 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
+    uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int final_len = 0;
-    int res       = EVP_DecryptFinal_ex(ctx, &wrapped_key->ptr[wrapped_key->len], &final_len);
+    int res       = EVP_DecryptFinal_ex(ctx, buf, &final_len);
     if (res != 1)
     {
         BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
@@ -137,7 +138,11 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
         BSL_FREE(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
-    cek->raw.len += (size_t)final_len;
+
+    if (final_len > 0)
+    {
+        BSL_Data_AppendFrom(&cek->raw, final_len, buf);
+    }
 
     EVP_CIPHER_CTX_free(ctx);
 
@@ -186,15 +191,21 @@ int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *c
         EVP_CIPHER_CTX_free(ctx);
         return -2;
     }
-
     wrapped_key->len = (size_t)len;
-    int final_len    = 0;
-    if (!EVP_EncryptFinal_ex(ctx, &wrapped_key->ptr[wrapped_key->len], &final_len))
+
+    uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
+    int final_len = 0;
+    if (!EVP_EncryptFinal_ex(ctx, buf, &final_len))
     {
         EVP_CIPHER_CTX_free(ctx);
         return -1;
     }
-    wrapped_key->len += (size_t)final_len;
+
+    if (final_len > 0)
+    {
+        BSL_Data_AppendFrom(&cek->raw, final_len, buf);
+    }
+
     EVP_CIPHER_CTX_free(ctx);
 
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
