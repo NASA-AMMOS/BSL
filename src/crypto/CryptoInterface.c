@@ -129,8 +129,7 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, BSL_Data_t *wrapped_key, const 
         BSL_FREE(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
-
-
+    
     // Wrapped key ciphertext always 8 bytes greater than CEK plaintext
     BSL_Data_InitBuffer(&cek->raw, wrapped_key->len - 8);
 
