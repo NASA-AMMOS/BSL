@@ -400,6 +400,7 @@ int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid,
     {
         res |= (!!mock_bpa_eid_from_text(&(primary_block.field_report_to_eid), report_to_eid, NULL) << 2);
     }
+    BSL_PrimaryBlock_deinit(&primary_block);
 
     return res;
 }

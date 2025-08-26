@@ -38,7 +38,7 @@ extern "C" {
 
 /** Definition of a simple flat buffer iterator.
  */
-struct BSL_SeqReader
+struct BSL_SeqReader_s
 {
     /// Current cursor into available data
     const uint8_t *cursor;
@@ -57,7 +57,7 @@ int BSL_SeqReader_InitFlat(BSL_SeqReader_t *obj, const uint8_t *buf, size_t bufs
 
 /** Definition of a simple flat buffer iterator.
  */
-struct BSL_SeqWriter
+struct BSL_SeqWriter_s
 {
     /// Memory mapped file
     FILE *fd;

@@ -44,6 +44,7 @@ int BSL_API_InitLib(BSL_LibCtx_t *lib)
     CHK_ARG_NONNULL(lib);
 
     BSL_SecCtxDict_init(lib->sc_reg);
+    BSL_PolicyDict_init(lib->policy_reg);
     return BSL_SUCCESS;
 }
 
@@ -51,21 +52,35 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
 {
     CHK_ARG_NONNULL(lib);
 
-    if (lib->policy_registry.deinit_fn != NULL)
+    BSL_PolicyDict_it_t policy_reg_it;
+    for (BSL_PolicyDict_it(policy_reg_it, lib->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it);
+         BSL_PolicyDict_next(policy_reg_it))
     {
-        // Call the policy deinit function
-        (lib->policy_registry.deinit_fn)(lib->policy_registry.user_data);
-
-        // TODO - We should not assume this is dynamically allocated.
-        BSL_FREE(lib->policy_registry.user_data);
+        const BSL_PolicyDesc_t *policy = BSL_PolicyDict_cref(policy_reg_it)->value_ptr;
+        if (policy->deinit_fn != NULL)
+        {
+            // Call the policy deinit function
+            (policy->deinit_fn)(policy->user_data);
+        }
+        else
+        {
+            BSL_LOG_WARNING("Policy Provider offered no deinit function");
+        }
     }
-    else
-    {
-        BSL_LOG_WARNING("Policy Provider offered no deinit function");
-    }
 
+    BSL_PolicyDict_clear(lib->policy_reg);
     BSL_SecCtxDict_clear(lib->sc_reg);
     return BSL_SUCCESS;
+}
+
+void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+
+    BSL_FREE(obj->block_numbers);
+    obj->block_numbers = NULL;
+
+    BSL_Data_Deinit(&obj->encoded);
 }
 
 int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_SecCtxDesc_t desc)
@@ -78,14 +93,14 @@ int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_
     return BSL_SUCCESS;
 }
 
-int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, BSL_PolicyDesc_t desc)
+int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_PolicyDesc_t desc)
 {
     CHK_ARG_NONNULL(lib);
     CHK_ARG_EXPR(desc.query_fn != NULL);
     CHK_ARG_EXPR(desc.finalize_fn != NULL);
     CHK_ARG_EXPR(desc.deinit_fn != NULL);
 
-    lib->policy_registry = desc;
+    BSL_PolicyDict_set_at(lib->policy_reg, pp_id, desc);
     return BSL_SUCCESS;
 }
 
@@ -96,9 +111,8 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
     CHK_ARG_NONNULL(output_action_set);
     CHK_ARG_NONNULL(bundle);
 
-    CHK_PRECONDITION(bsl->policy_registry.query_fn != NULL);
-
     BSL_LOG_INFO("Querying policy provider for security actions...");
+    BSL_SecurityActionSet_Init(output_action_set);
     int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
     BSL_LOG_INFO("Completed query: status=%d", query_status);
 
@@ -116,22 +130,12 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
-    uint64_t blocks_array[primary_block.block_count];
-    size_t   total_blocks = 0;
-    if (BSL_SUCCESS != BSL_BundleCtx_GetBlockIds(bundle, primary_block.block_count, blocks_array, &total_blocks))
-    {
-        BSL_LOG_ERR("Failed to get block indices");
-        return BSL_ERR_HOST_CALLBACK_FAILED;
-    }
-
-    CHK_PROPERTY(total_blocks == primary_block.block_count);
-
-    for (size_t i = 0; i < total_blocks; i++)
+    for (size_t ix = 0; ix < primary_block.block_count; ix++)
     {
         BSL_CanonicalBlock_t block = { 0 };
-        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, blocks_array[i], &block))
+        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, primary_block.block_numbers[ix], &block))
         {
-            BSL_LOG_WARNING("Failed to get block number %" PRIu64, blocks_array[i]);
+            BSL_LOG_WARNING("Failed to get block number %" PRIu64, primary_block.block_numbers[ix]);
             continue;
         }
         BSL_SecActionList_it_t act_it;
@@ -166,6 +170,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
             }
         }
     }
+    BSL_PrimaryBlock_deinit(&primary_block);
 
     if (BSL_SecCtx_ValidatePolicyActionSet((BSL_LibCtx_t *)bsl, bundle, output_action_set) == false)
     {
@@ -184,19 +189,10 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(policy_actions);
 
-    CHK_PRECONDITION(bsl->policy_registry.finalize_fn != NULL);
-
     int exec_code = BSL_SecCtx_ExecutePolicyActionSet((BSL_LibCtx_t *)bsl, response_output, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to execute policy action set");
-    }
-
-    BSL_PrimaryBlock_t primary_block = { 0 };
-    if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
-    {
-        BSL_LOG_ERR("Failed to get bundle metadata");
-        return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
     int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);

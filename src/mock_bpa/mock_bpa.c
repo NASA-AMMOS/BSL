@@ -653,7 +653,7 @@ int main(int argc, char **argv)
                                           .query_fn    = BSLP_QueryPolicy,
                                           .finalize_fn = BSLP_FinalizePolicy,
                                           .user_data   = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t)) };
-    ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(bsl, policy_callbacks));
+    ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(bsl, 1, policy_callbacks));
 
     BSL_CryptoInit();
 
