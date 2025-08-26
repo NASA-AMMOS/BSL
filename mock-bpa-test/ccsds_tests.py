@@ -61,7 +61,7 @@ class _CCSDS_Cases(_TestSet):
     def __init__(self):
         super().__init__()
 
-        s = open("mock-bpa-test/ccsds_bpsec_redbook_draft_734.5-R-2_requirements_implementation_guide.yaml")
+        s = open("mock-bpa-test/ccsds_bpsec_redbook_requirements_modified.yaml")
         requirements = yaml.safe_load(s)['requirements']
         for item in requirements:
             if 'tests' not in item.keys():
