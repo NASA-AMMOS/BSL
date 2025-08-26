@@ -58,18 +58,6 @@ bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const B
     return false;
 }
 
-size_t BSLX_Bytestr_GetCapacity(void)
-{
-    return BSL_DEFAULT_BYTESTR_LEN;
-}
-
-BSL_Data_t BSLX_Bytestr_AsData(BSLX_Bytestr_t *self)
-{
-    BSL_Data_t result;
-    BSL_Data_InitView(&result, self->bytelen, (BSL_DataPtr_t)(self->_bytes));
-    return result;
-}
-
 /**
  * Provides the mapping from the security-context-specific ID defined in RFC9173
  * to the local ID of the SHA variant used by the crypto engine (OpenSSL).
@@ -110,6 +98,9 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
     memset(self, 0, sizeof(*self));
     self->sha_variant           = -1;
     self->integrity_scope_flags = -1;
+    self->hash_size = 0;
+    // By default, skip keywrap
+    self->keywrap_aes = 0;
 
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
     {
@@ -129,13 +120,6 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
             BSL_SecParam_GetAsBytestr(param, &res);
             self->key_id = (char *)res.ptr;
         }
-        else if (param_id == BSL_SECPARAM_TYPE_INT_FIXED_KEY)
-        {
-            ASSERT_PRECONDITION(!is_int);
-            BSL_Data_t bytestr_data = BSLX_Bytestr_AsData(&self->override_key);
-            BSL_SecParam_GetAsBytestr(param, &bytestr_data);
-            self->override_key.bytelen = bytestr_data.len;
-        }
         else if (param_id == RFC9173_BIB_PARAMID_SHA_VARIANT)
         {
             ASSERT_PRECONDITION(is_int);
@@ -149,9 +133,14 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
         else if (param_id == RFC9173_BIB_PARAMID_WRAPPED_KEY)
         {
             ASSERT_PRECONDITION(!is_int);
-            BSL_Data_t bytestr_data = BSLX_Bytestr_AsData(&self->wrapped_key);
-            BSL_SecParam_GetAsBytestr(param, &bytestr_data);
-            self->wrapped_key.bytelen = bytestr_data.len;
+            BSL_SecParam_GetAsBytestr(param, &self->wrapped_key);
+        }
+        else if (param_id == BSL_SECPARAM_TYPE_WRAPPED_KEY_AES_MODE)
+        {
+            const uint64_t arg_val = BSL_SecParam_GetAsUInt64(param);
+            BSL_LOG_DEBUG("Param[%" PRIu64 "]: USE_WRAPPED_KEY value = %" PRIu64, param_id, arg_val);
+            self->keywrap_aes = arg_val;
+            break;
         }
         else
         {
@@ -172,6 +161,26 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
         BSL_LOG_WARNING("BIB SHA varient required.");
         return BSL_ERR_PROPERTY_CHECK_FAILED;
     }
+    
+    switch(self->sha_variant)
+    {
+        case BSL_CRYPTO_SHA_512:
+        {
+            self->hash_size = 64;
+            break;
+        }
+        case BSL_CRYPTO_SHA_384:
+        {
+            self->hash_size = 48;
+            break;
+        }
+        case BSL_CRYPTO_SHA_256:
+        {
+            self->hash_size = 32;
+            break;
+        }
+    }
+
     if (self->integrity_scope_flags < 0)
     {
         // If none given, assume they must all be true per spec.
@@ -186,6 +195,8 @@ void BSLX_BIB_Deinit(BSLX_BIB_t *self)
     ASSERT_ARG_NONNULL(self);
 
     BSL_PrimaryBlock_deinit(&self->primary_block);
+    BSL_Data_Deinit(&self->wrapped_key);
+    BSL_Data_Deinit(&self->hmac_result_val);
 }
 
 /**
@@ -259,12 +270,88 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
     CHK_ARG_NONNULL(self);
 
     BSL_AuthCtx_t hmac_ctx;
+    int res = 0;
 
-    const void *keyhandle;
-    int res = BSLB_Crypto_GetRegistryKey(self->key_id, &keyhandle);
-    CHK_POSTCONDITION(res == BSL_SUCCESS);
+    const void *key_id_handle;
+    const void *cipher_key;
+    const void *wrapped_key;
+    if (BSL_SUCCESS != BSLB_Crypto_GetRegistryKey(self->key_id, &key_id_handle))
+    {
+        BSL_LOG_ERR("Cannot get registry key");
+        return BSL_ERR_SECURITY_CONTEXT_FAILED;
+    }
 
-    if ((res = BSL_AuthCtx_Init(&hmac_ctx, keyhandle, self->sha_variant)) != 0)
+    uint64_t keywrap_aes_to_use = 0;
+    switch (self->keywrap_aes)
+    {
+        case 0:
+        {
+            keywrap_aes_to_use = 0;
+            break;
+        }
+        case 16:
+        {
+            keywrap_aes_to_use = BSL_CRYPTO_AES_128;
+            break;
+        }
+        case 24:
+        {
+            keywrap_aes_to_use = BSL_CRYPTO_AES_192;
+            break;
+        }
+        case 32:
+        {
+            keywrap_aes_to_use = BSL_CRYPTO_AES_256;
+            break;
+        }
+        default:
+        {
+            BSL_LOG_DEBUG("Invalid wrapped key length %"PRIu64" (must be 0 - skip, 16 - AES128, 24 - AES192, 32 - AES256)", self->keywrap_aes);
+        }
+    }
+
+    BSL_LOG_INFO("KEYWRAP AES?? %d", self->keywrap_aes);
+
+    if (0 == self->keywrap_aes)
+    {
+        // Bypass, use the Key-Encryption-Key (KEK) as the Content-Encryption-Key (CEK)
+        // This is legal per the RFC9173 spec, but not generally advised.
+        BSL_LOG_WARNING("Skipping keywrap (this is not advised)");
+        // Directly load key_id into content enc key
+        cipher_key = key_id_handle;
+    }
+    else
+    {
+        const size_t keysize = 16;
+        BSL_LOG_DEBUG("Generating %zu bit AES key", keysize * 8);
+
+        if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &cipher_key))
+        {
+            BSL_LOG_ERR("Failed to generate AES key");
+            BSL_Crypto_ClearKeyHandle((void *)cipher_key);
+            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+
+        if (BSL_SUCCESS != BSL_Data_InitBuffer(&self->wrapped_key, self->keywrap_aes))
+        {
+            BSL_LOG_ERR("Failed to allocate wrapped key");
+            BSL_Crypto_ClearKeyHandle((void *)cipher_key);
+            return BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+
+        int wrap_result =
+            BSL_Crypto_WrapKey(key_id_handle, keywrap_aes_to_use, cipher_key, &self->wrapped_key, &wrapped_key);
+
+        if (BSL_SUCCESS != wrap_result)
+        {
+            BSL_LOG_ERR("Failed to wrap AES key");
+            BSL_Crypto_ClearKeyHandle((void *)wrapped_key);
+            BSL_Crypto_ClearKeyHandle((void *)cipher_key);
+            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+    }
+
+    if ((res = BSL_AuthCtx_Init(&hmac_ctx, cipher_key, self->sha_variant)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_init failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
@@ -277,15 +364,15 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
 
-    void  *hmac_result_ptr = (void *)&self->hmac_result_val._bytes[0];
+    BSL_Data_InitBuffer(&self->hmac_result_val, self->hash_size);
     size_t hmaclen         = 0;
-    if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, &hmac_result_ptr, &hmaclen)) != 0)
+    if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, (void **) &self->hmac_result_val.ptr, &hmaclen)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_finalize failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
-    self->hmac_result_val.bytelen = hmaclen;
+    self->hmac_result_val.len = hmaclen;
 
     if ((res = BSL_AuthCtx_Deinit(&hmac_ctx)) != 0)
     {
@@ -387,9 +474,8 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     }
 
     BSL_SecResult_t *bib_result   = BSLX_ScratchSpace_take(&scratch, BSL_SecResult_Sizeof());
-    BSL_Data_t       bytestr_data = BSLX_Bytestr_AsData(&bib_context.hmac_result_val);
     BSL_SecResult_Init(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
-                       BSL_SecOper_GetTargetBlockNum(sec_oper), &bytestr_data);
+                       BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
     BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
 
     BSLX_BIB_Deinit(&bib_context);

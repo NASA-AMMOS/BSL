@@ -91,6 +91,8 @@ typedef struct
     BSL_SecParam_t param_wrapped_key;
     BSL_SecParam_t param_scope_flags;
 
+    BSL_SecParam_t param_wrapped_key_aes;
+
     BSL_SecOper_t sec_oper;
 } BIBTestContext;
 
