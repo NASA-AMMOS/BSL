@@ -310,8 +310,6 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         }
     }
 
-    BSL_LOG_INFO("KEYWRAP AES?? %d", self->keywrap_aes);
-
     if (0 == self->keywrap_aes)
     {
         // Bypass, use the Key-Encryption-Key (KEK) as the Content-Encryption-Key (CEK)

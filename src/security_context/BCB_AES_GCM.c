@@ -339,8 +339,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         }
     }
 
-    BSL_LOG_INFO("KEYWRAP AES?? %d", bcb_context->keywrap_aes);
-
     // Generated the CEK, using keywrap when needed
     if (0 == bcb_context->keywrap_aes)
     {

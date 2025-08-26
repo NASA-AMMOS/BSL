@@ -132,9 +132,6 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
 
     BSL_Data_InitBuffer(&cek->raw, kek->raw.len);
 
-    BSL_LOG_INFO("ABOUT TO UNWRAP");
-    BSL_LOG_INFO("%zu %zu %zu aes: %lu", cek->raw.len, kek->raw.len, wrapped_key->len, aes_variant);
-
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     if (dec_result != 1)
     {
@@ -243,9 +240,6 @@ int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *c
         return -2;
     }
     wrapped_key->len = (size_t)len;
-
-    BSL_LOG_INFO("AES?? %zu", aes_variant);
-    BSL_LOG_INFO("KEY WRAPPED SIZE::: %zu", len);
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int     final_len = 0;
