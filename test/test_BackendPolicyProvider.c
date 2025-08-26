@@ -75,8 +75,7 @@ void tearDown(void)
 void test_PolicyProvider_InspectEmptyRuleset(void)
 {
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
-
-    strncpy(policy->name, "Unit Test Policy Provider!", sizeof(policy->name));
+    string_init_set_str(policy->name, "Unit Test Policy Provider!");
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
 
@@ -90,6 +89,7 @@ void test_PolicyProvider_InspectEmptyRuleset(void)
     TEST_ASSERT_EQUAL(0, BSL_SecurityAction_CountSecOpers(act));
 
     BSL_SecurityActionSet_Deinit(&action_set);
+    string_clear(policy->name);
 }
 
 /**
@@ -100,19 +100,16 @@ void test_PolicyProvider_InspectEmptyRuleset(void)
  */
 void test_PolicyProvider_InspectSingleBIBRuleset(void)
 {
-    {
-        BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
-        strncpy(policy->name, "Unit Test Policy Provider!", sizeof(policy->name));
+    BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
+    string_init_set_str(policy->name, "Unit Test Policy Provider!");
 
-        BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
-        BSLP_PolicyPredicate_Init(predicate, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
-                                  BSL_TestUtils_GetEidPatternFromText("*:**"),
-                                  BSL_TestUtils_GetEidPatternFromText("*:**"));
+    BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
+    BSLP_PolicyPredicate_Init(predicate, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
+                              BSL_TestUtils_GetEidPatternFromText("*:**"), BSL_TestUtils_GetEidPatternFromText("*:**"));
 
-        BSLP_PolicyRule_t *rule = &policy->rules[policy->rule_count++];
-        BSLP_PolicyRule_Init(rule, "Verify BIB on APPIN from anywhere", predicate, 1, BSL_SECROLE_VERIFIER,
-                             BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
-    }
+    BSLP_PolicyRule_t *rule = &policy->rules[policy->rule_count++];
+    BSLP_PolicyRule_Init(rule, "Verify BIB on APPIN from anywhere", predicate, 1, BSL_SECROLE_VERIFIER,
+                         BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
 
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
@@ -125,6 +122,7 @@ void test_PolicyProvider_InspectSingleBIBRuleset(void)
     TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
 
     BSL_SecurityActionSet_Deinit(&action_set);
+    string_clear(policy->name);
 }
 
 /**
@@ -133,7 +131,7 @@ void test_PolicyProvider_InspectSingleBIBRuleset(void)
 void test_PolicyProvider_Inspect_RFC9173_BIB(void)
 {
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
-    strncpy(policy->name, "Unit Test Policy Provider!", sizeof(policy->name));
+    string_init_set_str(policy->name, "Unit Test Policy Provider!");
 
     BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
@@ -160,6 +158,7 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
     TEST_ASSERT_EQUAL(3, BSL_SecOper_CountParams(BSL_SecurityAction_GetSecOperAtIndex(act, 0)));
 
     BSL_SecurityActionSet_Deinit(&action_set);
+    string_clear(policy->name);
 }
 
 // TODO - test with also setting sec pararms and other things and test the RFC 9173 things.
@@ -179,11 +178,11 @@ void test_MultiplePolicyProviders(void)
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
     policy->pp_id                 = BSL_SAMPLE_PP_ID;
-    strncpy(policy->name, "Unit Test Policy Provider 1!", sizeof(policy->name));
+    string_init_set_str(policy->name, "Unit Test Policy Provider 1!");
 
     BSLP_PolicyProvider_t *policy2 = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID_2)->user_data;
     policy2->pp_id                 = BSL_SAMPLE_PP_ID_2;
-    strncpy(policy2->name, "Unit Test Policy Provider 2!", sizeof(policy2->name));
+    string_init_set_str(policy2->name, "Unit Test Policy Provider 2!");
 
     BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
@@ -246,4 +245,6 @@ void test_MultiplePolicyProviders(void)
 
     BSL_SecurityActionSet_Deinit(&action_set);
     BSL_FREE(response_set);
+    string_clear(policy->name);
+    string_clear(policy2->name);
 }
