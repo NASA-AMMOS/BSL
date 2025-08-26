@@ -240,6 +240,11 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
  */
 int BSLB_Crypto_GetRegistryKey(const char *keyid, const void **key_handle);
 
+/** Erase key entry from crypto library registry, if present
+ *  @param[in] keyid key ID of key to remove
+ */
+int BSLB_Crypto_RemoveRegistryKey(const char *keyid);
+
 /**
  * Add additional authenticated data (AAD) to cipher context
  * @param cipher_ctx pointer to context to add AAD  to

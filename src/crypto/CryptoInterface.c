@@ -588,6 +588,7 @@ int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t s
 int BSLB_Crypto_GetRegistryKey(const char *keyid, const void **key_handle)
 {
     CHK_ARG_NONNULL(key_handle);
+    CHK_ARG_NONNULL(keyid);
 
     string_t keyid_str;
     string_init_set_str(keyid_str, keyid);
@@ -601,4 +602,15 @@ int BSLB_Crypto_GetRegistryKey(const char *keyid, const void **key_handle)
     *key_handle = found;
     pthread_mutex_unlock(&StaticCryptoMutex);
     return BSL_SUCCESS;
+}
+
+int BSLB_Crypto_RemoveRegistryKey(const char *keyid)
+{
+    string_t keyid_str;
+    string_init_set_str(keyid_str, keyid);
+
+    pthread_mutex_lock(&StaticCryptoMutex);
+    int rem = BSLB_CryptoKeyDict_erase(StaticKeyRegistry, keyid_str);
+    pthread_mutex_unlock(&StaticCryptoMutex);
+    return rem ? BSL_SUCCESS : -1;
 }
