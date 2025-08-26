@@ -194,7 +194,7 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 
 /**
  * Deinit and free key handle data
- * @param[in] keyhandle keyhandle to clear
+ * @param[in] keyhandle key handle to clear
  */
 int BSL_Crypto_ClearKeyHandle(void *keyhandle);
 
