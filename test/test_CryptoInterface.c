@@ -192,11 +192,13 @@ int gcm_decrypt(const EVP_CIPHER *cipher, unsigned char *ciphertext, int ciphert
     return 0;
 }
 
-uint8_t test_128[16] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
-                            0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b };
-uint8_t test_256[32] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
-                            0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
-                            0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b };
+uint8_t test_128[16] = {
+    0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b
+};
+uint8_t test_256[32] = {
+    0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
+    0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b
+};
 
 void suiteSetUp(void)
 {
@@ -380,8 +382,8 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
 
     int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
-    BSL_Cipher_t   ctx;
-    const void *ekey;
+    BSL_Cipher_t ctx;
+    const void  *ekey;
     TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &ekey));
     res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_ENCRYPT, aes_var, iv, iv_len, ekey);
     TEST_ASSERT_EQUAL(0, res);
@@ -412,10 +414,10 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key));
     TEST_ASSERT_NOT_NULL(key);
 
-    bool is_key8 = (0 == strcmp(keyid, "Key8"));
-    const EVP_CIPHER *cipher = (is_key8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
-    res = gcm_decrypt(cipher, ciphertext, ct_size, aad, 2, (unsigned char *)tag, (unsigned char *) ((is_key8) ? test_256 : test_128), iv, iv_len,
-                      plaintext, &plaintext_len);
+    bool              is_key8 = (0 == strcmp(keyid, "Key8"));
+    const EVP_CIPHER *cipher  = (is_key8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
+    res                       = gcm_decrypt(cipher, ciphertext, ct_size, aad, 2, (unsigned char *)tag,
+                                            (unsigned char *)((is_key8) ? test_256 : test_128), iv, iv_len, plaintext, &plaintext_len);
     TEST_ASSERT_EQUAL(0, res);
 
     plaintext[plaintext_len] = '\0';
@@ -450,10 +452,10 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key));
     TEST_ASSERT_NOT_NULL(key);
 
-    bool is_key8 = (0 == strcmp(keyid, "Key8"));
-    const EVP_CIPHER *cipher = (is_key8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
-    res = gcm_encrypt(cipher, (unsigned char *)plaintext_in, strlen(plaintext_in), aad, 2, (unsigned char *) ((is_key8) ? test_256 : test_128), iv,
-                      iv_len, ciphertext, &ciphertext_len, tag);
+    bool              is_key8 = (0 == strcmp(keyid, "Key8"));
+    const EVP_CIPHER *cipher  = (is_key8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
+    res                       = gcm_encrypt(cipher, (unsigned char *)plaintext_in, strlen(plaintext_in), aad, 2,
+                                            (unsigned char *)((is_key8) ? test_256 : test_128), iv, iv_len, ciphertext, &ciphertext_len, tag);
     TEST_ASSERT_EQUAL(0, res);
 
     BSL_SeqReader_t reader;

@@ -194,22 +194,23 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 
 /**
  * Deinit and free key handle data
- * @param[in] keyhandle keyhandle to clear 
+ * @param[in] keyhandle keyhandle to clear
  */
 int BSL_Crypto_ClearKeyHandle(void *keyhandle);
 
 /**
- * Perform key wrap 
+ * Perform key wrap
  * @param[in] kek_handle key encryption key handle (encryption key)
  * @param[in] aes_variant AES variant to use for encryption
  * @param[in] cek_handle content encryption key handle (encryption data)
  * @param[in,out] wrapped_key output wrapped key (ciphertext) bytes
  * @param[in,out] wrapped_key_handle output wrapped key (ciphertext) handle
  */
-int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *cek_handle, BSL_Data_t *wrapped_key, const void **wrapped_key_handle);
+int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *cek_handle, BSL_Data_t *wrapped_key,
+                       const void **wrapped_key_handle);
 
 /**
- * Perform key unwrap 
+ * Perform key unwrap
  * @param[in] kek_handle key encryption key handle (decryption key)
  * @param[in] aes_variant AES variant to use for decryption
  * @param[in] wrapped_key input wrapped key (ciphertext) bytes
@@ -227,7 +228,8 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
  * @param key_handle key handle to use
  * @return 0 if successful
  */
-int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var, const void *init_vec, int iv_len, const void *key_handle);
+int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
+                    const void *init_vec, int iv_len, const void *key_handle);
 
 /** Get pointers to an existing key, if present.
  *
