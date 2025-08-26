@@ -330,7 +330,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
 
-        if (BSL_SUCCESS != BSL_Data_InitBuffer(&self->wrapped_key, self->keywrap_aes))
+        if (BSL_SUCCESS != BSL_Data_InitBuffer(&self->wrapped_key, keysize + 8))
         {
             BSL_LOG_ERR("Failed to allocate wrapped key");
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);

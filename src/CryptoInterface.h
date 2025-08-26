@@ -88,7 +88,7 @@ typedef enum
 
 typedef enum
 {
-    BSL_CRYPTO_AES_128,
+    BSL_CRYPTO_AES_128 = 1,
     BSL_CRYPTO_AES_192,
     BSL_CRYPTO_AES_256
 } BSL_CryptoCipherAESVariant_e;

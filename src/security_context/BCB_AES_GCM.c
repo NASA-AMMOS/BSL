@@ -132,7 +132,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    uint64_t keywrap_aes_to_use = 0;
     bcb_context->keywrap_aes = 0;
     if (bcb_context->wrapped_key.len != 0)
     {
@@ -140,20 +139,17 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         {
             case 16:
             {
-                bcb_context->keywrap_aes = 16;
-                keywrap_aes_to_use = BSL_CRYPTO_AES_128;
+                bcb_context->keywrap_aes = BSL_CRYPTO_AES_128;
                 break;
             }
             case 24:
             {
-                bcb_context->keywrap_aes = 24;
-                keywrap_aes_to_use = BSL_CRYPTO_AES_192;
+                bcb_context->keywrap_aes =  BSL_CRYPTO_AES_192;
                 break;
             }
             case 32:
             {
-                bcb_context->keywrap_aes = 32;
-                keywrap_aes_to_use = BSL_CRYPTO_AES_256;
+                bcb_context->keywrap_aes = BSL_CRYPTO_AES_256;
                 break;
             }
             default:
@@ -171,7 +167,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     }
     else
     {
-        int unwrap_result = BSL_Crypto_UnwrapKey(key_id_handle, keywrap_aes_to_use, &bcb_context->wrapped_key, &cipher_key);
+        int unwrap_result = BSL_Crypto_UnwrapKey(key_id_handle, bcb_context->keywrap_aes, &bcb_context->wrapped_key, &cipher_key);
         if (BSL_SUCCESS != unwrap_result)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
@@ -310,35 +306,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    uint64_t keywrap_aes_to_use = 0;
-    switch (bcb_context->keywrap_aes)
-    {
-        case 0:
-        {
-            keywrap_aes_to_use = 0;
-            break;
-        }
-        case 16:
-        {
-            keywrap_aes_to_use = BSL_CRYPTO_AES_128;
-            break;
-        }
-        case 24:
-        {
-            keywrap_aes_to_use = BSL_CRYPTO_AES_192;
-            break;
-        }
-        case 32:
-        {
-            keywrap_aes_to_use = BSL_CRYPTO_AES_256;
-            break;
-        }
-        default:
-        {
-            BSL_LOG_DEBUG("Invalid wrapped key length %"PRIu64" (must be 0 - skip, 16 - AES128, 24 - AES192, 32 - AES256)", bcb_context->keywrap_aes);
-        }
-    }
-
     // Generated the CEK, using keywrap when needed
     if (0 == bcb_context->keywrap_aes)
     {
@@ -360,7 +327,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
 
-        if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, 1000))//bcb_context->keywrap_aes))
+        if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, keysize + 8))
         {
             BSL_LOG_ERR("Failed to allocate wrapped key");
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);
@@ -368,7 +335,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         }
 
         int wrap_result =
-            BSL_Crypto_WrapKey(key_id_handle, keywrap_aes_to_use, cipher_key, &bcb_context->wrapped_key, &wrapped_key);
+            BSL_Crypto_WrapKey(key_id_handle, bcb_context->keywrap_aes, cipher_key, &bcb_context->wrapped_key, &wrapped_key);
 
         if (BSL_SUCCESS != wrap_result)
         {
@@ -484,7 +451,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
     CHK_PRECONDITION(bcb_context->target_block.btsd_len > 0);
 
     // By default, try to keywrap with AES-128
-    bcb_context->keywrap_aes = 16;
+    bcb_context->keywrap_aes = BSL_CRYPTO_AES_128;
 
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
     {

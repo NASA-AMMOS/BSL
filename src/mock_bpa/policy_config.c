@@ -402,7 +402,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
         if (use_wrapped_key)
         {
             BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9103");
-            BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_TYPE_WRAPPED_KEY_AES_MODE, 16);
+            BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_TYPE_WRAPPED_KEY_AES_MODE, BSL_CRYPTO_AES_128);
         }
         else
         {
