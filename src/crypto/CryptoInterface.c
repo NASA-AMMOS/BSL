@@ -228,9 +228,12 @@ int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *c
     return 0;
 }
 
-int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const char *keyid, BSL_CryptoCipherSHAVariant_e sha_var)
+int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const void *keyhandle, BSL_CryptoCipherSHAVariant_e sha_var)
 {
     CHK_ARG_NONNULL(hmac_ctx);
+    CHK_ARG_NONNULL(keyhandle);
+
+    const BSLB_CryptoKey_t *key_info = (const BSLB_CryptoKey_t *) keyhandle;
 
     hmac_ctx->libhandle = EVP_MD_CTX_new();
     CHK_PRECONDITION(hmac_ctx->libhandle != NULL);
@@ -254,21 +257,7 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const char *keyid, BSL_CryptoCiphe
             return BSL_ERR_FAILURE;
     }
 
-    string_t keyid_str;
-    string_init_set_str(keyid_str, keyid);
-
-    pthread_mutex_lock(&StaticCryptoMutex);
-    const BSLB_CryptoKey_t *key_info = BSLB_CryptoKeyDict_cget(StaticKeyRegistry, keyid_str);
-    if (key_info == NULL)
-    {
-        // Special case which should not happen
-        BSL_LOG_ERR("Failed to lookup Key ID %" PRId64, keyid);
-        pthread_mutex_unlock(&StaticCryptoMutex);
-        return BSL_ERR_NOT_FOUND;
-    }
-
     int res = EVP_DigestSignInit(hmac_ctx->libhandle, NULL, sha, NULL, key_info->pkey);
-    pthread_mutex_unlock(&StaticCryptoMutex);
     CHK_PROPERTY(res == 1);
 
     hmac_ctx->block_size = (size_t)EVP_MD_CTX_block_size(hmac_ctx->libhandle);

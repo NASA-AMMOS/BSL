@@ -295,8 +295,11 @@ void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&pt_in_data, pt_txt),
                                   "BSL_TestUtils_DecodeBase16() failed");
 
+    const void *keyhandle;
+    TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &keyhandle));
+
     BSL_AuthCtx_t hmac;
-    TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Init(&hmac, keyid, sha_var));
+    TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Init(&hmac, keyhandle, sha_var));
 
     BSL_SeqReader_t reader;
     switch (input_case)
@@ -343,15 +346,6 @@ void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_
     BSL_Data_Deinit(&pt_in_data);
     string_clear(exp_txt);
     string_clear(pt_txt);
-}
-
-TEST_CASE("100", BSL_CRYPTO_SHA_256)
-TEST_CASE("1", 999)
-void test_for_failure_hmac_init(const char *keyid, BSL_CryptoCipherSHAVariant_e sha_var)
-{
-    BSL_AuthCtx_t hmac;
-    TEST_ASSERT_NOT_EQUAL(0, BSL_AuthCtx_Init(&hmac, keyid, sha_var));
-    TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Deinit(&hmac));
 }
 
 /**

@@ -260,8 +260,11 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
 
     BSL_AuthCtx_t hmac_ctx;
 
-    int res = 0;
-    if ((res = BSL_AuthCtx_Init(&hmac_ctx, self->key_id, self->sha_variant)) != 0)
+    const void *keyhandle;
+    int res = BSLB_Crypto_GetRegistryKey(self->key_id, &keyhandle);
+    CHK_POSTCONDITION(res == BSL_SUCCESS);
+
+    if ((res = BSL_AuthCtx_Init(&hmac_ctx, keyhandle, self->sha_variant)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_init failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);

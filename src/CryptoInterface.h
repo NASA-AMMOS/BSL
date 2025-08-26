@@ -151,12 +151,12 @@ void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn);
 /**
  * Initialize HMAC context resources and set private key and SHA variant
  * @param[in,out] hmac_ctx pointer to hmac context struct to init and set
- * @param keyid ID of private key to use
+ * @param[in] keyhandle handle for key to use
  * @param[in] sha_var SHA variant, see RFC9173 @cite rfc9173
  * @return 0 if successful
  */
 BSL_REQUIRE_CHECK
-int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const char *keyid, BSL_CryptoCipherSHAVariant_e sha_var);
+int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const void *keyhandle, BSL_CryptoCipherSHAVariant_e sha_var);
 
 /**
  * Input data to HMAC sign to context
