@@ -132,42 +132,19 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    bcb_context->keywrap_aes = 0;
-    if (bcb_context->wrapped_key.len != 0)
+    if (bcb_context->keywrap && bcb_context->wrapped_key.len == 0)
     {
-        switch (bcb_context->wrapped_key.len - 8)
-        {
-            case 16:
-            {
-                bcb_context->keywrap_aes = BSL_CRYPTO_AES_128;
-                break;
-            }
-            case 24:
-            {
-                bcb_context->keywrap_aes =  BSL_CRYPTO_AES_192;
-                break;
-            }
-            case 32:
-            {
-                bcb_context->keywrap_aes = BSL_CRYPTO_AES_256;
-                break;
-            }
-            default:
-            {
-                BSL_LOG_DEBUG("Invalid wrapped key length (must be 0, 16, 24, 32)");
-                return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-            }
-        }
+       BSL_LOG_ERR("Key wrapping enabled, but no wrapped key param set");
     }
 
-    if (0 == bcb_context->keywrap_aes)
+    if (!bcb_context->keywrap)
     {
         BSL_LOG_WARNING("Using bare key without AES keywrap");
         cipher_key = key_id_handle;
     }
     else
     {
-        int unwrap_result = BSL_Crypto_UnwrapKey(key_id_handle, bcb_context->keywrap_aes, &bcb_context->wrapped_key, &cipher_key);
+        int unwrap_result = BSL_Crypto_UnwrapKey(key_id_handle, &bcb_context->wrapped_key, &cipher_key);
         if (BSL_SUCCESS != unwrap_result)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
@@ -183,7 +160,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
         BSL_Data_Deinit(&bcb_context->authtag);
-        if (0 != bcb_context->keywrap_aes)
+        if (bcb_context->keywrap)
         {
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);
         }
@@ -195,7 +172,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         BSL_LOG_ERR("Failed to add AAD");
         BSL_Data_Deinit(&bcb_context->authtag);
-        if (0 != bcb_context->keywrap_aes)
+        if (bcb_context->keywrap)
         {
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);
         }
@@ -210,7 +187,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         BSL_LOG_ERR("Decrypting BTSD ciphertext failed");
         BSL_Data_Deinit(&bcb_context->authtag);
-        if (0 != bcb_context->keywrap_aes)
+        if (bcb_context->keywrap)
         {
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);
         }
@@ -225,7 +202,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         BSL_LOG_ERR("Failed to set auth tag");
         BSL_Data_Deinit(&bcb_context->authtag);
-        if (0 != bcb_context->keywrap_aes)
+        if (bcb_context->keywrap)
         {
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);
         }
@@ -242,7 +219,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         BSL_LOG_ERR("Failed to check auth tag");
         BSL_Data_Deinit(&bcb_context->authtag);
-        if (0 != bcb_context->keywrap_aes)
+        if (bcb_context->keywrap)
         {
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);
         }
@@ -255,7 +232,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     BSL_Data_Deinit(&bcb_context->authtag);
 
-    if (0 != bcb_context->keywrap_aes)
+    if (bcb_context->keywrap)
     {
         BSL_Crypto_ClearKeyHandle((void *)cipher_key);
     }
@@ -307,7 +284,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     }
 
     // Generated the CEK, using keywrap when needed
-    if (0 == bcb_context->keywrap_aes)
+    if (!bcb_context->keywrap)
     {
         // Bypass, use the Key-Encryption-Key (KEK) as the Content-Encryption-Key (CEK)
         // This is legal per the RFC9173 spec, but not generally advised.
@@ -335,7 +312,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         }
 
         int wrap_result =
-            BSL_Crypto_WrapKey(key_id_handle, bcb_context->keywrap_aes, cipher_key, &bcb_context->wrapped_key, &wrapped_key);
+            BSL_Crypto_WrapKey(key_id_handle, cipher_key, &bcb_context->wrapped_key, &wrapped_key);
 
         if (BSL_SUCCESS != wrap_result)
         {
@@ -353,7 +330,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
-        if (0 != bcb_context->keywrap_aes)
+        if (bcb_context->keywrap)
         {
             BSL_Crypto_ClearKeyHandle((void *)wrapped_key);
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);
@@ -365,7 +342,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
     {
         BSL_LOG_ERR("Failed to add AAD");
-        if (0 != bcb_context->keywrap_aes)
+        if (bcb_context->keywrap)
         {
             BSL_Crypto_ClearKeyHandle((void *)wrapped_key);
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);
@@ -380,7 +357,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (nbytes < 0)
     {
         BSL_LOG_ERR("Encrypting plaintext BTSD failed");
-        if (0 != bcb_context->keywrap_aes)
+        if (bcb_context->keywrap)
         {
             BSL_Crypto_ClearKeyHandle((void *)wrapped_key);
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);
@@ -400,7 +377,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (extra_bytes < 0)
     {
         BSL_LOG_ERR("Finalizing AES failed");
-        if (0 != bcb_context->keywrap_aes)
+        if (bcb_context->keywrap)
         {
             BSL_Crypto_ClearKeyHandle((void *)wrapped_key);
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);
@@ -419,7 +396,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, (void **)&bcb_context->authtag.ptr))
     {
         BSL_LOG_ERR("Failed to get authentication tag");
-        if (0 != bcb_context->keywrap_aes)
+        if (bcb_context->keywrap)
         {
             BSL_Crypto_ClearKeyHandle((void *)wrapped_key);
             BSL_Crypto_ClearKeyHandle((void *)cipher_key);
@@ -431,7 +408,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     CHK_POSTCONDITION(bcb_context->btsd_replacement.ptr != NULL);
     CHK_POSTCONDITION(bcb_context->btsd_replacement.len == ciphertext_len);
 
-    if (0 != bcb_context->keywrap_aes)
+    if (bcb_context->keywrap)
     {
         BSL_Crypto_ClearKeyHandle((void *)wrapped_key);
         BSL_Crypto_ClearKeyHandle((void *)cipher_key);
@@ -450,8 +427,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
     CHK_PRECONDITION(bcb_context->target_block.btsd != NULL);
     CHK_PRECONDITION(bcb_context->target_block.btsd_len > 0);
 
-    // By default, try to keywrap with AES-128
-    bcb_context->keywrap_aes = BSL_CRYPTO_AES_128;
+    bcb_context->keywrap = -1;
 
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
     {
@@ -547,11 +523,11 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
                 BSL_SecParam_GetAsBytestr(param, &bcb_context->authtag);
                 break;
             }
-            case BSL_SECPARAM_TYPE_WRAPPED_KEY_AES_MODE:
+            case BSL_SECPARAM_USE_KEY_WRAP:
             {
                 const uint64_t arg_val = BSL_SecParam_GetAsUInt64(param);
                 BSL_LOG_DEBUG("Param[%" PRIu64 "]: USE_WRAPPED_KEY value = %" PRIu64, param_id, arg_val);
-                bcb_context->keywrap_aes = arg_val;
+                bcb_context->keywrap = arg_val;
                 break;
             }
             default:
@@ -560,6 +536,12 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
                 bcb_context->err_count++;
             }
         }
+    }
+
+    if (bcb_context->keywrap < 0)
+    {
+        BSL_LOG_WARNING("BCB USE KEYWRAP param required.");
+        return BSL_ERR_PROPERTY_CHECK_FAILED;
     }
 
     if (!bcb_context->skip_aad_sec_block)

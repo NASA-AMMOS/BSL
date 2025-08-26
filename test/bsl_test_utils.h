@@ -89,6 +89,7 @@ typedef struct
     BSL_SecParam_t param_sha_variant;
     BSL_SecParam_t param_hmac;
     BSL_SecParam_t param_wrapped_key;
+    BSL_SecParam_t use_key_wrap;
     BSL_SecParam_t param_scope_flags;
 
     BSL_SecParam_t param_wrapped_key_aes;
@@ -130,6 +131,7 @@ typedef struct
     BSL_SecParam_t param_init_vec;
     BSL_SecParam_t param_auth_tag;
     BSL_SecParam_t param_wrapped_key;
+    BSL_SecParam_t use_wrap_key;
     BSL_SecParam_t param_key_enc_key;
     BSL_SecParam_t param_content_enc_key;
 
@@ -310,6 +312,7 @@ typedef struct
     BSL_SecParam_t sha_variant;
     BSL_SecParam_t scope_flags;
     BSL_SecParam_t test_key_id;
+    BSL_SecParam_t use_wrap_key;
 } RFC9173_A1_Params;
 
 RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id);

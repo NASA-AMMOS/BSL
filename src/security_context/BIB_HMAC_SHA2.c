@@ -99,8 +99,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
     self->sha_variant           = -1;
     self->integrity_scope_flags = -1;
     self->hash_size = 0;
-    // By default, skip keywrap
-    self->keywrap_aes = 0;
+    self->keywrap = -1;
 
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
     {
@@ -135,11 +134,11 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
             ASSERT_PRECONDITION(!is_int);
             BSL_SecParam_GetAsBytestr(param, &self->wrapped_key);
         }
-        else if (param_id == BSL_SECPARAM_TYPE_WRAPPED_KEY_AES_MODE)
+        else if (param_id == BSL_SECPARAM_USE_KEY_WRAP)
         {
             const uint64_t arg_val = BSL_SecParam_GetAsUInt64(param);
             BSL_LOG_DEBUG("Param[%" PRIu64 "]: USE_WRAPPED_KEY value = %" PRIu64, param_id, arg_val);
-            self->keywrap_aes = arg_val;
+            self->keywrap = arg_val;
             break;
         }
         else
@@ -149,6 +148,11 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
         }
     }
 
+    if (self->keywrap < 0)
+    {
+        BSL_LOG_WARNING("BIB USE KEYWRAP param required.");
+        return BSL_ERR_PROPERTY_CHECK_FAILED;
+    }
     if (self->sha_variant < 0)
     {
         // Default is SHA384: https://www.rfc-editor.org/rfc/rfc9173.html#name-block-integrity-block
@@ -281,7 +285,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    if (0 == self->keywrap_aes)
+    if (!self->keywrap)
     {
         // Bypass, use the Key-Encryption-Key (KEK) as the Content-Encryption-Key (CEK)
         // This is legal per the RFC9173 spec, but not generally advised.
@@ -309,7 +313,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         }
 
         int wrap_result =
-            BSL_Crypto_WrapKey(key_id_handle, self->keywrap_aes, cipher_key, &self->wrapped_key, &wrapped_key);
+            BSL_Crypto_WrapKey(key_id_handle, cipher_key, &self->wrapped_key, &wrapped_key);
 
         if (BSL_SUCCESS != wrap_result)
         {
@@ -324,12 +328,20 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_init failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
+        if (self->keywrap)
+        {
+            BSL_Crypto_ClearKeyHandle((void *)cipher_key);
+        }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
     if ((res = BSL_AuthCtx_DigestBuffer(&hmac_ctx, ippt_data.ptr, ippt_data.len)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_input_data_buffer failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
+        if (self->keywrap)
+        {
+            BSL_Crypto_ClearKeyHandle((void *)cipher_key);
+        }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
 
@@ -339,6 +351,10 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_finalize failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
+        if (self->keywrap)
+        {
+            BSL_Crypto_ClearKeyHandle((void *)cipher_key);
+        }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
     self->hmac_result_val.len = hmaclen;
@@ -346,9 +362,16 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
     if ((res = BSL_AuthCtx_Deinit(&hmac_ctx)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_deinit failed with code %d", res);
+        if (self->keywrap)
+        {
+            BSL_Crypto_ClearKeyHandle((void *)cipher_key);
+        }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
-    ASSERT_POSTCONDITION(hmaclen > 0);
+    if (self->keywrap)
+    {
+        BSL_Crypto_ClearKeyHandle((void *)cipher_key);
+    }
     return (int)hmaclen;
 }
 
@@ -377,7 +400,13 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     BSL_Data_t ippt_space = { .ptr = BSLX_ScratchSpace_take(&scratch, 5000), .len = 5000 };
 
     BSLX_BIB_t bib_context = { 0 };
-    BSLX_BIB_InitFromSecOper(&bib_context, sec_oper);
+    if (BSL_SUCCESS != BSLX_BIB_InitFromSecOper(&bib_context, sec_oper))
+    {
+        BSL_LOG_ERR("Failed to init bib context from security operation");
+        BSLX_BIB_Deinit(&bib_context);
+        BSL_Data_Deinit(&scratch_buffer);
+        return BSL_ERR_SECURITY_CONTEXT_FAILED;
+    }
 
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &bib_context.primary_block))
     {

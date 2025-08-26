@@ -64,7 +64,7 @@ typedef struct BSLX_BIB_s
     uint64_t             sha_variant_uint;
     int64_t              _crypto_sha_variant;
     BSL_Data_t           wrapped_key;
-    uint64_t             keywrap_aes;
+    int64_t              keywrap;
     uint64_t             hmac_result_id;
     BSL_Data_t           hmac_result_val;
 
@@ -102,7 +102,7 @@ typedef struct BSLX_BCB_s
     BSL_CanonicalBlock_t sec_block;
     BSL_CanonicalBlock_t target_block;
 
-    uint64_t keywrap_aes;
+    int64_t keywrap;
     bool success;
     bool skip_aad_sec_block;
     bool skip_aad_target_block;

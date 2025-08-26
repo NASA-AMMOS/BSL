@@ -203,23 +203,21 @@ int BSL_Crypto_ClearKeyHandle(void *keyhandle);
  * Perform key wrap
  * KEK and CEK sizes must match
  * @param[in] kek_handle key encryption key handle (encryption key)
- * @param[in] aes_variant AES variant to use for encryption
  * @param[in] cek_handle content encryption key handle (encryption data)
  * @param[in,out] wrapped_key output wrapped key (ciphertext) bytes
  * @param[in,out] wrapped_key_handle output wrapped key (ciphertext) handle, allocated with ::BSL_MALLOC()
  */
-int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *cek_handle, BSL_Data_t *wrapped_key,
+int BSL_Crypto_WrapKey(const void *kek_handle, const void *cek_handle, BSL_Data_t *wrapped_key,
                        const void **wrapped_key_handle);
 
 /**
  * Perform key unwrap
  * CEK size expected to match size of KEK
  * @param[in] kek_handle key encryption key handle (decryption key)
- * @param[in] aes_variant AES variant to use for decryption
  * @param[in] wrapped_key input wrapped key (ciphertext) bytes
  * @param[in,out] cek_handle output content encryption key (plaintext) handle, allocated with ::BSL_MALLOC()
  */
-int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t *wrapped_key, const void **cek_handle);
+int BSL_Crypto_UnwrapKey(const void *kek_handle, BSL_Data_t *wrapped_key, const void **cek_handle);
 
 /**
  * Initialize crypto context resources and set as encoding or decoding

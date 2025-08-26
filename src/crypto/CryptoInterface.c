@@ -92,26 +92,26 @@ int BSL_Crypto_ClearKeyHandle(void *keyhandle)
     return BSL_SUCCESS;
 }
 
-int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t *wrapped_key, const void **cek_handle)
+int BSL_Crypto_UnwrapKey(const void *kek_handle, BSL_Data_t *wrapped_key, const void **cek_handle)
 {
     BSLB_CryptoKey_t *kek = (BSLB_CryptoKey_t *)kek_handle;
 
     BSLB_CryptoKey_t *cek = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
 
     const EVP_CIPHER *cipher;
-    switch (aes_variant)
+    switch (kek->raw.len)
     {
-        case BSL_CRYPTO_AES_128:
+        case 16:
         {
             cipher = EVP_aes_128_wrap();
             break;
         }
-        case BSL_CRYPTO_AES_192:
+        case 24:
         {
             cipher = EVP_aes_192_wrap();
             break;
         }
-        case BSL_CRYPTO_AES_256:
+        case 32:
         {
             cipher = EVP_aes_256_wrap();
             break;
@@ -130,7 +130,9 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
-    BSL_Data_InitBuffer(&cek->raw, kek->raw.len);
+
+    // Wrapped key ciphertext always 8 bytes greater than CEK plaintext
+    BSL_Data_InitBuffer(&cek->raw, wrapped_key->len - 8);
 
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     if (dec_result != 1)
@@ -186,35 +188,41 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
     return 0;
 }
 
-int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *cek_handle, BSL_Data_t *wrapped_key,
+int BSL_Crypto_WrapKey(const void *kek_handle, const void *cek_handle, BSL_Data_t *wrapped_key,
                        const void **wrapped_key_handle)
 {
     BSLB_CryptoKey_t *cek = (BSLB_CryptoKey_t *)cek_handle;
     BSLB_CryptoKey_t *kek = (BSLB_CryptoKey_t *)kek_handle;
 
+    if (cek->raw.len > kek->raw.len)
+    {
+        BSL_LOG_ERR("KEK size %zu too small to encrypt CEK size %zu", kek->raw.len, cek->raw.len);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+
     BSLB_CryptoKey_t *new_wrapped_key_handle = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
 
     const EVP_CIPHER *cipher;
-    switch (aes_variant)
+    switch (kek->raw.len)
     {
-        case BSL_CRYPTO_AES_128:
+        case 16:
         {
             cipher = EVP_aes_128_wrap();
             break;
         }
-        case BSL_CRYPTO_AES_192:
+        case 24:
         {
             cipher = EVP_aes_192_wrap();
             break;
         }
-        case BSL_CRYPTO_AES_256:
+        case 32:
         {
             cipher = EVP_aes_256_wrap();
             break;
         }
         default:
         {
-            BSL_LOG_DEBUG("UNWRAP AES MODE INVALID");
+            BSL_LOG_DEBUG("WRAP AES MODE INVALID");
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
     }

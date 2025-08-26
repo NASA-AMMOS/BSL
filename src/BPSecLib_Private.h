@@ -612,8 +612,8 @@ typedef enum
     /// @brief Used by tests to pass in a specific key bytestring
     BSL_SECPARAM_TYPE_INT_FIXED_KEY,
 
-    /// @brief Set to 0 to skip keywrap
-    BSL_SECPARAM_TYPE_WRAPPED_KEY_AES_MODE,
+    /// @brief 0 to skip key wrap, else use key wrap
+    BSL_SECPARAM_USE_KEY_WRAP,
 
     BSL_SECPARAM_TYPE_AUTH_TAG,
 
