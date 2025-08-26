@@ -49,16 +49,17 @@ class TestAgent(unittest.TestCase):
 
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
-        self.requirements_tests = _RequirementsCases()
-        self.json_policy_tests = _JSONPolicyTests()
-        # self.ccsds_tests = _CCSDS_Cases()
+        # self.requirements_tests = _RequirementsCases()
+        # self.json_policy_tests = _JSONPolicyTests()
+        self.ccsds_tests = _CCSDS_Cases()
+        
         self.pp_cfg_dict = {}
-        for id, tc in self.requirements_tests.cases.items():
-            self.pp_cfg_dict[id] = tc.policy_config
-        for id, tc in self.json_policy_tests.cases.items():
-            self.pp_cfg_dict[id] = tc.policy_config
-        # for id, tc in self.ccsds_tests.cases.items():
+        # for id, tc in self.requirements_tests.cases.items():
         #     self.pp_cfg_dict[id] = tc.policy_config
+        # for id, tc in self.json_policy_tests.cases.items():
+        #     self.pp_cfg_dict[id] = tc.policy_config
+        for id, tc in self.ccsds_tests.cases.items():
+            self.pp_cfg_dict[id] = tc.policy_config
 
     def setUp(self):
 
@@ -71,9 +72,6 @@ class TestAgent(unittest.TestCase):
             policy_config = str(self.pp_cfg_dict[self._testMethodName[5:]])
             LOGGER.info('Using policy config from DICT %s for %s', policy_config, self._testMethodName[5:])
             is_json = policy_config.endswith(".json")
-            if is_json:
-                # FIXME
-                policy_config = "mock-bpa-test/" + policy_config
         except Exception:
             policy_config = self._testMethodName
             # Find the index of the first occurrence of "_p" policy sequence
@@ -142,6 +140,7 @@ class TestAgent(unittest.TestCase):
         if not rrd:
             raise TimeoutError('Did not receive bundle in time')
         data = sock.recv(65535)
+        print(f'WAIT FOR GOT: {data}')
         return data
 
     def _single_test(self, testcase: _TestCase):
@@ -225,9 +224,9 @@ def _add_tests(new_tests: _TestSet):
     return decorator
 
 
-@_add_tests(_RequirementsCases())
-@_add_tests(_JSONPolicyTests())
-# @_add_tests(_CCSDS_Cases())
+# @_add_tests(_RequirementsCases())
+# @_add_tests(_JSONPolicyTests())
+@_add_tests(_CCSDS_Cases())
 class TestMockBPA(TestAgent):
 
     def test_start_stop_p00(self):
