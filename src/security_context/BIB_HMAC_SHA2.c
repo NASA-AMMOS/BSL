@@ -139,7 +139,6 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
             const uint64_t arg_val = BSL_SecParam_GetAsUInt64(param);
             BSL_LOG_DEBUG("Param[%" PRIu64 "]: USE_WRAPPED_KEY value = %" PRIu64, param_id, arg_val);
             self->keywrap = arg_val;
-            break;
         }
         else
         {
