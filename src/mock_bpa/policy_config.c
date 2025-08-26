@@ -415,6 +415,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
         BSL_SecParam_InitInt64(params->param_integ_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
         BSL_SecParam_InitInt64(params->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
         BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9100");
+        BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
     }
 
     BSL_SecBlockType_e sec_block_emum;
@@ -533,7 +534,6 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     if (sec_block_emum == BSL_SECBLOCKTYPE_BCB)
     {
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_aes_variant);
-        BSLP_PolicyRule_AddParam(rule_all_in, params->param_use_wrapped_key);
         if (sec_role != BSL_SECROLE_SOURCE)
         {
             BSLP_PolicyRule_AddParam(rule_all_in, params->param_aad_scope_flag);
@@ -545,6 +545,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_sha_variant);
         BSLP_PolicyRule_AddParam(rule_all_in, params->param_integ_scope_flag);
     }
+    BSLP_PolicyRule_AddParam(rule_all_in, params->param_use_wrapped_key);
     BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key);
 }
 
@@ -599,7 +600,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
     }
 
     size_t n = json_array_size(keys);
-    printf("Found %zu key objects\n\n", n);
+    BSL_LOG_INFO("Found %zu key objects\n\n", n);
 
     for (size_t i = 0; !retval && (i < n); ++i)
     {
@@ -623,7 +624,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         }
 
         json_t *kid = json_object_get(key_obj, "kid");
-        if (!kid)
+        if (!kid || !json_is_string(kid))
         {
             BSL_LOG_ERR("Missing \"kid\" \n");
             continue;
@@ -632,9 +633,9 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         BSL_LOG_DEBUG("kid: %s\n", kid_str);
 
         json_t *k = json_object_get(key_obj, "k");
-        if (!k)
+        if (!k || !json_is_string(k))
         {
-            BSL_LOG_ERR("Missing \"kid\" \n");
+            BSL_LOG_ERR("Missing \"k\" \n");
             continue;
         }
         const char *k_str = json_string_value(k);
