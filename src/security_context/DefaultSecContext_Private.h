@@ -103,10 +103,10 @@ typedef struct BSLX_BCB_s
     BSL_CanonicalBlock_t target_block;
 
     int64_t keywrap;
-    bool success;
-    bool skip_aad_sec_block;
-    bool skip_aad_target_block;
-    bool skip_aad_prim_block;
+    bool    success;
+    bool    skip_aad_sec_block;
+    bool    skip_aad_target_block;
+    bool    skip_aad_prim_block;
 } BSLX_BCB_t;
 
 /**

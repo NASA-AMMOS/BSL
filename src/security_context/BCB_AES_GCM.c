@@ -134,7 +134,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (bcb_context->keywrap && bcb_context->wrapped_key.len == 0)
     {
-       BSL_LOG_ERR("Key wrapping enabled, but no wrapped key param set");
+        BSL_LOG_ERR("Key wrapping enabled, but no wrapped key param set");
     }
 
     if (!bcb_context->keywrap)
@@ -312,8 +312,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
 
-        int wrap_result =
-            BSL_Crypto_WrapKey(key_id_handle, cipher_key, &bcb_context->wrapped_key, &wrapped_key);
+        int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &bcb_context->wrapped_key, &wrapped_key);
 
         if (BSL_SUCCESS != wrap_result)
         {

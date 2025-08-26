@@ -119,17 +119,18 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, BSL_Data_t *wrapped_key, const 
         default:
         {
             BSL_LOG_DEBUG("UNWRAP AES MODE INVALID");
-            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;;
+            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            ;
         }
     }
-    
-    EVP_CIPHER_CTX   *ctx    = EVP_CIPHER_CTX_new();
+
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if (ctx == NULL)
     {
         BSL_FREE(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
-    
+
     // Wrapped key ciphertext always 8 bytes greater than CEK plaintext
     BSL_Data_InitBuffer(&cek->raw, wrapped_key->len - 8);
 
@@ -225,8 +226,8 @@ int BSL_Crypto_WrapKey(const void *kek_handle, const void *cek_handle, BSL_Data_
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
     }
-    
-    EVP_CIPHER_CTX   *ctx    = EVP_CIPHER_CTX_new();
+
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if (ctx == NULL)
     {
         BSL_LOG_ERR("Could not create cipher context");
@@ -288,7 +289,7 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const void *keyhandle, BSL_CryptoC
     CHK_ARG_NONNULL(hmac_ctx);
     CHK_ARG_NONNULL(keyhandle);
 
-    const BSLB_CryptoKey_t *key_info = (const BSLB_CryptoKey_t *) keyhandle;
+    const BSLB_CryptoKey_t *key_info = (const BSLB_CryptoKey_t *)keyhandle;
 
     hmac_ctx->libhandle = EVP_MD_CTX_new();
     CHK_PRECONDITION(hmac_ctx->libhandle != NULL);

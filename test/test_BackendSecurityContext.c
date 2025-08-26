@@ -360,7 +360,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecOper_AppendParam(&bib_oper_primary, &param_key);
     BSL_SecOper_AppendParam(&bib_oper_primary, &param_sha_var);
     BSL_SecOper_AppendParam(&bib_oper_primary, &param_integ_scope);
-    BSL_SecOper_AppendParam(&bib_oper_primary, &use_wrap_key); 
+    BSL_SecOper_AppendParam(&bib_oper_primary, &use_wrap_key);
 
     BSL_SecOper_t bib_oper_ext_block;
     BSL_SecOper_Init(&bib_oper_ext_block);
@@ -369,7 +369,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &param_key);
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &param_sha_var);
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &param_integ_scope);
-    BSL_SecOper_AppendParam(&bib_oper_ext_block, &use_wrap_key); 
+    BSL_SecOper_AppendParam(&bib_oper_ext_block, &use_wrap_key);
 
     BSL_SecParam_t bcb_param_key = { 0 };
     BSL_SecParam_InitStr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A3_KEY);
@@ -386,7 +386,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecOper_AppendParam(&bcb_oper, &bcb_param_key);
     BSL_SecOper_AppendParam(&bcb_oper, &bcb_scope);
     BSL_SecOper_AppendParam(&bcb_oper, &aes_variant);
-    BSL_SecOper_AppendParam(&bcb_oper, &use_wrap_key); 
+    BSL_SecOper_AppendParam(&bcb_oper, &use_wrap_key);
 
     BSL_SecurityActionSet_t *malloced_actionset = BSL_CALLOC(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(malloced_actionset);
@@ -571,7 +571,7 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &bcb_param_key);
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &aes_variant);
     BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &bcb_scope);
-    BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &use_wrap_key);    
+    BSL_SecOper_AppendParam(&bcb_op_tgt_payload, &use_wrap_key);
 
     BSL_SecOper_t bcb_op_tgt_bib;
     BSL_SecOper_Init(&bcb_op_tgt_bib);
@@ -580,7 +580,7 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &bcb_param_key);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &aes_variant);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &bcb_scope);
-    BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &use_wrap_key); 
+    BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &use_wrap_key);
 
     BSL_SecurityActionSet_t *malloced_actionset = BSL_CALLOC(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(malloced_actionset);

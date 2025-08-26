@@ -98,8 +98,8 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
     memset(self, 0, sizeof(*self));
     self->sha_variant           = -1;
     self->integrity_scope_flags = -1;
-    self->hash_size = 0;
-    self->keywrap = -1;
+    self->hash_size             = 0;
+    self->keywrap               = -1;
 
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
     {
@@ -165,8 +165,8 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
         BSL_LOG_WARNING("BIB SHA varient required.");
         return BSL_ERR_PROPERTY_CHECK_FAILED;
     }
-    
-    switch(self->sha_variant)
+
+    switch (self->sha_variant)
     {
         case BSL_CRYPTO_SHA_512:
         {
@@ -274,7 +274,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
     CHK_ARG_NONNULL(self);
 
     BSL_AuthCtx_t hmac_ctx;
-    int res = 0;
+    int           res = 0;
 
     const void *key_id_handle;
     const void *cipher_key;
@@ -313,8 +313,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
 
-        int wrap_result =
-            BSL_Crypto_WrapKey(key_id_handle, cipher_key, &self->wrapped_key, &wrapped_key);
+        int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &self->wrapped_key, &wrapped_key);
 
         if (BSL_SUCCESS != wrap_result)
         {
@@ -347,8 +346,8 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
     }
 
     BSL_Data_InitBuffer(&self->hmac_result_val, self->hash_size);
-    size_t hmaclen         = 0;
-    if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, (void **) &self->hmac_result_val.ptr, &hmaclen)) != 0)
+    size_t hmaclen = 0;
+    if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, (void **)&self->hmac_result_val.ptr, &hmaclen)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_finalize failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
@@ -472,7 +471,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
         }
     }
 
-    BSL_SecResult_t *bib_result   = BSLX_ScratchSpace_take(&scratch, BSL_SecResult_Sizeof());
+    BSL_SecResult_t *bib_result = BSLX_ScratchSpace_take(&scratch, BSL_SecResult_Sizeof());
     BSL_SecResult_Init(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
                        BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
     BSL_SecOutcome_AppendResult(sec_outcome, bib_result);

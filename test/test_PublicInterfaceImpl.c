@@ -103,7 +103,7 @@ void setUp(void)
     wrapkey_data.ptr = (uint8_t *)ApxA2_WrappedKey;
     wrapkey_data.len = sizeof(ApxA2_WrappedKey);
     BSL_SecParam_InitBytestr(&param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, wrapkey_data);
-    
+
     BSL_SecParam_t param_use_wrap_key = { 0 };
     BSL_SecParam_InitInt64(&param_use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
     BSL_SecParam_t param_dont_use_wrap_key = { 0 };
