@@ -279,13 +279,11 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
         json_t *spec = json_object_get(policyrule, "spec");
         if (spec && json_is_object(spec))
         {
-
             // check sec ctx id
             json_t *sc_id   = json_object_get(spec, "sc_id");
             long    sc_id_l = json_integer_value(sc_id);
 
             BSL_LOG_DEBUG("spec:\n");
-            BSL_LOG_DEBUG("     svc: %s\n", svc_c ? svc_c : "(null)");
             BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT "\n", sc_id_l ? sc_id_l : -1);
 
             json_t *sc_parms = json_object_get(spec, "sc_parms");
