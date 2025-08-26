@@ -128,8 +128,8 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
     }
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
-    int final_len = 0;
-    int res       = EVP_DecryptFinal_ex(ctx, buf, &final_len);
+    int     final_len = 0;
+    int     res       = EVP_DecryptFinal_ex(ctx, buf, &final_len);
     if (res != 1)
     {
         BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
@@ -194,7 +194,7 @@ int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *c
     wrapped_key->len = (size_t)len;
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
-    int final_len = 0;
+    int     final_len = 0;
     if (!EVP_EncryptFinal_ex(ctx, buf, &final_len))
     {
         EVP_CIPHER_CTX_free(ctx);
