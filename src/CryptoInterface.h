@@ -193,15 +193,32 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
 int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 
 /**
- * @todo Doxygen
+ * Deinit and free key handle data
+ * @param[in] keyhandle key handle to clear. Assumed to be allocated with ::BSL_MALLOC().
  */
-int BSL_Crypto_UnwrapKey(BSL_Data_t *unwrapped_key_output, BSL_Data_t wrapped_key_plaintext, const char *key_id,
-                         size_t aes_variant);
+int BSL_Crypto_ClearKeyHandle(void *keyhandle);
 
 /**
- * @todo Doxygen
+ * Perform key wrap
+ * KEK and CEK sizes must match
+ * @param[in] kek_handle key encryption key handle (encryption key)
+ * @param[in] aes_variant AES variant to use for encryption
+ * @param[in] cek_handle content encryption key handle (encryption data)
+ * @param[in,out] wrapped_key output wrapped key (ciphertext) bytes
+ * @param[in,out] wrapped_key_handle output wrapped key (ciphertext) handle, allocated with ::BSL_MALLOC()
  */
-int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *content_key_id, size_t aes_variant);
+int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *cek_handle, BSL_Data_t *wrapped_key,
+                       const void **wrapped_key_handle);
+
+/**
+ * Perform key unwrap
+ * CEK size expected to match size of KEK
+ * @param[in] kek_handle key encryption key handle (decryption key)
+ * @param[in] aes_variant AES variant to use for decryption
+ * @param[in] wrapped_key input wrapped key (ciphertext) bytes
+ * @param[in,out] cek_handle output content encryption key (plaintext) handle, allocated with ::BSL_MALLOC()
+ */
+int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t *wrapped_key, const void **cek_handle);
 
 /**
  * Initialize crypto context resources and set as encoding or decoding
@@ -210,20 +227,19 @@ int BSL_Crypto_WrapKey(BSL_Data_t *wrapped_key, BSL_Data_t cek, const char *cont
  * @param enc enum for BSL_CRYPTO_ENCRYPT or BSL_CRYPTO_DECRYPT
  * @param init_vec pointer to initialization vector (IV) data
  * @param iv_len length of IV data
- * @param content_enc_key AES key to use as Content Encryption Key.
+ * @param key_handle key handle to use
  * @return 0 if successful
  */
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
-                    const void *init_vec, int iv_len, BSL_Data_t content_enc_key);
+                    const void *init_vec, int iv_len, const void *key_handle);
 
 /** Get pointers to an existing key, if present.
  *
  * @param keyid The key to search for.
- * @param[out] secret Pointer to the stored secret buffer, if successful.
- * @param[out] secret_len Pointer to the stored secret length, if successful.
+ * @param[in, out] key_handle pointer to pointer for new key handle
  * @return Zero upon success.
  */
-int BSLB_Crypto_GetRegistryKey(const char *keyid, const uint8_t **secret, size_t *secret_len);
+int BSLB_Crypto_GetRegistryKey(const char *keyid, const void **key_handle);
 
 /**
  * Add additional authenticated data (AAD) to cipher context
@@ -282,7 +298,12 @@ int BSL_Cipher_FinalizeData(BSL_Cipher_t *cipher_ctx, BSL_Data_t *extra);
  */
 int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
 
-int BSL_Crypto_GenKey(uint8_t *key_buffer, size_t key_length);
+/**
+ * Generate a new cryptographic key
+ * @param[in] key_length length of new key. Should be 16 or 32
+ * @param[in, out] key_out pointer to pointer for new key handle, allocated with ::BSL_MALLOC()
+ */
+int BSL_Crypto_GenKey(size_t key_length, const void **key_out);
 
 /**
  * Generate initialization vector (IV) for AES-GCM for BCBs
