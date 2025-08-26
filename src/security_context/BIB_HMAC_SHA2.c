@@ -281,35 +281,6 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    uint64_t keywrap_aes_to_use = 0;
-    switch (self->keywrap_aes)
-    {
-        case 0:
-        {
-            keywrap_aes_to_use = 0;
-            break;
-        }
-        case 16:
-        {
-            keywrap_aes_to_use = BSL_CRYPTO_AES_128;
-            break;
-        }
-        case 24:
-        {
-            keywrap_aes_to_use = BSL_CRYPTO_AES_192;
-            break;
-        }
-        case 32:
-        {
-            keywrap_aes_to_use = BSL_CRYPTO_AES_256;
-            break;
-        }
-        default:
-        {
-            BSL_LOG_DEBUG("Invalid wrapped key length %"PRIu64" (must be 0 - skip, 16 - AES128, 24 - AES192, 32 - AES256)", self->keywrap_aes);
-        }
-    }
-
     if (0 == self->keywrap_aes)
     {
         // Bypass, use the Key-Encryption-Key (KEK) as the Content-Encryption-Key (CEK)
@@ -338,7 +309,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         }
 
         int wrap_result =
-            BSL_Crypto_WrapKey(key_id_handle, keywrap_aes_to_use, cipher_key, &self->wrapped_key, &wrapped_key);
+            BSL_Crypto_WrapKey(key_id_handle, self->keywrap_aes, cipher_key, &self->wrapped_key, &wrapped_key);
 
         if (BSL_SUCCESS != wrap_result)
         {
