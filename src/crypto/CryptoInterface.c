@@ -81,6 +81,17 @@ void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn)
     rand_bytes_generator = rand_gen_fn;
 }
 
+int BSL_Crypto_ClearKeyHandle(void *keyhandle)
+{
+    CHK_ARG_NONNULL(keyhandle);
+    
+    BSLB_CryptoKey_t *key = (BSLB_CryptoKey_t *) keyhandle;
+    CHK_POSTCONDITION(BSL_SUCCESS == BSLB_CryptoKey_Deinit(key));
+    BSL_FREE(key);
+
+    return BSL_SUCCESS;
+}
+
 int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t *wrapped_key, const void **cek_handle)
 {
     BSLB_CryptoKey_t *kek = (BSLB_CryptoKey_t *) kek_handle;
@@ -89,27 +100,31 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
 
     const EVP_CIPHER *cipher = (aes_variant == BSL_CRYPTO_AES_128) ? EVP_aes_128_wrap() : EVP_aes_256_wrap();
     EVP_CIPHER_CTX   *ctx    = EVP_CIPHER_CTX_new();
-    ASSERT_ARG_NONNULL(ctx);
-
-    BSL_LOG_INFO("init-ing CEK buff with %zu", kek->raw.len);
-    BSL_Data_InitBuffer(&cek->raw, kek->raw.len);
-
-    BSL_LOG_INFO("wrapped key! %zu", wrapped_key->len);
-    for (size_t i = 0 ; i < wrapped_key->len; i ++)
+    if (ctx == NULL)
     {
-        BSL_LOG_INFO("%02x", wrapped_key->ptr[i]);
+        BSL_FREE(cek);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
+    BSL_Data_InitBuffer(&cek->raw, kek->raw.len);
+    
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
-    ASSERT_POSTCONDITION(dec_result == 1);
+    if (dec_result != 1)
+    {
+        BSL_Data_Deinit(&cek->raw);
+        BSL_FREE(cek);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
     EVP_CIPHER_CTX_set_padding(ctx, 0);
 
     int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, (int *) &cek->raw.len, wrapped_key->ptr, wrapped_key->len);
     if (decrypt_res != 1)
     {
         BSL_LOG_ERR("EVP_DecryptUpdate: %s", ERR_error_string(ERR_get_error(), NULL));
+        BSL_Data_Deinit(&cek->raw);
+        BSL_FREE(cek);
         EVP_CIPHER_CTX_free(ctx);
-        return -1;
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
     int final_len = 0;
@@ -118,21 +133,22 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
     {
         BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
         EVP_CIPHER_CTX_free(ctx);
-        return -1;
+        BSL_Data_Deinit(&cek->raw);
+        BSL_FREE(cek);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     cek->raw.len += (size_t)final_len;
-
-    BSL_LOG_INFO("cek now %zu,", cek->raw.len);
-    for (size_t i = 0 ; i < cek->raw.len; i ++)
-    {
-        BSL_LOG_INFO("%02x", cek->raw.ptr[i]);
-    }
 
     EVP_CIPHER_CTX_free(ctx);
 
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
     res = EVP_PKEY_keygen_init(pctx);
-    CHK_PROPERTY(res == 1);
+    if (res != 1)
+    {
+        BSL_FREE(cek);
+        BSL_Data_Deinit(&cek->raw);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
 
     cek->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, cek->raw.ptr, cek->raw.len);
     EVP_PKEY_CTX_free(pctx);
@@ -185,7 +201,6 @@ int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *c
     CHK_PROPERTY(res == 1);
 
     new_wrapped_key_handle->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, wrapped_key->len);
-    EVP_PKEY_CTX_free(pctx);
 
     BSL_Data_Init(&new_wrapped_key_handle->raw);
 
@@ -198,7 +213,6 @@ int BSL_Crypto_WrapKey(const void *kek_handle, size_t aes_variant, const void *c
 
     *wrapped_key_handle = new_wrapped_key_handle;
     EVP_PKEY_CTX_free(pctx);
-
     return 0;
 }
 
@@ -299,12 +313,6 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     ASSERT_ARG_NONNULL(key_handle);
 
     BSLB_CryptoKey_t *key = (BSLB_CryptoKey_t *) key_handle;
-
-    BSL_LOG_INFO("cipher init wit key: %zu ", key->raw.len);
-    for (size_t i = 0 ; i < key->raw.len; i ++)
-    {
-        BSL_LOG_INFO("%02x", key->raw.ptr[i]);
-    }
 
     cipher_ctx->libhandle   = EVP_CIPHER_CTX_new();
     cipher_ctx->enc         = enc;
@@ -448,7 +456,7 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
     return BSL_SUCCESS;
 }
 
-int BSL_Crypto_GenKey(size_t key_length, void **key_out)
+int BSL_Crypto_GenKey(size_t key_length, const void **key_out)
 {
     BSLB_CryptoKey_t *new_key = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
     

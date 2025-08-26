@@ -133,7 +133,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    bcb_context->skip_keywrap = !(bcb_context->wrapped_key.len > 0);
+    bcb_context->skip_keywrap = (bcb_context->wrapped_key.len == 0);
 
     if (bcb_context->skip_keywrap)
     {
@@ -147,7 +147,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != unwrap_result)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
-            BSL_FREE((void *) cipher_key);
             BSL_Data_Deinit(&bcb_context->authtag);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
@@ -161,7 +160,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         BSL_Data_Deinit(&bcb_context->authtag);
         if (!bcb_context->skip_keywrap)
         {
-            BSL_FREE((void *) cipher_key);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -173,7 +172,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         BSL_Data_Deinit(&bcb_context->authtag);
         if (!bcb_context->skip_keywrap)
         {
-            BSL_FREE((void *) cipher_key);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -188,7 +187,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         BSL_Data_Deinit(&bcb_context->authtag);
         if (!bcb_context->skip_keywrap)
         {
-            BSL_FREE((void *) cipher_key);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -203,7 +202,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         BSL_Data_Deinit(&bcb_context->authtag);
         if (!bcb_context->skip_keywrap)
         {
-            BSL_FREE((void *) cipher_key);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -220,7 +219,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         BSL_Data_Deinit(&bcb_context->authtag);
         if (!bcb_context->skip_keywrap)
         {
-            BSL_FREE((void *) cipher_key);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -233,7 +232,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     
     if (!bcb_context->skip_keywrap)
     {
-        BSL_FREE((void *) cipher_key);
+        BSL_Crypto_ClearKeyHandle((void *) cipher_key);
     }
     BSL_Cipher_Deinit(&cipher);
     ASSERT_POSTCONDITION(bcb_context->authtag.len == 0);
@@ -274,6 +273,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     const void *key_id_handle;
     const void *cipher_key;
+    const void *wrapped_key;
 
     if (BSL_SUCCESS
         != BSLB_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
@@ -297,42 +297,41 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         const size_t keysize = is_aes128 ? 16 : 32;
         BSL_LOG_DEBUG("Generating %zu bit AES key", keysize * 8);
         
-        void *gen_key_handle;
-        if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &gen_key_handle))
+        if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &cipher_key))
         {
             BSL_LOG_ERR("Failed to generate AES key");
-            BSL_FREE((void *) gen_key_handle);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
 
         if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, BSLX_MAX_KEYLEN))
         {
             BSL_LOG_ERR("Failed to allocate wrapped key");
-            BSL_FREE((void *) gen_key_handle);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
 
-        int wrap_result = BSL_Crypto_WrapKey(key_id_handle, aes_mode, gen_key_handle, &bcb_context->wrapped_key, &cipher_key);
+        int wrap_result = BSL_Crypto_WrapKey(key_id_handle, aes_mode, cipher_key, &bcb_context->wrapped_key, &wrapped_key);
             
         if (BSL_SUCCESS != wrap_result)
         {
             BSL_LOG_ERR("Failed to wrap AES key");
-            BSL_FREE((void *) gen_key_handle);
-            BSL_FREE((void *) cipher_key);
+            BSL_Crypto_ClearKeyHandle((void *) wrapped_key);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
-
-        BSL_FREE((void *) gen_key_handle);
     }
 
     BSL_Cipher_t cipher = { 0 };
+
     int cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, aes_mode, bcb_context->iv.ptr, bcb_context->iv.len, cipher_key);
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
         if (!bcb_context->skip_keywrap)
         {
-            BSL_FREE((void *) cipher_key);
+            BSL_Crypto_ClearKeyHandle((void *) wrapped_key);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -343,7 +342,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_LOG_ERR("Failed to add AAD");
         if (!bcb_context->skip_keywrap)
         {
-            BSL_FREE((void *) cipher_key);
+            BSL_Crypto_ClearKeyHandle((void *) wrapped_key);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -357,7 +357,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_LOG_ERR("Encrypting plaintext BTSD failed");
         if (!bcb_context->skip_keywrap)
         {
-            BSL_FREE((void *) cipher_key);
+            BSL_Crypto_ClearKeyHandle((void *) wrapped_key);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -376,7 +377,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_LOG_ERR("Finalizing AES failed");
         if (!bcb_context->skip_keywrap)
         {
-            BSL_FREE((void *) cipher_key);
+            BSL_Crypto_ClearKeyHandle((void *) wrapped_key);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -394,7 +396,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_LOG_ERR("Failed to get authentication tag");
         if (!bcb_context->skip_keywrap)
         {
-            BSL_FREE((void *) cipher_key);
+            BSL_Crypto_ClearKeyHandle((void *) wrapped_key);
+            BSL_Crypto_ClearKeyHandle((void *) cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -403,7 +406,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     CHK_POSTCONDITION(bcb_context->btsd_replacement.ptr != NULL);
     CHK_POSTCONDITION(bcb_context->btsd_replacement.len == ciphertext_len);
 
-    BSL_FREE((void *) cipher_key);
+    BSL_Crypto_ClearKeyHandle((void *) wrapped_key);
+    BSL_Crypto_ClearKeyHandle((void *) cipher_key);
     BSL_Cipher_Deinit(&cipher);
     return BSL_SUCCESS;
 }

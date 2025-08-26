@@ -192,6 +192,8 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
  */
 int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 
+int BSL_Crypto_ClearKeyHandle(void *keyhandle);
+
 /**
  * @todo Doxygen
  */
@@ -284,7 +286,7 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
  * @param[in] key_length length of new key. Should be 16 or 32
  * @param[in, out] key_out pointer to pointer for new key handle
  */
-int BSL_Crypto_GenKey(size_t key_length, void **key_out);
+int BSL_Crypto_GenKey(size_t key_length, const void **key_out);
 
 /**
  * Generate initialization vector (IV) for AES-GCM for BCBs
