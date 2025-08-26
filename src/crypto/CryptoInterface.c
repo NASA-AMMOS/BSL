@@ -145,8 +145,8 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, size_t aes_variant, BSL_Data_t 
     res                = EVP_PKEY_keygen_init(pctx);
     if (res != 1)
     {
-        BSL_FREE(cek);
         BSL_Data_Deinit(&cek->raw);
+        BSL_FREE(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
