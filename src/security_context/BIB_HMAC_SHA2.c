@@ -304,9 +304,9 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
 
-        /** 
-        * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
-        */
+        /**
+         * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
+         */
         if (BSL_SUCCESS != BSL_Data_InitBuffer(&self->wrapped_key, keysize + 8))
         {
             BSL_LOG_ERR("Failed to allocate wrapped key");

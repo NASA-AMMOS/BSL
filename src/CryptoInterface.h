@@ -228,7 +228,8 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
  * @param key_handle key handle to use
  * @return 0 if successful
  */
-int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var, const void *init_vec, int iv_len, void *key_handle);
+int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
+                    const void *init_vec, int iv_len, void *key_handle);
 
 /** Get pointers to an existing key, if present.
  *
