@@ -172,6 +172,7 @@ include(CTest)
 set(CMAKE_CTEST_ARGUMENTS
   --output-junit testresults.xml
   --output-on-failure
+  --verbose
 )
 
 # Install config used by tall targets
