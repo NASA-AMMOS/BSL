@@ -514,94 +514,6 @@ void test_crypto_generate_iv(int iv_len)
 }
 
 
-#define TEST_THREADS 10
-static pthread_t threads[TEST_THREADS];
-
-static void *add_key_to_reg_fn(void *arg)
-{
-    char *name = (char *) arg;
-    uint8_t key_bytes[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                            0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-    int res = BSL_Crypto_AddRegistryKey(name, key_bytes, sizeof(key_bytes));
-    TEST_ASSERT_EQUAL(res, 0);
-    BSL_LOG_INFO("ADDED %s KEY TO CRYPTO REG", name);
-
-    return NULL;
-}
-
-static void *get_key_from_reg_fn(void *arg)
-{
-    char *name = (char *) arg;
-    void *handle;
-    int res = BSLB_Crypto_GetRegistryKey(name, &handle);
-    TEST_ASSERT_EQUAL(res, 0);
-
-    return NULL;
-}
-
-void test_add_key_concurrency(void)
-{
-    char names[TEST_THREADS][10];
-    for (size_t i = 0; i < TEST_THREADS; i ++)
-    {
-        sprintf(names[i], "thread%zu", i); 
-    }
-
-    for (size_t i = 0; i < TEST_THREADS; i ++)
-    {
-        if (pthread_create(threads+i, NULL, add_key_to_reg_fn, (void *) names[i]))
-        {
-            TEST_ABORT();
-        }
-    }
-
-    for (size_t i = 0; i < TEST_THREADS; i ++)
-    {
-        if (pthread_join(threads[i], NULL))
-        {
-            BSL_LOG_ERR("Failed to join thread #%zu", i);
-        }
-    }
-
-    for (size_t i = 0; i < TEST_THREADS; i ++)
-    {
-        void *handle;
-        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLB_Crypto_GetRegistryKey(names[i], &handle));
-    }
-}
-
-void test_get_key_concurrency(void)
-{
-    char names[TEST_THREADS][10];
-    for (size_t i = 0; i < TEST_THREADS; i ++)
-    {
-        sprintf(names[i], "thread%zu", i); 
-    }
-
-    uint8_t key_bytes[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                            0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-    for (size_t i = 0; i < TEST_THREADS; i ++)
-    {
-        TEST_ASSERT_EQUAL(0, BSL_Crypto_AddRegistryKey(names[i], key_bytes, sizeof(key_bytes)));
-    }
-
-    for (size_t i = 0; i < TEST_THREADS; i ++)
-    {
-        if (pthread_create(threads+i, NULL, get_key_from_reg_fn, (void *) names[i]))
-        {
-            TEST_ABORT();
-        }
-    }
-
-    for (size_t i = 0; i < TEST_THREADS; i ++)
-    {
-        if (pthread_join(threads[i], NULL))
-        {
-            BSL_LOG_ERR("Failed to join thread #%zu", i);
-        }
-    }
-}
-
 // rfc3394 test vectors
 TEST_CASE("000102030405060708090A0B0C0D0E0F", "00112233445566778899AABBCCDDEEFF",
           "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5")
@@ -733,4 +645,92 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
     BSL_Crypto_ClearKeyHandle((void *)wrapped_key_handle2);
     BSLB_Crypto_RemoveRegistryKey("kek");
     BSLB_Crypto_RemoveRegistryKey("cek");
+}
+
+#define TEST_THREADS 10
+static pthread_t threads[TEST_THREADS];
+
+static void *add_key_to_reg_fn(void *arg)
+{
+    char *name = (char *) arg;
+    uint8_t key_bytes[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                            0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+    int res = BSL_Crypto_AddRegistryKey(name, key_bytes, sizeof(key_bytes));
+    TEST_ASSERT_EQUAL(res, 0);
+    BSL_LOG_INFO("ADDED %s KEY TO CRYPTO REG", name);
+
+    return NULL;
+}
+
+static void *get_key_from_reg_fn(void *arg)
+{
+    char *name = (char *) arg;
+    void *handle;
+    int res = BSLB_Crypto_GetRegistryKey(name, &handle);
+    TEST_ASSERT_EQUAL(res, 0);
+
+    return NULL;
+}
+
+void test_add_key_concurrency(void)
+{
+    char names[TEST_THREADS][10];
+    for (size_t i = 0; i < TEST_THREADS; i ++)
+    {
+        sprintf(names[i], "thread%zu", i); 
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i ++)
+    {
+        if (pthread_create(threads+i, NULL, add_key_to_reg_fn, (void *) names[i]))
+        {
+            TEST_ABORT();
+        }
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i ++)
+    {
+        if (pthread_join(threads[i], NULL))
+        {
+            BSL_LOG_ERR("Failed to join thread #%zu", i);
+        }
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i ++)
+    {
+        void *handle;
+        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLB_Crypto_GetRegistryKey(names[i], &handle));
+    }
+}
+
+void test_get_key_concurrency(void)
+{
+    char names[TEST_THREADS][10];
+    for (size_t i = 0; i < TEST_THREADS; i ++)
+    {
+        sprintf(names[i], "thread%zu", i); 
+    }
+
+    uint8_t key_bytes[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                            0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+    for (size_t i = 0; i < TEST_THREADS; i ++)
+    {
+        TEST_ASSERT_EQUAL(0, BSL_Crypto_AddRegistryKey(names[i], key_bytes, sizeof(key_bytes)));
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i ++)
+    {
+        if (pthread_create(threads+i, NULL, get_key_from_reg_fn, (void *) names[i]))
+        {
+            TEST_ABORT();
+        }
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i ++)
+    {
+        if (pthread_join(threads[i], NULL))
+        {
+            BSL_LOG_ERR("Failed to join thread #%zu", i);
+        }
+    }
 }
