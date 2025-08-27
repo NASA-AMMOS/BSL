@@ -240,13 +240,14 @@ int rfc3394_cek(unsigned char *buf, int len)
     }
     else
     {
-        uint8_t cek_buf[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF}; 
+        uint8_t cek_buf[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                              0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
         memcpy(buf, cek_buf, len);
     }
     return 1;
 }
 
-TEST_MATRIX([true, false], [true, false])
+TEST_MATRIX([ true, false ], [ true, false ])
 void ntest_sec_source_keywrap(bool wrap, bool bib)
 {
     string_t cek_str;
@@ -262,7 +263,7 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
     BSL_Data_Init(&kek_data);
     TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&kek_data, kek_str), 0);
     string_clear(kek_str);
-    
+
     string_t wrapped_key_str;
     string_init_set_str(wrapped_key_str, "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5");
     BSL_Data_t wrapped_key_data;
@@ -274,7 +275,8 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
     if (bib)
     {
         // sign
-        string_init_set_str(result_data_str, "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B");
+        string_init_set_str(result_data_str, "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
+                                             "4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B");
     }
     else
     {
@@ -286,13 +288,14 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
     TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&result_data, result_data_str), 0);
     string_clear(result_data_str);
 
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
+    TEST_ASSERT_EQUAL(
+        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
-    BSL_SecOutcome_t *sec_outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
+    BSL_SecOutcome_t      *sec_outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
     const BSL_SecResult_t *result;
-    BIBTestContext bibcontext;
-    BCBTestContext bcbcontext;
+    BIBTestContext         bibcontext;
+    BCBTestContext         bcbcontext;
     if (bib)
     {
         if (wrap)
@@ -310,9 +313,10 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
         }
         BSL_SecParam_InitInt64(&bibcontext.param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
         BSL_SecParam_InitInt64(&bibcontext.param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-        
+
         BSL_SecOper_Init(&bibcontext.sec_oper);
-        BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
+        BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
+                             BSL_POLICYACTION_DROP_BLOCK);
         BSL_SecOper_AppendParam(&bibcontext.sec_oper, &bibcontext.param_sha_variant);
         BSL_SecOper_AppendParam(&bibcontext.sec_oper, &bibcontext.param_scope_flags);
         BSL_SecOper_AppendParam(&bibcontext.sec_oper, &bibcontext.param_test_key);
@@ -320,7 +324,8 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
 
         BSL_SecOutcome_Init(sec_outcome, &bibcontext.sec_oper, BSL_SecOutcome_Sizeof());
 
-        int bib_exec_status = BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper, sec_outcome);
+        int bib_exec_status =
+            BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper, sec_outcome);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bib_exec_status);
 
         TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(sec_outcome));
@@ -344,11 +349,14 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
             BSL_SecParam_InitStr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "cek_wrap");
             BSL_SecParam_InitInt64(&bcbcontext.use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
         }
-        BSL_SecParam_InitInt64(&bcbcontext.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE, RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
-        BSL_SecParam_InitInt64(&bcbcontext.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-        
+        BSL_SecParam_InitInt64(&bcbcontext.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE,
+                               RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
+        BSL_SecParam_InitInt64(&bcbcontext.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
+                               RFC9173_BCB_AES_VARIANT_A128GCM);
+
         BSL_SecOper_Init(&bcbcontext.sec_oper);
-        BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
+        BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
+                             BSL_POLICYACTION_DROP_BLOCK);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_aes_variant);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_scope_flags);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_test_key_id);
@@ -356,7 +364,8 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
 
         BSL_SecOutcome_Init(sec_outcome, &bcbcontext.sec_oper, BSL_SecOutcome_Sizeof());
 
-        int bcb_exec_status = BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper, sec_outcome);
+        int bcb_exec_status =
+            BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper, sec_outcome);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_status);
 
         TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(sec_outcome));
@@ -370,17 +379,18 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
     if (wrap)
     {
         int got = 0;
-        for (size_t i = 0; i < BSL_SecOutcome_CountParams(sec_outcome); i ++)
+        for (size_t i = 0; i < BSL_SecOutcome_CountParams(sec_outcome); i++)
         {
             const BSL_SecParam_t *sec_param = BSL_SecOutcome_GetParamAt(sec_outcome, i);
             if (sec_param->param_id == ((bib) ? RFC9173_BIB_PARAMID_WRAPPED_KEY : RFC9173_BCB_SECPARAM_WRAPPEDKEY))
             {
                 got++;
                 BSL_LOG_INFO("GOT WRAPPED KEY PARAM:");
-                BSL_LOG_INFO("EXPECTED wrapped key: %s",
+                BSL_LOG_INFO(
+                    "EXPECTED wrapped key: %s",
                     BSL_Log_DumpAsHexString(logstr, sizeof(logstr), wrapped_key_data.ptr, wrapped_key_data.len));
                 BSL_LOG_INFO("ACTUAL wrapped key:   %s",
-                    BSL_Log_DumpAsHexString(logstr, sizeof(logstr), sec_param->_bytes, sec_param->_bytelen));
+                             BSL_Log_DumpAsHexString(logstr, sizeof(logstr), sec_param->_bytes, sec_param->_bytelen));
                 TEST_ASSERT_EQUAL(wrapped_key_data.len, sec_param->_bytelen);
                 TEST_ASSERT_EQUAL_MEMORY(wrapped_key_data.ptr, sec_param->_bytes, wrapped_key_data.len);
             }
@@ -406,10 +416,9 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
 
         BSL_CanonicalBlock_t target_block;
         BSL_BundleCtx_GetBlockMetadata(&mock_bpa_ctr->bundle_ref, 1, &target_block);
-        BSL_LOG_INFO("EXPECTED payload: %s",
-                    BSL_Log_DumpAsHexString(logstr, sizeof(logstr), pt_data.ptr, pt_data.len));
+        BSL_LOG_INFO("EXPECTED payload: %s", BSL_Log_DumpAsHexString(logstr, sizeof(logstr), pt_data.ptr, pt_data.len));
         BSL_LOG_INFO("ACTUAL payload:   %s",
-                    BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block.btsd, target_block.btsd_len));
+                     BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block.btsd, target_block.btsd_len));
         TEST_ASSERT_EQUAL_MEMORY(pt_data.ptr, target_block.btsd, pt_data.len);
 
         BSL_Data_Deinit(&pt_data);
@@ -432,13 +441,19 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
     BSL_FREE(sec_outcome);
 }
 
-TEST_MATRIX([true, false])
+TEST_MATRIX([ true, false ])
 void test_sec_accept_keyunwrap(bool bib)
 {
 
-    const char *bundle_bib = (  "9F88070000820282010282028202018202820201820018281A000F424085010100005823526561647920746F2067656E657261746520612033322D62797465207061796C6F6164850B020000585681010101820282020182820107820300818182015840756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7BFF" );
+    const char *bundle_bib = ("9F88070000820282010282028202018202820201820018281A000F424085010100005823526561647920746F"
+                              "2067656E657261746520612033322D62797465207061796C6F6164850B020000585681010101820282020182"
+                              "820107820300818182015840756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6"
+                              "B021E0CEC4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7BFF");
 
-    const char *bundle_bcb = (  "9F88070000820282010282028202018202820201820018281A000F42408501010000582315585E19F60C0978EDE4105E529F9B0006C13C9804A9C75AB46D4ED46F1097CFA03967850C02010058508101020182028202018482014C5477656C76653132313231328202018203581869C411276FECDDC4780DF42C8A2AF89296FABF34D7FAE7008204008181820150F6DC43C2EE046C7AE713F0531B2BCB48FF" );
+    const char *bundle_bcb =
+        ("9F88070000820282010282028202018202820201820018281A000F42408501010000582315585E19F60C0978EDE4105E529F9B0006C13"
+         "C9804A9C75AB46D4ED46F1097CFA03967850C02010058508101020182028202018482014C5477656C7665313231323132820201820358"
+         "1869C411276FECDDC4780DF42C8A2AF89296FABF34D7FAE7008204008181820150F6DC43C2EE046C7AE713F0531B2BCB48FF");
 
     string_t kek_str;
     string_init_set_str(kek_str, "000102030405060708090A0B0C0D0E0F");
@@ -446,7 +461,7 @@ void test_sec_accept_keyunwrap(bool bib)
     BSL_Data_Init(&kek_data);
     TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&kek_data, kek_str), 0);
     string_clear(kek_str);
-    
+
     string_t wrapped_key_str;
     string_init_set_str(wrapped_key_str, "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5");
     BSL_Data_t wrapped_key_data;
@@ -465,7 +480,8 @@ void test_sec_accept_keyunwrap(bool bib)
     if (bib)
     {
         // sign
-        string_init_set_str(result_data_str, "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B");
+        string_init_set_str(result_data_str, "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
+                                             "4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B");
     }
     else
     {
@@ -488,8 +504,8 @@ void test_sec_accept_keyunwrap(bool bib)
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BSL_SecOutcome_t *sec_outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
-    BIBTestContext bibcontext;
-    BCBTestContext bcbcontext;
+    BIBTestContext    bibcontext;
+    BCBTestContext    bcbcontext;
     if (bib)
     {
         BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
@@ -498,9 +514,10 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_SecParam_InitBytestr(&bibcontext.param_wrapped_key, RFC9173_BIB_PARAMID_WRAPPED_KEY, wrapped_key_data);
         BSL_SecParam_InitInt64(&bibcontext.param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
         BSL_SecParam_InitInt64(&bibcontext.param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-        
+
         BSL_SecOper_Init(&bibcontext.sec_oper);
-        BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR, BSL_POLICYACTION_DROP_BLOCK);
+        BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
+                             BSL_POLICYACTION_DROP_BLOCK);
         BSL_SecOper_AppendParam(&bibcontext.sec_oper, &bibcontext.param_sha_variant);
         BSL_SecOper_AppendParam(&bibcontext.sec_oper, &bibcontext.param_scope_flags);
         BSL_SecOper_AppendParam(&bibcontext.sec_oper, &bibcontext.param_test_key);
@@ -509,7 +526,8 @@ void test_sec_accept_keyunwrap(bool bib)
 
         BSL_SecOutcome_Init(sec_outcome, &bibcontext.sec_oper, BSL_SecOutcome_Sizeof());
 
-        int bib_exec_status = BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper, sec_outcome);
+        int bib_exec_status =
+            BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper, sec_outcome);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bib_exec_status);
     }
     else
@@ -522,11 +540,14 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_SecParam_InitBytestr(&bcbcontext.param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, wrapped_key_data);
         BSL_SecParam_InitBytestr(&bcbcontext.param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, result_data);
         BSL_SecParam_InitBytestr(&bcbcontext.param_init_vec, RFC9173_BCB_SECPARAM_IV, iv_data);
-        BSL_SecParam_InitInt64(&bcbcontext.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE, RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
-        BSL_SecParam_InitInt64(&bcbcontext.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-        
+        BSL_SecParam_InitInt64(&bcbcontext.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE,
+                               RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
+        BSL_SecParam_InitInt64(&bcbcontext.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
+                               RFC9173_BCB_AES_VARIANT_A128GCM);
+
         BSL_SecOper_Init(&bcbcontext.sec_oper);
-        BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR, BSL_POLICYACTION_DROP_BLOCK);
+        BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
+                             BSL_POLICYACTION_DROP_BLOCK);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_aes_variant);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_scope_flags);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_test_key_id);
@@ -534,10 +555,11 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_wrapped_key);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_auth_tag);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_init_vec);
-    
+
         BSL_SecOutcome_Init(sec_outcome, &bcbcontext.sec_oper, BSL_SecOutcome_Sizeof());
 
-        int bcb_exec_status = BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper, sec_outcome);
+        int bcb_exec_status =
+            BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper, sec_outcome);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_status);
     }
 
@@ -554,10 +576,9 @@ void test_sec_accept_keyunwrap(bool bib)
 
         BSL_CanonicalBlock_t target_block;
         BSL_BundleCtx_GetBlockMetadata(&mock_bpa_ctr->bundle_ref, 1, &target_block);
-        BSL_LOG_INFO("EXPECTED payload: %s",
-                    BSL_Log_DumpAsHexString(logstr, sizeof(logstr), pt_data.ptr, pt_data.len));
+        BSL_LOG_INFO("EXPECTED payload: %s", BSL_Log_DumpAsHexString(logstr, sizeof(logstr), pt_data.ptr, pt_data.len));
         BSL_LOG_INFO("ACTUAL payload:   %s",
-                    BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block.btsd, target_block.btsd_len));
+                     BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block.btsd, target_block.btsd_len));
         TEST_ASSERT_EQUAL_MEMORY(pt_data.ptr, target_block.btsd, pt_data.len);
 
         BSL_Data_Deinit(&pt_data);

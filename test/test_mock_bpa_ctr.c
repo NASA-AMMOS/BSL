@@ -24,7 +24,6 @@
 #include "bsl_test_utils.h"
 #include <mock_bpa/ctr.h>
 
-
 void suiteSetUp(void)
 {
     BSL_openlog();

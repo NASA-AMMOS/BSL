@@ -205,7 +205,8 @@ int BSL_Crypto_ClearKeyHandle(void *keyhandle);
  * @param[in] kek_handle key encryption key handle (encryption key)
  * @param[in] cek_handle content encryption key handle (encryption data)
  * @param[in,out] wrapped_key output wrapped key (ciphertext) bytes
- * @param[in,out] wrapped_key_handle output wrapped key (ciphertext) handle, allocated with ::BSL_MALLOC(). Set to NULL if handle not needed.
+ * @param[in,out] wrapped_key_handle output wrapped key (ciphertext) handle, allocated with ::BSL_MALLOC(). Set to NULL
+ * if handle not needed.
  */
 int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_key, void **wrapped_key_handle);
 

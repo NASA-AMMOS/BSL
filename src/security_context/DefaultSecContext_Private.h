@@ -67,7 +67,7 @@ typedef struct BSLX_BIB_s
     int64_t              keywrap;
     uint64_t             hmac_result_id;
     BSL_Data_t           hmac_result_val;
-    bool is_source;
+    bool                 is_source;
 } BSLX_BIB_t;
 
 int  BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper);

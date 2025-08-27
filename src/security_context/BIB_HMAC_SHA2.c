@@ -101,7 +101,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
     self->hash_size             = 0;
     self->keywrap               = -1;
     self->is_source             = BSL_SecOper_IsRoleSource(sec_oper);
-    
+
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
     {
         const BSL_SecParam_t *param    = BSL_SecOper_GetParamAt(sec_oper, param_index);
@@ -341,7 +341,6 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
             {
                 BSL_LOG_ERR("Key wrapping enabled, but no wrapped key param set");
                 return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-
             }
 
             int unwrap_result = BSL_Crypto_UnwrapKey(key_id_handle, &self->wrapped_key, &cipher_key);
@@ -510,8 +509,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     {
         BSL_SecParam_t *wrapped_key_param = BSL_CALLOC(1, BSL_SecResult_Sizeof());
         if (BSL_SUCCESS
-            != BSL_SecParam_InitBytestr(wrapped_key_param, RFC9173_BIB_PARAMID_WRAPPED_KEY,
-                                        bib_context.wrapped_key))
+            != BSL_SecParam_InitBytestr(wrapped_key_param, RFC9173_BIB_PARAMID_WRAPPED_KEY, bib_context.wrapped_key))
         {
             BSL_LOG_ERR("Failed to append BIB wrapped key param");
             BSL_FREE(wrapped_key_param);

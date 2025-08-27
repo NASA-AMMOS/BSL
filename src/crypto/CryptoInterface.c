@@ -205,7 +205,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
         BSL_LOG_ERR("KEK size %zu too small to encrypt CEK size %zu", kek->raw.len, cek->raw.len);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
-    
+
     const EVP_CIPHER *cipher;
     switch (kek->raw.len)
     {
@@ -267,7 +267,6 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
     }
 
     EVP_CIPHER_CTX_free(ctx);
-
 
     if (wrapped_key_handle != NULL)
     {
