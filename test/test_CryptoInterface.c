@@ -295,7 +295,7 @@ void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&pt_in_data, pt_txt),
                                   "BSL_TestUtils_DecodeBase16() failed");
 
-    const void *keyhandle;
+    void *keyhandle;
     TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &keyhandle));
 
     BSL_AuthCtx_t hmac;
@@ -376,7 +376,7 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
     BSL_Cipher_t ctx;
-    const void  *ekey;
+    void  *ekey;
     TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &ekey));
     res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_ENCRYPT, aes_var, iv, iv_len, ekey);
     TEST_ASSERT_EQUAL(0, res);
@@ -403,7 +403,7 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     uint8_t plaintext[ct_size];
     int     plaintext_len;
 
-    const void *key;
+    void *key;
     TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key));
     TEST_ASSERT_NOT_NULL(key);
 
@@ -441,7 +441,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     uint8_t tag[16];
     int     ciphertext_len;
 
-    const void *key;
+    void *key;
     TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key));
     TEST_ASSERT_NOT_NULL(key);
 
@@ -465,7 +465,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
 
     int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
-    const void *ckey;
+    void *ckey;
     TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &ckey));
     BSL_Cipher_t ctx;
     res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_DECRYPT, aes_var, iv, iv_len, ckey);
@@ -544,19 +544,19 @@ void test_key_wrap(const char *kek, const char *cek, const char *expected)
 
     // convert bytedata to keyhandles
     BSL_Crypto_AddRegistryKey("kek", kek_data.ptr, kek_data.len);
-    const void *kek_handle;
+    void *kek_handle;
     BSLB_Crypto_GetRegistryKey("kek", &kek_handle);
 
     BSL_Crypto_AddRegistryKey("cek", cek_data.ptr, cek_data.len);
-    const void *cek_handle;
+    void *cek_handle;
     BSLB_Crypto_GetRegistryKey("cek", &cek_handle);
 
-    const void *wrapped_key_handle;
+    void *wrapped_key_handle;
     BSL_Data_t wrapped_key;
     BSL_Data_InitBuffer(&wrapped_key, cek_data.len + 8);
     BSL_Crypto_WrapKey(kek_handle, cek_handle, &wrapped_key, &wrapped_key_handle);
 
-    TEST_ASSERT_TRUE(memcmp(wrapped_key.ptr, expected_data.ptr, wrapped_key.len) == 0);
+    TEST_ASSERT_EQUAL_MEMORY(wrapped_key.ptr, expected_data.ptr, wrapped_key.len);
 
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&cek_data);
@@ -596,29 +596,29 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
 
     // convert bytedata to keyhandles
     BSL_Crypto_AddRegistryKey("kek", kek_data.ptr, kek_data.len);
-    const void *kek_handle;
+    void *kek_handle;
     BSLB_Crypto_GetRegistryKey("kek", &kek_handle);
 
     BSL_Crypto_AddRegistryKey("cek", cek_data.ptr, cek_data.len);
-    const void *expected_cek_handle;
+    void *expected_cek_handle;
     BSLB_Crypto_GetRegistryKey("cek", &expected_cek_handle);
 
-    const void *cek_handle;
+    void *cek_handle;
     BSL_Crypto_UnwrapKey(kek_handle, &wrapped_key_data, &cek_handle);
 
     // test our unwrapped key
-    const void *wrapped_key_handle1;
+    void *wrapped_key_handle1;
     BSL_Data_t wrapped_key1;
     BSL_Data_InitBuffer(&wrapped_key1, cek_data.len + 8);
     BSL_Crypto_WrapKey(kek_handle, cek_handle, &wrapped_key1, &wrapped_key_handle1);
 
-    const void *wrapped_key_handle2;
+    void *wrapped_key_handle2;
     BSL_Data_t wrapped_key2;
     BSL_Data_InitBuffer(&wrapped_key2, cek_data.len + 8);
     BSL_Crypto_WrapKey(kek_handle, expected_cek_handle, &wrapped_key2, &wrapped_key_handle2);
     
-    TEST_ASSERT_TRUE(memcmp(wrapped_key1.ptr, wrapped_key_data.ptr, wrapped_key_data.len) == 0);
-    TEST_ASSERT_TRUE(memcmp(wrapped_key1.ptr, wrapped_key2.ptr, wrapped_key2.len) == 0);
+    TEST_ASSERT_EQUAL_MEMORY(wrapped_key1.ptr, wrapped_key_data.ptr, wrapped_key_data.len);
+    TEST_ASSERT_EQUAL_MEMORY(wrapped_key1.ptr, wrapped_key2.ptr, wrapped_key2.len);
 
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&cek_data);

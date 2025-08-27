@@ -92,7 +92,7 @@ int BSL_Crypto_ClearKeyHandle(void *keyhandle)
     return BSL_SUCCESS;
 }
 
-int BSL_Crypto_UnwrapKey(const void *kek_handle, BSL_Data_t *wrapped_key, const void **cek_handle)
+int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_handle)
 {
     BSLB_CryptoKey_t *kek = (BSLB_CryptoKey_t *)kek_handle;
 
@@ -188,8 +188,7 @@ int BSL_Crypto_UnwrapKey(const void *kek_handle, BSL_Data_t *wrapped_key, const 
     return 0;
 }
 
-int BSL_Crypto_WrapKey(const void *kek_handle, const void *cek_handle, BSL_Data_t *wrapped_key,
-                       const void **wrapped_key_handle)
+int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_key, void **wrapped_key_handle)
 {
     BSLB_CryptoKey_t *cek = (BSLB_CryptoKey_t *)cek_handle;
     BSLB_CryptoKey_t *kek = (BSLB_CryptoKey_t *)kek_handle;
@@ -284,7 +283,7 @@ int BSL_Crypto_WrapKey(const void *kek_handle, const void *cek_handle, BSL_Data_
     return 0;
 }
 
-int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, const void *keyhandle, BSL_CryptoCipherSHAVariant_e sha_var)
+int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, void *keyhandle, BSL_CryptoCipherSHAVariant_e sha_var)
 {
     CHK_ARG_NONNULL(hmac_ctx);
     CHK_ARG_NONNULL(keyhandle);
@@ -363,8 +362,7 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
     return 0;
 }
 
-int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
-                    const void *init_vec, int iv_len, const void *key_handle)
+int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var, const void *init_vec, int iv_len, void *key_handle)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(init_vec);
@@ -515,7 +513,7 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
     return BSL_SUCCESS;
 }
 
-int BSL_Crypto_GenKey(size_t key_length, const void **key_out)
+int BSL_Crypto_GenKey(size_t key_length, void **key_out)
 {
     BSLB_CryptoKey_t *new_key = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
 
@@ -585,7 +583,7 @@ int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t s
     return 0;
 }
 
-int BSLB_Crypto_GetRegistryKey(const char *keyid, const void **key_handle)
+int BSLB_Crypto_GetRegistryKey(const char *keyid, void **key_handle)
 {
     CHK_ARG_NONNULL(key_handle);
     CHK_ARG_NONNULL(keyid);
@@ -594,7 +592,7 @@ int BSLB_Crypto_GetRegistryKey(const char *keyid, const void **key_handle)
     string_init_set_str(keyid_str, keyid);
 
     pthread_mutex_lock(&StaticCryptoMutex);
-    const BSLB_CryptoKey_t *found = BSLB_CryptoKeyDict_cget(StaticKeyRegistry, keyid_str);
+    BSLB_CryptoKey_t *found = BSLB_CryptoKeyDict_get(StaticKeyRegistry, keyid_str);
     if (!found)
     {
         return BSL_ERR_NOT_FOUND;
@@ -610,7 +608,9 @@ int BSLB_Crypto_RemoveRegistryKey(const char *keyid)
     string_init_set_str(keyid_str, keyid);
 
     pthread_mutex_lock(&StaticCryptoMutex);
-    int rem = BSLB_CryptoKeyDict_erase(StaticKeyRegistry, keyid_str);
+    int res = BSLB_CryptoKeyDict_erase(StaticKeyRegistry, keyid_str);
     pthread_mutex_unlock(&StaticCryptoMutex);
-    return rem ? BSL_SUCCESS : -1;
+
+    string_clear(keyid_str);
+    return res ? BSL_SUCCESS : -1;
 }
