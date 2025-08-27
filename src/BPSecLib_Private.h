@@ -936,7 +936,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
 /** Increments a telemetry counter in the ctx based on telemetry index
  *
  * @todo
- * 
+ *
  */
 int BSL_TlmCounters_IncrementCounter(BSL_LibCtx_t *bsl, BSL_TlmCounterIndex_e tlm_index, uint64_t count);
 

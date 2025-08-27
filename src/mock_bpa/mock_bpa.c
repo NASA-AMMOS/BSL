@@ -143,9 +143,10 @@ static int bind_udp(int *sock, const struct sockaddr_in *addr)
 static void mock_bpa_dump_telemetry(void)
 {
     BSL_TlmCounters_t tlm;
-    int result = BSL_LibCtx_GetTlmCounters(bsl, &tlm);
-    
-    if(result) {
+    int               result = BSL_LibCtx_GetTlmCounters(bsl, &tlm);
+
+    if (result)
+    {
         BSL_LOG_ERR("Error with reading telemetry from bsl context");
         return;
     }

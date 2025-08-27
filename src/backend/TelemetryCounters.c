@@ -31,7 +31,7 @@
 int BSL_TlmCounters_IncrementCounter(BSL_LibCtx_t *bsl, BSL_TlmCounterIndex_e tlm_index, uint64_t count)
 {
     CHK_ARG_NONNULL(bsl);
-    
+
     bsl->tlm_counters.counters[tlm_index] += count;
     bsl->tlm_counters.counters[BSL_TLM_TOTAL_COUNT]++;
 

@@ -59,8 +59,8 @@ BPTREE_DEF2(BSL_PolicyDict, 4, uint64_t, M_BASIC_OPLIST, BSL_PolicyDesc_t, M_POD
 struct BSL_LibCtx_s
 {
     BSL_TlmCounters_t tlm_counters;
-    BSL_PolicyDict_t policy_reg;
-    BSL_SecCtxDict_t sc_reg;
+    BSL_PolicyDict_t  policy_reg;
+    BSL_SecCtxDict_t  sc_reg;
 };
 
 #ifdef __cplusplus
