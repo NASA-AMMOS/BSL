@@ -19,6 +19,7 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
+import os
 import yaml
 import cbor2
 import binascii
@@ -61,11 +62,13 @@ class _CCSDS_Cases(_TestSet):
     def __init__(self):
         super().__init__()
 
+        ccsds_test_dir = 'mock-bpa-test/ccsds_json/'
+
         s = open("mock-bpa-test/ccsds_bpsec_redbook_requirements_modified.yaml")
         requirements = yaml.safe_load(s)['requirements']
         for item in requirements:
             if 'tests' not in item.keys():
-                print(f'CCSDS | Test {t["test"]}: Skipping item - No test(s) specified.')
+                #print(f'CCSDS | Item {item["item"]}: Skipping item - No test(s) specified.')
                 continue
             
             for t in item['tests']:
@@ -94,7 +97,6 @@ class _CCSDS_Cases(_TestSet):
                         print(f'CCSDS | Test {t["test"]}: Bundle hex not specified.')
                         continue
 
-                    output=r".*",
                     output_format=DataFormat.ERR
 
                 bib_param_key_good = sc_param_json_format.format(param_id='key_name', value='9100')
@@ -169,13 +171,14 @@ class _CCSDS_Cases(_TestSet):
 
                 policyrules = ','.join(rules_json)
                 final_json = policyset_json_format.format(policyrules)
-                finame = f"mock-bpa-test/ccsds_json/{t['test']}.json"
+                finame = ccsds_test_dir + f"{t['test']}.json"
                 with open(finame, "w") as f:
                     f.write(final_json)
 
                 self.cases['ccsds_' + str(t['test'])] = _TestCase(
                     input_data = cbor_input,
-                    expected_output = output,
+                    # Python raw strings only work as literals apparently
+                    expected_output = output if (output_format == DataFormat.BUNDLEARRAY) else r".*Delete bundle due to failed security operation",
                     policy_config = finame,                    
                     is_working = True,
                     input_data_format = input_format,

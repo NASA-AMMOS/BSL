@@ -129,7 +129,7 @@ class TestAgent(unittest.TestCase):
         if not rrd:
             raise TimeoutError('Did not receive bundle in time')
         data = sock.recv(65535)
-        print(f'WAIT FOR GOT: {data}')
+        print(f'WAIT FOR GOT: {binascii.hexlify(data)}')
         return data
 
     def _single_test(self, testcase: _TestCase):
@@ -187,6 +187,7 @@ class TestAgent(unittest.TestCase):
             LOGGER.warning('Check log output to validate expected error')
 
             err_case_str = testcase.expected_output
+            print(f'ERR CASE STR: {err_case_str}')
 
             LOGGER.debug("Searching test runner logger for error string: %s", err_case_str)
             found = self._agent.wait_for_text(err_case_str)
