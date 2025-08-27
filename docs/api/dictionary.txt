@@ -102,6 +102,7 @@ GCM
 Heiner
 Henk
 hmac
+Housley
 html
 IANA
 IETF
@@ -119,6 +120,7 @@ Josefsson
 JPL
 JSON
 JWK
+KEK
 len
 LibCtx
 lifecycle
@@ -172,6 +174,7 @@ RNG
 RTEMS
 ruleset
 sc
+Schaad
 SCs
 SecOper
 SecParam
