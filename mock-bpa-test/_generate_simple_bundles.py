@@ -30,8 +30,8 @@ from Crypto.Random import get_random_bytes
 # HMAC signs, encrypts, or decrypts payload string
 # This is a really messy function for now 
 def sign_and_encrypt(   payload_s:str, 
-                        sign:bool=True, sign_key_s:str='1a2b1a2b1a2b1a2b1a2b1a2b1a2b1a2b', 
-                        enc:bool=True, enc_key_s:str='71776572747975696f70617364666768', 
+                        sign:bool=True, sign_key_s:str='00112233445566778899AABBCCDDEEFF', 
+                        enc:bool=True, enc_key_s:str='00112233445566778899AABBCCDDEEFF', 
                         denc:bool=False, denc_key_s:str='71776572747975696f70617364666768', denc_tag_s:str='5d37d992dbc6fc795ea597ed7e8a6078'):
     
     #print(f'{payload_s} | {sign} | {sign_key_s} | {enc} | {enc_key_s} | {denc} | {denc_key_s} | {denc_tag_s}\n')
@@ -153,12 +153,11 @@ def add_bcb_to_bundle_over_x(bundle, x):
 b = [
     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
     [1, 1, 0, 0, '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164'],
-    [192, 2, 0, 0, '676f20647261676f6e666c7921']
 ]
 
 
 print (f"ORIGINAL BUNDLE: {b}")
-b = add_bib_to_bundle_over_x(b, 2)
+b = add_bib_to_bundle_over_x(b, 1)
 print(f'BUNDLE AFTER BIB: {b}')
 #b = add_bcb_to_bundle_over_x(b, 1)
 print(f'FINAL BUNDLE: {b}')
