@@ -135,6 +135,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (bcb_context->keywrap && bcb_context->wrapped_key.len == 0)
     {
         BSL_LOG_ERR("Key wrapping enabled, but no wrapped key param set");
+        return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
     if (!bcb_context->keywrap)
@@ -275,7 +276,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     void *key_id_handle;
     void *cipher_key;
-    void *wrapped_key;
 
     if (BSL_SUCCESS != BSLB_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
     {
@@ -314,12 +314,11 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
 
-        int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &bcb_context->wrapped_key, &wrapped_key);
+        int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &bcb_context->wrapped_key, NULL);
 
         if (BSL_SUCCESS != wrap_result)
         {
             BSL_LOG_ERR("Failed to wrap AES key");
-            BSL_Crypto_ClearKeyHandle(wrapped_key);
             BSL_Crypto_ClearKeyHandle(cipher_key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
@@ -334,7 +333,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_LOG_ERR("Failed to init BCB AES cipher");
         if (bcb_context->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(wrapped_key);
             BSL_Crypto_ClearKeyHandle(cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
@@ -346,7 +344,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_LOG_ERR("Failed to add AAD");
         if (bcb_context->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(wrapped_key);
             BSL_Crypto_ClearKeyHandle(cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
@@ -361,7 +358,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_LOG_ERR("Encrypting plaintext BTSD failed");
         if (bcb_context->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(wrapped_key);
             BSL_Crypto_ClearKeyHandle(cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
@@ -381,7 +377,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_LOG_ERR("Finalizing AES failed");
         if (bcb_context->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(wrapped_key);
             BSL_Crypto_ClearKeyHandle(cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
@@ -400,7 +395,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_LOG_ERR("Failed to get authentication tag");
         if (bcb_context->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(wrapped_key);
             BSL_Crypto_ClearKeyHandle(cipher_key);
         }
         BSL_Cipher_Deinit(&cipher);
@@ -412,7 +406,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (bcb_context->keywrap)
     {
-        BSL_Crypto_ClearKeyHandle(wrapped_key);
         BSL_Crypto_ClearKeyHandle(cipher_key);
     }
     BSL_Cipher_Deinit(&cipher);

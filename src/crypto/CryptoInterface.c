@@ -192,6 +192,11 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
 
 int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_key, void **wrapped_key_handle)
 {
+
+    CHK_ARG_NONNULL(kek_handle);
+    CHK_ARG_NONNULL(cek_handle);
+    CHK_ARG_NONNULL(wrapped_key);
+
     BSLB_CryptoKey_t *cek = (BSLB_CryptoKey_t *)cek_handle;
     BSLB_CryptoKey_t *kek = (BSLB_CryptoKey_t *)kek_handle;
 
@@ -200,9 +205,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
         BSL_LOG_ERR("KEK size %zu too small to encrypt CEK size %zu", kek->raw.len, cek->raw.len);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
-
-    BSLB_CryptoKey_t *new_wrapped_key_handle = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
-
+    
     const EVP_CIPHER *cipher;
     switch (kek->raw.len)
     {
@@ -265,23 +268,28 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
 
     EVP_CIPHER_CTX_free(ctx);
 
-    EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
-    int           res  = EVP_PKEY_keygen_init(pctx);
-    CHK_PROPERTY(res == 1);
 
-    new_wrapped_key_handle->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, wrapped_key->len);
-
-    BSL_Data_Init(&new_wrapped_key_handle->raw);
-
-    int ecode = 0;
-    if ((ecode = BSL_Data_CopyFrom(&new_wrapped_key_handle->raw, wrapped_key->len, wrapped_key->ptr)) < 0)
+    if (wrapped_key_handle != NULL)
     {
-        BSL_LOG_ERR("Failed to copy key");
-        return ecode;
+        EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
+        int           res  = EVP_PKEY_keygen_init(pctx);
+        CHK_PROPERTY(res == 1);
+
+        BSLB_CryptoKey_t *new_wrapped_key_handle = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
+        new_wrapped_key_handle->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, wrapped_key->len);
+        BSL_Data_Init(&new_wrapped_key_handle->raw);
+
+        int ecode = 0;
+        if ((ecode = BSL_Data_CopyFrom(&new_wrapped_key_handle->raw, wrapped_key->len, wrapped_key->ptr)) < 0)
+        {
+            BSL_LOG_ERR("Failed to copy key");
+            return ecode;
+        }
+
+        *wrapped_key_handle = new_wrapped_key_handle;
+        EVP_PKEY_CTX_free(pctx);
     }
 
-    *wrapped_key_handle = new_wrapped_key_handle;
-    EVP_PKEY_CTX_free(pctx);
     return 0;
 }
 
@@ -479,7 +487,7 @@ int BSL_Cipher_FinalizeData(BSL_Cipher_t *cipher_ctx, BSL_Data_t *extra)
         BSL_LOG_ERR("%s", ERR_error_string(ERR_get_error(), NULL));
     }
     CHK_PROPERTY(res == 1);
-    BSL_LOG_DEBUG("extra->len = %zu", extra->len);
+    BSL_LOG_DEBUG("extra->len = %zu | got len = %d", extra->len, len);
     memset(extra->ptr, 0, extra->len);
     BSL_LOG_INFO("Completed EVP_CipherFinal_ex");
     if (len > 0)

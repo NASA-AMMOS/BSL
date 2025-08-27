@@ -33,10 +33,6 @@
 
 #include "bsl_test_utils.h"
 
-#define TEST_CASE(...)
-#define TEST_RANGE(...)
-#define TEST_MATRIX(...)
-
 static BSL_LibCtx_t bsl;
 
 /**

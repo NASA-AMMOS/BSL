@@ -30,8 +30,6 @@
 
 #include "bsl_test_utils.h"
 
-#define TEST_CASE(...)
-
 static BSL_TestContext_t       LocalTestCtx = { 0 };
 static BSL_SecurityActionSet_t action_set   = { 0 };
 

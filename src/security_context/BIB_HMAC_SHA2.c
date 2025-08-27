@@ -100,7 +100,8 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
     self->integrity_scope_flags = -1;
     self->hash_size             = 0;
     self->keywrap               = -1;
-
+    self->is_source             = BSL_SecOper_IsRoleSource(sec_oper);
+    
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
     {
         const BSL_SecParam_t *param    = BSL_SecOper_GetParamAt(sec_oper, param_index);
@@ -131,8 +132,18 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
         }
         else if (param_id == RFC9173_BIB_PARAMID_WRAPPED_KEY)
         {
+            BSL_LOG_DEBUG("BIB parsing Wrapped key parameter (optid=%" PRIu64 ")", param_id);
             ASSERT_PRECONDITION(!is_int);
-            BSL_SecParam_GetAsBytestr(param, &self->wrapped_key);
+            BSL_Data_t as_data;
+            if (BSL_SecParam_GetAsBytestr(param, &as_data) < 0)
+            {
+                continue;
+            }
+            if (BSL_Data_InitView(&self->wrapped_key, as_data.len, as_data.ptr) < 0)
+            {
+                BSL_LOG_ERR("Could not get view of wrapped key");
+                continue;
+            }
         }
         else if (param_id == BSL_SECPARAM_USE_KEY_WRAP)
         {
@@ -277,7 +288,6 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
 
     void *key_id_handle;
     void *cipher_key;
-    void *wrapped_key;
     if (BSL_SUCCESS != BSLB_Crypto_GetRegistryKey(self->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
@@ -294,34 +304,53 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
     }
     else
     {
-        const size_t keysize = 16;
-        BSL_LOG_DEBUG("Generating %zu bit AES key", keysize * 8);
-
-        if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &cipher_key))
+        if (self->is_source)
         {
-            BSL_LOG_ERR("Failed to generate AES key");
-            BSL_Crypto_ClearKeyHandle(cipher_key);
-            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            const size_t keysize = 16;
+            BSL_LOG_DEBUG("Generating %zu bit AES key", keysize * 8);
+
+            if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &cipher_key))
+            {
+                BSL_LOG_ERR("Failed to generate AES key");
+                BSL_Crypto_ClearKeyHandle(cipher_key);
+                return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+
+            /**
+             * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
+             */
+            if (BSL_SUCCESS != BSL_Data_InitBuffer(&self->wrapped_key, keysize + 8))
+            {
+                BSL_LOG_ERR("Failed to allocate wrapped key");
+                BSL_Crypto_ClearKeyHandle(cipher_key);
+                return BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
+
+            int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &self->wrapped_key, NULL);
+
+            if (BSL_SUCCESS != wrap_result)
+            {
+                BSL_LOG_ERR("Failed to wrap key");
+                BSL_Crypto_ClearKeyHandle(cipher_key);
+                return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
         }
-
-        /**
-         * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
-         */
-        if (BSL_SUCCESS != BSL_Data_InitBuffer(&self->wrapped_key, keysize + 8))
+        else
         {
-            BSL_LOG_ERR("Failed to allocate wrapped key");
-            BSL_Crypto_ClearKeyHandle(cipher_key);
-            return BSL_ERR_SECURITY_CONTEXT_FAILED;
-        }
+            if (self->wrapped_key.len == 0)
+            {
+                BSL_LOG_ERR("Key wrapping enabled, but no wrapped key param set");
+                return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
 
-        int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &self->wrapped_key, &wrapped_key);
+            }
 
-        if (BSL_SUCCESS != wrap_result)
-        {
-            BSL_LOG_ERR("Failed to wrap AES key");
-            BSL_Crypto_ClearKeyHandle(wrapped_key);
-            BSL_Crypto_ClearKeyHandle(cipher_key);
-            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            int unwrap_result = BSL_Crypto_UnwrapKey(key_id_handle, &self->wrapped_key, &cipher_key);
+            if (BSL_SUCCESS != unwrap_result)
+            {
+                BSL_LOG_ERR("Failed to unwrap key");
+                BSL_Crypto_ClearKeyHandle(cipher_key);
+                return BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
         }
     }
 
@@ -476,6 +505,26 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     BSL_SecResult_Init(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
                        BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
     BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
+
+    if (bib_context.wrapped_key.len > 0)
+    {
+        BSL_SecParam_t *wrapped_key_param = BSL_CALLOC(1, BSL_SecResult_Sizeof());
+        if (BSL_SUCCESS
+            != BSL_SecParam_InitBytestr(wrapped_key_param, RFC9173_BIB_PARAMID_WRAPPED_KEY,
+                                        bib_context.wrapped_key))
+        {
+            BSL_LOG_ERR("Failed to append BIB wrapped key param");
+            BSL_FREE(wrapped_key_param);
+            BSLX_BIB_Deinit(&bib_context);
+            return BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            BSL_LOG_INFO("Appending BIB wrapped key param");
+            BSL_SecOutcome_AppendParam(sec_outcome, wrapped_key_param);
+        }
+        BSL_FREE(wrapped_key_param);
+    }
 
     BSLX_BIB_Deinit(&bib_context);
     BSL_Data_Deinit(&scratch_buffer);

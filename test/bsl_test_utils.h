@@ -35,6 +35,10 @@
 extern "C" {
 #endif
 
+#define TEST_CASE(...)
+#define TEST_RANGE(...)
+#define TEST_MATRIX(...)
+
 /// @brief Key ID for the Appendix A1 key in OpenSSL
 #define RFC9173_EXAMPLE_A1_KEY "9100"
 
