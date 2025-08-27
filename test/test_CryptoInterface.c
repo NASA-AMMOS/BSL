@@ -240,6 +240,29 @@ void tearDown(void)
     TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&bsl));
 }
 
+void test_SeqReader_flat(void)
+{
+    uint8_t source[] = { 0x01, 0x02, 0x03, 0x04, 0x05 };
+
+    BSL_SeqReader_t reader;
+    BSL_TestUtils_FlatReader(&reader, source, sizeof(source));
+    TEST_ASSERT_NOT_NULL(reader.user_data);
+
+    uint8_t buf[3];
+    size_t bufsize = sizeof(buf);
+    // first 3 bytes
+    TEST_ASSERT_EQUAL_INT(0, BSL_SeqReader_Get(&reader, buf, &bufsize));
+    TEST_ASSERT_EQUAL_INT(3, bufsize);
+    TEST_ASSERT_EQUAL_MEMORY(source, buf, 3);
+    // next 2 bytes
+    bufsize = sizeof(buf);
+    TEST_ASSERT_EQUAL_INT(0, BSL_SeqReader_Get(&reader, buf, &bufsize));
+    TEST_ASSERT_EQUAL_INT(2, bufsize);
+    TEST_ASSERT_EQUAL_MEMORY(source + 3, buf, 2);
+
+    TEST_ASSERT_EQUAL_INT(0, BSL_SeqReader_Deinit(&reader));
+}
+
 // test vectors from RFC 4231
 // Test vector 1
 TEST_MATRIX([ 0, 1 ], ["Key1"], [BSL_CRYPTO_SHA_256], ["4869205468657265"],
@@ -300,10 +323,12 @@ void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_
     switch (input_case)
     {
         case 0:
-            BSL_SeqReader_InitFlat(&reader, pt_in_data.ptr, pt_in_data.len);
-            TEST_ASSERT_NOT_NULL(&reader);
+            BSL_TestUtils_FlatReader(&reader, pt_in_data.ptr, pt_in_data.len);
+            TEST_ASSERT_NOT_NULL(reader.user_data);
 
             TEST_ASSERT_EQUAL(0, BSL_AuthCtx_DigestSeq(&hmac, &reader));
+
+            TEST_ASSERT_EQUAL_INT(0, BSL_SeqReader_Deinit(&reader));
             break;
         case 1:
             TEST_ASSERT_EQUAL(0, BSL_AuthCtx_DigestBuffer(&hmac, (void *)pt_in_data.ptr, pt_in_data.len));
@@ -371,11 +396,8 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     uint8_t *ciphertext;
     size_t   ct_size;
 
-    res = BSL_SeqReader_InitFlat(&reader, (unsigned char *)plaintext_in, strlen(plaintext_in));
-    TEST_ASSERT_EQUAL(0, res);
-
-    res = BSL_SeqWriter_InitFlat(&writer, &ciphertext, &ct_size);
-    TEST_ASSERT_EQUAL(0, res);
+    BSL_TestUtils_FlatReader(&reader, (const void *)plaintext_in, strlen(plaintext_in));
+    BSL_TestUtils_FlatWriter(&writer, (void *)&ciphertext, &ct_size);
 
     int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
@@ -419,9 +441,13 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
                       plaintext, &plaintext_len);
     TEST_ASSERT_EQUAL(0, res);
 
-    plaintext[plaintext_len] = '\0';
-    TEST_ASSERT_EQUAL(0, strcmp((char *)plaintext, plaintext_in));
+    TEST_ASSERT_EQUAL_INT(ct_size, plaintext_len);
+    if (plaintext_len > 0)
+    {
+        TEST_ASSERT_EQUAL_MEMORY(plaintext_in, plaintext, plaintext_len);
+    }
 
+    TEST_ASSERT_EQUAL_INT(0, BSL_SeqReader_Deinit(&reader));
     res = BSL_Cipher_Deinit(&ctx);
     TEST_ASSERT_EQUAL(0, res);
 
@@ -462,11 +488,8 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     uint8_t *plaintext;
     size_t   pt_size;
 
-    res = BSL_SeqReader_InitFlat(&reader, ciphertext, ciphertext_len);
-    TEST_ASSERT_EQUAL(0, res);
-
-    res = BSL_SeqWriter_InitFlat(&writer, &plaintext, &pt_size);
-    TEST_ASSERT_EQUAL(0, res);
+    BSL_TestUtils_FlatReader(&reader, (const void *)ciphertext, ciphertext_len);
+    BSL_TestUtils_FlatWriter(&writer, (void *)&plaintext, &pt_size);
 
     int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
@@ -494,15 +517,16 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     res = BSL_SeqWriter_Deinit(&writer);
     TEST_ASSERT_EQUAL(0, res);
 
-    // compare output plaintext and expected plaintext
-    char plaintext_c[pt_size + 1];
-    memcpy(plaintext_c, plaintext, pt_size);
-    plaintext_c[pt_size] = '\0';
-    TEST_ASSERT_EQUAL(0, strcmp(plaintext_c, plaintext_in));
+    if (pt_size > 0)
+    {
+        // compare output plaintext and expected plaintext
+        TEST_ASSERT_EQUAL_MEMORY(plaintext_in, plaintext, pt_size);
+    }
 
     res = BSL_Cipher_Deinit(&ctx);
     TEST_ASSERT_EQUAL(0, res);
 
+    TEST_ASSERT_EQUAL(0, BSL_SeqReader_Deinit(&reader));
     BSL_FREE(plaintext);
 }
 

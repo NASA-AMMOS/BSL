@@ -103,11 +103,13 @@ static ssize_t map_rfc9173_sha_variant_to_crypto(size_t rfc9173_sha_variant)
  *
  * TODO: move to common function.
  */
-int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
+int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
 {
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(sec_oper);
     memset(self, 0, sizeof(*self));
+
+    self->bundle                = bundle;
     self->sha_variant           = -1;
     self->integrity_scope_flags = -1;
 
@@ -223,21 +225,26 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
         BSLX_EncodeHeader(&self->sec_block, &encoder);
     }
 
-    const uint8_t *target_cbor;
-    size_t         target_cbor_len;
     if (self->target_block.block_num > 0)
     {
-        target_cbor     = self->target_block.btsd;
-        target_cbor_len = self->target_block.btsd_len;
+        // IPPT needs the whole data now
+        BSL_Data_t btsd_copy;
+        BSL_Data_InitBuffer(&btsd_copy, self->target_block.btsd_len);
+
+        BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(self->bundle, self->target_block.block_num);
+        BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
+        BSL_SeqReader_Deinit(btsd_read);
+
+        UsefulBufC buf = { .ptr = btsd_copy.ptr, .len = btsd_copy.len };
+        QCBOREncode_AddBytes(&encoder, buf);
+        BSL_Data_Deinit(&btsd_copy);
     }
     else
     {
-        target_cbor     = self->primary_block.encoded.ptr;
-        target_cbor_len = self->primary_block.encoded.len;
+        UsefulBufC buf = { .ptr = self->primary_block.encoded.ptr, .len = self->primary_block.encoded.len };
+        QCBOREncode_AddBytes(&encoder, buf);
     }
 
-    UsefulBufC target_blk_btsd = { .ptr = target_cbor, .len = target_cbor_len };
-    QCBOREncode_AddBytes(&encoder, target_blk_btsd);
     UsefulBufC ippt_result;
     cbor_err = QCBOREncode_Finish(&encoder, &ippt_result);
     if (cbor_err != QCBOR_SUCCESS)
@@ -293,7 +300,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
     return (int)hmaclen;
 }
 
-int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
                      BSL_SecOutcome_t *sec_outcome)
 {
     CHK_ARG_NONNULL(lib);
@@ -318,7 +325,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL
     BSL_Data_t ippt_space = { .ptr = BSLX_ScratchSpace_take(&scratch, 5000), .len = 5000 };
 
     BSLX_BIB_t bib_context = { 0 };
-    BSLX_BIB_InitFromSecOper(&bib_context, sec_oper);
+    BSLX_BIB_InitFromSecOper(&bib_context, bundle, sec_oper);
 
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &bib_context.primary_block))
     {

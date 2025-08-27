@@ -29,6 +29,7 @@
 
 #include <backend/SecParam.h>
 #include <backend/SecurityActionSet.h>
+#include <backend/UtilDefs_SeqReadWrite.h>
 #include <policy_provider/SamplePolicyProvider.h>
 #include <security_context/DefaultSecContext.h>
 
@@ -279,7 +280,8 @@ int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cb
     assert(bundle->primary_block.lifetime > 0);
     assert(bundle->primary_block.flags <= 64);
     assert(bundle->primary_block.crc_type <= 4);
-    assert(bundle->block_count > 0);
+    assert(MockBPA_BlockList_size(bundle->blocks) > 0);
+    assert(MockBPA_BlockByNum_size(bundle->blocks_num) > 0);
     return decode_status;
 }
 
@@ -403,4 +405,115 @@ int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid,
     BSL_PrimaryBlock_deinit(&primary_block);
 
     return res;
+}
+
+/// Internal state for reader and writer
+struct BSL_TestUtils_Flat_Data_s {
+    /// Pointer to external buffer pointer
+    void **origbuf;
+    /// Pointer to external size
+    size_t *origsize;
+
+    /// Pointer to the head of the buffer
+    char *ptr;
+    /// Working size of the buffer
+    size_t size;
+    /// File opened for the buffer
+    FILE *file;
+};
+
+static int MockBPA_ReadBTSD_Read(void *user_data, void *buf, size_t *bufsize)
+{
+    struct BSL_TestUtils_Flat_Data_s *obj = user_data;
+    if (!obj || !obj->file)
+    {
+        return -1;
+    }
+
+    const size_t got = fread(buf, 1, *bufsize, obj->file);
+    *bufsize         = got;
+    return 0;
+}
+
+static void MockBPA_ReadBTSD_Deinit(void *user_data)
+{
+    struct BSL_TestUtils_Flat_Data_s *obj = user_data;
+    if (!obj || !obj->file)
+    {
+        return;
+    }
+
+    fclose(obj->file);
+    // buffer is external data, no cleanup
+    BSL_FREE(obj);
+}
+
+void BSL_TestUtils_FlatReader(BSL_SeqReader_t *reader, const void *buf, size_t bufsize)
+{
+    struct BSL_TestUtils_Flat_Data_s *obj = BSL_CALLOC(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
+    ASSERT_PROPERTY(obj);
+    obj->origbuf = NULL;
+    obj->origsize = NULL;
+    obj->ptr = (void *)buf;
+    obj->size = bufsize;
+    obj->file = fmemopen(obj->ptr, obj->size, "rb");
+
+    reader->user_data = obj;
+    reader->read      = MockBPA_ReadBTSD_Read;
+    reader->deinit    = MockBPA_ReadBTSD_Deinit;
+}
+
+static int MockBPA_WriteBTSD_Write(void *user_data, const void *buf, size_t size)
+{
+    struct BSL_TestUtils_Flat_Data_s *obj = user_data;
+    if (!obj || !obj->file)
+    {
+        return -1;
+    }
+
+    const size_t got = fwrite(buf, 1, size, obj->file);
+    if (got < size)
+    {
+        return BSL_ERR_FAILURE;
+    }
+    return BSL_SUCCESS;
+}
+
+static void MockBPA_WriteBTSD_Deinit(void *user_data)
+{
+    struct BSL_TestUtils_Flat_Data_s *obj = user_data;
+    if (!obj || !obj->file)
+    {
+        return;
+    }
+
+    fclose(obj->file);
+
+    // now write-back the result
+    if (obj->origbuf)
+    {
+        *obj->origbuf = obj->ptr;
+    }
+    if (obj->origsize)
+    {
+        *obj->origsize = obj->size;
+    }
+
+    BSL_FREE(obj);
+}
+
+void BSL_TestUtils_FlatWriter(BSL_SeqWriter_t *writer, void **buf, size_t *bufsize)
+{
+    struct BSL_TestUtils_Flat_Data_s *obj = BSL_CALLOC(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
+    ASSERT_PROPERTY(obj);
+    // double-buffer for this write
+    obj->origbuf = buf;
+    obj->origsize = bufsize;
+    obj->ptr = NULL;
+    obj->size = 0;
+    obj->file = open_memstream(&obj->ptr, &obj->size);
+
+    writer->user_data = obj;
+    writer->write     = MockBPA_WriteBTSD_Write;
+    writer->deinit    = MockBPA_WriteBTSD_Deinit;
 }

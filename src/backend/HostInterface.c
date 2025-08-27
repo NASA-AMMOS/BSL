@@ -24,6 +24,7 @@
  * @ingroup backend_dyn
  */
 #include <BPSecLib_Private.h>
+#include "UtilDefs_SeqReadWrite.h"
 
 // NOLINTNEXTLINE
 static BSL_HostDescriptors_t HostDescriptorTable = { 0 };
@@ -109,10 +110,27 @@ int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_
 {
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_EXPR(block_num > 0);
-    CHK_ARG_EXPR(bytesize > 0);
     CHK_PRECONDITION(HostDescriptorTable.block_remove_fn != NULL);
     int result = HostDescriptorTable.block_realloc_btsd_fn(bundle, block_num, bytesize);
     return (result == 0) ? BSL_SUCCESS : BSL_ERR_HOST_CALLBACK_FAILED;
+}
+
+BSL_SeqReader_t *BSL_BundleCtx_ReadBTSD(const BSL_BundleRef_t *bundle, uint64_t block_num)
+{
+    if (!bundle || !HostDescriptorTable.block_read_btsd_fn)
+    {
+        return NULL;
+    }
+    return HostDescriptorTable.block_read_btsd_fn(bundle, block_num);
+}
+
+BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_len)
+{
+    if (!bundle || !HostDescriptorTable.block_write_btsd_fn)
+    {
+        return NULL;
+    }
+    return HostDescriptorTable.block_write_btsd_fn(bundle, block_num, btsd_len);
 }
 
 void BSL_HostDescriptors_Get(BSL_HostDescriptors_t *desc)

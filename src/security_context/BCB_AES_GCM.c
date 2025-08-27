@@ -107,10 +107,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     // Key must have been set (this feeds the key encryption key)
     CHK_PRECONDITION(bcb_context->key_id);
 
-    // BTSD replacement is not yet allocated
-    CHK_PRECONDITION(bcb_context->btsd_replacement.ptr != NULL);
-    CHK_PRECONDITION(bcb_context->btsd_replacement.len > 0);
-
     // Must have an auth tag for us to verify
     CHK_PRECONDITION(bcb_context->authtag.ptr != NULL);
     CHK_PRECONDITION(bcb_context->authtag.len > 0);
@@ -132,7 +128,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != unwrap_result)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
-            BSL_Data_Deinit(&bcb_context->authtag);
             BSL_Data_Deinit(&content_enc_key);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
@@ -145,7 +140,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
                                           &content_enc_key.len))
         {
             BSL_LOG_ERR("Failed to load key");
-            BSL_Data_Deinit(&bcb_context->authtag);
             BSL_Data_Deinit(&content_enc_key);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
@@ -160,7 +154,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
-        BSL_Data_Deinit(&bcb_context->authtag);
         BSL_Data_Deinit(&content_enc_key);
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -169,58 +162,55 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
     {
         BSL_LOG_ERR("Failed to add AAD");
-        BSL_Data_Deinit(&bcb_context->authtag);
         BSL_Data_Deinit(&content_enc_key);
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
-    BSL_Data_t plaintext_data = { 0 };
-    BSL_Data_InitView(&plaintext_data, bcb_context->target_block.btsd_len, bcb_context->target_block.btsd);
-    int nbytes = BSL_Cipher_AddData(&cipher, plaintext_data, bcb_context->btsd_replacement);
+    BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bcb_context->bundle, bcb_context->target_block.block_num);
+    // output is same size
+    BSL_SeqWriter_t *btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
+                                                          bcb_context->target_block.btsd_len);
+
+    int retval = BSL_SUCCESS;
+
+    int nbytes = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write);
     if (nbytes < 0)
     {
         BSL_LOG_ERR("Decrypting BTSD ciphertext failed");
-        BSL_Data_Deinit(&bcb_context->authtag);
-        BSL_Data_Deinit(&content_enc_key);
-        BSL_Cipher_Deinit(&cipher);
-        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
-    const size_t plaintext_len = (size_t)nbytes;
 
-    // Last step is to compute the authentication tag, with is produced
-    // as an output parameter to this cipher suite.
-    if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, bcb_context->authtag.ptr))
+    if (retval == BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Failed to set auth tag");
-        BSL_Data_Deinit(&bcb_context->authtag);
-        BSL_Data_Deinit(&content_enc_key);
-        BSL_Cipher_Deinit(&cipher);
-        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        // Last step is to compute the authentication tag, with is produced
+        // as an output parameter to this cipher suite.
+        if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, bcb_context->authtag.ptr))
+        {
+            BSL_LOG_ERR("Failed to set auth tag");
+            retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
     }
 
-    uint8_t aes_extra[BSLX_MAX_AES_PAD];
-    memset(aes_extra, 0, sizeof(aes_extra));
-    BSL_Data_t remainder_data = { 0 };
-    BSL_Data_InitView(&remainder_data, sizeof(aes_extra), aes_extra);
-    int finalize_bytes = BSL_Cipher_FinalizeData(&cipher, &remainder_data);
-    if (finalize_bytes < 0)
+    if (retval == BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Failed to check auth tag");
-        BSL_Data_Deinit(&bcb_context->authtag);
-        BSL_Data_Deinit(&content_enc_key);
-        BSL_Cipher_Deinit(&cipher);
-        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        int finalize_bytes = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
+        if (finalize_bytes < 0)
+        {
+            BSL_LOG_ERR("Failed to check auth tag");
+            retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
     }
-    const size_t extra_bytes = (size_t)finalize_bytes;
-    ASSERT_POSTCONDITION(extra_bytes == 0);
-    BSL_Data_Resize(&bcb_context->btsd_replacement, plaintext_len + extra_bytes);
 
-    BSL_Data_Deinit(&bcb_context->authtag);
+    // close write after read
+    BSL_SeqReader_Deinit(btsd_read);
+    BSL_SeqWriter_Deinit(btsd_write);
+
     BSL_Data_Deinit(&content_enc_key);
     BSL_Cipher_Deinit(&cipher);
+
     ASSERT_POSTCONDITION(bcb_context->authtag.len == 0);
-    return BSL_SUCCESS;
+    return retval;
 }
 
 int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
@@ -233,10 +223,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     // Must have a key ID from the security operation parameters
     CHK_PRECONDITION(bcb_context->key_id);
-
-    // BTSD replacement is not yet allocated
-    CHK_PRECONDITION(bcb_context->btsd_replacement.ptr != NULL);
-    CHK_PRECONDITION(bcb_context->btsd_replacement.len > 0);
 
     // Auth tag must be empty
     CHK_PRECONDITION(bcb_context->authtag.len == 0);
@@ -331,9 +317,12 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
-    BSL_Data_t plaintext_data = { 0 };
-    BSL_Data_InitView(&plaintext_data, bcb_context->target_block.btsd_len, bcb_context->target_block.btsd);
-    int nbytes = BSL_Cipher_AddData(&cipher, plaintext_data, bcb_context->btsd_replacement);
+    BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bcb_context->bundle, bcb_context->target_block.block_num);
+    // output is same size
+    BSL_SeqWriter_t *btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
+                                                          bcb_context->target_block.btsd_len);
+
+    int nbytes = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write);
     if (nbytes < 0)
     {
         BSL_LOG_ERR("Encrypting plaintext BTSD failed");
@@ -341,15 +330,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
-    const size_t ciphertext_len = (size_t)nbytes;
-    ASSERT_PROPERTY(ciphertext_len >= plaintext_data.len);
 
-    ASSERT_PROPERTY(ciphertext_len < bcb_context->btsd_replacement.len);
-    uint8_t aes_extra[BSLX_MAX_AES_PAD];
-    memset(aes_extra, 0, sizeof(aes_extra));
-    BSL_Data_t remainder_data = { 0 };
-    BSL_Data_InitView(&remainder_data, sizeof(aes_extra), aes_extra);
-    int extra_bytes = BSL_Cipher_FinalizeData(&cipher, &remainder_data);
+    int extra_bytes = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
     if (extra_bytes < 0)
     {
         BSL_LOG_ERR("Finalizing AES failed");
@@ -357,12 +339,9 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
-    const size_t extra_bytelen = (size_t)extra_bytes;
 
     // "Finalizing" drains any remaining bytes out of the cipher context
     // and appends them to the ciphertext.
-    const size_t finalized_len = ciphertext_len + extra_bytelen;
-    BSL_Data_Resize(&bcb_context->btsd_replacement, finalized_len);
 
     BSL_Data_InitBuffer(&bcb_context->authtag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
     if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, (void **)&bcb_context->authtag.ptr))
@@ -372,9 +351,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         BSL_Cipher_Deinit(&cipher);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
-
-    CHK_POSTCONDITION(bcb_context->btsd_replacement.ptr != NULL);
-    CHK_POSTCONDITION(bcb_context->btsd_replacement.len == ciphertext_len);
 
     BSL_Data_Deinit(&content_enc_key);
     BSL_Cipher_Deinit(&cipher);
@@ -388,7 +364,6 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
     CHK_ARG_NONNULL(sec_oper);
 
     CHK_PRECONDITION(bcb_context->target_block.block_num > 0);
-    CHK_PRECONDITION(bcb_context->target_block.btsd != NULL);
     CHK_PRECONDITION(bcb_context->target_block.btsd_len > 0);
 
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
@@ -516,7 +491,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
     return BSL_SUCCESS;
 }
 
-int BSLX_BCB_Init(BSLX_BCB_t *bcb_context, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+int BSLX_BCB_Init(BSLX_BCB_t *bcb_context, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
 {
     CHK_ARG_NONNULL(bcb_context);
     CHK_ARG_NONNULL(bundle);
@@ -524,13 +499,7 @@ int BSLX_BCB_Init(BSLX_BCB_t *bcb_context, const BSL_BundleRef_t *bundle, const 
 
     memset(bcb_context, 0, sizeof(*bcb_context));
 
-    // Over-allocate space for any padding gets added in.
-    const size_t new_btsd_len = bcb_context->target_block.btsd_len + 2048;
-    if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->btsd_replacement, new_btsd_len))
-    {
-        BSL_LOG_ERR("Failed to allocate BTSD double buffer");
-        return BSL_ERR_INSUFFICIENT_SPACE;
-    }
+    bcb_context->bundle = bundle;
 
     if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->debugstr, 512))
     {
@@ -557,9 +526,7 @@ int BSLX_BCB_Init(BSLX_BCB_t *bcb_context, const BSL_BundleRef_t *bundle, const 
     }
 
     CHK_POSTCONDITION(bcb_context->target_block.block_num > 0);
-    CHK_POSTCONDITION(bcb_context->target_block.btsd != NULL);
     CHK_POSTCONDITION(bcb_context->target_block.btsd_len > 0);
-    CHK_POSTCONDITION(bcb_context->btsd_replacement.ptr != NULL);
     return BSL_SUCCESS;
 }
 
@@ -568,7 +535,6 @@ void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context)
     ASSERT_ARG_NONNULL(bcb_context);
 
     BSL_Data_Deinit(&bcb_context->aad);
-    BSL_Data_Deinit(&bcb_context->btsd_replacement);
     BSL_Data_Deinit(&bcb_context->debugstr);
     BSL_Data_Deinit(&bcb_context->authtag);
     BSL_Data_Deinit(&bcb_context->iv);
@@ -578,7 +544,7 @@ void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context)
     memset(bcb_context, 0, sizeof(*bcb_context));
 }
 
-int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
                      BSL_SecOutcome_t *sec_outcome)
 {
     CHK_ARG_NONNULL(bundle);
@@ -630,31 +596,6 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, const BSL_BundleRef_t *bundle, const
         BSL_LOG_ERR("Failed to perform cryptographic action");
         BSLX_BCB_Deinit(&bcb_context);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
-    }
-
-    if (!BSL_SecOper_IsRoleVerifier(sec_oper))
-    {
-        // Re-allocated the target block's BTSD, since enc/dec may slightly change its size.
-        const uint64_t target_blk_id = BSL_SecOper_GetTargetBlockNum(sec_oper);
-        if (BSL_SUCCESS
-            != BSL_BundleCtx_ReallocBTSD((BSL_BundleRef_t *)bundle, target_blk_id, bcb_context.btsd_replacement.len))
-        {
-            BSL_LOG_ERR("Failed to replace target BTSD");
-            BSLX_BCB_Deinit(&bcb_context);
-            return BSL_ERR_SECURITY_CONTEXT_FAILED;
-        }
-
-        // Refresh the block metadata to account for change in size.
-        if (BSL_SUCCESS
-            != BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &target_block))
-        {
-            BSL_LOG_ERR("Failed to get block data");
-            BSLX_BCB_Deinit(&bcb_context);
-            return BSL_ERR_SECURITY_CONTEXT_FAILED;
-        }
-        ASSERT_PROPERTY(target_block.btsd_len == bcb_context.btsd_replacement.len);
-        // Copy the encrypted/decrypted data into the blocks newly reallocated BTSD space.
-        memcpy(target_block.btsd, bcb_context.btsd_replacement.ptr, bcb_context.btsd_replacement.len);
     }
 
     // Generally we expect an auth tag with the encryption

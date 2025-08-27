@@ -62,6 +62,9 @@ BSL_Data_t BSLX_Bytestr_AsData(BSLX_Bytestr_t *self);
 
 typedef struct BSLX_BIB_s
 {
+    /// Bundle context associated with this operation
+    const BSL_BundleRef_t *bundle;
+
     /// @brief set to external pointer which will outlive the BIB context
     const char          *key_id;
     BSL_PrimaryBlock_t   primary_block;
@@ -77,7 +80,7 @@ typedef struct BSLX_BIB_s
     BSLX_Bytestr_t       hmac_result_val;
 } BSLX_BIB_t;
 
-int  BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper);
+int  BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
 void BSLX_BIB_Deinit(BSLX_BIB_t *self);
 int  BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space);
 int  BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data);
@@ -87,6 +90,9 @@ int  BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data);
  */
 typedef struct BSLX_BCB_s
 {
+    /// Bundle context associated with this operation
+    BSL_BundleRef_t *bundle;
+
     size_t      err_count;
     const char *key_id;
 
@@ -95,7 +101,6 @@ typedef struct BSLX_BCB_s
     BSL_Data_t authtag;
     BSL_Data_t iv;
     BSL_Data_t wrapped_key;
-    BSL_Data_t btsd_replacement;
     BSL_Data_t debugstr;
     BSL_Data_t aad;
 
@@ -134,7 +139,7 @@ typedef struct BSLX_ScratchSpace_s
 void *BSLX_ScratchSpace_take(BSLX_ScratchSpace_t *scratch, size_t len);
 int   BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, const BSL_SecOper_t *sec_oper);
 
-int  BSLX_BCB_Init(BSLX_BCB_t *bcb_context, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
+int  BSLX_BCB_Init(BSLX_BCB_t *bcb_context, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
 void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context);
 int  BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context);
 int  BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context);

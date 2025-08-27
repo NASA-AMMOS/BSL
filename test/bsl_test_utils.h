@@ -379,6 +379,14 @@ int rfc9173_byte_gen_fn_a2_kek(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a2_cek(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len);
 
+/** Initialize a flat-buffer reader object.
+ */
+void BSL_TestUtils_FlatReader(BSL_SeqReader_t *reader, const void *buf, size_t bufsize);
+
+/** Initialize a flat-buffer reader object.
+ */
+void BSL_TestUtils_FlatWriter(BSL_SeqWriter_t *writer, void **buf, size_t *bufsize);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

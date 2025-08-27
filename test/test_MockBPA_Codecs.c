@@ -215,7 +215,8 @@ void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
 
 void test_bsl_mock_encode_bundle(void)
 {
-    MockBPA_Bundle_t bundle = { 0 };
+    MockBPA_Bundle_t bundle;
+    MockBPA_Bundle_Init(&bundle);
 
     {
         MockBPA_PrimaryBlock_t *prim = &bundle.primary_block;
@@ -234,15 +235,14 @@ void test_bsl_mock_encode_bundle(void)
     static const uint8_t dummy_btsd[] = { 0x01, 0x02, 0x03 };
     static const size_t  dummy_size   = sizeof(dummy_btsd) / sizeof(uint8_t);
     {
-        MockBPA_CanonicalBlock_t blk = { 0 };
-        blk.blk_type                 = 10;
-        blk.blk_num                  = 45;
-        blk.flags                    = 0;
-        blk.crc_type                 = 0;
-        blk.btsd                     = BSL_CALLOC(1, dummy_size);
-        blk.btsd_len                 = dummy_size;
-        memcpy(blk.btsd, dummy_btsd, dummy_size);
-        bundle.blocks[bundle.block_count++] = blk;
+        MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_push_front_new(bundle.blocks);
+        blk->blk_type                 = 10;
+        blk->blk_num                  = 45;
+        blk->flags                    = 0;
+        blk->crc_type                 = 0;
+        blk->btsd                     = BSL_CALLOC(1, dummy_size);
+        blk->btsd_len                 = dummy_size;
+        memcpy(blk->btsd, dummy_btsd, dummy_size);
     }
 
     TEST_ASSERT_EQUAL_INT(0, bsl_mock_encode_bundle(&encoder, &bundle));
@@ -391,7 +391,8 @@ void test_bsl_loopback_bundle(const char *hexdata)
         string_clear(in_text);
     }
 
-    MockBPA_Bundle_t bundle = { 0 };
+    MockBPA_Bundle_t bundle;
+    MockBPA_Bundle_Init(&bundle);
     {
         QCBORDecodeContext decoder;
         QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);

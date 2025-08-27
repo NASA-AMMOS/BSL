@@ -100,11 +100,16 @@ void test_SecurityContext_BIB_Source(void)
 
     TEST_ASSERT_EQUAL(0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
                                                            &mock_bpa_ctr->bundle_ref, malloced_actionset));
-    BSL_CanonicalBlock_t block;
-    BSL_BundleCtx_GetBlockMetadata(&mock_bpa_ctr->bundle_ref, 2, &block);
+
+    MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 2);
+    TEST_ASSERT_NOT_NULL(target_ptr);
+    MockBPA_CanonicalBlock_t *target_block = *target_ptr;
+    TEST_ASSERT_NOT_NULL(target_block);
+
     bool x = BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bib_abs_sec_block,
-                                           (BSL_Data_t) { .len = block.btsd_len, .ptr = block.btsd });
+                                           (BSL_Data_t) { .len = target_block->btsd_len, .ptr = target_block->btsd });
     TEST_ASSERT_TRUE(x);
+
     TEST_ASSERT_EQUAL(0, mock_bpa_encode(mock_bpa_ctr));
     bool is_expected =
         (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib, mock_bpa_ctr->encoded));

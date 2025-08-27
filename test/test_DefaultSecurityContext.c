@@ -180,14 +180,18 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     TEST_ASSERT_EQUAL(sizeof(ApxA2_AuthTag), auth_tag_result->_bytelen);
     TEST_ASSERT_EQUAL_MEMORY(ApxA2_AuthTag, auth_tag_result->_bytes, sizeof(ApxA2_AuthTag));
 
-    BSL_CanonicalBlock_t target_block;
-    BSL_BundleCtx_GetBlockMetadata(&mock_bpa_ctr->bundle_ref, 1, &target_block);
+    MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
+    TEST_ASSERT_NOT_NULL(target_ptr);
+    MockBPA_CanonicalBlock_t *target_block = *target_ptr;
+    TEST_ASSERT_NOT_NULL(target_block);
+
+    TEST_ASSERT_EQUAL_size_t(sizeof(ApxA2_Ciphertext), target_block->btsd_len);
     uint8_t logstr[500];
     BSL_LOG_INFO("EXPECTED payload: %s",
                  BSL_Log_DumpAsHexString(logstr, sizeof(logstr), ApxA2_Ciphertext, sizeof(ApxA2_Ciphertext)));
     BSL_LOG_INFO("ACTUAL payload:   %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block.btsd, target_block.btsd_len));
-    TEST_ASSERT_TRUE(memcmp(ApxA2_Ciphertext, target_block.btsd, sizeof(ApxA2_Ciphertext)) == 0);
+                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
+    TEST_ASSERT_EQUAL_MEMORY(ApxA2_Ciphertext, target_block->btsd, sizeof(ApxA2_Ciphertext));
 
     BSL_SecOutcome_Deinit(outcome);
     BSL_SecOper_Deinit(&bcb_test_context.sec_oper);
@@ -216,15 +220,18 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     TEST_ASSERT_EQUAL(0, result_count);
 
     /// Confirm that the target block is decrypted correctly.
-    BSL_CanonicalBlock_t target_block;
-    BSL_BundleCtx_GetBlockMetadata(&mock_bpa_ctr->bundle_ref, 1, &target_block);
-    TEST_ASSERT_EQUAL(sizeof(ApxA2_PayloadData), target_block.btsd_len);
+    MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
+    TEST_ASSERT_NOT_NULL(target_ptr);
+    MockBPA_CanonicalBlock_t *target_block = *target_ptr;
+    TEST_ASSERT_NOT_NULL(target_block);
+
+    TEST_ASSERT_EQUAL_size_t(sizeof(ApxA2_PayloadData), target_block->btsd_len);
     uint8_t logstr[500];
     BSL_LOG_INFO("EXPECTED payload: %s",
                  BSL_Log_DumpAsHexString(logstr, sizeof(logstr), ApxA2_PayloadData, sizeof(ApxA2_PayloadData)));
     BSL_LOG_INFO("ACTUAL payload:   %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block.btsd, target_block.btsd_len));
-    TEST_ASSERT_TRUE(memcmp(ApxA2_PayloadData, target_block.btsd, sizeof(ApxA2_PayloadData)) == 0);
+                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
+    TEST_ASSERT_EQUAL_MEMORY(ApxA2_PayloadData, target_block->btsd, sizeof(ApxA2_PayloadData));
 
     BSL_SecOutcome_Deinit(outcome);
     BSL_SecOper_Deinit(&bcb_test_context.sec_oper);
