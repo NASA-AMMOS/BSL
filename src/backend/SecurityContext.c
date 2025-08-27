@@ -67,6 +67,8 @@ static int Encode_ASB(BSL_BundleRef_t *bundle, uint64_t blk_num, const BSL_AbsSe
         BSL_LOG_ERR("Failed to write BTSD");
         return BSL_ERR_ENCODING;
     }
+    // finalize the write
+    BSL_SeqWriter_Destroy(btsd_write);
 
     BSL_Data_Deinit(&asb_data);
     return BSL_SUCCESS;
@@ -161,7 +163,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
 
     BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, sec_blk.block_num);
     BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-    BSL_SeqReader_Deinit(btsd_read);
+    BSL_SeqReader_Destroy(btsd_read);
 
     BSL_AbsSecBlock_t abs_sec_block;
     BSL_AbsSecBlock_InitEmpty(&abs_sec_block);
@@ -267,7 +269,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
 
     BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, sec_blk.block_num);
     BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-    BSL_SeqReader_Deinit(btsd_read);
+    BSL_SeqReader_Destroy(btsd_read);
 
     BSL_AbsSecBlock_t abs_sec_block;
     BSL_AbsSecBlock_InitEmpty(&abs_sec_block);
@@ -404,7 +406,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
 
         BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, sec_blk.block_num);
         BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-        BSL_SeqReader_Deinit(btsd_read);
+        BSL_SeqReader_Destroy(btsd_read);
 
         if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_copy) != BSL_SUCCESS)
         {

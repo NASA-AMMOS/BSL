@@ -292,11 +292,12 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 typedef struct BSL_SeqReader_s BSL_SeqReader_t;
 
 /** Release resources from a sequential reader.
+ * This also frees memory of the instance itself.
  *
  * @param[in,out] obj The reader handle.
  * @return Zero if successful.
  */
-int BSL_SeqReader_Deinit(BSL_SeqReader_t *obj);
+int BSL_SeqReader_Destroy(BSL_SeqReader_t *obj);
 
 /** Iterate a sequential reader.
  *
@@ -312,11 +313,12 @@ int BSL_SeqReader_Get(BSL_SeqReader_t *obj, uint8_t *buf, size_t *bufsize);
 typedef struct BSL_SeqWriter_s BSL_SeqWriter_t;
 
 /** Release resources from a sequential writer and commit the writes.
+ * This also frees memory of the instance itself.
  *
  * @param[in,out] obj The writer handle.
  * @return Zero if successful.
  */
-int BSL_SeqWriter_Deinit(BSL_SeqWriter_t *obj);
+int BSL_SeqWriter_Destroy(BSL_SeqWriter_t *obj);
 
 /** Iterate a sequential writer.
  *

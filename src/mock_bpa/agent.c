@@ -61,6 +61,7 @@ int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle)
     for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
     {
         MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_ref(bit);
+        BSL_LOG_DEBUG("freeing block number %" PRIu64, blk->blk_num);
         BSL_FREE(blk->btsd);
     }
     MockBPA_BlockList_clear(bundle->blocks);
@@ -121,7 +122,7 @@ int MockBPA_GetBlockMetadata(const BSL_BundleRef_t *bundle_ref, uint64_t block_n
 
     memset(result_canonical_block, 0, sizeof(*result_canonical_block));
 
-    const MockBPA_Bundle_t         *bundle      = bundle_ref->data;
+    const MockBPA_Bundle_t *bundle = bundle_ref->data;
 
     MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
     if (found_ptr == NULL)
@@ -145,7 +146,7 @@ int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t 
         return -1;
     }
 
-    MockBPA_Bundle_t         *bundle      = bundle_ref->data;
+    MockBPA_Bundle_t *bundle = bundle_ref->data;
 
     MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
     if (found_ptr == NULL)
@@ -170,7 +171,8 @@ int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t 
 }
 
 /// Internal state for reader and writer
-struct MockBPA_BTSD_Data_s {
+struct MockBPA_BTSD_Data_s
+{
     /// Block which must have a longer lifetime than the reader/writer
     MockBPA_CanonicalBlock_t *block;
 
@@ -185,23 +187,22 @@ struct MockBPA_BTSD_Data_s {
 static int MockBPA_ReadBTSD_Read(void *user_data, void *buf, size_t *bufsize)
 {
     struct MockBPA_BTSD_Data_s *obj = user_data;
-    if (!obj || !obj->file)
-    {
-        return -1;
-    }
+    ASSERT_ARG_NONNULL(obj);
+    CHK_ARG_NONNULL(buf);
+    CHK_ARG_NONNULL(bufsize);
+    ASSERT_PRECONDITION(obj->file);
 
     const size_t got = fread(buf, 1, *bufsize, obj->file);
-    *bufsize         = got;
+    BSL_LOG_DEBUG("reading up to %zd bytes, got %zd", *bufsize, got);
+    *bufsize = got;
     return 0;
 }
 
 static void MockBPA_ReadBTSD_Deinit(void *user_data)
 {
     struct MockBPA_BTSD_Data_s *obj = user_data;
-    if (!obj || !obj->file)
-    {
-        return;
-    }
+    ASSERT_ARG_NONNULL(obj);
+    ASSERT_PRECONDITION(obj->file);
 
     fclose(obj->file);
     // buffer is external data, no cleanup
@@ -210,7 +211,7 @@ static void MockBPA_ReadBTSD_Deinit(void *user_data)
 
 static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_ref, uint64_t block_num)
 {
-    MockBPA_Bundle_t *bundle = bundle_ref->data;
+    MockBPA_Bundle_t          *bundle    = bundle_ref->data;
     MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
     if (found_ptr == NULL)
     {
@@ -224,9 +225,9 @@ static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_re
         return NULL;
     }
     obj->block = found_block;
-    obj->ptr = found_block->btsd;
-    obj->size = found_block->btsd_len;
-    obj->file = open_memstream(&obj->ptr, &obj->size);
+    obj->ptr   = found_block->btsd;
+    obj->size  = found_block->btsd_len;
+    obj->file  = fmemopen(obj->ptr, obj->size, "rb");
 
     BSL_SeqReader_t *reader = BSL_CALLOC(1, sizeof(BSL_SeqReader_t));
     if (!reader)
@@ -244,12 +245,12 @@ static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_re
 static int MockBPA_WriteBTSD_Write(void *user_data, const void *buf, size_t size)
 {
     struct MockBPA_BTSD_Data_s *obj = user_data;
-    if (!obj || !obj->file)
-    {
-        return -1;
-    }
+    ASSERT_ARG_NONNULL(obj);
+    CHK_ARG_NONNULL(buf);
+    ASSERT_PRECONDITION(obj->file);
 
     const size_t got = fwrite(buf, 1, size, obj->file);
+    BSL_LOG_DEBUG("writing up to %zd bytes, got %zd", size, got);
     if (got < size)
     {
         return BSL_ERR_FAILURE;
@@ -260,16 +261,15 @@ static int MockBPA_WriteBTSD_Write(void *user_data, const void *buf, size_t size
 static void MockBPA_WriteBTSD_Deinit(void *user_data)
 {
     struct MockBPA_BTSD_Data_s *obj = user_data;
-    if (!obj || !obj->file)
-    {
-        return;
-    }
+    ASSERT_ARG_NONNULL(obj);
+    ASSERT_PRECONDITION(obj->file);
 
     fclose(obj->file);
+    BSL_LOG_DEBUG("closed with size %zu", obj->size);
 
     // now write-back the BTSD
     BSL_FREE(obj->block->btsd);
-    obj->block->btsd = obj->ptr;
+    obj->block->btsd     = obj->ptr;
     obj->block->btsd_len = obj->size;
 
     BSL_FREE(obj);
@@ -277,7 +277,7 @@ static void MockBPA_WriteBTSD_Deinit(void *user_data)
 
 static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t total_size)
 {
-    MockBPA_Bundle_t *bundle = bundle_ref->data;
+    MockBPA_Bundle_t          *bundle    = bundle_ref->data;
     MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
     if (found_ptr == NULL)
     {
@@ -292,13 +292,14 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
     }
     // double-buffer for this write
     obj->block = found_block;
-    obj->ptr = BSL_MALLOC(total_size);
-    obj->size = total_size;
-    obj->file = open_memstream(&obj->ptr, &obj->size);
+    obj->ptr   = BSL_MALLOC(total_size);
+    obj->size  = total_size;
+    obj->file  = open_memstream(&obj->ptr, &obj->size);
 
     BSL_SeqWriter_t *writer = BSL_CALLOC(1, sizeof(BSL_SeqWriter_t));
     if (!writer)
     {
+        BSL_FREE(obj->ptr);
         BSL_FREE(obj);
         return NULL;
     }
@@ -343,7 +344,7 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
 
     MockBPA_BlockByNum_set_at(bundle->blocks_num, new_block->blk_num, new_block);
 
-    *result_block_num   = new_block->blk_num;
+    *result_block_num = new_block->blk_num;
     return 0;
 }
 
@@ -358,8 +359,7 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
     MockBPA_CanonicalBlock_t *found_block = NULL;
 
     MockBPA_BlockList_it_t bit;
-    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit);
-         MockBPA_BlockList_next(bit))
+    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
     {
         MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_ref(bit);
 

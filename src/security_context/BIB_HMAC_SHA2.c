@@ -232,8 +232,16 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
         BSL_Data_InitBuffer(&btsd_copy, self->target_block.btsd_len);
 
         BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(self->bundle, self->target_block.block_num);
+        if (!btsd_read)
+        {
+            BSL_LOG_ERR("Failed to open BTSD reader on block %" PRIu64, self->target_block.block_num);
+        }
         BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-        BSL_SeqReader_Deinit(btsd_read);
+        BSL_SeqReader_Destroy(btsd_read);
+        if (btsd_copy.len != self->target_block.btsd_len)
+        {
+            BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", self->target_block.btsd_len, btsd_copy.len);
+        }
 
         UsefulBufC buf = { .ptr = btsd_copy.ptr, .len = btsd_copy.len };
         QCBOREncode_AddBytes(&encoder, buf);

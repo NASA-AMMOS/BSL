@@ -44,10 +44,10 @@ void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src)
     CHKVOID(src);
     BSL_Data_InitMove(&(ctr->encoded), &(src->encoded));
 
-    ctr->bundle = src->bundle;
-    ctr->bundle_ref      = src->bundle_ref;
+    ctr->bundle     = src->bundle;
+    ctr->bundle_ref = src->bundle_ref;
 
-    src->bundle = NULL;
+    src->bundle          = NULL;
     src->bundle_ref.data = NULL;
 }
 
@@ -105,7 +105,7 @@ int mock_bpa_encode(mock_bpa_ctr_t *ctr)
     CHKERR1(bundle);
 
     // TODO this is not really defined by BPSec or BPv7
-//    MockBPA_BlockList_sort(bundle->blocks);
+    MockBPA_BlockList_sort(bundle->blocks);
 
     QCBOREncodeContext encoder;
     // first round of encoding is to get the full size

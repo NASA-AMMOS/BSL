@@ -71,7 +71,7 @@ typedef struct MockBPA_CanonicalBlock_s
     uint64_t crc_type;
 
     /// Pointer to memory managed by the BPA
-    void  *btsd;
+    void *btsd;
     /// Known length of the #btsd
     size_t btsd_len;
 } MockBPA_CanonicalBlock_t;

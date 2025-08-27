@@ -243,7 +243,7 @@ typedef struct
 
     /** Host BPA function do create a new sequential writer on a single block-type-specific data.
      * @note The BPA must double-buffer to allow a reader and writier on the same block.
-     * The writer will call BSL_SeqWriter_Deinit() when it is finished.
+     * The writer will call BSL_SeqWriter_Destroy() when it is finished.
      *
      * @param[in] bundle_ref The bundle to read data from.
      * @param block_num The specific block number to write BTSD into.

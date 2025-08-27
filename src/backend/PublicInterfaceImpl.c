@@ -153,7 +153,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
 
                 BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, block.block_num);
                 BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-                BSL_SeqReader_Deinit(btsd_read);
+                BSL_SeqReader_Destroy(btsd_read);
 
                 BSL_AbsSecBlock_t *abs_sec_block = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
                 if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, &btsd_copy) == 0)

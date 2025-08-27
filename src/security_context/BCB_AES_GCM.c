@@ -203,8 +203,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     }
 
     // close write after read
-    BSL_SeqReader_Deinit(btsd_read);
-    BSL_SeqWriter_Deinit(btsd_write);
+    BSL_SeqReader_Destroy(btsd_read);
+    BSL_SeqWriter_Destroy(btsd_write);
 
     BSL_Data_Deinit(&content_enc_key);
     BSL_Cipher_Deinit(&cipher);

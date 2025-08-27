@@ -33,12 +33,13 @@
 
 #include "backend/UtilDefs_SeqReadWrite.h"
 
-int BSL_SeqReader_Deinit(BSL_SeqReader_t *obj)
+int BSL_SeqReader_Destroy(BSL_SeqReader_t *obj)
 {
     CHK_ARG_NONNULL(obj);
     CHK_ARG_NONNULL(obj->deinit);
 
     obj->deinit(obj->user_data);
+    BSL_FREE(obj);
     return BSL_SUCCESS;
 }
 
@@ -52,12 +53,13 @@ int BSL_SeqReader_Get(BSL_SeqReader_t *obj, uint8_t *buf, size_t *bufsize)
     return obj->read(obj->user_data, buf, bufsize);
 }
 
-int BSL_SeqWriter_Deinit(BSL_SeqWriter_t *obj)
+int BSL_SeqWriter_Destroy(BSL_SeqWriter_t *obj)
 {
     CHK_ARG_NONNULL(obj);
     CHK_ARG_NONNULL(obj->deinit);
 
     obj->deinit(obj->user_data);
+    BSL_FREE(obj);
     return BSL_SUCCESS;
 }
 

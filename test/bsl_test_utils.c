@@ -408,7 +408,8 @@ int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid,
 }
 
 /// Internal state for reader and writer
-struct BSL_TestUtils_Flat_Data_s {
+struct BSL_TestUtils_Flat_Data_s
+{
     /// Pointer to external buffer pointer
     void **origbuf;
     /// Pointer to external size
@@ -422,7 +423,7 @@ struct BSL_TestUtils_Flat_Data_s {
     FILE *file;
 };
 
-static int MockBPA_ReadBTSD_Read(void *user_data, void *buf, size_t *bufsize)
+static int BSL_TestUtils_ReadBTSD_Read(void *user_data, void *buf, size_t *bufsize)
 {
     struct BSL_TestUtils_Flat_Data_s *obj = user_data;
     if (!obj || !obj->file)
@@ -435,7 +436,7 @@ static int MockBPA_ReadBTSD_Read(void *user_data, void *buf, size_t *bufsize)
     return 0;
 }
 
-static void MockBPA_ReadBTSD_Deinit(void *user_data)
+static void BSL_TestUtils_ReadBTSD_Deinit(void *user_data)
 {
     struct BSL_TestUtils_Flat_Data_s *obj = user_data;
     if (!obj || !obj->file)
@@ -452,18 +453,18 @@ void BSL_TestUtils_FlatReader(BSL_SeqReader_t *reader, const void *buf, size_t b
 {
     struct BSL_TestUtils_Flat_Data_s *obj = BSL_CALLOC(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
     ASSERT_PROPERTY(obj);
-    obj->origbuf = NULL;
+    obj->origbuf  = NULL;
     obj->origsize = NULL;
-    obj->ptr = (void *)buf;
-    obj->size = bufsize;
-    obj->file = fmemopen(obj->ptr, obj->size, "rb");
+    obj->ptr      = (void *)buf;
+    obj->size     = bufsize;
+    obj->file     = fmemopen(obj->ptr, obj->size, "rb");
 
     reader->user_data = obj;
-    reader->read      = MockBPA_ReadBTSD_Read;
-    reader->deinit    = MockBPA_ReadBTSD_Deinit;
+    reader->read      = BSL_TestUtils_ReadBTSD_Read;
+    reader->deinit    = BSL_TestUtils_ReadBTSD_Deinit;
 }
 
-static int MockBPA_WriteBTSD_Write(void *user_data, const void *buf, size_t size)
+static int BSL_TestUtils_WriteBTSD_Write(void *user_data, const void *buf, size_t size)
 {
     struct BSL_TestUtils_Flat_Data_s *obj = user_data;
     if (!obj || !obj->file)
@@ -479,7 +480,7 @@ static int MockBPA_WriteBTSD_Write(void *user_data, const void *buf, size_t size
     return BSL_SUCCESS;
 }
 
-static void MockBPA_WriteBTSD_Deinit(void *user_data)
+static void BSL_TestUtils_WriteBTSD_Deinit(void *user_data)
 {
     struct BSL_TestUtils_Flat_Data_s *obj = user_data;
     if (!obj || !obj->file)
@@ -507,13 +508,13 @@ void BSL_TestUtils_FlatWriter(BSL_SeqWriter_t *writer, void **buf, size_t *bufsi
     struct BSL_TestUtils_Flat_Data_s *obj = BSL_CALLOC(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
     ASSERT_PROPERTY(obj);
     // double-buffer for this write
-    obj->origbuf = buf;
+    obj->origbuf  = buf;
     obj->origsize = bufsize;
-    obj->ptr = NULL;
-    obj->size = 0;
-    obj->file = open_memstream(&obj->ptr, &obj->size);
+    obj->ptr      = NULL;
+    obj->size     = 0;
+    obj->file     = open_memstream(&obj->ptr, &obj->size);
 
     writer->user_data = obj;
-    writer->write     = MockBPA_WriteBTSD_Write;
-    writer->deinit    = MockBPA_WriteBTSD_Deinit;
+    writer->write     = BSL_TestUtils_WriteBTSD_Write;
+    writer->deinit    = BSL_TestUtils_WriteBTSD_Deinit;
 }
