@@ -362,7 +362,8 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
     return 0;
 }
 
-int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var, const void *init_vec, int iv_len, void *key_handle)
+int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
+                    const void *init_vec, int iv_len, void *key_handle)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(init_vec);
