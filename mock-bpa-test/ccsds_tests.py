@@ -69,6 +69,9 @@ class _CCSDS_Cases(_TestSet):
                 continue
             
             for t in item['tests']:
+                if not t['working']:
+                    continue
+
                 outcome = t['outcome'].split(' ')[0] == "SUCCESS."
                 if outcome:
                     input = t['incoming_bundle']['hex'][2:].replace(" ", "")[:-1]

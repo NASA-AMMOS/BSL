@@ -25,6 +25,10 @@
           {
             "id": "scope_flags",
             "value": "0"
+          },
+          {
+            "id": "key_wrap",
+            "value": "0"
           }
         ]
       },
@@ -66,6 +70,10 @@
           {
             "id": "aad_scope",
             "value": "0"
+          },
+          {
+            "id": "key_wrap",
+            "value": "1"
           }
         ]
       },

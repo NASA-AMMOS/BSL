@@ -49,17 +49,6 @@ class TestAgent(unittest.TestCase):
 
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
-        # self.requirements_tests = _RequirementsCases()
-        # self.json_policy_tests = _JSONPolicyTests()
-        self.ccsds_tests = _CCSDS_Cases()
-        
-        self.pp_cfg_dict = {}
-        # for id, tc in self.requirements_tests.cases.items():
-        #     self.pp_cfg_dict[id] = tc.policy_config
-        # for id, tc in self.json_policy_tests.cases.items():
-        #     self.pp_cfg_dict[id] = tc.policy_config
-        for id, tc in self.ccsds_tests.cases.items():
-            self.pp_cfg_dict[id] = tc.policy_config
 
     def setUp(self):
 
@@ -212,6 +201,7 @@ def _add_tests(new_tests: _TestSet):
 
     def decorator(cls):
         for id, tc in new_tests.cases.items():
+            cls.pp_cfg_dict[id] = tc.policy_config
             if tc.is_working:
 
                 def _test(cls, id=id):
@@ -224,10 +214,12 @@ def _add_tests(new_tests: _TestSet):
     return decorator
 
 
-# @_add_tests(_RequirementsCases())
-# @_add_tests(_JSONPolicyTests())
+@_add_tests(_RequirementsCases())
+@_add_tests(_JSONPolicyTests())
 @_add_tests(_CCSDS_Cases())
 class TestMockBPA(TestAgent):
+
+    pp_cfg_dict = {}
 
     def test_start_stop_p00(self):
         self._start()
