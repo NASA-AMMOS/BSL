@@ -131,7 +131,9 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
-    // Wrapped key ciphertext always 8 bytes greater than CEK plaintext
+    /**
+    * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
+    */
     BSL_Data_InitBuffer(&cek->raw, wrapped_key->len - 8);
 
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
