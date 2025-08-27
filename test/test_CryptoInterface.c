@@ -20,7 +20,6 @@
  * subcontract 1700763.
  */
 #include <inttypes.h>
-#include <unistd.h>
 
 #include <openssl/err.h>
 #include <openssl/rand.h>
