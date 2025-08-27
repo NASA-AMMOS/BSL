@@ -102,6 +102,7 @@ GCM
 Heiner
 Henk
 hmac
+Housley
 html
 IANA
 IETF
@@ -173,6 +174,7 @@ RNG
 RTEMS
 ruleset
 sc
+Schaad
 SCs
 SecOper
 SecParam

@@ -25,7 +25,6 @@
 #include <mock_bpa/eid.h>
 #include <mock_bpa/eidpat.h>
 
-// allow parameterized cases
 #define TEST_CASE(...)
 
 void suiteSetUp(void)
