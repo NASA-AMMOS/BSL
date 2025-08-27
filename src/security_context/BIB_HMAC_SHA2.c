@@ -44,7 +44,7 @@ bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const B
     // Note: Internal API distinction.
     // Called before the `_execute` function. This checks ahead of time whether it contains the necessary info in order
     // to perform the execution.
-    (void)lib;
+    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_BUNDLE_INSPECTED_COUNT, 1);
     (void)bundle;
     (void)sec_oper;
     return false;
@@ -52,7 +52,7 @@ bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const B
 
 bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
 {
-    (void)lib;
+    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_BUNDLE_INSPECTED_COUNT, 1);
     (void)bundle;
     (void)sec_oper;
     return false;

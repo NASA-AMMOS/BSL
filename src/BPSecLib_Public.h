@@ -118,6 +118,27 @@ typedef enum
     BSL_BUNDLECRCTYPE_32 = 2,
 } BSL_BundleCRCType_e;
 
+typedef enum
+{
+  BSL_TLM_BUNDLE_INSPECTED_COUNT = 0,
+  BSL_TLM_BUNDLE_INSPECTED_BYTES,
+  BSL_TLM_ASB_DECODE_COUNT,
+  BSL_TLM_ASB_DECODE_BYTES,
+  BSL_TLM_ASB_ENCODE_COUNT,
+  BSL_TLM_ASB_ENCODE_BYTES,
+  BSL_TLM_SECOP_SOURCE_COUNT,
+  BSL_TLM_SECOP_VERIFIER_COUNT,
+  BSL_TLM_SECOP_ACCEPTOR_COUNT,
+  BSL_TLM_SECOP_FAIL_COUNT,
+  BSL_TLM_TOTAL_COUNT
+} BSL_TlmCounterIndex_e;
+
+typedef struct BSL_TlmCounters_s {
+  uint64_t counters[BSL_TLM_TOTAL_COUNT + 1];
+} BSL_TlmCounters_t;
+
+int BSL_LibCtx_GetTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t *tlm);
+
 /** @brief Opaque pointer to BPA-specific Endpoint ID storage.
  *
  * Ownership of the object is kept by the BPA, and these are only references.

@@ -43,6 +43,8 @@ int BSL_API_InitLib(BSL_LibCtx_t *lib)
 {
     CHK_ARG_NONNULL(lib);
 
+    memset(&lib->tlm_counters, 0, sizeof(BSL_TlmCounters_t));
+
     BSL_SecCtxDict_init(lib->sc_reg);
     BSL_PolicyDict_init(lib->policy_reg);
     return BSL_SUCCESS;
@@ -70,6 +72,17 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
 
     BSL_PolicyDict_clear(lib->policy_reg);
     BSL_SecCtxDict_clear(lib->sc_reg);
+    return BSL_SUCCESS;
+}
+
+int BSL_LibCtx_GetTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t *tlm)
+{
+    CHK_ARG_NONNULL(lib);
+    CHK_ARG_NONNULL(tlm);
+
+    BSL_TlmCounters_t copy_tlm = lib->tlm_counters;
+    *tlm = copy_tlm;
+
     return BSL_SUCCESS;
 }
 

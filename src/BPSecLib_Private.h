@@ -933,6 +933,13 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
  */
 int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *buf);
 
+/** Increments a telemetry counter in the ctx based on telemetry index
+ *
+ * @todo
+ * 
+ */
+int BSL_TlmCounters_IncrementCounter(BSL_LibCtx_t *bsl, BSL_TlmCounterIndex_e tlm_index, uint64_t count);
+
 /** @brief Represents the output following execution of a security operation.
  */
 typedef struct BSL_SecOutcome_s BSL_SecOutcome_t;
