@@ -116,7 +116,7 @@ class TestAgent(unittest.TestCase):
 
         ''' Spawn the process and wait for the startup READY message. '''
         self._agent.start()
-        self._agent.wait_for_text(r'.* <INFO> \[.+\:bpa_exec] READY$')
+        self._agent.wait_for_text(r'.* <INFO> \[.+\:MockBPA_Agent_Exec] READY$')
 
     def _encode(self, blocks: List[object]):
 

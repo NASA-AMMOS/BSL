@@ -98,7 +98,6 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
     CHK_ARG_NONNULL(lib);
     CHK_ARG_EXPR(desc.query_fn != NULL);
     CHK_ARG_EXPR(desc.finalize_fn != NULL);
-    CHK_ARG_EXPR(desc.deinit_fn != NULL);
 
     BSL_PolicyDict_set_at(lib->policy_reg, pp_id, desc);
     return BSL_SUCCESS;

@@ -24,16 +24,23 @@
  * Declarations for Agent initialization.
  * @ingroup mock_bpa
  */
-#ifndef BSL_MOCK_BPA_H_
-#define BSL_MOCK_BPA_H_
+#ifndef BSL_MOCK_BPA_AGENT_H_
+#define BSL_MOCK_BPA_AGENT_H_
+
+#include "ctr.h"
+#include "policy_registry.h"
 
 #include <BPSecLib_Public.h>
 #include <BPSecLib_Private.h>
 
+#include <m-atomic.h>
+#include <m-buffer.h>
 #include <m-deque.h>
 #include <m-dict.h>
 #include <m-string.h>
 
+#include <arpa/inet.h>
+#include <pthread.h>
 #include <inttypes.h>
 
 #ifdef __cplusplus
@@ -95,17 +102,107 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
 int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num);
 int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref);
 
-/** Register this mock BPA for the current process.
+/// Queue size for bundle queues
+#define MOCKBPA_DATA_QUEUE_SIZE 100
+
+/**
+ * @struct MockBPA_data_queue_t
+ * @brief Container for a thread-safe circular queue of ::mock_bpa_ctr_t
+ * @cite lib:mlib.
+ */
+// NOLINTBEGIN
+/// @cond Doxygen_Suppress
+M_BUFFER_DEF(MockBPA_data_queue, mock_bpa_ctr_t, MOCKBPA_DATA_QUEUE_SIZE,
+             BUFFER_QUEUE | BUFFER_THREAD_SAFE | BUFFER_PUSH_INIT_POP_MOVE | BUFFER_BLOCKING)
+/// @endcond
+// NOLINTEND
+
+/** Overall Mock BPA state above any particular bundle handling.
+ */
+typedef struct MockBPA_Agent_s
+{
+    /** Shared operating state.
+     * Set to @c false while running, and @c true to stop.
+     */
+    atomic_bool stop_state;
+
+    /// Bundles received from the application
+    MockBPA_data_queue_t over_rx;
+    /// Bundles delivered to the application
+    MockBPA_data_queue_t over_tx;
+    /// Bundles received from the CL
+    MockBPA_data_queue_t under_rx;
+    /// Bundles forwarded to the CL
+    MockBPA_data_queue_t under_tx;
+    /// Bundles in need of delivery
+    MockBPA_data_queue_t deliver;
+    /// Bundles in need of forwarding
+    MockBPA_data_queue_t forward;
+
+    /** Worker threads.
+     * These are valid between MockBPA_Agent_Start() and MockBPA_Agent_Join().
+     */
+    pthread_t thr_over_rx, thr_under_rx, thr_deliver, thr_forward;
+
+    /// Pipe end for notifying TX worker
+    int tx_notify_w;
+    /// Pipe end for TX worker
+    int tx_notify_r;
+
+    /// Definitions of policy for all BSL instances
+    mock_bpa_policy_registry_t policy_registry;
+    /// Policy provider shared for all BSL instances
+    BSL_PolicyDesc_t policy_callbacks;
+
+    /// BSL context for ::BSL_POLICYLOCATION_APPIN
+    BSL_LibCtx_t *bsl_appin;
+    /// BSL context for ::BSL_POLICYLOCATION_APPOUT
+    BSL_LibCtx_t *bsl_appout;
+    /// BSL context for ::BSL_POLICYLOCATION_CLIN
+    BSL_LibCtx_t *bsl_clin;
+    /// BSL context for ::BSL_POLICYLOCATION_CLOUT
+    BSL_LibCtx_t *bsl_clout;
+
+    /// Configuration for local app-facing address
+    struct sockaddr_in over_addr;
+    /// Configuration for application-side address
+    struct sockaddr_in app_addr;
+    /// Configuration for local CL-facing address
+    struct sockaddr_in under_addr;
+    /// Configuration for CL-side address
+    struct sockaddr_in router_addr;
+
+} MockBPA_Agent_t;
+
+/** Get host descriptors without a specific agent.
+ *
+ * @param[in] agent The agent to associate as user data.
+ */
+BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent);
+
+/** Initialize and register this mock BPA for the current process.
  * @return Zero if successful.
  */
-int bsl_mock_bpa_agent_init(void);
+int MockBPA_Agent_Init(MockBPA_Agent_t *agent);
 
 /** Clean up the mock BPA for the current process.
  */
-void bsl_mock_bpa_agent_deinit(void);
+void MockBPA_Agent_Deinit(MockBPA_Agent_t *agent);
+
+int MockBPA_Agent_Start(MockBPA_Agent_t *agent);
+
+/** Stop an agent from another thread or a signal handler.
+ *
+ * @param[in,out] agent The agent to set the stopping state on.
+ */
+void MockBPA_Agent_Stop(MockBPA_Agent_t *agent);
+
+int MockBPA_Agent_Exec(MockBPA_Agent_t *agent);
+
+void MockBPA_Agent_Join(MockBPA_Agent_t *agent);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif // BSL_MOCK_BPA_H_
+#endif // BSL_MOCK_BPA_AGENT_H_

@@ -121,6 +121,11 @@ void BSL_HostDescriptors_Get(BSL_HostDescriptors_t *desc)
     *desc = HostDescriptorTable;
 }
 
+void BSL_HostDescriptors_Clear(void)
+{
+    HostDescriptorTable = (BSL_HostDescriptors_t) { 0 };
+}
+
 int BSL_HostEID_Init(BSL_HostEID_t *eid)
 {
     CHK_ARG_NONNULL(eid);
