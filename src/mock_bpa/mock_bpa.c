@@ -142,8 +142,8 @@ static int bind_udp(int *sock, const struct sockaddr_in *addr)
 
 static void mock_bpa_dump_telemetry(void)
 {
-    BSL_TlmCounters_t tlm;
-    int               result = BSL_LibCtx_GetTlmCounters(bsl, &tlm);
+    BSL_TlmCounters_t tlm    = BSL_TLM_COUNTERS_ZERO;
+    int               result = BSL_LibCtx_AccumulateTlmCounters(bsl, &tlm);
 
     if (result)
     {
@@ -153,14 +153,14 @@ static void mock_bpa_dump_telemetry(void)
 
     BSL_LOG_INFO("---------------------------------------------------------");
     BSL_LOG_INFO("---------------------TELEMETRY INFO----------------------");
-    BSL_LOG_INFO("                     FAIL COUNT: %lu", tlm.counters[BSL_TLM_SECOP_FAIL_COUNT]);
-    BSL_LOG_INFO("                BUNDLE INSPECTED COUNT: %lu", tlm.counters[BSL_TLM_BUNDLE_INSPECTED_COUNT]);
-    BSL_LOG_INFO("                   ASB ENCODE COUNT: %lu", tlm.counters[BSL_TLM_ASB_ENCODE_COUNT]);
-    BSL_LOG_INFO("                   ASB ENCODE BYTES: %lu", tlm.counters[BSL_TLM_ASB_ENCODE_BYTES]);
-    BSL_LOG_INFO("                  SECOP SOURCE COUNT: %lu", tlm.counters[BSL_TLM_SECOP_SOURCE_COUNT]);
-    BSL_LOG_INFO("                 SECOP VERIFIER COUNT: %lu", tlm.counters[BSL_TLM_SECOP_VERIFIER_COUNT]);
-    BSL_LOG_INFO("                 SECOP ACCEPTOR COUNT: %lu", tlm.counters[BSL_TLM_SECOP_ACCEPTOR_COUNT]);
-    BSL_LOG_INFO("                  TOTAL TLM COUNT: %lu", tlm.counters[BSL_TLM_TOTAL_COUNT]);
+    BSL_LOG_INFO("                     FAIL COUNT: %" PRIu64, tlm.counters[BSL_TLM_SECOP_FAIL_COUNT]);
+    BSL_LOG_INFO("                BUNDLE INSPECTED COUNT: %" PRIu64, tlm.counters[BSL_TLM_BUNDLE_INSPECTED_COUNT]);
+    BSL_LOG_INFO("                   ASB ENCODE COUNT: %" PRIu64, tlm.counters[BSL_TLM_ASB_ENCODE_COUNT]);
+    BSL_LOG_INFO("                   ASB ENCODE BYTES: %" PRIu64, tlm.counters[BSL_TLM_ASB_ENCODE_BYTES]);
+    BSL_LOG_INFO("                  SECOP SOURCE COUNT: %" PRIu64, tlm.counters[BSL_TLM_SECOP_SOURCE_COUNT]);
+    BSL_LOG_INFO("                 SECOP VERIFIER COUNT: %" PRIu64, tlm.counters[BSL_TLM_SECOP_VERIFIER_COUNT]);
+    BSL_LOG_INFO("                 SECOP ACCEPTOR COUNT: %" PRIu64, tlm.counters[BSL_TLM_SECOP_ACCEPTOR_COUNT]);
+    BSL_LOG_INFO("                  TOTAL TLM COUNT: %" PRIu64, tlm.counters[BSL_TLM_TOTAL_COUNT]);
     BSL_LOG_INFO("---------------------------------------------------------");
 }
 
@@ -194,7 +194,7 @@ static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
     BSL_LOG_INFO("Mock BPA: mock_bpa_process SUCCESS (code=0)");
 
 cleanup:
-    // Example telemetry dump to console - this can/should be changed
+    // Example telemetry dump to console
     mock_bpa_dump_telemetry();
 
     BSL_SecurityActionSet_Deinit(malloced_action_set);

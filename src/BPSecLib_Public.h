@@ -118,6 +118,12 @@ typedef enum
     BSL_BUNDLECRCTYPE_32 = 2,
 } BSL_BundleCRCType_e;
 
+#define BSL_TLM_COUNTERS_ZERO (BSL_TlmCounters_t) { 0 }
+
+/** @brief Defined indices for the counter structure to hold telemetry and counts
+ *
+ * @note If more telemetry is added, the array in ::BSL_TlmCounters_t must be updated.
+ */
 typedef enum
 {
     BSL_TLM_BUNDLE_INSPECTED_COUNT = 0,
@@ -133,12 +139,22 @@ typedef enum
     BSL_TLM_TOTAL_COUNT
 } BSL_TlmCounterIndex_e;
 
+/** @brief The telemetry counter structure to store the enumerations of telemetry.
+ *
+ * This structure is automatically created in the bsl context
+ */
 typedef struct BSL_TlmCounters_s
 {
     uint64_t counters[BSL_TLM_TOTAL_COUNT + 1];
 } BSL_TlmCounters_t;
 
-int BSL_LibCtx_GetTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t *tlm);
+/** @brief Retrive copy of the telemetry counters to accumulate in BPA.
+ *
+ * @param[in] lib           Pointer to BSL context.
+ * @param[out] sec_ctx_id       Pointer to the output telemetry structure
+ * @returns 0 on success, negative on error.
+ */
+int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t *tlm);
 
 /** @brief Opaque pointer to BPA-specific Endpoint ID storage.
  *

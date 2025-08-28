@@ -75,10 +75,9 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
     return BSL_SUCCESS;
 }
 
-int BSL_LibCtx_GetTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t *tlm)
+int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t *tlm)
 {
     CHK_ARG_NONNULL(lib);
-    CHK_ARG_NONNULL(tlm);
 
     BSL_TlmCounters_t copy_tlm = lib->tlm_counters;
     *tlm                       = copy_tlm;
