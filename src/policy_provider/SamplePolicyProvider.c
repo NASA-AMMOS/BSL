@@ -120,12 +120,12 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     {
         const BSLP_PolicyRule_t *rule = &self->rules[index];
         CHK_PROPERTY(BSLP_PolicyRule_IsConsistent(rule));
-        BSL_LOG_DEBUG("Evaluating against rule `%s`", rule->description);
+        BSL_LOG_DEBUG("Evaluating against rule `%s`", m_string_get_cstr(rule->description));
 
         if (!BSLP_PolicyPredicate_IsMatch(rule->predicate, location, primary_block.field_src_node_id,
                                           primary_block.field_dest_eid))
         {
-            BSL_LOG_DEBUG("Rule `%s` not a match", rule->description);
+            BSL_LOG_DEBUG("Rule `%s` not a match", m_string_get_cstr(rule->description));
             continue;
         }
 
@@ -209,7 +209,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
                 BSLP_SecOperPtrList_push_back(secops, sec_oper);
             }
         }
-        BSL_LOG_INFO("Created sec operation for rule `%s`", rule->description);
+        BSL_LOG_INFO("Created sec operation for rule `%s`", m_string_get_cstr(rule->description));
     }
     BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -370,7 +370,7 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
-    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", self->description, self->nparams);
+    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", m_string_get_cstr(self->description), self->nparams);
     string_clear(self->description);
     BSL_FREE(self->params);
     memset(self, 0, sizeof(*self));
@@ -427,7 +427,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
         uint8_t *ptr    = &((uint8_t *)(self->params))[offset];
         BSL_SecOper_AppendParam(sec_oper, (BSL_SecParam_t *)ptr);
     }
-    BSL_LOG_INFO("Created sec operation for rule `%s`", self->description);
+    BSL_LOG_INFO("Created sec operation for rule `%s`", m_string_get_cstr(self->description));
 
     return BSL_SUCCESS;
 }
