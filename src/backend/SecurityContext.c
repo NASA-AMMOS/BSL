@@ -387,7 +387,6 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     }
 
     BSL_AbsSecBlock_t abs_sec_block;
-    if (true)
     {
         BSL_HostEID_t src_eid = { 0 };
         BSL_HostEID_Init(&src_eid);
@@ -397,24 +396,6 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
             return BSL_ERR_HOST_CALLBACK_FAILED;
         }
         BSL_AbsSecBlock_Init(&abs_sec_block, sec_oper->context_id, src_eid);
-    }
-    else
-    {
-        // ASB decoder needs the whole BTSD now
-        BSL_Data_t btsd_copy;
-        BSL_Data_InitBuffer(&btsd_copy, sec_blk.btsd_len);
-
-        BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, sec_blk.block_num);
-        BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-        BSL_SeqReader_Destroy(btsd_read);
-
-        if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_copy) != BSL_SUCCESS)
-        {
-            BSL_LOG_ERR("Failed to parse ASB CBOR");
-            BSL_Data_Deinit(&btsd_copy);
-            return BSL_ERR_DECODING;
-        }
-        BSL_Data_Deinit(&btsd_copy);
     }
 
     BSL_AbsSecBlock_AddTarget(&abs_sec_block, sec_oper->target_block_num);
