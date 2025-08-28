@@ -125,6 +125,7 @@ set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/LoggingStderr.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PolicyProvider.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/TelemetryCounters.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOutcome.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecParam.c
