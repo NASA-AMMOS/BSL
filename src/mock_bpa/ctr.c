@@ -20,6 +20,7 @@
  * subcontract 1700763.
  */
 #include <BPSecLib_Private.h>
+#include <m-algo.h>
 
 #include "ctr.h"
 #include "decode.h"
@@ -94,8 +95,7 @@ static int block_cmp(const MockBPA_CanonicalBlock_t *block_a, const MockBPA_Cano
     return block_b->blk_type - block_a->blk_type;
 }
 
-#include <m-algo.h>
-
+// Add comparison by block type to sort just before encoding
 M_ALGO_DEF(MockBPA_BlockList, M_DEQUE_OPLIST(MockBPA_BlockList, M_OPEXTEND(M_POD_OPLIST, CMP(API_6(block_cmp)))))
 
 int mock_bpa_encode(mock_bpa_ctr_t *ctr)
