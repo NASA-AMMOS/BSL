@@ -650,32 +650,31 @@ static pthread_t threads[TEST_THREADS];
 
 static void *add_key_to_reg_fn(void *arg)
 {
-    const char *name        = (char *)arg;
-    static const uint8_t key_bytes[] = {    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                                            0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-    int res = BSL_Crypto_AddRegistryKey(name, key_bytes, sizeof(key_bytes));
+    const char          *name        = (char *)arg;
+    static const uint8_t key_bytes[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                                         0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+    int                  res         = BSL_Crypto_AddRegistryKey(name, key_bytes, sizeof(key_bytes));
     if (BSL_SUCCESS == res)
     {
         BSL_LOG_INFO("ADDED %s KEY TO CRYPTO REG", name);
-        return (void *) name;
+        return (void *)name;
     }
     else
     {
         BSL_LOG_INFO("FAILED TO ADD %s KEY TO CRYPTO REG", name);
         return NULL;
     }
-
 }
 
 static void *get_key_from_reg_fn(void *arg)
 {
     const char *name = (char *)arg;
-    void *handle;
-    int   res = BSLB_Crypto_GetRegistryKey(name, &handle);
+    void       *handle;
+    int         res = BSLB_Crypto_GetRegistryKey(name, &handle);
     if (BSL_SUCCESS == res)
     {
         BSL_LOG_INFO("GOT %s KEY FROM CRYPTO REG", name);
-        return (void *) name;
+        return (void *)name;
     }
     else
     {
@@ -725,8 +724,8 @@ void test_get_key_concurrency(void)
         sprintf(names[i], "thread%zu", i);
     }
 
-    static const uint8_t key_bytes[] = {    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                                            0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+    static const uint8_t key_bytes[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                                         0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
     for (size_t i = 0; i < TEST_THREADS; i++)
     {
         TEST_ASSERT_EQUAL(0, BSL_Crypto_AddRegistryKey(names[i], key_bytes, sizeof(key_bytes)));
