@@ -482,14 +482,13 @@ static void *MockBPA_Agent_work_over_rx(void *arg)
         BSL_LOG_INFO("over_rx item");
         mock_bpa_decode(&item);
 
-        if (MockBPA_process(agent->bsl_appin, BSL_POLICYLOCATION_APPIN, item.bundle_ref.data))
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (MockBPA_process(agent->bsl_appin, BSL_POLICYLOCATION_APPIN, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
-
-        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
         if (!bundle->retain)
         {
             BSL_LOG_ERR("bundle was marked to delete by BSL");
@@ -527,14 +526,13 @@ static void *MockBPA_Agent_work_under_rx(void *arg)
             continue;
         }
 
-        if (MockBPA_process(agent->bsl_clin, BSL_POLICYLOCATION_CLIN, item.bundle_ref.data))
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (MockBPA_process(agent->bsl_clin, BSL_POLICYLOCATION_CLIN, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
-
-        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
         if (!bundle->retain)
         {
             BSL_LOG_ERR("bundle was marked to delete by BSL");
@@ -565,14 +563,13 @@ static void *MockBPA_Agent_work_deliver(void *arg)
         }
         BSL_LOG_INFO("deliver item");
 
-        if (MockBPA_process(agent->bsl_appout, BSL_POLICYLOCATION_APPOUT, item.bundle_ref.data))
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (MockBPA_process(agent->bsl_appout, BSL_POLICYLOCATION_APPOUT, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
-
-        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
         if (!bundle->retain)
         {
             BSL_LOG_ERR("bundle was marked to delete by BSL");
@@ -611,14 +608,13 @@ static void *MockBPA_Agent_work_forward(void *arg)
         }
         BSL_LOG_INFO("forward item");
 
-        if (MockBPA_process(agent->bsl_clout, BSL_POLICYLOCATION_CLOUT, item.bundle_ref.data))
+        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
+        if (MockBPA_process(agent->bsl_clout, BSL_POLICYLOCATION_CLOUT, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);
             continue;
         }
-
-        MockBPA_Bundle_t *bundle = item.bundle_ref.data;
         if (!bundle->retain)
         {
             BSL_LOG_ERR("bundle was marked to delete by BSL");
