@@ -188,19 +188,19 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (nbytes < 0)
     {
         BSL_LOG_ERR("Decrypting BTSD ciphertext failed");
-        retval =  BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
     if (retval == BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to set auth tag");
-        retval =  BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
     if (retval == BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to check auth tag");
-        retval =  BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
     // close write after read

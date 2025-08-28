@@ -51,7 +51,7 @@ static BSL_TestContext_t LocalTestCtx;
 
 void suiteSetUp(void)
 {
-//    BSL_openlog();
+    BSL_openlog();
     assert(0 == bsl_mock_bpa_agent_init());
 }
 

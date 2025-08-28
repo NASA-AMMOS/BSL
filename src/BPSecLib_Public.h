@@ -239,8 +239,9 @@ typedef struct
     struct BSL_SeqReader_s *(*block_read_btsd_fn)(const BSL_BundleRef_t *bundle_ref, uint64_t block_num);
 
     /** Host BPA function do create a new sequential writer on a single block-type-specific data.
-     * @note The BPA must double-buffer to allow a reader and writier on the same block.
      * The writer will call BSL_SeqWriter_Destroy() when it is finished.
+     *
+     * @note The BPA must double-buffer to allow a reader and writer on the same block.
      *
      * @param[in] bundle_ref The bundle to read data from.
      * @param block_num The specific block number to write BTSD into.

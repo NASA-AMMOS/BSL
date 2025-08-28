@@ -242,7 +242,7 @@ void test_SeqReader_flat(void)
 {
     uint8_t source[] = { 0x01, 0x02, 0x03, 0x04, 0x05 };
 
-    BSL_SeqReader_t * reader = BSL_TestUtils_FlatReader(source, sizeof(source));
+    BSL_SeqReader_t *reader = BSL_TestUtils_FlatReader(source, sizeof(source));
     TEST_ASSERT_NOT_NULL(reader);
 
     uint8_t buf[3];
@@ -413,8 +413,8 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     BSL_SeqReader_t *reader = BSL_TestUtils_FlatReader((const void *)plaintext_in, strlen(plaintext_in));
     TEST_ASSERT_NOT_NULL(reader);
 
-    uint8_t *ciphertext;
-    size_t   ct_size;
+    uint8_t         *ciphertext;
+    size_t           ct_size;
     BSL_SeqWriter_t *writer = BSL_TestUtils_FlatWriter((void *)&ciphertext, &ct_size);
     TEST_ASSERT_NOT_NULL(writer);
 
@@ -502,8 +502,8 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
 
     BSL_SeqReader_t *reader = BSL_TestUtils_FlatReader((const void *)ciphertext, ciphertext_len);
 
-    uint8_t *plaintext;
-    size_t   pt_size;
+    uint8_t         *plaintext;
+    size_t           pt_size;
     BSL_SeqWriter_t *writer = BSL_TestUtils_FlatWriter((void *)&plaintext, &pt_size);
 
     int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
