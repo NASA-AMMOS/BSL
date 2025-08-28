@@ -322,39 +322,44 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     BSL_SeqWriter_t *btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
                                                           bcb_context->target_block.btsd_len);
 
+    int retval = BSL_SUCCESS;
+
     int nbytes = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write);
     if (nbytes < 0)
     {
         BSL_LOG_ERR("Encrypting plaintext BTSD failed");
-        BSL_Data_Deinit(&content_enc_key);
-        BSL_Cipher_Deinit(&cipher);
-        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
-    int extra_bytes = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
-    if (extra_bytes < 0)
+    if (retval == BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Finalizing AES failed");
-        BSL_Data_Deinit(&content_enc_key);
-        BSL_Cipher_Deinit(&cipher);
-        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        int extra_bytes = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
+        if (extra_bytes < 0)
+        {
+            BSL_LOG_ERR("Finalizing AES failed");
+            retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
     }
 
-    // "Finalizing" drains any remaining bytes out of the cipher context
-    // and appends them to the ciphertext.
-
-    BSL_Data_InitBuffer(&bcb_context->authtag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
-    if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, (void **)&bcb_context->authtag.ptr))
+    if (retval == BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Failed to get authentication tag");
-        BSL_Data_Deinit(&content_enc_key);
-        BSL_Cipher_Deinit(&cipher);
-        return BSL_ERR_SECURITY_CONTEXT_FAILED;
+        // "Finalizing" drains any remaining bytes out of the cipher context
+        // and appends them to the ciphertext.
+        BSL_Data_InitBuffer(&bcb_context->authtag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
+        if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, (void **)&bcb_context->authtag.ptr))
+        {
+            BSL_LOG_ERR("Failed to get authentication tag");
+            retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
     }
+
+    // close write after read
+    BSL_SeqReader_Destroy(btsd_read);
+    BSL_SeqWriter_Destroy(btsd_write);
 
     BSL_Data_Deinit(&content_enc_key);
     BSL_Cipher_Deinit(&cipher);
-    return BSL_SUCCESS;
+    return retval;
 }
 
 int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, const BSL_SecOper_t *sec_oper)

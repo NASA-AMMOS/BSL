@@ -381,11 +381,11 @@ int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len);
 
 /** Initialize a flat-buffer reader object.
  */
-void BSL_TestUtils_FlatReader(BSL_SeqReader_t *reader, const void *buf, size_t bufsize);
+BSL_SeqReader_t *BSL_TestUtils_FlatReader(const void *buf, size_t bufsize);
 
 /** Initialize a flat-buffer reader object.
  */
-void BSL_TestUtils_FlatWriter(BSL_SeqWriter_t *writer, void **buf, size_t *bufsize);
+BSL_SeqWriter_t *BSL_TestUtils_FlatWriter(void **buf, size_t *bufsize);
 
 #ifdef __cplusplus
 } // extern "C"

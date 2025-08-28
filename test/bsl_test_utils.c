@@ -449,7 +449,7 @@ static void BSL_TestUtils_ReadBTSD_Deinit(void *user_data)
     BSL_FREE(obj);
 }
 
-void BSL_TestUtils_FlatReader(BSL_SeqReader_t *reader, const void *buf, size_t bufsize)
+BSL_SeqReader_t *BSL_TestUtils_FlatReader(const void *buf, size_t bufsize)
 {
     struct BSL_TestUtils_Flat_Data_s *obj = BSL_CALLOC(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
     ASSERT_PROPERTY(obj);
@@ -459,9 +459,13 @@ void BSL_TestUtils_FlatReader(BSL_SeqReader_t *reader, const void *buf, size_t b
     obj->size     = bufsize;
     obj->file     = fmemopen(obj->ptr, obj->size, "rb");
 
+    BSL_SeqReader_t *reader = BSL_MALLOC(sizeof(BSL_SeqReader_t));
+    ASSERT_PROPERTY(reader);
     reader->user_data = obj;
     reader->read      = BSL_TestUtils_ReadBTSD_Read;
     reader->deinit    = BSL_TestUtils_ReadBTSD_Deinit;
+
+    return reader;
 }
 
 static int BSL_TestUtils_WriteBTSD_Write(void *user_data, const void *buf, size_t size)
@@ -503,7 +507,7 @@ static void BSL_TestUtils_WriteBTSD_Deinit(void *user_data)
     BSL_FREE(obj);
 }
 
-void BSL_TestUtils_FlatWriter(BSL_SeqWriter_t *writer, void **buf, size_t *bufsize)
+BSL_SeqWriter_t *BSL_TestUtils_FlatWriter(void **buf, size_t *bufsize)
 {
     struct BSL_TestUtils_Flat_Data_s *obj = BSL_CALLOC(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
     ASSERT_PROPERTY(obj);
@@ -514,7 +518,11 @@ void BSL_TestUtils_FlatWriter(BSL_SeqWriter_t *writer, void **buf, size_t *bufsi
     obj->size     = 0;
     obj->file     = open_memstream(&obj->ptr, &obj->size);
 
+    BSL_SeqWriter_t *writer = BSL_MALLOC(sizeof(BSL_SeqWriter_t));
+    ASSERT_PROPERTY(writer);
     writer->user_data = obj;
     writer->write     = BSL_TestUtils_WriteBTSD_Write;
     writer->deinit    = BSL_TestUtils_WriteBTSD_Deinit;
+
+    return writer;
 }
