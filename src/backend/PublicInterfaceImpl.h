@@ -27,6 +27,7 @@
 #define BSL_CTX_DYN_H_
 
 #include <m-dict.h>
+#include <m-bptree.h>
 
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
@@ -37,10 +38,19 @@ extern "C" {
 
 // NOLINTBEGIN
 /** @struct BSL_SecCtxDict_t
- * Stable dict of security context descriptors (key: context id | value: descriptor struct)
+ *  Stable dict of security context descriptors (key: context ID | value: security context descriptor struct.
  */
 /// @cond Doxygen_Suppress
 DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
+/// @endcond
+
+/**
+ * @struct BSL_PolicyDict_t
+ * Stable dict of policy provider descriptors (key: policy provider ID | value: policy provider descriptor struct).
+ * Policy provider IDs are arbitrary, unique, and control the order of use.
+ */
+/// @cond Doxygen_Suppress
+BPTREE_DEF2(BSL_PolicyDict, 4, uint64_t, M_BASIC_OPLIST, BSL_PolicyDesc_t, M_POD_OPLIST)
 /// @endcond
 // NOLINTEND
 
@@ -48,7 +58,7 @@ DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLI
  */
 struct BSL_LibCtx_s
 {
-    BSL_PolicyDesc_t policy_registry;
+    BSL_PolicyDict_t policy_reg;
     BSL_SecCtxDict_t sc_reg;
 };
 

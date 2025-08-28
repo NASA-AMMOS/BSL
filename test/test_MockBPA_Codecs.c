@@ -29,9 +29,6 @@
 
 #include "bsl_test_utils.h"
 
-// allow parameterized cases
-#define TEST_CASE(...)
-
 static BSL_LibCtx_t bsl;
 
 /// Output storage safely cleaned up

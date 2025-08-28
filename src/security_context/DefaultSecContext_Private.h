@@ -51,15 +51,6 @@ typedef struct BSLX_BlockMetadata_s
     BSL_Data_t btsd;
 } BSLX_BlockMetadata_t;
 
-typedef struct BSLX_Bytestr_s
-{
-    uint8_t _bytes[BSL_DEFAULT_BYTESTR_LEN + 1];
-    size_t  bytelen;
-} BSLX_Bytestr_t;
-
-size_t     BSLX_Bytestr_GetCapacity(void);
-BSL_Data_t BSLX_Bytestr_AsData(BSLX_Bytestr_t *self);
-
 typedef struct BSLX_BIB_s
 {
     /// Bundle context associated with this operation
@@ -72,12 +63,14 @@ typedef struct BSLX_BIB_s
     BSL_CanonicalBlock_t sec_block;
     int64_t              integrity_scope_flags;
     int64_t              sha_variant;
+    uint64_t             hash_size;
     uint64_t             sha_variant_uint;
     int64_t              _crypto_sha_variant;
-    BSLX_Bytestr_t       wrapped_key;
-    BSLX_Bytestr_t       override_key;
+    BSL_Data_t           wrapped_key;
+    int64_t              keywrap;
     uint64_t             hmac_result_id;
-    BSLX_Bytestr_t       hmac_result_val;
+    BSL_Data_t           hmac_result_val;
+    bool                 is_source;
 } BSLX_BIB_t;
 
 int  BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
@@ -114,11 +107,11 @@ typedef struct BSLX_BCB_s
     BSL_CanonicalBlock_t sec_block;
     BSL_CanonicalBlock_t target_block;
 
-    bool success;
-    bool skip_aad_sec_block;
-    bool skip_aad_target_block;
-    bool skip_aad_prim_block;
-    bool skip_keywrap;
+    int64_t keywrap;
+    bool    success;
+    bool    skip_aad_sec_block;
+    bool    skip_aad_target_block;
+    bool    skip_aad_prim_block;
 } BSLX_BCB_t;
 
 /**

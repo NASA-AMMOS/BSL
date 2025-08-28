@@ -72,6 +72,8 @@ typedef enum
 
     /// Policy Errors start at 100
     BSL_ERR_POLICY_FAILED = -100, ///< General error code for errors arising from a Policy Provider
+    BSL_ERR_POLICY_QUERY  = -101, ///< Error code for errors arising from Policy Provider query
+    BSL_ERR_POLICY_FINAL  = -102, ///< Error code for errors arising from Policy Provider finalize
 
     /// Security Context errors start at 200
     BSL_ERR_SECURITY_CONTEXT_FAILED       = -200, ///< General error code for errors arising from a Security Context.
@@ -612,8 +614,8 @@ typedef enum
     /// @brief Used by tests to pass in a specific key bytestring
     BSL_SECPARAM_TYPE_INT_FIXED_KEY,
 
-    /// @brief This must be explicitly set, and set to 0, to avoid generating a wrapped key.
-    BSL_SECPARAM_TYPE_INT_USE_WRAPPED_KEY,
+    /// @brief 0 to skip key wrap, else use key wrap
+    BSL_SECPARAM_USE_KEY_WRAP,
 
     BSL_SECPARAM_TYPE_AUTH_TAG,
 
@@ -1044,7 +1046,7 @@ void BSL_SecurityAction_InitSet(BSL_SecurityAction_t *self, const BSL_SecurityAc
 void BSL_SecurityAction_Deinit(BSL_SecurityAction_t *self);
 
 /**
- * Add security operation to security action, with deterministic ordering
+ * Add security operation to security action
  * @param[in,out] self action to add security operation to
  * @param[in,out] sec_oper new security operation to add and move from.
  * @return 0 if successful
@@ -1078,6 +1080,10 @@ void BSL_SecurityAction_IncrError(BSL_SecurityAction_t *self);
  * @return Count of errors.
  */
 size_t BSL_SecurityAction_CountErrors(const BSL_SecurityAction_t *self);
+
+/** @brief Returns Policy Provider ID of @param[in] self action
+ */
+uint64_t BSL_SecurityAction_GetPPID(const BSL_SecurityAction_t *self);
 
 /// @brief Returns size of the struct, helpful for dynamic allocation.
 /// @return Size of the struct
@@ -1197,7 +1203,8 @@ int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_Securi
 typedef int (*BSL_PolicyInspect_f)(const void *user_data, BSL_SecurityActionSet_t *output_action_set,
                                    const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location);
 
-/// @brief Callback interface to query policy provider to populate the action set
+/// @brief Callback interface to finalize policy provider over the action set. Finalize should ignore actions from
+/// different policy providers
 typedef int (*BSL_PolicyFinalize_f)(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
                                     const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
 

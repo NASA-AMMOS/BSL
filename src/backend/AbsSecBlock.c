@@ -54,7 +54,6 @@ bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self)
 
 void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
 {
-    BSL_StaticString_t str;
     BSL_LOG_INFO("ASB  context id: %" PRId64, self->sec_context_id);
     for (size_t index = 0; index < uint64_list_size(self->targets); index++)
     {
@@ -70,9 +69,11 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
     for (size_t index = 0; index < BSLB_SecResultList_size(self->results); index++)
     {
         BSL_SecResult_t *sec_result = BSLB_SecResultList_get(self->results, index);
-        BSL_Log_DumpAsHexString((uint8_t *)str, sizeof(str), sec_result->_bytes, sec_result->_bytelen);
+
+        char hex_str[2 * sec_result->_bytelen + 1];
+        BSL_Log_DumpAsHexString((uint8_t *)hex_str, sizeof(hex_str), sec_result->_bytes, sec_result->_bytelen);
         BSL_LOG_INFO("ASB  Result[%zu]: tgt=%" PRIu64 ", id=%" PRIu64 " %s", index, sec_result->target_block_num,
-                     sec_result->result_id, str);
+                     sec_result->result_id, hex_str);
     }
 }
 

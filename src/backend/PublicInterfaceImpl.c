@@ -44,6 +44,7 @@ int BSL_API_InitLib(BSL_LibCtx_t *lib)
     CHK_ARG_NONNULL(lib);
 
     BSL_SecCtxDict_init(lib->sc_reg);
+    BSL_PolicyDict_init(lib->policy_reg);
     return BSL_SUCCESS;
 }
 
@@ -51,19 +52,23 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
 {
     CHK_ARG_NONNULL(lib);
 
-    if (lib->policy_registry.deinit_fn != NULL)
+    BSL_PolicyDict_it_t policy_reg_it;
+    for (BSL_PolicyDict_it(policy_reg_it, lib->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it);
+         BSL_PolicyDict_next(policy_reg_it))
     {
-        // Call the policy deinit function
-        (lib->policy_registry.deinit_fn)(lib->policy_registry.user_data);
-
-        // TODO - We should not assume this is dynamically allocated.
-        BSL_FREE(lib->policy_registry.user_data);
+        const BSL_PolicyDesc_t *policy = BSL_PolicyDict_cref(policy_reg_it)->value_ptr;
+        if (policy->deinit_fn != NULL)
+        {
+            // Call the policy deinit function
+            (policy->deinit_fn)(policy->user_data);
+        }
+        else
+        {
+            BSL_LOG_WARNING("Policy Provider offered no deinit function");
+        }
     }
-    else
-    {
-        BSL_LOG_WARNING("Policy Provider offered no deinit function");
-    }
 
+    BSL_PolicyDict_clear(lib->policy_reg);
     BSL_SecCtxDict_clear(lib->sc_reg);
     return BSL_SUCCESS;
 }
@@ -88,14 +93,14 @@ int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_
     return BSL_SUCCESS;
 }
 
-int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, BSL_PolicyDesc_t desc)
+int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_PolicyDesc_t desc)
 {
     CHK_ARG_NONNULL(lib);
     CHK_ARG_EXPR(desc.query_fn != NULL);
     CHK_ARG_EXPR(desc.finalize_fn != NULL);
     CHK_ARG_EXPR(desc.deinit_fn != NULL);
 
-    lib->policy_registry = desc;
+    BSL_PolicyDict_set_at(lib->policy_reg, pp_id, desc);
     return BSL_SUCCESS;
 }
 
@@ -106,9 +111,8 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
     CHK_ARG_NONNULL(output_action_set);
     CHK_ARG_NONNULL(bundle);
 
-    CHK_PRECONDITION(bsl->policy_registry.query_fn != NULL);
-
     BSL_LOG_INFO("Querying policy provider for security actions...");
+    BSL_SecurityActionSet_Init(output_action_set);
     int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
     BSL_LOG_INFO("Completed query: status=%d", query_status);
 
@@ -192,8 +196,6 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     CHK_ARG_NONNULL(response_output);
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(policy_actions);
-
-    CHK_PRECONDITION(bsl->policy_registry.finalize_fn != NULL);
 
     int exec_code = BSL_SecCtx_ExecutePolicyActionSet((BSL_LibCtx_t *)bsl, response_output, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)

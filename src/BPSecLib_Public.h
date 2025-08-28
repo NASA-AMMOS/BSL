@@ -74,9 +74,6 @@ typedef struct BSL_SecCtxDesc_s BSL_SecCtxDesc_t;
 /// @brief Forward-declaration for structure containing callbacks to  provider.
 typedef struct BSL_PolicyDesc_s BSL_PolicyDesc_t;
 
-#define BSL_DEFAULT_STRLEN (128)
-typedef char BSL_StaticString_t[BSL_DEFAULT_STRLEN];
-
 /** @brief Indicates where in the lifecycle of the BPA the bundle is querying for security policy.
  *
  * @note The numeric values of the enum are arbitrary. We avoid using 0 as defaults.
@@ -331,7 +328,7 @@ int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_
  * @param[in]     desc  Policy Provider callbacks.
  */
 BSL_REQUIRE_CHECK
-int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, BSL_PolicyDesc_t desc);
+int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_PolicyDesc_t desc);
 
 /** @brief Query BSL to populate a `BSL_SecurityActionSet_t` containing security processing instructions.
  *

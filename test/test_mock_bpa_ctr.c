@@ -24,9 +24,6 @@
 #include "bsl_test_utils.h"
 #include <mock_bpa/ctr.h>
 
-// allow parameterized cases
-#define TEST_CASE(...)
-
 void suiteSetUp(void)
 {
     BSL_openlog();
