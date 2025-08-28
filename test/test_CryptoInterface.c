@@ -650,7 +650,7 @@ static pthread_t threads[TEST_THREADS];
 
 static void *add_key_to_reg_fn(void *arg)
 {
-    const char          *name        = (char *)arg;
+    const char          *name        = (const char *)arg;
     static const uint8_t key_bytes[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                                          0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
     int                  res         = BSL_Crypto_AddRegistryKey(name, key_bytes, sizeof(key_bytes));
@@ -668,7 +668,7 @@ static void *add_key_to_reg_fn(void *arg)
 
 static void *get_key_from_reg_fn(void *arg)
 {
-    const char *name = (char *)arg;
+    const char *name = (const char *)arg;
     void       *handle;
     int         res = BSLB_Crypto_GetRegistryKey(name, &handle);
     if (BSL_SUCCESS == res)
