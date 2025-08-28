@@ -331,6 +331,9 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, void *keyhandle, BSL_CryptoCipherS
         BSL_LOG_ERR("invalid block size zero, assuming %zu", hmac_ctx->block_size);
     }
 
+    res = BSL_Data_InitBuffer(&hmac_ctx->in_buf, hmac_ctx->block_size);
+    CHK_PROPERTY(!res);
+
     return 0;
 }
 
@@ -345,13 +348,16 @@ int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t d
 
 int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
 {
-    uint8_t buf[hmac_ctx->block_size];
-
-    size_t block_size = hmac_ctx->block_size;
-    while (block_size == hmac_ctx->block_size)
+    while (true)
     {
-        BSL_SeqReader_Get(reader, buf, &block_size);
-        EVP_DigestSignUpdate(hmac_ctx->libhandle, buf, block_size);
+        size_t block_size = hmac_ctx->block_size;
+        BSL_SeqReader_Get(reader, hmac_ctx->in_buf.ptr, &block_size);
+        if (block_size == 0)
+        {
+            // no more data
+            break;
+        }
+        EVP_DigestSignUpdate(hmac_ctx->libhandle, hmac_ctx->in_buf.ptr, block_size);
     }
 
     return 0;
@@ -372,6 +378,7 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
 
 int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
 {
+    BSL_Data_Deinit(&hmac_ctx->in_buf);
     EVP_MD_CTX_free(hmac_ctx->libhandle);
     return 0;
 }
@@ -421,6 +428,12 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, key->raw.ptr, init_vec, -1);
     CHK_PROPERTY(res == 1);
 
+    res = BSL_Data_InitBuffer(&cipher_ctx->in_buf, cipher_ctx->block_size);
+    CHK_PROPERTY(!res);
+
+    res = BSL_Data_InitBuffer(&cipher_ctx->out_buf, cipher_ctx->block_size);
+    CHK_PROPERTY(!res);
+
     return 0;
 }
 
@@ -433,11 +446,11 @@ int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len)
     return 0;
 }
 
-int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, BSL_Data_t plaintext, BSL_Data_t ciphertext)
+int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, const BSL_Data_t *input, BSL_Data_t *output)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
-    int cipherlen = (int)ciphertext.len;
-    if (EVP_CipherUpdate(cipher_ctx->libhandle, ciphertext.ptr, &cipherlen, plaintext.ptr, (int)plaintext.len) != 1)
+    int cipherlen = (int)(output->len);
+    if (EVP_CipherUpdate(cipher_ctx->libhandle, output->ptr, &cipherlen, input->ptr, (int)(input->len)) != 1)
     {
         return -1;
     }
@@ -447,26 +460,25 @@ int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, BSL_Data_t plaintext, BSL_Data_
 int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer)
 {
     BSL_LOG_DEBUG("sequential %zu bytes", cipher_ctx->block_size);
-    uint8_t read_buf[cipher_ctx->block_size];
-    uint8_t write_buf[cipher_ctx->block_size];
 
     while (true)
     {
         // read until there is no more
         size_t block_size = cipher_ctx->block_size;
-        BSL_SeqReader_Get(reader, read_buf, &block_size);
+        BSL_SeqReader_Get(reader, cipher_ctx->in_buf.ptr, &block_size);
         if (block_size == 0)
         {
+            // no more data
             break;
         }
 
         int block_size_int = (int)block_size;
-        int res = EVP_CipherUpdate(cipher_ctx->libhandle, write_buf, &block_size_int, read_buf, block_size_int);
+        int res = EVP_CipherUpdate(cipher_ctx->libhandle, cipher_ctx->out_buf.ptr, &block_size_int, cipher_ctx->in_buf.ptr, block_size_int);
         BSL_LOG_DEBUG("EVP_CipherUpdate took %zu bytes, gave %u bytes", block_size, block_size_int);
         CHK_PROPERTY(res == 1);
 
         block_size = (size_t)block_size_int;
-        BSL_SeqWriter_Put(writer, write_buf, block_size);
+        BSL_SeqWriter_Put(writer, cipher_ctx->out_buf.ptr, block_size);
     }
 
     return 0;
@@ -493,24 +505,21 @@ int BSL_Cipher_FinalizeData(BSL_Cipher_t *cipher_ctx, BSL_Data_t *extra)
 {
     CHK_ARG_NONNULL(cipher_ctx);
     CHK_ARG_EXPR(extra->ptr != NULL);
-    uint8_t buf[EVP_CIPHER_CTX_block_size(cipher_ctx->libhandle)];
-    CHK_PRECONDITION(extra->len >= sizeof(buf));
-
-    BSL_LOG_DEBUG("extra: ptr=0x%p len=%zu", extra->ptr, extra->len);
+    CHK_PRECONDITION(extra->len >= cipher_ctx->block_size);
 
     int len = 0;
-    int res = EVP_CipherFinal_ex(cipher_ctx->libhandle, buf, &len);
+    int res = EVP_CipherFinal_ex(cipher_ctx->libhandle, cipher_ctx->out_buf.ptr, &len);
     if (res != 1)
     {
-        BSL_LOG_ERR("%s", ERR_error_string(ERR_get_error(), NULL));
+        BSL_LOG_ERR("EVP_CipherFinal_ex error: %s", ERR_error_string(ERR_get_error(), NULL));
+        return BSL_ERR_FAILURE;
     }
-    CHK_PROPERTY(res == 1);
-    BSL_LOG_DEBUG("extra->len = %zu | got len = %d", extra->len, len);
+
     memset(extra->ptr, 0, extra->len);
-    BSL_LOG_INFO("Completed EVP_CipherFinal_ex");
+    BSL_LOG_DEBUG("Completed EVP_CipherFinal_ex");
     if (len > 0)
     {
-        memcpy(extra->ptr, buf, sizeof(buf));
+        memcpy(extra->ptr, cipher_ctx->out_buf.ptr, len);
         extra->len = len;
     }
     return 0;
@@ -521,21 +530,18 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer)
     CHK_ARG_NONNULL(cipher_ctx);
     CHK_ARG_NONNULL(writer);
 
-    // finalize can add 1 cipher block
-    uint8_t buf[cipher_ctx->block_size];
-
     int evp_len = 0;
-    int res     = EVP_CipherFinal_ex(cipher_ctx->libhandle, buf, &evp_len);
+    int res     = EVP_CipherFinal_ex(cipher_ctx->libhandle, cipher_ctx->out_buf.ptr, &evp_len);
     if (res != 1)
     {
-        BSL_LOG_ERR("EVP_CipherFinal_ex error %s", ERR_error_string(ERR_get_error(), NULL));
+        BSL_LOG_ERR("EVP_CipherFinal_ex error: %s", ERR_error_string(ERR_get_error(), NULL));
         return BSL_ERR_FAILURE;
     }
 
     if (evp_len > 0)
     {
         size_t bsl_len = evp_len;
-        BSL_SeqWriter_Put(writer, buf, bsl_len);
+        BSL_SeqWriter_Put(writer, cipher_ctx->out_buf.ptr, bsl_len);
     }
 
     return 0;
@@ -544,6 +550,8 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer)
 int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
 {
     CHK_ARG_NONNULL(cipher_ctx);
+    BSL_Data_Deinit(&cipher_ctx->out_buf);
+    BSL_Data_Deinit(&cipher_ctx->in_buf);
     EVP_CIPHER_CTX_free(cipher_ctx->libhandle);
     memset(cipher_ctx, 0, sizeof(*cipher_ctx));
     return BSL_SUCCESS;
