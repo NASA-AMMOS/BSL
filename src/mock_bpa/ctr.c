@@ -92,7 +92,15 @@ int mock_bpa_decode(mock_bpa_ctr_t *ctr)
 // TODO this is not really defined by BPSec or BPv7
 static int block_cmp(const MockBPA_CanonicalBlock_t *block_a, const MockBPA_CanonicalBlock_t *block_b)
 {
-    return block_b->blk_type - block_a->blk_type;
+    if (block_b->blk_type > block_a->blk_type)
+    {
+        return 1;
+    }
+    else if (block_b->blk_type < block_a->blk_type)
+    {
+        return -1;
+    }
+    return 0;
 }
 
 // Add comparison by block type to sort just before encoding
