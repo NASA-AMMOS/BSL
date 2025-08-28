@@ -597,7 +597,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
 bool BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
                                         const BSL_SecurityActionSet_t *action_set)
 {
-    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_BUNDLE_INSPECTED_COUNT, 1);
+    (void)lib;
     (void)bundle;
     (void)action_set;
     return true;
