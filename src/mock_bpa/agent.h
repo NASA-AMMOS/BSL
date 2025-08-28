@@ -32,6 +32,7 @@
 
 #include <BPSecLib_Public.h>
 #include <BPSecLib_Private.h>
+#include <policy_provider/SamplePolicyProvider.h>
 
 #include <m-atomic.h>
 #include <m-buffer.h>
@@ -140,7 +141,7 @@ typedef struct MockBPA_Agent_s
     MockBPA_data_queue_t forward;
 
     /** Worker threads.
-     * These are valid between MockBPA_Agent_Start() and MockBPA_Agent_Join().
+     * These are valid between ::MockBPA_Agent_Start() and ::MockBPA_Agent_Join().
      */
     pthread_t thr_over_rx, thr_under_rx, thr_deliver, thr_forward;
 
@@ -149,10 +150,14 @@ typedef struct MockBPA_Agent_s
     /// Pipe end for TX worker
     int tx_notify_r;
 
-    /// Definitions of policy for all BSL instances
-    mock_bpa_policy_registry_t policy_registry;
-    /// Policy provider shared for all BSL instances
-    BSL_PolicyDesc_t policy_callbacks;
+    /// Policy provider for ::BSL_POLICYLOCATION_APPIN
+    BSLP_PolicyProvider_t *policy_appin;
+    /// Policy provider for ::BSL_POLICYLOCATION_APPOUT
+    BSLP_PolicyProvider_t *policy_appout;
+    /// Policy provider for ::BSL_POLICYLOCATION_CLIN
+    BSLP_PolicyProvider_t *policy_clin;
+    /// Policy provider for ::BSL_POLICYLOCATION_CLOUT
+    BSLP_PolicyProvider_t *policy_clout;
 
     /// BSL context for ::BSL_POLICYLOCATION_APPIN
     BSL_LibCtx_t *bsl_appin;
@@ -181,14 +186,24 @@ typedef struct MockBPA_Agent_s
 BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent);
 
 /** Initialize and register this mock BPA for the current process.
+ *
+ * @param[out] agent The agent to initialize.
  * @return Zero if successful.
  */
 int MockBPA_Agent_Init(MockBPA_Agent_t *agent);
 
 /** Clean up the mock BPA for the current process.
+ *
+ * @param[out] agent The agent to deinitialize.
  */
 void MockBPA_Agent_Deinit(MockBPA_Agent_t *agent);
 
+/** Start worker threads.
+ *
+ * @param[out] agent The agent to start threads for.
+ * @return Zero if successful.
+ * @sa MockBPA_Agent_Join()
+ */
 int MockBPA_Agent_Start(MockBPA_Agent_t *agent);
 
 /** Stop an agent from another thread or a signal handler.
@@ -197,9 +212,21 @@ int MockBPA_Agent_Start(MockBPA_Agent_t *agent);
  */
 void MockBPA_Agent_Stop(MockBPA_Agent_t *agent);
 
+/** Execute the main thread activity while work threads are running.
+ * This will block until MockBPA_Agent_Stop() is called.
+ *
+ * @param[out] agent The agent to work for.
+ * @return Zero if successful.
+ */
 int MockBPA_Agent_Exec(MockBPA_Agent_t *agent);
 
-void MockBPA_Agent_Join(MockBPA_Agent_t *agent);
+/** Wait for and join worker threads.
+ *
+ * @param[out] agent The agent to start threads for.
+ * @return Zero if successful.
+ * @sa MockBPA_Agent_Start()
+ */
+int MockBPA_Agent_Join(MockBPA_Agent_t *agent);
 
 #ifdef __cplusplus
 } // extern C

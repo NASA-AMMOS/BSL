@@ -129,6 +129,10 @@ int main(int argc, char **argv)
     BSL_HostEID_Init(&app_eid);
     BSL_HostEID_Init(&sec_eid);
 
+    /// Definitions of policy for all BSL instances
+    mock_bpa_policy_registry_t policy_registry;
+    mock_bpa_policy_registry_init(&policy_registry);
+
     if (!retval)
     {
         int opt;
@@ -164,9 +168,12 @@ int main(int argc, char **argv)
                         retval = 1;
                     }
                     break;
-                case 'h':
                 case 'p':
-                    mock_bpa_handle_policy_config(optarg, agent.policy_callbacks.user_data, &agent.policy_registry);
+                    // TODO better way to handle this
+                    mock_bpa_handle_policy_config(optarg, agent.policy_appin, &policy_registry);
+                    mock_bpa_handle_policy_config(optarg, agent.policy_appout, &policy_registry);
+                    mock_bpa_handle_policy_config(optarg, agent.policy_clin, &policy_registry);
+                    mock_bpa_handle_policy_config(optarg, agent.policy_clout, &policy_registry);
 
                     // TODO JSON parsing
                     // // mock_bpa_handle_policy_config_from_json("src/mock_bpa/policy_provider_test.json",
@@ -177,6 +184,7 @@ int main(int argc, char **argv)
                     if (mock_bpa_key_registry_init(optarg))
                         retval = 1;
                     break;
+                case 'h':
                 default:
                     show_usage(argv[0]);
                     retval = 1;
@@ -223,6 +231,7 @@ int main(int argc, char **argv)
         MockBPA_Agent_Join(&agent);
     }
 
+    mock_bpa_policy_registry_deinit(&policy_registry);
     MockBPA_Agent_Deinit(&agent);
     BSL_HostEID_Deinit(&sec_eid);
     BSL_HostEID_Deinit(&app_eid);

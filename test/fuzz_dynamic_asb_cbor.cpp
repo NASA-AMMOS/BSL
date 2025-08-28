@@ -19,7 +19,7 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include <BPSecLib_Private.h>
+#include <mock_bpa/MockBPA.h>
 #include "bsl_test_utils.h"
 #include <cinttypes>
 

@@ -82,6 +82,7 @@ deallocated
 deinit
 Deinit
 deinitialize
+deinitialized
 Deinitializes
 dereference
 dir

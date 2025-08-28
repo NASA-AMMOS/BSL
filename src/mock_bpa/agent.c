@@ -308,12 +308,6 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
         agent->tx_notify_w = fds[1];
     }
 
-    mock_bpa_policy_registry_init(&agent->policy_registry);
-    agent->policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = NULL, // FIXME: BSLP_Deinit,
-                                                   .query_fn    = BSLP_QueryPolicy,
-                                                   .finalize_fn = BSLP_FinalizePolicy,
-                                                   .user_data   = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t)) };
-
     // All BSL contexts get the same config
     BSL_LibCtx_t **bsls[] = {
         &agent->bsl_appin,
@@ -332,8 +326,6 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
             retval = 2;
         }
 
-        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(bsl, 1, agent->policy_callbacks));
-
         BSL_SecCtxDesc_t bib_sec_desc;
         bib_sec_desc.execute  = BSLX_BIB_Execute;
         bib_sec_desc.validate = BSLX_BIB_Validate;
@@ -343,6 +335,39 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
         bcb_sec_desc.execute  = BSLX_BCB_Execute;
         bcb_sec_desc.validate = BSLX_BCB_Validate;
         ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(bsl, 2, bcb_sec_desc));
+    }
+    // TODO find a better way to deal with this
+    {
+        agent->policy_appin               = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
+                                                                 .query_fn    = BSLP_QueryPolicy,
+                                                                 .finalize_fn = BSLP_FinalizePolicy,
+                                                                 .user_data   = agent->policy_appin };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->bsl_appin, 1, policy_callbacks));
+    }
+    {
+        agent->policy_appout              = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
+                                                                 .query_fn    = BSLP_QueryPolicy,
+                                                                 .finalize_fn = BSLP_FinalizePolicy,
+                                                                 .user_data   = agent->policy_appout };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->bsl_appout, 1, policy_callbacks));
+    }
+    {
+        agent->policy_clin                = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
+                                                                 .query_fn    = BSLP_QueryPolicy,
+                                                                 .finalize_fn = BSLP_FinalizePolicy,
+                                                                 .user_data   = agent->policy_clin };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->bsl_clin, 1, policy_callbacks));
+    }
+    {
+        agent->policy_clout               = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
+                                                                 .query_fn    = BSLP_QueryPolicy,
+                                                                 .finalize_fn = BSLP_FinalizePolicy,
+                                                                 .user_data   = agent->policy_clout };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->bsl_clout, 1, policy_callbacks));
     }
 
     agent->over_addr.sin_family   = 0;
@@ -371,7 +396,6 @@ void MockBPA_Agent_Deinit(MockBPA_Agent_t *agent)
         BSL_FREE(*bsls[ix]);
         *bsls[ix] = NULL;
     }
-    mock_bpa_policy_registry_deinit(&agent->policy_registry);
 
     close(agent->tx_notify_r);
     close(agent->tx_notify_w);
@@ -810,8 +834,9 @@ int MockBPA_Agent_Exec(MockBPA_Agent_t *agent)
     return retval;
 }
 
-void MockBPA_Agent_Join(MockBPA_Agent_t *agent)
+int MockBPA_Agent_Join(MockBPA_Agent_t *agent)
 {
+    int errors = 0;
     BSL_LOG_INFO("cleaning up");
     mock_bpa_ctr_t item;
 
@@ -823,10 +848,12 @@ void MockBPA_Agent_Join(MockBPA_Agent_t *agent)
     if (pthread_join(agent->thr_under_rx, NULL))
     {
         BSL_LOG_ERR("Failed to join the work_under_rx");
+        ++errors;
     }
     if (pthread_join(agent->thr_over_rx, NULL))
     {
         BSL_LOG_ERR("Failed to join the work_over_rx");
+        ++errors;
     }
 
     // then delivery/forward workers after RX are all flushed
@@ -837,9 +864,13 @@ void MockBPA_Agent_Join(MockBPA_Agent_t *agent)
     if (pthread_join(agent->thr_forward, NULL))
     {
         BSL_LOG_ERR("Failed to join the work_forward");
+        ++errors;
     }
     if (pthread_join(agent->thr_deliver, NULL))
     {
         BSL_LOG_ERR("Failed to join the work_deliver");
+        ++errors;
     }
+
+    return errors;
 }
