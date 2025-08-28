@@ -155,6 +155,8 @@ static void mock_bpa_dump_telemetry(void)
     BSL_LOG_INFO("---------------------TELEMETRY INFO----------------------");
     BSL_LOG_INFO("                     FAIL COUNT: %" PRIu64, tlm.counters[BSL_TLM_SECOP_FAIL_COUNT]);
     BSL_LOG_INFO("                BUNDLE INSPECTED COUNT: %" PRIu64, tlm.counters[BSL_TLM_BUNDLE_INSPECTED_COUNT]);
+    BSL_LOG_INFO("                   ASB DECODE COUNT: %" PRIu64, tlm.counters[BSL_TLM_ASB_DECODE_COUNT]);
+    BSL_LOG_INFO("                   ASB DECODE BYTES: %" PRIu64, tlm.counters[BSL_TLM_ASB_DECODE_BYTES]);
     BSL_LOG_INFO("                   ASB ENCODE COUNT: %" PRIu64, tlm.counters[BSL_TLM_ASB_ENCODE_COUNT]);
     BSL_LOG_INFO("                   ASB ENCODE BYTES: %" PRIu64, tlm.counters[BSL_TLM_ASB_ENCODE_BYTES]);
     BSL_LOG_INFO("                  SECOP SOURCE COUNT: %" PRIu64, tlm.counters[BSL_TLM_SECOP_SOURCE_COUNT]);

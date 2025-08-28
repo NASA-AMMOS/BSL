@@ -79,8 +79,10 @@ int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t 
 {
     CHK_ARG_NONNULL(lib);
 
-    BSL_TlmCounters_t copy_tlm = lib->tlm_counters;
-    *tlm                       = copy_tlm;
+    for (size_t ix = 0; ix < sizeof(tlm->counters) / sizeof(uint64_t); ++ix)
+    {
+        tlm->counters[ix] += lib->tlm_counters.counters[ix];
+    }
 
     return BSL_SUCCESS;
 }

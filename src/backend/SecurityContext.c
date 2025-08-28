@@ -171,6 +171,8 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_DECODING;
     }
+    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_BYTES, sec_blk.btsd_len);
+    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_COUNT, 1);
 
     CHK_PROPERTY(BSL_AbsSecBlock_IsConsistent(&abs_sec_block));
 
@@ -297,6 +299,8 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_DECODING;
     }
+    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_BYTES, sec_blk.btsd_len);
+    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_COUNT, 1);
 
     CHK_PROPERTY(BSL_AbsSecBlock_IsConsistent(&abs_sec_block));
 
@@ -455,6 +459,8 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
             BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
             return BSL_ERR_DECODING;
         }
+        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_BYTES, sec_blk.btsd_len);
+        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_COUNT, 1);
     }
 
     BSL_AbsSecBlock_AddTarget(&abs_sec_block, sec_oper->target_block_num);
@@ -591,7 +597,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
 bool BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
                                         const BSL_SecurityActionSet_t *action_set)
 {
-    (void)lib;
+    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_BUNDLE_INSPECTED_COUNT, 1);
     (void)bundle;
     (void)action_set;
     return true;
