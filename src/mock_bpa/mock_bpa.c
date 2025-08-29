@@ -757,25 +757,25 @@ int main(int argc, char **argv)
         }
         if (!retval && (over_addr.sin_family != AF_INET))
         {
-            BSL_LOG_ERR("Missing over-socket address\n");
+            BSL_LOG_ERR("Missing over-socket address");
             show_usage(argv[0]);
             retval = 1;
         }
         if (!retval && (app_addr.sin_family != AF_INET))
         {
-            BSL_LOG_ERR("Missing application address\n");
+            BSL_LOG_ERR("Missing application address");
             show_usage(argv[0]);
             retval = 1;
         }
         if (!retval && (under_addr.sin_family != AF_INET))
         {
-            BSL_LOG_ERR("Missing under-socket address\n");
+            BSL_LOG_ERR("Missing under-socket address");
             show_usage(argv[0]);
             retval = 1;
         }
         if (!retval && (router_addr.sin_family != AF_INET))
         {
-            BSL_LOG_ERR("Missing router address\n");
+            BSL_LOG_ERR("Missing router address");
             show_usage(argv[0]);
             retval = 1;
         }

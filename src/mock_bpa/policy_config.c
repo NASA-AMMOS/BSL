@@ -74,7 +74,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     root = json_load_file(pp_cfg_file_path, 0, &err);
     if (!root)
     {
-        BSL_LOG_ERR("JSON error: line %d: %s\n", err.line, err.text);
+        BSL_LOG_ERR("JSON error: line %d: %s", err.line, err.text);
         return;
     }
 
@@ -82,37 +82,37 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
     json_t *policyrule = json_object_get(root, "policyrule");
     if (!policyrule || !json_is_object(policyrule))
     {
-        BSL_LOG_ERR("Missing \"policyrule\" \n");
+        BSL_LOG_ERR("Missing \"policyrule\" ");
         json_decref(root);
         return;
     }
 
     // filter attr
     json_t *filter = json_object_get(policyrule, "filter");
-    BSL_LOG_DEBUG("filter:\n");
+    BSL_LOG_DEBUG("filter:");
     if (filter && json_is_object(filter))
     {
         // Get rule_id
         json_t *rule_id = json_object_get(filter, "rule_id");
         if (!rule_id)
         {
-            BSL_LOG_ERR("No rule ID \n");
+            BSL_LOG_ERR("No rule ID ");
             json_decref(root);
             return;
         }
         const char *rule_id_str = json_string_value(rule_id);
-        BSL_LOG_DEBUG("     rule_id: %s\n", rule_id_str);
+        BSL_LOG_DEBUG("     rule_id: %s", rule_id_str);
 
         // get sec role
         json_t *role = json_object_get(filter, "role");
         if (!role)
         {
-            BSL_LOG_ERR("No sec role\n");
+            BSL_LOG_ERR("No sec role");
             json_decref(root);
             return;
         }
         const char *role_str = json_string_value(role);
-        BSL_LOG_DEBUG("     role   : %s\n", role_str);
+        BSL_LOG_DEBUG("     role   : %s", role_str);
 
         // check for valid sec role
         if (!strcmp(role_str, "s"))
@@ -129,7 +129,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         }
         else
         {
-            BSL_LOG_ERR("INVALID SEC ROLE %s\n", role_str);
+            BSL_LOG_ERR("INVALID SEC ROLE %s", role_str);
             json_decref(root);
             return;
         }
@@ -138,7 +138,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         if (src)
         {
             src_str = json_string_value(src);
-            BSL_LOG_DEBUG("     src    : %s\n", src_str);
+            BSL_LOG_DEBUG("     src    : %s", src_str);
             src_eid = mock_bpa_util_get_eid_pattern_from_text(src_str);
         }
 
@@ -146,7 +146,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         if (dest)
         {
             dest_str = json_string_value(dest);
-            BSL_LOG_DEBUG("     dest    : %s\n", dest_str);
+            BSL_LOG_DEBUG("     dest    : %s", dest_str);
             dest_eid = mock_bpa_util_get_eid_pattern_from_text(dest_str);
         }
 
@@ -154,7 +154,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         if (sec_src)
         {
             sec_src_str = json_string_value(sec_src);
-            BSL_LOG_DEBUG("     sec_src    : %s\n", sec_src_str);
+            BSL_LOG_DEBUG("     sec_src    : %s", sec_src_str);
             sec_src_eid = mock_bpa_util_get_eid_pattern_from_text(sec_src_str);
         }
 
@@ -162,7 +162,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         // do we care about this for BSL? TODO
         if (!dest && !src && !sec_src)
         {
-            BSL_LOG_ERR("No EIDs set, INVALID RULE\n");
+            BSL_LOG_ERR("No EIDs set, INVALID RULE");
             json_decref(root);
             return;
         }
@@ -171,12 +171,12 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         json_t *tgt = json_object_get(filter, "tgt");
         if (!tgt)
         {
-            BSL_LOG_ERR("No tgt\n");
+            BSL_LOG_ERR("No tgt");
             json_decref(root);
             return;
         }
         const long tgt_l = json_integer_value(tgt);
-        BSL_LOG_DEBUG("     tgt    : %" JSON_INTEGER_FORMAT "\n", tgt_l);
+        BSL_LOG_DEBUG("     tgt    : %" JSON_INTEGER_FORMAT "", tgt_l);
 
         bundle_block_type = tgt_l;
 
@@ -184,12 +184,12 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         json_t *loc = json_object_get(filter, "loc");
         if (!loc)
         {
-            BSL_LOG_ERR("No loc\n");
+            BSL_LOG_ERR("No loc");
             json_decref(root);
             return;
         }
         const char *loc_str = json_string_value(loc);
-        BSL_LOG_DEBUG("     loc    : %s\n", loc_str);
+        BSL_LOG_DEBUG("     loc    : %s", loc_str);
 
         if (strcmp(loc_str, "appin"))
         {
@@ -209,14 +209,14 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         }
         else
         {
-            BSL_LOG_ERR("INVALID POLICY LOCATION %s\n", loc_str);
+            BSL_LOG_ERR("INVALID POLICY LOCATION %s", loc_str);
             json_decref(root);
             return;
         }
 
         json_t *sc_id   = json_object_get(filter, "sc_id");
         long    sc_id_l = json_integer_value(sc_id);
-        BSL_LOG_DEBUG("     scid    : %" JSON_INTEGER_FORMAT "\n", sc_id_l);
+        BSL_LOG_DEBUG("     scid    : %" JSON_INTEGER_FORMAT "", sc_id_l);
 
         sec_ctx_id = sc_id_l;
     }
@@ -240,15 +240,15 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         json_t *sc_id   = json_object_get(spec, "sc_id");
         long    sc_id_l = json_integer_value(sc_id);
 
-        BSL_LOG_DEBUG("spec:\n");
-        BSL_LOG_DEBUG("     svc: %s\n", svc_c ? svc_c : "(null)");
-        BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT "\n", sc_id_l ? sc_id_l : -1);
+        BSL_LOG_DEBUG("spec:");
+        BSL_LOG_DEBUG("     svc: %s", svc_c ? svc_c : "(null)");
+        BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT "", sc_id_l ? sc_id_l : -1);
 
         json_t *sc_parms = json_object_get(spec, "sc_parms");
         if (sc_parms && json_is_array(sc_parms))
         {
             size_t i, n = json_array_size(sc_parms);
-            BSL_LOG_DEBUG("     sc_parms (%zu):\n", n);
+            BSL_LOG_DEBUG("     sc_parms (%zu):", n);
             for (i = 0; i < n; ++i)
             {
                 json_t *entry = json_array_get(sc_parms, i);
@@ -265,7 +265,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
                     continue;
                 const char *value_str = json_string_value(value);
 
-                BSL_LOG_DEBUG("         - id: %s, value: %s\n", id_str, value_str);
+                BSL_LOG_DEBUG("         - id: %s, value: %s", id_str, value_str);
 
                 // different valid param IDs for different contexts
                 switch (sc_id_l)
@@ -279,7 +279,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
                         {}
                         else
                         {
-                            BSL_LOG_ERR("INVALID KEY FOR SC ID %d\n", sc_id_l);
+                            BSL_LOG_ERR("INVALID KEY FOR SC ID %d", sc_id_l);
                             json_decref(root);
                             return;
                         }
@@ -295,13 +295,13 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
                         {}
                         else
                         {
-                            BSL_LOG_ERR("INVALID KEY FOR SC ID %d\n", sc_id_l);
+                            BSL_LOG_ERR("INVALID KEY FOR SC ID %d", sc_id_l);
                             json_decref(root);
                             return;
                         }
                         break;
                     default:
-                        BSL_LOG_ERR("INVALID SC ID\n");
+                        BSL_LOG_ERR("INVALID SC ID");
                         json_decref(root);
                         return;
                 }
@@ -324,7 +324,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
         if (events && json_is_array(events))
         {
             size_t i, n = json_array_size(events);
-            BSL_LOG_DEBUG("num events (%zu):\n", n);
+            BSL_LOG_DEBUG("num events (%zu):", n);
             for (i = 0; i < n; ++i)
             {
                 json_t *entry = json_array_get(events, i);
@@ -342,7 +342,7 @@ void mock_bpa_handle_policy_config_from_json(const char *pp_cfg_file_path, BSLP_
                 if (actions && json_is_array(actions))
                 {
                     size_t j, m = json_array_size(actions);
-                    BSL_LOG_DEBUG("num actions in %s (%zu):\n", event_id_str, m);
+                    BSL_LOG_DEBUG("num actions in %s (%zu):", event_id_str, m);
                     for (j = 0; j < m; ++j)
                     {
                         json_t *act = json_array_get(actions, j);
@@ -380,7 +380,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
                                      mock_bpa_policy_params_t *params)
 {
 
-    BSL_LOG_DEBUG("\nInterpreted policy: 0x%X\n", policy_bits);
+    BSL_LOG_DEBUG("Interpreted policy: 0x%X", policy_bits);
 
     uint32_t sec_block_type     = policy_bits & 0x01;
     uint32_t policy_loc         = (policy_bits >> 1) & 0x01;
@@ -423,25 +423,25 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     {
         sec_block_emum = BSL_SECBLOCKTYPE_BCB;
         sec_context    = 2;
-        BSL_LOG_DEBUG("\nPolicy: 0x%X - BSL Security Block Type: BCB", policy_bits);
+        BSL_LOG_DEBUG("Policy: 0x%X - BSL Security Block Type: BCB", policy_bits);
     }
     else
     {
         sec_block_emum = BSL_SECBLOCKTYPE_BIB;
         sec_context    = 1;
-        BSL_LOG_DEBUG("\nPolicy: 0x%X - BSL Security Block Type: BIB", policy_bits);
+        BSL_LOG_DEBUG("Policy: 0x%X - BSL Security Block Type: BIB", policy_bits);
     }
 
     BSL_PolicyLocation_e policy_loc_enum;
     if (policy_loc == 1)
     {
         policy_loc_enum = BSL_POLICYLOCATION_CLIN;
-        BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Location: CLIN", policy_bits);
+        BSL_LOG_DEBUG("Policy: 0x%X - Policy Location: CLIN", policy_bits);
     }
     else
     {
         policy_loc_enum = BSL_POLICYLOCATION_CLOUT;
-        BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Location: CLOUT", policy_bits);
+        BSL_LOG_DEBUG("Policy: 0x%X - Policy Location: CLOUT", policy_bits);
     }
 
     BSL_BundleBlockTypeCode_e bundle_block_enum;
@@ -449,19 +449,19 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     {
         case 0:
             bundle_block_enum = BSL_BLOCK_TYPE_PRIMARY;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: PRIMARY", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Bundle Block Type: PRIMARY", policy_bits);
             break;
         case 1:
             bundle_block_enum = BSL_BLOCK_TYPE_PAYLOAD;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: PAYLOAD", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Bundle Block Type: PAYLOAD", policy_bits);
             break;
         case 2:
             bundle_block_enum = 192;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: PRIVATE (192)", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Bundle Block Type: PRIVATE (192)", policy_bits);
             break;
         case 3:
             bundle_block_enum = BSL_BLOCK_TYPE_BUNDLE_AGE;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Bundle Block Type: BUNDLE AGE", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Bundle Block Type: BUNDLE AGE", policy_bits);
             break;
         default:
             return;
@@ -472,19 +472,19 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     {
         case 0:
             policy_action_enum = BSL_POLICYACTION_NOTHING;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Acion: DO NOTHING", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Policy Acion: DO NOTHING", policy_bits);
             break;
         case 1:
             policy_action_enum = BSL_POLICYACTION_DROP_BLOCK;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Acion: DROP BLOCK", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Policy Acion: DROP BLOCK", policy_bits);
             break;
         case 2:
             policy_action_enum = BSL_POLICYACTION_DROP_BUNDLE;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Acion: DROP BUNDLE", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Policy Acion: DROP BUNDLE", policy_bits);
             break;
         default:
             policy_action_enum = BSL_POLICYACTION_NOTHING;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Policy Acion: DO NOTHING", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Policy Acion: DO NOTHING", policy_bits);
             break;
     }
 
@@ -493,19 +493,19 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     {
         case 0:
             sec_role_enum = BSL_SECROLE_SOURCE;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Security Role: SOURCE", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Security Role: SOURCE", policy_bits);
             break;
         case 1:
             sec_role_enum = BSL_SECROLE_VERIFIER;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Security Role: VERIFIER", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Security Role: VERIFIER", policy_bits);
             break;
         case 2:
             sec_role_enum = BSL_SECROLE_ACCEPTOR;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Security Role: ACCEPTOR", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Security Role: ACCEPTOR", policy_bits);
             break;
         default:
             sec_role_enum = BSL_SECROLE_VERIFIER;
-            BSL_LOG_DEBUG("\nPolicy: 0x%X - Security Role: VERIFIER", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%X - Security Role: VERIFIER", policy_bits);
             break;
     }
 
@@ -567,12 +567,12 @@ void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy
         }
         else
         {
-            BSL_LOG_ERR("\nPOLICY COUNT EXCEEDED, NOT REGISTERING FURTHER\n");
+            BSL_LOG_ERR("POLICY COUNT EXCEEDED, NOT REGISTERING FURTHER");
         }
         pt = strtok(NULL, ",");
     }
 
-    BSL_LOG_DEBUG("Successfully created policy registry of size: %d\n", mock_bpa_policy_registry_size(reg));
+    BSL_LOG_DEBUG("Successfully created policy registry of size: %d", mock_bpa_policy_registry_size(reg));
 }
 
 int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
@@ -586,7 +586,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
     root = json_load_file(pp_cfg_file_path, 0, &err);
     if (!root)
     {
-        BSL_LOG_ERR("JSON error: line %d: %s\n", err.line, err.text);
+        BSL_LOG_ERR("JSON error: line %d: %s", err.line, err.text);
         json_decref(root);
         return 1;
     }
@@ -594,13 +594,13 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
     json_t *keys = json_object_get(root, "keys");
     if (!keys || !json_is_array(keys))
     {
-        BSL_LOG_ERR("Missing \"keys\" \n");
+        BSL_LOG_ERR("Missing \"keys\" ");
         json_decref(root);
         return 1;
     }
 
     size_t n = json_array_size(keys);
-    BSL_LOG_INFO("Found %zu key objects\n\n", n);
+    BSL_LOG_INFO("Found %zu key objects", n);
 
     for (size_t i = 0; !retval && (i < n); ++i)
     {
@@ -613,33 +613,33 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         json_t *kty = json_object_get(key_obj, "kty");
         if (!kty)
         {
-            BSL_LOG_ERR("Missing \"kty\" \n");
+            BSL_LOG_ERR("Missing \"kty\" ");
             continue;
         }
 
         if (0 != strcmp("oct", json_string_value(kty)))
         {
-            BSL_LOG_ERR("Not a symmetric key set\n");
+            BSL_LOG_ERR("Not a symmetric key set");
             continue;
         }
 
         json_t *kid = json_object_get(key_obj, "kid");
         if (!kid || !json_is_string(kid))
         {
-            BSL_LOG_ERR("Missing \"kid\" \n");
+            BSL_LOG_ERR("Missing \"kid\" ");
             continue;
         }
         const char *kid_str = json_string_value(kid);
-        BSL_LOG_DEBUG("kid: %s\n", kid_str);
+        BSL_LOG_DEBUG("kid: %s", kid_str);
 
         json_t *k = json_object_get(key_obj, "k");
         if (!k || !json_is_string(k))
         {
-            BSL_LOG_ERR("Missing \"k\" \n");
+            BSL_LOG_ERR("Missing \"k\" ");
             continue;
         }
         const char *k_str = json_string_value(k);
-        BSL_LOG_DEBUG("k: %s\n", k_str);
+        BSL_LOG_DEBUG("k: %s", k_str);
 
         m_string_t k_text;
         m_string_init_set_cstr(k_text, k_str);
