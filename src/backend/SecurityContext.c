@@ -35,7 +35,7 @@
 #include "SecurityActionSet.h"
 #include "SecurityResultSet.h"
 
-static int Encode_ASB(BSL_BundleRef_t *bundle, uint64_t blk_num, const BSL_AbsSecBlock_t *abs_sec_block)
+static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_num, const BSL_AbsSecBlock_t *abs_sec_block)
 {
     // Get the needed size first
     BSL_Data_t asb_data;
@@ -141,7 +141,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_AbsSecBlock_AddParam(&abs_sec_block, BSL_SecOutcome_GetParamAt(outcome, index));
     }
 
-    int res = Encode_ASB(bundle, created_block_num, &abs_sec_block);
+    int res = Encode_ASB(lib, bundle, created_block_num, &abs_sec_block);
     if (res != BSL_SUCCESS)
     {
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
@@ -242,7 +242,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         }
         else
         {
-            int res = Encode_ASB(bundle, sec_blk.block_num, &abs_sec_block);
+            int res = Encode_ASB(lib, bundle, sec_blk.block_num, &abs_sec_block);
             if (res != BSL_SUCCESS)
             {
                 BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
@@ -366,7 +366,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
         }
         else
         {
-            int res = Encode_ASB(bundle, sec_blk.block_num, &abs_sec_block);
+            int res = Encode_ASB(lib, bundle, sec_blk.block_num, &abs_sec_block);
             if (res != BSL_SUCCESS)
             {
                 BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
@@ -450,7 +450,7 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_AbsSecBlock_AddParam(&abs_sec_block, param_ptr);
     }
 
-    res = Encode_ASB(bundle, sec_blk.block_num, &abs_sec_block);
+    res = Encode_ASB(lib, bundle, sec_blk.block_num, &abs_sec_block);
     if (res != BSL_SUCCESS)
     {
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
