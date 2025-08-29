@@ -87,6 +87,7 @@ typedef struct BSLX_BCB_s
     BSL_BundleRef_t *bundle;
 
     size_t      err_count;
+    /// Pointer to text which will outlive this context
     const char *key_id;
 
     // Data wrappers and containers for borrowed and owned/allocated buffers

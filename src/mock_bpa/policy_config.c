@@ -533,20 +533,20 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
 
     if (sec_block_emum == BSL_SECBLOCKTYPE_BCB)
     {
-        BSLP_PolicyRule_AddParam(rule_all_in, params->param_aes_variant);
+        BSLP_PolicyRule_CopyParam(rule_all_in, params->param_aes_variant);
         if (sec_role != BSL_SECROLE_SOURCE)
         {
-            BSLP_PolicyRule_AddParam(rule_all_in, params->param_aad_scope_flag);
+            BSLP_PolicyRule_CopyParam(rule_all_in, params->param_aad_scope_flag);
             BSL_Crypto_SetRngGenerator(bsl_mock_bpa_rfc9173_bcb_cek);
         }
     }
     else
     {
-        BSLP_PolicyRule_AddParam(rule_all_in, params->param_sha_variant);
-        BSLP_PolicyRule_AddParam(rule_all_in, params->param_integ_scope_flag);
+        BSLP_PolicyRule_CopyParam(rule_all_in, params->param_sha_variant);
+        BSLP_PolicyRule_CopyParam(rule_all_in, params->param_integ_scope_flag);
     }
-    BSLP_PolicyRule_AddParam(rule_all_in, params->param_use_wrapped_key);
-    BSLP_PolicyRule_AddParam(rule_all_in, params->param_test_key);
+    BSLP_PolicyRule_CopyParam(rule_all_in, params->param_use_wrapped_key);
+    BSLP_PolicyRule_CopyParam(rule_all_in, params->param_test_key);
 }
 
 void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg)

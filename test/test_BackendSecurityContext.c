@@ -59,6 +59,7 @@ int suiteTearDown(int failures)
 
 void setUp(void)
 {
+    BSL_CryptoInit();
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
     memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
     TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
@@ -69,8 +70,8 @@ void setUp(void)
 void tearDown(void)
 {
     mock_bpa_ctr_deinit(&LocalTestCtx.mock_bpa_ctr);
-    BSL_CryptoDeinit();
     TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));
+    BSL_CryptoDeinit();
 }
 
 /**

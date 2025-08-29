@@ -631,15 +631,19 @@ int BSLB_Crypto_GetRegistryKey(const char *keyid, void **key_handle)
     string_t keyid_str;
     string_init_set_str(keyid_str, keyid);
 
+    int retval = BSL_SUCCESS;
     pthread_mutex_lock(&StaticCryptoMutex);
     BSLB_CryptoKey_t *found = BSLB_CryptoKeyDict_get(StaticKeyRegistry, keyid_str);
     if (!found)
     {
-        return BSL_ERR_NOT_FOUND;
+        retval = BSL_ERR_NOT_FOUND;
     }
-    *key_handle = found;
+    else
+    {
+        *key_handle = found;
+    }
     pthread_mutex_unlock(&StaticCryptoMutex);
-    return BSL_SUCCESS;
+    return retval;
 }
 
 int BSLB_Crypto_RemoveRegistryKey(const char *keyid)

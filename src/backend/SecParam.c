@@ -57,7 +57,14 @@ void BSL_SecParam_Set(BSL_SecParam_t *self, const BSL_SecParam_t *src)
     self->param_id    = src->param_id;
     self->_type       = src->_type;
     self->_uint_value = src->_uint_value;
-    m_bstring_set(self->_bytes, src->_bytes);
+    // workaround m_bstring issue
+    if (m_bstring_empty_p(src->_bytes))
+    {
+        m_bstring_reset(self->_bytes);
+    }
+    else{
+        m_bstring_set(self->_bytes, src->_bytes);
+    }
 }
 
 int BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char *value)
@@ -109,9 +116,9 @@ int BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, uint64_t val
     return BSL_SUCCESS;
 }
 
-int BSL_SecParam_IsInt64(const BSL_SecParam_t *self)
+bool BSL_SecParam_IsInt64(const BSL_SecParam_t *self)
 {
-    CHK_ARG_NONNULL(self);
+    CHK_AS_BOOL(self);
     return (self->_type == BSL_SECPARAM_TYPE_INT64);
 }
 
@@ -121,6 +128,12 @@ uint64_t BSL_SecParam_GetAsUInt64(const BSL_SecParam_t *self)
     ASSERT_PRECONDITION(self->_type == BSL_SECPARAM_TYPE_INT64);
 
     return self->_uint_value;
+}
+
+bool BSL_SecParam_IsBytestr(const BSL_SecParam_t *self)
+{
+    CHK_AS_BOOL(self);
+    return (self->_type == BSL_SECPARAM_TYPE_BYTESTR);
 }
 
 int BSL_SecParam_GetAsBytestr(const BSL_SecParam_t *self, BSL_Data_t *result)

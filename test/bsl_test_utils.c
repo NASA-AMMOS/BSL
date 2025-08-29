@@ -42,6 +42,14 @@
 
 void BIBTestContext_Deinit(BIBTestContext *obj)
 {
+    BSL_SecParam_Deinit(&obj->param_test_key);
+    BSL_SecParam_Deinit(&obj->param_sha_variant);
+    BSL_SecParam_Deinit(&obj->param_hmac);
+    BSL_SecParam_Deinit(&obj->param_wrapped_key);
+    BSL_SecParam_Deinit(&obj->use_key_wrap);
+    BSL_SecParam_Deinit(&obj->param_scope_flags);
+    BSL_SecParam_Deinit(&obj->param_wrapped_key_aes);
+
     BSL_SecOper_Deinit(&obj->sec_oper);
 }
 

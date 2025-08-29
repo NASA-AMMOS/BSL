@@ -361,8 +361,7 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
     // TODO(bvb) assert Role in expected range
     self->failure_action_code = failure_action_code;
     self->role                = role;
-    self->params              = BSL_CALLOC(BSL_PP_POLICYRULE_PARAM_MAX_COUNT, BSL_SecParam_Sizeof());
-    self->nparams             = 0;
+    BSLB_SecParamList_init(self->params);
     ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
     return BSL_SUCCESS;
 }
@@ -370,23 +369,28 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
-    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", m_string_get_cstr(self->description), self->nparams);
+    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", m_string_get_cstr(self->description), BSLB_SecParamList_size(self->params));
     string_clear(self->description);
-    BSL_FREE(self->params);
+    BSLB_SecParamList_clear(self->params);
     memset(self, 0, sizeof(*self));
 }
 
-void BSLP_PolicyRule_AddParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *param)
+void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *param)
 {
     ASSERT_ARG_EXPR(BSL_SecParam_IsConsistent(param));
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
 
-    // TODO(bvb) - BOUNDS CHECKING
-    ASSERT_ARG_EXPR(self->nparams < BSL_PP_POLICYRULE_PARAM_MAX_COUNT);
+    BSLB_SecParamList_push_back(self->params, *param);
 
-    size_t offset = self->nparams * BSL_SecParam_Sizeof();
-    memcpy(&((uint8_t *)self->params)[offset], param, BSL_SecParam_Sizeof());
-    self->nparams++;
+    ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
+}
+
+void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param)
+{
+    ASSERT_ARG_EXPR(BSL_SecParam_IsConsistent(param));
+    ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
+
+    BSLB_SecParamList_push_move(self->params, param);
 
     ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
 }
@@ -420,12 +424,11 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
                          self->failure_action_code);
 
     // Next, append all the parameters from the matched rule.
-    for (size_t index = 0; index < self->nparams; index++)
+    BSLB_SecParamList_it_t pit;
+    for (BSLB_SecParamList_it(pit, self->params); !BSLB_SecParamList_end_p(pit); BSLB_SecParamList_next(pit))
     {
-        // We need to do this weird offsetting bc it does not know the size of SecParam_t
-        size_t   offset = BSL_SecParam_Sizeof() * index;
-        uint8_t *ptr    = &((uint8_t *)(self->params))[offset];
-        BSL_SecOper_AppendParam(sec_oper, (BSL_SecParam_t *)ptr);
+        const BSL_SecParam_t *param = BSLB_SecParamList_cref(pit);
+        BSL_SecOper_AppendParam(sec_oper, param);
     }
     BSL_LOG_INFO("Created sec operation for rule `%s`", m_string_get_cstr(self->description));
 

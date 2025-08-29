@@ -708,7 +708,7 @@ int BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char
  * @param[in] self This Security Parameter
  * @return True when value type is integer.
  */
-int BSL_SecParam_IsInt64(const BSL_SecParam_t *self);
+bool BSL_SecParam_IsInt64(const BSL_SecParam_t *self);
 
 /** Retrieve integer value of result when this result type is integer.
  * @warning Always check using BSL_SecParam_IsInt64() first.
@@ -718,8 +718,15 @@ int BSL_SecParam_IsInt64(const BSL_SecParam_t *self);
  */
 uint64_t BSL_SecParam_GetAsUInt64(const BSL_SecParam_t *self);
 
-/** Retrieve bytestring value of result when security parameter type is bytestring.
- * @warning Always check type before using this.
+/** Returns true when the value type is a byte string.
+ *
+ * @param[in] self This Security Parameter
+ * @return True when value type is integer.
+ */
+bool BSL_SecParam_IsBytestr(const BSL_SecParam_t *self);
+
+/** Retrieve byte string value of result.
+ * @warning Always check BSL_SecParam_IsBytestr() before using this.
  *
  * @todo Clarify whether result contains copy or view of content
  * @param[in] self This Security Parameter

@@ -493,9 +493,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             case BSL_SECPARAM_TYPE_KEY_ID:
             {
                 ASSERT_PRECONDITION(!is_int);
-                BSL_Data_t res;
-                ASSERT_POSTCONDITION(BSL_SUCCESS == BSL_SecParam_GetAsBytestr(param, &res));
-                bcb_context->key_id = (char *)res.ptr;
+                ASSERT_POSTCONDITION(BSL_SUCCESS == BSL_SecParam_GetAsTextstr(param, &bcb_context->key_id));
                 BSL_LOG_DEBUG("Param[%" PRIu64 "]: KEY_ID value = %s", param_id, bcb_context->key_id);
                 break;
             }
