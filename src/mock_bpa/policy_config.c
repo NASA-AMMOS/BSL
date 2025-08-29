@@ -553,7 +553,7 @@ int mock_bpa_handle_policy_config(const char *policies, BSLP_PolicyProvider_t *p
 {
     // Split up and register each policy
     const char *curs = policies;
-    char *pend;
+    char       *pend;
     while (true)
     {
         mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(reg);
