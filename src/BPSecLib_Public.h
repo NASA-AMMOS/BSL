@@ -186,6 +186,15 @@ typedef struct BSL_BundleRef_s
     void *data; ///< Opaque pointer, not used by the BSL.
 } BSL_BundleRef_t;
 
+typedef enum
+{
+    BSL_REASONCODE_MISSING_SECOP = 12,
+    BSL_REASONCODE_UNKNOWN_SECOP = 13,
+    BSL_REASONCODE_UNEXPECTED_SECOP = 14,
+    BSL_REASONCODE_FAILED_SECOP = 15,
+    BSL_REASONCODE_CONFLICTING_SECOP = 16
+} BSL_ReasonCode_e;
+
 /** @brief Contains Bundle Primary Block fields and metadata.
  *
  *  @note This contains a *snapshot* of the fields at the time it was queried. It is not a pointer.
