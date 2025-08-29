@@ -549,30 +549,41 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     BSLP_PolicyRule_CopyParam(rule_all_in, params->param_test_key);
 }
 
-void mock_bpa_handle_policy_config(char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg)
+int mock_bpa_handle_policy_config(const char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg)
 {
-
-    char *pt;
-
     // Split up and register each policy
-    pt = strtok(policies, ",");
-    while (pt != NULL)
+    const char *curs = policies;
+    char       *pend;
+    while (true)
     {
-
         mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(reg);
+        if (!params)
+        {
+            BSL_LOG_CRIT("POLICY COUNT EXCEEDED, NOT REGISTERING FURTHER");
+            return -1;
+        }
 
-        if (params != NULL)
+        uint32_t val = strtoul(curs, &pend, 0);
+        if (pend == curs)
         {
-            mock_bpa_register_policy(strtoul(pt, NULL, 0), policy, params);
+            BSL_LOG_ERR("Failed to decode policy integer at: %s", curs);
         }
-        else
+        curs = pend;
+        mock_bpa_register_policy(val, policy, params);
+
+        if (*curs == '\0')
         {
-            BSL_LOG_ERR("POLICY COUNT EXCEEDED, NOT REGISTERING FURTHER");
+            break;
         }
-        pt = strtok(NULL, ",");
+        else if (*curs != ',')
+        {
+            BSL_LOG_ERR("Failed to decode policy list (expecting comma) at: %s", curs);
+        }
+        curs += 1;
     }
 
     BSL_LOG_DEBUG("Successfully created policy registry of size: %d", mock_bpa_policy_registry_size(reg));
+    return 0;
 }
 
 int mock_bpa_key_registry_init(const char *pp_cfg_file_path)

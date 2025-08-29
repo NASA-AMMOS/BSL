@@ -47,7 +47,7 @@ typedef struct mock_bpa_policy_registry
 
 void mock_bpa_policy_registry_init(mock_bpa_policy_registry_t *registry);
 
-int mock_bpa_policy_registry_size(mock_bpa_policy_registry_t *registry);
+int mock_bpa_policy_registry_size(const mock_bpa_policy_registry_t *registry);
 
 mock_bpa_policy_params_t *mock_bpa_policy_registry_get(mock_bpa_policy_registry_t *registry);
 

@@ -36,7 +36,7 @@ void mock_bpa_policy_registry_init(mock_bpa_policy_registry_t *registry)
     registry->registry_count = 0;
 }
 
-int mock_bpa_policy_registry_size(mock_bpa_policy_registry_t *registry)
+int mock_bpa_policy_registry_size(const mock_bpa_policy_registry_t *registry)
 {
     return registry->registry_count;
 }

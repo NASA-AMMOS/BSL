@@ -25,7 +25,7 @@
 #include "crc.h"
 #include "encode.h"
 #include "decode.h"
-#include "agent.h"
 #include "eidpat.h"
+#include "agent.h"
 
 #endif //_BSL_MockBPA_MockBPA_H_

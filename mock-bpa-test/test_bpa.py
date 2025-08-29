@@ -79,7 +79,7 @@ class TestAgent(unittest.TestCase):
 
         args = compose_args([
             'bsl-mock-bpa',
-            '-e', 'ipn:2.1',
+            '-s', 'ipn:2.1',  # security source
             '-u', 'localhost:4556', '-r', 'localhost:14556',
             '-o', 'localhost:24556', '-a', 'localhost:34556',
             '-p', policy_config,
@@ -116,7 +116,7 @@ class TestAgent(unittest.TestCase):
 
         ''' Spawn the process and wait for the startup READY message. '''
         self._agent.start()
-        self._agent.wait_for_text(r'.* <INFO> \[.+\:bpa_exec] READY$')
+        self._agent.wait_for_text(r'.* <INFO> \[.+\:MockBPA_Agent_Exec] READY$')
 
     def _encode(self, blocks: List[object]):
 

@@ -35,8 +35,6 @@
 extern "C" {
 #endif
 
-int MockBPA_GetEid(const void *user_data, BSL_HostEID_t *result_eid);
-
 /// Scheme-specific part for IPN scheme
 typedef struct
 {

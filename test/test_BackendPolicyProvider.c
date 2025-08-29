@@ -46,7 +46,7 @@ void setUp(void)
 {
     BSL_openlog();
     memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
-    assert(0 == bsl_mock_bpa_agent_init());
+    TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
     TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
 
@@ -65,7 +65,7 @@ void tearDown(void)
 {
     mock_bpa_ctr_deinit(&LocalTestCtx.mock_bpa_ctr);
     TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));
-    bsl_mock_bpa_agent_deinit();
+    BSL_HostDescriptors_Clear();
     BSL_closelog();
 }
 
