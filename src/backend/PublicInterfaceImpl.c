@@ -43,6 +43,8 @@ int BSL_API_InitLib(BSL_LibCtx_t *lib)
 {
     CHK_ARG_NONNULL(lib);
 
+    memset(&lib->tlm_counters, 0, sizeof(BSL_TlmCounters_t));
+
     BSL_SecCtxDict_init(lib->sc_reg);
     BSL_PolicyDict_init(lib->policy_reg);
     return BSL_SUCCESS;
@@ -70,6 +72,18 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
 
     BSL_PolicyDict_clear(lib->policy_reg);
     BSL_SecCtxDict_clear(lib->sc_reg);
+    return BSL_SUCCESS;
+}
+
+int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t *tlm)
+{
+    CHK_ARG_NONNULL(lib);
+
+    for (size_t ix = 0; ix < sizeof(tlm->counters) / sizeof(uint64_t); ++ix)
+    {
+        tlm->counters[ix] += lib->tlm_counters.counters[ix];
+    }
+
     return BSL_SUCCESS;
 }
 
@@ -114,6 +128,8 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
     BSL_SecurityActionSet_Init(output_action_set);
     int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
     BSL_LOG_INFO("Completed query: status=%d", query_status);
+
+    BSL_TlmCounters_IncrementCounter((BSL_LibCtx_t *)bsl, BSL_TLM_BUNDLE_INSPECTED_COUNT, 1);
 
     // Here - find the sec block numbers for all ASBs
 

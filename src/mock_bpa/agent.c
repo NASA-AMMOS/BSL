@@ -370,6 +370,8 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
         ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->bsl_clout, 1, policy_callbacks));
     }
 
+    pthread_mutex_init(&agent->tlm_mutex, NULL);
+
     agent->over_addr.sin_family   = 0;
     agent->app_addr.sin_family    = 0;
     agent->under_addr.sin_family  = 0;
@@ -380,6 +382,8 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
 
 void MockBPA_Agent_Deinit(MockBPA_Agent_t *agent)
 {
+    pthread_mutex_destroy(&agent->tlm_mutex);
+
     // All BSL contexts get the same config
     BSL_LibCtx_t **bsls[] = {
         &agent->bsl_appin,
@@ -433,7 +437,64 @@ static int bind_udp(int *sock, const struct sockaddr_in *addr)
     return 0;
 }
 
-static int MockBPA_process(BSL_LibCtx_t *bsl, BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
+/// Display form for counters
+#define TLM_COUNTER_FMT "7" PRIu64
+/** Aggregate and log telemetry from all BSL contexts.
+ */
+static void MockBPA_Agent_DumpTelemetry(MockBPA_Agent_t *agent)
+{
+    BSL_TlmCounters_t tlm = BSL_TLM_COUNTERS_ZERO;
+
+    if (pthread_mutex_lock(&agent->tlm_mutex))
+    {
+        BSL_LOG_CRIT("failed to lock mutex");
+        return;
+    }
+    {
+        const BSL_LibCtx_t *bsls[] = {
+            agent->bsl_appin,
+            agent->bsl_appout,
+            agent->bsl_clin,
+            agent->bsl_clout,
+        };
+        for (size_t ix = 0; ix < sizeof(bsls) / sizeof(bsls[0]); ++ix)
+        {
+            const BSL_LibCtx_t *bsl = bsls[ix];
+
+            int result = BSL_LibCtx_AccumulateTlmCounters(bsl, &tlm);
+            if (result)
+            {
+                BSL_LOG_ERR("Error with reading telemetry from bsl context");
+            }
+        }
+    }
+    pthread_mutex_unlock(&agent->tlm_mutex);
+
+    BSL_LOG_INFO("---------------------------------------------------------");
+    BSL_LOG_INFO("---------------------TELEMETRY INFO----------------------");
+    BSL_LOG_INFO("                     FAIL COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_SECOP_FAIL_COUNT]);
+    BSL_LOG_INFO("         BUNDLE INSPECTED COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_BUNDLE_INSPECTED_COUNT]);
+    BSL_LOG_INFO("               ASB DECODE COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_ASB_DECODE_COUNT]);
+    BSL_LOG_INFO("               ASB DECODE BYTES:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_ASB_DECODE_BYTES]);
+    BSL_LOG_INFO("               ASB ENCODE COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_ASB_ENCODE_COUNT]);
+    BSL_LOG_INFO("               ASB ENCODE BYTES:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_ASB_ENCODE_BYTES]);
+    BSL_LOG_INFO("             SECOP SOURCE COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_SECOP_SOURCE_COUNT]);
+    BSL_LOG_INFO("           SECOP VERIFIER COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_SECOP_VERIFIER_COUNT]);
+    BSL_LOG_INFO("           SECOP ACCEPTOR COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_SECOP_ACCEPTOR_COUNT]);
+    BSL_LOG_INFO("                TOTAL TLM COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_TOTAL_COUNT]);
+    BSL_LOG_INFO("---------------------------------------------------------");
+}
+
+/** Process a single bundle at one of the interaction points.
+ *
+ * @param[in] agent The agent state, which is not locked for the work thread.
+ * @param[in,out] bsl The specific BSL instance to process with.
+ * @param loc The interaction point for policy use.
+ * @param[in,out] bundle The bundle to process.
+ * @return Zero if successful.
+ */
+static int MockBPA_Agent_process(MockBPA_Agent_t *agent, BSL_LibCtx_t *bsl, BSL_PolicyLocation_e loc,
+                                 MockBPA_Bundle_t *bundle)
 {
     int returncode = 0;
 
@@ -459,6 +520,9 @@ static int MockBPA_process(BSL_LibCtx_t *bsl, BSL_PolicyLocation_e loc, MockBPA_
         }
     }
 
+    // Example telemetry dump to log
+    MockBPA_Agent_DumpTelemetry(agent);
+
     BSL_SecurityActionSet_Deinit(malloced_action_set);
     BSL_FREE(malloced_action_set);
     BSL_FREE(malloced_response_set);
@@ -483,7 +547,7 @@ static void *MockBPA_Agent_work_over_rx(void *arg)
         mock_bpa_decode(&item);
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (MockBPA_process(agent->bsl_appin, BSL_POLICYLOCATION_APPIN, bundle))
+        if (MockBPA_Agent_process(agent, agent->bsl_appin, BSL_POLICYLOCATION_APPIN, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);
@@ -527,7 +591,7 @@ static void *MockBPA_Agent_work_under_rx(void *arg)
         }
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (MockBPA_process(agent->bsl_clin, BSL_POLICYLOCATION_CLIN, bundle))
+        if (MockBPA_Agent_process(agent, agent->bsl_clin, BSL_POLICYLOCATION_CLIN, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);
@@ -564,7 +628,7 @@ static void *MockBPA_Agent_work_deliver(void *arg)
         BSL_LOG_INFO("deliver item");
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (MockBPA_process(agent->bsl_appout, BSL_POLICYLOCATION_APPOUT, bundle))
+        if (MockBPA_Agent_process(agent, agent->bsl_appout, BSL_POLICYLOCATION_APPOUT, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);
@@ -609,7 +673,7 @@ static void *MockBPA_Agent_work_forward(void *arg)
         BSL_LOG_INFO("forward item");
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (MockBPA_process(agent->bsl_clout, BSL_POLICYLOCATION_CLOUT, bundle))
+        if (MockBPA_Agent_process(agent, agent->bsl_clout, BSL_POLICYLOCATION_CLOUT, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);

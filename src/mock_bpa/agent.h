@@ -167,6 +167,8 @@ typedef struct MockBPA_Agent_s
     BSL_LibCtx_t *bsl_clin;
     /// BSL context for ::BSL_POLICYLOCATION_CLOUT
     BSL_LibCtx_t *bsl_clout;
+    /// Mutex for aggregating telemtry on all above ::BSL_LibCtx_t instances
+    pthread_mutex_t tlm_mutex;
 
     /// Configuration for local app-facing address
     struct sockaddr_in over_addr;

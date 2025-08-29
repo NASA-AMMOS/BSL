@@ -67,13 +67,17 @@ static pthread_mutex_t      StaticCryptoMutex = PTHREAD_MUTEX_INITIALIZER;
 
 void BSL_CryptoInit(void)
 {
+    pthread_mutex_lock(&StaticCryptoMutex);
     BSLB_CryptoKeyDict_init(StaticKeyRegistry);
+    pthread_mutex_unlock(&StaticCryptoMutex);
     rand_bytes_generator = RAND_bytes;
 }
 
 void BSL_CryptoDeinit(void)
 {
+    pthread_mutex_lock(&StaticCryptoMutex);
     BSLB_CryptoKeyDict_clear(StaticKeyRegistry);
+    pthread_mutex_unlock(&StaticCryptoMutex);
 }
 
 void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn)
