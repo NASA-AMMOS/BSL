@@ -235,6 +235,7 @@ int main(int argc, char **argv)
     MockBPA_Agent_Deinit(&agent);
     BSL_HostEID_Deinit(&sec_eid);
     BSL_HostEID_Deinit(&app_eid);
+
     BSL_HostDescriptors_Clear();
     BSL_CryptoDeinit();
     BSL_closelog();
