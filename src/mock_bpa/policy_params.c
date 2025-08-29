@@ -39,20 +39,27 @@ void mock_bpa_policy_params_init(mock_bpa_policy_params_t *params, int policy_nu
 
     params->active = true;
 
-    BSL_LOG_DEBUG("Successfully Init policy number %d in registry\n", policy_num);
+    BSL_LOG_DEBUG("Successfully Init policy number %d in registry", policy_num);
 }
 
 void mock_bpa_policy_params_deinit(mock_bpa_policy_params_t *params, int policy_num)
 {
+    BSL_SecParam_Deinit(params->param_integ_scope_flag);
     BSL_FREE(params->param_integ_scope_flag);
+    BSL_SecParam_Deinit(params->param_sha_variant);
     BSL_FREE(params->param_sha_variant);
+    BSL_SecParam_Deinit(params->param_aad_scope_flag);
     BSL_FREE(params->param_aad_scope_flag);
+    BSL_SecParam_Deinit(params->param_init_vector);
     BSL_FREE(params->param_init_vector);
+    BSL_SecParam_Deinit(params->param_aes_variant);
     BSL_FREE(params->param_aes_variant);
+    BSL_SecParam_Deinit(params->param_test_key);
     BSL_FREE(params->param_test_key);
+    BSL_SecParam_Deinit(params->param_use_wrapped_key);
     BSL_FREE(params->param_use_wrapped_key);
 
     params->active = false;
 
-    BSL_LOG_DEBUG("Successfully De-init policy number %d in registry\n", policy_num);
+    BSL_LOG_DEBUG("Successfully De-init policy number %d in registry", policy_num);
 }

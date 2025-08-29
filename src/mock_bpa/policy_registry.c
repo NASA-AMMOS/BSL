@@ -54,7 +54,7 @@ mock_bpa_policy_params_t *mock_bpa_policy_registry_get(mock_bpa_policy_registry_
             return &registry->registry_params[index];
         }
     }
-    BSL_LOG_ERR("\nPOLICY COUNT FULL!\n");
+    BSL_LOG_CRIT("POLICY COUNT FULL!");
     return NULL;
 }
 

@@ -493,9 +493,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             case BSL_SECPARAM_TYPE_KEY_ID:
             {
                 ASSERT_PRECONDITION(!is_int);
-                BSL_Data_t res;
-                ASSERT_POSTCONDITION(BSL_SUCCESS == BSL_SecParam_GetAsBytestr(param, &res));
-                bcb_context->key_id = (char *)res.ptr;
+                ASSERT_POSTCONDITION(BSL_SUCCESS == BSL_SecParam_GetAsTextstr(param, &bcb_context->key_id));
                 BSL_LOG_DEBUG("Param[%" PRIu64 "]: KEY_ID value = %s", param_id, bcb_context->key_id);
                 break;
             }
@@ -673,10 +671,11 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
 
     if (bcb_context.iv.len > 0)
     {
-        BSL_SecParam_t *iv_param = BSL_CALLOC(1, BSL_SecResult_Sizeof());
+        BSL_SecParam_t *iv_param = BSL_CALLOC(1, BSL_SecParam_Sizeof());
         if (BSL_SUCCESS != BSL_SecParam_InitBytestr(iv_param, RFC9173_BCB_SECPARAM_IV, bcb_context.iv))
         {
             BSL_LOG_ERR("Failed to append BCB source IV");
+            BSL_SecParam_Deinit(iv_param);
             BSL_FREE(iv_param);
             BSLX_BCB_Deinit(&bcb_context);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -686,13 +685,15 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
             BSL_LOG_INFO("Appending BCB source IV");
             BSL_SecOutcome_AppendParam(sec_outcome, iv_param);
         }
+        BSL_SecParam_Deinit(iv_param);
         BSL_FREE(iv_param);
     }
 
-    BSL_SecParam_t *aes_param = BSL_CALLOC(1, BSL_SecResult_Sizeof());
+    BSL_SecParam_t *aes_param = BSL_CALLOC(1, BSL_SecParam_Sizeof());
     if (BSL_SUCCESS != BSL_SecParam_InitInt64(aes_param, RFC9173_BCB_SECPARAM_AESVARIANT, bcb_context.aes_variant))
     {
         BSL_LOG_ERR("Failed to append BCB AES param");
+        BSL_SecParam_Deinit(aes_param);
         BSL_FREE(aes_param);
         BSLX_BCB_Deinit(&bcb_context);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -702,16 +703,18 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
         BSL_LOG_INFO("Appending BCB AES param");
         BSL_SecOutcome_AppendParam(sec_outcome, aes_param);
     }
+    BSL_SecParam_Deinit(aes_param);
     BSL_FREE(aes_param);
 
     if (bcb_context.wrapped_key.len > 0)
     {
-        BSL_SecParam_t *aes_wrapped_key_param = BSL_CALLOC(1, BSL_SecResult_Sizeof());
+        BSL_SecParam_t *aes_wrapped_key_param = BSL_CALLOC(1, BSL_SecParam_Sizeof());
         if (BSL_SUCCESS
             != BSL_SecParam_InitBytestr(aes_wrapped_key_param, RFC9173_BCB_SECPARAM_WRAPPEDKEY,
                                         bcb_context.wrapped_key))
         {
             BSL_LOG_ERR("Failed to append BCB wrapped key param");
+            BSL_SecParam_Deinit(aes_wrapped_key_param);
             BSL_FREE(aes_wrapped_key_param);
             BSLX_BCB_Deinit(&bcb_context);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -721,13 +724,15 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
             BSL_LOG_INFO("Appending BCB wrapped key param");
             BSL_SecOutcome_AppendParam(sec_outcome, aes_wrapped_key_param);
         }
+        BSL_SecParam_Deinit(aes_wrapped_key_param);
         BSL_FREE(aes_wrapped_key_param);
     }
 
-    BSL_SecParam_t *scope_flag_param = BSL_CALLOC(1, BSL_SecResult_Sizeof());
+    BSL_SecParam_t *scope_flag_param = BSL_CALLOC(1, BSL_SecParam_Sizeof());
     if (BSL_SUCCESS != BSL_SecParam_InitInt64(scope_flag_param, RFC9173_BCB_SECPARAM_AADSCOPE, bcb_context.aad_scope))
     {
         BSL_LOG_ERR("Failed to append BCB scope flag param");
+        BSL_SecParam_Deinit(scope_flag_param);
         BSL_FREE(scope_flag_param);
         BSLX_BCB_Deinit(&bcb_context);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -737,6 +742,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
         BSL_LOG_INFO("Appending BCB scope flag param");
         BSL_SecOutcome_AppendParam(sec_outcome, scope_flag_param);
     }
+    BSL_SecParam_Deinit(scope_flag_param);
     BSL_FREE(scope_flag_param);
 
     BSLX_BCB_Deinit(&bcb_context);
