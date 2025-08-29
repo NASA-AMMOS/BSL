@@ -48,8 +48,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     int retval = 0;
 
-    MockBPA_Bundle_t bundle = { 0 };
-    //    MockBPA_Bundle_Init(&bundle);
+    MockBPA_Bundle_t bundle;
+    MockBPA_Bundle_Init(&bundle);
     {
         QCBORDecodeContext decoder;
         QCBORDecode_Init(&decoder, (UsefulBufC) { data, size }, QCBOR_DECODE_MODE_NORMAL);

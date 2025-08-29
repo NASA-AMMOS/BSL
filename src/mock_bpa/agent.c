@@ -26,6 +26,7 @@
  */
 #include <BPSecLib_Public.h>
 #include <BPSecLib_Private.h>
+#include <backend/UtilDefs_SeqReadWrite.h>
 #include <assert.h>
 #include "agent.h"
 #include "eid.h"
@@ -33,18 +34,37 @@
 #include "encode.h"
 #include "decode.h"
 
+int MockBPA_Bundle_Init(MockBPA_Bundle_t *bundle)
+{
+    ASSERT_ARG_NONNULL(bundle);
+    memset(bundle, 0, sizeof(*bundle));
+
+    bundle->retain = true;
+
+    MockBPA_BlockList_init(bundle->blocks);
+    MockBPA_BlockByNum_init(bundle->blocks_num);
+
+    return 0;
+}
+
 int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle)
 {
     ASSERT_ARG_NONNULL(bundle);
     BSL_HostEID_Deinit(&bundle->primary_block.src_node_id);
     BSL_HostEID_Deinit(&bundle->primary_block.dest_eid);
     BSL_HostEID_Deinit(&bundle->primary_block.report_to_eid);
-    for (size_t i = 0; i < bundle->block_count; i++)
-    {
-        BSL_FREE(bundle->blocks[i].btsd);
-        memset(&bundle->blocks[i], 0, sizeof(bundle->blocks[i]));
-    }
     BSL_Data_Deinit(&bundle->primary_block.encoded);
+
+    MockBPA_BlockByNum_clear(bundle->blocks_num);
+
+    MockBPA_BlockList_it_t bit;
+    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
+    {
+        MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_ref(bit);
+        BSL_LOG_DEBUG("freeing block number %" PRIu64, blk->blk_num);
+        BSL_FREE(blk->btsd);
+    }
+    MockBPA_BlockList_clear(bundle->blocks);
 
     memset(bundle, 0, sizeof(*bundle));
     return 0;
@@ -74,15 +94,19 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
     BSL_Data_InitView(&result_primary_block->encoded, bundle->primary_block.encoded.len,
                       bundle->primary_block.encoded.ptr);
 
-    result_primary_block->block_count   = bundle->block_count;
-    result_primary_block->block_numbers = BSL_CALLOC(bundle->block_count, sizeof(uint64_t));
+    result_primary_block->block_count = MockBPA_BlockList_size(bundle->blocks);
+
+    result_primary_block->block_numbers = BSL_CALLOC(result_primary_block->block_count, sizeof(uint64_t));
     if (!result_primary_block->block_numbers)
     {
         return -2;
     }
-    for (size_t ix = 0; ix < bundle->block_count; ix++)
+    size_t                 ix = 0;
+    MockBPA_BlockList_it_t bit;
+    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
     {
-        result_primary_block->block_numbers[ix] = bundle->blocks[ix].blk_num;
+        const MockBPA_CanonicalBlock_t *blk       = MockBPA_BlockList_cref(bit);
+        result_primary_block->block_numbers[ix++] = blk->blk_num;
     }
 
     return 0;
@@ -98,26 +122,19 @@ int MockBPA_GetBlockMetadata(const BSL_BundleRef_t *bundle_ref, uint64_t block_n
 
     memset(result_canonical_block, 0, sizeof(*result_canonical_block));
 
-    MockBPA_Bundle_t         *bundle      = bundle_ref->data;
-    MockBPA_CanonicalBlock_t *found_block = NULL;
-    for (size_t i = 0; i < bundle->block_count; i++)
-    {
-        if (bundle->blocks[i].blk_num == block_num)
-        {
-            found_block = &bundle->blocks[i];
-        }
-    }
+    const MockBPA_Bundle_t *bundle = bundle_ref->data;
 
-    if (found_block == NULL)
+    MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
+    if (found_ptr == NULL)
     {
         return -3;
     }
+    const MockBPA_CanonicalBlock_t *found_block = *found_ptr;
 
     result_canonical_block->block_num = found_block->blk_num;
     result_canonical_block->flags     = found_block->flags;
     result_canonical_block->crc_type  = found_block->crc_type;
     result_canonical_block->type_code = found_block->blk_type;
-    result_canonical_block->btsd      = found_block->btsd;
     result_canonical_block->btsd_len  = found_block->btsd_len;
     return 0;
 }
@@ -129,20 +146,14 @@ int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t 
         return -1;
     }
 
-    MockBPA_Bundle_t         *bundle      = bundle_ref->data;
-    MockBPA_CanonicalBlock_t *found_block = NULL;
-    for (size_t found_index = 0; found_index < bundle->block_count; found_index++)
-    {
-        if (bundle->blocks[found_index].blk_num == block_num)
-        {
-            found_block = &bundle->blocks[found_index];
-        }
-    }
+    MockBPA_Bundle_t *bundle = bundle_ref->data;
 
-    if (found_block == NULL)
+    MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
+    if (found_ptr == NULL)
     {
-        return -2;
+        return -3;
     }
+    MockBPA_CanonicalBlock_t *found_block = *found_ptr;
 
     if (found_block->btsd == NULL)
     {
@@ -159,6 +170,147 @@ int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t 
     return (found_block->btsd == NULL) ? -9 : 0;
 }
 
+/// Internal state for reader and writer
+struct MockBPA_BTSD_Data_s
+{
+    /// Block which must have a longer lifetime than the reader/writer
+    MockBPA_CanonicalBlock_t *block;
+
+    /// Pointer to the head of the buffer
+    char *ptr;
+    /// Working size of the buffer
+    size_t size;
+    /// File opened for the buffer
+    FILE *file;
+};
+
+static int MockBPA_ReadBTSD_Read(void *user_data, void *buf, size_t *bufsize)
+{
+    struct MockBPA_BTSD_Data_s *obj = user_data;
+    ASSERT_ARG_NONNULL(obj);
+    CHK_ARG_NONNULL(buf);
+    CHK_ARG_NONNULL(bufsize);
+    ASSERT_PRECONDITION(obj->file);
+
+    const size_t got = fread(buf, 1, *bufsize, obj->file);
+    BSL_LOG_DEBUG("reading up to %zd bytes, got %zd", *bufsize, got);
+    *bufsize = got;
+    return 0;
+}
+
+static void MockBPA_ReadBTSD_Deinit(void *user_data)
+{
+    struct MockBPA_BTSD_Data_s *obj = user_data;
+    ASSERT_ARG_NONNULL(obj);
+    ASSERT_PRECONDITION(obj->file);
+
+    fclose(obj->file);
+    // buffer is external data, no cleanup
+    BSL_FREE(obj);
+}
+
+static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_ref, uint64_t block_num)
+{
+    MockBPA_Bundle_t          *bundle    = bundle_ref->data;
+    MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
+    if (found_ptr == NULL)
+    {
+        return NULL;
+    }
+    MockBPA_CanonicalBlock_t *found_block = *found_ptr;
+
+    struct MockBPA_BTSD_Data_s *obj = BSL_CALLOC(1, sizeof(struct MockBPA_BTSD_Data_s));
+    if (!obj)
+    {
+        return NULL;
+    }
+    obj->block = found_block;
+    obj->ptr   = found_block->btsd;
+    obj->size  = found_block->btsd_len;
+    obj->file  = fmemopen(obj->ptr, obj->size, "rb");
+
+    BSL_SeqReader_t *reader = BSL_CALLOC(1, sizeof(BSL_SeqReader_t));
+    if (!reader)
+    {
+        BSL_FREE(obj);
+        return NULL;
+    }
+    reader->user_data = obj;
+    reader->read      = MockBPA_ReadBTSD_Read;
+    reader->deinit    = MockBPA_ReadBTSD_Deinit;
+
+    return reader;
+}
+
+static int MockBPA_WriteBTSD_Write(void *user_data, const void *buf, size_t size)
+{
+    struct MockBPA_BTSD_Data_s *obj = user_data;
+    ASSERT_ARG_NONNULL(obj);
+    CHK_ARG_NONNULL(buf);
+    ASSERT_PRECONDITION(obj->file);
+
+    const size_t got = fwrite(buf, 1, size, obj->file);
+    BSL_LOG_DEBUG("writing up to %zd bytes, got %zd", size, got);
+    if (got < size)
+    {
+        return BSL_ERR_FAILURE;
+    }
+    return BSL_SUCCESS;
+}
+
+static void MockBPA_WriteBTSD_Deinit(void *user_data)
+{
+    struct MockBPA_BTSD_Data_s *obj = user_data;
+    ASSERT_ARG_NONNULL(obj);
+    ASSERT_PRECONDITION(obj->file);
+
+    fclose(obj->file);
+    BSL_LOG_DEBUG("closed block %p with size %zu", obj->block, obj->size);
+
+    // now write-back the BTSD
+    BSL_FREE(obj->block->btsd);
+    obj->block->btsd     = obj->ptr;
+    obj->block->btsd_len = obj->size;
+
+    BSL_FREE(obj);
+}
+
+static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t total_size)
+{
+    MockBPA_Bundle_t          *bundle    = bundle_ref->data;
+    MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
+    if (found_ptr == NULL)
+    {
+        return NULL;
+    }
+    MockBPA_CanonicalBlock_t *found_block = *found_ptr;
+    BSL_LOG_DEBUG("opened block %p for size %zu", found_block, total_size);
+
+    struct MockBPA_BTSD_Data_s *obj = BSL_CALLOC(1, sizeof(struct MockBPA_BTSD_Data_s));
+    if (!obj)
+    {
+        return NULL;
+    }
+    // double-buffer for this write
+    obj->block = found_block;
+    obj->ptr   = NULL;
+    obj->size  = 0;
+    obj->file  = open_memstream(&obj->ptr, &obj->size);
+
+    BSL_SeqWriter_t *writer = BSL_CALLOC(1, sizeof(BSL_SeqWriter_t));
+    if (!writer)
+    {
+        BSL_FREE(obj->ptr);
+        BSL_FREE(obj);
+        return NULL;
+    }
+    writer->user_data = obj;
+    writer->write     = MockBPA_WriteBTSD_Write;
+    writer->deinit    = MockBPA_WriteBTSD_Deinit;
+
+    return writer;
+}
+
 int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, uint64_t *result_block_num)
 {
     if (!bundle_ref || !bundle_ref->data || !result_block_num)
@@ -168,18 +320,21 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
 
     *result_block_num        = 0;
     MockBPA_Bundle_t *bundle = bundle_ref->data;
-    if (bundle->block_count >= MockBPA_BUNDLE_MAXBLOCKS)
+
+    uint64_t               max_id = 0;
+    MockBPA_BlockList_it_t bit;
+    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
     {
+        const MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_cref(bit);
+        max_id                              = blk->blk_num >= max_id ? blk->blk_num : max_id;
+    }
+    if (max_id < 1)
+    {
+        // should have at least a payload already
         return -2;
     }
 
-    uint64_t max_id = 0;
-    for (size_t i = 0; i < bundle->block_count; i++)
-    {
-        max_id = bundle->blocks[i].blk_num >= max_id ? bundle->blocks[i].blk_num : max_id;
-    }
-
-    MockBPA_CanonicalBlock_t *new_block = &bundle->blocks[bundle->block_count++];
+    MockBPA_CanonicalBlock_t *new_block = MockBPA_BlockList_push_back_new(bundle->blocks);
     memset(new_block, 0, sizeof(*new_block));
     new_block->blk_num  = max_id + 1;
     new_block->blk_type = block_type_code;
@@ -187,7 +342,10 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
     new_block->flags    = block_type_code == 12 ? 1 : 0; // BCB should have a flag of 1
     new_block->btsd     = NULL;
     new_block->btsd_len = 0;
-    *result_block_num   = new_block->blk_num;
+
+    MockBPA_BlockByNum_set_at(bundle->blocks_num, new_block->blk_num, new_block);
+
+    *result_block_num = new_block->blk_num;
     return 0;
 }
 
@@ -200,40 +358,30 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
 
     MockBPA_Bundle_t         *bundle      = bundle_ref->data;
     MockBPA_CanonicalBlock_t *found_block = NULL;
-    size_t                    found_index = 0;
-    for (found_index = 0; found_index < bundle->block_count; found_index++)
+
+    MockBPA_BlockList_it_t bit;
+    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
     {
-        if (bundle->blocks[found_index].blk_num == block_num)
+        MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_ref(bit);
+
+        if (blk->blk_num == block_num)
         {
-            found_block = &bundle->blocks[found_index];
+            // stop with @c bit on the block
+            found_block = blk;
             break;
         }
     }
-
     if (found_block == NULL)
     {
         return -2;
     }
 
     // Deinit and clear the target block for removal
-    if (found_block->btsd != NULL)
-    {
-        BSL_FREE(found_block->btsd);
-    }
-    memset(found_block, 0, sizeof(*found_block));
+    BSL_FREE(found_block->btsd);
 
-    if (bundle->block_count > 1)
-    {
-        for (size_t dst_index = found_index; dst_index < bundle->block_count - 1; dst_index++)
-        {
-            printf("Shifting block[%zu] (id=%" PRIu64 ", type=%" PRIu64 ") left", dst_index + 1,
-                   bundle->blocks[dst_index + 1].blk_num, bundle->blocks[dst_index + 1].blk_type);
-            memcpy(&bundle->blocks[dst_index], &bundle->blocks[dst_index + 1], sizeof(MockBPA_CanonicalBlock_t));
-            memset(&bundle->blocks[dst_index + 1], 0, sizeof(MockBPA_CanonicalBlock_t));
-        }
-    }
+    MockBPA_BlockByNum_erase(bundle->blocks_num, block_num);
+    MockBPA_BlockList_remove(bundle->blocks, bit);
 
-    bundle->block_count--;
     return 0;
 }
 
@@ -266,6 +414,8 @@ int bsl_mock_bpa_agent_init(void)
         .block_remove_fn       = MockBPA_RemoveBlock,
         .bundle_delete_fn      = MockBPA_DeleteBundle,
         .block_realloc_btsd_fn = MockBPA_ReallocBTSD,
+        .block_read_btsd_fn    = MockBPA_ReadBTSD,
+        .block_write_btsd_fn   = MockBPA_WriteBTSD,
 
         // Old-style callbacks
         .eid_init      = MockBPA_EID_Init,

@@ -155,39 +155,18 @@ int bsl_mock_encode_canonical(QCBOREncodeContext *enc, const MockBPA_CanonicalBl
     return 0;
 }
 
-// TODO(bvb,brian?) - Ensure deterministic encoding of blocks persuant to RFC9171 rules
-static int _cmp(const void *a, const void *b)
-{
-    // Be careful! This dereferencing took a long time to figure out!
-    const MockBPA_CanonicalBlock_t *block_a = *(const MockBPA_CanonicalBlock_t *const *)a;
-    const MockBPA_CanonicalBlock_t *block_b = *(const MockBPA_CanonicalBlock_t *const *)b;
-    return block_b->blk_type - block_a->blk_type;
-}
-
 int bsl_mock_encode_bundle(QCBOREncodeContext *enc, const MockBPA_Bundle_t *bundle)
 {
     QCBOREncode_OpenArrayIndefiniteLength(enc);
 
     bsl_mock_encode_primary(enc, &bundle->primary_block);
 
-    const MockBPA_CanonicalBlock_t *block_ref_array[40] = { 0 };
-    size_t                          block_id_nitems     = 0;
-
-    for (size_t index = 0; index < bundle->block_count; index++)
+    // Encode according to the existing order
+    MockBPA_BlockList_it_t bit;
+    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
     {
-        const MockBPA_CanonicalBlock_t *info = &bundle->blocks[index];
-        block_ref_array[block_id_nitems++]   = info;
-    }
-
-    // Sort so that payload block comes at the end/
-    // BCB > BIB > exts > Payload
-    qsort(block_ref_array, block_id_nitems, sizeof(const MockBPA_CanonicalBlock_t *), _cmp);
-
-    // Encode according to the above order.
-    for (size_t index = 0; index < block_id_nitems; index++)
-    {
-        const MockBPA_CanonicalBlock_t *info = block_ref_array[index];
-        bsl_mock_encode_canonical(enc, info);
+        const MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_cref(bit);
+        bsl_mock_encode_canonical(enc, blk);
     }
 
     QCBOREncode_CloseArrayIndefiniteLength(enc);
