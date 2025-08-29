@@ -35,7 +35,8 @@
 #include "SecurityActionSet.h"
 #include "SecurityResultSet.h"
 
-static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_num, const BSL_AbsSecBlock_t *abs_sec_block)
+static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_num,
+                      const BSL_AbsSecBlock_t *abs_sec_block)
 {
     // Get the needed size first
     BSL_Data_t asb_data;
