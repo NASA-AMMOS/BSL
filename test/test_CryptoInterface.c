@@ -198,6 +198,18 @@ static uint8_t test_256[32] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 
 void suiteSetUp(void)
 {
     BSL_openlog();
+}
+
+int suiteTearDown(int failures)
+{
+    BSL_closelog();
+    return failures;
+}
+
+void setUp(void)
+{
+    TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&bsl));
+
     BSL_CryptoInit();
 
     // static keys
@@ -221,20 +233,9 @@ void suiteSetUp(void)
     BSL_Crypto_AddRegistryKey("Key9", test_128, 16);
 }
 
-int suiteTearDown(int failures)
-{
-    BSL_CryptoDeinit();
-    BSL_closelog();
-    return failures;
-}
-
-void setUp(void)
-{
-    TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&bsl));
-}
-
 void tearDown(void)
 {
+    BSL_CryptoDeinit();
     TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&bsl));
 }
 
@@ -690,4 +691,109 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
     BSL_Crypto_ClearKeyHandle((void *)wrapped_key_handle2);
     BSLB_Crypto_RemoveRegistryKey("kek");
     BSLB_Crypto_RemoveRegistryKey("cek");
+}
+
+#define TEST_THREADS 10
+static pthread_t threads[TEST_THREADS];
+
+static void *add_key_to_reg_fn(void *arg)
+{
+    const char          *name        = (const char *)arg;
+    static const uint8_t key_bytes[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                                         0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+    int                  res         = BSL_Crypto_AddRegistryKey(name, key_bytes, sizeof(key_bytes));
+    if (BSL_SUCCESS == res)
+    {
+        BSL_LOG_INFO("ADDED %s KEY TO CRYPTO REG", name);
+        return (void *)name;
+    }
+    else
+    {
+        BSL_LOG_INFO("FAILED TO ADD %s KEY TO CRYPTO REG", name);
+        return NULL;
+    }
+}
+
+static void *get_key_from_reg_fn(void *arg)
+{
+    const char *name = (const char *)arg;
+    void       *handle;
+    int         res = BSLB_Crypto_GetRegistryKey(name, &handle);
+    if (BSL_SUCCESS == res)
+    {
+        BSL_LOG_INFO("GOT %s KEY FROM CRYPTO REG", name);
+        return (void *)name;
+    }
+    else
+    {
+        BSL_LOG_INFO("FAILED TO GET %s KEY FROM CRYPTO REG", name);
+        return NULL;
+    }
+}
+
+void test_add_key_concurrency(void)
+{
+    char names[TEST_THREADS][10];
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        sprintf(names[i], "thread%zu", i);
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        if (pthread_create(threads + i, NULL, add_key_to_reg_fn, (void *)names[i]))
+        {
+            TEST_FAIL_MESSAGE("pthread_create() failed");
+        }
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        void *ret;
+        if (pthread_join(threads[i], &ret))
+        {
+            TEST_FAIL_MESSAGE("pthread_join() failed");
+        }
+        TEST_ASSERT_NOT_NULL(ret);
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        void *handle;
+        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLB_Crypto_GetRegistryKey(names[i], &handle));
+    }
+}
+
+void test_get_key_concurrency(void)
+{
+    char names[TEST_THREADS][10];
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        sprintf(names[i], "thread%zu", i);
+    }
+
+    static const uint8_t key_bytes[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                                         0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        TEST_ASSERT_EQUAL(0, BSL_Crypto_AddRegistryKey(names[i], key_bytes, sizeof(key_bytes)));
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        if (pthread_create(threads + i, NULL, get_key_from_reg_fn, (void *)names[i]))
+        {
+            TEST_FAIL_MESSAGE("pthread_create() failed");
+        }
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        void *ret;
+        if (pthread_join(threads[i], &ret))
+        {
+            TEST_FAIL_MESSAGE("pthread_join() failed");
+        }
+        TEST_ASSERT_NOT_NULL(ret);
+    }
 }

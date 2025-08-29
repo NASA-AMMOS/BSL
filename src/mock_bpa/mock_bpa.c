@@ -140,6 +140,32 @@ static int bind_udp(int *sock, const struct sockaddr_in *addr)
     return 0;
 }
 
+static void mock_bpa_dump_telemetry(void)
+{
+    BSL_TlmCounters_t tlm    = BSL_TLM_COUNTERS_ZERO;
+    int               result = BSL_LibCtx_AccumulateTlmCounters(bsl, &tlm);
+
+    if (result)
+    {
+        BSL_LOG_ERR("Error with reading telemetry from bsl context");
+        return;
+    }
+
+    BSL_LOG_INFO("---------------------------------------------------------");
+    BSL_LOG_INFO("---------------------TELEMETRY INFO----------------------");
+    BSL_LOG_INFO("                     FAIL COUNT: %" PRIu64, tlm.counters[BSL_TLM_SECOP_FAIL_COUNT]);
+    BSL_LOG_INFO("                BUNDLE INSPECTED COUNT: %" PRIu64, tlm.counters[BSL_TLM_BUNDLE_INSPECTED_COUNT]);
+    BSL_LOG_INFO("                   ASB DECODE COUNT: %" PRIu64, tlm.counters[BSL_TLM_ASB_DECODE_COUNT]);
+    BSL_LOG_INFO("                   ASB DECODE BYTES: %" PRIu64, tlm.counters[BSL_TLM_ASB_DECODE_BYTES]);
+    BSL_LOG_INFO("                   ASB ENCODE COUNT: %" PRIu64, tlm.counters[BSL_TLM_ASB_ENCODE_COUNT]);
+    BSL_LOG_INFO("                   ASB ENCODE BYTES: %" PRIu64, tlm.counters[BSL_TLM_ASB_ENCODE_BYTES]);
+    BSL_LOG_INFO("                  SECOP SOURCE COUNT: %" PRIu64, tlm.counters[BSL_TLM_SECOP_SOURCE_COUNT]);
+    BSL_LOG_INFO("                 SECOP VERIFIER COUNT: %" PRIu64, tlm.counters[BSL_TLM_SECOP_VERIFIER_COUNT]);
+    BSL_LOG_INFO("                 SECOP ACCEPTOR COUNT: %" PRIu64, tlm.counters[BSL_TLM_SECOP_ACCEPTOR_COUNT]);
+    BSL_LOG_INFO("                  TOTAL TLM COUNT: %" PRIu64, tlm.counters[BSL_TLM_TOTAL_COUNT]);
+    BSL_LOG_INFO("---------------------------------------------------------");
+}
+
 static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
 {
     (void)loc;
@@ -170,6 +196,9 @@ static int mock_bpa_process(BSL_PolicyLocation_e loc, MockBPA_Bundle_t *bundle)
     BSL_LOG_INFO("Mock BPA: mock_bpa_process SUCCESS (code=0)");
 
 cleanup:
+    // Example telemetry dump to console
+    mock_bpa_dump_telemetry();
+
     BSL_SecurityActionSet_Deinit(malloced_action_set);
     BSL_FREE(malloced_action_set);
     BSL_FREE(malloced_response_set);
