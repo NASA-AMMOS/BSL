@@ -33,8 +33,9 @@ typedef struct
     /// Encoded PDU
     BSL_Data_t encoded;
     /// The decoded bundle
+    MockBPA_Bundle_t *bundle;
+    /// External reference to #bundle
     BSL_BundleRef_t bundle_ref;
-    // MockBPA_Bundle_t *bundle;
 } mock_bpa_ctr_t;
 
 void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr);

@@ -276,23 +276,19 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
     // iterate until failure of CBOR, not block decoder
     while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &decitem))
     {
-        if (bundle->block_count >= MockBPA_BUNDLE_MAXBLOCKS)
-        {
-            BSL_LOG_ERR("number of canonical blocks exceeded limit %zd", MockBPA_BUNDLE_MAXBLOCKS);
-            return 3;
-        }
         BSL_LOG_DEBUG("decoding canonical block (at %zd)...", QCBORDecode_Tell(dec));
 
-        MockBPA_CanonicalBlock_t blk = { 0 };
+        MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_push_back_new(bundle->blocks);
 
-        res = bsl_mock_decode_canonical(dec, &blk);
+        res = bsl_mock_decode_canonical(dec, blk);
         if (res || (QCBOR_SUCCESS != QCBORDecode_GetError(dec)))
         {
+            // block instance is already part of the bundle, so handle cleanup there
             BSL_LOG_ERR("failed decoding canonical block");
-            BSL_FREE(blk.btsd);
             return 3;
         }
-        bundle->blocks[bundle->block_count++] = blk;
+
+        MockBPA_BlockByNum_set_at(bundle->blocks_num, blk->blk_num, blk);
     }
 
     BSL_LOG_DEBUG("exiting array (at %zd)", QCBORDecode_Tell(dec));
