@@ -169,22 +169,30 @@ int main(int argc, char **argv)
                     }
                     break;
                 case 'p':
+                {
                     // TODO better way to handle this
-                    mock_bpa_handle_policy_config(optarg, agent.policy_appin, &policy_registry);
-                    mock_bpa_handle_policy_config(optarg, agent.policy_appout, &policy_registry);
-                    mock_bpa_handle_policy_config(optarg, agent.policy_clin, &policy_registry);
-                    mock_bpa_handle_policy_config(optarg, agent.policy_clout, &policy_registry);
+                    int anyerr = 0;
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_appin, &policy_registry));
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_appout, &policy_registry));
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_clin, &policy_registry));
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_clout, &policy_registry));
+                    if (anyerr)
+                    {
+                        retval = 1;
+                    }
 
                     // TODO JSON parsing
                     // // mock_bpa_handle_policy_config_from_json("src/mock_bpa/policy_provider_test.json",
                     // policy_callbacks.user_data);
 
                     break;
+                }
                 case 'k':
                     if (mock_bpa_key_registry_init(optarg))
                         retval = 1;
                     break;
                 case 'h':
+                    // fall-through to default
                 default:
                     show_usage(argv[0]);
                     retval = 1;
