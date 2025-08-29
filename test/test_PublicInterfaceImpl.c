@@ -65,60 +65,60 @@ void setUp(void)
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
     string_init_set_str(policy->name, "Unit Test Policy Provider!");
 
-    BSL_SecParam_t param_scope_flag = { 0 };
+    BSL_SecParam_t param_scope_flag;
     BSL_SecParam_InitInt64(&param_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
-    BSL_SecParam_t param_scope_flag_7 = { 0 };
+    BSL_SecParam_t param_scope_flag_7;
     BSL_SecParam_InitInt64(&param_scope_flag_7, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0x7);
-    BSL_SecParam_t param_sha_variant = { 0 };
+    BSL_SecParam_t param_sha_variant;
     BSL_SecParam_InitInt64(&param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-    BSL_SecParam_t param_sha_variant_384 = { 0 };
+    BSL_SecParam_t param_sha_variant_384;
     BSL_SecParam_InitInt64(&param_sha_variant_384, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
 
-    BSL_SecParam_t param_aes_variant = { 0 };
+    BSL_SecParam_t param_aes_variant;
     BSL_SecParam_InitInt64(&param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-    BSL_SecParam_t param_aes_variant_256 = { 0 };
+    BSL_SecParam_t param_aes_variant_256;
     BSL_SecParam_InitInt64(&param_aes_variant_256, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
-    BSL_SecParam_t param_aad_scope_flag = { 0 };
+    BSL_SecParam_t param_aad_scope_flag;
     BSL_SecParam_InitInt64(&param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
 
-    BSL_SecParam_t param_auth_tag = { 0 };
+    BSL_SecParam_t param_auth_tag;
     BSL_Data_t     authtag_data;
     BSL_Data_Init(&authtag_data);
     authtag_data.ptr = (uint8_t *)ApxA2_AuthTag;
     authtag_data.len = sizeof(ApxA2_AuthTag);
     BSL_SecParam_InitBytestr(&param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, authtag_data);
 
-    BSL_SecParam_t param_iv = { 0 };
+    BSL_SecParam_t param_iv;
     BSL_Data_t     iv_data;
     BSL_Data_Init(&iv_data);
     iv_data.ptr = (uint8_t *)ApxA2_InitVec;
     iv_data.len = sizeof(ApxA2_InitVec);
     BSL_SecParam_InitBytestr(&param_iv, RFC9173_BCB_SECPARAM_IV, iv_data);
 
-    BSL_SecParam_t param_wrapped_key = { 0 };
+    BSL_SecParam_t param_wrapped_key;
     BSL_Data_t     wrapkey_data;
     BSL_Data_Init(&wrapkey_data);
     wrapkey_data.ptr = (uint8_t *)ApxA2_WrappedKey;
     wrapkey_data.len = sizeof(ApxA2_WrappedKey);
     BSL_SecParam_InitBytestr(&param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, wrapkey_data);
 
-    BSL_SecParam_t param_use_wrap_key = { 0 };
+    BSL_SecParam_t param_use_wrap_key;
     BSL_SecParam_InitInt64(&param_use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
-    BSL_SecParam_t param_dont_use_wrap_key = { 0 };
+    BSL_SecParam_t param_dont_use_wrap_key;
     BSL_SecParam_InitInt64(&param_dont_use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
 
-    BSL_SecParam_t param_test_bib_key_correct = { 0 };
-    BSL_SecParam_InitStr(&param_test_bib_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_SecParam_t param_test_bib_key_bad = { 0 };
-    BSL_SecParam_InitStr(&param_test_bib_key_bad, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
-    BSL_SecParam_t param_test_bcb_key_correct = { 0 };
-    BSL_SecParam_InitStr(&param_test_bcb_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
-    BSL_SecParam_t param_test_bcb_key_bad = { 0 };
-    BSL_SecParam_InitStr(&param_test_bcb_key_bad, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_SecParam_t param_test_bcb_2_key_correct = { 0 };
-    BSL_SecParam_InitStr(&param_test_bcb_2_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
-    BSL_SecParam_t param_test_bcb_2_key_bad = { 0 };
-    BSL_SecParam_InitStr(&param_test_bcb_2_key_bad, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_t param_test_bib_key_correct;
+    BSL_SecParam_InitTextstr(&param_test_bib_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_t param_test_bib_key_bad;
+    BSL_SecParam_InitTextstr(&param_test_bib_key_bad, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
+    BSL_SecParam_t param_test_bcb_key_correct;
+    BSL_SecParam_InitTextstr(&param_test_bcb_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
+    BSL_SecParam_t param_test_bcb_key_bad;
+    BSL_SecParam_InitTextstr(&param_test_bcb_key_bad, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_t param_test_bcb_2_key_correct;
+    BSL_SecParam_InitTextstr(&param_test_bcb_2_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_SecParam_t param_test_bcb_2_key_bad;
+    BSL_SecParam_InitTextstr(&param_test_bcb_2_key_bad, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
 
     // test bib accepting with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
     // CLIN, SRC=ipn:1.1, ACCEPTOR, BIB, PAYLOAD, DROP BLOCK, good key
@@ -568,8 +568,8 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
 
     (void)target_block;
 
-    BSL_PrimaryBlock_t        primary_block = { 0 };
-    BSL_SecurityResponseSet_t response_set  = { 0 };
+    BSL_PrimaryBlock_t        primary_block;
+    BSL_SecurityResponseSet_t response_set = { 0 };
 
     int query_result = -1;
     int apply_result = -1;
@@ -813,8 +813,8 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
 // But, here's the fixture anyways, can be used for a future PP enhancement ticket (like #68)
 void n_test_BSL_6(void)
 {
-    BSL_PrimaryBlock_t        primary_block = { 0 };
-    BSL_SecurityResponseSet_t response_set  = { 0 };
+    BSL_PrimaryBlock_t        primary_block;
+    BSL_SecurityResponseSet_t response_set = { 0 };
     BSL_CanonicalBlock_t      res_blk;
     int                       query_result = -1;
     int                       apply_result = -1;
@@ -854,8 +854,8 @@ void n_test_BSL_6(void)
 // Recreate MockBPA test BSL_43
 void test_BSL_32(void)
 {
-    BSL_PrimaryBlock_t        primary_block = { 0 };
-    BSL_SecurityResponseSet_t response_set  = { 0 };
+    BSL_PrimaryBlock_t        primary_block;
+    BSL_SecurityResponseSet_t response_set = { 0 };
     BSL_CanonicalBlock_t      res_blk;
     int                       query_result = -1;
     int                       apply_result = -1;

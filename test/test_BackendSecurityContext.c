@@ -182,8 +182,9 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_VERIFIER, RFC9173_EXAMPLE_A2_KEY);
 
     // Note - switch to use the WRONG KEY
-    memcpy(bib_test_context.param_test_key._bytes, RFC9173_EXAMPLE_A2_KEY, strlen(RFC9173_EXAMPLE_A2_KEY));
-    bib_test_context.param_test_key._bytelen = strlen(RFC9173_EXAMPLE_A2_KEY);
+    int old_id = BSL_SecParam_GetId(&bib_test_context.param_test_key);
+    BSL_SecParam_Deinit(&bib_test_context.param_test_key);
+    BSL_SecParam_InitTextstr(&bib_test_context.param_test_key, old_id, RFC9173_EXAMPLE_A2_KEY);
 
     BSL_SecurityActionSet_t   *malloced_actionset   = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
@@ -272,13 +273,13 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, final_bundle));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
-    BSL_PrimaryBlock_t primary_block = { 0 };
+    BSL_PrimaryBlock_t primary_block;
     BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(4, primary_block.block_count);
 
-    BSL_SecParam_t param_key = { 0 };
-    BSL_SecParam_InitStr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_SecParam_t use_wrap_key = { 0 };
+    BSL_SecParam_t param_key;
+    BSL_SecParam_InitTextstr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_t use_wrap_key;
     BSL_SecParam_InitInt64(&use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
     BSL_SecOper_t bib_oper_primary;
     BSL_SecOper_Init(&bib_oper_primary);
@@ -293,8 +294,8 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &param_key);
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &use_wrap_key);
 
-    BSL_SecParam_t bcb_param_key = { 0 };
-    BSL_SecParam_InitStr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A3_KEY);
+    BSL_SecParam_t bcb_param_key;
+    BSL_SecParam_InitTextstr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A3_KEY);
     BSL_SecOper_t bcb_oper;
     BSL_SecOper_Init(&bcb_oper);
     BSL_SecOper_Populate(&bcb_oper, 2, 1, 4, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR, BSL_POLICYACTION_DROP_BLOCK);
@@ -337,20 +338,20 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     // Confirm the bundle has two canonical blocks, the payload and bundle age block
-    BSL_PrimaryBlock_t primary_block = { 0 };
+    BSL_PrimaryBlock_t primary_block;
     BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(2, primary_block.block_count);
 
-    BSL_SecParam_t param_key = { 0 };
-    BSL_SecParam_InitStr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_t param_key;
+    BSL_SecParam_InitTextstr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
 
-    BSL_SecParam_t param_sha_var = { 0 };
+    BSL_SecParam_t param_sha_var;
     BSL_SecParam_InitInt64(&param_sha_var, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC256);
 
-    BSL_SecParam_t param_integ_scope = { 0 };
+    BSL_SecParam_t param_integ_scope;
     BSL_SecParam_InitInt64(&param_integ_scope, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
 
-    BSL_SecParam_t use_wrap_key = { 0 };
+    BSL_SecParam_t use_wrap_key;
     BSL_SecParam_InitInt64(&use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
 
     BSL_SecOper_t bib_oper_primary;
@@ -371,13 +372,13 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &param_integ_scope);
     BSL_SecOper_AppendParam(&bib_oper_ext_block, &use_wrap_key);
 
-    BSL_SecParam_t bcb_param_key = { 0 };
-    BSL_SecParam_InitStr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A3_KEY);
+    BSL_SecParam_t bcb_param_key;
+    BSL_SecParam_InitTextstr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A3_KEY);
 
-    BSL_SecParam_t bcb_scope = { 0 };
+    BSL_SecParam_t bcb_scope;
     BSL_SecParam_InitInt64(&bcb_scope, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
 
-    BSL_SecParam_t aes_variant = { 0 };
+    BSL_SecParam_t aes_variant;
     BSL_SecParam_InitInt64(&aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, 1);
 
     BSL_SecOper_t bcb_oper;
@@ -438,24 +439,24 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     // Confirm the bundle has 3 canonical blocks: payload, BIB, and BCB
-    BSL_PrimaryBlock_t primary_block = { 0 };
+    BSL_PrimaryBlock_t primary_block;
     BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(3, primary_block.block_count);
 
-    BSL_CanonicalBlock_t bcb_block = { 0 };
+    BSL_CanonicalBlock_t bcb_block;
     BSL_BundleCtx_GetBlockMetadata(&mock_bpa_ctr->bundle_ref, 2, &bcb_block);
     TEST_ASSERT_EQUAL(12, bcb_block.type_code);
     TEST_ASSERT_EQUAL(2, bcb_block.block_num);
     TEST_ASSERT_EQUAL(1, bcb_block.flags);
 
     // FIRST we must decrypt the BCB targets.
-    BSL_SecParam_t bcb_param_key = { 0 };
-    BSL_SecParam_InitStr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
-    BSL_SecParam_t bcb_scope = { 0 };
+    BSL_SecParam_t bcb_param_key;
+    BSL_SecParam_InitTextstr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_SecParam_t bcb_scope;
     BSL_SecParam_InitInt64(&bcb_scope, RFC9173_BCB_SECPARAM_AADSCOPE, 0x07);
-    BSL_SecParam_t aes_variant = { 0 };
+    BSL_SecParam_t aes_variant;
     BSL_SecParam_InitInt64(&aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
-    BSL_SecParam_t use_wrap_key = { 0 };
+    BSL_SecParam_t use_wrap_key;
     BSL_SecParam_InitInt64(&use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
 
     BSL_SecOper_t bcb_op_tgt_payload;
@@ -476,11 +477,11 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &bcb_scope);
     BSL_SecOper_AppendParam(&bcb_op_tgt_bib, &use_wrap_key);
 
-    BSL_SecParam_t param_key = { 0 };
-    BSL_SecParam_InitStr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_SecParam_t sha_variant = { 0 };
+    BSL_SecParam_t param_key;
+    BSL_SecParam_InitTextstr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_t sha_variant;
     BSL_SecParam_InitInt64(&sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
-    BSL_SecParam_t scope_flag = { 0 };
+    BSL_SecParam_t scope_flag;
     BSL_SecParam_InitInt64(&scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0x07);
 
     BSL_SecOper_t bib_oper_payload;
@@ -535,17 +536,17 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, original_bundle));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
-    BSL_PrimaryBlock_t primary_block = { 0 };
+    BSL_PrimaryBlock_t primary_block;
     BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(1, primary_block.block_count);
 
-    BSL_SecParam_t param_key = { 0 };
-    BSL_SecParam_InitStr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_SecParam_t sha_variant = { 0 };
+    BSL_SecParam_t param_key;
+    BSL_SecParam_InitTextstr(&param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_t sha_variant;
     BSL_SecParam_InitInt64(&sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
-    BSL_SecParam_t scope_flag = { 0 };
+    BSL_SecParam_t scope_flag;
     BSL_SecParam_InitInt64(&scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0x07);
-    BSL_SecParam_t use_wrap_key = { 0 };
+    BSL_SecParam_t use_wrap_key;
     BSL_SecParam_InitInt64(&use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
 
     BSL_SecOper_t bib_oper_payload;
@@ -557,11 +558,11 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecOper_AppendParam(&bib_oper_payload, &scope_flag);
     BSL_SecOper_AppendParam(&bib_oper_payload, &use_wrap_key);
 
-    BSL_SecParam_t bcb_param_key = { 0 };
-    BSL_SecParam_InitStr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
-    BSL_SecParam_t bcb_scope = { 0 };
+    BSL_SecParam_t bcb_param_key;
+    BSL_SecParam_InitTextstr(&bcb_param_key, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_SecParam_t bcb_scope;
     BSL_SecParam_InitInt64(&bcb_scope, RFC9173_BCB_SECPARAM_AADSCOPE, 0x07);
-    BSL_SecParam_t aes_variant = { 0 };
+    BSL_SecParam_t aes_variant;
     BSL_SecParam_InitInt64(&aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
 
     BSL_SecOper_t bcb_op_tgt_payload;

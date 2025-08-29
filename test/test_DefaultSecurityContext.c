@@ -301,14 +301,14 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
         if (wrap)
         {
             BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
-            BSL_SecParam_InitStr(&bibcontext.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
+            BSL_SecParam_InitTextstr(&bibcontext.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
             BSL_SecParam_InitInt64(&bibcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
             BSL_Crypto_SetRngGenerator(rfc3394_cek);
         }
         else
         {
             BSL_Crypto_AddRegistryKey("cek_wrap", cek_data.ptr, cek_data.len);
-            BSL_SecParam_InitStr(&bibcontext.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "cek_wrap");
+            BSL_SecParam_InitTextstr(&bibcontext.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "cek_wrap");
             BSL_SecParam_InitInt64(&bibcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
         }
         BSL_SecParam_InitInt64(&bibcontext.param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
@@ -340,13 +340,13 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
         if (wrap)
         {
             BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
-            BSL_SecParam_InitStr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
+            BSL_SecParam_InitTextstr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
             BSL_SecParam_InitInt64(&bcbcontext.use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
         }
         else
         {
             BSL_Crypto_AddRegistryKey("cek_wrap", cek_data.ptr, cek_data.len);
-            BSL_SecParam_InitStr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "cek_wrap");
+            BSL_SecParam_InitTextstr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "cek_wrap");
             BSL_SecParam_InitInt64(&bcbcontext.use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
         }
         BSL_SecParam_InitInt64(&bcbcontext.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE,
@@ -389,10 +389,13 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
                 BSL_LOG_INFO(
                     "EXPECTED wrapped key: %s",
                     BSL_Log_DumpAsHexString(logstr, sizeof(logstr), wrapped_key_data.ptr, wrapped_key_data.len));
+                BSL_Data_t view;
+                TEST_ASSERT_EQUAL_INT(0, BSL_SecParam_GetAsBytestr(sec_param, &view));
                 BSL_LOG_INFO("ACTUAL wrapped key:   %s",
-                             BSL_Log_DumpAsHexString(logstr, sizeof(logstr), sec_param->_bytes, sec_param->_bytelen));
-                TEST_ASSERT_EQUAL(wrapped_key_data.len, sec_param->_bytelen);
-                TEST_ASSERT_EQUAL_MEMORY(wrapped_key_data.ptr, sec_param->_bytes, wrapped_key_data.len);
+                             BSL_Log_DumpAsHexString(logstr, sizeof(logstr), view.ptr, view.len));
+                TEST_ASSERT_EQUAL(wrapped_key_data.len, view.len);
+                TEST_ASSERT_EQUAL_MEMORY(wrapped_key_data.ptr, view.ptr, wrapped_key_data.len);
+                BSL_Data_Deinit(&view);
             }
         }
         TEST_ASSERT_EQUAL(1, got);
@@ -509,7 +512,7 @@ void test_sec_accept_keyunwrap(bool bib)
     if (bib)
     {
         BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
-        BSL_SecParam_InitStr(&bibcontext.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
+        BSL_SecParam_InitTextstr(&bibcontext.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
         BSL_SecParam_InitInt64(&bibcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
         BSL_SecParam_InitBytestr(&bibcontext.param_wrapped_key, RFC9173_BIB_PARAMID_WRAPPED_KEY, wrapped_key_data);
         BSL_SecParam_InitInt64(&bibcontext.param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
@@ -535,7 +538,7 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_Crypto_SetRngGenerator(rfc3394_cek);
 
         BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
-        BSL_SecParam_InitStr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
+        BSL_SecParam_InitTextstr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
         BSL_SecParam_InitInt64(&bcbcontext.use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
         BSL_SecParam_InitBytestr(&bcbcontext.param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, wrapped_key_data);
         BSL_SecParam_InitBytestr(&bcbcontext.param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, result_data);

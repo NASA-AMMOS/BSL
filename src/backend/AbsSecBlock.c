@@ -39,15 +39,8 @@ bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self)
 {
     // NOLINTBEGIN
     CHK_AS_BOOL(self != NULL);
-    // CHK_AS_BOOL(self->sec_context_id > 0);
     CHK_AS_BOOL(self->source_eid.handle != NULL);
-    CHK_AS_BOOL(BSLB_SecParamList_size(self->params) < 10000);
 
-    // Invariant: Must have at least one result
-    CHK_AS_BOOL(BSLB_SecResultList_size(self->results) < 10000);
-
-    // Invariant: Must have at least one target
-    CHK_AS_BOOL(uint64_list_size(self->targets) < 10000);
     // NOLINTEND
     return true;
 }
@@ -419,6 +412,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
                 BSL_SecParam_t param;
                 BSL_SecParam_InitInt64(&param, item_id, param_u64_value);
                 BSLB_SecParamList_push_back(self->params, param);
+                BSL_SecParam_Deinit(&param);
             }
             else if (asbitem.uDataType == QCBOR_TYPE_BYTE_STRING)
             {
@@ -431,6 +425,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
                 BSL_SecParam_t param;
                 BSL_SecParam_InitBytestr(&param, item_id, data_view);
                 BSLB_SecParamList_push_back(self->params, param);
+                BSL_SecParam_Deinit(&param);
             }
             else
             {

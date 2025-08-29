@@ -401,12 +401,12 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
                                RFC9173_BCB_AES_VARIANT_A128GCM);
         if (use_wrapped_key)
         {
-            BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9103");
+            BSL_SecParam_InitTextstr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9103");
             BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
         }
         else
         {
-            BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9102");
+            BSL_SecParam_InitTextstr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9102");
             BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
         }
     }
@@ -414,7 +414,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     {
         BSL_SecParam_InitInt64(params->param_integ_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
         BSL_SecParam_InitInt64(params->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-        BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9100");
+        BSL_SecParam_InitTextstr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9100");
         BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
     }
 

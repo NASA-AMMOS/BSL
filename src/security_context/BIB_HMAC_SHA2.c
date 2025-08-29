@@ -116,9 +116,9 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_SecOper_t *sec_oper)
         if (param_id == BSL_SECPARAM_TYPE_KEY_ID)
         {
             ASSERT_PRECONDITION(!is_int);
-            BSL_Data_t res;
-            BSL_SecParam_GetAsBytestr(param, &res);
-            self->key_id = (char *)res.ptr;
+            const char *res;
+            BSL_SecParam_GetAsTextstr(param, &res);
+            self->key_id = res;
         }
         else if (param_id == RFC9173_BIB_PARAMID_SHA_VARIANT)
         {
