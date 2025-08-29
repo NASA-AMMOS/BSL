@@ -106,12 +106,13 @@ typedef struct MockBPA_Bundle_s
 } MockBPA_Bundle_t;
 
 /** Initialize an empty not-really-valid bundle.
- *
+ * @param[out] bundle The struct.
  */
 int MockBPA_Bundle_Init(MockBPA_Bundle_t *bundle);
 
 /** Deinitialize any bundle storage.
- * This includes deallocating BTSD.
+ * This includes freeing any BTSD.
+ * @param[out] bundle The struct.
  */
 int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle);
 
