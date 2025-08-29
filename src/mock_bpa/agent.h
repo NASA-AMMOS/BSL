@@ -31,7 +31,7 @@
 #include <BPSecLib_Private.h>
 
 #include <m-deque.h>
-#include <m-dict.h>
+#include <m-bptree.h>
 #include <m-string.h>
 
 #include <inttypes.h>
@@ -69,21 +69,41 @@ typedef struct MockBPA_CanonicalBlock_s
     uint64_t blk_num;
     uint64_t flags;
     uint64_t crc_type;
-    void    *btsd;
-    size_t   btsd_len;
+
+    /// Pointer to memory managed by the BPA
+    void *btsd;
+    /// Known length of the #btsd
+    size_t btsd_len;
 } MockBPA_CanonicalBlock_t;
 
-#define MockBPA_BUNDLE_MAXBLOCKS (10)
+/** @struct MockBPA_BlockList_t
+ * An ordered list of ::MockBPA_CanonicalBlock_t storage
+ * with fast size access.
+ * BTSD is not managed by this list, but by the BPA itself.
+ */
+/** @struct MockBPA_BlockByNum_t
+ * A lookup from unique block number to ::MockBPA_CanonicalBlock_t pointer.
+ */
+/// @cond Doxygen_Suppress
+M_DEQUE_DEF(MockBPA_BlockList, MockBPA_CanonicalBlock_t, M_POD_OPLIST)
+M_BPTREE_DEF2(MockBPA_BlockByNum, 4, uint64_t, M_BASIC_OPLIST, MockBPA_CanonicalBlock_t *, M_PTR_OPLIST)
+/// @endcond
+
 typedef struct MockBPA_Bundle_s
 {
-    uint64_t                 id;
-    bool                     retain;
-    MockBPA_PrimaryBlock_t   primary_block;
-    MockBPA_CanonicalBlock_t blocks[MockBPA_BUNDLE_MAXBLOCKS];
-    size_t                   block_count;
+    uint64_t               id;
+    bool                   retain;
+    MockBPA_PrimaryBlock_t primary_block;
+
+    /// Storage for blocks in this bundle
+    MockBPA_BlockList_t blocks;
+    /// Lookup table by block number
+    MockBPA_BlockByNum_t blocks_num;
+
 } MockBPA_Bundle_t;
 
-int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle_ref);
+int MockBPA_Bundle_Init(MockBPA_Bundle_t *bundle);
+int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle);
 
 int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBlock_t *result_primary_block);
 int MockBPA_GetBlockNums(const BSL_BundleRef_t *bundle_ref, size_t block_id_array_capacity,
