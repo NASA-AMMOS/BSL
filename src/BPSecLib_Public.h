@@ -245,8 +245,8 @@ typedef struct
     /// User data pointer for callbacks
     void *user_data;
 
-    /// @brief Host BPA function to get its current EID
-    int (*get_host_eid_fn)(const void *user_data, BSL_HostEID_t *result);
+    /// @brief Host BPA function to get its security source EID
+    int (*get_sec_src_eid_fn)(void *user_data, BSL_HostEID_t *result);
 
     /// @brief Host BPA function to initialize/allocate an EID type.
     int (*eid_init)(void *user_data, BSL_HostEID_t *result);

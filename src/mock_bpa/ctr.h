@@ -22,10 +22,11 @@
 #ifndef BSL_MOCK_BPA_CTR_H_
 #define BSL_MOCK_BPA_CTR_H_
 
-#include <m-core.h>
-
+#include "bundle.h"
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
+
+#include <m-core.h>
 
 /// A container for encoded and decoded bundle data
 typedef struct

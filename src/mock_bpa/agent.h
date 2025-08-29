@@ -36,8 +36,6 @@
 
 #include <m-atomic.h>
 #include <m-buffer.h>
-#include <m-deque.h>
-#include <m-bptree.h>
 #include <m-string.h>
 
 #include <arpa/inet.h>
@@ -47,71 +45,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct MockBPA_BundleTimestamp_s
-{
-    uint64_t bundle_creation_time;
-    uint64_t seq_num;
-} MockBPA_BundleTimestamp_t;
-
-typedef struct MockBPA_PrimaryBlock_s
-{
-    uint64_t                  version;
-    uint64_t                  flags;
-    uint64_t                  crc_type;
-    BSL_HostEID_t             dest_eid;
-    BSL_HostEID_t             src_node_id;
-    BSL_HostEID_t             report_to_eid;
-    MockBPA_BundleTimestamp_t timestamp;
-    uint64_t                  lifetime;
-    uint64_t                  frag_offset;
-    uint64_t                  adu_length;
-
-    /// Encoded form owned by this struct
-    BSL_Data_t encoded;
-} MockBPA_PrimaryBlock_t;
-
-typedef struct MockBPA_CanonicalBlock_s
-{
-    uint64_t blk_type;
-    uint64_t blk_num;
-    uint64_t flags;
-    uint64_t crc_type;
-
-    /// Pointer to memory managed by the BPA
-    void *btsd;
-    /// Known length of the #btsd
-    size_t btsd_len;
-} MockBPA_CanonicalBlock_t;
-
-/** @struct MockBPA_BlockList_t
- * An ordered list of ::MockBPA_CanonicalBlock_t storage
- * with fast size access.
- * BTSD is not managed by this list, but by the BPA itself.
- */
-/** @struct MockBPA_BlockByNum_t
- * A lookup from unique block number to ::MockBPA_CanonicalBlock_t pointer.
- */
-/// @cond Doxygen_Suppress
-M_DEQUE_DEF(MockBPA_BlockList, MockBPA_CanonicalBlock_t, M_POD_OPLIST)
-M_BPTREE_DEF2(MockBPA_BlockByNum, 4, uint64_t, M_BASIC_OPLIST, MockBPA_CanonicalBlock_t *, M_PTR_OPLIST)
-/// @endcond
-
-typedef struct MockBPA_Bundle_s
-{
-    uint64_t               id;
-    bool                   retain;
-    MockBPA_PrimaryBlock_t primary_block;
-
-    /// Storage for blocks in this bundle
-    MockBPA_BlockList_t blocks;
-    /// Lookup table by block number
-    MockBPA_BlockByNum_t blocks_num;
-
-} MockBPA_Bundle_t;
-
-int MockBPA_Bundle_Init(MockBPA_Bundle_t *bundle);
-int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle);
 
 int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBlock_t *result_primary_block);
 int MockBPA_GetBlockNums(const BSL_BundleRef_t *bundle_ref, size_t block_id_array_capacity,

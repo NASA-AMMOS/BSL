@@ -158,8 +158,6 @@ int main(int argc, char **argv)
                         BSL_LOG_ERR("Failed to decode app EID: %s", optarg);
                         retval = 1;
                     }
-                    BSL_LOG_INFO("SETTING IPN EID: %s", optarg);
-                    setenv("BSL_TEST_LOCAL_IPN_EID", optarg, 1);
                     break;
                 case 's':
                     if (BSL_HostEID_DecodeFromText(&sec_eid, optarg))
@@ -167,6 +165,7 @@ int main(int argc, char **argv)
                         BSL_LOG_ERR("Failed to decode BPSec EID: %s", optarg);
                         retval = 1;
                     }
+                    setenv("BSL_TEST_LOCAL_IPN_EID", optarg, 1);
                     break;
                 case 'p':
                 {

@@ -28,7 +28,7 @@
 #define BSL_MOCK_BPA_ENCODE_H_
 
 #include "eid.h"
-#include "agent.h"
+#include "bundle.h"
 #include <qcbor/qcbor_encode.h>
 
 #ifdef __cplusplus

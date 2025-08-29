@@ -25,7 +25,6 @@
 #include "crc.h"
 #include "encode.h"
 #include "decode.h"
-#include "agent.h"
 #include "eidpat.h"
 #include "agent.h"
 

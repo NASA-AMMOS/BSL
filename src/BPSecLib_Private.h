@@ -371,17 +371,22 @@ int BSL_Host_GetSecSrcEID(BSL_HostEID_t *eid);
  */
 int BSL_HostEID_DecodeFromText(BSL_HostEID_t *eid, const char *text);
 
-/** Load an EID from CBOR
+/** Decode an EID from CBOR.
  *
- * @param[in,out] eid This eid
- * @param[in] CBOR decoder context
+ * @param[in,out] eid The value to decode into
+ * @param[in] decoder CBOR decoder context
  * @return 0 on success
  */
 int BSL_HostEID_DecodeFromCBOR(BSL_HostEID_t *eid, void *decoder);
 
-/** Opaque pointer to BPA-specific Endpoint ID Pattern storage.
- * Ownership of the object is kept by the BPA, and these are only references.
+/** Encode a EID into CBOR.
+ *
+ * @param[in] eid The value to encode
+ * @param[in] encoder CBOR encoder context
+ * @return Zero if successful.
  */
+int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, void *encoder);
+
 /** Static initializer for an invalid ::BSL_HostEIDPattern_t.
  * Even after this, BSL_HostEIDPattern_Init() must be used to get into a valid state.
  */
@@ -402,14 +407,6 @@ int BSL_HostEIDPattern_Init(BSL_HostEIDPattern_t *pat);
  * @param[in,out] pat The object to de-initialize.
  */
 void BSL_HostEIDPattern_Deinit(BSL_HostEIDPattern_t *pat);
-
-/**
- * Encode a EID into a CBOR sequence
- * @param[in] eid
- * @param[in] user_data
- * @return Zero if successful.
- */
-int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, void *user_data);
 
 /** Decode an EID Pattern from its text form.
  *

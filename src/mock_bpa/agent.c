@@ -40,40 +40,13 @@
 #include "policy_config.h"
 #include "policy_registry.h"
 
-int MockBPA_Bundle_Init(MockBPA_Bundle_t *bundle)
+static int MockBPA_GetEid(void *user_data, BSL_HostEID_t *result_eid)
 {
-    ASSERT_ARG_NONNULL(bundle);
-    memset(bundle, 0, sizeof(*bundle));
+    const char *local_ipn = getenv("BSL_TEST_LOCAL_IPN_EID");
 
-    bundle->retain = true;
+    int x = mock_bpa_eid_from_text(result_eid, local_ipn, user_data);
 
-    MockBPA_BlockList_init(bundle->blocks);
-    MockBPA_BlockByNum_init(bundle->blocks_num);
-
-    return 0;
-}
-
-int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle)
-{
-    ASSERT_ARG_NONNULL(bundle);
-    BSL_HostEID_Deinit(&bundle->primary_block.src_node_id);
-    BSL_HostEID_Deinit(&bundle->primary_block.dest_eid);
-    BSL_HostEID_Deinit(&bundle->primary_block.report_to_eid);
-    BSL_Data_Deinit(&bundle->primary_block.encoded);
-
-    MockBPA_BlockByNum_clear(bundle->blocks_num);
-
-    MockBPA_BlockList_it_t bit;
-    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
-    {
-        MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_ref(bit);
-        BSL_LOG_DEBUG("freeing block number %" PRIu64, blk->blk_num);
-        BSL_FREE(blk->btsd);
-    }
-    MockBPA_BlockList_clear(bundle->blocks);
-
-    memset(bundle, 0, sizeof(*bundle));
-    return 0;
+    return (0 == x) ? 0 : -1;
 }
 
 int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBlock_t *result_primary_block)
@@ -411,7 +384,7 @@ BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent)
     BSL_HostDescriptors_t bpa = {
         .user_data = agent,
         // New-style callbacks
-        .get_host_eid_fn       = MockBPA_GetEid,
+        .get_sec_src_eid_fn    = MockBPA_GetEid,
         .bundle_metadata_fn    = MockBPA_GetBundleMetadata,
         .block_metadata_fn     = MockBPA_GetBlockMetadata,
         .block_create_fn       = MockBPA_CreateBlock,
