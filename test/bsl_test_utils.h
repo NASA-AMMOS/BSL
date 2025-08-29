@@ -101,6 +101,8 @@ typedef struct
     BSL_SecOper_t sec_oper;
 } BIBTestContext;
 
+//void BIBTestContext_Init(BIBTestContext *obj);
+
 void BIBTestContext_Deinit(BIBTestContext *obj);
 
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id);

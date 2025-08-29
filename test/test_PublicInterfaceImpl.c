@@ -65,6 +65,7 @@ void setUp(void)
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
     string_init_set_str(policy->name, "Unit Test Policy Provider!");
 
+    //FIXME these params need managed lifecycle to ensure Deinit (by some means)
     BSL_SecParam_t param_scope_flag;
     BSL_SecParam_InitInt64(&param_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
     BSL_SecParam_t param_scope_flag_7;
@@ -129,10 +130,10 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_1, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.1) WITH POLICY DROP BLOCK",
                          predicate_1, 1, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_1, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_1, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_1, &param_test_bib_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_1, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_1, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_1, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_1, &param_test_bib_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_1, &param_dont_use_wrap_key);
 
     // CLIN, SRC=ipn:1.2, ACCEPTOR, BIB, PAYLOAD, DROP BUNDLE, bad key
     BSLP_PolicyPredicate_t *predicate_2 = &policy->predicates[policy->predicate_count++];
@@ -142,10 +143,10 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_2, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.2)", predicate_2, 1,
                          BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BUNDLE);
-    BSLP_PolicyRule_MoveParam(rule_2, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_2, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_2, &param_test_bib_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_2, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_2, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_2, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_2, &param_test_bib_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_2, &param_dont_use_wrap_key);
 
     // CLIN, SRC=ipn:1.3, ACCEPTOR, BIB, PAYLOAD, DROP BLOCK, bad key
     BSLP_PolicyPredicate_t *predicate_3 = &policy->predicates[policy->predicate_count++];
@@ -155,10 +156,10 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_3, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.3)", predicate_3, 1,
                          BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_3, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_3, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_3, &param_test_bib_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_3, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_3, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_3, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_3, &param_test_bib_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_3, &param_dont_use_wrap_key);
 
     // CLIN, SRC=ipn:1.4, ACCEPTOR, BIB, PAYLOAD, NOTHING, bad key
     BSLP_PolicyPredicate_t *predicate_4 = &policy->predicates[policy->predicate_count++];
@@ -167,10 +168,10 @@ void setUp(void)
     BSLP_PolicyRule_t *rule_4 = &policy->rules[policy->rule_count++];
     BSLP_PolicyRule_Init(rule_4, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.4)", predicate_4, 1,
                          BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING);
-    BSLP_PolicyRule_MoveParam(rule_4, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_4, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_4, &param_test_bib_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_4, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_4, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_4, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_4, &param_test_bib_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_4, &param_dont_use_wrap_key);
 
     // test bcb accepting with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
     // CLIN, SRC=ipn:1.5, ACCEPTOR, BCB, PAYLOAD, DROP BLOCK, good key
@@ -181,12 +182,12 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_5, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.5) WITH POLICY DROP BLOCK",
                          predicate_5, 2, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_5, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_5, &param_iv);
-    BSLP_PolicyRule_MoveParam(rule_5, &param_wrapped_key);
-    BSLP_PolicyRule_MoveParam(rule_5, &param_auth_tag);
-    BSLP_PolicyRule_MoveParam(rule_5, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_5, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_5, &param_test_bcb_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_5, &param_iv);
+    BSLP_PolicyRule_CopyParam(rule_5, &param_wrapped_key);
+    BSLP_PolicyRule_CopyParam(rule_5, &param_auth_tag);
+    BSLP_PolicyRule_CopyParam(rule_5, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_5, &param_use_wrap_key);
 
     // CLIN, SRC=ipn:1.6, ACCEPTOR, BCB, PAYLOAD, DROP BUNDLE, bad key
     BSLP_PolicyPredicate_t *predicate_6 = &policy->predicates[policy->predicate_count++];
@@ -196,12 +197,12 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_6, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.6)", predicate_6, 2,
                          BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BUNDLE);
-    BSLP_PolicyRule_MoveParam(rule_6, &param_test_bcb_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_6, &param_iv);
-    BSLP_PolicyRule_MoveParam(rule_6, &param_wrapped_key);
-    BSLP_PolicyRule_MoveParam(rule_6, &param_auth_tag);
-    BSLP_PolicyRule_MoveParam(rule_6, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_6, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_6, &param_test_bcb_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_6, &param_iv);
+    BSLP_PolicyRule_CopyParam(rule_6, &param_wrapped_key);
+    BSLP_PolicyRule_CopyParam(rule_6, &param_auth_tag);
+    BSLP_PolicyRule_CopyParam(rule_6, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_6, &param_use_wrap_key);
 
     // CLIN, SRC=ipn:1.7, ACCEPTOR, BCB, PAYLOAD, DROP BLOCK, bad key
     BSLP_PolicyPredicate_t *predicate_7 = &policy->predicates[policy->predicate_count++];
@@ -211,12 +212,12 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_7, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.7)", predicate_7, 2,
                          BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_7, &param_test_bcb_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_7, &param_iv);
-    BSLP_PolicyRule_MoveParam(rule_7, &param_wrapped_key);
-    BSLP_PolicyRule_MoveParam(rule_7, &param_auth_tag);
-    BSLP_PolicyRule_MoveParam(rule_7, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_7, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_7, &param_test_bcb_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_7, &param_iv);
+    BSLP_PolicyRule_CopyParam(rule_7, &param_wrapped_key);
+    BSLP_PolicyRule_CopyParam(rule_7, &param_auth_tag);
+    BSLP_PolicyRule_CopyParam(rule_7, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_7, &param_use_wrap_key);
 
     // CLIN, SRC=ipn:1.8, ACCEPTOR, BCB, PAYLOAD, NOTHING, bad key
     BSLP_PolicyPredicate_t *predicate_8 = &policy->predicates[policy->predicate_count++];
@@ -225,12 +226,12 @@ void setUp(void)
     BSLP_PolicyRule_t *rule_8 = &policy->rules[policy->rule_count++];
     BSLP_PolicyRule_Init(rule_8, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.8)", predicate_8, 2,
                          BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING);
-    BSLP_PolicyRule_MoveParam(rule_8, &param_test_bcb_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_8, &param_iv);
-    BSLP_PolicyRule_MoveParam(rule_8, &param_wrapped_key);
-    BSLP_PolicyRule_MoveParam(rule_8, &param_auth_tag);
-    BSLP_PolicyRule_MoveParam(rule_8, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_8, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_8, &param_test_bcb_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_8, &param_iv);
+    BSLP_PolicyRule_CopyParam(rule_8, &param_wrapped_key);
+    BSLP_PolicyRule_CopyParam(rule_8, &param_auth_tag);
+    BSLP_PolicyRule_CopyParam(rule_8, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_8, &param_use_wrap_key);
 
     // test bib & bcb accpeting with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
     // CLIN, SRC=ipn:1.9, ACCEPTOR, BIB, PAYLOAD, DROP BLOCK, good key
@@ -242,10 +243,10 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_9a, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.9) WITH POLICY DROP BLOCK",
                          predicate_9a, 1, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_9a, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_9a, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_9a, &param_test_bib_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_9a, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_9a, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_9a, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_9a, &param_test_bib_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_9a, &param_dont_use_wrap_key);
 
     BSLP_PolicyPredicate_t *predicate_9b = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate_9b, BSL_POLICYLOCATION_CLIN, BSL_TestUtils_GetEidPatternFromText("ipn:*.1.9"),
@@ -254,12 +255,12 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_9b, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.9) WITH POLICY DROP BLOCK",
                          predicate_9b, 2, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_9b, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_9b, &param_iv);
-    BSLP_PolicyRule_MoveParam(rule_9b, &param_wrapped_key);
-    BSLP_PolicyRule_MoveParam(rule_9b, &param_auth_tag);
-    BSLP_PolicyRule_MoveParam(rule_9b, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_9b, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_9b, &param_test_bcb_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_9b, &param_iv);
+    BSLP_PolicyRule_CopyParam(rule_9b, &param_wrapped_key);
+    BSLP_PolicyRule_CopyParam(rule_9b, &param_auth_tag);
+    BSLP_PolicyRule_CopyParam(rule_9b, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_9b, &param_use_wrap_key);
 
     // test bib sourcing with good key
     // CLOUT, DEST=ipn:1.1, SOURCE, BIB, PAYLOAD, DROP BLOCK, good key
@@ -271,10 +272,10 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_13, "SOURCE BIB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:1.1) WITH POLICY DROP BLOCK",
                          predicate_13, 1, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_13, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_13, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_13, &param_test_bib_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_13, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_13, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_13, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_13, &param_test_bib_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_13, &param_dont_use_wrap_key);
 
     // test bcb sourcing with good key
     // CLOUT, DEST=ipn:1.5, SOURCE, BCB, PAYLOAD, DROP BLOCK, good key
@@ -285,9 +286,9 @@ void setUp(void)
     BSLP_PolicyRule_t *rule_14 = &policy->rules[policy->rule_count++];
     BSLP_PolicyRule_Init(rule_14, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:1.5)", predicate_14, 2,
                          BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_14, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_14, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_14, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_14, &param_test_bcb_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_14, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_14, &param_use_wrap_key);
 
     // test bib & bcb sourcing with good key
     // CLOUT, DEST=ipn:1.9, SOURCE, BIB, PAYLOAD, DROP BLOCK, good key
@@ -300,10 +301,10 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_15a, "SOURCE BIB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:1.9) WITH POLICY DROP BLOCK",
                          predicate_15a, 1, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_15a, &param_sha_variant_384);
-    BSLP_PolicyRule_MoveParam(rule_15a, &param_scope_flag_7);
-    BSLP_PolicyRule_MoveParam(rule_15a, &param_test_bib_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_15a, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_15a, &param_sha_variant_384);
+    BSLP_PolicyRule_CopyParam(rule_15a, &param_scope_flag_7);
+    BSLP_PolicyRule_CopyParam(rule_15a, &param_test_bib_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_15a, &param_dont_use_wrap_key);
 
     BSLP_PolicyPredicate_t *predicate_15b = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate_15b, BSL_POLICYLOCATION_CLOUT, BSL_TestUtils_GetEidPatternFromText("*:**"),
@@ -312,9 +313,9 @@ void setUp(void)
     BSLP_PolicyRule_t *rule_15b = &policy->rules[policy->rule_count++];
     BSLP_PolicyRule_Init(rule_15b, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:1.9)", predicate_15b, 2,
                          BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_15b, &param_test_bcb_2_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_15b, &param_aes_variant_256);
-    BSLP_PolicyRule_MoveParam(rule_15b, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_15b, &param_test_bcb_2_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_15b, &param_aes_variant_256);
+    BSLP_PolicyRule_CopyParam(rule_15b, &param_dont_use_wrap_key);
 
     // test bib verif with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
     // APPIN, DEST=ipn:1.1, VERIF, BIB, PAYLOAD, DROP BLOCK, good key
@@ -326,10 +327,10 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_17, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.1)", predicate_17, 1,
                          BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_17, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_17, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_17, &param_test_bib_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_17, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_17, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_17, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_17, &param_test_bib_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_17, &param_dont_use_wrap_key);
 
     // APPIN, DEST=ipn:1.2, VERIF, BIB, PAYLOAD, DROP BUNDLE, bad key
     BSLP_PolicyPredicate_t *predicate_18 = &policy->predicates[policy->predicate_count++];
@@ -340,10 +341,10 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_18, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.2)", predicate_18, 1,
                          BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BUNDLE);
-    BSLP_PolicyRule_MoveParam(rule_18, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_18, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_18, &param_test_bib_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_18, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_18, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_18, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_18, &param_test_bib_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_18, &param_dont_use_wrap_key);
 
     // APPIN, DEST=ipn:1.3, VERIF, BIB, PAYLOAD, DROP BLOCK, bad key
     BSLP_PolicyPredicate_t *predicate_19 = &policy->predicates[policy->predicate_count++];
@@ -354,10 +355,10 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_19, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.3)", predicate_19, 1,
                          BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_19, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_19, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_19, &param_test_bib_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_19, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_19, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_19, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_19, &param_test_bib_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_19, &param_dont_use_wrap_key);
 
     // APPIN, DEST=ipn:1.4, VERIF, BIB, PAYLOAD, NOTHING, bad key
     BSLP_PolicyPredicate_t *predicate_20 = &policy->predicates[policy->predicate_count++];
@@ -367,10 +368,10 @@ void setUp(void)
     BSLP_PolicyRule_t *rule_20 = &policy->rules[policy->rule_count++];
     BSLP_PolicyRule_Init(rule_20, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.4)", predicate_20, 1,
                          BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING);
-    BSLP_PolicyRule_MoveParam(rule_20, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_20, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_20, &param_test_bib_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_20, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_20, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_20, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_20, &param_test_bib_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_20, &param_dont_use_wrap_key);
 
     // test bcb verif with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
     // APPIN, DEST=ipn:1.5, VERIF, BCB, PAYLOAD, DROP BLOCK, good key
@@ -382,12 +383,12 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_21, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.5)", predicate_21, 2,
                          BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_21, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_21, &param_iv);
-    BSLP_PolicyRule_MoveParam(rule_21, &param_wrapped_key);
-    BSLP_PolicyRule_MoveParam(rule_21, &param_auth_tag);
-    BSLP_PolicyRule_MoveParam(rule_21, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_21, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_21, &param_test_bcb_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_21, &param_iv);
+    BSLP_PolicyRule_CopyParam(rule_21, &param_wrapped_key);
+    BSLP_PolicyRule_CopyParam(rule_21, &param_auth_tag);
+    BSLP_PolicyRule_CopyParam(rule_21, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_21, &param_use_wrap_key);
 
     // APPIN, DEST=ipn:1.6, VERIF, BCB, PAYLOAD, DROP BUNDLE, bad key
     BSLP_PolicyPredicate_t *predicate_22 = &policy->predicates[policy->predicate_count++];
@@ -398,12 +399,12 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_22, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.6)", predicate_22, 2,
                          BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BUNDLE);
-    BSLP_PolicyRule_MoveParam(rule_22, &param_test_bcb_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_22, &param_iv);
-    BSLP_PolicyRule_MoveParam(rule_22, &param_wrapped_key);
-    BSLP_PolicyRule_MoveParam(rule_22, &param_auth_tag);
-    BSLP_PolicyRule_MoveParam(rule_22, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_22, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_22, &param_test_bcb_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_22, &param_iv);
+    BSLP_PolicyRule_CopyParam(rule_22, &param_wrapped_key);
+    BSLP_PolicyRule_CopyParam(rule_22, &param_auth_tag);
+    BSLP_PolicyRule_CopyParam(rule_22, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_22, &param_use_wrap_key);
 
     // APPIN, DEST=ipn:1.7, VERIF, BCB, PAYLOAD, DROP BLOCK, bad key
     BSLP_PolicyPredicate_t *predicate_23 = &policy->predicates[policy->predicate_count++];
@@ -414,12 +415,12 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_23, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.7)", predicate_23, 2,
                          BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_23, &param_test_bcb_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_23, &param_iv);
-    BSLP_PolicyRule_MoveParam(rule_23, &param_wrapped_key);
-    BSLP_PolicyRule_MoveParam(rule_23, &param_auth_tag);
-    BSLP_PolicyRule_MoveParam(rule_23, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_23, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_23, &param_test_bcb_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_23, &param_iv);
+    BSLP_PolicyRule_CopyParam(rule_23, &param_wrapped_key);
+    BSLP_PolicyRule_CopyParam(rule_23, &param_auth_tag);
+    BSLP_PolicyRule_CopyParam(rule_23, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_23, &param_use_wrap_key);
 
     // APPIN, DEST=ipn:1.8, VERIF, BCB, PAYLOAD, NOTHING, bad key
     BSLP_PolicyPredicate_t *predicate_24 = &policy->predicates[policy->predicate_count++];
@@ -429,12 +430,12 @@ void setUp(void)
     BSLP_PolicyRule_t *rule_24 = &policy->rules[policy->rule_count++];
     BSLP_PolicyRule_Init(rule_24, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.8)", predicate_24, 2,
                          BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING);
-    BSLP_PolicyRule_MoveParam(rule_24, &param_test_bcb_key_bad);
-    BSLP_PolicyRule_MoveParam(rule_24, &param_iv);
-    BSLP_PolicyRule_MoveParam(rule_24, &param_wrapped_key);
-    BSLP_PolicyRule_MoveParam(rule_24, &param_auth_tag);
-    BSLP_PolicyRule_MoveParam(rule_24, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_24, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_24, &param_test_bcb_key_bad);
+    BSLP_PolicyRule_CopyParam(rule_24, &param_iv);
+    BSLP_PolicyRule_CopyParam(rule_24, &param_wrapped_key);
+    BSLP_PolicyRule_CopyParam(rule_24, &param_auth_tag);
+    BSLP_PolicyRule_CopyParam(rule_24, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_24, &param_use_wrap_key);
 
     // test bib & bcb verif with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
     // APPIN, DEST=ipn:1.9, VERIF, BIB, PAYLOAD, DROP BLOCK, good key
@@ -447,10 +448,10 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_25a, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.9)", predicate_25a, 1,
                          BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_25a, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_25a, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_25a, &param_test_bib_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_25a, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_25a, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_25a, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_25a, &param_test_bib_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_25a, &param_dont_use_wrap_key);
 
     BSLP_PolicyPredicate_t *predicate_25b = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate_25b, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
@@ -460,11 +461,11 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_25b, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.9)", predicate_25b, 2,
                          BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_25b, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_25b, &param_iv);
-    BSLP_PolicyRule_MoveParam(rule_25b, &param_wrapped_key);
-    BSLP_PolicyRule_MoveParam(rule_25b, &param_auth_tag);
-    BSLP_PolicyRule_MoveParam(rule_25b, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_25b, &param_test_bcb_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_25b, &param_iv);
+    BSLP_PolicyRule_CopyParam(rule_25b, &param_wrapped_key);
+    BSLP_PolicyRule_CopyParam(rule_25b, &param_auth_tag);
+    BSLP_PolicyRule_CopyParam(rule_25b, &param_aes_variant);
 
     // BSL 6
     BSLP_PolicyPredicate_t *predicate_bsl_6 = &policy->predicates[policy->predicate_count++];
@@ -475,10 +476,10 @@ void setUp(void)
     BSLP_PolicyRule_Init(rule_bsl_6, "SOURCE BIB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:0.6) WITH POLICY DROP BLOCK",
                          predicate_bsl_6, 1, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_bsl_6, &param_sha_variant);
-    BSLP_PolicyRule_MoveParam(rule_bsl_6, &param_scope_flag);
-    BSLP_PolicyRule_MoveParam(rule_bsl_6, &param_test_bib_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_bsl_6, &param_dont_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_bsl_6, &param_sha_variant);
+    BSLP_PolicyRule_CopyParam(rule_bsl_6, &param_scope_flag);
+    BSLP_PolicyRule_CopyParam(rule_bsl_6, &param_test_bib_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_bsl_6, &param_dont_use_wrap_key);
 
     // BSL_32
     BSLP_PolicyPredicate_t *predicate_bsl_32a = &policy->predicates[policy->predicate_count++];
@@ -488,9 +489,9 @@ void setUp(void)
     BSLP_PolicyRule_t *rule_bsl_32a = &policy->rules[policy->rule_count++];
     BSLP_PolicyRule_Init(rule_bsl_32a, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:3.2)", predicate_bsl_32a, 2,
                          BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_bsl_32a, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_bsl_32a, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_bsl_32a, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_bsl_32a, &param_test_bcb_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_bsl_32a, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_bsl_32a, &param_use_wrap_key);
 
     BSLP_PolicyPredicate_t *predicate_bsl_32b = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate_bsl_32b, BSL_POLICYLOCATION_CLOUT, BSL_TestUtils_GetEidPatternFromText("*:**"),
@@ -499,9 +500,9 @@ void setUp(void)
     BSLP_PolicyRule_t *rule_bsl_32b = &policy->rules[policy->rule_count++];
     BSLP_PolicyRule_Init(rule_bsl_32b, "SOURCE BCB OVER BIB AT CLOUT FILTER(DEST=ipn:3.2)", predicate_bsl_32b, 2,
                          BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_BIB, BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_MoveParam(rule_bsl_32b, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_MoveParam(rule_bsl_32b, &param_aes_variant);
-    BSLP_PolicyRule_MoveParam(rule_bsl_32b, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(rule_bsl_32b, &param_test_bcb_key_correct);
+    BSLP_PolicyRule_CopyParam(rule_bsl_32b, &param_aes_variant);
+    BSLP_PolicyRule_CopyParam(rule_bsl_32b, &param_use_wrap_key);
 
     /// Register the Security Context
     BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
