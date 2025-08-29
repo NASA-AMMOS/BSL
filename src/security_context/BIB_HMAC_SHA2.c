@@ -522,11 +522,12 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
 
     if (bib_context.wrapped_key.len > 0)
     {
-        BSL_SecParam_t *wrapped_key_param = BSL_CALLOC(1, BSL_SecResult_Sizeof());
+        BSL_SecParam_t *wrapped_key_param = BSL_CALLOC(1, BSL_SecParam_Sizeof());
         if (BSL_SUCCESS
             != BSL_SecParam_InitBytestr(wrapped_key_param, RFC9173_BIB_PARAMID_WRAPPED_KEY, bib_context.wrapped_key))
         {
             BSL_LOG_ERR("Failed to append BIB wrapped key param");
+            BSL_SecParam_Deinit(wrapped_key_param);
             BSL_FREE(wrapped_key_param);
             BSLX_BIB_Deinit(&bib_context);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -536,6 +537,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
             BSL_LOG_INFO("Appending BIB wrapped key param");
             BSL_SecOutcome_AppendParam(sec_outcome, wrapped_key_param);
         }
+        BSL_SecParam_Deinit(wrapped_key_param);
         BSL_FREE(wrapped_key_param);
     }
 

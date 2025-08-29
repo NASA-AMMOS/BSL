@@ -64,6 +64,7 @@ int suiteTearDown(int failures)
 
 void setUp(void)
 {
+    BSL_CryptoInit();
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
     memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
     TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
@@ -102,6 +103,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
+    BIBTestContext_Init(&bib_test_context);
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_SOURCE, RFC9173_EXAMPLE_A1_KEY);
 
     BSL_SecOutcome_t *sec_outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
@@ -126,8 +128,8 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     TEST_ASSERT_TRUE(memcmp(ApxA1_HMAC, bib_result->_bytes, sizeof(ApxA1_HMAC)) == 0);
 
     BSL_SecOutcome_Deinit(sec_outcome);
-    BSL_SecOper_Deinit(&bib_test_context.sec_oper);
     BSL_FREE(sec_outcome);
+    BIBTestContext_Deinit(&bib_test_context);
 }
 
 // /// @brief Purpose: Exercise BIB verifying a security block.
@@ -159,6 +161,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BCBTestContext bcb_test_context;
+    BCBTestContext_Init(&bcb_test_context);
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_SOURCE);
 
     BSL_SecOutcome_t *outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
@@ -194,8 +197,8 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     TEST_ASSERT_EQUAL_MEMORY(ApxA2_Ciphertext, target_block->btsd, sizeof(ApxA2_Ciphertext));
 
     BSL_SecOutcome_Deinit(outcome);
-    BSL_SecOper_Deinit(&bcb_test_context.sec_oper);
     BSL_FREE(outcome);
+    BCBTestContext_Deinit(&bcb_test_context);
 }
 
 void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
@@ -205,6 +208,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BCBTestContext bcb_test_context;
+    BCBTestContext_Init(&bcb_test_context);
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_ACCEPTOR);
 
     BSL_SecOutcome_t *outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
@@ -237,8 +241,8 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     TEST_ASSERT_EQUAL_MEMORY(ApxA2_PayloadData, target_block->btsd, sizeof(ApxA2_PayloadData));
 
     BSL_SecOutcome_Deinit(outcome);
-    BSL_SecOper_Deinit(&bcb_test_context.sec_oper);
     BSL_FREE(outcome);
+    BCBTestContext_Deinit(&bcb_test_context);
 }
 
 int rfc3394_cek(unsigned char *buf, int len)
@@ -306,6 +310,8 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
     const BSL_SecResult_t *result;
     BIBTestContext         bibcontext;
     BCBTestContext         bcbcontext;
+    BIBTestContext_Init(&bibcontext);
+    BCBTestContext_Init(&bcbcontext);
     if (bib)
     {
         if (wrap)
@@ -324,7 +330,6 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
         BSL_SecParam_InitInt64(&bibcontext.param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
         BSL_SecParam_InitInt64(&bibcontext.param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
 
-        BSL_SecOper_Init(&bibcontext.sec_oper);
         BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
                              BSL_POLICYACTION_DROP_BLOCK);
         BSL_SecOper_AppendParam(&bibcontext.sec_oper, &bibcontext.param_sha_variant);
@@ -351,26 +356,25 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
         {
             BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
             BSL_SecParam_InitTextstr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
-            BSL_SecParam_InitInt64(&bcbcontext.use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
+            BSL_SecParam_InitInt64(&bcbcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
         }
         else
         {
             BSL_Crypto_AddRegistryKey("cek_wrap", cek_data.ptr, cek_data.len);
             BSL_SecParam_InitTextstr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "cek_wrap");
-            BSL_SecParam_InitInt64(&bcbcontext.use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
+            BSL_SecParam_InitInt64(&bcbcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
         }
         BSL_SecParam_InitInt64(&bcbcontext.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE,
                                RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
         BSL_SecParam_InitInt64(&bcbcontext.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
                                RFC9173_BCB_AES_VARIANT_A128GCM);
 
-        BSL_SecOper_Init(&bcbcontext.sec_oper);
         BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
                              BSL_POLICYACTION_DROP_BLOCK);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_aes_variant);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_scope_flags);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_test_key_id);
-        BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.use_wrap_key);
+        BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.use_key_wrap);
 
         BSL_SecOutcome_Init(sec_outcome, &bcbcontext.sec_oper, BSL_SecOutcome_Sizeof());
 
@@ -441,20 +445,14 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
     }
 
     BSL_SecOutcome_Deinit(sec_outcome);
-    if (bib)
-    {
-        BSL_SecOper_Deinit(&bibcontext.sec_oper);
-    }
-    else
-    {
-        BSL_SecOper_Deinit(&bcbcontext.sec_oper);
-    }
 
     BSL_Data_Deinit(&result_data);
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&wrapped_key_data);
     BSL_FREE(sec_outcome);
+    BIBTestContext_Deinit(&bibcontext);
+    BCBTestContext_Deinit(&bcbcontext);
 }
 
 TEST_MATRIX([ true, false ])
@@ -522,6 +520,8 @@ void test_sec_accept_keyunwrap(bool bib)
     BSL_SecOutcome_t *sec_outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
     BIBTestContext    bibcontext;
     BCBTestContext    bcbcontext;
+    BIBTestContext_Init(&bibcontext);
+    BCBTestContext_Init(&bcbcontext);
     if (bib)
     {
         BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
@@ -531,7 +531,6 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_SecParam_InitInt64(&bibcontext.param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
         BSL_SecParam_InitInt64(&bibcontext.param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
 
-        BSL_SecOper_Init(&bibcontext.sec_oper);
         BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
                              BSL_POLICYACTION_DROP_BLOCK);
         BSL_SecOper_AppendParam(&bibcontext.sec_oper, &bibcontext.param_sha_variant);
@@ -552,7 +551,7 @@ void test_sec_accept_keyunwrap(bool bib)
 
         BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
         BSL_SecParam_InitTextstr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
-        BSL_SecParam_InitInt64(&bcbcontext.use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
+        BSL_SecParam_InitInt64(&bcbcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
         BSL_SecParam_InitBytestr(&bcbcontext.param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, wrapped_key_data);
         BSL_SecParam_InitBytestr(&bcbcontext.param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, result_data);
         BSL_SecParam_InitBytestr(&bcbcontext.param_init_vec, RFC9173_BCB_SECPARAM_IV, iv_data);
@@ -561,13 +560,12 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_SecParam_InitInt64(&bcbcontext.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
                                RFC9173_BCB_AES_VARIANT_A128GCM);
 
-        BSL_SecOper_Init(&bcbcontext.sec_oper);
         BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
                              BSL_POLICYACTION_DROP_BLOCK);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_aes_variant);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_scope_flags);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_test_key_id);
-        BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.use_wrap_key);
+        BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.use_key_wrap);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_wrapped_key);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_auth_tag);
         BSL_SecOper_AppendParam(&bcbcontext.sec_oper, &bcbcontext.param_init_vec);
@@ -604,20 +602,13 @@ void test_sec_accept_keyunwrap(bool bib)
     }
 
     BSL_SecOutcome_Deinit(sec_outcome);
-    if (bib)
-    {
-        BSL_SecOper_Deinit(&bibcontext.sec_oper);
-    }
-    else
-    {
-        BSL_SecOper_Deinit(&bcbcontext.sec_oper);
-    }
-
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&wrapped_key_data);
     BSL_Data_Deinit(&result_data);
     BSL_Data_Deinit(&iv_data);
     BSL_FREE(sec_outcome);
+    BIBTestContext_Deinit(&bibcontext);
+    BCBTestContext_Deinit(&bcbcontext);
 }
 
 // /// @brief Purpose: Exercises BCB as a security acceptor

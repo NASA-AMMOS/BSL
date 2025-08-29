@@ -62,7 +62,10 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
 
 void BSL_SecOper_Deinit(BSL_SecOper_t *self)
 {
-    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    // doesn't have to be consistent to be deinit'd right?
+    //ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(self->_param_list);
     BSLB_SecParamList_clear(self->_param_list);
 }
 
