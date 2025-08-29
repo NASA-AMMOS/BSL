@@ -19,14 +19,14 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#ifndef TEST_BPA_MOCK_BPA_CTR_H_
-#define TEST_BPA_MOCK_BPA_CTR_H_
+#ifndef BSL_MOCK_BPA_CTR_H_
+#define BSL_MOCK_BPA_CTR_H_
 
-#include <m-core.h>
-
+#include "bundle.h"
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
-#include "agent.h"
+
+#include <m-core.h>
 
 /// A container for encoded and decoded bundle data
 typedef struct
@@ -52,4 +52,4 @@ int mock_bpa_encode(mock_bpa_ctr_t *ctr);
 #define M_OPL_mock_bpa_ctr_t() \
     (INIT(API_2(mock_bpa_ctr_init)), INIT_MOVE(API_6(mock_bpa_ctr_init_move)), CLEAR(API_2(mock_bpa_ctr_deinit)))
 
-#endif /* TEST_BPA_MOCK_BPA_CTR_H_ */
+#endif /* BSL_MOCK_BPA_CTR_H_ */

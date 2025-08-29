@@ -24,86 +24,27 @@
  * Declarations for Agent initialization.
  * @ingroup mock_bpa
  */
-#ifndef BSL_MOCK_BPA_H_
-#define BSL_MOCK_BPA_H_
+#ifndef BSL_MOCK_BPA_AGENT_H_
+#define BSL_MOCK_BPA_AGENT_H_
+
+#include "ctr.h"
+#include "policy_registry.h"
 
 #include <BPSecLib_Public.h>
 #include <BPSecLib_Private.h>
+#include <policy_provider/SamplePolicyProvider.h>
 
-#include <m-deque.h>
-#include <m-bptree.h>
+#include <m-atomic.h>
+#include <m-buffer.h>
 #include <m-string.h>
 
+#include <arpa/inet.h>
+#include <pthread.h>
 #include <inttypes.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct MockBPA_BundleTimestamp_s
-{
-    uint64_t bundle_creation_time;
-    uint64_t seq_num;
-} MockBPA_BundleTimestamp_t;
-
-typedef struct MockBPA_PrimaryBlock_s
-{
-    uint64_t                  version;
-    uint64_t                  flags;
-    uint64_t                  crc_type;
-    BSL_HostEID_t             dest_eid;
-    BSL_HostEID_t             src_node_id;
-    BSL_HostEID_t             report_to_eid;
-    MockBPA_BundleTimestamp_t timestamp;
-    uint64_t                  lifetime;
-    uint64_t                  frag_offset;
-    uint64_t                  adu_length;
-
-    /// Encoded form owned by this struct
-    BSL_Data_t encoded;
-} MockBPA_PrimaryBlock_t;
-
-typedef struct MockBPA_CanonicalBlock_s
-{
-    uint64_t blk_type;
-    uint64_t blk_num;
-    uint64_t flags;
-    uint64_t crc_type;
-
-    /// Pointer to memory managed by the BPA
-    void *btsd;
-    /// Known length of the #btsd
-    size_t btsd_len;
-} MockBPA_CanonicalBlock_t;
-
-/** @struct MockBPA_BlockList_t
- * An ordered list of ::MockBPA_CanonicalBlock_t storage
- * with fast size access.
- * BTSD is not managed by this list, but by the BPA itself.
- */
-/** @struct MockBPA_BlockByNum_t
- * A lookup from unique block number to ::MockBPA_CanonicalBlock_t pointer.
- */
-/// @cond Doxygen_Suppress
-M_DEQUE_DEF(MockBPA_BlockList, MockBPA_CanonicalBlock_t, M_POD_OPLIST)
-M_BPTREE_DEF2(MockBPA_BlockByNum, 4, uint64_t, M_BASIC_OPLIST, MockBPA_CanonicalBlock_t *, M_PTR_OPLIST)
-/// @endcond
-
-typedef struct MockBPA_Bundle_s
-{
-    uint64_t               id;
-    bool                   retain;
-    MockBPA_PrimaryBlock_t primary_block;
-
-    /// Storage for blocks in this bundle
-    MockBPA_BlockList_t blocks;
-    /// Lookup table by block number
-    MockBPA_BlockByNum_t blocks_num;
-
-} MockBPA_Bundle_t;
-
-int MockBPA_Bundle_Init(MockBPA_Bundle_t *bundle);
-int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle);
 
 int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBlock_t *result_primary_block);
 int MockBPA_GetBlockNums(const BSL_BundleRef_t *bundle_ref, size_t block_id_array_capacity,
@@ -115,17 +56,135 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
 int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num);
 int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref);
 
-/** Register this mock BPA for the current process.
+/// Queue size for bundle queues
+#define MOCKBPA_DATA_QUEUE_SIZE 100
+
+/**
+ * @struct MockBPA_data_queue_t
+ * @brief Container for a thread-safe circular queue of ::mock_bpa_ctr_t
+ * @cite lib:mlib.
+ */
+// NOLINTBEGIN
+/// @cond Doxygen_Suppress
+M_BUFFER_DEF(MockBPA_data_queue, mock_bpa_ctr_t, MOCKBPA_DATA_QUEUE_SIZE,
+             BUFFER_QUEUE | BUFFER_THREAD_SAFE | BUFFER_PUSH_INIT_POP_MOVE | BUFFER_BLOCKING)
+/// @endcond
+// NOLINTEND
+
+/** Overall Mock BPA state above any particular bundle handling.
+ */
+typedef struct MockBPA_Agent_s
+{
+    /** Shared operating state.
+     * Set to @c false while running, and @c true to stop.
+     */
+    atomic_bool stop_state;
+
+    /// Bundles received from the application
+    MockBPA_data_queue_t over_rx;
+    /// Bundles delivered to the application
+    MockBPA_data_queue_t over_tx;
+    /// Bundles received from the CL
+    MockBPA_data_queue_t under_rx;
+    /// Bundles forwarded to the CL
+    MockBPA_data_queue_t under_tx;
+    /// Bundles in need of delivery
+    MockBPA_data_queue_t deliver;
+    /// Bundles in need of forwarding
+    MockBPA_data_queue_t forward;
+
+    /** Worker threads.
+     * These are valid between ::MockBPA_Agent_Start() and ::MockBPA_Agent_Join().
+     */
+    pthread_t thr_over_rx, thr_under_rx, thr_deliver, thr_forward;
+
+    /// Pipe end for notifying TX worker
+    int tx_notify_w;
+    /// Pipe end for TX worker
+    int tx_notify_r;
+
+    /// Policy provider for ::BSL_POLICYLOCATION_APPIN
+    BSLP_PolicyProvider_t *policy_appin;
+    /// Policy provider for ::BSL_POLICYLOCATION_APPOUT
+    BSLP_PolicyProvider_t *policy_appout;
+    /// Policy provider for ::BSL_POLICYLOCATION_CLIN
+    BSLP_PolicyProvider_t *policy_clin;
+    /// Policy provider for ::BSL_POLICYLOCATION_CLOUT
+    BSLP_PolicyProvider_t *policy_clout;
+
+    /// BSL context for ::BSL_POLICYLOCATION_APPIN
+    BSL_LibCtx_t *bsl_appin;
+    /// BSL context for ::BSL_POLICYLOCATION_APPOUT
+    BSL_LibCtx_t *bsl_appout;
+    /// BSL context for ::BSL_POLICYLOCATION_CLIN
+    BSL_LibCtx_t *bsl_clin;
+    /// BSL context for ::BSL_POLICYLOCATION_CLOUT
+    BSL_LibCtx_t *bsl_clout;
+    /// Mutex for aggregating telemetry on all above ::BSL_LibCtx_t instances
+    pthread_mutex_t tlm_mutex;
+
+    /// Configuration for local app-facing address
+    struct sockaddr_in over_addr;
+    /// Configuration for application-side address
+    struct sockaddr_in app_addr;
+    /// Configuration for local CL-facing address
+    struct sockaddr_in under_addr;
+    /// Configuration for CL-side address
+    struct sockaddr_in router_addr;
+
+} MockBPA_Agent_t;
+
+/** Get host descriptors without a specific agent.
+ *
+ * @param[in] agent The agent to associate as user data.
+ */
+BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent);
+
+/** Initialize and register this mock BPA for the current process.
+ *
+ * @param[out] agent The agent to initialize.
  * @return Zero if successful.
  */
-int bsl_mock_bpa_agent_init(void);
+int MockBPA_Agent_Init(MockBPA_Agent_t *agent);
 
 /** Clean up the mock BPA for the current process.
+ *
+ * @param[out] agent The agent to deinitialize.
  */
-void bsl_mock_bpa_agent_deinit(void);
+void MockBPA_Agent_Deinit(MockBPA_Agent_t *agent);
+
+/** Start worker threads.
+ *
+ * @param[out] agent The agent to start threads for.
+ * @return Zero if successful.
+ * @sa MockBPA_Agent_Join()
+ */
+int MockBPA_Agent_Start(MockBPA_Agent_t *agent);
+
+/** Stop an agent from another thread or a signal handler.
+ *
+ * @param[in,out] agent The agent to set the stopping state on.
+ */
+void MockBPA_Agent_Stop(MockBPA_Agent_t *agent);
+
+/** Execute the main thread activity while work threads are running.
+ * This will block until MockBPA_Agent_Stop() is called.
+ *
+ * @param[out] agent The agent to work for.
+ * @return Zero if successful.
+ */
+int MockBPA_Agent_Exec(MockBPA_Agent_t *agent);
+
+/** Wait for and join worker threads.
+ *
+ * @param[out] agent The agent to start threads for.
+ * @return Zero if successful.
+ * @sa MockBPA_Agent_Start()
+ */
+int MockBPA_Agent_Join(MockBPA_Agent_t *agent);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif // BSL_MOCK_BPA_H_
+#endif // BSL_MOCK_BPA_AGENT_H_

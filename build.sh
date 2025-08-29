@@ -89,7 +89,7 @@ function cmd_deps {
 }
 
 function cmd_docs {
-    cmake --build ${BUILDDIR} --target docs-api-html
+    cmake --build ${BUILDDIR} --target docs-api-html docs-api-misspelling
 }
 
 function cmd_install {

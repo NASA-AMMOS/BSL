@@ -32,7 +32,7 @@ static BSL_HostDescriptors_t HostDescriptorTable = { 0 };
 int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
 {
     CHK_PRECONDITION(desc.eid_init);
-    CHK_PRECONDITION(desc.get_host_eid_fn);
+    CHK_PRECONDITION(desc.get_sec_src_eid_fn);
     CHK_PRECONDITION(desc.eid_deinit);
     CHK_PRECONDITION(desc.bundle_metadata_fn);
     CHK_PRECONDITION(desc.block_metadata_fn);
@@ -139,6 +139,11 @@ void BSL_HostDescriptors_Get(BSL_HostDescriptors_t *desc)
     *desc = HostDescriptorTable;
 }
 
+void BSL_HostDescriptors_Clear(void)
+{
+    HostDescriptorTable = (BSL_HostDescriptors_t) { 0 };
+}
+
 int BSL_HostEID_Init(BSL_HostEID_t *eid)
 {
     CHK_ARG_NONNULL(eid);
@@ -156,8 +161,8 @@ void BSL_HostEID_Deinit(BSL_HostEID_t *eid)
 int BSL_Host_GetSecSrcEID(BSL_HostEID_t *eid)
 {
     CHK_ARG_NONNULL(eid);
-    CHK_PRECONDITION(HostDescriptorTable.get_host_eid_fn != NULL);
-    return HostDescriptorTable.get_host_eid_fn(HostDescriptorTable.user_data, eid);
+    CHK_PRECONDITION(HostDescriptorTable.get_sec_src_eid_fn != NULL);
+    return HostDescriptorTable.get_sec_src_eid_fn(HostDescriptorTable.user_data, eid);
 }
 
 int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, void *encoder)
