@@ -468,7 +468,8 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     // FIRST we must decrypt the BCB targets.
     BSL_SecParam_InitTextstr(&bcb_context.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
     BSL_SecParam_InitInt64(&bcb_context.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE, 0x07);
-    BSL_SecParam_InitInt64(&bcb_context.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
+    BSL_SecParam_InitInt64(&bcb_context.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
+                           RFC9173_BCB_AES_VARIANT_A256GCM);
     BSL_SecParam_InitInt64(&bcb_context.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
 
     BSL_SecOper_t bcb_op_tgt_payload;
@@ -577,9 +578,9 @@ void test_RFC9173_AppendixA_Example4_Source(void)
 
     BSL_SecParam_InitTextstr(&bcb_context.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
     BSL_SecParam_InitInt64(&bcb_context.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE, 0x07);
-    BSL_SecParam_InitInt64(&bcb_context.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
+    BSL_SecParam_InitInt64(&bcb_context.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
+                           RFC9173_BCB_AES_VARIANT_A256GCM);
     BSL_SecParam_InitInt64(&bcb_context.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
-
 
     BSL_SecOper_t bcb_op_tgt_payload;
     BSL_SecOper_Init(&bcb_op_tgt_payload);

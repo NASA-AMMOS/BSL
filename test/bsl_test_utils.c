@@ -43,7 +43,7 @@
 void BIBTestContext_Init(BIBTestContext *obj)
 {
     BSL_SecOper_Init(&obj->sec_oper);
-    
+
     BSL_SecParam_Init(&obj->param_test_key);
     BSL_SecParam_Init(&obj->param_sha_variant);
     BSL_SecParam_Init(&obj->param_hmac);
@@ -82,7 +82,7 @@ void BCBTestContext_Init(BCBTestContext *obj)
 }
 
 void BCBTestContext_Deinit(BCBTestContext *obj)
-{    
+{
     BSL_SecParam_Deinit(&obj->param_aes_variant);
     BSL_SecParam_Deinit(&obj->param_scope_flags);
     BSL_SecParam_Deinit(&obj->param_test_key_id);

@@ -369,7 +369,8 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
-    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", m_string_get_cstr(self->description), BSLB_SecParamList_size(self->params));
+    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", m_string_get_cstr(self->description),
+                 BSLB_SecParamList_size(self->params));
     string_clear(self->description);
     BSLB_SecParamList_clear(self->params);
     memset(self, 0, sizeof(*self));

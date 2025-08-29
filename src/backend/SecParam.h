@@ -79,7 +79,9 @@ struct BSL_SecParam_s
 };
 
 /// OPLIST for ::BSL_SecParam_t
-#define M_OPL_BSL_SecParam_t() (INIT(API_2(BSL_SecParam_Init)), INIT_SET(API_6(BSL_SecParam_InitSet)), CLEAR(API_2(BSL_SecParam_Deinit)), SET(API_6(BSL_SecParam_Set)))
+#define M_OPL_BSL_SecParam_t()                                                                                 \
+    (INIT(API_2(BSL_SecParam_Init)), INIT_SET(API_6(BSL_SecParam_InitSet)), CLEAR(API_2(BSL_SecParam_Deinit)), \
+     SET(API_6(BSL_SecParam_Set)))
 
 /** @struct BSLB_SecParamList_t
  * Defines a basic list of Security Parameters (::BSL_SecParam_t).

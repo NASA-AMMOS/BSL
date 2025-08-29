@@ -86,7 +86,7 @@ typedef struct BSLX_BCB_s
     /// Bundle context associated with this operation
     BSL_BundleRef_t *bundle;
 
-    size_t      err_count;
+    size_t err_count;
     /// Pointer to text which will outlive this context
     const char *key_id;
 

@@ -30,7 +30,8 @@
 
 #include "bsl_test_utils.h"
 
-typedef struct {
+typedef struct
+{
     BSL_SecParam_t param_scope_flag;
     BSL_SecParam_t param_scope_flag_7;
     BSL_SecParam_t param_sha_variant_512;
@@ -51,9 +52,9 @@ typedef struct {
     BSL_SecParam_t param_test_bcb_2_key_bad;
 } BSL_TestPublInterfaceCtx_t;
 
-static BSL_TestContext_t       LocalTestCtx = { 0 };
-static BSL_SecurityActionSet_t action_set   = { 0 };
-static BSL_TestPublInterfaceCtx_t ctx = { 0 };
+static BSL_TestContext_t          LocalTestCtx = { 0 };
+static BSL_SecurityActionSet_t    action_set   = { 0 };
+static BSL_TestPublInterfaceCtx_t ctx          = { 0 };
 
 void suiteSetUp(void)
 {
@@ -112,7 +113,6 @@ void PublicInterfaceTestCtx_deinit(BSL_TestPublInterfaceCtx_t *ctx)
     BSL_SecParam_Deinit(&ctx->param_test_bcb_2_key_bad);
 }
 
-
 void setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
@@ -136,29 +136,31 @@ void setUp(void)
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
     string_init_set_str(policy->name, "Unit Test Policy Provider!");
 
-    //FIXME these params need managed lifecycle to ensure Deinit (by some means)
+    // FIXME these params need managed lifecycle to ensure Deinit (by some means)
     BSL_SecParam_InitInt64(&ctx.param_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
     BSL_SecParam_InitInt64(&ctx.param_scope_flag_7, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0x7);
     BSL_SecParam_InitInt64(&ctx.param_sha_variant_512, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
     BSL_SecParam_InitInt64(&ctx.param_sha_variant_384, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
 
-    BSL_SecParam_InitInt64(&ctx.param_aes_variant_128, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-    BSL_SecParam_InitInt64(&ctx.param_aes_variant_256, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
+    BSL_SecParam_InitInt64(&ctx.param_aes_variant_128, RFC9173_BCB_SECPARAM_AESVARIANT,
+                           RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_SecParam_InitInt64(&ctx.param_aes_variant_256, RFC9173_BCB_SECPARAM_AESVARIANT,
+                           RFC9173_BCB_AES_VARIANT_A256GCM);
     BSL_SecParam_InitInt64(&ctx.param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
 
-    BSL_Data_t     authtag_data;
+    BSL_Data_t authtag_data;
     BSL_Data_Init(&authtag_data);
     authtag_data.ptr = (uint8_t *)ApxA2_AuthTag;
     authtag_data.len = sizeof(ApxA2_AuthTag);
     BSL_SecParam_InitBytestr(&ctx.param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, authtag_data);
 
-    BSL_Data_t     iv_data;
+    BSL_Data_t iv_data;
     BSL_Data_Init(&iv_data);
     iv_data.ptr = (uint8_t *)ApxA2_InitVec;
     iv_data.len = sizeof(ApxA2_InitVec);
     BSL_SecParam_InitBytestr(&ctx.param_iv, RFC9173_BCB_SECPARAM_IV, iv_data);
 
-    BSL_Data_t     wrapkey_data;
+    BSL_Data_t wrapkey_data;
     BSL_Data_Init(&wrapkey_data);
     wrapkey_data.ptr = (uint8_t *)ApxA2_WrappedKey;
     wrapkey_data.len = sizeof(ApxA2_WrappedKey);

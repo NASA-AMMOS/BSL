@@ -62,7 +62,8 @@ void BSL_SecParam_Set(BSL_SecParam_t *self, const BSL_SecParam_t *src)
     {
         m_bstring_reset(self->_bytes);
     }
-    else{
+    else
+    {
         m_bstring_set(self->_bytes, src->_bytes);
     }
 }
