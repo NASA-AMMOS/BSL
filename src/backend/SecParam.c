@@ -73,7 +73,6 @@ int BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char
     CHK_ARG_NONNULL(self);
     CHK_ARG_EXPR(value != NULL);
     size_t value_strlen = strlen(value);
-    CHK_ARG_EXPR(value_strlen < sizeof(self->_bytes) - 1);
 
     memset(self, 0, sizeof(*self));
     self->param_id = param_id;
@@ -88,9 +87,6 @@ int BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char
 int BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t value)
 {
     CHK_ARG_NONNULL(self);
-
-    CHK_ARG_EXPR(value.ptr != NULL);
-    CHK_ARG_EXPR(value.len < sizeof(self->_bytes));
 
     memset(self, 0, sizeof(*self));
     self->param_id = param_id;
