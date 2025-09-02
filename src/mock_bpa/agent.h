@@ -73,7 +73,8 @@ M_BUFFER_DEF(MockBPA_data_queue, mock_bpa_ctr_t, MOCKBPA_DATA_QUEUE_SIZE,
 
 /** Each BSL context and its associated control state.
  */
-typedef struct {
+typedef struct
+{
     /// Policy provider for the #bsl
     BSLP_PolicyProvider_t *policy;
     /// BSL context instance

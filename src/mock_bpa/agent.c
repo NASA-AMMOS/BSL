@@ -443,7 +443,7 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
     {
         MockBPA_Agent_BSL_Ctx_t *ctx = ctxs[ix];
 
-        ctx->bsl         = BSL_CALLOC(1, BSL_LibCtx_Sizeof());
+        ctx->bsl = BSL_CALLOC(1, BSL_LibCtx_Sizeof());
         if (BSL_API_InitLib(ctx->bsl))
         {
             BSL_LOG_ERR("Failed BSL_API_InitLib()");
