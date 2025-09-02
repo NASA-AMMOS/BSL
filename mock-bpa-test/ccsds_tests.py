@@ -62,8 +62,14 @@ class _CCSDS_Cases(_TestSet):
         super().__init__()
 
         ccsds_test_dir = 'mock-bpa-test/ccsds_json/'
+        ccsds_spec_file = 'not_available'
 
-        s = open("mock-bpa-test/ccsds_bpsec_redbook_requirements_modified.yaml")
+        try:
+            s = open(ccsds_spec_file)
+        except FileNotFoundError:
+            print(f'Could not find {ccsds_spec_file}')
+            return
+        
         requirements = yaml.safe_load(s)['requirements']
         for item in requirements:
             if 'tests' not in item.keys():
