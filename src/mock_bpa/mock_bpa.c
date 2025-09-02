@@ -168,17 +168,6 @@ int main(int argc, char **argv)
                     setenv("BSL_TEST_LOCAL_IPN_EID", optarg, 1);
                     break;
                 case 'p':
-<<<<<<< HEAD
-                    mock_bpa_policy_registry_init(&policy_registry);
-                    mock_bpa_handle_policy_config(optarg, policy_callbacks.user_data, &policy_registry);
-                    policy_configured = true;
-                    break;
-                case 'j':
-                    mock_bpa_policy_registry_init(&policy_registry);
-                    mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(&policy_registry);
-                    mock_bpa_register_policy_from_json(optarg, policy_callbacks.user_data, params);
-                    policy_configured = true;
-=======
                 {
                     // TODO better way to handle this
                     int anyerr = 0;
@@ -191,11 +180,16 @@ int main(int argc, char **argv)
                         retval = 1;
                     }
 
-                    // TODO JSON parsing
-                    // // mock_bpa_handle_policy_config_from_json("src/mock_bpa/policy_provider_test.json",
-                    // policy_callbacks.user_data);
-
->>>>>>> main
+                    break;
+                }
+                case 'j':
+                {
+                    mock_bpa_policy_registry_init(&policy_registry);
+                    mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(&policy_registry);
+                    mock_bpa_register_policy_from_json(optarg, agent.policy_appin, params);
+                    mock_bpa_register_policy_from_json(optarg, agent.policy_appout, params);
+                    mock_bpa_register_policy_from_json(optarg, agent.policy_clin, params);
+                    mock_bpa_register_policy_from_json(optarg, agent.policy_clout, params);
                     break;
                 }
                 case 'k':
