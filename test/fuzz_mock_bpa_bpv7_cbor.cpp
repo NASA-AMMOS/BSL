@@ -36,20 +36,16 @@ extern "C" int LLVMFuzzerInitialize(int *argc _U_, char ***argv _U_)
 {
     BSL_openlog();
     BSL_LogSetLeastSeverity(LOG_CRIT);
-    bsl_mock_bpa_agent_init();
+    BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL));
     return 0;
 }
-/* No cleanup:
-    bsl_mock_bpa_agent_deinit();
-    BSL_closelog();
-*/
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     int retval = 0;
 
-    MockBPA_Bundle_t bundle = { 0 };
-    //    MockBPA_Bundle_Init(&bundle);
+    MockBPA_Bundle_t bundle;
+    MockBPA_Bundle_Init(&bundle);
     {
         QCBORDecodeContext decoder;
         QCBORDecode_Init(&decoder, (UsefulBufC) { data, size }, QCBOR_DECODE_MODE_NORMAL);

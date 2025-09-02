@@ -24,6 +24,7 @@
  * @ingroup backend_dyn
  */
 #include <BPSecLib_Private.h>
+#include "UtilDefs_SeqReadWrite.h"
 
 // NOLINTNEXTLINE
 static BSL_HostDescriptors_t HostDescriptorTable = { 0 };
@@ -31,7 +32,7 @@ static BSL_HostDescriptors_t HostDescriptorTable = { 0 };
 int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
 {
     CHK_PRECONDITION(desc.eid_init);
-    CHK_PRECONDITION(desc.get_host_eid_fn);
+    CHK_PRECONDITION(desc.get_sec_src_eid_fn);
     CHK_PRECONDITION(desc.eid_deinit);
     CHK_PRECONDITION(desc.bundle_metadata_fn);
     CHK_PRECONDITION(desc.block_metadata_fn);
@@ -109,16 +110,38 @@ int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_
 {
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_EXPR(block_num > 0);
-    CHK_ARG_EXPR(bytesize > 0);
     CHK_PRECONDITION(HostDescriptorTable.block_remove_fn != NULL);
     int result = HostDescriptorTable.block_realloc_btsd_fn(bundle, block_num, bytesize);
     return (result == 0) ? BSL_SUCCESS : BSL_ERR_HOST_CALLBACK_FAILED;
+}
+
+BSL_SeqReader_t *BSL_BundleCtx_ReadBTSD(const BSL_BundleRef_t *bundle, uint64_t block_num)
+{
+    if (!bundle || !HostDescriptorTable.block_read_btsd_fn)
+    {
+        return NULL;
+    }
+    return HostDescriptorTable.block_read_btsd_fn(bundle, block_num);
+}
+
+BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_len)
+{
+    if (!bundle || !HostDescriptorTable.block_write_btsd_fn)
+    {
+        return NULL;
+    }
+    return HostDescriptorTable.block_write_btsd_fn(bundle, block_num, btsd_len);
 }
 
 void BSL_HostDescriptors_Get(BSL_HostDescriptors_t *desc)
 {
     ASSERT_ARG_NONNULL(desc);
     *desc = HostDescriptorTable;
+}
+
+void BSL_HostDescriptors_Clear(void)
+{
+    HostDescriptorTable = (BSL_HostDescriptors_t) { 0 };
 }
 
 int BSL_HostEID_Init(BSL_HostEID_t *eid)
@@ -138,8 +161,8 @@ void BSL_HostEID_Deinit(BSL_HostEID_t *eid)
 int BSL_Host_GetSecSrcEID(BSL_HostEID_t *eid)
 {
     CHK_ARG_NONNULL(eid);
-    CHK_PRECONDITION(HostDescriptorTable.get_host_eid_fn != NULL);
-    return HostDescriptorTable.get_host_eid_fn(HostDescriptorTable.user_data, eid);
+    CHK_PRECONDITION(HostDescriptorTable.get_sec_src_eid_fn != NULL);
+    return HostDescriptorTable.get_sec_src_eid_fn(HostDescriptorTable.user_data, eid);
 }
 
 int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, void *encoder)

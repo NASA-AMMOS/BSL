@@ -20,6 +20,7 @@
  * subcontract 1700763.
  */
 #include <BPSecLib_Private.h>
+#include <m-algo.h>
 
 #include "ctr.h"
 #include "decode.h"
@@ -29,13 +30,13 @@ void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr)
 {
     CHKVOID(ctr);
     memset(ctr, 0, sizeof(*ctr));
-    BSL_Data_Init(&(ctr->encoded));
-    ctr->bundle_ref.data = BSL_CALLOC(1, sizeof(MockBPA_Bundle_t));
-    // TODO : Just make a MockBPA_Bundle_Init function.
-    // HostEID_t's are initialized deeper into the decode function.
 
-    MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
-    bundle->retain           = true;
+    BSL_Data_Init(&(ctr->encoded));
+
+    ctr->bundle = BSL_CALLOC(1, sizeof(MockBPA_Bundle_t));
+    MockBPA_Bundle_Init(ctr->bundle);
+
+    ctr->bundle_ref.data = ctr->bundle;
 }
 
 void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src)
@@ -43,7 +44,11 @@ void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src)
     CHKVOID(ctr);
     CHKVOID(src);
     BSL_Data_InitMove(&(ctr->encoded), &(src->encoded));
-    ctr->bundle_ref      = src->bundle_ref;
+
+    ctr->bundle     = src->bundle;
+    ctr->bundle_ref = src->bundle_ref;
+
+    src->bundle          = NULL;
     src->bundle_ref.data = NULL;
 }
 
@@ -52,10 +57,10 @@ void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr)
     CHKVOID(ctr);
     BSL_Data_Deinit(&(ctr->encoded));
 
-    if (ctr->bundle_ref.data)
+    if (ctr->bundle)
     {
-        MockBPA_Bundle_Deinit(ctr->bundle_ref.data);
-        BSL_FREE(ctr->bundle_ref.data);
+        MockBPA_Bundle_Deinit(ctr->bundle);
+        BSL_FREE(ctr->bundle);
     }
 }
 
@@ -66,10 +71,8 @@ int mock_bpa_decode(mock_bpa_ctr_t *ctr)
 
     if (ctr->bundle_ref.data)
     {
-        for (size_t i = 0; i < bundle->block_count; i++)
-        {
-            BSL_FREE(bundle->blocks[i].btsd);
-        }
+        MockBPA_Bundle_Deinit(ctr->bundle_ref.data);
+        MockBPA_Bundle_Init(ctr->bundle_ref.data);
     }
 
     QCBORDecodeContext decoder;
@@ -86,14 +89,33 @@ int mock_bpa_decode(mock_bpa_ctr_t *ctr)
     return 0;
 }
 
+// TODO this is not really defined by BPSec or BPv7
+static int block_cmp(const MockBPA_CanonicalBlock_t *block_a, const MockBPA_CanonicalBlock_t *block_b)
+{
+    if (block_b->blk_type > block_a->blk_type)
+    {
+        return 1;
+    }
+    else if (block_b->blk_type < block_a->blk_type)
+    {
+        return -1;
+    }
+    return 0;
+}
+
+// Add comparison by block type to sort just before encoding
+M_ALGO_DEF(MockBPA_BlockList, M_DEQUE_OPLIST(MockBPA_BlockList, M_OPEXTEND(M_POD_OPLIST, CMP(API_6(block_cmp)))))
+
 int mock_bpa_encode(mock_bpa_ctr_t *ctr)
 {
     CHKERR1(ctr);
     MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
     CHKERR1(bundle);
 
-    QCBOREncodeContext encoder;
+    // TODO this is not really defined by BPSec or BPv7
+    MockBPA_BlockList_sort(bundle->blocks);
 
+    QCBOREncodeContext encoder;
     // first round of encoding is to get the full size
     QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
     if (bsl_mock_encode_bundle(&encoder, bundle))

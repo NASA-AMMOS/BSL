@@ -27,9 +27,8 @@
 #ifndef BSL_MOCK_BPA_DECODE_H_
 #define BSL_MOCK_BPA_DECODE_H_
 
-#include "agent.h"
 #include "eid.h"
-#include <BPSecLib_Private.h>
+#include "bundle.h"
 #include <qcbor/qcbor_decode.h>
 
 #ifdef __cplusplus

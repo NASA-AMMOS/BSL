@@ -33,21 +33,13 @@
 
 #include "backend/UtilDefs_SeqReadWrite.h"
 
-int BSL_SeqReader_Deinit(BSL_SeqReader_t *obj _U_)
-{
-    // nothing to do here
-    return BSL_SUCCESS;
-}
-
-int BSL_SeqReader_InitFlat(BSL_SeqReader_t *obj, const uint8_t *buf, size_t bufsize)
+int BSL_SeqReader_Destroy(BSL_SeqReader_t *obj)
 {
     CHK_ARG_NONNULL(obj);
-    CHK_ARG_NONNULL(buf);
-    // CHK_ARG_EXPR(bufsize > 0);
+    CHK_ARG_NONNULL(obj->deinit);
 
-    obj->cursor = buf;
-    obj->remain = bufsize;
-
+    obj->deinit(obj->user_data);
+    BSL_FREE(obj);
     return BSL_SUCCESS;
 }
 
@@ -56,53 +48,26 @@ int BSL_SeqReader_Get(BSL_SeqReader_t *obj, uint8_t *buf, size_t *bufsize)
     CHK_ARG_NONNULL(obj);
     CHK_ARG_NONNULL(buf);
     CHK_ARG_NONNULL(bufsize);
-    CHK_ARG_EXPR(*bufsize > 0);
+    CHK_ARG_NONNULL(obj->read);
 
-    const size_t got = (obj->remain < *bufsize ? obj->remain : *bufsize);
-    if (got > 0)
-    {
-        memcpy(buf, obj->cursor, got);
-        obj->cursor += got;
-        obj->remain -= got;
-    }
-    *bufsize = got;
+    return obj->read(obj->user_data, buf, bufsize);
+}
+
+int BSL_SeqWriter_Destroy(BSL_SeqWriter_t *obj)
+{
+    CHK_ARG_NONNULL(obj);
+    CHK_ARG_NONNULL(obj->deinit);
+
+    obj->deinit(obj->user_data);
+    BSL_FREE(obj);
     return BSL_SUCCESS;
 }
 
-int BSL_SeqWriter_InitFlat(BSL_SeqWriter_t *obj, uint8_t **buf, size_t *bufsize)
+int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t bufsize)
 {
     CHK_ARG_NONNULL(obj);
     CHK_ARG_NONNULL(buf);
-    CHK_ARG_NONNULL(bufsize);
+    CHK_ARG_NONNULL(obj->write);
 
-    obj->fd = open_memstream((char **)buf, bufsize);
-
-    CHK_POSTCONDITION(obj->fd != NULL);
-    return BSL_SUCCESS;
-}
-
-int BSL_SeqWriter_Deinit(BSL_SeqWriter_t *obj)
-{
-    CHK_ARG_NONNULL(obj);
-
-    // NOLINTNEXTLINE
-    fclose(obj->fd);
-    obj->fd = NULL;
-
-    return BSL_SUCCESS;
-}
-
-int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t *bufsize)
-{
-    CHK_ARG_NONNULL(obj);
-    CHK_ARG_NONNULL(buf);
-    CHK_ARG_NONNULL(bufsize);
-    // CHK_ARG_EXPR(*bufsize > 0);
-
-    const size_t got = fwrite(buf, 1, *bufsize, obj->fd);
-    if (got > 0)
-    {
-        *bufsize = got;
-    }
-    return BSL_SUCCESS;
+    return obj->write(obj->user_data, buf, bufsize);
 }

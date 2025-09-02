@@ -112,7 +112,6 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
     CHK_ARG_NONNULL(lib);
     CHK_ARG_EXPR(desc.query_fn != NULL);
     CHK_ARG_EXPR(desc.finalize_fn != NULL);
-    CHK_ARG_EXPR(desc.deinit_fn != NULL);
 
     BSL_PolicyDict_set_at(lib->policy_reg, pp_id, desc);
     return BSL_SUCCESS;
@@ -166,11 +165,17 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                 {
                     continue;
                 }
-                // Now set it's sec_block
+
+                // ASB decoder needs the whole BTSD now
+                BSL_Data_t btsd_copy;
+                BSL_Data_InitBuffer(&btsd_copy, block.btsd_len);
+
+                BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, block.block_num);
+                BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
+                BSL_SeqReader_Destroy(btsd_read);
+
                 BSL_AbsSecBlock_t *abs_sec_block = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
-                BSL_Data_t         block_btsd    = { 0 };
-                BSL_Data_InitView(&block_btsd, block.btsd_len, block.btsd);
-                if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, &block_btsd) == 0)
+                if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, &btsd_copy) == 0)
                 {
                     if (BSL_AbsSecBlock_ContainsTarget(abs_sec_block, sec_oper->target_block_num))
                     {
@@ -183,6 +188,8 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                 }
                 BSL_AbsSecBlock_Deinit(abs_sec_block);
                 BSL_FREE(abs_sec_block);
+
+                BSL_Data_Deinit(&btsd_copy);
             }
         }
     }

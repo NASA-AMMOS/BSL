@@ -71,6 +71,7 @@ cryptographic
 ctx
 de
 De
+deallocated
 deallocation
 Decodeable
 DecodeBase
@@ -78,10 +79,10 @@ decrypt
 DECRYPT
 decrypted
 DefaultSecuritContext's
-deallocated
 deinit
 Deinit
 deinitialize
+deinitialized
 Deinitializes
 dereference
 dir
@@ -136,6 +137,7 @@ MiMTAR
 MLib
 MLIB
 MMCS
+Mutex
 namespace
 namespaced
 NIST

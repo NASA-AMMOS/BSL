@@ -40,38 +40,55 @@ extern "C" {
  */
 struct BSL_SeqReader_s
 {
-    /// Current cursor into available data
-    const uint8_t *cursor;
-    /// Remaining available buffer
-    size_t remain;
+    /// Context from the BPA
+    void *user_data;
+
+    /** Called to read a block of data from the source.
+     * This pointer must not be NULL.
+     *
+     * @param[in] user_data The context pointer.
+     * @param[out] buf The buffer to read into, which must be large enough
+     * to hold the initial value of @c size.
+     * @param[in,out] size The input of the buffer size, and set to the actual
+     * size of data read upon completion.
+     * @return Zero if successful.
+     */
+    int (*read)(void *user_data, void *buf, size_t *size);
+
+    /** Called to close this reader and free its resources.
+     * This pointer must not be NULL.
+     *
+     * @param[in] user_data The context pointer.
+     */
+    void (*deinit)(void *user_data);
 };
 
-/** Initialize resources for a sequential reader.
- *
- * @param[in,out] obj The reader struct to allocate.
- * @param buf The flat buffer start.
- * @param bufsize The flat buffer total size.
- * @return Zero if successful.
- */
-int BSL_SeqReader_InitFlat(BSL_SeqReader_t *obj, const uint8_t *buf, size_t bufsize);
-
-/** Definition of a simple flat buffer iterator.
+/** Definition of a sequential writer using callbacks.
  */
 struct BSL_SeqWriter_s
 {
-    /// Memory mapped file
-    FILE *fd;
-};
+    /// Context from the BPA
+    void *user_data;
 
-/** Initialize resources for a sequential writer.
- *
- * @param[in,out] obj The reader struct to allocate.
- * @param[out] buf The flat buffer pointer to update after the writer is released.
- * @param[out] bufsize The flat buffer total size pointer to update after the
- * writer is released.
- * @return Zero if successful.
- */
-int BSL_SeqWriter_InitFlat(BSL_SeqWriter_t *obj, uint8_t **buf, size_t *bufsize);
+    /** Called to read a block of data from the source.
+     * This pointer must not be NULL.
+     *
+     * @param[in] user_data The context pointer.
+     * @param[in] buf The buffer to write from, with its size indicated by @c size.
+     * @param size The input of the buffer size.
+     * @return Zero if successful writing the entire size.
+     */
+    int (*write)(void *user_data, const void *buf, size_t size);
+
+    /** Called to close this writer and free its resources.
+     * This pointer must not be NULL.
+     *
+     * @param[in] user_data The context pointer.
+     * @post The data written to the block is reflected in later reads and/or
+     * block metadata.
+     */
+    void (*deinit)(void *user_data);
+};
 
 #ifdef __cplusplus
 } // extern C

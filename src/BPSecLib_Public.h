@@ -235,8 +235,7 @@ typedef struct BSL_CanonicalBlock_s
     uint64_t type_code; ///< CBOR-decoded block type code (should be > 0)
     uint64_t flags;     ///< CBOR-decoded flags field
     uint64_t crc_type;  ///< CBOR-decoded block CRC Type
-    void    *btsd;      ///< Pointer to BTSD owned by the host BPA
-    size_t   btsd_len;  ///< Length in bytes of the BTSD pointer.
+    size_t   btsd_len;  ///< Length in bytes of the BTSD accessible through sequential APIs
 } BSL_CanonicalBlock_t;
 
 /** Dynamic BPA descriptor.
@@ -246,8 +245,8 @@ typedef struct
     /// User data pointer for callbacks
     void *user_data;
 
-    /// @brief Host BPA function to get its current EID
-    int (*get_host_eid_fn)(const void *user_data, BSL_HostEID_t *result);
+    /// @brief Host BPA function to get its security source EID
+    int (*get_sec_src_eid_fn)(void *user_data, BSL_HostEID_t *result);
 
     /// @brief Host BPA function to initialize/allocate an EID type.
     int (*eid_init)(void *user_data, BSL_HostEID_t *result);
@@ -269,7 +268,30 @@ typedef struct
     int (*block_remove_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num);
 
     /// @brief Host BPA function to reallocate a canonical block's BTSD, keeping existing data in-place.
+    /// @deprecated use sequential writer to do this
     int (*block_realloc_btsd_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t bytesize);
+
+    /** Host BPA function do create a new sequential reader on a single block-type-specific data.
+     *
+     * @param[in] bundle_ref The bundle to read data from.
+     * @param block_num The specific block number to read BTSD from.
+     * @return A pointer to a reader struct or NULL if the reader cannot
+     * be configured for any reason.
+     */
+    struct BSL_SeqReader_s *(*block_read_btsd_fn)(const BSL_BundleRef_t *bundle_ref, uint64_t block_num);
+
+    /** Host BPA function do create a new sequential writer on a single block-type-specific data.
+     * The writer will call BSL_SeqWriter_Destroy() when it is finished.
+     *
+     * @note The BPA must double-buffer to allow a reader and writer on the same block.
+     *
+     * @param[in] bundle_ref The bundle to read data from.
+     * @param block_num The specific block number to write BTSD into.
+     * @param total_size A hint as to the total size that will be written.
+     * @return A pointer to a reader struct or NULL if the reader cannot
+     * be configured for any reason.
+     */
+    struct BSL_SeqWriter_s *(*block_write_btsd_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t total_size);
 
     /// @brief Host BPA function to delete Bundle
     int (*bundle_delete_fn)(BSL_BundleRef_t *bundle_ref);
@@ -298,7 +320,7 @@ typedef struct
 
 /** Set the BPA descriptor (callbacks) for this process.
  *
- * @warning This function is not thread safe and should be set before any
+ * @warning This function is not thread safe and should be used before any
  * ::BSL_LibCtx_t is initialized or other BSL interfaces used.
  *
  * @param desc The descriptor to use for future BPA functions.
@@ -312,6 +334,13 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc);
  * @param[out] desc The descriptor to copy into.
  */
 void BSL_HostDescriptors_Get(BSL_HostDescriptors_t *desc);
+
+/** Reset the host descriptors to their default, unusable state.
+ *
+ * @warning This function is not thread safe and should be used after any
+ * ::BSL_LibCtx_t is deinitialized.
+ */
+void BSL_HostDescriptors_Clear(void);
 
 /** @brief Initialize the BPSecLib (BSL) library context.
  *
