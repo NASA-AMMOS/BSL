@@ -371,7 +371,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                             }
                             else
                             {
-                                BSL_LOG_ERR("INVALID KEY FOR SC ID %d", sc_id_l);
+                                BSL_LOG_ERR("INVALID PARAM KEY %s FOR SC ID %d", id_str, sc_id_l);
                                 continue;
                             }
                             break;
