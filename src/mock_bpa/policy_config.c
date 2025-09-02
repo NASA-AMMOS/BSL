@@ -321,7 +321,6 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                     {
                         case 1:
                         {
-                            BSL_LOG_INFO("IM GOING CRAZY %s %d", id_str, strcmp(id_str, "key_name"));
                             if (0 == strcmp(id_str, "key_name"))
                             {
                                 BSL_SecParam_InitTextstr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
