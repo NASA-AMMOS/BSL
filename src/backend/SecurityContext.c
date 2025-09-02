@@ -525,7 +525,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
                 BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_FAILURE);
                 BSL_SecurityResponseSet_AppendResult(output_response, errcode, sec_oper->failure_code);
                 BSL_SecurityResponseSet_SetReasonCode(output_response, BSL_REASONCODE_FAILED_SECOP);
-                BSL_LOG_INFO("Setting reason code %"PRIi64 , BSL_REASONCODE_FAILED_SECOP);
+                BSL_LOG_INFO("Setting reason code %" PRIi64, BSL_REASONCODE_FAILED_SECOP);
                 break; // stop processing secops if there is a failure
             }
             BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_SUCCESS);

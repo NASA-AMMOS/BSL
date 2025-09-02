@@ -188,11 +188,11 @@ typedef struct BSL_BundleRef_s
 
 typedef enum BSL_ReasonCode_e
 {
-    BSL_REASONCODE_SUCCESS = 0,
-    BSL_REASONCODE_MISSING_SECOP = 12,
-    BSL_REASONCODE_UNKNOWN_SECOP = 13,
-    BSL_REASONCODE_UNEXPECTED_SECOP = 14,
-    BSL_REASONCODE_FAILED_SECOP = 15,
+    BSL_REASONCODE_SUCCESS           = 0,
+    BSL_REASONCODE_MISSING_SECOP     = 12,
+    BSL_REASONCODE_UNKNOWN_SECOP     = 13,
+    BSL_REASONCODE_UNEXPECTED_SECOP  = 14,
+    BSL_REASONCODE_FAILED_SECOP      = 15,
     BSL_REASONCODE_CONFLICTING_SECOP = 16
 } BSL_ReasonCode_t;
 
@@ -423,13 +423,14 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
                           const BSL_SecurityActionSet_t *policy_actions);
 
 /** @brief Retrieve the reason code associated with a response set
- * 
+ *
  * @param[in]     bsl             Pointer to BSL context structure.
  * @param[out]    response_output Pointer to host-allocated output structure.
  * @param[out]    reason_code     Pointer to reason code to be set by function
  * @returns 0 on success
  */
-int BSL_API_GetReasonCode(const BSL_LibCtx_t *bsl, const BSL_SecurityResponseSet_t *bundle_response_set, BSL_ReasonCode_t *reason_code);
+int BSL_API_GetReasonCode(const BSL_LibCtx_t *bsl, const BSL_SecurityResponseSet_t *bundle_response_set,
+                          BSL_ReasonCode_t *reason_code);
 
 #ifdef __cplusplus
 } // extern C

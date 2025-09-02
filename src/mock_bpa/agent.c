@@ -668,8 +668,8 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
         if (returncode < 0)
         {
             BSL_LOG_ERR("Failed to retrieve reason code: return code=%d", returncode);
-        } 
-        BSL_LOG_INFO("Got Bundle Reason Code: %"PRIi64, reason);
+        }
+        BSL_LOG_INFO("Got Bundle Reason Code: %" PRIi64, reason);
     }
     if (pthread_mutex_unlock(&ctx->mutex))
     {
@@ -679,8 +679,8 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
     // Example telemetry dump to log
     MockBPA_Agent_DumpTelemetry(agent);
 
-    // FIXME 
-    // Should we expect BPAs to deinit these? 
+    // FIXME
+    // Should we expect BPAs to deinit these?
     // Should this be part of a broader API-wide de-init?
     BSL_SecurityResponseSet_Deinit(malloced_response_set);
     BSL_SecurityActionSet_Deinit(malloced_action_set);

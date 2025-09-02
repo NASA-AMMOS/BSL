@@ -282,7 +282,8 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     return BSL_SUCCESS;
 }
 
-int BSL_API_GetReasonCode(const BSL_LibCtx_t *bsl, const BSL_SecurityResponseSet_t *bundle_response_set, BSL_ReasonCode_t *reason_code)
+int BSL_API_GetReasonCode(const BSL_LibCtx_t *bsl, const BSL_SecurityResponseSet_t *bundle_response_set,
+                          BSL_ReasonCode_t *reason_code)
 {
     CHK_ARG_NONNULL(bsl);
     CHK_ARG_NONNULL(bundle_response_set);
