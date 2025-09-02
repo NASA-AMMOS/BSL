@@ -184,11 +184,22 @@ int main(int argc, char **argv)
                 }
                 case 'j':
                 {
-                    mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(&policy_registry);
-                    mock_bpa_register_policy_from_json(optarg, agent.appin.policy, params);
-                    mock_bpa_register_policy_from_json(optarg, agent.appout.policy, params);
-                    mock_bpa_register_policy_from_json(optarg, agent.clin.policy, params);
-                    mock_bpa_register_policy_from_json(optarg, agent.clout.policy, params);
+                    {
+                        mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(&policy_registry);
+                        mock_bpa_register_policy_from_json(optarg, agent.appin.policy, params);
+                    }
+                    {
+                        mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(&policy_registry);
+                        mock_bpa_register_policy_from_json(optarg, agent.appout.policy, params);
+                    }
+                    {   
+                        mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(&policy_registry);
+                        mock_bpa_register_policy_from_json(optarg, agent.clin.policy, params);
+                    }
+                    {   
+                        mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(&policy_registry);
+                        mock_bpa_register_policy_from_json(optarg, agent.clout.policy, params);
+                    }
                     break;
                 }
                 case 'k':
