@@ -422,6 +422,13 @@ BSL_REQUIRE_CHECK
 int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
                           const BSL_SecurityActionSet_t *policy_actions);
 
+/** @brief Retrieve the reason code associated with a response set
+ * 
+ * @param[in]     bsl             Pointer to BSL context structure.
+ * @param[out]    response_output Pointer to host-allocated output structure.
+ * @param[out]    reason_code     Pointer to reason code to be set by function
+ * @returns 0 on success
+ */
 int BSL_API_GetReasonCode(const BSL_LibCtx_t *bsl, const BSL_SecurityResponseSet_t *bundle_response_set, BSL_ReasonCode_t *reason_code);
 
 #ifdef __cplusplus
