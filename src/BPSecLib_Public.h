@@ -254,8 +254,8 @@ typedef struct
     /// User data pointer for callbacks
     void *user_data;
 
-    /// @brief Host BPA function to get its current EID
-    int (*get_host_eid_fn)(const void *user_data, BSL_HostEID_t *result);
+    /// @brief Host BPA function to get its security source EID
+    int (*get_sec_src_eid_fn)(void *user_data, BSL_HostEID_t *result);
 
     /// @brief Host BPA function to initialize/allocate an EID type.
     int (*eid_init)(void *user_data, BSL_HostEID_t *result);
@@ -329,7 +329,7 @@ typedef struct
 
 /** Set the BPA descriptor (callbacks) for this process.
  *
- * @warning This function is not thread safe and should be set before any
+ * @warning This function is not thread safe and should be used before any
  * ::BSL_LibCtx_t is initialized or other BSL interfaces used.
  *
  * @param desc The descriptor to use for future BPA functions.
@@ -343,6 +343,13 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc);
  * @param[out] desc The descriptor to copy into.
  */
 void BSL_HostDescriptors_Get(BSL_HostDescriptors_t *desc);
+
+/** Reset the host descriptors to their default, unusable state.
+ *
+ * @warning This function is not thread safe and should be used after any
+ * ::BSL_LibCtx_t is deinitialized.
+ */
+void BSL_HostDescriptors_Clear(void);
 
 /** @brief Initialize the BPSecLib (BSL) library context.
  *

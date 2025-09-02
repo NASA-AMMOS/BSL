@@ -34,7 +34,7 @@
 struct BSL_SecOper_s
 {
     /// @brief Security context ID
-    uint64_t context_id;
+    int64_t context_id;
 
     /// @brief Bundle's block ID over which the security operation is applied.
     uint64_t target_block_num;

@@ -37,13 +37,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 extern "C" int LLVMFuzzerInitialize(int *argc _U_, char ***argv _U_)
 {
     BSL_openlog();
-    bsl_mock_bpa_agent_init();
+    BSL_LogSetLeastSeverity(LOG_CRIT);
+    BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL));
     return 0;
 }
-/* No cleanup:
-    bsl_mock_bpa_agent_deinit();
-    BSL_closelog();
-*/
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
