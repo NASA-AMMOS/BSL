@@ -593,7 +593,7 @@ enum BSL_SecParam_Types_e
     BSL_SECPARAM_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
     BSL_SECPARAM_TYPE_INT64,       ///< Indicates value type is an unsigned integer.
     BSL_SECPARAM_TYPE_BYTESTR,     ///< Indicates the value type is a byte string.
-    BSL_SECPARAM_TYPE_STR
+    BSL_SECPARAM_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
 };
 
 /** Defines supplementary Security Parameter type used internally by
@@ -627,9 +627,32 @@ typedef enum
  */
 typedef struct BSL_SecParam_s BSL_SecParam_t;
 
-/// @brief Get parameter ID of this param
-/// @param[in] self This BPSec Param type
-/// @return
+/** Initialize to a default empty state.
+ * @param[out] self The object to initialize.
+ */
+void BSL_SecParam_Init(BSL_SecParam_t *self);
+
+/** Initialize to a copy of another value.
+ * @param[out] self The object to initialize.
+ * @param[in] src The source of the copy.
+ */
+void BSL_SecParam_InitSet(BSL_SecParam_t *self, const BSL_SecParam_t *src);
+
+/** De-initialize a parameter.
+ * @param[in,out] self The object to deinitialize.
+ */
+void BSL_SecParam_Deinit(BSL_SecParam_t *self);
+
+/** Overwrite with a copy of another value.
+ * @param[out] self The object to overwrite.
+ * @param[in] src The source of the copy.
+ */
+void BSL_SecParam_Set(BSL_SecParam_t *self, const BSL_SecParam_t *src);
+
+/** @brief Get parameter ID of this param
+ * @param[in] self This BPSec Param type
+ * @return The parameter ID value
+ */
 uint64_t BSL_SecParam_GetId(const BSL_SecParam_t *self);
 
 /** @brief Return true if invariant conditions pass
@@ -667,20 +690,22 @@ int BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t
  */
 int BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value);
 
-/**
+/** Initialize as a parameter containing a byte string with a null-terminated
+ * text value.
+ *
  * @param[in,out] self This Security Parameter
  * @param[in] param_id ID of the parameter
  * @param[in] value text string of the parameter, copied into self
  * @return Negative on an error.
  */
-int BSL_SecParam_InitStr(BSL_SecParam_t *self, uint64_t param_id, const char *value);
+int BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char *value);
 
 /** Returns true when the value type is an integer.
  *
  * @param[in] self This Security Parameter
  * @return True when value type is integer.
  */
-int BSL_SecParam_IsInt64(const BSL_SecParam_t *self);
+bool BSL_SecParam_IsInt64(const BSL_SecParam_t *self);
 
 /** Retrieve integer value of result when this result type is integer.
  * @warning Always check using BSL_SecParam_IsInt64() first.
@@ -690,15 +715,32 @@ int BSL_SecParam_IsInt64(const BSL_SecParam_t *self);
  */
 uint64_t BSL_SecParam_GetAsUInt64(const BSL_SecParam_t *self);
 
-/** Retrieve bytestring value of result when security parameter type is bytestring. WARNING: Always check type before
- * using.
+/** Returns true when the value type is a byte string.
+ *
+ * @param[in] self This Security Parameter
+ * @return True when value type is integer.
+ */
+bool BSL_SecParam_IsBytestr(const BSL_SecParam_t *self);
+
+/** Retrieve byte string value of result.
+ * @warning Always check BSL_SecParam_IsBytestr() before using this.
  *
  * @todo Clarify whether result contains copy or view of content
  * @param[in] self This Security Parameter
- * @param[in,out] result Pointer to pre-allocated data into which the bytestring is copied.
+ * @param[in,out] result Pointer to data struct which will be made a view onto this parameter value.
  * @return Negative on error.
  */
 int BSL_SecParam_GetAsBytestr(const BSL_SecParam_t *self, BSL_Data_t *result);
+
+/** Retrieve bytestring value of result when security parameter type is bytestring.
+ * @warning Always check type before using this.
+ *
+ * @todo Clarify whether result contains copy or view of content
+ * @param[in] self This Security Parameter
+ * @param[in,out] result Pointer to data struct which will be made a view onto this parameter value.
+ * @return Negative on error.
+ */
+int BSL_SecParam_GetAsTextstr(const BSL_SecParam_t *self, const char **result);
 
 /** Represents a Security Operation produced by a policy provider to inform the security context.
  *
@@ -891,7 +933,7 @@ void BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uint64_t target_block_id
  * @todo - Can be backend-only.
  *
  * @param[in,out] self This security block
- * @param[in] param Non-Null Security parameter pointer to add to list
+ * @param[in] param Non-Null Security parameter pointer to copy into list
  */
 void BSL_AbsSecBlock_AddParam(BSL_AbsSecBlock_t *self, const BSL_SecParam_t *param);
 
@@ -900,7 +942,7 @@ void BSL_AbsSecBlock_AddParam(BSL_AbsSecBlock_t *self, const BSL_SecParam_t *par
  * @todo - Can be backend-only.
  *
  * @param[in,out] self This security block
- * @param[in] result Non-Null Security result pointer to add to list
+ * @param[in] result Non-Null Security result pointer to copy into list
  */
 void BSL_AbsSecBlock_AddResult(BSL_AbsSecBlock_t *self, const BSL_SecResult_t *result);
 

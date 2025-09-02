@@ -300,6 +300,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_Data_Deinit(&btsd_copy);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_DECODING;
     }
@@ -327,7 +328,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
             BSL_SecParam_t *result_param = &results_as_params[i];
             BSL_Data_t      as_data      = { .ptr = result->_bytes, .len = result->_bytelen };
             BSL_SecParam_InitBytestr(result_param, BSL_SECPARAM_TYPE_AUTH_TAG, as_data);
-            BSLB_SecParamList_push_back(sec_oper->_param_list, *result_param);
+            BSLB_SecParamList_push_move(sec_oper->_param_list, result_param);
         }
     }
 
