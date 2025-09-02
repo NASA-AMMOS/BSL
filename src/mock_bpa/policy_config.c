@@ -187,7 +187,6 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
             const long tgt_l = json_integer_value(tgt);
             BSL_LOG_DEBUG("     tgt    : %" JSON_INTEGER_FORMAT, tgt_l);
 
-
             target_block_type = tgt_l;
 
             // check loc (sec location )
@@ -246,7 +245,6 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
         {
             BSL_LOG_DEBUG("NO ES REF");
         }
-
 
         // _temp_not_ion_spec_policy_action_on_fail
         json_t *policy_action_on_fail = json_object_get(policyrule, "_temp_not_ion_spec_policy_action_on_fail");
