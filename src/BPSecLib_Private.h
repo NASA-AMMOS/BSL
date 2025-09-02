@@ -1155,7 +1155,7 @@ size_t BSL_SecurityResponseSet_Sizeof(void);
  * @todo This is still undefined.
  *
  */
-void BSL_SecurityResponseSet_Init(BSL_SecurityResponseSet_t *self, size_t noperations, size_t nfailed);
+void BSL_SecurityResponseSet_Init(BSL_SecurityResponseSet_t *self);
 
 /** Zeroize itself and release any owned resources
  *
@@ -1174,6 +1174,13 @@ bool BSL_SecurityResponseSet_IsConsistent(const BSL_SecurityResponseSet_t *self)
  * @param[in] self This response set.
  */
 size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *self);
+
+/** Append a result code to the security response set
+ * @param[in,out] self the response set to append result to
+ * @param[in] result the result code to append
+ * @param[in] err_act the on-error policy action associated with the response
+ */
+void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result, BSL_PolicyAction_e err_act);
 
 /** Queries the policy provider for any security operations to take on the bundle.
  *

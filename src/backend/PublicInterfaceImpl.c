@@ -212,6 +212,8 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(policy_actions);
 
+    BSL_SecurityResponseSet_Init(response_output);
+
     int exec_code = BSL_SecCtx_ExecutePolicyActionSet((BSL_LibCtx_t *)bsl, response_output, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)
     {
@@ -274,6 +276,8 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
             }
         }
     }
+
+    BSL_SecurityResponseSet_Deinit(response_output);
 
     // TODO CHK_POSTCONDITION
     return BSL_SUCCESS;

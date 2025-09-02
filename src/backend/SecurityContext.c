@@ -472,7 +472,6 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
     CHK_PRECONDITION(BSL_SecurityActionSet_IsConsistent(action_set));
     // NOLINTEND
 
-    BSL_SecurityResponseSet_Init(output_response, BSL_SecurityActionSet_CountOperations(action_set), 0);
     /**
      * Notes:
      *  - It should evaluate every security operation, even if earlier ones failed.
@@ -518,13 +517,15 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
 
             BSL_SecOutcome_Deinit(outcome);
 
-            if (errcode != 0)
+            if (errcode != BSL_SUCCESS)
             {
                 BSL_LOG_ERR("Security Op failed: %d", errcode);
                 BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_FAILURE);
+                BSL_SecurityResponseSet_AppendResult(output_response, errcode, sec_oper->failure_code);
                 break; // stop processing secops if there is a failure
             }
             BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_SUCCESS);
+            BSL_SecurityResponseSet_AppendResult(output_response, errcode, sec_oper->failure_code);
         }
     }
     BSL_FREE(outcome);
