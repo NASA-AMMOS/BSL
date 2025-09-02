@@ -412,6 +412,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
     BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityResponseSet_Init(malloced_responseset);
 
     const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
                                                               &mock_bpa_ctr->bundle_ref, malloced_actionset);
@@ -425,6 +426,8 @@ void test_RFC9173_AppendixA_Example3_Source(void)
 
     const size_t response_count = BSL_SecurityResponseSet_CountResponses(malloced_responseset);
     TEST_ASSERT_EQUAL(3, response_count);
+
+    BSL_SecurityResponseSet_Deinit(malloced_responseset);
 
     BSL_SecurityAction_Deinit(malloced_action);
     BSL_FREE(malloced_action);
