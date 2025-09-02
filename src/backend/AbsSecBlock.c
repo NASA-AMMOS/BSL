@@ -123,6 +123,12 @@ bool BSL_AbsSecBlock_IsEmpty(const BSL_AbsSecBlock_t *self)
     return is_empty;
 }
 
+int64_t BSL_AbsSecBlock_GetContextID(const BSL_AbsSecBlock_t *self)
+{
+    ASSERT_ARG_NONNULL(self);
+    return self->sec_context_id;
+}
+
 bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t target_block_num)
 {
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));

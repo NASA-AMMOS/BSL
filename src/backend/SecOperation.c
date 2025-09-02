@@ -79,7 +79,7 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     BSLB_SecParamList_set(self->_param_list, src->_param_list);
 }
 
-void BSL_SecOper_Populate(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
+void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
                           BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e failure_code)
 {
     ASSERT_ARG_NONNULL(self);
