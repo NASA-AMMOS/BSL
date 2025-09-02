@@ -39,9 +39,10 @@ static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *
 /**
  * @todo Handle ION events as policy actions - dependent on other BSL issues/ future changes
  */
-void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy,
-                                        mock_bpa_policy_params_t *params)
+void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg)
 {
+
+    mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(reg);
 
     uint32_t             sec_block_type;
     uint32_t             sec_ctx_id;
