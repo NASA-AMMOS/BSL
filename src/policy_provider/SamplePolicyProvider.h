@@ -104,7 +104,7 @@ typedef struct BSLP_PolicyRule_s
     BSL_SecRole_e             role;
     BSL_BundleBlockTypeCode_e target_block_type;
     BSL_SecBlockType_e        sec_block_type;
-    int64_t                  context_id;
+    int64_t                   context_id;
     BSL_SecParam_t           *params;
     size_t                    nparams;
     BSL_PolicyAction_e        failure_action_code;

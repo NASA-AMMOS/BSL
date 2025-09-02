@@ -46,7 +46,8 @@ void tearDown(void)
     BSL_closelog();
 }
 
-void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int64_t expect_ctx_id, uint64_t sample_target_block_num)
+void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int64_t expect_ctx_id,
+                                uint64_t sample_target_block_num)
 {
     BSL_Data_t asb_cbor_data = { 0 };
     BSL_Data_InitView(&asb_cbor_data, asb_cbor_bytelen, asb_cbor);
@@ -150,7 +151,8 @@ void test_AbsSecBlock_RFC9173_AppendixA_Example4_BCB(void)
 }
 
 // Test with private use context id (-5)
-TEST_CASE("820301240182028202018382014C5477656C76653132313231328202038204078281820150220FFC45C8A901999ECC60991DD78B2981820150D2C51CB2481792DAE8B21D848CEDE99B",
+TEST_CASE("820301240182028202018382014C5477656C76653132313231328202038204078281820150220FFC45C8A901999ECC60991DD78B2981"
+          "820150D2C51CB2481792DAE8B21D848CEDE99B",
           -5, 3)
 void test_AbsSecBlock_loopback(const char *hexdata, int64_t expect_ctx_id, uint64_t sample_target_block_num)
 {
