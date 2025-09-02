@@ -115,7 +115,7 @@ typedef struct BSLX_BCB_s
     bool    skip_aad_prim_block;
 } BSLX_BCB_t;
 
-int   BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, const BSL_SecOper_t *sec_oper);
+int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, const BSL_SecOper_t *sec_oper);
 
 int  BSLX_BCB_Init(BSLX_BCB_t *bcb_context, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
 void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context);
