@@ -1260,6 +1260,10 @@ size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *s
  */
 void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result, BSL_PolicyAction_e err_act);
 
+void BSL_SecurityResponseSet_SetReasonCode(BSL_SecurityResponseSet_t *self, BSL_ReasonCode_t reason_code);
+
+BSL_ReasonCode_t BSL_SecurityResponseSet_GetReasonCode(const BSL_SecurityResponseSet_t *self);
+
 /** Queries the policy provider for any security operations to take on the bundle.
  *
  * @note The caller is obligated to allocate space for the policy_action_set output.

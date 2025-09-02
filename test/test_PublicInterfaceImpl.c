@@ -866,6 +866,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             break;
         }
     }
+    BSL_SecurityResponseSet_Deinit(&response_set);
 }
 
 // Recommended BSL_6 be removed
@@ -907,6 +908,7 @@ void n_test_BSL_6(void)
     BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(2, primary_block.block_count);
 
+    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_PrimaryBlock_deinit(&primary_block);
 }
 
@@ -963,5 +965,6 @@ void test_BSL_32(void)
     TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 4, &res_blk));
     TEST_ASSERT_EQUAL(12, res_blk.type_code);
 
+    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_PrimaryBlock_deinit(&primary_block);
 }

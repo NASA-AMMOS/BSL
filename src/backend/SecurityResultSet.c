@@ -41,6 +41,7 @@ bool BSL_SecurityResponseSet_IsConsistent(const BSL_SecurityResponseSet_t *self)
 void BSL_SecurityResponseSet_Init(BSL_SecurityResponseSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
+    self->reason_code = BSL_REASONCODE_SUCCESS;
     BSL_SecResultSet_ResultCodes_init(self->results);
     BSL_SecResultSet_ErrorActionCodes_init(self->err_action_codes);
 }
@@ -65,4 +66,16 @@ void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64
     BSL_SecResultSet_ResultCodes_push_back(self->results, result);
     BSL_SecResultSet_ErrorActionCodes_push_back(self->err_action_codes, err_act);
     self->total_operations++;
+}
+
+void BSL_SecurityResponseSet_SetReasonCode(BSL_SecurityResponseSet_t *self, BSL_ReasonCode_t reason_code)
+{
+    ASSERT_ARG_NONNULL(self);
+    self->reason_code = reason_code;
+}
+
+BSL_ReasonCode_t BSL_SecurityResponseSet_GetReasonCode(const BSL_SecurityResponseSet_t *self)
+{
+    ASSERT_ARG_NONNULL(self);
+    return self->reason_code;
 }

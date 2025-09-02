@@ -186,14 +186,15 @@ typedef struct BSL_BundleRef_s
     void *data; ///< Opaque pointer, not used by the BSL.
 } BSL_BundleRef_t;
 
-typedef enum
+typedef enum BSL_ReasonCode_e
 {
+    BSL_REASONCODE_SUCCESS = 0,
     BSL_REASONCODE_MISSING_SECOP = 12,
     BSL_REASONCODE_UNKNOWN_SECOP = 13,
     BSL_REASONCODE_UNEXPECTED_SECOP = 14,
     BSL_REASONCODE_FAILED_SECOP = 15,
     BSL_REASONCODE_CONFLICTING_SECOP = 16
-} BSL_ReasonCode_e;
+} BSL_ReasonCode_t;
 
 /** @brief Contains Bundle Primary Block fields and metadata.
  *
@@ -420,6 +421,8 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
 BSL_REQUIRE_CHECK
 int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
                           const BSL_SecurityActionSet_t *policy_actions);
+
+int BSL_API_GetReasonCode(const BSL_LibCtx_t *bsl, const BSL_SecurityResponseSet_t *bundle_response_set, BSL_ReasonCode_t *reason_code);
 
 #ifdef __cplusplus
 } // extern C

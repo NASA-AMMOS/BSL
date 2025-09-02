@@ -47,6 +47,7 @@ struct BSL_SecurityResponseSet_s
     BSL_SecResultSet_ErrorActionCodes_t err_action_codes;
     size_t                              total_operations;
     size_t                              failure_count;
+    BSL_ReasonCode_t                    reason_code;
 };
 
 #endif /* BSLB_SECURITYRESULTSET_H_ */
