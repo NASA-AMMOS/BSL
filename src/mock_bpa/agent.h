@@ -71,6 +71,18 @@ M_BUFFER_DEF(MockBPA_data_queue, mock_bpa_ctr_t, MOCKBPA_DATA_QUEUE_SIZE,
 /// @endcond
 // NOLINTEND
 
+/** Each BSL context and its associated control state.
+ */
+typedef struct {
+    /// Policy provider for the #bsl
+    BSLP_PolicyProvider_t *policy;
+    /// BSL context instance
+    BSL_LibCtx_t *bsl;
+    /// Mutex for aggregating telemetry from #bsl
+    pthread_mutex_t mutex;
+
+} MockBPA_Agent_BSL_Ctx_t;
+
 /** Overall Mock BPA state above any particular bundle handling.
  */
 typedef struct MockBPA_Agent_s
@@ -103,25 +115,14 @@ typedef struct MockBPA_Agent_s
     /// Pipe end for TX worker
     int tx_notify_r;
 
-    /// Policy provider for ::BSL_POLICYLOCATION_APPIN
-    BSLP_PolicyProvider_t *policy_appin;
-    /// Policy provider for ::BSL_POLICYLOCATION_APPOUT
-    BSLP_PolicyProvider_t *policy_appout;
-    /// Policy provider for ::BSL_POLICYLOCATION_CLIN
-    BSLP_PolicyProvider_t *policy_clin;
-    /// Policy provider for ::BSL_POLICYLOCATION_CLOUT
-    BSLP_PolicyProvider_t *policy_clout;
-
-    /// BSL context for ::BSL_POLICYLOCATION_APPIN
-    BSL_LibCtx_t *bsl_appin;
-    /// BSL context for ::BSL_POLICYLOCATION_APPOUT
-    BSL_LibCtx_t *bsl_appout;
-    /// BSL context for ::BSL_POLICYLOCATION_CLIN
-    BSL_LibCtx_t *bsl_clin;
-    /// BSL context for ::BSL_POLICYLOCATION_CLOUT
-    BSL_LibCtx_t *bsl_clout;
-    /// Mutex for aggregating telemetry on all above ::BSL_LibCtx_t instances
-    pthread_mutex_t tlm_mutex;
+    /// State for ::BSL_POLICYLOCATION_APPIN
+    MockBPA_Agent_BSL_Ctx_t appin;
+    /// State for ::BSL_POLICYLOCATION_APPOUT
+    MockBPA_Agent_BSL_Ctx_t appout;
+    /// State for ::BSL_POLICYLOCATION_CLIN
+    MockBPA_Agent_BSL_Ctx_t clin;
+    /// State for ::BSL_POLICYLOCATION_CLOUT
+    MockBPA_Agent_BSL_Ctx_t clout;
 
     /// Configuration for local app-facing address
     struct sockaddr_in over_addr;
