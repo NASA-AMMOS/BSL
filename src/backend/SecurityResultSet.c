@@ -33,22 +33,23 @@ size_t BSL_SecurityResponseSet_Sizeof(void)
 bool BSL_SecurityResponseSet_IsConsistent(const BSL_SecurityResponseSet_t *self)
 {
     CHK_AS_BOOL(self != NULL);
-    CHK_AS_BOOL(self->err_msg[sizeof(self->err_msg) - 1] == '\0');
-    CHK_AS_BOOL(strlen(self->err_msg) < sizeof(self->err_msg));
+    ASSERT_PROPERTY(self->total_operations == BSL_SecResultSet_ResultCodes_size(self->results));
+    ASSERT_PROPERTY(self->total_operations == BSL_SecResultSet_ErrorActionCodes_size(self->err_action_codes));
     return true;
 }
 
-void BSL_SecurityResponseSet_Init(BSL_SecurityResponseSet_t *self, size_t noperations, size_t nfailed)
+void BSL_SecurityResponseSet_Init(BSL_SecurityResponseSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    self->failure_count    = nfailed;
-    self->total_operations = noperations;
-    self->err_code         = (nfailed == 0 && noperations > 1) ? 0 : 1;
+    BSL_SecResultSet_ResultCodes_init(self->results);
+    BSL_SecResultSet_ErrorActionCodes_init(self->err_action_codes);
 }
 
 void BSL_SecurityResponseSet_Deinit(BSL_SecurityResponseSet_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecurityResponseSet_IsConsistent(self));
+    BSL_SecResultSet_ResultCodes_clear(self->results);
+    BSL_SecResultSet_ErrorActionCodes_clear(self->err_action_codes);
     memset(self, 0, sizeof(*self));
 }
 
@@ -56,4 +57,12 @@ size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *s
 {
     ASSERT_PRECONDITION(BSL_SecurityResponseSet_IsConsistent(self));
     return self->total_operations;
+}
+
+void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result, BSL_PolicyAction_e err_act)
+{
+    ASSERT_ARG_NONNULL(self);
+    BSL_SecResultSet_ResultCodes_push_back(self->results, result);
+    BSL_SecResultSet_ErrorActionCodes_push_back(self->err_action_codes, err_act);
+    self->total_operations++;
 }
