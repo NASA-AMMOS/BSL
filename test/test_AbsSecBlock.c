@@ -47,7 +47,8 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int64_t expect_ctx_id, uint64_t sample_target_block_num)
+void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int64_t expect_ctx_id,
+                                uint64_t sample_target_block_num)
 {
     BSL_Data_t asb_cbor_data;
     BSL_Data_InitView(&asb_cbor_data, asb_cbor_bytelen, asb_cbor);
@@ -98,7 +99,8 @@ TEST_CASE("8200020101820282030082820105820300828182015820cac6ce8e4c5dae57988b757
           "1b81820158203ed614c0d97f49b3633627779aa18a338d212bf3c92b97759d9739cd50725596",
           1, 0)
 // RFC9173 AppendixA Example3 BCB
-TEST_CASE("8101020182028202018382014c5477656c76653132313231328202018204008181820150efa4b5ac0108e3816c5606479801bc04", 2, 1)
+TEST_CASE("8101020182028202018382014c5477656c76653132313231328202018204008181820150efa4b5ac0108e3816c5606479801bc04", 2,
+          1)
 // RFC9173 AppendixA Example4 BIB
 TEST_CASE("81010101820282020182820106820307818182015830f75fe4c37f76f046165855bd5ff72fbfd4e3a64b4695c40e2b787da005ae819f"
           "0a2e30a2e8b325527de8aefb52e73d71",
