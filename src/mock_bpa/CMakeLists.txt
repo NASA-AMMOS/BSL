@@ -76,7 +76,7 @@ install(
         COMPONENT devel
 )
 
-if(BUILD_MOCK_BPA)
+if(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)
   add_executable(bsl-mock-bpa)
   target_sources(bsl-mock-bpa PRIVATE mock_bpa.c)
   target_link_libraries(bsl-mock-bpa PUBLIC bsl_mock_bpa bsl_crypto)
@@ -89,4 +89,4 @@ if(BUILD_MOCK_BPA)
       RUNTIME
           COMPONENT test
   )
-endif(BUILD_MOCK_BPA)
+endif(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)

@@ -48,7 +48,7 @@ endif(BUILD_UNITTEST OR BUILD_FUZZING)
 
 set(LIB_ORDERED bsl_front bsl_dynamic bsl_mock_bpa bsl_test_utils)
 
-if(BUILD_UNITTEST)
+if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
   find_package(unitytools)
 
@@ -67,8 +67,8 @@ if(BUILD_UNITTEST)
   add_unity_test(SOURCE test_CryptoInterface.c)
   target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
   
-  add_unity_test(SOURCE test_SecurityTypes.c)
-  target_link_libraries(test_SecurityTypes PUBLIC ${LIB_ORDERED})
+  add_unity_test(SOURCE test_AbsSecBlock.c)
+  target_link_libraries(test_AbsSecBlock PUBLIC ${LIB_ORDERED})
   
   # Exercises the portion of the backend that interacts with the policy providers
   add_unity_test(SOURCE test_BackendSecurityContext.c)
@@ -89,7 +89,7 @@ if(BUILD_UNITTEST)
   # Exercises the MockBPA using the publicly exposed BSL front end
   add_unity_test(SOURCE test_PublicInterfaceImpl.c)
   target_link_libraries(test_PublicInterfaceImpl PUBLIC ${LIB_ORDERED})
-endif(BUILD_UNITTEST)
+endif(BUILD_UNITTEST AND NOT BUILD_FUZZING)
 
 if(BUILD_FUZZING)
   add_fuzz_test(SOURCE fuzz_mock_bpa_eid_uri.cpp)
@@ -98,12 +98,12 @@ if(BUILD_FUZZING)
   add_fuzz_test(SOURCE fuzz_mock_bpa_eid_cbor.cpp)
   target_link_libraries(fuzz_mock_bpa_eid_cbor PUBLIC ${LIB_ORDERED})
 
-  add_fuzz_test(SOURCE fuzz_mock_bpa_eidpat_text.cpp)
+  add_fuzz_test(SOURCE fuzz_mock_bpa_eidpat_text.cpp RUNS_COUNT 300000)
   target_link_libraries(fuzz_mock_bpa_eidpat_text PUBLIC ${LIB_ORDERED})
 
   add_fuzz_test(SOURCE fuzz_mock_bpa_bpv7_cbor.cpp)
   target_link_libraries(fuzz_mock_bpa_bpv7_cbor PUBLIC ${LIB_ORDERED})
 
-  add_fuzz_test(SOURCE fuzz_dynamic_asb_cbor.cpp)
+  add_fuzz_test(SOURCE fuzz_dynamic_asb_cbor.cpp RUNS_COUNT 2000000)
   target_link_libraries(fuzz_dynamic_asb_cbor PUBLIC ${LIB_ORDERED})
 endif(BUILD_FUZZING)
