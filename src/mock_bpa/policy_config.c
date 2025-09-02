@@ -157,7 +157,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
             if (dest)
             {
                 dest_str = json_string_value(dest);
-                BSL_LOG_DEBUG("     dest    : %s\n", dest_str);
+                BSL_LOG_DEBUG("     dest    : %s", dest_str);
                 dest_eid = mock_bpa_util_get_eid_pattern_from_text(dest_str);
             }
             else
@@ -169,7 +169,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
             if (sec_src)
             {
                 sec_src_str = json_string_value(sec_src);
-                BSL_LOG_DEBUG("     sec_src    : %s\n", sec_src_str);
+                BSL_LOG_DEBUG("     sec_src    : %s", sec_src_str);
                 sec_src_eid = mock_bpa_util_get_eid_pattern_from_text(sec_src_str);
             }
             else
@@ -271,7 +271,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
         }
         else
         {
-            BSL_LOG_ERR("INVALID POLICY ACTION ENUM %s\n", policy_act_str);
+            BSL_LOG_ERR("INVALID POLICY ACTION ENUM %s", policy_act_str);
             continue;
         }
 
@@ -315,7 +315,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                     }
                     const char *value_str = json_string_value(value);
 
-                    BSL_LOG_DEBUG("         - id: %s, value: %s\n", id_str, value_str);
+                    BSL_LOG_DEBUG("         - id: %s, value: %s", id_str, value_str);
 
                     // different valid param IDs for different contexts
                     switch (sc_id_l)
@@ -373,7 +373,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                             }
                             else
                             {
-                                BSL_LOG_ERR("INVALID KEY FOR SC ID %d\n", sc_id_l);
+                                BSL_LOG_ERR("INVALID KEY FOR SC ID %d", sc_id_l);
                                 continue;
                             }
                             break;
@@ -432,12 +432,12 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                             }
                             else
                             {
-                                BSL_LOG_ERR("INVALID KEY FOR SC ID %d\n", sc_id_l);
+                                BSL_LOG_ERR("INVALID KEY FOR SC ID %d", sc_id_l);
                                 continue;
                             }
                             break;
                         default:
-                            BSL_LOG_ERR("INVALID SC ID\n");
+                            BSL_LOG_ERR("INVALID SC ID");
                             continue;
                     }
                 }
