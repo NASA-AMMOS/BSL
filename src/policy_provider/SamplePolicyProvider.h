@@ -104,7 +104,7 @@ typedef struct BSLP_PolicyRule_s
     BSL_SecRole_e             role;
     BSL_BundleBlockTypeCode_e target_block_type;
     BSL_SecBlockType_e        sec_block_type;
-    uint64_t                  context_id;
+    int64_t                  context_id;
     BSL_SecParam_t           *params;
     size_t                    nparams;
     BSL_PolicyAction_e        failure_action_code;
@@ -124,7 +124,7 @@ typedef struct BSLP_PolicyRule_s
  * @returns Zero on success
  */
 int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyPredicate_t *predicate,
-                         uint64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type,
+                         int64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type,
                          BSL_BundleBlockTypeCode_e target_block_type, BSL_PolicyAction_e failure_action_code);
 
 /**

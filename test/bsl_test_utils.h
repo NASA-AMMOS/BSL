@@ -158,7 +158,7 @@ static const struct RFC9173_TestVectors_AppendixA1
     uint16_t payload_crc_type;
 
     uint64_t bib_asb_sec_target;
-    uint64_t bib_asb_context_id;
+    int64_t bib_asb_context_id;
     uint64_t bib_asb_context_flags;
     uint64_t bib_asb_sha_variant_key;
     uint64_t bib_asb_sha_variant_value;
@@ -329,7 +329,7 @@ typedef struct
     BSL_SecParam_t key_enc_key;
     BSL_SecParam_t test_key_id;
     BSL_SecParam_t wrapped_key;
-    uint64_t       context_id;
+    int64_t       context_id;
     uint64_t       context_flags;
     uint64_t       scope_flag;
 } RFC9173_AppendixA2_BCB;

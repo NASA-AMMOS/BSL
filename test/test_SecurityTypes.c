@@ -46,7 +46,7 @@ void tearDown(void)
     BSL_closelog();
 }
 
-void TestASBEncodeDecodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, uint64_t sample_target_block_num)
+void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int64_t expect_ctx_id, uint64_t sample_target_block_num)
 {
     BSL_Data_t asb_cbor_data = { 0 };
     BSL_Data_InitView(&asb_cbor_data, asb_cbor_bytelen, asb_cbor);
@@ -57,6 +57,9 @@ void TestASBEncodeDecodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, uint
 
     // Confirm its in a valid state
     TEST_ASSERT_TRUE(BSL_AbsSecBlock_IsConsistent(asb));
+
+    // Confirm it contains an given sample block num
+    TEST_ASSERT_EQUAL_INT(expect_ctx_id, BSL_AbsSecBlock_GetContextID(asb));
 
     // Confirm it contains an given sample block num
     TEST_ASSERT_TRUE(BSL_AbsSecBlock_ContainsTarget(asb, sample_target_block_num));
@@ -89,7 +92,7 @@ void test_AbsSecBlock_RFC9173_AppendixA_Example1(void)
                            0x46, 0xea, 0xe3, 0x88, 0x6a, 0xe4, 0xec, 0xc8, 0x3c, 0x4e, 0xe5, 0x50, 0xfd, 0xfb, 0x1c,
                            0xc6, 0x36, 0xb9, 0x04, 0xe2, 0xf1, 0xa7, 0x3e, 0x30, 0x3d, 0xcd, 0x4b, 0x6c, 0xce, 0xce,
                            0x00, 0x3e, 0x95, 0xe8, 0x16, 0x4d, 0xcc, 0x89, 0xa1, 0x56, 0xe1 };
-    TestASBEncodeDecodeClosure(asb_cbor, sizeof(asb_cbor), 1);
+    TestASBDecodeEncodeClosure(asb_cbor, sizeof(asb_cbor), 1, 1);
 }
 
 // See: https://www.rfc-editor.org/rfc/rfc9173.html#name-abstract-security-block-2
@@ -101,7 +104,7 @@ void test_AbsSecBlock_RFC9173_AppendixA_Example2(void)
                            0xf4, 0x2c, 0x8a, 0x2a, 0xf8, 0x92, 0x96, 0xfa, 0xbf, 0x34, 0xd7, 0xfa, 0xe7, 0x00,
                            0x82, 0x04, 0x00, 0x81, 0x81, 0x82, 0x01, 0x50, 0xef, 0xa4, 0xb5, 0xac, 0x01, 0x08,
                            0xe3, 0x81, 0x6c, 0x56, 0x06, 0x47, 0x98, 0x01, 0xbc, 0x04 };
-    TestASBEncodeDecodeClosure(asb_cbor, sizeof(asb_cbor), 1);
+    TestASBDecodeEncodeClosure(asb_cbor, sizeof(asb_cbor), 2, 1);
 }
 
 void test_AbsSecBlock_RFC9173_AppendixA_Example3_BIB(void)
@@ -114,7 +117,7 @@ void test_AbsSecBlock_RFC9173_AppendixA_Example3_BIB(void)
                            0x82, 0x01, 0x58, 0x20, 0x3e, 0xd6, 0x14, 0xc0, 0xd9, 0x7f, 0x49, 0xb3, 0x63, 0x36,
                            0x27, 0x77, 0x9a, 0xa1, 0x8a, 0x33, 0x8d, 0x21, 0x2b, 0xf3, 0xc9, 0x2b, 0x97, 0x75,
                            0x9d, 0x97, 0x39, 0xcd, 0x50, 0x72, 0x55, 0x96 };
-    TestASBEncodeDecodeClosure(asb_cbor, sizeof(asb_cbor), 0);
+    TestASBDecodeEncodeClosure(asb_cbor, sizeof(asb_cbor), 1, 0);
 }
 
 void test_AbsSecBlock_RFC9173_AppendixA_Example3_BCB(void)
@@ -123,7 +126,7 @@ void test_AbsSecBlock_RFC9173_AppendixA_Example3_BCB(void)
                            0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32, 0x82,
                            0x02, 0x01, 0x82, 0x04, 0x00, 0x81, 0x81, 0x82, 0x01, 0x50, 0xef, 0xa4, 0xb5,
                            0xac, 0x01, 0x08, 0xe3, 0x81, 0x6c, 0x56, 0x06, 0x47, 0x98, 0x01, 0xbc, 0x04 };
-    TestASBEncodeDecodeClosure(asb_cbor, sizeof(asb_cbor), 1);
+    TestASBDecodeEncodeClosure(asb_cbor, sizeof(asb_cbor), 2, 1);
 }
 
 void test_AbsSecBlock_RFC9173_AppendixA_Example4_BIB(void)
@@ -133,7 +136,7 @@ void test_AbsSecBlock_RFC9173_AppendixA_Example4_BIB(void)
                            0xf0, 0x46, 0x16, 0x58, 0x55, 0xbd, 0x5f, 0xf7, 0x2f, 0xbf, 0xd4, 0xe3, 0xa6, 0x4b,
                            0x46, 0x95, 0xc4, 0x0e, 0x2b, 0x78, 0x7d, 0xa0, 0x05, 0xae, 0x81, 0x9f, 0x0a, 0x2e,
                            0x30, 0xa2, 0xe8, 0xb3, 0x25, 0x52, 0x7d, 0xe8, 0xae, 0xfb, 0x52, 0xe7, 0x3d, 0x71 };
-    TestASBEncodeDecodeClosure(asb_cbor, sizeof(asb_cbor), 1);
+    TestASBDecodeEncodeClosure(asb_cbor, sizeof(asb_cbor), 1, 1);
 }
 
 void test_AbsSecBlock_RFC9173_AppendixA_Example4_BCB(void)
@@ -143,9 +146,28 @@ void test_AbsSecBlock_RFC9173_AppendixA_Example4_BCB(void)
                            0x04, 0x07, 0x82, 0x81, 0x82, 0x01, 0x50, 0x22, 0x0f, 0xfc, 0x45, 0xc8, 0xa9, 0x01, 0x99,
                            0x9e, 0xcc, 0x60, 0x99, 0x1d, 0xd7, 0x8b, 0x29, 0x81, 0x82, 0x01, 0x50, 0xd2, 0xc5, 0x1c,
                            0xb2, 0x48, 0x17, 0x92, 0xda, 0xe8, 0xb2, 0x1d, 0x84, 0x8c, 0xed, 0xe9, 0x9b };
-    TestASBEncodeDecodeClosure(asb_cbor, sizeof(asb_cbor), 3);
+    TestASBDecodeEncodeClosure(asb_cbor, sizeof(asb_cbor), 2, 3);
 }
 
+// Test with private use context id (-5)
+TEST_CASE("820301240182028202018382014C5477656C76653132313231328202038204078281820150220FFC45C8A901999ECC60991DD78B2981820150D2C51CB2481792DAE8B21D848CEDE99B",
+          -5, 3)
+void test_AbsSecBlock_loopback(const char *hexdata, int64_t expect_ctx_id, uint64_t sample_target_block_num)
+{
+    BSL_Data_t in_data;
+    BSL_Data_Init(&in_data);
+    {
+        string_t in_text;
+        string_init_set_str(in_text, hexdata);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
+                                      "BSL_TestUtils_DecodeBase16() failed");
+        string_clear(in_text);
+    }
+
+    TestASBDecodeEncodeClosure(in_data.ptr, in_data.len, expect_ctx_id, sample_target_block_num);
+
+    BSL_Data_Deinit(&in_data);
+}
 void test_AbsSecBlock_RFC9173_AppendixA_Example4_BIB_Ciphertext_failure(void)
 {
     uint8_t asb_cbor_encrypted[] = {

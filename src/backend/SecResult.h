@@ -81,7 +81,7 @@ struct BSL_SecResult_s
     uint64_t result_id;
 
     /// @brief Context ID, put in here for convenience.
-    uint64_t context_id;
+    int64_t context_id;
 
     /// @brief Target block id, put in here for convenience.
     uint64_t target_block_num;
