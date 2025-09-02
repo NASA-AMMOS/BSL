@@ -57,7 +57,7 @@ void BSL_SecParam_Set(BSL_SecParam_t *self, const BSL_SecParam_t *src)
     self->param_id    = src->param_id;
     self->_type       = src->_type;
     self->_uint_value = src->_uint_value;
-    // workaround m_bstring issue
+    // workaround m_bstring issue https://github.com/P-p-H-d/mlib/issues/142
     if (m_bstring_empty_p(src->_bytes))
     {
         m_bstring_reset(self->_bytes);
@@ -133,26 +133,26 @@ bool BSL_SecParam_IsBytestr(const BSL_SecParam_t *self)
     return (self->_type == BSL_SECPARAM_TYPE_BYTESTR);
 }
 
-int BSL_SecParam_GetAsBytestr(const BSL_SecParam_t *self, BSL_Data_t *result)
+int BSL_SecParam_GetAsBytestr(const BSL_SecParam_t *self, BSL_Data_t *out)
 {
-    CHK_ARG_NONNULL(result);
+    CHK_ARG_NONNULL(out);
     CHK_PRECONDITION(BSL_SecParam_IsConsistent(self));
     CHK_PROPERTY(self->_type == BSL_SECPARAM_TYPE_BYTESTR);
 
     const size_t   size = m_bstring_size(self->_bytes);
     const uint8_t *ptr  = m_bstring_view(self->_bytes, 0, size);
-    return BSL_Data_InitView(result, size, (uint8_t *)ptr);
+    return BSL_Data_InitView(out, size, (uint8_t *)ptr);
 }
 
-int BSL_SecParam_GetAsTextstr(const BSL_SecParam_t *self, const char **result)
+int BSL_SecParam_GetAsTextstr(const BSL_SecParam_t *self, const char **out)
 {
-    CHK_ARG_NONNULL(result);
+    CHK_ARG_NONNULL(out);
     CHK_PRECONDITION(BSL_SecParam_IsConsistent(self));
     CHK_PROPERTY(self->_type == BSL_SECPARAM_TYPE_TEXTSTR);
 
     const size_t   size = m_bstring_size(self->_bytes);
     const uint8_t *ptr  = m_bstring_view(self->_bytes, 0, size);
-    *result             = (const char *)ptr;
+    *out                = (const char *)ptr;
     return BSL_SUCCESS;
 }
 

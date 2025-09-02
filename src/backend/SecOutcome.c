@@ -150,13 +150,12 @@ static bool BSL_AbsSecBlock_ContainsResult(const BSL_AbsSecBlock_t *abs_sec_bloc
     {
         BSL_SecResult_t *expected = BSLB_SecResultList_get(abs_sec_block->results, index);
         ASSERT_PROPERTY(expected != NULL);
-        bool hdr_matches = (actual->context_id == expected->context_id) && (actual->result_id == expected->result_id)
-                           && (actual->target_block_num == expected->target_block_num)
-                           && (actual->_bytelen == expected->_bytelen);
-        if (hdr_matches)
+        bool match = (actual->context_id == expected->context_id) && (actual->result_id == expected->result_id)
+                     && (actual->target_block_num == expected->target_block_num)
+                     && (m_bstring_equal_p(actual->_bytes, expected->_bytes));
+        if (match)
         {
-            int cmp = memcmp(actual->_bytes, expected->_bytes, expected->_bytelen);
-            return cmp == 0;
+            return true;
         }
     }
     return false;

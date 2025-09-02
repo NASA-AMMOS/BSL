@@ -74,7 +74,7 @@ struct BSL_SecParam_s
     /// @brief Private. When an integer, this field is populated with the correct value.
     uint64_t _uint_value;
 
-    /// @brief Private. When a bytestring, this field is set, with the _bytelen set accordingly.
+    /// @brief Private. When a bytestring, this field is used.
     m_bstring_t _bytes;
 };
 

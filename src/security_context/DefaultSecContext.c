@@ -48,15 +48,3 @@ void BSLX_EncodeHeader(const BSL_CanonicalBlock_t *block, QCBOREncodeContext *en
     QCBOREncode_AddUInt64(encoder, block->block_num);
     QCBOREncode_AddUInt64(encoder, block->flags);
 }
-
-void *BSLX_ScratchSpace_take(BSLX_ScratchSpace_t *scratch, size_t len)
-{
-    ASSERT_ARG_NONNULL(scratch);
-    ASSERT_ARG_EXPR(scratch->position + len < scratch->size);
-
-    uint8_t *target = &scratch->buffer[scratch->position];
-    memset(target, 0, len);
-    // We give a padding of 16 bytes between objects for safety
-    scratch->position += (len + 16);
-    return target;
-}
