@@ -171,10 +171,10 @@ int main(int argc, char **argv)
                 {
                     // TODO better way to handle this
                     int anyerr = 0;
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_appin, &policy_registry));
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_appout, &policy_registry));
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_clin, &policy_registry));
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_clout, &policy_registry));
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.appin.policy, &policy_registry));
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.appout.policy, &policy_registry));
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.clin.policy, &policy_registry));
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.clout.policy, &policy_registry));
                     if (anyerr)
                     {
                         retval = 1;
