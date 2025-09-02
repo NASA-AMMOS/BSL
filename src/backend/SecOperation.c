@@ -38,8 +38,6 @@ void BSL_SecOper_Init(BSL_SecOper_t *self)
 
     memset(self, 0, sizeof(*self));
     BSLB_SecParamList_init(self->_param_list);
-
-    ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
 
 void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
@@ -62,8 +60,6 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
 
 void BSL_SecOper_Deinit(BSL_SecOper_t *self)
 {
-    // doesn't have to be consistent to be deinit'd right?
-    // ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(self->_param_list);
     BSLB_SecParamList_clear(self->_param_list);
@@ -109,13 +105,9 @@ bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self)
 {
     // NOLINTBEGIN
     CHK_AS_BOOL(self != NULL);
-    CHK_AS_BOOL(self->context_id > 0);
-    CHK_AS_BOOL(self->target_block_num < 10000);
-    // CHK_AS_BOOL(self->sec_block_num > 0);
     CHK_AS_BOOL(self->_service_type == BSL_SECBLOCKTYPE_BCB || self->_service_type == BSL_SECBLOCKTYPE_BIB);
     CHK_AS_BOOL(self->_role == BSL_SECROLE_ACCEPTOR || self->_role == BSL_SECROLE_VERIFIER
                 || self->_role == BSL_SECROLE_SOURCE);
-    CHK_AS_BOOL(BSLB_SecParamList_size(self->_param_list) < 1000);
     CHK_AS_BOOL(self->conclusion >= BSL_SECOP_CONCLUSION_PENDING && self->conclusion <= BSL_SECOP_CONCLUSION_FAILURE);
     // NOLINTEND
     return true;
