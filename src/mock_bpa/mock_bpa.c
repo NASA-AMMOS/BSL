@@ -171,10 +171,10 @@ int main(int argc, char **argv)
                 {
                     // TODO better way to handle this
                     int anyerr = 0;
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_appin, &policy_registry));
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_appout, &policy_registry));
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_clin, &policy_registry));
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.policy_clout, &policy_registry));
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.appin.policy, &policy_registry));
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.appout.policy, &policy_registry));
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.clin.policy, &policy_registry));
+                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.clout.policy, &policy_registry));
                     if (anyerr)
                     {
                         retval = 1;
@@ -206,25 +206,25 @@ int main(int argc, char **argv)
         }
         if (!retval && (agent.over_addr.sin_family != AF_INET))
         {
-            BSL_LOG_ERR("Missing over-socket address\n");
+            BSL_LOG_ERR("Missing over-socket address");
             show_usage(argv[0]);
             retval = 1;
         }
         if (!retval && (agent.app_addr.sin_family != AF_INET))
         {
-            BSL_LOG_ERR("Missing application address\n");
+            BSL_LOG_ERR("Missing application address");
             show_usage(argv[0]);
             retval = 1;
         }
         if (!retval && (agent.under_addr.sin_family != AF_INET))
         {
-            BSL_LOG_ERR("Missing under-socket address\n");
+            BSL_LOG_ERR("Missing under-socket address");
             show_usage(argv[0]);
             retval = 1;
         }
         if (!retval && (agent.router_addr.sin_family != AF_INET))
         {
-            BSL_LOG_ERR("Missing router address\n");
+            BSL_LOG_ERR("Missing router address");
             show_usage(argv[0]);
             retval = 1;
         }

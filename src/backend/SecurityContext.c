@@ -300,6 +300,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_Data_Deinit(&btsd_copy);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_DECODING;
     }
@@ -323,11 +324,12 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
         BSL_SecResult_t *result = BSLB_SecResultList_get(abs_sec_block.results, i);
         if (result->target_block_num == sec_oper->target_block_num)
         {
-            CHK_PROPERTY(BSL_SecResult_IsConsistent(result));
+            BSL_Data_t as_data;
+            BSL_SecResult_GetAsBytestr(result, &as_data);
+
             BSL_SecParam_t *result_param = &results_as_params[i];
-            BSL_Data_t      as_data      = { .ptr = result->_bytes, .len = result->_bytelen };
             BSL_SecParam_InitBytestr(result_param, BSL_SECPARAM_TYPE_AUTH_TAG, as_data);
-            BSLB_SecParamList_push_back(sec_oper->_param_list, *result_param);
+            BSLB_SecParamList_push_move(sec_oper->_param_list, result_param);
         }
     }
 
@@ -472,7 +474,6 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
     CHK_PRECONDITION(BSL_SecurityActionSet_IsConsistent(action_set));
     // NOLINTEND
 
-    BSL_SecurityResponseSet_Init(output_response, BSL_SecurityActionSet_CountOperations(action_set), 0);
     /**
      * Notes:
      *  - It should evaluate every security operation, even if earlier ones failed.
@@ -518,13 +519,15 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
 
             BSL_SecOutcome_Deinit(outcome);
 
-            if (errcode != 0)
+            if (errcode != BSL_SUCCESS)
             {
                 BSL_LOG_ERR("Security Op failed: %d", errcode);
                 BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_FAILURE);
+                BSL_SecurityResponseSet_AppendResult(output_response, errcode, sec_oper->failure_code);
                 break; // stop processing secops if there is a failure
             }
             BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_SUCCESS);
+            BSL_SecurityResponseSet_AppendResult(output_response, errcode, sec_oper->failure_code);
         }
     }
     BSL_FREE(outcome);

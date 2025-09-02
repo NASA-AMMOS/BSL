@@ -175,6 +175,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                 BSL_SeqReader_Destroy(btsd_read);
 
                 BSL_AbsSecBlock_t *abs_sec_block = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
+                BSL_AbsSecBlock_InitEmpty(abs_sec_block);
                 if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, &btsd_copy) == 0)
                 {
                     if (BSL_AbsSecBlock_ContainsTarget(abs_sec_block, sec_oper->target_block_num))
@@ -211,6 +212,8 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     CHK_ARG_NONNULL(response_output);
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(policy_actions);
+
+    BSL_SecurityResponseSet_Init(response_output);
 
     int exec_code = BSL_SecCtx_ExecutePolicyActionSet((BSL_LibCtx_t *)bsl, response_output, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)
@@ -274,6 +277,8 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
             }
         }
     }
+
+    BSL_SecurityResponseSet_Deinit(response_output);
 
     // TODO CHK_POSTCONDITION
     return BSL_SUCCESS;

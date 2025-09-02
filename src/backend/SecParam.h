@@ -58,6 +58,7 @@
 
 #include <stdint.h>
 
+#include <m-bstring.h>
 #include <m-array.h>
 
 #include <BPSecLib_Private.h>
@@ -73,20 +74,21 @@ struct BSL_SecParam_s
     /// @brief Private. When an integer, this field is populated with the correct value.
     uint64_t _uint_value;
 
-    /// @brief Private. When a bytestring, this field is set, with the _bytelen set accordingly.
-    uint8_t _bytes[BSL_DEFAULT_BYTESTR_LEN + 1];
-
-    /// @brief Private. When a bytestring, this field is the length of param, and always less than
-    /// BSL_DEFAULT_BYTESTR_LEN.
-    size_t _bytelen;
+    /// @brief Private. When a bytestring, this field is used.
+    m_bstring_t _bytes;
 };
+
+/// OPLIST for ::BSL_SecParam_t
+#define M_OPL_BSL_SecParam_t()                                                                                 \
+    (INIT(API_2(BSL_SecParam_Init)), INIT_SET(API_6(BSL_SecParam_InitSet)), CLEAR(API_2(BSL_SecParam_Deinit)), \
+     SET(API_6(BSL_SecParam_Set)))
 
 /** @struct BSLB_SecParamList_t
  * Defines a basic list of Security Parameters (::BSL_SecParam_t).
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
-M_ARRAY_DEF(BSLB_SecParamList, BSL_SecParam_t, M_POD_OPLIST)
+M_ARRAY_DEF(BSLB_SecParamList, BSL_SecParam_t, M_OPL_BSL_SecParam_t())
 /// @endcond
 // NOLINTEND
 

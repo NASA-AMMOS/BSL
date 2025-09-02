@@ -433,68 +433,71 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
     }
 
     // All BSL contexts get the same config
-    BSL_LibCtx_t **bsls[] = {
-        &agent->bsl_appin,
-        &agent->bsl_appout,
-        &agent->bsl_clin,
-        &agent->bsl_clout,
+    MockBPA_Agent_BSL_Ctx_t *ctxs[] = {
+        &agent->appin,
+        &agent->appout,
+        &agent->clin,
+        &agent->clout,
     };
-    for (size_t ix = 0; (ix < 4) && !retval; ++ix)
+    for (size_t ix = 0; (ix < sizeof(ctxs) / sizeof(ctxs[0])) && !retval; ++ix)
     {
-        *bsls[ix]         = BSL_CALLOC(1, BSL_LibCtx_Sizeof());
-        BSL_LibCtx_t *bsl = *bsls[ix];
+        MockBPA_Agent_BSL_Ctx_t *ctx = ctxs[ix];
 
-        if (BSL_API_InitLib(bsl))
+        ctx->bsl = BSL_CALLOC(1, BSL_LibCtx_Sizeof());
+        if (BSL_API_InitLib(ctx->bsl))
         {
-            BSL_LOG_ERR("Failed to initialize BSL");
+            BSL_LOG_ERR("Failed BSL_API_InitLib()");
             retval = 2;
+        }
+        if (pthread_mutex_init(&ctx->mutex, NULL))
+        {
+            BSL_LOG_ERR("Failed pthread_mutex_init()");
+            retval = 3;
         }
 
         BSL_SecCtxDesc_t bib_sec_desc;
         bib_sec_desc.execute  = BSLX_BIB_Execute;
         bib_sec_desc.validate = BSLX_BIB_Validate;
-        ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(bsl, 1, bib_sec_desc));
+        ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, 1, bib_sec_desc));
 
         BSL_SecCtxDesc_t bcb_sec_desc;
         bcb_sec_desc.execute  = BSLX_BCB_Execute;
         bcb_sec_desc.validate = BSLX_BCB_Validate;
-        ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(bsl, 2, bcb_sec_desc));
+        ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, 2, bcb_sec_desc));
     }
     // TODO find a better way to deal with this
     {
-        agent->policy_appin               = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->appin.policy               = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,
-                                                                 .user_data   = agent->policy_appin };
-        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->bsl_appin, 1, policy_callbacks));
+                                                                 .user_data   = agent->appin.policy };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->appin.bsl, 1, policy_callbacks));
     }
     {
-        agent->policy_appout              = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->appout.policy              = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,
-                                                                 .user_data   = agent->policy_appout };
-        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->bsl_appout, 1, policy_callbacks));
+                                                                 .user_data   = agent->appout.policy };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->appout.bsl, 1, policy_callbacks));
     }
     {
-        agent->policy_clin                = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->clin.policy                = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,
-                                                                 .user_data   = agent->policy_clin };
-        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->bsl_clin, 1, policy_callbacks));
+                                                                 .user_data   = agent->clin.policy };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->clin.bsl, 1, policy_callbacks));
     }
     {
-        agent->policy_clout               = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->clout.policy               = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,
-                                                                 .user_data   = agent->policy_clout };
-        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->bsl_clout, 1, policy_callbacks));
+                                                                 .user_data   = agent->clout.policy };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->clout.bsl, 1, policy_callbacks));
     }
-
-    pthread_mutex_init(&agent->tlm_mutex, NULL);
 
     agent->over_addr.sin_family   = 0;
     agent->app_addr.sin_family    = 0;
@@ -506,23 +509,28 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
 
 void MockBPA_Agent_Deinit(MockBPA_Agent_t *agent)
 {
-    pthread_mutex_destroy(&agent->tlm_mutex);
-
     // All BSL contexts get the same config
-    BSL_LibCtx_t **bsls[] = {
-        &agent->bsl_appin,
-        &agent->bsl_appout,
-        &agent->bsl_clin,
-        &agent->bsl_clout,
+    MockBPA_Agent_BSL_Ctx_t *ctxs[] = {
+        &agent->appin,
+        &agent->appout,
+        &agent->clin,
+        &agent->clout,
     };
-    for (size_t ix = 0; ix < 4; ++ix)
+    for (size_t ix = 0; ix < sizeof(ctxs) / sizeof(ctxs[0]); ++ix)
     {
-        if (BSL_API_DeinitLib(*bsls[ix]))
+        MockBPA_Agent_BSL_Ctx_t *ctx = ctxs[ix];
+
+        if (pthread_mutex_destroy(&ctx->mutex))
         {
-            BSL_LOG_ERR("Failed BSL_API_DeinitLib");
+            BSL_LOG_ERR("Failed pthread_mutex_destroy()");
         }
-        BSL_FREE(*bsls[ix]);
-        *bsls[ix] = NULL;
+
+        if (BSL_API_DeinitLib(ctx->bsl))
+        {
+            BSL_LOG_ERR("Failed BSL_API_DeinitLib()");
+        }
+        BSL_FREE(ctx->bsl);
+        ctx->bsl = NULL;
     }
 
     close(agent->tx_notify_r);
@@ -569,30 +577,36 @@ static void MockBPA_Agent_DumpTelemetry(MockBPA_Agent_t *agent)
 {
     BSL_TlmCounters_t tlm = BSL_TLM_COUNTERS_ZERO;
 
-    if (pthread_mutex_lock(&agent->tlm_mutex))
     {
-        BSL_LOG_CRIT("failed to lock mutex");
-        return;
-    }
-    {
-        const BSL_LibCtx_t *bsls[] = {
-            agent->bsl_appin,
-            agent->bsl_appout,
-            agent->bsl_clin,
-            agent->bsl_clout,
+        MockBPA_Agent_BSL_Ctx_t *ctxs[] = {
+            &agent->appin,
+            &agent->appout,
+            &agent->clin,
+            &agent->clout,
         };
-        for (size_t ix = 0; ix < sizeof(bsls) / sizeof(bsls[0]); ++ix)
+        for (size_t ix = 0; ix < sizeof(ctxs) / sizeof(ctxs[0]); ++ix)
         {
-            const BSL_LibCtx_t *bsl = bsls[ix];
+            MockBPA_Agent_BSL_Ctx_t *ctx = ctxs[ix];
 
-            int result = BSL_LibCtx_AccumulateTlmCounters(bsl, &tlm);
+            if (pthread_mutex_lock(&ctx->mutex))
+            {
+                BSL_LOG_CRIT("failed to lock mutex");
+                continue;
+            }
+
+            int result = BSL_LibCtx_AccumulateTlmCounters(ctx->bsl, &tlm);
             if (result)
             {
                 BSL_LOG_ERR("Error with reading telemetry from bsl context");
+                // fall-through to unlock
+            }
+
+            if (pthread_mutex_unlock(&ctx->mutex))
+            {
+                BSL_LOG_CRIT("failed to unlock mutex");
             }
         }
     }
-    pthread_mutex_unlock(&agent->tlm_mutex);
 
     BSL_LOG_INFO("---------------------------------------------------------");
     BSL_LOG_INFO("---------------------TELEMETRY INFO----------------------");
@@ -617,18 +631,24 @@ static void MockBPA_Agent_DumpTelemetry(MockBPA_Agent_t *agent)
  * @param[in,out] bundle The bundle to process.
  * @return Zero if successful.
  */
-static int MockBPA_Agent_process(MockBPA_Agent_t *agent, BSL_LibCtx_t *bsl, BSL_PolicyLocation_e loc,
+static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t *ctx, BSL_PolicyLocation_e loc,
                                  MockBPA_Bundle_t *bundle)
 {
     int returncode = 0;
-
     BSL_LOG_INFO("starting");
+
+    if (pthread_mutex_lock(&ctx->mutex))
+    {
+        BSL_LOG_CRIT("failed to lock mutex");
+        return 2;
+    }
+
     BSL_SecurityActionSet_t   *malloced_action_set   = BSL_CALLOC(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityResponseSet_t *malloced_response_set = BSL_CALLOC(1, BSL_SecurityResponseSet_Sizeof());
 
     BSL_BundleRef_t bundle_ref = { .data = bundle };
     BSL_LOG_INFO("calling BSL_API_QuerySecurity");
-    returncode = BSL_API_QuerySecurity(bsl, malloced_action_set, &bundle_ref, loc);
+    returncode = BSL_API_QuerySecurity(ctx->bsl, malloced_action_set, &bundle_ref, loc);
     if (returncode != 0)
     {
         BSL_LOG_ERR("Failed to query security: code=%d", returncode);
@@ -637,11 +657,15 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, BSL_LibCtx_t *bsl, BSL_
     if (!returncode)
     {
         BSL_LOG_INFO("calling BSL_API_ApplySecurity");
-        returncode = BSL_API_ApplySecurity(bsl, malloced_response_set, &bundle_ref, malloced_action_set);
+        returncode = BSL_API_ApplySecurity(ctx->bsl, malloced_response_set, &bundle_ref, malloced_action_set);
         if (returncode < 0)
         {
             BSL_LOG_ERR("Failed to apply security: code=%d", returncode);
         }
+    }
+    if (pthread_mutex_unlock(&ctx->mutex))
+    {
+        BSL_LOG_CRIT("failed to unlock mutex");
     }
 
     // Example telemetry dump to log
@@ -671,7 +695,7 @@ static void *MockBPA_Agent_work_over_rx(void *arg)
         mock_bpa_decode(&item);
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (MockBPA_Agent_process(agent, agent->bsl_appin, BSL_POLICYLOCATION_APPIN, bundle))
+        if (MockBPA_Agent_process(agent, &agent->appin, BSL_POLICYLOCATION_APPIN, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);
@@ -715,7 +739,7 @@ static void *MockBPA_Agent_work_under_rx(void *arg)
         }
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (MockBPA_Agent_process(agent, agent->bsl_clin, BSL_POLICYLOCATION_CLIN, bundle))
+        if (MockBPA_Agent_process(agent, &agent->clin, BSL_POLICYLOCATION_CLIN, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);
@@ -752,7 +776,7 @@ static void *MockBPA_Agent_work_deliver(void *arg)
         BSL_LOG_INFO("deliver item");
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (MockBPA_Agent_process(agent, agent->bsl_appout, BSL_POLICYLOCATION_APPOUT, bundle))
+        if (MockBPA_Agent_process(agent, &agent->appout, BSL_POLICYLOCATION_APPOUT, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);
@@ -797,7 +821,7 @@ static void *MockBPA_Agent_work_forward(void *arg)
         BSL_LOG_INFO("forward item");
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
-        if (MockBPA_Agent_process(agent, agent->bsl_clout, BSL_POLICYLOCATION_CLOUT, bundle))
+        if (MockBPA_Agent_process(agent, &agent->clout, BSL_POLICYLOCATION_CLOUT, bundle))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_deinit(&item);
