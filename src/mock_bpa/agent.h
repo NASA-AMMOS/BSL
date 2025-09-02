@@ -54,7 +54,7 @@ int MockBPA_GetBlockMetadata(const BSL_BundleRef_t *bundle_ref, uint64_t block_n
 int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t bytesize);
 int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, uint64_t *result_block_num);
 int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num);
-int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref);
+int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_e reason);
 
 /// Queue size for bundle queues
 #define MOCKBPA_DATA_QUEUE_SIZE 100

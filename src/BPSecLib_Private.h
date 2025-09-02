@@ -515,9 +515,10 @@ int BSL_BundleCtx_RemoveBlock(BSL_BundleRef_t *bundle, uint64_t block_num);
 /** @brief Requests dropping of bundle
  *
  * @param[in] bundle    Context bundle
+ * @param[in] reason_code reason code indicating reason for bundle deletion
  * @return 0 on success, negative on failure.
  */
-int BSL_BundleCtx_DeleteBundle(BSL_BundleRef_t *bundle);
+int BSL_BundleCtx_DeleteBundle(BSL_BundleRef_t *bundle, BSL_ReasonCode_e reason_code);
 
 /** @brief Requests the re-allocation of a block's BTSD, useful for BCB.
  *
@@ -894,6 +895,20 @@ BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(const BSL_SecOper_t *sel
  * @param[in] new_conclusion new conclusion to set to
  */
 void BSL_SecOper_SetConclusion(BSL_SecOper_t *self, BSL_SecOper_ConclusionState_e new_conclusion);
+
+/**
+ * Get security operation reason code
+ * @param[in] self the security operation
+ * @returns the reason code of the security operation
+ */
+BSL_ReasonCode_e BSL_SecOper_GetReasonCode(const BSL_SecOper_t *self);
+
+/**
+ * Set the security operation reason code
+ * @param[in,out] self security operation to change reason code of
+ * @param[in] new_reason_code new reason code to set to
+ */
+void BSL_SecOper_SetReasonCode(BSL_SecOper_t *self, BSL_ReasonCode_e new_reason_code);
 
 /// Forward declaration of this struct
 typedef struct BSL_AbsSecBlock_s BSL_AbsSecBlock_t;
