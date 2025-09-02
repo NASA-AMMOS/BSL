@@ -25,7 +25,7 @@
  */
 #include "SecResult.h"
 
-int BSL_SecResult_Init(BSL_SecResult_t *self, uint64_t result_id, uint64_t context_id, uint64_t target_block_num,
+int BSL_SecResult_Init(BSL_SecResult_t *self, uint64_t result_id, int64_t context_id, uint64_t target_block_num,
                        const BSL_Data_t *content)
 {
     CHK_ARG_NONNULL(self);
@@ -48,7 +48,7 @@ int BSL_SecResult_Init(BSL_SecResult_t *self, uint64_t result_id, uint64_t conte
 bool BSL_SecResult_IsConsistent(const BSL_SecResult_t *self)
 {
     CHK_AS_BOOL(self != NULL);
-    CHK_AS_BOOL(self->context_id > 0);
+    CHK_AS_BOOL(self->context_id != 0);
     CHK_AS_BOOL(self->result_id > 0);
     // Check that the target block num is sane (not junk)
     CHK_AS_BOOL(self->target_block_num < 10000);
