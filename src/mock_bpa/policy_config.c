@@ -323,7 +323,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                         case 1:
                             if (!strcmp(id_str, "key_name"))
                             {
-                                BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
+                                BSL_SecParam_InitTextstr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
                                 // FIXME add attr?
                                 BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
                                 params_got |= 0x1;
@@ -380,7 +380,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                         case 2:
                             if (!strcmp(id_str, "key_name"))
                             {
-                                BSL_SecParam_InitStr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
+                                BSL_SecParam_InitTextstr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
                                 // FIXME add attr?
                                 BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
                                 params_got |= 0x1;
@@ -510,20 +510,20 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
 
         if (sec_ctx_id == 2) // BCB
         {
-            BSLP_PolicyRule_AddParam(rule, params->param_aes_variant);
+            BSLP_PolicyRule_CopyParam(rule, params->param_aes_variant);
             if (sec_role == BSL_SECROLE_SOURCE)
             {
-                BSLP_PolicyRule_AddParam(rule, params->param_aad_scope_flag);
+                BSLP_PolicyRule_CopyParam(rule, params->param_aad_scope_flag);
                 BSL_Crypto_SetRngGenerator(bsl_mock_bpa_rfc9173_bcb_cek);
             }
         }
         else
         {
-            BSLP_PolicyRule_AddParam(rule, params->param_sha_variant);
-            BSLP_PolicyRule_AddParam(rule, params->param_integ_scope_flag);
+            BSLP_PolicyRule_CopyParam(rule, params->param_sha_variant);
+            BSLP_PolicyRule_CopyParam(rule, params->param_integ_scope_flag);
         }
-        BSLP_PolicyRule_AddParam(rule, params->param_test_key);
-        BSLP_PolicyRule_AddParam(rule, params->param_use_wrapped_key);
+        BSLP_PolicyRule_CopyParam(rule, params->param_test_key);
+        BSLP_PolicyRule_CopyParam(rule, params->param_use_wrapped_key);
     }
 
     json_decref(root);
