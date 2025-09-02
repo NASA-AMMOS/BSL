@@ -230,7 +230,8 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
 
     QCBORError cbor_err = QCBOR_ERR_UNSUPPORTED;
 
-    UsefulBuf result_ub = ippt_space->ptr ? (UsefulBuf){ .ptr = ippt_space->ptr, ippt_space->len } : SizeCalculateUsefulBuf;
+    UsefulBuf result_ub =
+        ippt_space->ptr ? (UsefulBuf) { .ptr = ippt_space->ptr, ippt_space->len } : SizeCalculateUsefulBuf;
     QCBOREncodeContext encoder;
 
     QCBOREncode_Init(&encoder, result_ub);
@@ -516,7 +517,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
     {
         BSL_SecResult_t *bib_result = BSL_CALLOC(1, BSL_SecResult_Sizeof());
         BSL_SecResult_InitFull(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
-                BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
+                               BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
         BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
         BSL_SecResult_Deinit(bib_result);
         BSL_FREE(bib_result);
