@@ -7,13 +7,13 @@ class _JSONPolicyTests(_TestSet):
     def __init__(self):
         super().__init__()
 
-        self.cases['json_source_bib'] = (_TestCase(
+        self.cases['json_source_bib_bcb'] = (_TestCase(
             # A bundle with just the **payload** block
             input_data=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
-            # Bundle with additional BIB
+            # Bundle with BIB and BCB
             expected_output=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [12, 3, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
