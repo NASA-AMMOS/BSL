@@ -115,22 +115,6 @@ typedef struct BSLX_BCB_s
     bool    skip_aad_prim_block;
 } BSLX_BCB_t;
 
-/**
- * Wrapper for large, variable-sized buffer holding all working data to compete a BCB operation.
- * @deprecated
- */
-typedef struct BSLX_ScratchSpace_s
-{
-    uint8_t *buffer;
-    size_t   size;
-    size_t   position;
-} BSLX_ScratchSpace_t;
-
-/**
- * This means "give me len bytes from the scratch space and increment a counter."
- * This is a convenience to assign space within the scratch space for certain structs.
- */
-void *BSLX_ScratchSpace_take(BSLX_ScratchSpace_t *scratch, size_t len);
 int   BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, const BSL_SecOper_t *sec_oper);
 
 int  BSLX_BCB_Init(BSLX_BCB_t *bcb_context, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
