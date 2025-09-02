@@ -118,6 +118,8 @@ class _CCSDS_Cases(_TestSet):
                 bcb_param_aes = sc_param_json_format.format(param_id='aes_variant', value='1')
                 bcb_param_scope = sc_param_json_format.format(param_id='aad_scope', value='0')
 
+                param_key_wrap_off = sc_param_json_format.format(param_id='key_wrap', value='0')
+
                 rules_json = []
                 policy_rules=t['rules']
                 success = True
@@ -137,11 +139,11 @@ class _CCSDS_Cases(_TestSet):
                         break
 
                     if policy_desc[3] == 0:
-                        bib_params = f'{bib_param_key_bad},{bib_param_sha},{bib_param_scope}'
-                        bcb_params = f'{bcb_param_key_bad},{bcb_param_aes},{bcb_param_scope}'
+                        bib_params = f'{bib_param_key_bad},{bib_param_sha},{bib_param_scope},{param_key_wrap_off}'
+                        bcb_params = f'{bcb_param_key_bad},{bcb_param_aes},{bcb_param_scope},{param_key_wrap_off}'
                     else:
-                        bib_params = f'{bib_param_key_good},{bib_param_sha},{bib_param_scope}'
-                        bcb_params = f'{bcb_param_key_good},{bcb_param_aes},{bcb_param_scope}'
+                        bib_params = f'{bib_param_key_good},{bib_param_sha},{bib_param_scope},{param_key_wrap_off}'
+                        bcb_params = f'{bcb_param_key_good},{bcb_param_aes},{bcb_param_scope},{param_key_wrap_off}'
 
                     sec_ctx = -1
                     params = ''

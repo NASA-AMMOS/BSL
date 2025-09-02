@@ -123,15 +123,15 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
             BSL_LOG_DEBUG("     role   : %s", role_str);
 
             // check for valid sec role
-            if (!strcmp(role_str, "s"))
+            if (0 == strcmp(role_str, "s"))
             {
                 sec_role = BSL_SECROLE_SOURCE;
             }
-            else if (!strcmp(role_str, "v"))
+            else if (0 == strcmp(role_str, "v"))
             {
                 sec_role = BSL_SECROLE_VERIFIER;
             }
-            else if (!strcmp(role_str, "a"))
+            else if (0 == strcmp(role_str, "a"))
             {
                 sec_role = BSL_SECROLE_ACCEPTOR;
             }
@@ -199,19 +199,19 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
             const char *loc_str = json_string_value(loc);
             BSL_LOG_DEBUG("     loc    : %s", loc_str);
 
-            if (!strcmp(loc_str, "appin"))
+            if (0 == strcmp(loc_str, "appin"))
             {
                 policy_loc_enum = BSL_POLICYLOCATION_APPIN;
             }
-            else if (!strcmp(loc_str, "appout"))
+            else if (0 == strcmp(loc_str, "appout"))
             {
                 policy_loc_enum = BSL_POLICYLOCATION_APPOUT;
             }
-            else if (!strcmp(loc_str, "clin"))
+            else if (0 == strcmp(loc_str, "clin"))
             {
                 policy_loc_enum = BSL_POLICYLOCATION_CLIN;
             }
-            else if (!strcmp(loc_str, "clout"))
+            else if (0 == strcmp(loc_str, "clout"))
             {
                 policy_loc_enum = BSL_POLICYLOCATION_CLOUT;
             }
@@ -255,15 +255,15 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
         }
 
         const char *policy_act_str = json_string_value(policy_action_on_fail);
-        if (!strcmp(policy_act_str, "delete_bundle"))
+        if (0 == strcmp(policy_act_str, "delete_bundle"))
         {
             policy_action_enum = BSL_POLICYACTION_DROP_BUNDLE;
         }
-        else if (!strcmp(policy_act_str, "drop_block"))
+        else if (0 == strcmp(policy_act_str, "drop_block"))
         {
             policy_action_enum = BSL_POLICYACTION_DROP_BLOCK;
         }
-        else if (!strcmp(policy_act_str, "nothing"))
+        else if (0 == strcmp(policy_act_str, "nothing"))
         {
             policy_action_enum = BSL_POLICYACTION_NOTHING;
         }
@@ -319,21 +319,21 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                     switch (sc_id_l)
                     {
                         case 1:
-                            if (!strcmp(id_str, "key_name"))
+                        {
+                            BSL_LOG_INFO("IM GOING CRAZY %s %d", id_str, strcmp(id_str, "key_name"));
+                            if (0 == strcmp(id_str, "key_name"))
                             {
                                 BSL_SecParam_InitTextstr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
-                                // FIXME add attr?
-                                BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
                                 params_got |= 0x1;
                             }
-                            else if (!strcmp(id_str, "sha_variant"))
+                            else if (0 == strcmp(id_str, "sha_variant"))
                             {
                                 uint64_t sha_var;
-                                if (!strcmp(value_str, "5"))
+                                if (0 == strcmp(value_str, "5"))
                                 {
                                     sha_var = RFC9173_BIB_SHA_HMAC256;
                                 }
-                                else if (!strcmp(value_str, "6"))
+                                else if (0 == strcmp(value_str, "6"))
                                 {
                                     sha_var = RFC9173_BIB_SHA_HMAC384;
                                 }
@@ -346,17 +346,17 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                                                        sha_var);
                                 params_got |= 0x2;
                             }
-                            else if (!strcmp(id_str, "scope_flags"))
+                            else if (0 == strcmp(id_str, "scope_flags"))
                             {
                                 uint64_t flag = strtol(value_str, NULL, 10); // FIXME
                                 BSL_SecParam_InitInt64(params->param_integ_scope_flag,
                                                        RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, flag);
                                 params_got |= 0x4;
                             }
-                            if (!strcmp(id_str, "key_wrap"))
+                            else if (0 == strcmp(id_str, "key_wrap"))
                             {
                                 uint64_t keywrap;
-                                if (!strcmp(value_str, "0"))
+                                if (0 == strcmp(value_str, "0"))
                                 {
                                     keywrap = 0;
                                 }
@@ -375,24 +375,24 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                                 continue;
                             }
                             break;
+                        }
                         case 2:
-                            if (!strcmp(id_str, "key_name"))
+                        {
+                            if (0 == strcmp(id_str, "key_name"))
                             {
                                 BSL_SecParam_InitTextstr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
-                                // FIXME add attr?
-                                BSL_SecParam_InitInt64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
                                 params_got |= 0x1;
                             }
-                            else if (!strcmp(id_str, "iv"))
+                            else if (0 == strcmp(id_str, "iv"))
                             {
                                 // TODO covert value_str to bstring
                                 // BSL_SecParam_InitBytestr(params->param_init_vector, RFC9173_BCB_SECPARAM_IV, );
                                 params_got |= 0x2;
                             }
-                            else if (!strcmp(id_str, "aes_variant"))
+                            else if (0 == strcmp(id_str, "aes_variant"))
                             {
                                 rfc9173_bcb_aes_variant_e aes_var;
-                                if (!strcmp(value_str, "1"))
+                                if (0 == strcmp(value_str, "1"))
                                 {
                                     aes_var = RFC9173_BCB_AES_VARIANT_A128GCM;
                                 }
@@ -405,17 +405,17 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                                                        aes_var);
                                 params_got |= 0x4;
                             }
-                            else if (!strcmp(id_str, "aad_scope"))
+                            else if (0 == strcmp(id_str, "aad_scope"))
                             {
                                 uint64_t flag = strtol(value_str, NULL, 10); // FIXME
                                 BSL_SecParam_InitInt64(params->param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE,
                                                        flag);
                                 params_got |= 0x8;
                             }
-                            if (!strcmp(id_str, "key_wrap"))
+                            else if (0 == strcmp(id_str, "key_wrap"))
                             {
                                 uint64_t keywrap;
-                                if (!strcmp(value_str, "0"))
+                                if (0 == strcmp(value_str, "0"))
                                 {
                                     keywrap = 0;
                                 }
@@ -434,9 +434,12 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
                                 continue;
                             }
                             break;
+                        }
                         default:
+                        {
                             BSL_LOG_ERR("INVALID SC ID");
                             continue;
+                        }
                     }
                 }
             }
