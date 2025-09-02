@@ -22,6 +22,7 @@
 import yaml
 import cbor2
 import binascii
+import tempfile
 from _test_util import _TestCase, _TestSet, DataFormat
 
 policyset_json_format = '''{{ 
@@ -62,13 +63,16 @@ class _CCSDS_Cases(_TestSet):
         super().__init__()
 
         ccsds_test_dir = 'mock-bpa-test/ccsds_json/'
-        ccsds_spec_file = 'not_available'
+        ccsds_spec_file = 'mock-bpa-test/ccsds_bpsec_redbook_requirements_modified.yaml'
 
         try:
             s = open(ccsds_spec_file)
         except FileNotFoundError:
             print(f'Could not find {ccsds_spec_file}')
             return
+        
+        with tempfile.TemporaryDirectory() as ccsds_test_dir:
+            print(f"Temporary directory for CCSDS test PP JSON: {ccsds_test_dir}")
         
         requirements = yaml.safe_load(s)['requirements']
         for item in requirements:

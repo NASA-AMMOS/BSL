@@ -36,12 +36,12 @@ enum rfc9173_secctx_id_e
 };
 
 /// @brief https://www.rfc-editor.org/rfc/rfc9173.html#name-sha-variant-parameter-value
-typedef enum
+typedef enum rfc9173_bib_sha_variantid_e
 {
     RFC9173_BIB_SHA_HMAC256 = 5,
     RFC9173_BIB_SHA_HMAC384 = 6,
     RFC9173_BIB_SHA_HMAC512 = 7,
-} rfc9173_bib_sha_variantid_e;
+} rfc9173_bib_sha_variantid_t;
 
 /// @brief https://www.rfc-editor.org/rfc/rfc9173.html#name-bib-hmac-sha2-security-cont
 enum rfc9173_bib_paramid_e
