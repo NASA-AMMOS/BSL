@@ -75,8 +75,8 @@ typedef struct BSLX_BIB_s
 
 int  BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
 void BSLX_BIB_Deinit(BSLX_BIB_t *self);
-int  BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space);
-int  BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data);
+int  BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space);
+int  BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data);
 
 /**
  * BCB encryption context with crypto primitives.

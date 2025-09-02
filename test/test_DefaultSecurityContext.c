@@ -123,9 +123,13 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     TEST_ASSERT_EQUAL(RFC9173_BIB_RESULTID_HMAC, bib_result->result_id);
     TEST_ASSERT_EQUAL(1, bib_result->target_block_num);
 
-    /// Confirm the actual HMAC signature matches what is in the RFC
-    TEST_ASSERT_EQUAL(sizeof(ApxA1_HMAC), bib_result->_bytelen);
-    TEST_ASSERT_TRUE(memcmp(ApxA1_HMAC, bib_result->_bytes, sizeof(ApxA1_HMAC)) == 0);
+    {
+        /// Confirm the actual HMAC signature matches what is in the RFC
+        BSL_Data_t view;
+        TEST_ASSERT_EQUAL(0, BSL_SecResult_GetAsBytestr(bib_result, &view));
+        TEST_ASSERT_EQUAL(sizeof(ApxA1_HMAC), view.len);
+        TEST_ASSERT_EQUAL_MEMORY(ApxA1_HMAC, view.ptr, sizeof(ApxA1_HMAC));
+    }
 
     BSL_SecOutcome_Deinit(sec_outcome);
     BSL_FREE(sec_outcome);
@@ -179,9 +183,13 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     // Confirm that AUTHTAG result id is there
     TEST_ASSERT_EQUAL(RFC9173_BCB_RESULTID_AUTHTAG, auth_tag_result->result_id);
 
-    // Confirm expected vs actual auth tag byte length's match and they are equal
-    TEST_ASSERT_EQUAL(sizeof(ApxA2_AuthTag), auth_tag_result->_bytelen);
-    TEST_ASSERT_EQUAL_MEMORY(ApxA2_AuthTag, auth_tag_result->_bytes, sizeof(ApxA2_AuthTag));
+    {
+        // Confirm expected vs actual auth tag byte length's match and they are equal
+        BSL_Data_t view;
+        TEST_ASSERT_EQUAL(0, BSL_SecResult_GetAsBytestr(auth_tag_result, &view));
+        TEST_ASSERT_EQUAL_size_t(sizeof(ApxA2_AuthTag), view.len);
+        TEST_ASSERT_EQUAL_MEMORY(ApxA2_AuthTag, view.ptr, sizeof(ApxA2_AuthTag));
+    }
 
     MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
     TEST_ASSERT_NOT_NULL(target_ptr);
@@ -189,7 +197,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     TEST_ASSERT_NOT_NULL(target_block);
 
     TEST_ASSERT_EQUAL_size_t(sizeof(ApxA2_Ciphertext), target_block->btsd_len);
-    uint8_t logstr[500];
+    char logstr[500];
     BSL_LOG_INFO("EXPECTED payload: %s",
                  BSL_Log_DumpAsHexString(logstr, sizeof(logstr), ApxA2_Ciphertext, sizeof(ApxA2_Ciphertext)));
     BSL_LOG_INFO("ACTUAL payload:   %s",
@@ -230,7 +238,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     TEST_ASSERT_NOT_NULL(target_block);
 
     TEST_ASSERT_EQUAL_size_t(sizeof(ApxA2_PayloadData), target_block->btsd_len);
-    uint8_t logstr[500];
+    char logstr[500];
     BSL_LOG_INFO("EXPECTED payload: %s",
                  BSL_Log_DumpAsHexString(logstr, sizeof(logstr), ApxA2_PayloadData, sizeof(ApxA2_PayloadData)));
     BSL_LOG_INFO("ACTUAL payload:   %s",
@@ -386,7 +394,7 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
         TEST_ASSERT_EQUAL(1, result->target_block_num);
     }
 
-    uint8_t logstr[500];
+    char logstr[500];
     if (wrap)
     {
         int got = 0;
@@ -412,12 +420,16 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
         TEST_ASSERT_EQUAL(1, got);
     }
 
-    BSL_LOG_INFO("EXPECTED result: %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), result_data.ptr, result_data.len));
-    BSL_LOG_INFO("ACTUAL result:   %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), result->_bytes, result->_bytelen));
-    TEST_ASSERT_EQUAL(result_data.len, result->_bytelen);
-    TEST_ASSERT_EQUAL_MEMORY(result_data.ptr, result->_bytes, result_data.len);
+    {
+        BSL_LOG_INFO("EXPECTED result: %s",
+                     BSL_Log_DumpAsHexString(logstr, sizeof(logstr), result_data.ptr, result_data.len));
+
+        BSL_Data_t view;
+        TEST_ASSERT_EQUAL(0, BSL_SecResult_GetAsBytestr(result, &view));
+        BSL_LOG_INFO("ACTUAL result:   %s", BSL_Log_DumpAsHexString(logstr, sizeof(logstr), view.ptr, view.len));
+        TEST_ASSERT_EQUAL_size_t(result_data.len, view.len);
+        TEST_ASSERT_EQUAL_MEMORY(result_data.ptr, view.ptr, result_data.len);
+    }
 
     if (!bib)
     {
@@ -574,7 +586,7 @@ void test_sec_accept_keyunwrap(bool bib)
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_status);
     }
 
-    uint8_t logstr[500];
+    char logstr[500];
 
     if (!bib)
     {

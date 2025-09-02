@@ -324,9 +324,10 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
         BSL_SecResult_t *result = BSLB_SecResultList_get(abs_sec_block.results, i);
         if (result->target_block_num == sec_oper->target_block_num)
         {
-            CHK_PROPERTY(BSL_SecResult_IsConsistent(result));
+            BSL_Data_t as_data;
+            BSL_SecResult_GetAsBytestr(result, &as_data);
+
             BSL_SecParam_t *result_param = &results_as_params[i];
-            BSL_Data_t      as_data      = { .ptr = result->_bytes, .len = result->_bytelen };
             BSL_SecParam_InitBytestr(result_param, BSL_SECPARAM_TYPE_AUTH_TAG, as_data);
             BSLB_SecParamList_push_move(sec_oper->_param_list, result_param);
         }
