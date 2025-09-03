@@ -186,16 +186,26 @@ typedef struct BSL_BundleRef_s
     void *data; ///< Opaque pointer, not used by the BSL.
 } BSL_BundleRef_t;
 
+/// @brief IANA "Bundle Status Report Reason Codes" registry @cite rfc9171 @cite rfc9172
 typedef enum BSL_ReasonCode_e
 {
-    BSL_REASONCODE_NO_ADDITIONAL_INFO   = 0,
-    BSL_REASONCODE_DEPLETED_STORAGE     = 4,
-    BSL_REASONCODE_BLOCK_UNINTELLIGIBLE = 8,
-    BSL_REASONCODE_MISSING_SECOP        = 12,
-    BSL_REASONCODE_UNKNOWN_SECOP        = 13,
-    BSL_REASONCODE_UNEXPECTED_SECOP     = 14,
-    BSL_REASONCODE_FAILED_SECOP         = 15,
-    BSL_REASONCODE_CONFLICTING_SECOP    = 16
+    BSL_REASONCODE_NO_ADDITIONAL_INFO   = 0, /// No additional information
+    BSL_REASONCODE_LIFETIME_EXPIRED     = 1, /// Lifetime expired
+    BSL_REASONCODE_FWD_UNIDIRECT_LINK   = 2, /// Forwarded over unidirectional link
+    BSL_REASONCODE_TX_CANCEL            = 3, /// Transmission canceled
+    BSL_REASONCODE_DEPLETED_STORAGE     = 4, /// Depleted storage
+    BSL_REASONCODE_DEST_EID_UNAVAILABLE = 5, /// Destination endpoint ID unavailable
+    BSL_REASONCODE_NO_KNOWN_ROUTE       = 6, /// No known route to destination from here
+    BSL_REASONCODE_NO_CONTACT_NEXT_NODE = 7, /// No timely contact with next node on route
+    BSL_REASONCODE_BLOCK_UNINTELLIGIBLE = 8, /// Block unintelligible
+    BSL_REASONCODE_HOP_LIMIT_EXCEEDED   = 9, /// Hop limit exceeded
+    BSL_REASONCODE_TRAFFIC_PARED        = 10, /// Traffic pared
+    BSL_REASONCODE_BLOCK_UNSUPPORTED    = 11, /// Block unsupported
+    BSL_REASONCODE_MISSING_SECOP        = 12, /// Missing security operation
+    BSL_REASONCODE_UNKNOWN_SECOP        = 13, /// Unknown security operation
+    BSL_REASONCODE_UNEXPECTED_SECOP     = 14, /// Unexpected security operation
+    BSL_REASONCODE_FAILED_SECOP         = 15, /// Failed security operation
+    BSL_REASONCODE_CONFLICTING_SECOP    = 16  /// Conflicting security operation
 } BSL_ReasonCode_t;
 
 /** @brief Contains Bundle Primary Block fields and metadata.
