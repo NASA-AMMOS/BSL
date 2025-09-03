@@ -37,6 +37,14 @@ void mock_bpa_policy_params_init(mock_bpa_policy_params_t *params, int policy_nu
     params->param_test_key         = BSL_CALLOC(1, BSL_SecParam_Sizeof());
     params->param_use_wrapped_key  = BSL_CALLOC(1, BSL_SecParam_Sizeof());
 
+    BSL_SecParam_Init(params->param_integ_scope_flag);
+    BSL_SecParam_Init(params->param_sha_variant);
+    BSL_SecParam_Init(params->param_aad_scope_flag);
+    BSL_SecParam_Init(params->param_init_vector);
+    BSL_SecParam_Init(params->param_aes_variant);
+    BSL_SecParam_Init(params->param_test_key);
+    BSL_SecParam_Init(params->param_use_wrapped_key);
+
     params->active = true;
 
     BSL_LOG_DEBUG("Successfully Init policy number %d in registry", policy_num);
