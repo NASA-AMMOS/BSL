@@ -169,6 +169,12 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self)
     return self->_service_type == BSL_SECBLOCKTYPE_BIB;
 }
 
+BSL_PolicyAction_e BSL_SecOper_GetFailureCode(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    return self->failure_code;
+}
+
 BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));

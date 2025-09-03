@@ -882,6 +882,13 @@ bool BSL_SecOper_IsRoleAcceptor(const BSL_SecOper_t *self);
 bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self);
 
 /**
+ * Retrieve the policy action of a security operation
+ * @param[in] self The security operation
+ * @return the policy action
+ */
+BSL_PolicyAction_e BSL_SecOper_GetFailureCode(const BSL_SecOper_t *self);
+
+/**
  * Retrieve the conclusion state of a security operation
  * @param[in] self The security operation
  * @return the conclusion state
