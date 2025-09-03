@@ -189,16 +189,16 @@ typedef struct BSL_BundleRef_s
 /// @brief IANA "Bundle Status Report Reason Codes" registry @cite rfc9171 @cite rfc9172
 typedef enum BSL_ReasonCode_e
 {
-    BSL_REASONCODE_NO_ADDITIONAL_INFO   = 0, /// No additional information
-    BSL_REASONCODE_LIFETIME_EXPIRED     = 1, /// Lifetime expired
-    BSL_REASONCODE_FWD_UNIDIRECT_LINK   = 2, /// Forwarded over unidirectional link
-    BSL_REASONCODE_TX_CANCEL            = 3, /// Transmission canceled
-    BSL_REASONCODE_DEPLETED_STORAGE     = 4, /// Depleted storage
-    BSL_REASONCODE_DEST_EID_UNAVAILABLE = 5, /// Destination endpoint ID unavailable
-    BSL_REASONCODE_NO_KNOWN_ROUTE       = 6, /// No known route to destination from here
-    BSL_REASONCODE_NO_CONTACT_NEXT_NODE = 7, /// No timely contact with next node on route
-    BSL_REASONCODE_BLOCK_UNINTELLIGIBLE = 8, /// Block unintelligible
-    BSL_REASONCODE_HOP_LIMIT_EXCEEDED   = 9, /// Hop limit exceeded
+    BSL_REASONCODE_NO_ADDITIONAL_INFO   = 0,  /// No additional information
+    BSL_REASONCODE_LIFETIME_EXPIRED     = 1,  /// Lifetime expired
+    BSL_REASONCODE_FWD_UNIDIRECT_LINK   = 2,  /// Forwarded over unidirectional link
+    BSL_REASONCODE_TX_CANCEL            = 3,  /// Transmission canceled
+    BSL_REASONCODE_DEPLETED_STORAGE     = 4,  /// Depleted storage
+    BSL_REASONCODE_DEST_EID_UNAVAILABLE = 5,  /// Destination endpoint ID unavailable
+    BSL_REASONCODE_NO_KNOWN_ROUTE       = 6,  /// No known route to destination from here
+    BSL_REASONCODE_NO_CONTACT_NEXT_NODE = 7,  /// No timely contact with next node on route
+    BSL_REASONCODE_BLOCK_UNINTELLIGIBLE = 8,  /// Block unintelligible
+    BSL_REASONCODE_HOP_LIMIT_EXCEEDED   = 9,  /// Hop limit exceeded
     BSL_REASONCODE_TRAFFIC_PARED        = 10, /// Traffic pared
     BSL_REASONCODE_BLOCK_UNSUPPORTED    = 11, /// Block unsupported
     BSL_REASONCODE_MISSING_SECOP        = 12, /// Missing security operation
@@ -315,7 +315,8 @@ typedef struct
      */
     struct BSL_SeqWriter_s *(*block_write_btsd_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t total_size);
 
-    /// @brief Host BPA function to delete Bundle with a reason code. This can be called multiple times per-bundle with different reason codes
+    /// @brief Host BPA function to delete Bundle with a reason code. This can be called multiple times per-bundle with
+    /// different reason codes
     int (*bundle_delete_fn)(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason);
 
     /// @brief Host BPA function to encode an EID to CBOR.
