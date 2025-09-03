@@ -375,8 +375,8 @@ int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason)
 
     // Mark the bundle for deletion
     bundle->retain = false;
-    
-    BSL_LOG_INFO("MockBPA: BSL indicated to delete bundle with reason code %"PRIi64, reason);
+
+    BSL_LOG_INFO("MockBPA: BSL indicated to delete bundle with reason code %" PRIi64, reason);
     return 0;
 }
 
