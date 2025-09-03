@@ -236,7 +236,9 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
             if (conclusion == BSL_SECOP_CONCLUSION_SUCCESS)
             {
                 BSL_LOG_DEBUG("Security operation success, target block num = %" PRIu64, sec_oper->target_block_num);
-                continue;
+            }
+            else {
+                BSL_LOG_DEBUG("Security operation failure, target block num = %" PRIu64, sec_oper->target_block_num);
             }
         }
     }

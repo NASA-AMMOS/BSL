@@ -280,19 +280,24 @@ int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *ou
     const BSLP_PolicyProvider_t *self = user_data;
     ASSERT_ARG_EXPR(BSLP_PolicyProvider_IsConsistent(self));
 
+    BSL_LOG_INFO("BEGINNING OF POLICY PROVIDER FINALIZE CODE");
+
     for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(output_action_set); i++)
     {
         const BSL_SecurityAction_t *action = BSL_SecurityActionSet_GetActionAtIndex(output_action_set, i);
 
-        if (BSL_SecurityAction_GetPPID(action) != self->pp_id)
-        {
-            continue;
-        }
+        // if (BSL_SecurityAction_GetPPID(action) != self->pp_id)
+        // {
+        //     continue;
+        // }
 
+        BSL_LOG_INFO("LOOPING THROUGH ACTIONS IN ACTION SET: ", i);
         for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(action); j++)
         {
             const BSL_SecOper_t *secop = BSL_SecurityAction_GetSecOperAtIndex(action, j);
             BSL_SecOper_ConclusionState_e conclusion = BSL_SecOper_GetConclusion(secop);
+
+            BSL_LOG_INFO("LOOPING THROUGH SEC OPS IN ACTIONS: ", j);
 
             switch(conclusion)
             {
