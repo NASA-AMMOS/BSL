@@ -101,6 +101,7 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
         json_t *policy_rule_elm = json_array_get(policyrule_set, policy_rule_idx);
         if (!json_is_object(policy_rule_elm))
         {
+            BSL_LOG_ERR("Policy rule not JSON object");
             continue;
         }
 

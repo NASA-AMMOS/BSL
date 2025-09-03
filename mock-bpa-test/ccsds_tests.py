@@ -23,39 +23,8 @@ import yaml
 import cbor2
 import binascii
 import tempfile
+import json
 from _test_util import _TestCase, _TestSet, DataFormat
-
-policyset_json_format = '''{{ 
-    "policyrule_set": [
-        {}
-    ]
-}}
-'''
-
-policyrule_json_format = '''{{
-    "policyrule": {{
-    "desc": "{desc}",
-    "filter": {{
-        "rule_id": "{rule_id}",
-        "role": "{role}",
-        "tgt": {target},
-        "loc": "clin",
-        "sc_id": {sec_ctx}
-    }},
-    "spec": {{
-        "sc_id": {sec_ctx},
-        "sc_parms": [
-            {sc_params}
-        ]
-    }},
-    "_temp_not_ion_spec_policy_action_on_fail": "{policy_act}"
-    }}
-}}'''
-
-sc_param_json_format = '''{{  
-    "id": "{param_id}",
-    "value": "{value}"
-}} '''
 
 class _CCSDS_Cases(_TestSet):
 
@@ -108,19 +77,19 @@ class _CCSDS_Cases(_TestSet):
 
                     output_format=DataFormat.ERR
 
-                bib_param_key_good = sc_param_json_format.format(param_id='key_name', value='9100')
-                bib_param_key_bad = sc_param_json_format.format(param_id='key_name', value='9102')
-                bib_param_sha = sc_param_json_format.format(param_id='sha_variant', value='7')
-                bib_param_scope = sc_param_json_format.format(param_id='scope_flags', value='0')
+                bib_param_key_good = {'id': 'key_name', 'value': '9100'}
+                bib_param_key_bad = {'id': 'key_name', 'value': '9102'}
+                bib_param_sha = {'id': 'sha_variant', 'value': '7'}
+                bib_param_scope = {'id': 'scope_flags', 'value': '0'}
 
-                bcb_param_key_good = sc_param_json_format.format(param_id='key_name', value='9102')
-                bcb_param_key_bad = sc_param_json_format.format(param_id='key_name', value='9100')
-                bcb_param_aes = sc_param_json_format.format(param_id='aes_variant', value='1')
-                bcb_param_scope = sc_param_json_format.format(param_id='aad_scope', value='0')
+                bcb_param_key_good = {'id': 'key_name', 'value': '9102'}
+                bcb_param_key_bad = {'id': 'key_name', 'value': '9100'}
+                bcb_param_aes = {'id': 'aes_variant', 'value': '1'}
+                bcb_param_scope = {'id': 'aad_scope', 'value': '0'}
 
-                param_key_wrap_off = sc_param_json_format.format(param_id='key_wrap', value='0')
+                param_key_wrap_off = {'id': 'key_wrap', 'value': '0'}
 
-                rules_json = []
+                policyrules = []
                 policy_rules=t['rules']
                 success = True
                 for i, r in enumerate(policy_rules):
@@ -138,21 +107,24 @@ class _CCSDS_Cases(_TestSet):
                         success = False
                         break
 
-                    if policy_desc[3] == 0:
-                        bib_params = f'{bib_param_key_bad},{bib_param_sha},{bib_param_scope},{param_key_wrap_off}'
-                        bcb_params = f'{bcb_param_key_bad},{bcb_param_aes},{bcb_param_scope},{param_key_wrap_off}'
-                    else:
-                        bib_params = f'{bib_param_key_good},{bib_param_sha},{bib_param_scope},{param_key_wrap_off}'
-                        bcb_params = f'{bcb_param_key_good},{bcb_param_aes},{bcb_param_scope},{param_key_wrap_off}'
-
-                    sec_ctx = -1
-                    params = ''
                     if policy_desc[0] == 'bcb':
                         sec_ctx = 2
-                        params = bcb_params
+                        params = [bcb_param_aes, bcb_param_scope, param_key_wrap_off]
+
+                        if policy_desc[3] == 0:
+                            params.append(bcb_param_key_bad)
+                        else:
+                            params.append(bcb_param_key_good)
+
                     elif policy_desc[0] == 'bib':
                         sec_ctx = 1
-                        params = bib_params
+                        params = [bib_param_sha, bib_param_scope, param_key_wrap_off]
+
+                        if policy_desc[3] == 0:
+                            params.append(bib_param_key_bad)
+                        else:
+                            params.append(bib_param_key_good)
+
                     else:
                         print(f'CCSDS | Test {t["test"]}: Policyrule {i} sec ctx misconfigured.')
                         success = False
@@ -166,22 +138,31 @@ class _CCSDS_Cases(_TestSet):
 
                     target = policy_desc[2]
 
-                    pr = policyrule_json_format.format(
-                        desc=r['description'],
-                        rule_id=str(i),
-                        role=sec_role,
-                        target=target,
-                        sec_ctx=sec_ctx,
-                        policy_act='delete_bundle',
-                        sc_params=params
-                    )
-                    rules_json.append(pr)
+                    pr = {
+                        'policyrule': {
+                            'desc': r['description'],
+                            'filter': {
+                                'rule_id': str(i),
+                                'role': sec_role,
+                                'tgt': int(target),
+                                'loc': 'clin',
+                                'sc_id': sec_ctx,
+                            },
+                            'spec': {
+                                'sc_id': sec_ctx,
+                                'sc_parms': params
+                            },
+                        '_temp_not_ion_spec_policy_action_on_fail': 'delete_bundle'
+                        }
+                    }
+                    print(f'Appending new Policy Rule {pr}')
+                    policyrules.append(pr)
 
                 if not success:
                     continue
 
-                policyrules = ','.join(rules_json)
-                final_json = policyset_json_format.format(policyrules)
+                final_json = json.dumps({'policyrule_set': policyrules})
+                print(f'Final rule set {final_json}')
                 finame = ccsds_test_dir + f"{t['test']}.json"
                 with open(finame, "w") as f:
                     f.write(final_json)
