@@ -48,8 +48,6 @@ void BSL_SecParam_Deinit(BSL_SecParam_t *self)
 {
     ASSERT_ARG_NONNULL(self);
 
-    BSL_LOG_INFO("DEINIT PARAM: %d %d", self->param_id, self->_type);
-
     m_bstring_clear(self->_bytes);
 }
 
@@ -76,8 +74,6 @@ int BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char
     CHK_ARG_NONNULL(self);
     CHK_ARG_EXPR(value != NULL);
     size_t value_strlen = strlen(value);
-
-    BSL_LOG_INFO("INIT TEXT STRING %d %s %zu", param_id, value, value_strlen);
 
     memset(self, 0, sizeof(*self));
     self->param_id = param_id;

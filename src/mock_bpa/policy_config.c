@@ -36,13 +36,27 @@ static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *
     return pat;
 }
 
+int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len)
+{
+    if (len == 12) // IV
+    {
+        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+        memcpy(buf, iv, 12);
+    }
+    else // A3 KEY
+    {
+        uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
+                                    0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
+        memcpy(buf, rfc9173A3_key, len);
+    }
+    return 1;
+}
+
 /**
  * @todo Handle ION events as policy actions - dependent on other BSL issues/ future changes
  */
-void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg)
+int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg)
 {
-
-    mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(reg);
 
     uint32_t             sec_block_type;
     uint32_t             sec_ctx_id;
@@ -67,7 +81,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
     if (!root)
     {
         BSL_LOG_ERR("JSON error: line %d: %s", err.line, err.text);
-        return;
+        return -2;
     }
 
     // policyrule_set attr
@@ -76,7 +90,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
     {
         BSL_LOG_ERR("Missing policyrule set ");
         json_decref(root);
-        return;
+        return -3;
     }
 
     size_t policy_rule_idx, policy_rule_ct = json_array_size(policyrule_set);
@@ -95,6 +109,13 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
         {
             BSL_LOG_ERR("Missing policyrule");
             continue;
+        }
+
+        mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(reg);
+        if (!params)
+        {
+            BSL_LOG_CRIT("POLICY COUNT EXCEEDED, NOT REGISTERING FURTHER");
+            return -1;
         }
 
         // filter attr
@@ -515,7 +536,7 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
             if (sec_role == BSL_SECROLE_SOURCE)
             {
                 BSLP_PolicyRule_CopyParam(rule, params->param_aad_scope_flag);
-                BSL_Crypto_SetRngGenerator(bsl_mock_bpa_rfc9173_bcb_cek);
+                BSL_Crypto_SetRngGenerator(mock_bpa_rfc9173_bcb_cek);
             }
         }
         else
@@ -528,22 +549,8 @@ void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Polic
     }
 
     json_decref(root);
-}
 
-int bsl_mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len)
-{
-    if (len == 12) // IV
-    {
-        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
-        memcpy(buf, iv, 12);
-    }
-    else // A3 KEY
-    {
-        uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
-                                    0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
-        memcpy(buf, rfc9173A3_key, len);
-    }
-    return 1;
+    return 0;
 }
 
 static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t policy_bits, BSLP_PolicyProvider_t *policy,
@@ -707,7 +714,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
         if (sec_role_enum == BSL_SECROLE_SOURCE)
         {
             BSLP_PolicyRule_CopyParam(rule_all_in, params->param_aad_scope_flag);
-            BSL_Crypto_SetRngGenerator(bsl_mock_bpa_rfc9173_bcb_cek);
+            BSL_Crypto_SetRngGenerator(mock_bpa_rfc9173_bcb_cek);
         }
     }
     else

@@ -76,11 +76,11 @@ typedef uint32_t bsl_mock_policy_configuration_t;
 
 int mock_bpa_handle_policy_config(const char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg);
 
-void mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg);
+int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg);
 
 int mock_bpa_key_registry_init(const char *pp_cfg_file_path);
 
-int bsl_mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len);
+int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len);
 
 #ifdef __cplusplus
 } // extern C
