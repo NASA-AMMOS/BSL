@@ -305,7 +305,7 @@ typedef struct
      */
     struct BSL_SeqWriter_s *(*block_write_btsd_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t total_size);
 
-    /// @brief Host BPA function to delete Bundle
+    /// @brief Host BPA function to delete Bundle with a reason code
     int (*bundle_delete_fn)(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_e reason);
 
     /// @brief Host BPA function to encode an EID to CBOR.
