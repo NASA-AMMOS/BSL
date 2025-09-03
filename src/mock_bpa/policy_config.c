@@ -55,7 +55,8 @@ int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len)
 /**
  * @todo Handle ION events as policy actions - dependent on other BSL issues/ future changes
  */
-int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg)
+int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy,
+                                       mock_bpa_policy_registry_t *reg)
 {
 
     uint32_t             sec_block_type;
