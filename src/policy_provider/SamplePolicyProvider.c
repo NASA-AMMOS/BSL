@@ -68,8 +68,8 @@ static uint64_t BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, cons
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
 
-    uint64_t error_ret = BSL_SUCCESS;
-    uint64_t block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
+    uint64_t           error_ret       = BSL_SUCCESS;
+    uint64_t           block_num       = BSL_SecOper_GetTargetBlockNum(sec_oper);
     BSL_PolicyAction_e err_action_code = BSL_SecOper_GetFailureCode(sec_oper);
 
     // Handle failure with specify rule policy code
@@ -89,8 +89,7 @@ static uint64_t BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, cons
         }
         case BSL_POLICYACTION_DROP_BUNDLE:
         {
-            BSL_LOG_WARNING("Deleting bundle due to block target num %" PRIu64 " security failure",
-                            block_num);
+            BSL_LOG_WARNING("Deleting bundle due to block target num %" PRIu64 " security failure", block_num);
             // Drop the bundle
             BSL_LOG_WARNING("***** Delete bundle due to failed security operation *******");
             error_ret = BSL_BundleCtx_DeleteBundle(bundle);
@@ -276,30 +275,26 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
 int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
                         const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
 {
-    int error_ret = BSL_SUCCESS;
-    const BSLP_PolicyProvider_t *self = user_data;
+    int                          error_ret = BSL_SUCCESS;
+    const BSLP_PolicyProvider_t *self      = user_data;
     ASSERT_ARG_EXPR(BSLP_PolicyProvider_IsConsistent(self));
-
-    BSL_LOG_INFO("BEGINNING OF POLICY PROVIDER FINALIZE CODE");
 
     for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(output_action_set); i++)
     {
         const BSL_SecurityAction_t *action = BSL_SecurityActionSet_GetActionAtIndex(output_action_set, i);
 
+        // @todo THERE A BUG HERE?
         // if (BSL_SecurityAction_GetPPID(action) != self->pp_id)
         // {
         //     continue;
         // }
 
-        BSL_LOG_INFO("LOOPING THROUGH ACTIONS IN ACTION SET: ", i);
         for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(action); j++)
         {
-            const BSL_SecOper_t *secop = BSL_SecurityAction_GetSecOperAtIndex(action, j);
+            const BSL_SecOper_t          *secop      = BSL_SecurityAction_GetSecOperAtIndex(action, j);
             BSL_SecOper_ConclusionState_e conclusion = BSL_SecOper_GetConclusion(secop);
 
-            BSL_LOG_INFO("LOOPING THROUGH SEC OPS IN ACTIONS: ", j);
-
-            switch(conclusion)
+            switch (conclusion)
             {
                 case BSL_SECOP_CONCLUSION_PENDING:
                 {
@@ -324,7 +319,8 @@ int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *ou
                 }
             }
 
-            if(conclusion != BSL_SECOP_CONCLUSION_SUCCESS) {
+            if (conclusion != BSL_SECOP_CONCLUSION_SUCCESS)
+            {
                 error_ret = BSLP_PolicyProvider_HandleFailures((BSL_BundleRef_t *)bundle, secop);
             }
         }

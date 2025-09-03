@@ -70,18 +70,12 @@ int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_Securi
     CHK_ARG_NONNULL(response_output);
     CHK_ARG_NONNULL(bundle);
 
-    BSL_LOG_DEBUG("BEGINNING OF BACKEND POLICY FINALIZE FUNCTION");
-
     size_t act_ct = BSL_SecurityActionSet_CountActions(policy_actions);
-    BSL_LOG_DEBUG("NUMBER OF ACTIONS: %d", act_ct);
     for (size_t i = 0; i < act_ct; i++)
     {
-        BSL_LOG_DEBUG("GETTING ACTION FROM LIST: %d", i);
         BSL_SecurityAction_t *act = BSL_SecActionList_get(policy_actions->actions, i);
 
-        BSL_LOG_DEBUG("RETRIEVING POLICY FOR ACTION POLICY: %d", act->pp_id);
         const BSL_PolicyDesc_t *policy = BSL_PolicyDict_get(bsl->policy_reg, act->pp_id);
-        BSL_LOG_DEBUG("SUCCESSFULLY RETREIVED THE POLICY");
         if (BSL_SUCCESS != policy->finalize_fn(policy->user_data, policy_actions, bundle, response_output))
         {
             return BSL_ERR_POLICY_FINAL;
