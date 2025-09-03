@@ -106,7 +106,6 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     {
         BSL_LOG_ERR("BIB Source failed!");
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_FAILED_SECOP);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
@@ -185,7 +184,6 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_LOG_ERR("Failed to parse ASB CBOR");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         BSL_Data_Deinit(&btsd_copy);
-        BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_DECODING;
     }
@@ -208,7 +206,6 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         BSL_LOG_ERR("BIB Acceptor failed!");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_FAILED_SECOP);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
@@ -342,7 +339,6 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
         BSL_LOG_ERR("BCB Acceptor failed!");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_FAILED_SECOP);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
@@ -416,7 +412,6 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     {
         BSL_LOG_ERR("BCB Source failed!");
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_FAILED_SECOP);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
     BSL_LOG_INFO("BCB SOURCE operation success.");
@@ -528,6 +523,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             {
                 BSL_LOG_ERR("Security Op failed: %d", errcode);
                 BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_FAILURE);
+                BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_FAILED_SECOP);
                 BSL_SecurityResponseSet_AppendResult(output_response, errcode, sec_oper->failure_code);
                 break; // stop processing secops if there is a failure
             }
