@@ -364,7 +364,7 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
     return 0;
 }
 
-int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_e reason)
+int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason)
 {
     if (!bundle_ref || !bundle_ref->data)
     {

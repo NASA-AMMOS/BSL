@@ -49,7 +49,7 @@ struct BSL_SecOper_s
     BSL_SecOper_ConclusionState_e conclusion;
 
     /// @brief Reason code for security operation
-    BSL_ReasonCode_e reason_code;
+    BSL_ReasonCode_t reason_code;
 
     /// @brief Private enumeration indicating the role (e.g., acceptor vs verifier)
     BSL_SecRole_e       _role;

@@ -186,7 +186,7 @@ typedef struct BSL_BundleRef_s
     void *data; ///< Opaque pointer, not used by the BSL.
 } BSL_BundleRef_t;
 
-typedef enum
+typedef enum BSL_ReasonCode_e
 {
     BSL_REASONCODE_NO_ADDITIONAL_INFO   = 0,
     BSL_REASONCODE_DEPLETED_STORAGE     = 4,
@@ -196,7 +196,7 @@ typedef enum
     BSL_REASONCODE_UNEXPECTED_SECOP     = 14,
     BSL_REASONCODE_FAILED_SECOP         = 15,
     BSL_REASONCODE_CONFLICTING_SECOP    = 16
-} BSL_ReasonCode_e;
+} BSL_ReasonCode_t;
 
 /** @brief Contains Bundle Primary Block fields and metadata.
  *
@@ -305,8 +305,8 @@ typedef struct
      */
     struct BSL_SeqWriter_s *(*block_write_btsd_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t total_size);
 
-    /// @brief Host BPA function to delete Bundle with a reason code
-    int (*bundle_delete_fn)(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_e reason);
+    /// @brief Host BPA function to delete Bundle with a reason code. This can be called multiple times per-bundle with different reason codes
+    int (*bundle_delete_fn)(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason);
 
     /// @brief Host BPA function to encode an EID to CBOR.
     int (*eid_to_cbor)(void *encoder, const BSL_HostEID_t *eid);

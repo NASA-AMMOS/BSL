@@ -172,13 +172,13 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self)
     return self->_service_type == BSL_SECBLOCKTYPE_BIB;
 }
 
-BSL_ReasonCode_e BSL_SecOper_GetReasonCode(const BSL_SecOper_t *self)
+BSL_ReasonCode_t BSL_SecOper_GetReasonCode(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     return self->reason_code;
 }
 
-void BSL_SecOper_SetReasonCode(BSL_SecOper_t *self, BSL_ReasonCode_e new_reason_code)
+void BSL_SecOper_SetReasonCode(BSL_SecOper_t *self, BSL_ReasonCode_t new_reason_code)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     self->reason_code = new_reason_code;
