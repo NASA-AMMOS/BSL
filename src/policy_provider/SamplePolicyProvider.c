@@ -272,8 +272,8 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     return (int)BSL_SecurityActionSet_CountErrors(output_action_set);
 }
 
-int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
-                        const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
+int BSLP_FinalizePolicy(const void *user_data _U_, const BSL_SecurityActionSet_t *output_action_set _U_,
+                        const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output _U_)
 {
     int                          error_ret = BSL_SUCCESS;
     const BSLP_PolicyProvider_t *self      = user_data;
@@ -325,9 +325,7 @@ int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *ou
             }
         }
     }
-    (void)user_data;
-    (void)output_action_set;
-    (void)response_output;
+
     return error_ret;
 }
 
