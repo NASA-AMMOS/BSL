@@ -28,6 +28,7 @@ jobs:
       - name: Run Build Wrapper
         run: |
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./build.sh
+          ls -al ${{ env.BUILD_WRAPPER_OUT_DIR }}
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
