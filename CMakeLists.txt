@@ -157,15 +157,11 @@ if(BUILD_COVERAGE)
     "${CMAKE_CURRENT_BINARY_DIR}/test/*"
   )
   set(GCOVR_ADDITIONAL_ARGS
+    --keep
   )
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-xml
     BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-  )
-  setup_target_for_coverage_gcovr_xml(
-    NAME coverage-sonarqube
-    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    SONARQUBE
   )
   setup_target_for_coverage_gcovr_html(
     NAME coverage-html

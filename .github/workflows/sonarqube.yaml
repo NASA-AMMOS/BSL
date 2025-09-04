@@ -39,6 +39,7 @@ jobs:
           submodules: recursive
       - name: Prep
         run: |
+          sudo rm /var/lib/man-db/auto-update
           sudo apt-get update && sudo apt-get install -y \
             cmake ninja-build ruby build-essential \
             libssl-dev libjansson-dev \
@@ -55,7 +56,7 @@ jobs:
       - name: Unit Tests
         run: |
           ./build.sh check
-          ./build.sh --target coverage-sonarqube
+          ./build.sh --target coverage-xml
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
