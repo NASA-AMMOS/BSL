@@ -59,10 +59,10 @@ size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *s
     return self->total_operations;
 }
 
-void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result, BSL_PolicyAction_e err_act)
+void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result, BSL_PolicyAction_e policy_action)
 {
     ASSERT_ARG_NONNULL(self);
     BSL_SecResultSet_ResultCodes_push_back(self->results, result);
-    BSL_SecResultSet_ErrorActionCodes_push_back(self->err_action_codes, err_act);
+    BSL_SecResultSet_ErrorActionCodes_push_back(self->err_action_codes, policy_action);
     self->total_operations++;
 }

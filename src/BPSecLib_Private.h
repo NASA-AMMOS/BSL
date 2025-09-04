@@ -815,6 +815,7 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src);
  * @param[in] sec_block_num Block ID of security block.
  * @param[in] sec_type Member of ::BSL_SecBlockType_e enum indicating BIB or BCB
  * @param[in] sec_role Member of ::BSL_SecRole_e enum indicating role.
+ * @param[in] policy_action Member of ::BSL_PolicyAction_e enum indicating failure policy
  */
 void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
                           BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action);
@@ -1263,9 +1264,9 @@ size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *s
 /** Append a result code to the security response set
  * @param[in,out] self the response set to append result to
  * @param[in] result the result code to append
- * @param[in] err_act the on-error policy action associated with the response
+ * @param[in] policy_action the on-failure policy action associated with the response
  */
-void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result, BSL_PolicyAction_e err_act);
+void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result, BSL_PolicyAction_e policy_action);
 
 /** Queries the policy provider for any security operations to take on the bundle.
  *
