@@ -221,9 +221,6 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
         BSL_LOG_ERR("Failed to execute policy action set");
     }
 
-    int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);
-    BSL_LOG_INFO("Completed finalize: status=%d", finalize_status);
-
     BSL_SecActionList_it_t act_it;
     for (BSL_SecActionList_it(act_it, policy_actions->actions); !BSL_SecActionList_end_p(act_it);
          BSL_SecActionList_next(act_it))
@@ -239,44 +236,16 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
             if (conclusion == BSL_SECOP_CONCLUSION_SUCCESS)
             {
                 BSL_LOG_DEBUG("Security operation success, target block num = %" PRIu64, sec_oper->target_block_num);
-                continue;
             }
-
-            BSL_PolicyAction_e err_action_code = sec_oper->failure_code;
-
-            // Now handle a specific error
-            switch (err_action_code)
+            else
             {
-                case BSL_POLICYACTION_NOTHING:
-                {
-                    // Do nothing, per policy (Indicate in telemetry.)
-                    BSL_LOG_WARNING("Instructed to do nothing for failed security operation");
-                    break;
-                }
-                case BSL_POLICYACTION_DROP_BLOCK:
-                {
-                    // Drop the failed target block, but otherwise continue
-                    BSL_LOG_WARNING("***** Dropping block over which security operation failed *******");
-                    BSL_BundleCtx_RemoveBlock(bundle, sec_oper->target_block_num);
-                    break;
-                }
-                case BSL_POLICYACTION_DROP_BUNDLE:
-                {
-                    BSL_LOG_WARNING("Deleting bundle due to block target num %" PRIu64 " security failure",
-                                    sec_oper->target_block_num);
-                    // Drop the bundle and return operation error
-                    BSL_LOG_WARNING("***** Delete bundle due to failed security operation *******");
-                    BSL_BundleCtx_DeleteBundle(bundle, BSL_SecOper_GetReasonCode(sec_oper));
-                    break;
-                }
-                case BSL_POLICYACTION_UNDEFINED:
-                default:
-                {
-                    BSL_LOG_ERR("Unhandled policy action: %" PRIu64, err_action_code);
-                }
+                BSL_LOG_DEBUG("Security operation failure, target block num = %" PRIu64, sec_oper->target_block_num);
             }
         }
     }
+
+    int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);
+    BSL_LOG_INFO("Completed finalize: status=%d", finalize_status);
 
     BSL_SecurityResponseSet_Deinit(response_output);
 

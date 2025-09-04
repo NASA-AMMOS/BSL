@@ -118,6 +118,7 @@ typedef struct BSLP_PolicyRule_s
  * @param[in] role Such as source, acceptor, etc
  * @param[in] sec_block_type Block type (BIB or BCB)
  * @param[in] target_block_type Target block type (anything, such as primary or payload)
+ * @param[in] failure_action_code Code to indicate fate of security block/bundle if error occurs
  *
  * @returns Zero on success
  */

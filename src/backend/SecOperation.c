@@ -49,7 +49,7 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->context_id       = src->context_id;
     self->target_block_num = src->target_block_num;
     self->sec_block_num    = src->sec_block_num;
-    self->failure_code     = src->failure_code;
+    self->policy_action    = src->policy_action;
     self->conclusion       = src->conclusion;
     self->reason_code      = src->reason_code;
     self->_role            = src->_role;
@@ -73,7 +73,7 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->context_id       = src->context_id;
     self->target_block_num = src->target_block_num;
     self->sec_block_num    = src->sec_block_num;
-    self->failure_code     = src->failure_code;
+    self->policy_action    = src->policy_action;
     self->conclusion       = src->conclusion;
     self->reason_code      = src->reason_code;
     self->_role            = src->_role;
@@ -82,13 +82,13 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
 }
 
 void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
-                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e failure_code)
+                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action)
 {
     ASSERT_ARG_NONNULL(self);
     self->context_id       = context_id;
     self->target_block_num = target_block_num;
     self->sec_block_num    = sec_block_num;
-    self->failure_code     = failure_code;
+    self->policy_action    = policy_action;
     self->_service_type    = sec_type;
     self->_role            = sec_role;
     self->conclusion       = BSL_SECOP_CONCLUSION_PENDING;
@@ -170,6 +170,12 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     return self->_service_type == BSL_SECBLOCKTYPE_BIB;
+}
+
+BSL_PolicyAction_e BSL_SecOper_GetPolicyAction(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    return self->policy_action;
 }
 
 BSL_ReasonCode_t BSL_SecOper_GetReasonCode(const BSL_SecOper_t *self)
