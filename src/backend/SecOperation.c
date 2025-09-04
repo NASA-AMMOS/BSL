@@ -51,6 +51,7 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->sec_block_num    = src->sec_block_num;
     self->failure_code     = src->failure_code;
     self->conclusion       = src->conclusion;
+    self->reason_code      = src->reason_code;
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
     BSLB_SecParamList_init_set(self->_param_list, src->_param_list);
@@ -74,6 +75,7 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->sec_block_num    = src->sec_block_num;
     self->failure_code     = src->failure_code;
     self->conclusion       = src->conclusion;
+    self->reason_code      = src->reason_code;
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
     BSLB_SecParamList_set(self->_param_list, src->_param_list);
@@ -90,6 +92,7 @@ void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t targ
     self->_service_type    = sec_type;
     self->_role            = sec_role;
     self->conclusion       = BSL_SECOP_CONCLUSION_PENDING;
+    self->reason_code      = BSL_REASONCODE_NO_ADDITIONAL_INFO;
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
@@ -167,6 +170,19 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     return self->_service_type == BSL_SECBLOCKTYPE_BIB;
+}
+
+BSL_ReasonCode_t BSL_SecOper_GetReasonCode(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    return self->reason_code;
+}
+
+void BSL_SecOper_SetReasonCode(BSL_SecOper_t *self, BSL_ReasonCode_t new_reason_code)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    self->reason_code = new_reason_code;
+    ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
 
 BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(const BSL_SecOper_t *self)
