@@ -35,10 +35,10 @@ import unittest
 import cbor2
 
 from helpers import CmdRunner, compose_args
-from _test_data import _TestData
 from _test_util import _TestCase, _TestSet, DataFormat
 from requirements_tests import _RequirementsCases
 from ccsds_tests import _CCSDS_Cases
+from json_policy_tests import _JSONPolicyTests
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
@@ -49,14 +49,6 @@ class TestAgent(unittest.TestCase):
 
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
-        # self.testdata = _TestData()
-        self.requirements_tests = _RequirementsCases()
-        # self.ccsds_tests = _CCSDS_Cases()
-        self.pp_cfg_dict = {}
-        for id, tc in self.requirements_tests.cases.items():
-            self.pp_cfg_dict[id] = tc.policy_config
-        # for id, tc in self.ccsds_tests.cases.items():
-        #     self.pp_cfg_dict[id] = tc.policy_config
 
     def setUp(self):
 
@@ -64,9 +56,11 @@ class TestAgent(unittest.TestCase):
         os.chdir(path)
         LOGGER.info('Working in %s', path)
 
+        is_json = False
         try:
             policy_config = str(self.pp_cfg_dict[self._testMethodName[5:]])
             LOGGER.info('Using policy config from DICT %s for %s', policy_config, self._testMethodName[5:])
+            is_json = policy_config.endswith(".json")
         except Exception:
             policy_config = self._testMethodName
             # Find the index of the first occurrence of "_p" policy sequence
@@ -82,7 +76,7 @@ class TestAgent(unittest.TestCase):
             '-s', 'ipn:2.1',  # security source
             '-u', 'localhost:4556', '-r', 'localhost:14556',
             '-o', 'localhost:24556', '-a', 'localhost:34556',
-            '-p', policy_config,
+            '-j' if is_json else "-p", policy_config,
             '-k', key_set
         ])
         self._agent = CmdRunner(args, stderr=subprocess.STDOUT)
@@ -135,6 +129,7 @@ class TestAgent(unittest.TestCase):
         if not rrd:
             raise TimeoutError('Did not receive bundle in time')
         data = sock.recv(65535)
+        LOGGER.debug(f'WAIT FOR GOT: {binascii.hexlify(data)}')
         return data
 
     def _single_test(self, testcase: _TestCase):
@@ -158,7 +153,7 @@ class TestAgent(unittest.TestCase):
             cbor_str = cbor2.loads(rx_data)
             LOGGER.info('\nCBOR representation of received data:\n%s\n', cbor_str)
 
-            print(f'exp: {binascii.hexlify(expected_rx)}, got: {binascii.hexlify(rx_data)}')
+            LOGGER.debug(f'exp: {binascii.hexlify(expected_rx)}, got: {binascii.hexlify(rx_data)}')
 
             self.assertEqual(binascii.hexlify(expected_rx), binascii.hexlify(rx_data))
 
@@ -192,6 +187,7 @@ class TestAgent(unittest.TestCase):
             LOGGER.warning('Check log output to validate expected error')
 
             err_case_str = testcase.expected_output
+            LOGGER.debug(f'ERR CASE STR: {err_case_str}')
 
             LOGGER.debug("Searching test runner logger for error string: %s", err_case_str)
             found = self._agent.wait_for_text(err_case_str)
@@ -206,6 +202,7 @@ def _add_tests(new_tests: _TestSet):
 
     def decorator(cls):
         for id, tc in new_tests.cases.items():
+            cls.pp_cfg_dict[id] = tc.policy_config
             if tc.is_working:
 
                 def _test(cls, id=id):
@@ -219,9 +216,11 @@ def _add_tests(new_tests: _TestSet):
 
 
 @_add_tests(_RequirementsCases())
-# @_add_tests(_TestData())
-# @_add_tests(_CCSDS_Cases())
+@_add_tests(_JSONPolicyTests())
+@_add_tests(_CCSDS_Cases())
 class TestMockBPA(TestAgent):
+
+    pp_cfg_dict = {}
 
     def test_start_stop_p00(self):
         self._start()
