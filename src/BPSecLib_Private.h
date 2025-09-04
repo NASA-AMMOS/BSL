@@ -1301,6 +1301,11 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
 
 /** Finalizes policy provider for sec ops & sec results for a bundle
  *
+ * @note Currently the implementation is such that the Policy Provider callback handles the policy action on failure
+ * that is stored in the the Security Operations in the Action Set. As such, the backend and Security Context do not use
+ * the policy action field of the ::BSL_SecOper_s and the Policy Provider is the sole executor of policy actions
+ * regarding failures.
+ *
  * @param[in] bsl BSL library context
  * @param[in] policy_actions A policy action set, which may contain error codes and other info. @preallocated
  * Caller-allocated, zeroed space for action set
