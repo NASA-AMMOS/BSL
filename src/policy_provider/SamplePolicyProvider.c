@@ -92,7 +92,7 @@ static uint64_t BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, cons
             BSL_LOG_WARNING("Deleting bundle due to block target num %" PRIu64 " security failure", block_num);
             // Drop the bundle
             BSL_LOG_WARNING("***** Delete bundle due to failed security operation *******");
-            error_ret = BSL_BundleCtx_DeleteBundle(bundle);
+            error_ret = BSL_BundleCtx_DeleteBundle(bundle, BSL_SecOper_GetReasonCode(sec_oper));
             break;
         }
         case BSL_POLICYACTION_UNDEFINED:
