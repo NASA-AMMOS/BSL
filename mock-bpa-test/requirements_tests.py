@@ -444,7 +444,7 @@ class _RequirementsCases(_TestSet):
             # Confirm that the operations fails and returns a Reason Code 8.
             expected_output=r".*failed to decode bundle",
             # Execute as a BIB acceptor.
-            policy_config='0x86',
+            policy_config='0xA6',
             is_working=True,
             input_data_format=DataFormat.HEX,
             expected_output_format=DataFormat.ERR
