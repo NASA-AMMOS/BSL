@@ -30,6 +30,10 @@ jobs:
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./build.sh
           echo ${{ env.BUILD_WRAPPER_OUT_DIR }}
           ls -al ${{ env.BUILD_WRAPPER_OUT_DIR }}
+      - name: Unit Tests
+        run: |
+          ./build.sh check
+          ./build.sh --target coverage-sonarqube
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
