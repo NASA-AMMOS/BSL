@@ -266,7 +266,7 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
                                     sec_oper->target_block_num);
                     // Drop the bundle and return operation error
                     BSL_LOG_WARNING("***** Delete bundle due to failed security operation *******");
-                    BSL_BundleCtx_DeleteBundle(bundle);
+                    BSL_BundleCtx_DeleteBundle(bundle, BSL_SecOper_GetReasonCode(sec_oper));
                     break;
                 }
                 case BSL_POLICYACTION_UNDEFINED:
