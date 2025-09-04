@@ -887,7 +887,7 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self);
  * @param[in] self The security operation
  * @return the policy action
  */
-BSL_PolicyAction_e BSL_SecOper_GetFailureCode(const BSL_SecOper_t *self);
+BSL_PolicyAction_e BSL_SecOper_GetPolicyAction(const BSL_SecOper_t *self);
 
 /**
  * Retrieve the conclusion state of a security operation
@@ -1266,7 +1266,8 @@ size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *s
  * @param[in] result the result code to append
  * @param[in] policy_action the on-failure policy action associated with the response
  */
-void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result, BSL_PolicyAction_e policy_action);
+void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result,
+                                          BSL_PolicyAction_e policy_action);
 
 /** Queries the policy provider for any security operations to take on the bundle.
  *

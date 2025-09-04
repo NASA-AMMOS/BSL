@@ -43,6 +43,8 @@ struct BSL_SecOper_s
     uint64_t sec_block_num;
 
     /// @brief Policy for handing what to do to the block or bundle if security processing fails.
+    /// @note Currently the implementation is for the Policy Provider to use the policy action on failure to determine
+    /// and execute course of action (e.g., remove block, etc.)
     BSL_PolicyAction_e policy_action;
 
     /// @brief Conclusion state of security operation processing

@@ -59,7 +59,8 @@ size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *s
     return self->total_operations;
 }
 
-void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result, BSL_PolicyAction_e policy_action)
+void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result,
+                                          BSL_PolicyAction_e policy_action)
 {
     ASSERT_ARG_NONNULL(self);
     BSL_SecResultSet_ResultCodes_push_back(self->results, result);

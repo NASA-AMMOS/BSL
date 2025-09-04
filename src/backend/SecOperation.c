@@ -49,7 +49,7 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->context_id       = src->context_id;
     self->target_block_num = src->target_block_num;
     self->sec_block_num    = src->sec_block_num;
-    self->policy_action     = src->policy_action;
+    self->policy_action    = src->policy_action;
     self->conclusion       = src->conclusion;
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
@@ -72,7 +72,7 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->context_id       = src->context_id;
     self->target_block_num = src->target_block_num;
     self->sec_block_num    = src->sec_block_num;
-    self->policy_action     = src->policy_action;
+    self->policy_action    = src->policy_action;
     self->conclusion       = src->conclusion;
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
@@ -86,7 +86,7 @@ void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t targ
     self->context_id       = context_id;
     self->target_block_num = target_block_num;
     self->sec_block_num    = sec_block_num;
-    self->policy_action     = policy_action;
+    self->policy_action    = policy_action;
     self->_service_type    = sec_type;
     self->_role            = sec_role;
     self->conclusion       = BSL_SECOP_CONCLUSION_PENDING;
@@ -169,7 +169,7 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self)
     return self->_service_type == BSL_SECBLOCKTYPE_BIB;
 }
 
-BSL_PolicyAction_e BSL_SecOper_GetFailureCode(const BSL_SecOper_t *self)
+BSL_PolicyAction_e BSL_SecOper_GetPolicyAction(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     return self->policy_action;

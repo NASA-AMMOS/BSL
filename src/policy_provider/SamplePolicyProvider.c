@@ -68,12 +68,12 @@ static uint64_t BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, cons
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
 
-    uint64_t           error_ret       = BSL_SUCCESS;
-    uint64_t           block_num       = BSL_SecOper_GetTargetBlockNum(sec_oper);
-    BSL_PolicyAction_e err_action_code = BSL_SecOper_GetFailureCode(sec_oper);
+    uint64_t           error_ret          = BSL_SUCCESS;
+    uint64_t           block_num          = BSL_SecOper_GetTargetBlockNum(sec_oper);
+    BSL_PolicyAction_e fail_policy_action = BSL_SecOper_GetPolicyAction(sec_oper);
 
     // Handle failure with specify rule policy code
-    switch (err_action_code)
+    switch (fail_policy_action)
     {
         case BSL_POLICYACTION_NOTHING:
         {
@@ -98,7 +98,7 @@ static uint64_t BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, cons
         case BSL_POLICYACTION_UNDEFINED:
         default:
         {
-            BSL_LOG_ERR("Unhandled policy action: %" PRIu64, err_action_code);
+            BSL_LOG_ERR("Unhandled policy action: %" PRIu64, fail_policy_action);
             return BSL_ERR_POLICY_FAILED;
         }
     }
