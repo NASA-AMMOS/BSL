@@ -53,9 +53,12 @@ jobs:
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./build.sh
           echo ${{ env.BUILD_WRAPPER_OUT_DIR }}
           ls -al ${{ env.BUILD_WRAPPER_OUT_DIR }}
-      - name: Unit Tests
+      - name: Tests
         run: |
           ./build.sh check
+          pip3 install --upgrade pip
+          pip3 install -r mock-bpa-test/requirements.txt
+          python3 -m pytest mock-bpa-test
           ./build.sh --target coverage-xml
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
