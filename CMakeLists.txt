@@ -158,7 +158,7 @@ if(BUILD_COVERAGE)
   )
   set(GCOVR_ADDITIONAL_ARGS
     --gcov-ignore-parse-errors=negative_hits.warn_once_per_file
-    --keep
+    --gcov-keep
   )
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-xml
