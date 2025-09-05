@@ -84,7 +84,7 @@ function cmd_coverage_summary {
         else
             ATTRVAL="src.${DIRNAME}"
         fi
-	COV_XPATH="format-number(/coverage/packages/package[@name='${ATTRVAL}']/@line-rate * 100, '#.0')"
+        COV_XPATH="format-number(/coverage/packages/package[@name='${ATTRVAL}']/@line-rate * 100, '#.0')"
         COV_PERC=$(xmlstarlet sel -t -v "${COV_XPATH}" -n build/default/coverage-xml.xml 2>/dev/null)
         echo "Source ${DIRNAME} coverage: ${COV_PERC}%"
     done
