@@ -60,6 +60,7 @@ jobs:
           pip3 install -r mock-bpa-test/requirements.txt
           python3 -m pytest mock-bpa-test
           ./build.sh --target coverage-xml
+          ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
