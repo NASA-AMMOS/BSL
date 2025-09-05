@@ -51,14 +51,16 @@ jobs:
       - name: Run Build Wrapper
         run: |
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./build.sh
-          echo ${{ env.BUILD_WRAPPER_OUT_DIR }}
-          ls -al ${{ env.BUILD_WRAPPER_OUT_DIR }}
-      - name: Tests
+      - name: Install
+        run: ./build.sh install
+      - name: Test
         run: |
           ./build.sh check
           pip3 install --upgrade pip
           pip3 install -r mock-bpa-test/requirements.txt
           python3 -m pytest mock-bpa-test
+      - name: Collect coverage
+        run: |
           ./build.sh --target coverage-xml
           ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
       - name: SonarQube Scan

@@ -100,14 +100,14 @@ jobs:
       - name: Test
         run: ./build.sh check
       - name: Collect coverage
-        run: ./build.sh coverage
+        run: |
+          ./build.sh coverage
+          ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
           name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
           path: build/default/coverage*
-      - name: Report coverage
-        run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
 
   mock-bpa-test:
     strategy:
@@ -174,11 +174,11 @@ jobs:
           TEST_MEMCHECK: '1'
         run: python3 -m pytest mock-bpa-test
       - name: Collect coverage
-        run: ./build.sh coverage
+        run: |
+          ./build.sh coverage
+          ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
           name: ${{github.job}}-${{matrix.os}}-gcc-coverage
           path: build/default/coverage*
-      - name: Report coverage
-        run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
