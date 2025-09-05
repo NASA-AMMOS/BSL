@@ -56,7 +56,9 @@ jobs:
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
               libssl-dev libjansson-dev \
-              valgrind gcovr xmlstarlet
+              valgrind xmlstarlet \
+              python3 python3-pip python3-wheel
+          pip3 install gcovr
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
@@ -68,7 +70,8 @@ jobs:
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
               openssl-devel jansson-devel \
-              valgrind xmlstarlet python3-pip
+              valgrind xmlstarlet \
+              python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -130,7 +133,7 @@ jobs:
               cmake ninja-build ruby gcc g++ ccache patch \
               libssl-dev libjansson-dev \
               valgrind xmlstarlet \
-              python3 python3-pip
+              python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -143,7 +146,7 @@ jobs:
               ruby pkg-config gcc gcc-c++ ccache patch \
               openssl-devel jansson-devel \
               valgrind xmlstarlet \
-              python3 python3-pip
+              python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4

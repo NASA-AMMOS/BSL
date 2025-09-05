@@ -41,9 +41,10 @@ jobs:
         run: |
           sudo rm /var/lib/man-db/auto-update
           sudo apt-get update && sudo apt-get install -y \
-            cmake ninja-build ruby build-essential \
-            libssl-dev libjansson-dev \
-            gcovr
+              cmake ninja-build ruby build-essential \
+              libssl-dev libjansson-dev \
+              python3 python3-pip python3-wheel
+          pip3 install gcovr
           ./build.sh deps
           ./build.sh prep -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=ON -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
       - name: Install Build Wrapper
