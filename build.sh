@@ -76,9 +76,15 @@ function cmd_coverage {
         coverage-html coverage-xml
 }
 function cmd_coverage_summary {
-    for DIRNAME in backend crypto policy_provider security_context mock_bpa
+    for DIRNAME in frontend backend crypto policy_provider security_context mock_bpa
     do
-	COV_XPATH="format-number(/coverage/packages/package[@name='src.${DIRNAME}']/@line-rate * 100, '#.0')"
+        if [[ ${DIRNAME} = "frontend" ]]
+        then
+            ATTRVAL="src"
+        else
+            ATTRVAL="src.${DIRNAME}"
+        fi
+	COV_XPATH="format-number(/coverage/packages/package[@name='${ATTRVAL}']/@line-rate * 100, '#.0')"
         COV_PERC=$(xmlstarlet sel -t -v "${COV_XPATH}" -n build/default/coverage-xml.xml 2>/dev/null)
         echo "Source ${DIRNAME} coverage: ${COV_PERC}%"
     done
