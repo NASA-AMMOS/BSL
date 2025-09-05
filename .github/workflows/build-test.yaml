@@ -56,7 +56,9 @@ jobs:
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
               libssl-dev libjansson-dev \
-              valgrind gcovr xmlstarlet
+              valgrind xmlstarlet \
+              python3 python3-pip python3-wheel
+          pip3 install gcovr
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
         run: |
@@ -68,7 +70,8 @@ jobs:
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
               openssl-devel jansson-devel \
-              valgrind xmlstarlet python3-pip
+              valgrind xmlstarlet \
+              python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -100,14 +103,14 @@ jobs:
       - name: Test
         run: ./build.sh check
       - name: Collect coverage
-        run: ./build.sh coverage
+        run: |
+          ./build.sh coverage
+          ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
           name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
           path: build/default/coverage*
-      - name: Report coverage
-        run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
 
   mock-bpa-test:
     strategy:
@@ -130,7 +133,7 @@ jobs:
               cmake ninja-build ruby gcc g++ ccache patch \
               libssl-dev libjansson-dev \
               valgrind xmlstarlet \
-              python3 python3-pip
+              python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -143,7 +146,7 @@ jobs:
               ruby pkg-config gcc gcc-c++ ccache patch \
               openssl-devel jansson-devel \
               valgrind xmlstarlet \
-              python3 python3-pip
+              python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -174,11 +177,11 @@ jobs:
           TEST_MEMCHECK: '1'
         run: python3 -m pytest mock-bpa-test
       - name: Collect coverage
-        run: ./build.sh coverage
+        run: |
+          ./build.sh coverage
+          ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
       - name: Archive coverage
         uses: actions/upload-artifact@v4
         with:
           name: ${{github.job}}-${{matrix.os}}-gcc-coverage
           path: build/default/coverage*
-      - name: Report coverage
-        run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY

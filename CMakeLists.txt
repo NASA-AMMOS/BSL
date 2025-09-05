@@ -157,6 +157,8 @@ if(BUILD_COVERAGE)
     "${CMAKE_CURRENT_BINARY_DIR}/test/*"
   )
   set(GCOVR_ADDITIONAL_ARGS
+    --gcov-ignore-parse-errors=negative_hits.warn_once_per_file
+    --gcov-keep
   )
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-xml
