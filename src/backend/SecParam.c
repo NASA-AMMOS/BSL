@@ -47,7 +47,6 @@ void BSL_SecParam_InitSet(BSL_SecParam_t *self, const BSL_SecParam_t *src)
 void BSL_SecParam_Deinit(BSL_SecParam_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-
     m_bstring_clear(self->_bytes);
 }
 
