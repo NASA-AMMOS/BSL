@@ -93,13 +93,19 @@ typedef enum
     BSL_CRYPTO_AES_256
 } BSL_CryptoCipherAESVariant_e;
 
+typedef enum
+{
+    BSL_CRYPTO_KEYSTATS_TIMES_USED = 0,
+    BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED,
+    BSL_CRYPTO_KEYSTATS_MAX_INDEX
+} BSL_Crypto_KeyStatCounterIndex_e;
+
 /**
  * 
  */
 typedef struct BSL_Crypto_KeyStats_s
 {
-    uint64_t num_times_used;
-    uint64_t bytes_processed;
+    uint64_t counters[BSL_CRYPTO_KEYSTATS_MAX_INDEX];
 } BSL_Crypto_KeyStats_t;
 
 /**
