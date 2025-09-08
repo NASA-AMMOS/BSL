@@ -81,7 +81,7 @@ The implementation to support these SCs only handles symmetric keys and only the
 
 ## Command Line Options
 
-See the Mock BPA man page for more details
+The table below contains the Mock BPA executable's command line options. See the Mock BPA man page for more details.
 
 | Option    | Description                                                                                                                       |
 |--------   |------------------------------------                                                                                               |
