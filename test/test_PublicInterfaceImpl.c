@@ -967,8 +967,3 @@ void test_BSL_32(void)
 
     BSL_PrimaryBlock_deinit(&primary_block);
 }
-
-void test_TLM_BSL_64(void)
-{
-    // TODO 
-}
