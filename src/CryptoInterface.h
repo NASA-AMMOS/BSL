@@ -101,11 +101,11 @@ typedef enum
 } BSL_Crypto_KeyStatCounterIndex_e;
 
 /**
- * 
+ * Structure containing statistics for individual keys
  */
 typedef struct BSL_Crypto_KeyStats_s
 {
-    uint64_t counters[BSL_CRYPTO_KEYSTATS_MAX_INDEX];
+    uint64_t stats[BSL_CRYPTO_KEYSTATS_MAX_INDEX];
 } BSL_Crypto_KeyStats_t;
 
 /**
@@ -117,7 +117,7 @@ typedef struct BSL_AuthCtx_s
     void *libhandle;
     /// SHA variant of context
     BSL_CryptoCipherSHAVariant_e SHA_variant;
-
+    /// Key handle used by context
     void *keyhandle;
     /**
      * Block size used by backend
@@ -137,7 +137,7 @@ typedef struct BSL_Cipher_s
     BSL_CipherMode_e enc;
     /// AES variant of context
     BSL_CryptoCipherAESVariant_e AES_variant;
-
+    /// Key handle used by context
     void *keyhandle;
     /// block size of cipher context
     size_t block_size;
@@ -345,6 +345,11 @@ int BSL_Crypto_GenIV(void *buf, int size);
  */
 int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t secret_len);
 
+/**
+ * Retrive statistics related to a crypto key
+ * @param[in] keyid key ID of a key in the crypto registry to retrive the stats of
+ * @param[out] stats struct containing statistics related to the key id
+ */
 int BSL_Crypto_GetKeyStatistics(const char *keyid, BSL_Crypto_KeyStats_t *stats);
 
 #ifdef __cplusplus
