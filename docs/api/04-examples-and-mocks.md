@@ -75,7 +75,7 @@ The path to the JSON file should be passed to the Mock BPA with the `-j` command
 
 ## Key Management
 
-The keys used by the example SCs registered in the Mock BPA Cryptographic Library instance are obtained from a file using the JSON Web Key (JWK) format of RFC 7517 @cite rfc7517.
+The keys used by the example SCs registered in the Mock BPA's Cryptographic Library instance are obtained from a file using the JSON Web Key (JWK) format of RFC 7517 @cite rfc7517.
 
 The implementation to support these SCs only handles symmetric keys and only the minimal header parameters needed for key ID ("kid") and key material itself.
 
@@ -94,4 +94,4 @@ See the Mock BPA man page for more details
 | `-s`      | The endpoint ID of the local security source used to handle BPSec.                                                                |
 | `-p`      | The comma-separated bit fields representing policies to initialize Mock BPA with.                                                  |
 | `-j`      | The path to a ION-Like Policy JSON-encoded policy structure file containing policies to initialize Mock BPA with.                 |
-| `-k`      | The path to a JSON Web Key (JWK) formatted file containing keys to register with the Mock BPA’s Cryptographic Library instance.   |
+| `-k`      | The path to a JSON Web Key (JWK) formatted file containing keys to register with the BPA's Cryptographic Library instance.   |
