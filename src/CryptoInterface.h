@@ -94,6 +94,15 @@ typedef enum
 } BSL_CryptoCipherAESVariant_e;
 
 /**
+ * 
+ */
+typedef struct BSL_Crypto_KeyStats_s
+{
+    uint64_t num_times_used;
+    uint64_t bytes_processed;
+} BSL_Crypto_KeyStats_t;
+
+/**
  * Struct def for HMAC operation context
  */
 typedef struct BSL_AuthCtx_s
@@ -102,6 +111,8 @@ typedef struct BSL_AuthCtx_s
     void *libhandle;
     /// SHA variant of context
     BSL_CryptoCipherSHAVariant_e SHA_variant;
+
+    void *keyhandle;
     /**
      * Block size used by backend
      * @note Private value
@@ -120,6 +131,8 @@ typedef struct BSL_Cipher_s
     BSL_CipherMode_e enc;
     /// AES variant of context
     BSL_CryptoCipherAESVariant_e AES_variant;
+
+    void *keyhandle;
     /// block size of cipher context
     size_t block_size;
 } BSL_Cipher_t;
@@ -238,12 +251,12 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
  * @param[in, out] key_handle pointer to pointer for new key handle
  * @return Zero upon success.
  */
-int BSLB_Crypto_GetRegistryKey(const char *keyid, void **key_handle);
+int BSL_Crypto_GetRegistryKey(const char *keyid, void **key_handle);
 
 /** Erase key entry from crypto library registry, if present
  *  @param[in] keyid key ID of key to remove
  */
-int BSLB_Crypto_RemoveRegistryKey(const char *keyid);
+int BSL_Crypto_RemoveRegistryKey(const char *keyid);
 
 /**
  * Add additional authenticated data (AAD) to cipher context
@@ -325,6 +338,8 @@ int BSL_Crypto_GenIV(void *buf, int size);
  * @return Zero upon success.
  */
 int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t secret_len);
+
+int BSL_Crypto_GetKeyStatistics(const char *keyid, BSL_Crypto_KeyStats_t *stats);
 
 #ifdef __cplusplus
 } // extern C

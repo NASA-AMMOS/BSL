@@ -311,7 +311,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
 
     void *key_id_handle;
     void *cipher_key;
-    if (BSL_SUCCESS != BSLB_Crypto_GetRegistryKey(self->key_id, &key_id_handle))
+    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(self->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;

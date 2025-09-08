@@ -121,7 +121,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     void *key_id_handle;
     void *cipher_key;
 
-    if (BSL_SUCCESS != BSLB_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
+    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
         BSL_Data_Deinit(&bcb_context->authtag);
@@ -272,7 +272,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     void *key_id_handle;
     void *cipher_key;
 
-    if (BSL_SUCCESS != BSLB_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
+    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;

@@ -34,41 +34,54 @@
 /**
  * Struct to hold private key information
  */
-typedef struct BSLB_CryptoKey_s
+typedef struct BSL_CryptoKey_s
 {
     /// Pointer to OpenSSL PKEY struct (used in hmac ctx)
     EVP_PKEY *pkey;
     /// Pointer to raw key information (used in cipher ctx)
     BSL_Data_t raw;
-} BSLB_CryptoKey_t;
 
-static int BSLB_CryptoKey_Deinit(BSLB_CryptoKey_t *key)
+    BSL_Crypto_KeyStats_t stats;
+} BSL_CryptoKey_t;
+
+static int BSL_CryptoKey_Init(BSL_CryptoKey_t *key)
+{
+    key->stats.bytes_processed = 0;
+    key->stats.num_times_used = 0;
+
+    return 0;
+}
+
+static int BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
 {
     fflush(stdout); // NOLINT
     EVP_PKEY_free(key->pkey);
     BSL_Data_Deinit(&(key->raw));
+    BSL_LOG_INFO("deinit - %d bytes - num %d ", key->stats.bytes_processed, key->stats.num_times_used);
+    key->stats.bytes_processed = 0;
+    key->stats.num_times_used = 0;
     return 0;
 }
 
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
-#define M_OPL_BSLB_CryptoKey_t() M_OPEXTEND(M_POD_OPLIST, CLEAR(API_2(BSLB_CryptoKey_Deinit)))
+#define M_OPL_BSL_CryptoKey_t() M_OPEXTEND(M_POD_OPLIST, CLEAR(API_2(BSL_CryptoKey_Deinit)))
 /// Stable dict of crypto keys (key: key ID | value: key)
-DICT_DEF2(BSLB_CryptoKeyDict, string_t, STRING_OPLIST, BSLB_CryptoKey_t, M_OPL_BSLB_CryptoKey_t())
+DICT_DEF2(BSL_CryptoKeyDict, string_t, STRING_OPLIST, BSL_CryptoKey_t, M_OPL_BSL_CryptoKey_t())
 /// @endcond
 
 /// Random bytes generator
 static BSL_Crypto_RandBytesFn rand_bytes_generator;
 
 /// Crypto key registry
-static BSLB_CryptoKeyDict_t StaticKeyRegistry;
+static BSL_CryptoKeyDict_t StaticKeyRegistry;
 static pthread_mutex_t      StaticCryptoMutex = PTHREAD_MUTEX_INITIALIZER;
 // NOLINTEND
 
 void BSL_CryptoInit(void)
 {
     pthread_mutex_lock(&StaticCryptoMutex);
-    BSLB_CryptoKeyDict_init(StaticKeyRegistry);
+    BSL_CryptoKeyDict_init(StaticKeyRegistry);
     pthread_mutex_unlock(&StaticCryptoMutex);
     rand_bytes_generator = RAND_bytes;
 }
@@ -76,7 +89,7 @@ void BSL_CryptoInit(void)
 void BSL_CryptoDeinit(void)
 {
     pthread_mutex_lock(&StaticCryptoMutex);
-    BSLB_CryptoKeyDict_clear(StaticKeyRegistry);
+    BSL_CryptoKeyDict_clear(StaticKeyRegistry);
     pthread_mutex_unlock(&StaticCryptoMutex);
 }
 
@@ -89,8 +102,8 @@ int BSL_Crypto_ClearKeyHandle(void *keyhandle)
 {
     CHK_ARG_NONNULL(keyhandle);
 
-    BSLB_CryptoKey_t *key = (BSLB_CryptoKey_t *)keyhandle;
-    CHK_POSTCONDITION(BSL_SUCCESS == BSLB_CryptoKey_Deinit(key));
+    BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)keyhandle;
+    CHK_POSTCONDITION(BSL_SUCCESS == BSL_CryptoKey_Deinit(key));
     BSL_FREE(key);
 
     return BSL_SUCCESS;
@@ -98,9 +111,10 @@ int BSL_Crypto_ClearKeyHandle(void *keyhandle)
 
 int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_handle)
 {
-    BSLB_CryptoKey_t *kek = (BSLB_CryptoKey_t *)kek_handle;
+    BSL_CryptoKey_t *kek = (BSL_CryptoKey_t *)kek_handle;
 
-    BSLB_CryptoKey_t *cek = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
+    BSL_CryptoKey_t *cek = BSL_MALLOC(sizeof(BSL_CryptoKey_t));
+    BSL_CryptoKey_Init(cek);
 
     const EVP_CIPHER *cipher;
     switch (kek->raw.len)
@@ -124,7 +138,6 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         {
             BSL_LOG_DEBUG("UNWRAP AES MODE INVALID");
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-            ;
         }
     }
 
@@ -149,6 +162,8 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     }
     EVP_CIPHER_CTX_set_padding(ctx, 0);
 
+    kek->stats.num_times_used++;
+
     int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, (int *)&cek->raw.len, wrapped_key->ptr, wrapped_key->len);
     if (decrypt_res != 1)
     {
@@ -158,6 +173,8 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         EVP_CIPHER_CTX_free(ctx);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+
+    kek->stats.bytes_processed += wrapped_key->len;
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int     final_len = 0;
@@ -201,8 +218,8 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
     CHK_ARG_NONNULL(cek_handle);
     CHK_ARG_NONNULL(wrapped_key);
 
-    BSLB_CryptoKey_t *cek = (BSLB_CryptoKey_t *)cek_handle;
-    BSLB_CryptoKey_t *kek = (BSLB_CryptoKey_t *)kek_handle;
+    BSL_CryptoKey_t *cek = (BSL_CryptoKey_t *)cek_handle;
+    BSL_CryptoKey_t *kek = (BSL_CryptoKey_t *)kek_handle;
 
     if (cek->raw.len > kek->raw.len)
     {
@@ -249,6 +266,8 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
         return -1;
     }
 
+    kek->stats.num_times_used++;
+
     int len = (int)wrapped_key->len;
     if (!EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek->raw.ptr, cek->raw.len))
     {
@@ -256,6 +275,8 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
         return -2;
     }
     wrapped_key->len = (size_t)len;
+
+    kek->stats.bytes_processed += cek->raw.len;
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int     final_len = 0;
@@ -278,7 +299,8 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
         int           res  = EVP_PKEY_keygen_init(pctx);
         CHK_PROPERTY(res == 1);
 
-        BSLB_CryptoKey_t *new_wrapped_key_handle = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
+        BSL_CryptoKey_t *new_wrapped_key_handle = BSL_MALLOC(sizeof(BSL_CryptoKey_t));
+        BSL_CryptoKey_Init(new_wrapped_key_handle);
         new_wrapped_key_handle->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, wrapped_key->len);
         BSL_Data_Init(&new_wrapped_key_handle->raw);
 
@@ -301,7 +323,8 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, void *keyhandle, BSL_CryptoCipherS
     CHK_ARG_NONNULL(hmac_ctx);
     CHK_ARG_NONNULL(keyhandle);
 
-    const BSLB_CryptoKey_t *key_info = (const BSLB_CryptoKey_t *)keyhandle;
+    hmac_ctx->keyhandle = keyhandle;
+    BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
 
     hmac_ctx->libhandle = EVP_MD_CTX_new();
     CHK_PRECONDITION(hmac_ctx->libhandle != NULL);
@@ -335,6 +358,8 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, void *keyhandle, BSL_CryptoCipherS
         BSL_LOG_ERR("invalid block size zero, assuming %zu", hmac_ctx->block_size);
     }
 
+    key_info->stats.num_times_used++;
+
     return 0;
 }
 
@@ -344,18 +369,24 @@ int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t d
     int res = EVP_DigestSignUpdate(hmac_ctx->libhandle, data, data_len);
     CHK_PROPERTY(res == 1);
 
+    BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
+    key_info->stats.bytes_processed += data_len;
+
     return 0;
 }
 
 int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
 {
-    uint8_t buf[hmac_ctx->block_size];
+    BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
 
+    uint8_t buf[hmac_ctx->block_size];
     size_t block_size = hmac_ctx->block_size;
     while (block_size == hmac_ctx->block_size)
     {
         BSL_SeqReader_Get(reader, buf, &block_size);
         EVP_DigestSignUpdate(hmac_ctx->libhandle, buf, block_size);
+
+        key_info->stats.bytes_processed += block_size;
     }
 
     return 0;
@@ -377,6 +408,7 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
 int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
 {
     EVP_MD_CTX_free(hmac_ctx->libhandle);
+    memset(hmac_ctx, 0, sizeof(BSL_AuthCtx_t));
     return 0;
 }
 
@@ -387,7 +419,8 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     ASSERT_ARG_NONNULL(init_vec);
     ASSERT_ARG_NONNULL(key_handle);
 
-    BSLB_CryptoKey_t *key = (BSLB_CryptoKey_t *)key_handle;
+    cipher_ctx->keyhandle = key_handle;
+    BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
 
     cipher_ctx->libhandle   = EVP_CIPHER_CTX_new();
     cipher_ctx->enc         = enc;
@@ -425,6 +458,8 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, key->raw.ptr, init_vec, -1);
     CHK_PROPERTY(res == 1);
 
+    key->stats.num_times_used++;
+
     return 0;
 }
 
@@ -434,6 +469,10 @@ int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len)
     int len = 0;
     int res = EVP_CipherUpdate(cipher_ctx->libhandle, NULL, &len, aad, aad_len);
     CHK_PROPERTY(res == 1);
+
+    BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
+    key->stats.bytes_processed += aad_len;
+
     return 0;
 }
 
@@ -445,6 +484,10 @@ int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, BSL_Data_t plaintext, BSL_Data_
     {
         return -1;
     }
+
+    BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
+    key->stats.bytes_processed += plaintext.len;
+
     return cipherlen;
 }
 
@@ -453,6 +496,8 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
     BSL_LOG_DEBUG("sequential %zu bytes", cipher_ctx->block_size);
     uint8_t read_buf[cipher_ctx->block_size];
     uint8_t write_buf[cipher_ctx->block_size];
+
+    BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
 
     while (true)
     {
@@ -469,6 +514,7 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
         BSL_LOG_DEBUG("EVP_CipherUpdate took %zu bytes, gave %u bytes", block_size, block_size_int);
         CHK_PROPERTY(res == 1);
 
+        key->stats.bytes_processed += block_size_int;
         block_size = (size_t)block_size_int;
         BSL_SeqWriter_Put(writer, write_buf, block_size);
     }
@@ -555,7 +601,8 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
 
 int BSL_Crypto_GenKey(size_t key_length, void **key_out)
 {
-    BSLB_CryptoKey_t *new_key = BSL_MALLOC(sizeof(BSLB_CryptoKey_t));
+    BSL_CryptoKey_t *new_key = BSL_MALLOC(sizeof(BSL_CryptoKey_t));
+    BSL_CryptoKey_Init(new_key);
 
     CHK_ARG_NONNULL(key_out);
     CHK_ARG_EXPR(key_length == 16 || key_length == 32);
@@ -596,7 +643,7 @@ int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t s
     CHK_ARG_NONNULL(secret);
     CHK_ARG_EXPR(secret_len > 0);
 
-    BSLB_CryptoKey_t key;
+    BSL_CryptoKey_t key;
     EVP_PKEY_CTX    *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
     int              res = EVP_PKEY_keygen_init(ctx);
     CHK_PROPERTY(res == 1);
@@ -613,17 +660,20 @@ int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t s
         return ecode;
     }
 
+    key.stats.bytes_processed = 0;
+    key.stats.num_times_used = 0;
+
     string_t keyid_str;
     string_init_set_str(keyid_str, keyid);
 
     pthread_mutex_lock(&StaticCryptoMutex);
-    BSLB_CryptoKeyDict_set_at(StaticKeyRegistry, keyid_str, key);
+    BSL_CryptoKeyDict_set_at(StaticKeyRegistry, keyid_str, key);
     pthread_mutex_unlock(&StaticCryptoMutex);
 
     return 0;
 }
 
-int BSLB_Crypto_GetRegistryKey(const char *keyid, void **key_handle)
+int BSL_Crypto_GetRegistryKey(const char *keyid, void **key_handle)
 {
     CHK_ARG_NONNULL(key_handle);
     CHK_ARG_NONNULL(keyid);
@@ -633,7 +683,7 @@ int BSLB_Crypto_GetRegistryKey(const char *keyid, void **key_handle)
 
     int retval = BSL_SUCCESS;
     pthread_mutex_lock(&StaticCryptoMutex);
-    BSLB_CryptoKey_t *found = BSLB_CryptoKeyDict_get(StaticKeyRegistry, keyid_str);
+    BSL_CryptoKey_t *found = BSL_CryptoKeyDict_get(StaticKeyRegistry, keyid_str);
     if (!found)
     {
         retval = BSL_ERR_NOT_FOUND;
@@ -646,15 +696,39 @@ int BSLB_Crypto_GetRegistryKey(const char *keyid, void **key_handle)
     return retval;
 }
 
-int BSLB_Crypto_RemoveRegistryKey(const char *keyid)
+int BSL_Crypto_RemoveRegistryKey(const char *keyid)
 {
     string_t keyid_str;
     string_init_set_str(keyid_str, keyid);
 
     pthread_mutex_lock(&StaticCryptoMutex);
-    int res = BSLB_CryptoKeyDict_erase(StaticKeyRegistry, keyid_str);
+    int res = BSL_CryptoKeyDict_erase(StaticKeyRegistry, keyid_str);
     pthread_mutex_unlock(&StaticCryptoMutex);
 
     string_clear(keyid_str);
     return res ? BSL_SUCCESS : -1;
+}
+
+int BSL_Crypto_GetKeyStatistics(const char *keyid, BSL_Crypto_KeyStats_t *stats)
+{
+    CHK_ARG_NONNULL(stats);
+    CHK_ARG_NONNULL(keyid);
+
+    string_t keyid_str;
+    string_init_set_str(keyid_str, keyid);
+
+    int retval = BSL_SUCCESS;
+    pthread_mutex_lock(&StaticCryptoMutex);
+    BSL_CryptoKey_t *found = BSL_CryptoKeyDict_get(StaticKeyRegistry, keyid_str);
+    if (!found)
+    {
+        retval = BSL_ERR_NOT_FOUND;
+    }
+    else
+    {
+        stats->bytes_processed = found->stats.bytes_processed;
+        stats->num_times_used = found->stats.num_times_used;
+    }
+    pthread_mutex_unlock(&StaticCryptoMutex);
+    return retval;
 }
