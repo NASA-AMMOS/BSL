@@ -283,11 +283,10 @@ int BSLP_FinalizePolicy(const void *user_data _U_, const BSL_SecurityActionSet_t
     {
         const BSL_SecurityAction_t *action = BSL_SecurityActionSet_GetActionAtIndex(output_action_set, i);
 
-        // @todo THERE A BUG HERE?
-        // if (BSL_SecurityAction_GetPPID(action) != self->pp_id)
-        // {
-        //     continue;
-        // }
+        if (BSL_SecurityAction_GetPPID(action) != self->pp_id)
+        {
+            continue;
+        }
 
         for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(action); j++)
         {
