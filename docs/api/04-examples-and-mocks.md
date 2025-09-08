@@ -92,6 +92,6 @@ The table below contains the Mock BPA executable command line options. See the M
 | `-r`      | Underlayer router address-and-port to send to and receive from.                                                                   |
 | `-e`      | The endpoint ID of the local application which is registered.                                                                     |
 | `-s`      | The endpoint ID of the local security source used to handle BPSec.                                                                |
-| `-p`      | The comma-separated bit fields representing policies to initialize Mock BPA with.                                                  |
+| `-p`      | The comma-separated bit fields representing policies to initialize Mock BPA with.                                                 |
 | `-j`      | The path to a ION-Like Policy JSON-encoded policy structure file containing policies to initialize Mock BPA with.                 |
-| `-k`      | The path to a JSON Web Key (JWK) formatted file containing keys to register with the BPA's Cryptographic Library instance.   |
+| `-k`      | The path to a JSON Web Key (JWK) formatted file containing keys to register with the BPA's Cryptographic Library instance.        |
