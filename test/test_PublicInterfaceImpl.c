@@ -137,6 +137,8 @@ void setUp(void)
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
     string_init_set_str(policy->name, "Unit Test Policy Provider!");
 
+    policy->pp_id = 1;
+
     // FIXME these params need managed lifecycle to ensure Deinit (by some means)
     BSL_SecParam_InitInt64(&ctx.param_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
     BSL_SecParam_InitInt64(&ctx.param_scope_flag_7, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0x7);

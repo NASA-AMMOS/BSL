@@ -469,6 +469,7 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
     // TODO find a better way to deal with this
     {
         agent->appin.policy               = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->appin.policy->pp_id        = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,
@@ -477,6 +478,7 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
     }
     {
         agent->appout.policy              = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->appout.policy->pp_id       = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,
@@ -485,6 +487,7 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
     }
     {
         agent->clin.policy                = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->clin.policy->pp_id         = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,
@@ -493,6 +496,7 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
     }
     {
         agent->clout.policy               = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->clout.policy->pp_id        = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,
