@@ -61,7 +61,7 @@ Sources related to the Mock BPA are associated with the @ref mock_bpa group.
 
 ## Policy Management
 
-The policies used by the Mock BPA's example policy providers can be provided with two different methods.
+The policies used by the Mock BPA example policy providers can be provided with two different methods.
 
 ### Policy Bit Fields
 
@@ -75,7 +75,7 @@ The path to the JSON file should be passed to the Mock BPA with the `-j` command
 
 ## Key Management
 
-The keys used by the example SCs registered in the Mock BPA's Cryptographic Library instance are obtained from a file using the JSON Web Key (JWK) format of RFC 7517 @cite rfc7517.
+The keys used by the example SCs registered in the Mock BPA Cryptographic Library instance are obtained from a file using the JSON Web Key (JWK) format of RFC 7517 @cite rfc7517.
 
 The implementation to support these SCs only handles symmetric keys and only the minimal header parameters needed for key ID ("kid") and key material itself.
 

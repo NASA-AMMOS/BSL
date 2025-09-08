@@ -58,7 +58,7 @@ The comma-separated bit fields representing policies to initialize Mock BPA with
 The path to a ION-Like Policy JSON-encoded policy structure file containing policies to initialize Mock BPA with.
 
 *-k* _POLICY-KEYS_::
-The path to a JSON Web Key (JWK) formatted file containing keys to register with the Mock BPA's Cryptographic Library instance.
+The path to a JSON Web Key (JWK) formatted file containing keys to register with the Mock BPA Cryptographic Library instance.
 
 == Exit Status
 
