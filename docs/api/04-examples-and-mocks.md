@@ -90,8 +90,8 @@ See the Mock BPA man page for more details
 | `-a`      | Overlayer application address-and-port to send to and receive from.                                                               |
 | `-u`      | Underlayer local address-and-port to bind to.                                                                                     |
 | `-r`      | Underlayer router address-and-port to send to and receive from.                                                                   |
-| `-e`      | The endpoint ID of the local applicaiton which is registered.                                                                     |
+| `-e`      | The endpoint ID of the local application which is registered.                                                                     |
 | `-s`      | The endpoint ID of the local security source used to handle BPSec.                                                                |
-| `-p`      | The comma-seperated bitfields representing policies to initialize Mock BPA with.                                                  |
+| `-p`      | The comma-separated bit fields representing policies to initialize Mock BPA with.                                                  |
 | `-j`      | The path to a ION-Like Policy JSON-encoded policy structure file containing policies to initialize Mock BPA with.                 |
 | `-k`      | The path to a JSON Web Key (JWK) formatted file containing keys to register with the Mock BPA’s Cryptographic Library instance.   |
