@@ -20,8 +20,6 @@
 # subcontract 1700763.
 #
 from _test_util import _TestCase, _TestSet, DataFormat
-from _test_util import NO_OUTPUT, FAILURE_CODE, DELETION
-
 
 # Test Cases specified by the Requirements Document
 class _RequirementsCases(_TestSet):
