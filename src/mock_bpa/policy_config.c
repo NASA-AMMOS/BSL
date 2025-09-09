@@ -701,7 +701,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
 
     // Create a rule to verify security block at APP/CLA Ingress
     char policybits_str[100];
-    sprintf(policybits_str, "Policy: %x", policy_bits);
+    snprintf(policybits_str, 100, "Policy: %x", policy_bits);
     BSLP_PolicyPredicate_t *predicate_all_in = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate_all_in, policy_loc_enum, eid_src_pat,
                               mock_bpa_util_get_eid_pattern_from_text("*:**"),

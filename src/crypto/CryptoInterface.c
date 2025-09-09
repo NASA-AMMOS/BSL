@@ -187,7 +187,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
-    cek->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, cek->raw.ptr, cek->raw.len);
+    cek->pkey = EVP_PKEY_get_raw_private_key(EVP_PKEY_HMAC, NULL, cek->raw.ptr, cek->raw.len);
     EVP_PKEY_CTX_free(pctx);
 
     *cek_handle = cek;
