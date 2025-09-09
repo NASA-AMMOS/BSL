@@ -46,7 +46,7 @@ typedef struct BSL_CryptoKey_s
 
 static int BSL_CryptoKey_Init(BSL_CryptoKey_t *key)
 {
-    for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i ++)
+    for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
     {
         key->stats.stats[i] = 0;
     }
@@ -60,7 +60,7 @@ static int BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
     EVP_PKEY_free(key->pkey);
     BSL_Data_Deinit(&(key->raw));
 
-    for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i ++)
+    for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
     {
         key->stats.stats[i] = 0;
     }
@@ -79,7 +79,7 @@ static BSL_Crypto_RandBytesFn rand_bytes_generator;
 
 /// Crypto key registry
 static BSL_CryptoKeyDict_t StaticKeyRegistry;
-static pthread_mutex_t      StaticCryptoMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t     StaticCryptoMutex = PTHREAD_MUTEX_INITIALIZER;
 // NOLINTEND
 
 void BSL_CryptoInit(void)
@@ -327,7 +327,7 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, void *keyhandle, BSL_CryptoCipherS
     CHK_ARG_NONNULL(hmac_ctx);
     CHK_ARG_NONNULL(keyhandle);
 
-    hmac_ctx->keyhandle = keyhandle;
+    hmac_ctx->keyhandle       = keyhandle;
     BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
 
     hmac_ctx->libhandle = EVP_MD_CTX_new();
@@ -384,7 +384,7 @@ int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
     BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
 
     uint8_t buf[hmac_ctx->block_size];
-    size_t block_size = hmac_ctx->block_size;
+    size_t  block_size = hmac_ctx->block_size;
     while (block_size == hmac_ctx->block_size)
     {
         BSL_SeqReader_Get(reader, buf, &block_size);
@@ -424,7 +424,7 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     ASSERT_ARG_NONNULL(key_handle);
 
     cipher_ctx->keyhandle = key_handle;
-    BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
+    BSL_CryptoKey_t *key  = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
 
     cipher_ctx->libhandle   = EVP_CIPHER_CTX_new();
     cipher_ctx->enc         = enc;
@@ -649,8 +649,8 @@ int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t s
 
     BSL_CryptoKey_t key;
     BSL_CryptoKey_Init(&key);
-    EVP_PKEY_CTX    *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
-    int              res = EVP_PKEY_keygen_init(ctx);
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
+    int           res = EVP_PKEY_keygen_init(ctx);
     CHK_PROPERTY(res == 1);
 
     key.pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, secret, (int)secret_len);
@@ -728,7 +728,7 @@ int BSL_Crypto_GetKeyStatistics(const char *keyid, BSL_Crypto_KeyStats_t *stats)
     }
     else
     {
-        for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i ++)
+        for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
         {
             stats->stats[i] = found->stats.stats[i];
         }
