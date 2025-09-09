@@ -816,9 +816,10 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src);
  * @param[in] sec_block_num Block ID of security block.
  * @param[in] sec_type Member of ::BSL_SecBlockType_e enum indicating BIB or BCB
  * @param[in] sec_role Member of ::BSL_SecRole_e enum indicating role.
+ * @param[in] policy_action Member of ::BSL_PolicyAction_e enum indicating failure policy
  */
 void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
-                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e failure_code);
+                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action);
 
 /** Returns true if internal consistency and sanity checks pass
  *
@@ -881,6 +882,13 @@ bool BSL_SecOper_IsRoleAcceptor(const BSL_SecOper_t *self);
  * @return boolean
  */
 bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self);
+
+/**
+ * Retrieve the policy action of a security operation
+ * @param[in] self The security operation
+ * @return the policy action
+ */
+BSL_PolicyAction_e BSL_SecOper_GetPolicyAction(const BSL_SecOper_t *self);
 
 /**
  * Retrieve the conclusion state of a security operation
@@ -1271,9 +1279,10 @@ size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *s
 /** Append a result code to the security response set
  * @param[in,out] self the response set to append result to
  * @param[in] result the result code to append
- * @param[in] err_act the on-error policy action associated with the response
+ * @param[in] policy_action the on-failure policy action associated with the response
  */
-void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result, BSL_PolicyAction_e err_act);
+void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result,
+                                          BSL_PolicyAction_e policy_action);
 
 /** Queries the policy provider for any security operations to take on the bundle.
  *
@@ -1291,6 +1300,11 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
                                       const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location);
 
 /** Finalizes policy provider for sec ops & sec results for a bundle
+ *
+ * @note Currently the implementation is such that the Policy Provider callback handles the policy action on failure
+ * that is stored in the the Security Operations in the Action Set. As such, the backend and Security Context do not use
+ * the policy action field of the ::BSL_SecOper_s and the Policy Provider is the sole executor of policy actions
+ * regarding failures.
  *
  * @param[in] bsl BSL library context
  * @param[in] policy_actions A policy action set, which may contain error codes and other info. @preallocated
