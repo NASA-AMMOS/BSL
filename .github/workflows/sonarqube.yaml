@@ -1,0 +1,74 @@
+##
+## Copyright (c) 2025 The Johns Hopkins University Applied Physics
+## Laboratory LLC.
+##
+## This file is part of the Bundle Protocol Security Library (BSL).
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##     http://www.apache.org/licenses/LICENSE-2.0
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## This work was performed for the Jet Propulsion Laboratory, California
+## Institute of Technology, sponsored by the United States Government under
+## the prime contract 80NM0018D0004 between the Caltech and NASA under
+## subcontract 1700763.
+##
+name: SonarQube
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    env:
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          submodules: recursive
+      - name: Prep
+        run: |
+          sudo rm /var/lib/man-db/auto-update
+          sudo apt-get update && sudo apt-get install -y \
+              cmake ninja-build ruby build-essential \
+              libssl-dev libjansson-dev \
+              xmlstarlet \
+              python3 python3-pip python3-wheel
+          pip3 install gcovr
+          ./build.sh deps
+          ./build.sh prep -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=ON -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+      - name: Install Build Wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v5
+      - name: Run Build Wrapper
+        run: |
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./build.sh
+      - name: Install
+        run: ./build.sh install
+      - name: Test
+        run: |
+          ./build.sh check
+          pip3 install --upgrade pip
+          pip3 install -r mock-bpa-test/requirements.txt
+          python3 -m pytest mock-bpa-test
+      - name: Collect coverage
+        run: |
+          ./build.sh --target coverage-xml -v
+          ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            --define sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json
