@@ -346,8 +346,8 @@ int BSL_Crypto_GenIV(void *buf, int size);
 int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t secret_len);
 
 /**
- * Retrive statistics related to a crypto key
- * @param[in] keyid key ID of a key in the crypto registry to retrive the stats of
+ * Retrieve statistics related to a crypto key
+ * @param[in] keyid key ID of a key in the crypto registry to retrieve the stats of
  * @param[out] stats struct containing statistics related to the key id
  */
 int BSL_Crypto_GetKeyStatistics(const char *keyid, BSL_Crypto_KeyStats_t *stats);
