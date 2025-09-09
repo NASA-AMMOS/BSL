@@ -263,11 +263,11 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 #define CHK_ARG_NONNULL(var) \
     CHK_TEMPL((var) != NULL, "Illegal Argument: Argument null check failed to satisfy", BSL_ERR_ARG_NULL)
 
-#define CHK_PRECONDITION(expr) CHK_TEMPL(expr, "Precondition Failed: Did not satisfy", BSL_ERR_FAILURE);
+#define CHK_PRECONDITION(expr) CHK_TEMPL(expr, "Precondition Failed: Did not satisfy", BSL_ERR_FAILURE)
 
-#define CHK_PROPERTY(expr) CHK_TEMPL(expr, "Property Failed: Did not satisfy", BSL_ERR_FAILURE);
+#define CHK_PROPERTY(expr) CHK_TEMPL(expr, "Property Failed: Did not satisfy", BSL_ERR_FAILURE)
 
-#define CHK_POSTCONDITION(expr) CHK_TEMPL(expr, "Postcondition Failed: Did not satisfy", BSL_ERR_FAILURE);
+#define CHK_POSTCONDITION(expr) CHK_TEMPL(expr, "Postcondition Failed: Did not satisfy", BSL_ERR_FAILURE)
 
 #define ASSERT_TEMPL(expr, msg)                 \
     do                                          \
