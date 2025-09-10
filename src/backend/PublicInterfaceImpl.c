@@ -186,6 +186,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                 else
                 {
                     BSL_LOG_WARNING("Failed to parse ASB from BTSD");
+                    BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
                 }
                 BSL_AbsSecBlock_Deinit(abs_sec_block);
                 BSL_FREE(abs_sec_block);

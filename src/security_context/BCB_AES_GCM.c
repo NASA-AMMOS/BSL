@@ -121,7 +121,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     void *key_id_handle;
     void *cipher_key;
 
-    if (BSL_SUCCESS != BSLB_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
+    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
         BSL_Data_Deinit(&bcb_context->authtag);
@@ -233,7 +233,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     BSL_Data_Deinit(&bcb_context->authtag);
     if (bcb_context->keywrap)
     {
-        BSL_Crypto_ClearKeyHandle(cipher_key);
+        BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
     }
     BSL_Cipher_Deinit(&cipher);
 
@@ -272,7 +272,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     void *key_id_handle;
     void *cipher_key;
 
-    if (BSL_SUCCESS != BSLB_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
+    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -295,7 +295,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &cipher_key))
         {
             BSL_LOG_ERR("Failed to generate AES key");
-            BSL_Crypto_ClearKeyHandle(cipher_key);
+            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
 
@@ -305,7 +305,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, keysize + 8))
         {
             BSL_LOG_ERR("Failed to allocate wrapped key");
-            BSL_Crypto_ClearKeyHandle(cipher_key);
+            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
 
@@ -314,7 +314,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != wrap_result)
         {
             BSL_LOG_ERR("Failed to wrap AES key");
-            BSL_Crypto_ClearKeyHandle(cipher_key);
+            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
     }
@@ -394,7 +394,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (bcb_context->keywrap)
     {
-        BSL_Crypto_ClearKeyHandle(cipher_key);
+        BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
     }
     BSL_Cipher_Deinit(&cipher);
     return retval;
