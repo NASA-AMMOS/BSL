@@ -40,7 +40,7 @@ typedef struct BSL_CryptoKey_s
     EVP_PKEY *pkey;
     /// Pointer to raw key information (used in cipher ctx)
     BSL_Data_t raw;
-
+    /// Statistics related to this key
     BSL_Crypto_KeyStats_t stats;
 } BSL_CryptoKey_t;
 
@@ -102,12 +102,12 @@ void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn)
     rand_bytes_generator = rand_gen_fn;
 }
 
-int BSL_Crypto_ClearKeyHandle(void *keyhandle)
+int BSL_Crypto_ClearGeneratedKeyHandle(void *keyhandle)
 {
     CHK_ARG_NONNULL(keyhandle);
 
     BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)keyhandle;
-    CHK_POSTCONDITION(BSL_SUCCESS == BSL_CryptoKey_Deinit(key));
+    BSL_CryptoKey_Deinit(key);
     BSL_FREE(key);
 
     return BSL_SUCCESS;
@@ -672,6 +672,7 @@ int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t s
     BSL_CryptoKeyDict_set_at(StaticKeyRegistry, keyid_str, key);
     pthread_mutex_unlock(&StaticCryptoMutex);
 
+    string_clear(keyid_str);
     return 0;
 }
 
@@ -695,6 +696,7 @@ int BSL_Crypto_GetRegistryKey(const char *keyid, void **key_handle)
         *key_handle = found;
     }
     pthread_mutex_unlock(&StaticCryptoMutex);
+    string_clear(keyid_str);
     return retval;
 }
 
@@ -734,5 +736,6 @@ int BSL_Crypto_GetKeyStatistics(const char *keyid, BSL_Crypto_KeyStats_t *stats)
         }
     }
     pthread_mutex_unlock(&StaticCryptoMutex);
+    string_clear(keyid_str);
     return retval;
 }

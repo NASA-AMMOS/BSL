@@ -614,7 +614,7 @@ void test_key_wrap(const char *kek, const char *cek, const char *expected)
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&expected_data);
     BSL_Data_Deinit(&wrapped_key);
-    BSL_Crypto_ClearKeyHandle((void *)wrapped_key_handle);
+    BSL_Crypto_ClearGeneratedKeyHandle((void *)wrapped_key_handle);
     BSL_Crypto_RemoveRegistryKey("kek");
     BSL_Crypto_RemoveRegistryKey("cek");
 }
@@ -685,9 +685,9 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
     BSL_Data_Deinit(&wrapped_key_data);
     BSL_Data_Deinit(&wrapped_key1);
     BSL_Data_Deinit(&wrapped_key2);
-    BSL_Crypto_ClearKeyHandle((void *)cek_handle);
-    BSL_Crypto_ClearKeyHandle((void *)wrapped_key_handle1);
-    BSL_Crypto_ClearKeyHandle((void *)wrapped_key_handle2);
+    BSL_Crypto_ClearGeneratedKeyHandle((void *)cek_handle);
+    BSL_Crypto_ClearGeneratedKeyHandle((void *)wrapped_key_handle1);
+    BSL_Crypto_ClearGeneratedKeyHandle((void *)wrapped_key_handle2);
     BSL_Crypto_RemoveRegistryKey("kek");
     BSL_Crypto_RemoveRegistryKey("cek");
 }

@@ -213,10 +213,12 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
 int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 
 /**
- * Deinit and free key handle data
- * @param[in] keyhandle key handle to clear. Assumed to be allocated with ::BSL_MALLOC().
+ * Deinit and free generated key handle
+ * @param[in] keyhandle key handle to clear. 
+ * Key handle assumed to be generated, not present in key registry, and allocated with ::BSL_MALLOC().
+ * @returns 0 if successfully cleared key handle
  */
-int BSL_Crypto_ClearKeyHandle(void *keyhandle);
+int BSL_Crypto_ClearGeneratedKeyHandle(void *keyhandle);
 
 /**
  * Perform key wrap

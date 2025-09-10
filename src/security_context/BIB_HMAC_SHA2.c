@@ -335,7 +335,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
             if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &cipher_key))
             {
                 BSL_LOG_ERR("Failed to generate AES key");
-                BSL_Crypto_ClearKeyHandle(cipher_key);
+                BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
                 return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
 
@@ -345,7 +345,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
             if (BSL_SUCCESS != BSL_Data_InitBuffer(&self->wrapped_key, keysize + 8))
             {
                 BSL_LOG_ERR("Failed to allocate wrapped key");
-                BSL_Crypto_ClearKeyHandle(cipher_key);
+                BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
                 return BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
 
@@ -354,7 +354,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
             if (BSL_SUCCESS != wrap_result)
             {
                 BSL_LOG_ERR("Failed to wrap key");
-                BSL_Crypto_ClearKeyHandle(cipher_key);
+                BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
                 return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
         }
@@ -370,7 +370,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
             if (BSL_SUCCESS != unwrap_result)
             {
                 BSL_LOG_ERR("Failed to unwrap key");
-                BSL_Crypto_ClearKeyHandle(cipher_key);
+                BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
                 return BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
         }
@@ -382,7 +382,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
         BSL_AuthCtx_Deinit(&hmac_ctx);
         if (self->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(cipher_key);
+            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
         }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
@@ -392,7 +392,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
         BSL_AuthCtx_Deinit(&hmac_ctx);
         if (self->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(cipher_key);
+            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
         }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
@@ -405,7 +405,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
         BSL_AuthCtx_Deinit(&hmac_ctx);
         if (self->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(cipher_key);
+            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
         }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
@@ -416,13 +416,13 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
         BSL_LOG_ERR("bsl_hmac_ctx_deinit failed with code %d", res);
         if (self->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(cipher_key);
+            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
         }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
     if (self->keywrap)
     {
-        BSL_Crypto_ClearKeyHandle(cipher_key);
+        BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
     }
     return (int)hmaclen;
 }
