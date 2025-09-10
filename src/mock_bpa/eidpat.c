@@ -28,7 +28,7 @@ int bsl_eidpat_numrange_seg_cmp(const bsl_eidpat_numrange_seg_t *left, const bsl
     if (!left || !right)
     {
         // not valid
-        return 0; // LCOV_EXCL_LINE
+        return 0; // GCOV_EXCL_LINE
     }
     if (left->last < right->last)
     {
@@ -46,7 +46,7 @@ bool bsl_eidpat_numrange_seg_overlap(const bsl_eidpat_numrange_seg_t *left, cons
     if (!left || !right)
     {
         // not valid
-        return false; // LCOV_EXCL_LINE
+        return false; // GCOV_EXCL_LINE
     }
 
     uint64_t max_first = (left->first > right->first) ? left->first : right->first;
@@ -231,7 +231,7 @@ bool bsl_eidpat_numcomp_match(const bsl_eidpat_numcomp_t *obj, uint64_t val)
             return ((val >= found->first) && (val <= found->last));
         }
     }
-    return false; // LCOV_EXCL_LINE
+    return false; // GCOV_EXCL_LINE
 }
 
 void bsl_eidpat_ipn_ssp_init(bsl_eidpat_ipn_ssp_t *obj)
@@ -379,7 +379,7 @@ int mock_bpa_eidpat_init(BSL_HostEIDPattern_t *pat, void *user_data _U_)
     pat->handle = BSL_MALLOC(sizeof(bsl_mock_eidpat_t));
     if (!(pat->handle))
     {
-        return 2; // LCOV_EXCL_LINE
+        return 2; // GCOV_EXCL_LINE
     }
     {
         memset(pat->handle, 0, sizeof(bsl_mock_eidpat_t));
