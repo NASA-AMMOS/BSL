@@ -206,6 +206,7 @@ if(BUILD_PACKAGE)
 endif(BUILD_PACKAGE)
 
 add_custom_command(
+    DEPENDS CMakeGraphVizOptions.cmake
     OUTPUT dep_chart.dot
     COMMAND ${CMAKE_COMMAND} "--graphviz=dep_chart.dot" .
 )
