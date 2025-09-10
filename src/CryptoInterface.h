@@ -214,7 +214,7 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 
 /**
  * Deinit and free generated key handle
- * @param[in] keyhandle key handle to clear. 
+ * @param[in] keyhandle key handle to clear.
  * Key handle assumed to be generated, not present in key registry, and allocated with ::BSL_MALLOC().
  * @returns 0 if successfully cleared key handle
  */
