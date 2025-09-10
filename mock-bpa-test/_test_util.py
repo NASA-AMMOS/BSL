@@ -42,7 +42,7 @@ class _TestCase:
         self.expected_output = expected_output
         self.policy_config = policy_config
 
-        # can be removed once all tests are wworking
+        # can be removed once all tests are working
         self.is_working = is_working
 
         self.input_data_format = input_data_format
@@ -53,6 +53,3 @@ class _TestSet:
     def __init__(self):
         self.cases = {}
 
-NO_OUTPUT = 0
-FAILURE_CODE = -1
-DELETION = -2
