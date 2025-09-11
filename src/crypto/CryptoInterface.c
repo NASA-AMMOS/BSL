@@ -605,20 +605,21 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
 
 int BSL_Crypto_GenKey(size_t key_length, void **key_out)
 {
-    BSL_CryptoKey_t *new_key = BSL_MALLOC(sizeof(BSL_CryptoKey_t));
-    BSL_CryptoKey_Init(new_key);
-
     CHK_ARG_NONNULL(key_out);
     CHK_ARG_EXPR(key_length == 16 || key_length == 32);
 
-    BSL_Data_InitBuffer(&new_key->raw, key_length);
+    BSL_CryptoKey_t *new_key = BSL_MALLOC(sizeof(BSL_CryptoKey_t));
+    CHK_PROPERTY(new_key);
+    BSL_CryptoKey_Init(new_key);
 
+    BSL_Data_InitBuffer(&new_key->raw, key_length);
     if (rand_bytes_generator(new_key->raw.ptr, (int)new_key->raw.len) != 1)
     {
         return -2;
     }
 
     EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
+    CHK_PROPERTY(ctx);
     int           res = EVP_PKEY_keygen_init(ctx);
     CHK_PROPERTY(res == 1);
 

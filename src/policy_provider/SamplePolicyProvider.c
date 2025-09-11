@@ -159,10 +159,14 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     BSLP_SecOperPtrList_init(secops);
 
     const size_t capacity = sizeof(self->rules) / sizeof(BSLP_PolicyRule_t);
-    for (size_t index = 0; index < self->rule_count && index < capacity; index++)
+    for (size_t index = 0; (index < self->rule_count) && (index < capacity); index++)
     {
         const BSLP_PolicyRule_t *rule = &self->rules[index];
-        CHK_PROPERTY(BSLP_PolicyRule_IsConsistent(rule));
+        if (!BSLP_PolicyRule_IsConsistent(rule))
+        {
+            BSL_LOG_ERR("Rule `%s` is not consistent", m_string_get_cstr(rule->description));
+            continue;
+        }
         BSL_LOG_DEBUG("Evaluating against rule `%s`", m_string_get_cstr(rule->description));
 
         if (!BSLP_PolicyPredicate_IsMatch(rule->predicate, location, primary_block.field_src_node_id,
@@ -173,7 +177,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         }
 
         uint64_t target_block_num = get_target_block_id(bundle, rule->target_block_type);
-        if (target_block_num == 0 && rule->target_block_type != BSL_BLOCK_TYPE_PRIMARY)
+        if ((target_block_num == 0) && (rule->target_block_type != BSL_BLOCK_TYPE_PRIMARY))
         {
             BSL_LOG_WARNING("Cannot find target block type = %" PRIu64, rule->target_block_type);
             continue;
@@ -183,79 +187,82 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         BSL_SecOper_Init(sec_oper);
         if (BSLP_PolicyRule_EvaluateAsSecOper(rule, sec_oper, bundle, location) < 0)
         {
+            BSL_LOG_WARNING("SecOp evaluate failed");
             BSL_SecurityAction_IncrError(action);
+            BSL_SecOper_Deinit(sec_oper);
+            BSL_FREE(sec_oper);
+            continue;
         }
-        else
-        {
-            size_t i;
-            for (i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
-            {
-                BSL_SecOper_t **comp = BSLP_SecOperPtrList_get(secops, i);
-                BSL_LOG_DEBUG("NEW SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(sec_oper),
-                              BSL_SecOper_IsBIB(sec_oper), BSL_SecOper_GetSecurityBlockNum(sec_oper));
-                BSL_LOG_DEBUG("comp SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(*comp),
-                              BSL_SecOper_IsBIB(*comp), BSL_SecOper_GetSecurityBlockNum(*comp));
-                if (BSL_SecOper_GetTargetBlockNum(*comp) == BSL_SecOper_GetTargetBlockNum(sec_oper))
-                {
-                    // Both BIBs or BCBs
-                    if (!(BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsBIB(*comp)))
-                    {
-                        BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_INVALID);
-                    }
-                    // SOURCE BIB or ACCEPT BCB should come first
-                    // true if ACC BIB or SRC BCB
-                    if (BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsRoleSource(sec_oper))
-                    {
-                        BSL_LOG_DEBUG("NEW OP AFTER COMP");
-                        BSLP_SecOperPtrList_push_at(secops, i + 1, sec_oper);
-                    }
-                    else
-                    {
-                        BSL_LOG_DEBUG("NEW OP BEFORE COMP");
-                        BSLP_SecOperPtrList_push_at(secops, i, sec_oper);
-                    }
-                    break;
-                }
 
-                // security operation in list targets security operation
-                if (BSL_SecOper_GetTargetBlockNum(*comp) == BSL_SecOper_GetSecurityBlockNum(sec_oper))
+        size_t i;
+        for (i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
+        {
+            BSL_SecOper_t **comp = BSLP_SecOperPtrList_get(secops, i);
+            BSL_LOG_DEBUG("NEW SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(sec_oper),
+                          BSL_SecOper_IsBIB(sec_oper), BSL_SecOper_GetSecurityBlockNum(sec_oper));
+            BSL_LOG_DEBUG("comp SECOP (tgt=%d)(bib?=%d)(secblk=%d)", BSL_SecOper_GetTargetBlockNum(*comp),
+                          BSL_SecOper_IsBIB(*comp), BSL_SecOper_GetSecurityBlockNum(*comp));
+            if (BSL_SecOper_GetTargetBlockNum(*comp) == BSL_SecOper_GetTargetBlockNum(sec_oper))
+            {
+                // Both BIBs or BCBs
+                if (!(BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsBIB(*comp)))
+                {
+                    BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_INVALID);
+                }
+                // SOURCE BIB or ACCEPT BCB should come first
+                // true if ACC BIB or SRC BCB
+                if (BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsRoleSource(sec_oper))
+                {
+                    BSL_LOG_DEBUG("NEW OP AFTER COMP");
+                    BSLP_SecOperPtrList_push_at(secops, i + 1, sec_oper);
+                }
+                else
+                {
+                    BSL_LOG_DEBUG("NEW OP BEFORE COMP");
+                    BSLP_SecOperPtrList_push_at(secops, i, sec_oper);
+                }
+                break;
+            }
+
+            // security operation in list targets security operation
+            if (BSL_SecOper_GetTargetBlockNum(*comp) == BSL_SecOper_GetSecurityBlockNum(sec_oper))
+            {
+                BSLP_SecOperPtrList_push_at(secops, i, sec_oper);
+                break;
+            }
+
+            // new security operation targets security operation in list
+            if (BSL_SecOper_GetTargetBlockNum(sec_oper) == BSL_SecOper_GetSecurityBlockNum(*comp))
+            {
+                BSLP_SecOperPtrList_push_at(secops, i + 1, sec_oper);
+                break;
+            }
+
+            // same security block number, order by target
+            if (BSL_SecOper_GetSecurityBlockNum(sec_oper) == BSL_SecOper_GetSecurityBlockNum(*comp))
+            {
+                if (BSL_SecOper_GetTargetBlockNum(*comp) - BSL_SecOper_GetTargetBlockNum(sec_oper))
                 {
                     BSLP_SecOperPtrList_push_at(secops, i, sec_oper);
-                    break;
                 }
-
-                // new security operation targets security operation in list
-                if (BSL_SecOper_GetTargetBlockNum(sec_oper) == BSL_SecOper_GetSecurityBlockNum(*comp))
+                else
                 {
                     BSLP_SecOperPtrList_push_at(secops, i + 1, sec_oper);
-                    break;
                 }
-
-                // same security block number, order by target
-                if (BSL_SecOper_GetSecurityBlockNum(sec_oper) == BSL_SecOper_GetSecurityBlockNum(*comp))
-                {
-                    if (BSL_SecOper_GetTargetBlockNum(*comp) - BSL_SecOper_GetTargetBlockNum(sec_oper))
-                    {
-                        BSLP_SecOperPtrList_push_at(secops, i, sec_oper);
-                    }
-                    else
-                    {
-                        BSLP_SecOperPtrList_push_at(secops, i + 1, sec_oper);
-                    }
-                    break;
-                }
+                break;
             }
+        }
 
-            if (i >= BSLP_SecOperPtrList_size(secops))
-            {
-                BSL_LOG_INFO("append to end");
-                BSLP_SecOperPtrList_push_back(secops, sec_oper);
-            }
+        if (i >= BSLP_SecOperPtrList_size(secops))
+        {
+            BSL_LOG_INFO("append to end");
+            BSLP_SecOperPtrList_push_back(secops, sec_oper);
         }
         BSL_LOG_INFO("Created sec operation for rule `%s`", m_string_get_cstr(rule->description));
     }
     BSL_PrimaryBlock_deinit(&primary_block);
 
+    // TODO replace a lot of copying with moving
     for (size_t i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
     {
         BSL_SecOper_t **secop = BSLP_SecOperPtrList_get(secops, i);
