@@ -47,7 +47,9 @@
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_ARRAY_DEF(uint64_list, uint64_t)
+// GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
 

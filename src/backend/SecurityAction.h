@@ -28,9 +28,16 @@
     (INIT(API_2(BSL_SecOper_Init)), INIT_SET(API_6(BSL_SecOper_InitSet)), SET(API_6(BSL_SecOper_Set)), \
      CLEAR(API_2(BSL_SecOper_Deinit)))
 
+/** @struct BSL_SecOperList_t
+ * Defines a basic list of ::BSL_SecOper_t.
+ */
+/// @cond Doxygen_Suppress
 // NOLINTBEGIN
+// GCOV_EXCL_START
 M_ARRAY_DEF(BSL_SecOperList, BSL_SecOper_t, M_OPL_BSL_SecOper_t())
+// GCOV_EXCL_STOP
 // NOLINTEND
+/// @endcond
 
 struct BSL_SecurityAction_s
 {
