@@ -164,6 +164,11 @@ if(BUILD_COVERAGE)
     NAME coverage-xml
     BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
   )
+  setup_target_for_coverage_gcovr_xml(
+    NAME coverage-sonarqube
+    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    SONARQUBE
+  )
   setup_target_for_coverage_gcovr_html(
     NAME coverage-html
     BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
