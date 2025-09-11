@@ -230,6 +230,8 @@ bool bsl_eidpat_numcomp_match(const bsl_eidpat_numcomp_t *obj, uint64_t val)
             const bsl_eidpat_numrange_seg_t *found = bsl_eidpat_numrage_cref(it);
             return ((val >= found->first) && (val <= found->last));
         }
+        default:
+            break; // GCOV_EXCL_LINE
     }
     return false; // GCOV_EXCL_LINE
 }
@@ -269,16 +271,18 @@ void bsl_mock_eidpat_item_deinit(bsl_mock_eidpat_item_t *obj)
             bsl_eidpat_ipn_ssp_deinit(&(obj->ssp.as_ipn));
             break;
         default:
-            break;
+            break; // GCOV_EXCL_LINE
     }
     memset(obj, 0, sizeof(bsl_mock_eidpat_item_t));
 }
 
 int mock_bpa_eidpat_item_from_text(bsl_mock_eidpat_item_t *item, const char *text, const char **endptr)
 {
+    // GCOV_EXCL_START
     CHKERR1(item);
     CHKERR1(text);
     CHKERR1(endptr);
+    // GCOV_EXCL_STOP
 
     // clean up if necessary
     bsl_mock_eidpat_item_deinit(item);
@@ -352,8 +356,10 @@ int mock_bpa_eidpat_item_from_text(bsl_mock_eidpat_item_t *item, const char *tex
 
 bool mock_bpa_eidpat_item_match(const bsl_mock_eidpat_item_t *item, const bsl_mock_eid_t *eid)
 {
+    // GCOV_EXCL_START
     CHKERR1(item);
     CHKERR1(eid);
+    // GCOV_EXCL_STOP
 
     if (item->scheme != eid->scheme)
     {
@@ -366,15 +372,18 @@ bool mock_bpa_eidpat_item_match(const bsl_mock_eidpat_item_t *item, const bsl_mo
         case BSL_MOCK_EID_IPN:
             return bsl_eidpat_ipn_ssp_match(&(item->ssp.as_ipn), &(eid->ssp.as_ipn));
         default:
-            BSL_LOG_ERR("EID Pattern scheme %" PRIu64 " not handled", item->scheme);
+            // GCOV_EXCL_START
+            BSL_LOG_CRIT("EID Pattern scheme %" PRIu64 " not handled", item->scheme);
             break;
+            // GCOV_EXCL_STOP
     }
     return false;
 }
 
 int mock_bpa_eidpat_init(BSL_HostEIDPattern_t *pat, void *user_data _U_)
 {
-    CHKERR1(pat);
+    CHKERR1(pat); // GCOV_EXCL_LINE
+
     memset(pat, 0, sizeof(BSL_HostEIDPattern_t));
     pat->handle = BSL_MALLOC(sizeof(bsl_mock_eidpat_t));
     if (!(pat->handle))
@@ -391,7 +400,8 @@ int mock_bpa_eidpat_init(BSL_HostEIDPattern_t *pat, void *user_data _U_)
 
 static void bsl_mock_eidpat_deinit(bsl_mock_eidpat_t *pat)
 {
-    CHKVOID(pat);
+    CHKVOID(pat); // GCOV_EXCL_LINE
+
     bsl_mock_eidpat_item_list_clear(pat->items);
     memset(pat, 0, sizeof(bsl_mock_eidpat_t));
 }
@@ -409,10 +419,12 @@ void mock_bpa_eidpat_deinit(BSL_HostEIDPattern_t *pat, void *user_data _U_)
 
 int mock_bpa_eidpat_from_text(BSL_HostEIDPattern_t *pat, const char *text, void *user_data _U_)
 {
+    // GCOV_EXCL_START
     CHKERR1(pat);
     CHKERR1(text);
     bsl_mock_eidpat_t *obj = pat->handle;
     CHKERR1(obj);
+    // GCOV_EXCL_STOP
 
     // clean up if necessary
     obj->match_all = false;
@@ -458,10 +470,13 @@ int mock_bpa_eidpat_from_text(BSL_HostEIDPattern_t *pat, const char *text, void 
 
 bool mock_bpa_eidpat_match(const BSL_HostEIDPattern_t *pat, const BSL_HostEID_t *eid, void *user_data _U_)
 {
+    // GCOV_EXCL_START
     CHKERR1(pat);
     CHKERR1(pat->handle);
     CHKERR1(eid);
     CHKERR1(eid->handle);
+    // GCOV_EXCL_STOP
+
     bsl_mock_eidpat_t *patobj = (bsl_mock_eidpat_t *)pat->handle;
     bsl_mock_eid_t    *eidobj = (bsl_mock_eid_t *)eid->handle;
 

@@ -130,12 +130,10 @@ typedef enum
  * @deprecated
  */
 #define CHKRET(cond, val) \
-    /* GCOV_EXCL_START */ \
     if (!LIKELY(cond))    \
     {                     \
         return val;       \
-    }                     \
-    /* GCOV_EXCL_STOP */
+    }
 /// Return from void functions if condition fails.
 #define CHKVOID(cond) CHKRET(cond, )
 /// Return a null pointer if condition fails.
