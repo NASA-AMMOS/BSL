@@ -118,8 +118,10 @@ static void BSL_LogEvent_event_set(BSL_LogEvent_event_t *obj, const BSL_LogEvent
 
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_BUFFER_DEF(BSL_LogEvent_queue, BSL_LogEvent_event_t, BSL_LOG_QUEUE_SIZE,
              M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING | M_BUFFER_PUSH_INIT_POP_MOVE)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /// Shared least severity

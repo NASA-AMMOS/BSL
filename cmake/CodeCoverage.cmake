@@ -420,7 +420,7 @@ endfunction() # setup_target_for_coverage_lcov
 # GCVOR command.
 function(setup_target_for_coverage_gcovr_xml)
 
-    set(options NONE)
+    set(options SONARQUBE)
     set(oneValueArgs BASE_DIRECTORY NAME)
     set(multiValueArgs EXCLUDE EXECUTABLE EXECUTABLE_ARGS DEPENDENCIES)
     cmake_parse_arguments(Coverage "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -458,9 +458,14 @@ function(setup_target_for_coverage_gcovr_xml)
     set(GCOVR_XML_EXEC_TESTS_CMD
         ${Coverage_EXECUTABLE} ${Coverage_EXECUTABLE_ARGS}
     )
+    if(Coverage_SONARQUBE)
+        set(GCOVR_FORM --sonarqube)
+    else()
+        set(GCOVR_FORM --xml)
+    endif()
     # Running gcovr
     set(GCOVR_XML_CMD
-        ${GCOVR_PATH} ${GCOV_EXEC} --xml ${Coverage_NAME}.xml -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
+        ${GCOVR_PATH} ${GCOV_EXEC} ${GCOVR_FORM} ${Coverage_NAME}.xml -r ${BASEDIR} ${GCOVR_ADDITIONAL_ARGS}
         ${GCOVR_EXCLUDE_ARGS} --object-directory=${PROJECT_BINARY_DIR}
     )
 

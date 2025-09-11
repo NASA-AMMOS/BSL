@@ -58,7 +58,9 @@ bool bsl_eidpat_numrange_seg_overlap(const bsl_eidpat_numrange_seg_t *left, cons
  * An ordered set of range segments with fast lookup.
  */
 /// @cond Doxygen_Suppress
-BPTREE_DEF(bsl_eidpat_numrage, 4, bsl_eidpat_numrange_seg_t)
+// GCOV_EXCL_START
+M_BPTREE_DEF(bsl_eidpat_numrage, 4, bsl_eidpat_numrange_seg_t)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /// The component type for a numeric tuple pattern
@@ -130,7 +132,9 @@ bool mock_bpa_eidpat_item_match(const bsl_mock_eidpat_item_t *item, const bsl_mo
     (INIT(API_2(bsl_mock_eidpat_item_init)), CLEAR(API_2(bsl_mock_eidpat_item_deinit)))
 
 /// @cond Doxygen_Suppress
-DEQUE_DEF(bsl_mock_eidpat_item_list, bsl_mock_eidpat_item_t)
+// GCOV_EXCL_START
+M_DEQUE_DEF(bsl_mock_eidpat_item_list, bsl_mock_eidpat_item_t)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /// Struct to be used as a BSL_HostEIDPattern_t::handle

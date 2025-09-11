@@ -30,12 +30,20 @@
 
 #include <m-array.h>
 
-// NOLINTBEGIN
+/** @struct BSL_SecResultSet_ResultCodes
+ * Defines a basic list of ::int64_t for result values.
+ */
+/** @struct BSL_SecResultSet_ErrorActionCodes_t
+ * Defines a basic list of ::BSL_PolicyAction_e.
+ */
 /// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
 M_ARRAY_DEF(BSL_SecResultSet_ResultCodes, int64_t, M_POD_OPLIST)
 M_ARRAY_DEF(BSL_SecResultSet_ErrorActionCodes, BSL_PolicyAction_e, M_POD_OPLIST)
-/// @endcond
+// GCOV_EXCL_STOP
 // NOLINTEND
+/// @endcond
 
 /// @brief Contains the results and outcomes after performing the security operations.
 /// @note This struct is still in-concept

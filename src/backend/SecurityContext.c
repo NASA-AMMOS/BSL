@@ -522,8 +522,12 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             if (errcode != BSL_SUCCESS)
             {
                 BSL_LOG_ERR("Security Op failed: %d", errcode);
+                if (BSL_REASONCODE_NO_ADDITIONAL_INFO == BSL_SecOper_GetReasonCode(sec_oper))
+                {
+                    BSL_LOG_INFO("SETTING (prev=%d)", BSL_SecOper_GetReasonCode(sec_oper));
+                    BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_FAILED_SECOP);
+                }
                 BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_FAILURE);
-                BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_FAILED_SECOP);
                 BSL_SecurityResponseSet_AppendResult(output_response, errcode, sec_oper->policy_action);
                 break; // stop processing secops if there is a failure
             }
