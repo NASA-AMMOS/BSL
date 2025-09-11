@@ -129,10 +129,10 @@ typedef enum
  * @param val The return value if the check fails.
  * @deprecated
  */
-#define CHKRET(cond, val) \
-    if (!LIKELY(cond))    \
-    {                     \
-        return val;       \
+#define CHKRET(cond, val)                \
+    if (!LIKELY(cond))                   \
+    {                                    \
+        return val; /* GCOV_EXCL_LINE */ \
     }
 /// Return from void functions if condition fails.
 #define CHKVOID(cond) CHKRET(cond, )
