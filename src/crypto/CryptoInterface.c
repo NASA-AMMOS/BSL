@@ -628,7 +628,7 @@ int BSL_Crypto_GenKey(size_t key_length, void **key_out)
 
     EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
     CHK_PROPERTY(ctx);
-    int           res = EVP_PKEY_keygen_init(ctx);
+    int res = EVP_PKEY_keygen_init(ctx);
     CHK_PROPERTY(res == 1);
 
     new_key->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, new_key->raw.ptr, (int)new_key->raw.len);
