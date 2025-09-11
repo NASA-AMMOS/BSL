@@ -63,10 +63,9 @@ class TestAgent(unittest.TestCase):
         if self._agent:
             # Exit cleanly if not already gone
             ret = self._agent.stop()
+            self._agent = None
 
             self.assertEqual(0, ret)
-            self._agent = None
-            self.assertEqual(self._agent, None)
 
     def _start(self, testcase: _TestCase):
 
