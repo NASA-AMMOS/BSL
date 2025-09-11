@@ -73,7 +73,7 @@ static int BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
     return 0;
 }
 
-/** M*LIB oplist for ::BSL_CryptoKey_t
+/** M*LIB OPLIST for ::BSL_CryptoKey_t
  */
 #define M_OPL_BSL_CryptoKey_t() M_OPEXTEND(M_POD_OPLIST, CLEAR(API_2(BSL_CryptoKey_Deinit)))
 /** @struct BSL_CryptoKeyDict_t
