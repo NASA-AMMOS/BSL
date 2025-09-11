@@ -62,6 +62,7 @@ static int BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
     if (key->pkey)
     {
         EVP_PKEY_free(key->pkey);
+        key->pkey = NULL;
     }
     BSL_Data_Deinit(&(key->raw));
 
@@ -72,11 +73,18 @@ static int BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
     return 0;
 }
 
-// NOLINTBEGIN
-/// @cond Doxygen_Suppress
+/** M*LIB oplist for ::BSL_CryptoKey_t
+ */
 #define M_OPL_BSL_CryptoKey_t() M_OPEXTEND(M_POD_OPLIST, CLEAR(API_2(BSL_CryptoKey_Deinit)))
-/// Stable dict of crypto keys (key: key ID | value: key)
+/** @struct BSL_CryptoKeyDict_t
+ * Stable dict of crypto keys (key: key ID | value: key)
+ */
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
 DICT_DEF2(BSL_CryptoKeyDict, string_t, STRING_OPLIST, BSL_CryptoKey_t, M_OPL_BSL_CryptoKey_t())
+// GCOV_EXCL_STOP
+// NOLINTEND
 /// @endcond
 
 /// Random bytes generator
@@ -85,7 +93,6 @@ static BSL_Crypto_RandBytesFn rand_bytes_generator;
 /// Crypto key registry
 static BSL_CryptoKeyDict_t StaticKeyRegistry;
 static pthread_mutex_t     StaticCryptoMutex = PTHREAD_MUTEX_INITIALIZER;
-// NOLINTEND
 
 void BSL_CryptoInit(void)
 {
