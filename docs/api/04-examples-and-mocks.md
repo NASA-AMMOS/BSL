@@ -77,9 +77,9 @@ The path to the JSON file should be passed to the Mock BPA with the `-j` command
 
 The keys used by the example SCs registered in the Mock BPA's Cryptographic Library instance are obtained from a file using the JSON Web Key (JWK) format of RFC 7517 @cite rfc7517.
 
-The implementation to support these SCs only handles symmetric keys and only the minimal header parameters needed for key ID ("kid") and key material itself.
+The implementation to support these SCs only handles symmetric keys and only the minimal header parameters needed for key ID ("kid") and symmetric key material itself ("k").
 
-## Command Line Options
+## Command Line Options {#command-line-options}
 
 The table below contains the Mock BPA executable command line options. See the Mock BPA man page for more details.
 
