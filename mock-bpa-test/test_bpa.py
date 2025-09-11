@@ -66,12 +66,13 @@ class TestAgent(unittest.TestCase):
 
             self.assertEqual(0, ret)
             self._agent = None
+            self.assertEqual(self._agent, None)
 
     def _start(self, testcase: _TestCase):
 
         is_json = False
 
-        if not testcase is None:
+        if testcase is not None:
             policy_config = testcase.policy_config
             LOGGER.info('Using policy config %s', policy_config)
             is_json = policy_config.endswith(".json")
