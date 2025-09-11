@@ -88,8 +88,10 @@ typedef struct
  * A lookup from unique block number to ::MockBPA_CanonicalBlock_t pointer.
  */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_DEQUE_DEF(MockBPA_BlockList, MockBPA_CanonicalBlock_t, M_POD_OPLIST)
 M_BPTREE_DEF2(MockBPA_BlockByNum, 4, uint64_t, M_BASIC_OPLIST, MockBPA_CanonicalBlock_t *, M_PTR_OPLIST)
+// GCOV_EXCL_STOP
 /// @endcond
 
 typedef struct MockBPA_Bundle_s

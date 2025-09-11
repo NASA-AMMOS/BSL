@@ -59,7 +59,7 @@ bool bsl_eidpat_numrange_seg_overlap(const bsl_eidpat_numrange_seg_t *left, cons
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-BPTREE_DEF(bsl_eidpat_numrage, 4, bsl_eidpat_numrange_seg_t)
+M_BPTREE_DEF(bsl_eidpat_numrage, 4, bsl_eidpat_numrange_seg_t)
 // GCOV_EXCL_STOP
 /// @endcond
 
@@ -133,7 +133,7 @@ bool mock_bpa_eidpat_item_match(const bsl_mock_eidpat_item_t *item, const bsl_mo
 
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-DEQUE_DEF(bsl_mock_eidpat_item_list, bsl_mock_eidpat_item_t)
+M_DEQUE_DEF(bsl_mock_eidpat_item_list, bsl_mock_eidpat_item_t)
 // GCOV_EXCL_STOP
 /// @endcond
 
