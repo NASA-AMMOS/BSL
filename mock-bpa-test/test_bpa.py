@@ -35,14 +35,10 @@ import unittest
 import cbor2
 
 from helpers import CmdRunner, compose_args
-from _test_util import _TestCase, _TestSet, DataFormat
-from requirements_tests import _RequirementsCases
-from ccsds_tests import _CCSDS_Cases
-from json_policy_tests import _JSONPolicyTests
+from _test_util import _TestCase, DataFormat
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
-
 
 class TestAgent(unittest.TestCase):
     ''' Verify whole-agent behavior with the bsl-mock-bpa '''
@@ -56,20 +52,34 @@ class TestAgent(unittest.TestCase):
         os.chdir(path)
         LOGGER.info('Working in %s', path)
 
-        is_json = False
-        try:
-            policy_config = str(self.pp_cfg_dict[self._testMethodName[5:]])
-            LOGGER.info('Using policy config from DICT %s for %s', policy_config, self._testMethodName[5:])
-            is_json = policy_config.endswith(".json")
-        except Exception:
-            policy_config = self._testMethodName
-            # Find the index of the first occurrence of "_p" policy sequence
-            index = policy_config.index("_p")
-            # Slice the string from index + 1 to the end
-            policy_config = policy_config[index + 2:]
-            LOGGER.info('Using policy config %s for %s', policy_config, self._testMethodName)
+    def tearDown(self):
 
-        key_set = "src/mock_bpa/key_set_1.json"
+        self._ol_sock.close()
+        self._ol_sock = None
+
+        self._ul_sock.close()
+        self._ul_sock = None
+
+        if self._agent:
+            # Exit cleanly if not already gone
+            ret = self._agent.stop()
+
+            self.assertEqual(0, ret)
+            self._agent = None
+
+    def _start(self, testcase: _TestCase):
+
+        is_json = False
+
+        if not testcase is None:
+            policy_config = testcase.policy_config
+            LOGGER.info('Using policy config %s', policy_config)
+            is_json = policy_config.endswith(".json")
+
+            key_set = testcase.key_set
+        else:
+            policy_config = "0x00"
+            key_set = "src/mock_bpa/key_set_1.json"
 
         args = compose_args([
             'bsl-mock-bpa',
@@ -90,23 +100,6 @@ class TestAgent(unittest.TestCase):
         self._ol_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._ol_sock.bind(('localhost', 34556))
         self._ol_sock.connect(('localhost', 24556))
-
-    def tearDown(self):
-
-        self._ol_sock.close()
-        self._ol_sock = None
-
-        self._ul_sock.close()
-        self._ul_sock = None
-
-        if self._agent:
-            # Exit cleanly if not already gone
-            ret = self._agent.stop()
-
-            self.assertEqual(0, ret)
-            self._agent = None
-
-    def _start(self):
 
         ''' Spawn the process and wait for the startup READY message. '''
         self._agent.start()
@@ -135,7 +128,7 @@ class TestAgent(unittest.TestCase):
     def _single_test(self, testcase: _TestCase):
 
         # start mock BPA using specified policy config
-        self._start()
+        self._start(testcase)
 
         tx_data = testcase.input_data if (testcase.input_data_format == DataFormat.HEX) else self._encode(testcase.input_data)
 
@@ -194,35 +187,9 @@ class TestAgent(unittest.TestCase):
             LOGGER.debug("\nFOUND OCCURENCE: %s", found)
             self.assertTrue(found != "")
 
-
-# Below utilizes setattr to add methods to a child class of the TestAgent, which will in-turn give us unit tests
-# tldr auto-generated methods for unit tests :)
-# @param new_tests needs to be a class that is child of _TestSet()
-def _add_tests(new_tests: _TestSet):
-
-    def decorator(cls):
-        for id, tc in new_tests.cases.items():
-            cls.pp_cfg_dict[id] = tc.policy_config
-            if tc.is_working:
-
-                def _test(cls, id=id):
-                    cls._single_test(new_tests.cases[id])
-
-                setattr(cls, f'test_{id}', _test)
-
-        return cls
-
-    return decorator
-
-
-@_add_tests(_RequirementsCases())
-@_add_tests(_JSONPolicyTests())
-@_add_tests(_CCSDS_Cases())
-class TestMockBPA(TestAgent):
-
-    pp_cfg_dict = {}
-
-    def test_start_stop_p00(self):
-        self._start()
+class TestStartStop(TestAgent):
+    
+    def test_start_stop(self):
+        self._start(None)
         self.assertEqual(0, self._agent.stop())
         self._agent = None

@@ -32,24 +32,20 @@ class _TestCase:
     '''
     @param input_data: list representation of bundle
     @param expected_output: either list representation of expected output bundle OR a string to search log output for match 
-    @param policy_config: decimal digit representing uint32 for policy configuration
+    @param policy_config: decimal digit representing uint32 for policy configuration OR path to JSON-encoded ION-like policy rules
+    @param key_set: path to JWK-encoded key set
     @param is_working: True if test working
     @param input/output_data_format: data format of input/output
     '''
-    def __init__(self, input_data, expected_output, policy_config, is_working: bool, 
+    def __init__(self, input_data, expected_output : DataFormat, policy_config : str, key_set : str, is_working: bool, 
                  input_data_format : DataFormat, expected_output_format : DataFormat):
         self.input_data = input_data
         self.expected_output = expected_output
         self.policy_config = policy_config
+        self.key_set = key_set
 
         # can be removed once all tests are working
         self.is_working = is_working
 
         self.input_data_format = input_data_format
         self.expected_output_format = expected_output_format
-
-
-class _TestSet:
-    def __init__(self):
-        self.cases = {}
-
