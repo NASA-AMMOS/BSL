@@ -29,9 +29,18 @@
 #include <BPSecLib_Private.h>
 #include "SecurityAction.h"
 
+/** @struct BSL_SecActionList_t
+ * Defines a basic list of ::BSL_SecurityAction_t.
+ */
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
 M_ARRAY_DEF(BSL_SecActionList, BSL_SecurityAction_t,
             (INIT(API_2(BSL_SecurityAction_Init)), INIT_SET(API_6(BSL_SecurityAction_InitSet)), SET(0),
              CLEAR(API_2(BSL_SecurityAction_Deinit))))
+// GCOV_EXCL_STOP
+// NOLINTEND
+/// @endcond
 
 /// @brief Contains the populated security operations for this bundle.
 /// @note This is intended to be a write-once, read-only struct

@@ -63,12 +63,12 @@ jobs:
           python3 -m pytest mock-bpa-test
       - name: Collect coverage
         run: |
-          ./build.sh --target coverage-xml -v
-          ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
+          ./build.sh --target coverage-sonarqube -v
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
+            --define sonar.coverageReportPaths=build/default/coverage-sonarqube.xml
             --define sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json

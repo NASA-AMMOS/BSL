@@ -66,8 +66,10 @@ int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason);
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_BUFFER_DEF(MockBPA_data_queue, mock_bpa_ctr_t, MOCKBPA_DATA_QUEUE_SIZE,
              BUFFER_QUEUE | BUFFER_THREAD_SAFE | BUFFER_PUSH_INIT_POP_MOVE | BUFFER_BLOCKING)
+// GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
 

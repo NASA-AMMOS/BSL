@@ -41,7 +41,9 @@ extern "C" {
  *  Stable dict of security context descriptors (key: context ID | value: security context descriptor struct.
  */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /**
@@ -50,7 +52,9 @@ DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLI
  * Policy provider IDs are arbitrary, unique, and control the order of use.
  */
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 BPTREE_DEF2(BSL_PolicyDict, 4, uint64_t, M_BASIC_OPLIST, BSL_PolicyDesc_t, M_POD_OPLIST)
+// GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
 

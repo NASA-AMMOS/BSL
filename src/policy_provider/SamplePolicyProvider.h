@@ -34,9 +34,16 @@
 #include <BPSecLib_Private.h>
 #include <backend/SecParam.h>
 
+/** @struct BSLP_SecOperPtrList_t
+ * Defines a basic list of ::BSL_SecOper_t pointers.
+ */
+/// @cond Doxygen_Suppress
 // NOLINTBEGIN
+// GCOV_EXCL_START
 M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t *, M_PTR_OPLIST)
+// GCOV_EXCL_STOP
 // NOLINTEND
+/// @endcond
 
 /**
  * THE key function that matches a bundle against a rule to provide the output action and specific parameters to use for

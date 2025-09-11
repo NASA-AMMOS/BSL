@@ -88,7 +88,9 @@ struct BSL_SecParam_s
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_ARRAY_DEF(BSLB_SecParamList, BSL_SecParam_t, M_OPL_BSL_SecParam_t())
+// GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
 
