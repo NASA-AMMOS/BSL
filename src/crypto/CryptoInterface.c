@@ -46,6 +46,9 @@ typedef struct BSL_CryptoKey_s
 
 static int BSL_CryptoKey_Init(BSL_CryptoKey_t *key)
 {
+    key->pkey = NULL;
+    BSL_Data_Init(&(key->raw));
+
     for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
     {
         key->stats.stats[i] = 0;
@@ -56,8 +59,10 @@ static int BSL_CryptoKey_Init(BSL_CryptoKey_t *key)
 
 static int BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
 {
-    fflush(stdout); // NOLINT
-    EVP_PKEY_free(key->pkey);
+    if (key->pkey)
+    {
+        EVP_PKEY_free(key->pkey);
+    }
     BSL_Data_Deinit(&(key->raw));
 
     for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
@@ -117,9 +122,6 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
 {
     BSL_CryptoKey_t *kek = (BSL_CryptoKey_t *)kek_handle;
 
-    BSL_CryptoKey_t *cek = BSL_MALLOC(sizeof(BSL_CryptoKey_t));
-    BSL_CryptoKey_Init(cek);
-
     const EVP_CIPHER *cipher;
     switch (kek->raw.len)
     {
@@ -148,19 +150,25 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if (ctx == NULL)
     {
-        BSL_FREE(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+
+    BSL_CryptoKey_t *cek = BSL_MALLOC(sizeof(BSL_CryptoKey_t));
+    if (cek == NULL)
+    {
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    BSL_CryptoKey_Init(cek);
 
     /**
      * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
      */
-    BSL_Data_InitBuffer(&cek->raw, wrapped_key->len - 8);
+    BSL_Data_Resize(&cek->raw, wrapped_key->len - 8);
 
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     if (dec_result != 1)
     {
-        BSL_Data_Deinit(&cek->raw);
+        BSL_CryptoKey_Deinit(cek);
         BSL_FREE(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
@@ -172,9 +180,9 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     if (decrypt_res != 1)
     {
         BSL_LOG_ERR("EVP_DecryptUpdate: %s", ERR_error_string(ERR_get_error(), NULL));
-        BSL_Data_Deinit(&cek->raw);
-        BSL_FREE(cek);
         EVP_CIPHER_CTX_free(ctx);
+        BSL_CryptoKey_Deinit(cek);
+        BSL_FREE(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
@@ -187,7 +195,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     {
         BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
         EVP_CIPHER_CTX_free(ctx);
-        BSL_Data_Deinit(&cek->raw);
+        BSL_CryptoKey_Deinit(cek);
         BSL_FREE(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
@@ -203,7 +211,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     res                = EVP_PKEY_keygen_init(pctx);
     if (res != 1)
     {
-        BSL_Data_Deinit(&cek->raw);
+        BSL_CryptoKey_Deinit(cek);
         BSL_FREE(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
