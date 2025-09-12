@@ -28,13 +28,15 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
 # HMAC signs, encrypts, or decrypts payload string
-# This is a really messy function for now 
-def sign_and_encrypt(   payload_s:str, 
-                        sign:bool=True, sign_key_s:str='00112233445566778899AABBCCDDEEFF', 
-                        enc:bool=True, enc_key_s:str='00112233445566778899AABBCCDDEEFF', 
-                        denc:bool=False, denc_key_s:str='71776572747975696f70617364666768', denc_tag_s:str='5d37d992dbc6fc795ea597ed7e8a6078'):
-    
-    #print(f'{payload_s} | {sign} | {sign_key_s} | {enc} | {enc_key_s} | {denc} | {denc_key_s} | {denc_tag_s}\n')
+# This is a really messy function for now
+
+
+def sign_and_encrypt(payload_s: str,
+                     sign: bool = True, sign_key_s: str = '00112233445566778899AABBCCDDEEFF',
+                     enc: bool = True, enc_key_s: str = '00112233445566778899AABBCCDDEEFF',
+                     denc: bool = False, denc_key_s: str = '71776572747975696f70617364666768', denc_tag_s: str = '5d37d992dbc6fc795ea597ed7e8a6078'):
+
+    # print(f'{payload_s} | {sign} | {sign_key_s} | {enc} | {enc_key_s} | {denc} | {denc_key_s} | {denc_tag_s}\n')
 
     # TODO only convert what's needed in if statements below
     payload = bytes.fromhex(payload_s)
@@ -64,7 +66,8 @@ def sign_and_encrypt(   payload_s:str,
         cipher = AES.new(enc_key, AES.MODE_GCM, nonce=iv)
         cipher.update(aad)
         ciphertext, tag = cipher.encrypt_and_digest(payload)
-        results[1] = (ciphertext.hex(), tag.hex(), '69c411276fecddc4780df42c8a2af89296fabf34d7fae700', iv.hex())
+        results[1] = (ciphertext.hex(), tag.hex(),
+                      '69c411276fecddc4780df42c8a2af89296fabf34d7fae700', iv.hex())
 
     if denc:
         cipher = AES.new(denc_key, AES.MODE_GCM, nonce=iv)
@@ -81,10 +84,10 @@ def add_bib_to_bundle_over_x(bundle, x):
     if x == 0:
         sign = sign_and_encrypt(cbor2.dumps(bundle[0]).hex(), sign=True, enc=False, denc=False)[0]
         asb = [
-                [x], 1, 1, [2, [2, 1]],
-                [[1, 7], [3, 0]],
-                [[[1, bytes.fromhex(sign)]]]
-            ]
+            [x], 1, 1, [2, [2, 1]],
+            [[1, 7], [3, 0]],
+            [[[1, bytes.fromhex(sign)]]]
+        ]
         buf = io.BytesIO()
         for b in asb:
             cbor2.dump(b, buf)
@@ -101,7 +104,7 @@ def add_bib_to_bundle_over_x(bundle, x):
         # find the target block
         if blk[1] == x:
 
-            # get the HMAC signature 
+            # get the HMAC signature
             sign = sign_and_encrypt(blk[4], sign=True, enc=False, denc=False)[0]
 
             # create ASB and cbor dump as BIB btsd
@@ -119,6 +122,7 @@ def add_bib_to_bundle_over_x(bundle, x):
 
     return bundle
 
+
 def add_bcb_to_bundle_over_x(bundle, x):
     # find max blk num, we will make new BCB max+1. This guarantees the block num is free
     mx_blk_num = max(bundle, key=lambda blk: blk[1])[1]
@@ -133,9 +137,10 @@ def add_bcb_to_bundle_over_x(bundle, x):
             # create ASB and cbor dump as BCB btsd
             asb = [
                 [x], 2, 1, [2, [2, 1]],
-                     # IV                                       # wrapped key
-                [[1, bytes.fromhex(ciphertext[3])], [2, 1], [3, bytes.fromhex(ciphertext[2])], [4, 0]],
-                      # ciphertext
+                # IV                                       # wrapped key
+                [[1, bytes.fromhex(ciphertext[3])], [2, 1], [
+                    3, bytes.fromhex(ciphertext[2])], [4, 0]],
+                # ciphertext
                 [[[1, bytes.fromhex(ciphertext[1])]]]
             ]
             buf = io.BytesIO()
@@ -150,14 +155,15 @@ def add_bcb_to_bundle_over_x(bundle, x):
 
     return bundle
 
+
 b = [
     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
     [1, 1, 0, 0, '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164'],
 ]
 
 
-print (f"ORIGINAL BUNDLE: {b}")
+print(f"ORIGINAL BUNDLE: {b}")
 b = add_bib_to_bundle_over_x(b, 1)
 print(f'BUNDLE AFTER BIB: {b}')
-#b = add_bcb_to_bundle_over_x(b, 1)
+# b = add_bcb_to_bundle_over_x(b, 1)
 print(f'FINAL BUNDLE: {b}')
