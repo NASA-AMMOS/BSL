@@ -27,8 +27,10 @@ import json
 from _test_util import _TestCase, DataFormat
 from test_bpa import TestAgent
 
+
 class TestCCSDS(TestAgent):
     pass
+
 
 def load_ccsds():
 
@@ -42,16 +44,16 @@ def load_ccsds():
     except FileNotFoundError:
         print(f'Could not find {ccsds_spec_file}')
         return
-    
+
     with tempfile.TemporaryDirectory() as ccsds_test_dir:
         print(f"Temporary directory for CCSDS test PP JSON: {ccsds_test_dir}")
-    
+
     requirements = yaml.safe_load(s)['requirements']
     for item in requirements:
         if 'tests' not in item.keys():
-            #print(f'CCSDS | Item {item["item"]}: Skipping item - No test(s) specified.')
+            # print(f'CCSDS | Item {item["item"]}: Skipping item - No test(s) specified.')
             continue
-        
+
         for t in item['tests']:
             if not t['working']:
                 continue
@@ -78,7 +80,7 @@ def load_ccsds():
                     print(f'CCSDS | Test {t["test"]}: Bundle hex not specified.')
                     continue
 
-                output_format=DataFormat.ERR
+                output_format = DataFormat.ERR
 
             bib_param_key_good = {'id': 'key_name', 'value': '9100'}
             bib_param_key_bad = {'id': 'key_name', 'value': '9102'}
@@ -93,7 +95,7 @@ def load_ccsds():
             param_key_wrap_off = {'id': 'key_wrap', 'value': '0'}
 
             policyrules = []
-            policy_rules=t['rules']
+            policy_rules = t['rules']
             success = True
             for i, r in enumerate(policy_rules):
 
@@ -155,7 +157,7 @@ def load_ccsds():
                             'sc_id': sec_ctx,
                             'sc_parms': params
                         },
-                    '_temp_not_ion_spec_policy_action_on_fail': 'delete_bundle'
+                        '_temp_not_ion_spec_policy_action_on_fail': 'delete_bundle'
                     }
                 }
                 print(f'Appending new Policy Rule {pr}')
@@ -171,14 +173,15 @@ def load_ccsds():
                 f.write(final_json)
 
             cases['ccsds_' + str(t['test'])] = _TestCase(
-                input_data = cbor_input,
+                input_data=cbor_input,
                 # Python raw strings only work as literals apparently
-                expected_output = output if (output_format == DataFormat.BUNDLEARRAY) else r".*Delete bundle due to failed security operation",
-                policy_config = finame,
+                expected_output=output if (
+                    output_format == DataFormat.BUNDLEARRAY) else r".*Delete bundle due to failed security operation",
+                policy_config=finame,
                 key_set="src/mock_bpa/key_set_1.json",
-                is_working = True,
-                input_data_format = input_format,
-                expected_output_format = output_format
+                is_working=True,
+                input_data_format=input_format,
+                expected_output_format=output_format
             )
             print(f'CCSDS | Test {t["test"]}: Appending case.')
 
@@ -189,5 +192,6 @@ def load_ccsds():
 
     for id, case in cases.items():
         setattr(TestCCSDS,  f'test_{id}', _make_test(case))
+
 
 load_ccsds()

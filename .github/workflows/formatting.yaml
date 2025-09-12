@@ -46,6 +46,6 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y \
               clang-format python3-pip
-          pip3 install licenseheaders
+          pip3 install autopep8 licenseheaders
       - name: Check code formatting
         run: ./build.sh check-format

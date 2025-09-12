@@ -138,10 +138,12 @@ class TestAgent(unittest.TestCase):
         # start mock BPA using specified policy config
         self._start(testcase)
 
-        tx_data = testcase.input_data if (testcase.input_data_format == DataFormat.HEX) else self._encode(testcase.input_data)
+        tx_data = testcase.input_data if (
+            testcase.input_data_format == DataFormat.HEX) else self._encode(testcase.input_data)
 
         if (testcase.expected_output_format == DataFormat.BUNDLEARRAY):
-            expected_rx = testcase.expected_output if (testcase.expected_output == "HEX") else self._encode(testcase.expected_output)
+            expected_rx = testcase.expected_output if (
+                testcase.expected_output == "HEX") else self._encode(testcase.expected_output)
 
             self._ul_sock.send(tx_data)
             LOGGER.debug('waiting')

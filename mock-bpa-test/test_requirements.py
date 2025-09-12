@@ -23,6 +23,8 @@ from _test_util import _TestCase, DataFormat
 from test_bpa import TestAgent
 
 # Test Cases specified by the Requirements Document
+
+
 class TestRequirements(TestAgent):
 
     # BSL_2
@@ -33,14 +35,18 @@ class TestRequirements(TestAgent):
             # A bundle with BIB and BCB both targeting the **payload** block, policy to accept both the blocks
             input_data=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [11, 3, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-                [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
-                [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
+                [11, 3, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [12, 2, 1, 0, bytes.fromhex(
+                    '8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             # A bundle with just the **payload** block
             expected_output=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x1A6,0x1A7',
             key_set="src/mock_bpa/key_set_1.json",
@@ -54,94 +60,107 @@ class TestRequirements(TestAgent):
     # The purpose of this test case is to verify that the BSL shall construct security blocks for inclusion in a bundle.
     def test_BSL_03(self):
         self._single_test(_TestCase(
-        # A bundle with just the **payload** block
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # Bundle with additional BIB
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        policy_config='0x04',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # A bundle with just the **payload** block
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # Bundle with additional BIB
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0x04',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_7
     # Removing Security Operations
     # The purpose of this test case is to verify that the BSL can remove security operations from a bundle.
     def test_BSL_07(self):
         self._single_test(_TestCase(
-        # A bundle with a BIB targeting the **payload** block
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # A bundle with just the **payload** block
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        policy_config='0xA6',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # A bundle with a BIB targeting the **payload** block
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # A bundle with just the **payload** block
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0xA6',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_12
     # Encode BTSD
     # The purpose of this test case is to verify that the BSL can encode the BTSD produced for a security block in compliance with RFC 9172 encodings.
     def test_BSL_12(self):
         self._single_test(_TestCase(
-        # A bundle with just the primary block
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # Bundle with additional BIB
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        policy_config='0x04',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # A bundle with just the primary block
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # Bundle with additional BIB
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0x04',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_13
     # Decode BTSD
     # The purpose of this test case is to verify that the BSL can decode the BTSD of an RFC 9172 encoded security block.
     def test_BSL_13(self):
         self._single_test(_TestCase(
-        # A bundle with a BIB targeting the primary block
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
-        ],
-        # Identical bundle output
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # policy_config = BIB_VERIFIER,
-        policy_config='0x66',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # A bundle with a BIB targeting the primary block
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            # Identical bundle output
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # policy_config = BIB_VERIFIER,
+            policy_config='0x66',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_14
     # Node Security Role
@@ -162,86 +181,105 @@ class TestRequirements(TestAgent):
     #
     def test_BSL_14a(self):
         self._single_test(_TestCase(
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        #
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        #
-        policy_config='0x2A0',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            #
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            #
+            policy_config='0x2A0',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
+
     def test_BSL_14b(self):
         self._single_test(_TestCase(
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        #
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
-            [11, 3, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        #
-        policy_config='0x04',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            #
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
+                [11, 3, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            #
+            policy_config='0x04',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
     # 14c) need logs to show verification
+
     def test_BSL_14c(self):
         self._single_test(_TestCase(
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        #
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        #
-        # policy_config = BIB_VERIFIER,
-        policy_config='0x62',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            #
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            #
+            # policy_config = BIB_VERIFIER,
+            policy_config='0x62',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
+
     def test_BSL_14d(self):
         self._single_test(_TestCase(
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        #
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        #
-        policy_config='0xA2',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            #
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            #
+            policy_config='0xA2',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_17
     # BPA Deleting Block
@@ -250,28 +288,32 @@ class TestRequirements(TestAgent):
     # Verify that the BSL can request that a BPA delete a security target block when required by policy.
     def test_BSL_17(self):
         self._single_test(_TestCase(
-        # Bundle with a BIB targeting extension block with private use type
-        # TODO what is meant by private use type?
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [7, 2, 0, 0, bytes.fromhex('19012C')],  # 2 byte, 012c
-                                        # NOTE this differs from RFC9173 A3, uses SHA512 instead of SHA256
-                                        # NOTE modified first 2 bytes of signature for failure
-            [11, 3, 0, 0, bytes.fromhex('81020101820282020182820107820300818182015840ffff78889abb36f06a2272b88f7fceab74fe69b35b4c5f7b737634ff478d9fd800f0797e2ce6ac0f0d413b34c2196e1e777a180cb63ffc33d2761e386177fa78')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # Bundle with removed target block
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 3, 0, 0, bytes.fromhex('81020101820282020182820107820300818182015840ffff78889abb36f06a2272b88f7fceab74fe69b35b4c5f7b737634ff478d9fd800f0797e2ce6ac0f0d413b34c2196e1e777a180cb63ffc33d2761e386177fa78')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        policy_config='0x5E',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # Bundle with a BIB targeting extension block with private use type
+            # TODO what is meant by private use type?
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [7, 2, 0, 0, bytes.fromhex('19012C')],  # 2 byte, 012c
+                # NOTE this differs from RFC9173 A3, uses SHA512 instead of SHA256
+                # NOTE modified first 2 bytes of signature for failure
+                [11, 3, 0, 0, bytes.fromhex(
+                    '81020101820282020182820107820300818182015840ffff78889abb36f06a2272b88f7fceab74fe69b35b4c5f7b737634ff478d9fd800f0797e2ce6ac0f0d413b34c2196e1e777a180cb63ffc33d2761e386177fa78')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # Bundle with removed target block
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 3, 0, 0, bytes.fromhex(
+                    '81020101820282020182820107820300818182015840ffff78889abb36f06a2272b88f7fceab74fe69b35b4c5f7b737634ff478d9fd800f0797e2ce6ac0f0d413b34c2196e1e777a180cb63ffc33d2761e386177fa78')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0x5E',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_19
     # BPA Deleting Bundle
@@ -280,20 +322,22 @@ class TestRequirements(TestAgent):
     # 19) need logs to show deletion
     def test_BSL_19(self):
         self._single_test(_TestCase(
-        # Bundle with a BIB targeting primary block
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92dda8ec93df80b41620df5bc6c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # No output because it was deleted, logs to indicate deletion.
-        expected_output=r".*Delete bundle due to failed security operation",
-        policy_config='0x62',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.NONE
-    ))
+            # Bundle with a BIB targeting primary block
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92dda8ec93df80b41620df5bc6c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # No output because it was deleted, logs to indicate deletion.
+            expected_output=r".*Delete bundle due to failed security operation",
+            policy_config='0x62',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.NONE
+        ))
 
     # BSL_23
     # RFC Compliant Cryptographs
@@ -306,72 +350,82 @@ class TestRequirements(TestAgent):
     # repeat of BSL_2
     def test_BSL_23(self):
         self._single_test(_TestCase(
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 3, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
-            [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
-        ],
-        # A bundle with just the **payload** block
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        policy_config='0x1A6,0x1A7',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 3, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [12, 2, 1, 0, bytes.fromhex(
+                    '8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
+            ],
+            # A bundle with just the **payload** block
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0x1A6,0x1A7',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_24
     # Security Block Result Fields
     # The purpose of this test case is to verify that the BSL can place cryptographic material in security block security result fields in accordance with RFC 9172 and RFC 9173.
     def test_BSL_24(self):
         self._single_test(_TestCase(
-        # CBOR provided in RFC 9173 Appendix A1 https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.1.3
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
-        ],
-        # Test that following the given BIB operation from Appendix A, the encoded bundle equals the final bundle
-        # in the test vector Appendix A.1.4. This shows the cryptographic results were encoded correctly.
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
-        ],
-        #
-        policy_config='0x04',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # CBOR provided in RFC 9173 Appendix A1 https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.1.3
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            # Test that following the given BIB operation from Appendix A, the encoded bundle equals the final bundle
+            # in the test vector Appendix A.1.4. This shows the cryptographic results were encoded correctly.
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            #
+            policy_config='0x04',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_26
     # Retrieving Key Parameters
     # The purpose of this test case is verify that the BSL can retrieve key-related parameters required by key-based security contexts.
     def test_BSL_26(self):
         self._single_test(_TestCase(
-        # CBOR provided in RFC 9173 Appendix A1 https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.1.3
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
-        ],
-        # Satisfied by validation for SSF-4-0, as performing the security operations must assemble key material.
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
-        ],
-        #
-        policy_config='0x04',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # CBOR provided in RFC 9173 Appendix A1 https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.1.3
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            # Satisfied by validation for SSF-4-0, as performing the security operations must assemble key material.
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            #
+            policy_config='0x04',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_27
     # Supporting Security Contents
@@ -384,38 +438,45 @@ class TestRequirements(TestAgent):
     # This shows that they implement the security context of RFC9173 in Appendix A1 and A2.
     def test_BSL_27a(self):
         self._single_test(_TestCase(
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
-        ],
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
-        ],
-        policy_config='0x04',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            policy_config='0x04',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
+
     def test_BSL_27b(self):
         self._single_test(_TestCase(
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746f2067656e657261746520612033322d62797465207061796c6f6164')]
-        ],
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
-            [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
-        ],
-        policy_config='0x105',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746f2067656e657261746520612033322d62797465207061796c6f6164')]
+            ],
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [12, 2, 1, 0, bytes.fromhex(
+                    '8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
+            ],
+            policy_config='0x105',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_28
     # Supporting BCB AES GCM
@@ -424,22 +485,25 @@ class TestRequirements(TestAgent):
     # repeat of bsl_27b
     def test_BSL_28(self):
         self._single_test(_TestCase(
-        # Input is CBOR provided in Appendix A2 for BCB https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.2
+            # Input is CBOR provided in Appendix A2 for BCB https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.2
             input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746f2067656e657261746520612033322d62797465207061796c6f6164')]
-        ],
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
-            [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
-        ],
-        policy_config='0x105',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746f2067656e657261746520612033322d62797465207061796c6f6164')]
+            ],
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [12, 2, 1, 0, bytes.fromhex(
+                    '8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
+            ],
+            policy_config='0x105',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_29
     # Supporting BIB HMAC SHA
@@ -448,43 +512,46 @@ class TestRequirements(TestAgent):
     # repeat bsl_27a
     def test_BSL_29(self):
         self._single_test(_TestCase(
-        # CBOR provided in RFC 9173 Appendix A1 https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.1.3 (for BIB)
+            # CBOR provided in RFC 9173 Appendix A1 https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.1.3 (for BIB)
             input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
-        ],
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
-        ],
-        policy_config='0x04',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            policy_config='0x04',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_33
     # Reason Code 8
     # The purpose of this test case is to verify that the BSL has the ability to inform the BPA that a block is unintelligible using Reason Code 8 as defined in RFC 9171.
     def test_BSL_33(self):
         self._single_test(_TestCase(
-        # Using the Bundle from RFC 9173 Appendix A1.4, change the bytes of the BIB header to be be all zeros (thus not a valid CBOR array).
-        # Header: 850b020000 -> 0000000000
-        input_data=bytes.fromhex('9f88070000820282010282028202018202820201820018281a000f42400000000000585681010101820282020182820' \
-                                    '1078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb' \
-                                    '1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e185010100005823526561647920746f2067656e657' \
-                                    '261746520612033322d62797465207061796c6f6164ff'),
-        # Confirm that the operations fails and returns a Reason Code 8.
-        expected_output=r".*failed to decode bundle",
-        # Execute as a BIB acceptor.
-        policy_config='0x86',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.HEX,
-        expected_output_format=DataFormat.ERR
-    ))
+            # Using the Bundle from RFC 9173 Appendix A1.4, change the bytes of the BIB header to be be all zeros (thus not a valid CBOR array).
+            # Header: 850b020000 -> 0000000000
+            input_data=bytes.fromhex('9f88070000820282010282028202018202820201820018281a000f42400000000000585681010101820282020182820'
+                                     '1078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb'
+                                     '1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e185010100005823526561647920746f2067656e657'
+                                     '261746520612033322d62797465207061796c6f6164ff'),
+            # Confirm that the operations fails and returns a Reason Code 8.
+            expected_output=r".*failed to decode bundle",
+            # Execute as a BIB acceptor.
+            policy_config='0x86',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.HEX,
+            expected_output_format=DataFormat.ERR
+        ))
 
     # BSL_37
     # Interface Failure
@@ -493,20 +560,22 @@ class TestRequirements(TestAgent):
     # 37) need logs to show error
     def test_BSL_37(self):
         self._single_test(_TestCase(
-        # Using the Bundle from RFC 9173 Appendix A1.4, change the the block ID of the payload to number 99
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('8101010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 99, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # Ensure that the host interface returns an error code (since the block does not exist). Confirm that a log indicating this error is created.
-        expected_output=r".*Deleting bundle due to block target num 99 security failure",
-        policy_config='0x66',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.ERR
-    ))
+            # Using the Bundle from RFC 9173 Appendix A1.4, change the the block ID of the payload to number 99
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '8101010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 99, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # Ensure that the host interface returns an error code (since the block does not exist). Confirm that a log indicating this error is created.
+            expected_output=r".*Deleting bundle due to block target num 99 security failure",
+            policy_config='0x66',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.ERR
+        ))
 
     # BSL_38
     # Processing Error
@@ -515,91 +584,104 @@ class TestRequirements(TestAgent):
     # 38) need logs to show new further sec option processed
     def test_BSL_38(self):
         self._single_test(_TestCase(
-        # Using the bundle created from RFC 9173 Appendix A.2.4. Change the first 10 bytes of the encrypted payload (BTSD of block 1) to be all zeroes.
-        # This will cause decryption to fail.
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 3, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
-            [1, 1, 0, 0, bytes.fromhex('000000000000000000009c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
-        ],
-        # The security operation will return an error code indicating failure. Additionally, using the telemetry counters and logs,
-        # confirm that no further security operation processing was taken (specifically, no BIB operations should be seen).
-        expected_output=r".*Failed to perform cryptographic action",
-        policy_config='0x1A6,0x1A7',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.ERR
-    ))
+            # Using the bundle created from RFC 9173 Appendix A.2.4. Change the first 10 bytes of the encrypted payload (BTSD of block 1) to be all zeroes.
+            # This will cause decryption to fail.
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 3, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [12, 2, 1, 0, bytes.fromhex(
+                    '8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '000000000000000000009c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
+            ],
+            # The security operation will return an error code indicating failure. Additionally, using the telemetry counters and logs,
+            # confirm that no further security operation processing was taken (specifically, no BIB operations should be seen).
+            expected_output=r".*Failed to perform cryptographic action",
+            policy_config='0x1A6,0x1A7',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.ERR
+        ))
 
     # BSL_43
     # Query Existing Block Types
     # The purpose of this test case is to verify that the BSL can use a BPA interface to query what block types exist in a bundle.
     def test_BSL_43a(self):
         self._single_test(_TestCase(
-        # Create a bundle using the vector in RFC9173 Appendix A1.4.
-        # Then the BSL will use the BPA host interface to show that there is a primary, payload, and BIB block present.
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # Result asserts there are three blocks present, each with the expected type.
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        policy_config='0x0A',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # Create a bundle using the vector in RFC9173 Appendix A1.4.
+            # Then the BSL will use the BPA host interface to show that there is a primary, payload, and BIB block present.
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # Result asserts there are three blocks present, each with the expected type.
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0x0A',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
+
     def test_BSL_43b(self):
         self._single_test(_TestCase(
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [192, 2, 0, 0, bytes.fromhex('676f20647261676f6e666c7921')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # Result asserts there are three blocks present, each with the expected type.
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000], 
-            [192, 2, 0, 0, bytes.fromhex('676f20647261676f6e666c7921')], 
-            [11, 3, 0, 0, bytes.fromhex('8102010182028202018282010782030081818201584037f54fd9c08b1b9225e74e821ef4ead35dc850ea98a2b944105447d12d145416dadb83c5123c44bab0e57c20196eff060ddcdc7412e948fd46527101e54c201e')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        policy_config='0x0A',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
-
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [192, 2, 0, 0, bytes.fromhex('676f20647261676f6e666c7921')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # Result asserts there are three blocks present, each with the expected type.
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [192, 2, 0, 0, bytes.fromhex('676f20647261676f6e666c7921')],
+                [11, 3, 0, 0, bytes.fromhex(
+                    '8102010182028202018282010782030081818201584037f54fd9c08b1b9225e74e821ef4ead35dc850ea98a2b944105447d12d145416dadb83c5123c44bab0e57c20196eff060ddcdc7412e948fd46527101e54c201e')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0x0A',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_44
     # Query Block Numbers
     # The purpose of this test case is to verify that the BSL can use a BPA interface to query what block numbers are present in a bundle.
+
     def test_BSL_44(self):
         self._single_test(_TestCase(
-        # Create a bundle using the vector in RFC9173 Appendix A1.4. Then the BSL will use the BPA host interface to show that there is block 0, 1, and 2 present.
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # Test code asserts there are three blocks present, each with the expected id.
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
-        ],
-        policy_config='0x46',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # Create a bundle using the vector in RFC9173 Appendix A1.4. Then the BSL will use the BPA host interface to show that there is block 0, 1, and 2 present.
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # Test code asserts there are three blocks present, each with the expected id.
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
+            ],
+            policy_config='0x46',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_45
     # Request BPA Block Contents
@@ -608,94 +690,107 @@ class TestRequirements(TestAgent):
     # TODO is my interpretation of this language correct?
     def test_BSL_45(self):
         self._single_test(_TestCase(
-        # Create a bundle using the vector in RFC9173 Appendix A1.4. Then the BSL will use the BPA to retrieve the block header fields and BTSD.
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # Confirm the resultant bundle after performing the BIB operation in Appendix A1 results in the bundle in Appendix 1.4.
-        # This shows the BSL retrieving information from other blocks.
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        policy_config='0x46',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # Create a bundle using the vector in RFC9173 Appendix A1.4. Then the BSL will use the BPA to retrieve the block header fields and BTSD.
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # Confirm the resultant bundle after performing the BIB operation in Appendix A1 results in the bundle in Appendix 1.4.
+            # This shows the BSL retrieving information from other blocks.
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0x46',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_47
     # Add New BPA Blocks
     # The purpose of this test case is to verify that the BSL can use a BPA interface to have the BPA add new blocks to a bundle.
     def test_BSL_47(self):
         self._single_test(_TestCase(
-        # Create a bundle using the vector in RFC9173 Appendix A1.1. Then the BSL will use the BPA to create a new block for the BIB.
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # Test verifies that output matches RFC9173 Appendix A1.4, showing that after BIB source operation a new bundle block with BIB type is created.
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        policy_config='0x04',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # Create a bundle using the vector in RFC9173 Appendix A1.1. Then the BSL will use the BPA to create a new block for the BIB.
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # Test verifies that output matches RFC9173 Appendix A1.4, showing that after BIB source operation a new bundle block with BIB type is created.
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            policy_config='0x04',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_48
     # Remove BPA Blocks
     # The purpose of this test case is to verify that the BSL can use a BPA interface to have the BPA remove existing blocks from a bundle.
     def test_BSL_48(self):
         self._single_test(_TestCase(
-        # Create a bundle using the vector in RFC9173 Appendix A1.4. Then the BSL will use the BPA to validate and remove the BIB block.
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [11, 2, 0, 0, bytes.fromhex('810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        # This tests the reverse of the test above.
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
-        ],
-        #
-        policy_config='0x96',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # Create a bundle using the vector in RFC9173 Appendix A1.4. Then the BSL will use the BPA to validate and remove the BIB block.
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            # This tests the reverse of the test above.
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
+            ],
+            #
+            policy_config='0x96',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
 
     # BSL_49
     # Modify Block Specific Data
     # The purpose of this test case is to verify that the BSL can use a BPA interface to modify the block-type-specific data of non-security, non-primary blocks.
     def test_BSL_49(self):
         self._single_test(_TestCase(
-        # Create a bundle using the test vector in RFC9173 Appendix A.2.1
-        input_data=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [1, 1, 0, 0, bytes.fromhex('526561647920746f2067656e657261746520612033322d62797465207061796c6f6164')]
-        ],
-        # Apply the BCB operation per the parameters in Appendix 2, and confirm the final bundle matches the one in Appendix 2.4.
-        # This shows BSL modifying BTSD (encrypting).
-        expected_output=[
-            [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-            [12, 2, 1, 0, bytes.fromhex('8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
-            [1, 1, 0, 0, bytes.fromhex('3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
-        ],
-        #
-        policy_config='0x105',
-        key_set="src/mock_bpa/key_set_1.json",
-        is_working=True,
-        input_data_format=DataFormat.BUNDLEARRAY,
-        expected_output_format=DataFormat.BUNDLEARRAY
-    ))
+            # Create a bundle using the test vector in RFC9173 Appendix A.2.1
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '526561647920746f2067656e657261746520612033322d62797465207061796c6f6164')]
+            ],
+            # Apply the BCB operation per the parameters in Appendix 2, and confirm the final bundle matches the one in Appendix 2.4.
+            # This shows BSL modifying BTSD (encrypting).
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [12, 2, 1, 0, bytes.fromhex(
+                    '8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
+            ],
+            #
+            policy_config='0x105',
+            key_set="src/mock_bpa/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))
