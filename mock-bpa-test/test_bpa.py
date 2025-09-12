@@ -30,7 +30,7 @@ import signal
 import socket
 import subprocess
 import time
-from typing import List
+from typing import List, Optional
 import unittest
 import cbor2
 
@@ -67,7 +67,10 @@ class TestAgent(unittest.TestCase):
 
             self.assertEqual(0, ret)
 
-    def _start(self, testcase: _TestCase):
+    def _start(self, testcase: Optional[_TestCase]):
+        self.assertIsNone(self._agent)
+        self.assertIsNone(self._ul_sock)
+        self.assertIsNone(self._ol_sock)
 
         is_json = False
 
@@ -105,7 +108,7 @@ class TestAgent(unittest.TestCase):
         self._agent.start()
         self._agent.wait_for_text(r'.* <INFO> \[.+\:MockBPA_Agent_Exec] READY$')
 
-    def _encode(self, blocks: List[object]):
+    def _encode(self, blocks: List[object]) -> bytes:
 
         buf = io.BytesIO()
         buf.write(b'\x9F')
@@ -125,7 +128,7 @@ class TestAgent(unittest.TestCase):
         LOGGER.debug(f'WAIT FOR GOT: {binascii.hexlify(data)}')
         return data
 
-    def _single_test(self, testcase: _TestCase):
+    def _single_test(self, testcase: Optional[_TestCase]):
 
         # start mock BPA using specified policy config
         self._start(testcase)
@@ -166,7 +169,7 @@ class TestAgent(unittest.TestCase):
             LOGGER.debug("Searching test runner logger for failure string: %s", output_str)
             found = self._agent.wait_for_text(output_str)
             LOGGER.debug("\nFOUND OCCURENCE: %s", found)
-            self.assertTrue(found != "")
+            self.assertNotEqual("", found)
 
         elif (testcase.expected_output_format == DataFormat.ERR):
             self._ul_sock.send(tx_data)
@@ -185,11 +188,13 @@ class TestAgent(unittest.TestCase):
             LOGGER.debug("Searching test runner logger for error string: %s", err_case_str)
             found = self._agent.wait_for_text(err_case_str)
             LOGGER.debug("\nFOUND OCCURENCE: %s", found)
-            self.assertTrue(found != "")
+            self.assertNotEqual("", found)
 
 class TestStartStop(TestAgent):
-    
+    ''' Basic verification of the daemon itself '''
+
     def test_start_stop(self):
         self._start(None)
-        self.assertEqual(0, self._agent.stop())
+        ret = self._agent.stop()
         self._agent = None
+        self.assertEqual(0, ret)
