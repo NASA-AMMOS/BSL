@@ -40,6 +40,7 @@ from _test_util import _TestCase, DataFormat
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
 
+
 class TestAgent(unittest.TestCase):
     ''' Verify whole-agent behavior with the bsl-mock-bpa '''
 
@@ -51,6 +52,10 @@ class TestAgent(unittest.TestCase):
         path = os.path.abspath(os.path.join(OWNPATH, '..'))
         os.chdir(path)
         LOGGER.info('Working in %s', path)
+
+        self._agent = None
+        self._ol_sock = None
+        self._ul_sock = None
 
     def tearDown(self):
 
@@ -189,6 +194,7 @@ class TestAgent(unittest.TestCase):
             found = self._agent.wait_for_text(err_case_str)
             LOGGER.debug("\nFOUND OCCURENCE: %s", found)
             self.assertNotEqual("", found)
+
 
 class TestStartStop(TestAgent):
     ''' Basic verification of the daemon itself '''
