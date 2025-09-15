@@ -96,7 +96,7 @@ int bsl_mock_encode_eid_from_ctx(QCBOREncodeContext *enc, const BSL_HostEID_t *e
     BSL_Data_Deinit(&eid_data);
     if (encode_result <= 0)
     {
-        BSL_LOG_ERR("Failed to calculate ASB size");
+        BSL_LOG_ERR("Failed to calculate EID size");
         return BSL_ERR_ENCODING;
     }
 
@@ -104,7 +104,7 @@ int bsl_mock_encode_eid_from_ctx(QCBOREncodeContext *enc, const BSL_HostEID_t *e
     encode_result = BSL_HostEID_EncodeToCBOR(eid, &eid_data);
     if (encode_result <= BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Failed to encode ASB");
+        BSL_LOG_ERR("Failed to encode EID");
         return BSL_ERR_ENCODING;
     }
 

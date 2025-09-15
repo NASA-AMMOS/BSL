@@ -280,7 +280,7 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
     BSL_Data_Deinit(&eid_data);
     if (encode_result <= 0)
     {
-        BSL_LOG_ERR("Failed to calculate ASB size");
+        BSL_LOG_ERR("Failed to calculate EID size");
         return BSL_ERR_ENCODING;
     }
 
@@ -288,7 +288,7 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
     encode_result = BSL_HostEID_EncodeToCBOR(&self->source_eid, &eid_data);
     if (encode_result <= BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Failed to encode ASB");
+        BSL_LOG_ERR("Failed to encode EID");
         return BSL_ERR_ENCODING;
     }
 
