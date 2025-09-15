@@ -319,7 +319,7 @@ typedef struct
     /// different reason codes
     int (*bundle_delete_fn)(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason);
 
-    /** Host BPA function to encode an EID to CBOR. 
+    /** Host BPA function to encode an EID to CBOR.
      * @param[in] eid EID value to encode.
      * @param[in, out] encoded_bytes output encoded bytes. Initialized and deinitialized by BSL.
      * @returns Number of bytes CBOR encoded EID must be

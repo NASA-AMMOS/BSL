@@ -44,7 +44,7 @@ extern "C" {
 int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid);
 
 /** Decode a single EID from a QCBOR Decode Context
- * 
+ *
  * @param[in] dec QCBOR Decode Context.
  * @param[in,out] eid The EID Value.
  */

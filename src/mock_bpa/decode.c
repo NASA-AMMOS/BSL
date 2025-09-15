@@ -41,7 +41,7 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
     bsl_mock_eid_init(obj);
 
     QCBORDecodeContext dec;
-    UsefulBufC qcbor_buf = (UsefulBufC) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len };
+    UsefulBufC         qcbor_buf = (UsefulBufC) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len };
     QCBORDecode_Init(&dec, qcbor_buf, QCBOR_DECODE_MODE_NORMAL);
 
     QCBORItem decitem;
@@ -117,11 +117,12 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
 int bsl_mock_decode_eid_from_ctx(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
 {
     QCBORItem eid_item;
-    uint32_t eid_item_start_index = QCBORDecode_Tell(dec);
+    uint32_t  eid_item_start_index = QCBORDecode_Tell(dec);
     QCBORDecode_VGetNextConsume(dec, &eid_item);
-    uint32_t eid_item_end_index = QCBORDecode_Tell(dec); 
-    UsefulBufC all = QCBORDecode_RetrieveUndecodedInput(dec);
-    UsefulBufC eid_raw = (UsefulBufC){ (const uint8_t *)all.ptr + eid_item_start_index, eid_item_end_index - eid_item_start_index };
+    uint32_t   eid_item_end_index = QCBORDecode_Tell(dec);
+    UsefulBufC all                = QCBORDecode_RetrieveUndecodedInput(dec);
+    UsefulBufC eid_raw =
+        (UsefulBufC) { (const uint8_t *)all.ptr + eid_item_start_index, eid_item_end_index - eid_item_start_index };
 
     BSL_Data_t eid_cbor_data;
     BSL_Data_Init(&eid_cbor_data);

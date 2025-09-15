@@ -36,7 +36,8 @@ int bsl_mock_encode_eid(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes)
     CHKERR1(obj);
 
     QCBOREncodeContext enc;
-    UsefulBuf qcbor_buf = encoded_bytes->ptr ? (UsefulBuf) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len } : SizeCalculateUsefulBuf;
+    UsefulBuf qcbor_buf = encoded_bytes->ptr ? (UsefulBuf) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len }
+                                             : SizeCalculateUsefulBuf;
     QCBOREncode_Init(&enc, qcbor_buf);
 
     QCBOREncode_OpenArray(&enc);
@@ -106,7 +107,7 @@ int bsl_mock_encode_eid_from_ctx(QCBOREncodeContext *enc, const BSL_HostEID_t *e
         BSL_LOG_ERR("Failed to encode ASB");
         return BSL_ERR_ENCODING;
     }
-    
+
     UsefulBufC eid_buf = (UsefulBufC) { .ptr = eid_data.ptr, .len = eid_data.len };
     QCBOREncode_AddEncoded(enc, eid_buf);
 

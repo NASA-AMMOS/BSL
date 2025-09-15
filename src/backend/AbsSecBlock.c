@@ -274,7 +274,6 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
         QCBOREncode_AddUInt64(&encoder, flags);
     }
 
-
     BSL_Data_t eid_data;
     BSL_Data_Init(&eid_data);
     ssize_t encode_result = BSL_HostEID_EncodeToCBOR(&self->source_eid, &eid_data);
@@ -433,10 +432,12 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
 
     // Host-specific parsing of EID
     QCBORItem eid_item;
-    uint32_t eid_item_start_index = QCBORDecode_Tell(&asbdec);
+    uint32_t  eid_item_start_index = QCBORDecode_Tell(&asbdec);
     QCBORDecode_VGetNextConsume(&asbdec, &eid_item);
-    uint32_t eid_item_end_index = QCBORDecode_Tell(&asbdec); 
-    UsefulBufC eid_raw = (UsefulBufC){ (const uint8_t *) QCBORDecode_RetrieveUndecodedInput(&asbdec).ptr + eid_item_start_index, eid_item_end_index - eid_item_start_index };
+    uint32_t   eid_item_end_index = QCBORDecode_Tell(&asbdec);
+    UsefulBufC eid_raw =
+        (UsefulBufC) { (const uint8_t *)QCBORDecode_RetrieveUndecodedInput(&asbdec).ptr + eid_item_start_index,
+                       eid_item_end_index - eid_item_start_index };
 
     BSL_Data_t eid_cbor_data;
     BSL_Data_Init(&eid_cbor_data);
