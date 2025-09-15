@@ -32,21 +32,23 @@
 
 #include <qcbor/qcbor_spiffy_decode.h>
 
-int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
+int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
 {
-    ASSERT_ARG_NONNULL(dec);
-    ASSERT_ARG_NONNULL(eid);
     bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
     ASSERT_ARG_NONNULL(obj);
 
     bsl_mock_eid_deinit(obj);
     bsl_mock_eid_init(obj);
 
-    QCBORItem decitem;
-    QCBORDecode_EnterArray(dec, NULL);
+    QCBORDecodeContext dec;
+    UsefulBufC qcbor_buf = (UsefulBufC) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len };
+    QCBORDecode_Init(&dec, qcbor_buf, QCBOR_DECODE_MODE_NORMAL);
 
-    QCBORDecode_GetUInt64(dec, &(obj->scheme));
-    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+    QCBORItem decitem;
+    QCBORDecode_EnterArray(&dec, NULL);
+
+    QCBORDecode_GetUInt64(&dec, &(obj->scheme));
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(&dec))
     {
         return 2;
     }
@@ -57,22 +59,22 @@ int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
         {
             bsl_eid_ipn_ssp_t *ipn = &(obj->ssp.as_ipn);
             ASSERT_ARG_NONNULL(ipn);
-            QCBORDecode_EnterArray(dec, &decitem);
+            QCBORDecode_EnterArray(&dec, &decitem);
             if (decitem.val.uCount == 2)
             {
                 ipn->ncomp = 2;
                 uint64_t qnode;
-                QCBORDecode_GetUInt64(dec, &qnode);
+                QCBORDecode_GetUInt64(&dec, &qnode);
                 ipn->auth_num = qnode >> 32;
                 ipn->node_num = qnode & 0xFFFFFFFF;
-                QCBORDecode_GetUInt64(dec, &(ipn->svc_num));
+                QCBORDecode_GetUInt64(&dec, &(ipn->svc_num));
             }
             else if (decitem.val.uCount == 3)
             {
                 ipn->ncomp = 3;
-                QCBORDecode_GetUInt64(dec, &(ipn->auth_num));
-                QCBORDecode_GetUInt64(dec, &(ipn->node_num));
-                QCBORDecode_GetUInt64(dec, &(ipn->svc_num));
+                QCBORDecode_GetUInt64(&dec, &(ipn->auth_num));
+                QCBORDecode_GetUInt64(&dec, &(ipn->node_num));
+                QCBORDecode_GetUInt64(&dec, &(ipn->svc_num));
 
                 if ((ipn->auth_num > UINT32_MAX) || (ipn->node_num > UINT32_MAX))
                 {
@@ -84,19 +86,19 @@ int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
             {
                 return 2;
             }
-            QCBORDecode_ExitArray(dec);
+            QCBORDecode_ExitArray(&dec);
             break;
         }
         default:
         {
             // skip over item and store its encoded form
-            const size_t begin = QCBORDecode_Tell(dec);
-            QCBORDecode_VGetNextConsume(dec, &decitem);
-            const size_t end = QCBORDecode_Tell(dec);
+            const size_t begin = QCBORDecode_Tell(&dec);
+            QCBORDecode_VGetNextConsume(&dec, &decitem);
+            const size_t end = QCBORDecode_Tell(&dec);
 
-            if ((QCBOR_SUCCESS == QCBORDecode_GetError(dec)) && (end > begin))
+            if ((QCBOR_SUCCESS == QCBORDecode_GetError(&dec)) && (end > begin))
             {
-                const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
+                const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(&dec);
 
                 BSL_Data_t *raw = &(obj->ssp.as_raw);
                 ASSERT_ARG_NONNULL(raw);
@@ -108,7 +110,26 @@ int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
         }
     }
 
-    QCBORDecode_ExitArray(dec);
+    QCBORDecode_ExitArray(&dec);
+    return 0;
+}
+
+int bsl_mock_decode_eid_from_ctx(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
+{
+    QCBORItem eid_item;
+    uint32_t eid_item_start_index = QCBORDecode_Tell(dec);
+    QCBORDecode_VGetNextConsume(dec, &eid_item);
+    uint32_t eid_item_end_index = QCBORDecode_Tell(dec); 
+    UsefulBufC all = QCBORDecode_RetrieveUndecodedInput(dec);
+    UsefulBufC eid_raw = (UsefulBufC){ (const uint8_t *)all.ptr + eid_item_start_index, eid_item_end_index - eid_item_start_index };
+
+    BSL_Data_t eid_cbor_data;
+    BSL_Data_Init(&eid_cbor_data);
+    BSL_Data_CopyFrom(&eid_cbor_data, eid_raw.len, eid_raw.ptr);
+
+    bsl_mock_decode_eid(&eid_cbor_data, eid);
+
+    BSL_Data_Deinit(&eid_cbor_data);
     return 0;
 }
 
@@ -130,13 +151,13 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     QCBORDecode_GetUInt64(dec, &(blk->crc_type));
 
     MockBPA_EID_Init(NULL, &blk->dest_eid);
-    bsl_mock_decode_eid(dec, &(blk->dest_eid));
+    bsl_mock_decode_eid_from_ctx(dec, &(blk->dest_eid));
 
     MockBPA_EID_Init(NULL, &blk->src_node_id);
-    bsl_mock_decode_eid(dec, &(blk->src_node_id));
+    bsl_mock_decode_eid_from_ctx(dec, &(blk->src_node_id));
 
     MockBPA_EID_Init(NULL, &blk->report_to_eid);
-    bsl_mock_decode_eid(dec, &(blk->report_to_eid));
+    bsl_mock_decode_eid_from_ctx(dec, &(blk->report_to_eid));
 
     QCBORDecode_EnterArray(dec, NULL);
     QCBORDecode_GetUInt64(dec, &(blk->timestamp.bundle_creation_time));

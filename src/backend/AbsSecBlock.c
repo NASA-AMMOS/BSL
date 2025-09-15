@@ -274,7 +274,28 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
         QCBOREncode_AddUInt64(&encoder, flags);
     }
 
-    BSL_HostEID_EncodeToCBOR(&self->source_eid, (void *)&encoder);
+
+    BSL_Data_t eid_data;
+    BSL_Data_Init(&eid_data);
+    ssize_t encode_result = BSL_HostEID_EncodeToCBOR(&self->source_eid, &eid_data);
+    BSL_Data_Deinit(&eid_data);
+    if (encode_result <= 0)
+    {
+        BSL_LOG_ERR("Failed to calculate ASB size");
+        return BSL_ERR_ENCODING;
+    }
+
+    BSL_Data_InitBuffer(&eid_data, (size_t)encode_result);
+    encode_result = BSL_HostEID_EncodeToCBOR(&self->source_eid, &eid_data);
+    if (encode_result <= BSL_SUCCESS)
+    {
+        BSL_LOG_ERR("Failed to encode ASB");
+        return BSL_ERR_ENCODING;
+    }
+
+    UsefulBufC eid_buf = (UsefulBufC) { .ptr = eid_data.ptr, .len = eid_data.len };
+    QCBOREncode_AddEncoded(&encoder, eid_buf);
+    BSL_Data_Deinit(&eid_data);
 
     {
         QCBOREncode_OpenArray(&encoder);
@@ -411,8 +432,20 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
     BSL_LOG_DEBUG("got flags %" PRId64, flags);
 
     // Host-specific parsing of EID
+    QCBORItem eid_item;
+    uint32_t eid_item_start_index = QCBORDecode_Tell(&asbdec);
+    QCBORDecode_VGetNextConsume(&asbdec, &eid_item);
+    uint32_t eid_item_end_index = QCBORDecode_Tell(&asbdec); 
+    UsefulBufC eid_raw = (UsefulBufC){ (const uint8_t *) QCBORDecode_RetrieveUndecodedInput(&asbdec).ptr + eid_item_start_index, eid_item_end_index - eid_item_start_index };
+
+    BSL_Data_t eid_cbor_data;
+    BSL_Data_Init(&eid_cbor_data);
+    BSL_Data_CopyFrom(&eid_cbor_data, eid_raw.len, eid_raw.ptr);
+
     BSL_HostEID_Init(&self->source_eid);
-    BSL_HostEID_DecodeFromCBOR(&self->source_eid, &asbdec);
+    BSL_HostEID_DecodeFromCBOR(&eid_cbor_data, &self->source_eid);
+
+    BSL_Data_Deinit(&eid_cbor_data);
 
     // A zero value for flags means there are NO paramers, a value of 1 indicates there are parameters to parse.
     if (flags & 0x01)
