@@ -47,11 +47,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_HostEID_t eid;
     BSL_HostEID_Init(&eid);
     {
-        QCBORDecodeContext decoder;
-        QCBORDecode_Init(&decoder, (UsefulBufC) { data, size }, QCBOR_DECODE_MODE_NORMAL);
-        int res_eid  = BSL_HostEID_DecodeFromCBOR(&eid, &decoder);
-        int res_cbor = QCBORDecode_Finish(&decoder);
-        if (res_eid || (res_cbor != QCBOR_SUCCESS))
+        BSL_Data_t eid_data;
+        BSL_Data_InitView(&eid_data, size, (uint8_t *) data);
+        int res_eid  = BSL_HostEID_DecodeFromCBOR(&eid_data, &eid);
+        if (res_eid)
         {
             retval = -1;
         }
