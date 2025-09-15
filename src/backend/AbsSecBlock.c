@@ -432,12 +432,12 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
 
     // Host-specific parsing of EID
     QCBORItem eid_item;
-    
+
     // Get size of next CBOR item
-    uint32_t  eid_item_start_index = QCBORDecode_Tell(&asbdec);
+    uint32_t eid_item_start_index = QCBORDecode_Tell(&asbdec);
     QCBORDecode_VGetNextConsume(&asbdec, &eid_item);
-    uint32_t   eid_item_end_index = QCBORDecode_Tell(&asbdec);
-    
+    uint32_t eid_item_end_index = QCBORDecode_Tell(&asbdec);
+
     UsefulBufC eid_raw =
         (UsefulBufC) { (const uint8_t *)QCBORDecode_RetrieveUndecodedInput(&asbdec).ptr + eid_item_start_index,
                        eid_item_end_index - eid_item_start_index };
