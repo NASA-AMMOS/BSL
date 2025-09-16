@@ -33,7 +33,10 @@
 int bsl_mock_encode_eid(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes)
 {
     bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
+
+    // GCOV_EXCL_START
     CHKERR1(obj);
+    // GCOV_EXCL_STOP
 
     QCBOREncodeContext enc;
     UsefulBuf qcbor_buf = encoded_bytes != NULL ? (UsefulBuf) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len }

@@ -31,6 +31,7 @@ static BSL_HostDescriptors_t HostDescriptorTable = { 0 };
 
 int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
 {
+    // GCOV_EXCL_START
     CHK_PRECONDITION(desc.eid_init);
     CHK_PRECONDITION(desc.get_sec_src_eid_fn);
     CHK_PRECONDITION(desc.eid_deinit);
@@ -47,6 +48,7 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
     CHK_PRECONDITION(desc.eidpat_deinit);
     CHK_PRECONDITION(desc.eidpat_from_text);
     CHK_PRECONDITION(desc.eidpat_match);
+    // GCOV_EXCL_STOP
 
     HostDescriptorTable = desc;
     return BSL_SUCCESS;
@@ -54,10 +56,12 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
 
 int BSL_BundleCtx_GetBundleMetadata(const BSL_BundleRef_t *bundle, BSL_PrimaryBlock_t *result_primary_block)
 {
+    // GCOV_EXCL_START
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(result_primary_block);
 
     CHK_PRECONDITION(HostDescriptorTable.bundle_metadata_fn != NULL);
+    // GCOV_EXCL_STOP
 
     memset(result_primary_block, 0, sizeof(*result_primary_block));
     int result = HostDescriptorTable.bundle_metadata_fn(bundle, result_primary_block);

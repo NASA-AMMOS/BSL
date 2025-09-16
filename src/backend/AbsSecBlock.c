@@ -37,11 +37,12 @@ size_t BSL_AbsSecBlock_Sizeof(void)
 
 bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self)
 {
+    // GCOV_EXCL_START
     // NOLINTBEGIN
     CHK_AS_BOOL(self != NULL);
     CHK_AS_BOOL(self->source_eid.handle != NULL);
-
     // NOLINTEND
+    // GCOV_EXCL_STOP
     return true;
 }
 
@@ -85,7 +86,9 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
 
 void BSL_AbsSecBlock_InitEmpty(BSL_AbsSecBlock_t *self)
 {
+    // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(self);
+    // GCOV_EXCL_STOP
 
     memset(self, 0, sizeof(*self));
     BSLB_SecParamList_init(self->params);
@@ -95,19 +98,27 @@ void BSL_AbsSecBlock_InitEmpty(BSL_AbsSecBlock_t *self)
 
 void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self, int64_t sec_context_id, BSL_HostEID_t source_eid)
 {
+    // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(self);
+    // GCOV_EXCL_STOP
+
     memset(self, 0, sizeof(*self));
     self->sec_context_id = sec_context_id;
     self->source_eid     = source_eid;
     BSLB_SecParamList_init(self->params);
     BSLB_SecResultList_init(self->results);
     uint64_list_init(self->targets);
+
+    // GCOV_EXCL_START
     ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    // GCOV_EXCL_STOP
 }
 
 void BSL_AbsSecBlock_Deinit(BSL_AbsSecBlock_t *self)
 {
+    // GCOV_EXCL_START
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    // GCOV_EXCL_STOP
 
     BSLB_SecParamList_clear(self->params);
     BSLB_SecResultList_clear(self->results);
@@ -118,20 +129,29 @@ void BSL_AbsSecBlock_Deinit(BSL_AbsSecBlock_t *self)
 
 bool BSL_AbsSecBlock_IsEmpty(const BSL_AbsSecBlock_t *self)
 {
+    // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(self);
+    // GCOV_EXCL_STOP
+
     bool is_empty = (uint64_list_size(self->targets) == 0) && (BSLB_SecResultList_size(self->results) == 0);
     return is_empty;
 }
 
 int64_t BSL_AbsSecBlock_GetContextID(const BSL_AbsSecBlock_t *self)
 {
+    // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(self);
+    // GCOV_EXCL_STOP
+    
     return self->sec_context_id;
 }
 
 bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t target_block_num)
 {
+    // GCOV_EXCL_START
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    // GCOV_EXCL_STOP
+
     for
         M_EACH(target_num, self->targets, M_ARRAY_OPLIST(uint64_list))
         {
@@ -145,36 +165,50 @@ bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t targ
 
 void BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uint64_t target_block_id)
 {
+    // GCOV_EXCL_START
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    // GCOV_EXCL_STOP
 
     uint64_list_push_back(self->targets, target_block_id);
 
+    // GCOV_EXCL_START
     ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    // GCOV_EXCL_STOP
 }
 
 void BSL_AbsSecBlock_AddParam(BSL_AbsSecBlock_t *self, const BSL_SecParam_t *param)
 {
+    // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(param);
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    // GCOV_EXCL_STOP
 
     BSLB_SecParamList_push_back(self->params, *param);
 
+    // GCOV_EXCL_START
     ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    // GCOV_EXCL_STOP
 }
 
 void BSL_AbsSecBlock_AddResult(BSL_AbsSecBlock_t *self, const BSL_SecResult_t *result)
 {
+    // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(result);
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    // GCOV_EXCL_STOP
 
     BSLB_SecResultList_push_back(self->results, *result);
 
+    // GCOV_EXCL_START
     ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    // GCOV_EXCL_STOP
 }
 
 static size_t BSL_AbsSecBlock_GetResultCnt(const BSL_AbsSecBlock_t *self, uint64_t target_block_id)
 {
+    // GCOV_EXCL_START
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    // GCOV_EXCL_STOP
 
     size_t match_count = 0;
     for (size_t index = 0; index < BSLB_SecResultList_size(self->results); index++)
@@ -190,7 +224,9 @@ static size_t BSL_AbsSecBlock_GetResultCnt(const BSL_AbsSecBlock_t *self, uint64
 
 int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_num)
 {
+    // GCOV_EXCL_START
     CHK_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    // GCOV_EXCL_STOP
 
     size_t things_removed = 0;
 

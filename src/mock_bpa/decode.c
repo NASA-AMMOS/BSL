@@ -35,7 +35,9 @@
 int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
 {
     bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
+    // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(obj);
+    // GCOV_EXCL_STOP
 
     bsl_mock_eid_deinit(obj);
     bsl_mock_eid_init(obj);
@@ -151,8 +153,10 @@ int bsl_mock_decode_eid_from_ctx(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
 
 int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk)
 {
+    // GCOV_EXCL_START
     CHKERR1(dec);
     CHKERR1(blk);
+    // GCOV_EXCL_STOP
 
     const size_t begin = QCBORDecode_Tell(dec);
     QCBORDecode_EnterArray(dec, NULL);
@@ -235,8 +239,10 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
 
 int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t *blk)
 {
+    // GCOV_EXCL_START
     CHKERR1(dec);
     CHKERR1(blk);
+    // GCOV_EXCL_STOP
 
     const size_t begin = QCBORDecode_Tell(dec);
     QCBORDecode_EnterArray(dec, NULL);
@@ -260,7 +266,9 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
         if (blk->btsd_len > 0)
         {
             blk->btsd = BSL_MALLOC(view.len);
+            // GCOV_EXCL_START
             ASSERT_ARG_NONNULL(blk->btsd);
+            // GCOV_EXCL_STOP
             memcpy(blk->btsd, view.ptr, view.len);
         }
     }
@@ -294,8 +302,10 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
 
 int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
 {
+    // GCOV_EXCL_START
     CHKERR1(dec);
     CHKERR1(bundle);
+    // GCOV_EXCL_STOP
 
     QCBORItem decitem;
     QCBORDecode_EnterArray(dec, &decitem);
