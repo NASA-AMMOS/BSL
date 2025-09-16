@@ -27,6 +27,7 @@
  */
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <m-array.h>
 
@@ -419,8 +420,10 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
-    self->description = BSL_MALLOC(strnlen(desc, POLICY_RULE_DESCRIPTION_MAX_STRLEN) + 1);
-    strncpy(self->description, desc, POLICY_RULE_DESCRIPTION_MAX_STRLEN);
+    size_t desc_sz = strnlen(desc, POLICY_RULE_DESCRIPTION_MAX_STRLEN);
+    self->description = BSL_MALLOC(desc_sz + 1);
+    strncpy(self->description, desc, desc_sz);
+    self->description[desc_sz - 1] = '\0';
     self->sec_block_type    = sec_block_type;
     self->target_block_type = target_block_type;
     self->predicate         = predicate;
