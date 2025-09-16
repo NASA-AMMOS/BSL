@@ -127,7 +127,7 @@ include(CheckTypeSize)
 check_type_size("int" SIZE_INT LANGUAGE C)
 check_type_size("size_t" SIZE_SIZET LANGUAGE C)
 
-find_program(MEMCHECK_CMD valgrind-devel)
+find_program(MEMCHECK_CMD valgrind)
 if(NOT MEMCHECK_CMD)
     message(FATAL_ERROR "Valgrind not found")
 endif()
