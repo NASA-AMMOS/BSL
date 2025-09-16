@@ -116,21 +116,36 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
 
 int bsl_mock_decode_eid_from_ctx(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
 {
+    UsefulBufC all = QCBORDecode_RetrieveUndecodedInput(dec);
+
     QCBORItem eid_item;
     uint32_t  eid_item_start_index = QCBORDecode_Tell(dec);
+    if (eid_item_start_index > all.len)
+    {
+        return 2;
+    }
+
     QCBORDecode_VGetNextConsume(dec, &eid_item);
     uint32_t   eid_item_end_index = QCBORDecode_Tell(dec);
-    UsefulBufC all                = QCBORDecode_RetrieveUndecodedInput(dec);
+    if (eid_item_end_index > all.len)
+    {
+        return 2;
+    }
+
     UsefulBufC eid_raw =
         (UsefulBufC) { (const uint8_t *)all.ptr + eid_item_start_index, eid_item_end_index - eid_item_start_index };
 
     BSL_Data_t eid_cbor_data;
     BSL_Data_Init(&eid_cbor_data);
     BSL_Data_CopyFrom(&eid_cbor_data, eid_raw.len, eid_raw.ptr);
-
-    bsl_mock_decode_eid(&eid_cbor_data, eid);
-
+    
+    int res = bsl_mock_decode_eid(&eid_cbor_data, eid);
     BSL_Data_Deinit(&eid_cbor_data);
+    if (res != 0)
+    {
+        return 2;
+    }
+
     return 0;
 }
 
@@ -152,13 +167,22 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     QCBORDecode_GetUInt64(dec, &(blk->crc_type));
 
     MockBPA_EID_Init(NULL, &blk->dest_eid);
-    bsl_mock_decode_eid_from_ctx(dec, &(blk->dest_eid));
+    if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->dest_eid)))
+    {
+        return 2;
+    }
 
     MockBPA_EID_Init(NULL, &blk->src_node_id);
-    bsl_mock_decode_eid_from_ctx(dec, &(blk->src_node_id));
+    if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->src_node_id)))
+    {
+        return 2;
+    }
 
     MockBPA_EID_Init(NULL, &blk->report_to_eid);
-    bsl_mock_decode_eid_from_ctx(dec, &(blk->report_to_eid));
+    if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->report_to_eid)))
+    {
+        return 2;
+    }
 
     QCBORDecode_EnterArray(dec, NULL);
     QCBORDecode_GetUInt64(dec, &(blk->timestamp.bundle_creation_time));

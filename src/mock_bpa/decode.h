@@ -36,6 +36,7 @@ extern "C" {
 #endif
 
 /** Decode a single EID.
+ *  Matches the signature for the BSL_HostDescriptors_t::eid_from_cbor function.
  *
  * @param[in] dec The encoded bytes to be decoded.
  * @param[in,out] eid The EID value.

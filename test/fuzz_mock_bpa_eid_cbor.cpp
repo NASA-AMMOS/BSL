@@ -60,19 +60,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_Data_Init(&out_data);
     if (!retval)
     {
-        QCBOREncodeContext encoder;
-        size_t             needlen;
-
-        QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
-        EXPECT_EQ(0, BSL_HostEID_EncodeToCBOR(&eid, &encoder));
-        assert(QCBOR_SUCCESS == QCBOREncode_FinishGetSize(&encoder, &needlen));
+        ssize_t             needlen;
+        needlen = BSL_HostEID_EncodeToCBOR(&eid, &out_data);
+        EXPECT_EQ(needlen <= 0, 0);
 
         EXPECT_EQ(0, BSL_Data_Resize(&out_data, needlen));
-        QCBOREncode_Init(&encoder, (UsefulBuf) { out_data.ptr, out_data.len });
-        EXPECT_EQ(0, bsl_mock_encode_eid(&encoder, &eid));
-
-        UsefulBufC out;
-        EXPECT_EQ(QCBOR_SUCCESS, QCBOREncode_Finish(&encoder, &out));
+        needlen = BSL_HostEID_EncodeToCBOR(&eid, &out_data);
+        EXPECT_EQ(needlen <= 0, 0);
     }
 
     if (!retval)

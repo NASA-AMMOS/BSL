@@ -377,8 +377,6 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
     CHK_ARG_EXPR(buf->len > 0);
     CHK_ARG_EXPR(buf->ptr != NULL);
 
-    BSL_AbsSecBlock_InitEmpty(self);
-
     QCBORDecodeContext asbdec;
 
     UsefulBufC qcbor_buf = { .ptr = buf->ptr, .len = buf->len };
@@ -431,15 +429,28 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
     BSL_LOG_DEBUG("got flags %" PRId64, flags);
 
     // Host-specific parsing of EID
-    QCBORItem eid_item;
+
+    UsefulBufC all = QCBORDecode_RetrieveUndecodedInput(&asbdec);
 
     // Get size of next CBOR item
     uint32_t eid_item_start_index = QCBORDecode_Tell(&asbdec);
+    if (eid_item_start_index > all.len)
+    {
+        BSL_LOG_ERR("BSL DECODE FAIL");
+        return BSL_ERR_DECODING;
+    }
+
+    QCBORItem eid_item;
     QCBORDecode_VGetNextConsume(&asbdec, &eid_item);
     uint32_t eid_item_end_index = QCBORDecode_Tell(&asbdec);
+    if (eid_item_end_index > all.len)
+    {
+        BSL_LOG_ERR("BSL DECODE FAIL");
+        return BSL_ERR_DECODING;
+    }
 
     UsefulBufC eid_raw =
-        (UsefulBufC) { (const uint8_t *)QCBORDecode_RetrieveUndecodedInput(&asbdec).ptr + eid_item_start_index,
+        (UsefulBufC) { ((const uint8_t *) all.ptr) + eid_item_start_index,
                        eid_item_end_index - eid_item_start_index };
 
     BSL_Data_t eid_cbor_data;
@@ -447,9 +458,13 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
     BSL_Data_CopyFrom(&eid_cbor_data, eid_raw.len, eid_raw.ptr);
 
     BSL_HostEID_Init(&self->source_eid);
-    BSL_HostEID_DecodeFromCBOR(&eid_cbor_data, &self->source_eid);
-
+    int res = BSL_HostEID_DecodeFromCBOR(&eid_cbor_data, &self->source_eid);
     BSL_Data_Deinit(&eid_cbor_data);
+    if (res != BSL_SUCCESS)
+    {
+        BSL_LOG_ERR("BSL HOST EID DECODE FAIL");
+        return BSL_ERR_DECODING;
+    }
 
     // A zero value for flags means there are NO paramers, a value of 1 indicates there are parameters to parse.
     if (flags & 0x01)
@@ -517,6 +532,8 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
                     return BSL_ERR_DECODING;
             }
             const size_t item_end = QCBORDecode_Tell(&asbdec);
+
+            BSL_LOG_INFO("idk dawg");
 
             QCBORDecode_ExitArray(&asbdec);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec))
