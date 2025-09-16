@@ -61,7 +61,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (!retval)
     {
         ssize_t             needlen;
-        needlen = BSL_HostEID_EncodeToCBOR(&eid, &out_data);
+        needlen = BSL_HostEID_EncodeToCBOR(&eid, NULL);
         EXPECT_EQ(needlen <= 0, 0);
 
         EXPECT_EQ(0, BSL_Data_Resize(&out_data, needlen));

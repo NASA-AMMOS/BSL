@@ -168,7 +168,6 @@ int BSL_Host_GetSecSrcEID(BSL_HostEID_t *eid)
 int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes)
 {
     CHK_ARG_NONNULL(eid);
-    CHK_ARG_NONNULL(encoded_bytes);
     return HostDescriptorTable.eid_to_cbor(eid, encoded_bytes);
 }
 

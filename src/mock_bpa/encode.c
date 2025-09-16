@@ -36,8 +36,7 @@ int bsl_mock_encode_eid(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes)
     CHKERR1(obj);
 
     QCBOREncodeContext enc;
-    UsefulBuf qcbor_buf = encoded_bytes->ptr ? (UsefulBuf) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len }
-                                             : SizeCalculateUsefulBuf;
+    UsefulBuf qcbor_buf = encoded_bytes != NULL ? (UsefulBuf) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len } : SizeCalculateUsefulBuf;
     QCBOREncode_Init(&enc, qcbor_buf);
 
     QCBOREncode_OpenArray(&enc);
@@ -90,16 +89,14 @@ int bsl_mock_encode_eid(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes)
 
 int bsl_mock_encode_eid_from_ctx(QCBOREncodeContext *enc, const BSL_HostEID_t *eid)
 {
-    BSL_Data_t eid_data;
-    BSL_Data_Init(&eid_data);
-    ssize_t encode_result = BSL_HostEID_EncodeToCBOR(eid, &eid_data);
-    BSL_Data_Deinit(&eid_data);
+    ssize_t encode_result = BSL_HostEID_EncodeToCBOR(eid, NULL);
     if (encode_result <= 0)
     {
         BSL_LOG_ERR("Failed to calculate EID size");
         return BSL_ERR_ENCODING;
     }
 
+    BSL_Data_t eid_data;
     BSL_Data_InitBuffer(&eid_data, (size_t)encode_result);
     encode_result = BSL_HostEID_EncodeToCBOR(eid, &eid_data);
     if (encode_result <= BSL_SUCCESS)

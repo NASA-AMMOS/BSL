@@ -274,16 +274,14 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
         QCBOREncode_AddUInt64(&encoder, flags);
     }
 
-    BSL_Data_t eid_data;
-    BSL_Data_Init(&eid_data);
-    ssize_t encode_result = BSL_HostEID_EncodeToCBOR(&self->source_eid, &eid_data);
-    BSL_Data_Deinit(&eid_data);
+    ssize_t encode_result = BSL_HostEID_EncodeToCBOR(&self->source_eid, NULL);
     if (encode_result <= 0)
     {
         BSL_LOG_ERR("Failed to calculate EID size");
         return BSL_ERR_ENCODING;
     }
 
+    BSL_Data_t eid_data;
     BSL_Data_InitBuffer(&eid_data, (size_t)encode_result);
     encode_result = BSL_HostEID_EncodeToCBOR(&self->source_eid, &eid_data);
     if (encode_result <= BSL_SUCCESS)
