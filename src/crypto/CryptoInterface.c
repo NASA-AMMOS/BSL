@@ -30,6 +30,7 @@
 #include <m-string.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#include <valgrind/memcheck.h>
 
 /**
  * Struct to hold private key information
@@ -545,6 +546,7 @@ int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, void **tag)
 {
     int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN, *tag);
     CHK_PROPERTY(res == 1);
+    VALGRIND_MAKE_MEM_DEFINED(*tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
     return 0;
 }
 
