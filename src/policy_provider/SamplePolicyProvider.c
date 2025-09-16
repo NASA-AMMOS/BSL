@@ -419,8 +419,8 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
-    self->description = BSL_MALLOC(strlen(desc) + 1);
-    strcpy(self->description, desc);
+    self->description = BSL_MALLOC(strnlen(desc, POLICY_RULE_DESCRIPTION_MAX_STRLEN) + 1);
+    strncpy(self->description, desc, POLICY_RULE_DESCRIPTION_MAX_STRLEN);
     self->sec_block_type    = sec_block_type;
     self->target_block_type = target_block_type;
     self->predicate         = predicate;

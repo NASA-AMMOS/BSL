@@ -77,6 +77,9 @@ void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
 bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
                                   BSL_HostEID_t src_eid, BSL_HostEID_t dst_eid);
 
+
+#define POLICY_RULE_DESCRIPTION_MAX_STRLEN 100
+
 /**
  * @brief Represents a policy rule
  *
