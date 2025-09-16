@@ -32,7 +32,6 @@
 #include <BPSecLib_Private.h>
 #include <backend/SecParam.h>
 
-
 /**
  * THE key function that matches a bundle against a rule to provide the output action and specific parameters to use for
  * the security operation.
@@ -93,7 +92,7 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
  */
 typedef struct BSLP_PolicyRule_s
 {
-    char *description;
+    char                     *description;
     BSLP_PolicyPredicate_t   *predicate;
     BSL_SecRole_e             role;
     BSL_BundleBlockTypeCode_e target_block_type;

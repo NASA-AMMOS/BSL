@@ -419,7 +419,7 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
-    self->description = BSL_MALLOC(strlen(desc)+1);
+    self->description = BSL_MALLOC(strlen(desc) + 1);
     strcpy(self->description, desc);
     self->sec_block_type    = sec_block_type;
     self->target_block_type = target_block_type;
@@ -436,8 +436,7 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
-    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", self->description,
-                 BSLB_SecParamList_size(self->params));
+    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", self->description, BSLB_SecParamList_size(self->params));
     BSL_FREE(self->description);
     BSLB_SecParamList_clear(self->params);
     memset(self, 0, sizeof(*self));
