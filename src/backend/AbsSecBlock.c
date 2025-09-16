@@ -448,8 +448,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
     }
 
     UsefulBufC eid_raw =
-        (UsefulBufC) { ((const uint8_t *) all.ptr) + eid_item_start_index,
-                       eid_item_end_index - eid_item_start_index };
+        (UsefulBufC) { ((const uint8_t *)all.ptr) + eid_item_start_index, eid_item_end_index - eid_item_start_index };
 
     BSL_Data_t eid_cbor_data;
     BSL_Data_Init(&eid_cbor_data);

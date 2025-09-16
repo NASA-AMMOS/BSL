@@ -48,8 +48,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_HostEID_Init(&eid);
     {
         BSL_Data_t eid_data;
-        BSL_Data_InitView(&eid_data, size, (uint8_t *) data);
-        int res_eid  = BSL_HostEID_DecodeFromCBOR(&eid_data, &eid);
+        BSL_Data_InitView(&eid_data, size, (uint8_t *)data);
+        int res_eid = BSL_HostEID_DecodeFromCBOR(&eid_data, &eid);
         if (res_eid)
         {
             retval = -1;
@@ -60,7 +60,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_Data_Init(&out_data);
     if (!retval)
     {
-        ssize_t             needlen;
+        ssize_t needlen;
         needlen = BSL_HostEID_EncodeToCBOR(&eid, NULL);
         EXPECT_EQ(needlen <= 0, 0);
 

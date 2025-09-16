@@ -321,13 +321,16 @@ typedef struct
 
     /** Host BPA function to encode an EID to CBOR.
      * @param[in] eid EID value to encode.
-     * @param[in, out] encoded_bytes Output encoded bytes. Initialized and deinitialized by BSL. The encoded EID must contain a CBOR array head. If set to NULL, function should return needed size of encoded CBOR bytestring without actually copying data into param.
+     * @param[in, out] encoded_bytes Output encoded bytes. Initialized and deinitialized by BSL. The encoded EID must
+     * contain a CBOR array head. If set to NULL, function should return needed size of encoded CBOR bytestring without
+     * actually copying data into param.
      * @returns Number of bytes CBOR encoded EID must be
      */
     int (*eid_to_cbor)(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes);
 
-     /** Host BPA function to decode an EID from CBOR.
-     * @param[in] encoded_bytes Input encoded bytes. Initialized and deinitialized by BSL. The encoded EID must contain a CBOR array head.
+    /** Host BPA function to decode an EID from CBOR.
+     * @param[in] encoded_bytes Input encoded bytes. Initialized and deinitialized by BSL. The encoded EID must contain
+     * a CBOR array head.
      * @param[in, out] eid EID value to encode.
      * @returns 0 if successful
      */

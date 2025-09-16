@@ -126,7 +126,7 @@ int bsl_mock_decode_eid_from_ctx(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
     }
 
     QCBORDecode_VGetNextConsume(dec, &eid_item);
-    uint32_t   eid_item_end_index = QCBORDecode_Tell(dec);
+    uint32_t eid_item_end_index = QCBORDecode_Tell(dec);
     if (eid_item_end_index > all.len)
     {
         return 2;
@@ -138,7 +138,7 @@ int bsl_mock_decode_eid_from_ctx(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
     BSL_Data_t eid_cbor_data;
     BSL_Data_Init(&eid_cbor_data);
     BSL_Data_CopyFrom(&eid_cbor_data, eid_raw.len, eid_raw.ptr);
-    
+
     int res = bsl_mock_decode_eid(&eid_cbor_data, eid);
     BSL_Data_Deinit(&eid_cbor_data);
     if (res != 0)

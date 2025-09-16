@@ -37,7 +37,7 @@ extern "C" {
 
 /** Encode a single EID.
  *  Matches the signature for the BSL_HostDescriptors_t::eid_to_cbor function.
- * 
+ *
  * @param[in] eid The EID value.
  * @param[in,out] encoded_bytes Resulting encoded bytes. NULL if checking for required CBOR length.
  */

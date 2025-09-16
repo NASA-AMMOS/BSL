@@ -36,7 +36,8 @@ int bsl_mock_encode_eid(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes)
     CHKERR1(obj);
 
     QCBOREncodeContext enc;
-    UsefulBuf qcbor_buf = encoded_bytes != NULL ? (UsefulBuf) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len } : SizeCalculateUsefulBuf;
+    UsefulBuf qcbor_buf = encoded_bytes != NULL ? (UsefulBuf) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len }
+                                                : SizeCalculateUsefulBuf;
     QCBOREncode_Init(&enc, qcbor_buf);
 
     QCBOREncode_OpenArray(&enc);
