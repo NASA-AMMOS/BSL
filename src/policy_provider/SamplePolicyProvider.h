@@ -29,21 +29,9 @@
 #define BSLP_SAMPLE_POLICY_PROVIDER_H
 
 #include <stdint.h>
-#include <m-array.h>
-#include <m-string.h>
 #include <BPSecLib_Private.h>
 #include <backend/SecParam.h>
 
-/** @struct BSLP_SecOperPtrList_t
- * Defines a basic list of ::BSL_SecOper_t pointers.
- */
-/// @cond Doxygen_Suppress
-// NOLINTBEGIN
-// GCOV_EXCL_START
-M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t *, M_PTR_OPLIST)
-// GCOV_EXCL_STOP
-// NOLINTEND
-/// @endcond
 
 /**
  * THE key function that matches a bundle against a rule to provide the output action and specific parameters to use for
@@ -105,7 +93,7 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
  */
 typedef struct BSLP_PolicyRule_s
 {
-    string_t                  description;
+    char *description;
     BSLP_PolicyPredicate_t   *predicate;
     BSL_SecRole_e             role;
     BSL_BundleBlockTypeCode_e target_block_type;
@@ -173,7 +161,6 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
 /// @brief Concrete definition of a policy provider
 typedef struct BSLP_PolicyProvider_s
 {
-    string_t               name;
     BSLP_PolicyPredicate_t predicates[BSLP_POLICYPREDICATE_ARRAY_CAPACITY];
     size_t                 predicate_count;
     BSLP_PolicyRule_t      rules[BSLP_POLICYPREDICATE_ARRAY_CAPACITY];
