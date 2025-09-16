@@ -142,7 +142,7 @@ int64_t BSL_AbsSecBlock_GetContextID(const BSL_AbsSecBlock_t *self)
     // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(self);
     // GCOV_EXCL_STOP
-    
+
     return self->sec_context_id;
 }
 
