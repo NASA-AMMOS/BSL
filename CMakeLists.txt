@@ -196,9 +196,11 @@ if(BUILD_PACKAGE)
     # Source packaging as tarball build with target package_source
     set(CPACK_SOURCE_GENERATOR "TGZ")
     set(CPACK_SOURCE_IGNORE_FILES
-        ".*/?\\.git/"
-        ".*/?\\.pytest_cache/"
-        ".*/?__pycache__/"
+        "/\\.git/"
+        "/\\.github/"
+        "/\\.ccache/"
+        "/\\.pytest_cache/"
+        "/__pycache__/"
         build/
         testroot/
         ".*~$"
