@@ -78,9 +78,9 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
                                   BSL_HostEID_t src_eid, BSL_HostEID_t dst_eid);
 
 /**
- * Maximum string length of a policy rule description; 
+ * Maximum string length of a policy rule description;
  * Affects ::BSLP_PolicyRule_Init `desc` parameter
- */ 
+ */
 #define BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN 100
 
 /**
@@ -112,7 +112,8 @@ typedef struct BSLP_PolicyRule_s
  * @brief Initialize this policy rule
  *
  * @param[in] self This policy rule
- * @param[in] dest Description of this rule (C-string). Will copy characters of parameter from index 0 to ::BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN - 1.
+ * @param[in] dest Description of this rule (C-string). Will copy characters of parameter from index 0 to
+ * ::BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN - 1.
  * @param[in] predicate Predicate used to identify which bundles apply
  * @param[in] context_id Security context ID
  * @param[in] role Such as source, acceptor, etc

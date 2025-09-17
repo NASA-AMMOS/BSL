@@ -425,11 +425,11 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
     self->description = BSL_MALLOC(desc_sz + 1);
     strncpy(self->description, desc, desc_sz);
     self->description[desc_sz - 1] = '\0';
-    
-    self->sec_block_type           = sec_block_type;
-    self->target_block_type        = target_block_type;
-    self->predicate                = predicate;
-    self->context_id               = context_id;
+
+    self->sec_block_type    = sec_block_type;
+    self->target_block_type = target_block_type;
+    self->predicate         = predicate;
+    self->context_id        = context_id;
     // TODO(bvb) assert Role in expected range
     self->failure_action_code = failure_action_code;
     self->role                = role;
