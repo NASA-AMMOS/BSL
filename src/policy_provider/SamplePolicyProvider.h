@@ -77,7 +77,10 @@ void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
 bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
                                   BSL_HostEID_t src_eid, BSL_HostEID_t dst_eid);
 
-/// @brief Maximum string length of a policy rule description; Affects @ref BSLP_PolicyRule_Init::desc 
+/**
+ * Maximum string length of a policy rule description; 
+ * Affects ::BSLP_PolicyRule_Init `desc` parameter
+ */ 
 #define BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN 100
 
 /**
