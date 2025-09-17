@@ -36,11 +36,19 @@ extern "C" {
 #endif
 
 /** Encode a single EID.
+ *  Matches the signature for the BSL_HostDescriptors_t::eid_to_cbor function.
  *
- * @param[in] enc The encoder.
  * @param[in] eid The EID value.
+ * @param[in,out] encoded_bytes Resulting encoded bytes. NULL if checking for required CBOR length.
  */
-int bsl_mock_encode_eid(QCBOREncodeContext *enc, const BSL_HostEID_t *eid);
+int bsl_mock_encode_eid(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes);
+
+/** Encode a single EID from a QCBOR Encode Context
+ *
+ * @param[in,out] enc QCBOR Encode Context.
+ * @param[in] eid The EID Value.
+ */
+int bsl_mock_encode_eid_from_ctx(QCBOREncodeContext *enc, const BSL_HostEID_t *eid);
 
 /**
  * Encode primary block to a CBOR data.
