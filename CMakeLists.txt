@@ -116,7 +116,7 @@ if(BUILD_LIB)
     find_package(QCBOR REQUIRED)
     find_package(OpenSSL REQUIRED)
     find_package(Threads REQUIRED)
-    find_package(jansson REQUIRED)
+    find_package(Jansson REQUIRED)
 endif(BUILD_LIB)
 
 include(CheckSymbolExists)
@@ -130,7 +130,9 @@ check_type_size("size_t" SIZE_SIZET LANGUAGE C)
 
 if(BUILD_UNITTEST)
   if(TEST_MEMCHECK)
-    find_program(MEMCHECK_CMD valgrind)
+    find_package(valgrind REQUIRED)
+
+    find_program(MEMCHECK_CMD valgrind REQUIRED)
     message(STATUS "Using valgrind memcheck for tests: ${MEMCHECK_CMD}")
     set(MEMCHECK_OPTIONS
       "--tool=memcheck"

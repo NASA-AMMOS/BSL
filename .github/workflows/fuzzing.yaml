@@ -56,7 +56,7 @@ jobs:
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
               libssl-dev libjansson-dev \
-              valgrind gcovr xmlstarlet
+              gcovr xmlstarlet
           sudo gem install cbor-diag
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -69,7 +69,7 @@ jobs:
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
               openssl-devel jansson-devel \
-              valgrind xmlstarlet python3-pip
+              xmlstarlet python3-pip
           pip3 install gcovr
           gem install cbor-diag
       - name: Checkout repository
