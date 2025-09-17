@@ -157,10 +157,17 @@ if(BUILD_COVERAGE)
     "${CMAKE_CURRENT_BINARY_DIR}/test/*"
   )
   set(GCOVR_ADDITIONAL_ARGS
+    --gcov-ignore-parse-errors=negative_hits.warn_once_per_file
+    --gcov-keep
   )
   setup_target_for_coverage_gcovr_xml(
     NAME coverage-xml
     BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+  )
+  setup_target_for_coverage_gcovr_xml(
+    NAME coverage-sonarqube
+    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    SONARQUBE
   )
   setup_target_for_coverage_gcovr_html(
     NAME coverage-html
@@ -189,9 +196,11 @@ if(BUILD_PACKAGE)
     # Source packaging as tarball build with target package_source
     set(CPACK_SOURCE_GENERATOR "TGZ")
     set(CPACK_SOURCE_IGNORE_FILES
-        \\.git/
-        \\.pytest_cache/
-        __pycache__/
+        "/\\.git/"
+        "/\\.github/"
+        "/\\.ccache/"
+        "/\\.pytest_cache/"
+        "/__pycache__/"
         build/
         testroot/
         ".*~$"
@@ -204,6 +213,7 @@ if(BUILD_PACKAGE)
 endif(BUILD_PACKAGE)
 
 add_custom_command(
+    DEPENDS CMakeGraphVizOptions.cmake
     OUTPUT dep_chart.dot
     COMMAND ${CMAKE_COMMAND} "--graphviz=dep_chart.dot" .
 )

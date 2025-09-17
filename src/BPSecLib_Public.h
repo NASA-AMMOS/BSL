@@ -118,6 +118,48 @@ typedef enum
     BSL_BUNDLECRCTYPE_32 = 2,
 } BSL_BundleCRCType_e;
 
+#define BSL_TLM_COUNTERS_ZERO \
+    (BSL_TlmCounters_t)       \
+    {                         \
+        0                     \
+    }
+
+/** @brief Defined indices for the counter structure to hold telemetry and counts
+ *
+ * @note If more telemetry is added, the array in ::BSL_TlmCounters_t must be updated.
+ */
+typedef enum
+{
+    BSL_TLM_BUNDLE_INSPECTED_COUNT = 0,
+    BSL_TLM_BUNDLE_INSPECTED_BYTES,
+    BSL_TLM_ASB_DECODE_COUNT,
+    BSL_TLM_ASB_DECODE_BYTES,
+    BSL_TLM_ASB_ENCODE_COUNT,
+    BSL_TLM_ASB_ENCODE_BYTES,
+    BSL_TLM_SECOP_SOURCE_COUNT,
+    BSL_TLM_SECOP_VERIFIER_COUNT,
+    BSL_TLM_SECOP_ACCEPTOR_COUNT,
+    BSL_TLM_SECOP_FAIL_COUNT,
+    BSL_TLM_TOTAL_COUNT
+} BSL_TlmCounterIndex_e;
+
+/** @brief The telemetry counter structure to store the enumerations of telemetry.
+ *
+ * This structure is automatically created in the BSL context
+ */
+typedef struct BSL_TlmCounters_s
+{
+    uint64_t counters[BSL_TLM_TOTAL_COUNT + 1];
+} BSL_TlmCounters_t;
+
+/** @brief Retrieve copy of the telemetry counters to accumulate in BPA.
+ *
+ * @param[in] lib           Pointer to BSL context.
+ * @param[out] sec_ctx_id       Pointer to the output telemetry structure
+ * @returns 0 on success, negative on error.
+ */
+int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t *tlm);
+
 /** @brief Opaque pointer to BPA-specific Endpoint ID storage.
  *
  * Ownership of the object is kept by the BPA, and these are only references.
@@ -143,6 +185,28 @@ typedef struct BSL_BundleRef_s
 {
     void *data; ///< Opaque pointer, not used by the BSL.
 } BSL_BundleRef_t;
+
+/// @brief IANA "Bundle Status Report Reason Codes" registry @cite rfc9171 @cite rfc9172
+typedef enum BSL_ReasonCode_e
+{
+    BSL_REASONCODE_NO_ADDITIONAL_INFO   = 0,  /// No additional information
+    BSL_REASONCODE_LIFETIME_EXPIRED     = 1,  /// Lifetime expired
+    BSL_REASONCODE_FWD_UNIDIRECT_LINK   = 2,  /// Forwarded over unidirectional link
+    BSL_REASONCODE_TX_CANCEL            = 3,  /// Transmission canceled
+    BSL_REASONCODE_DEPLETED_STORAGE     = 4,  /// Depleted storage
+    BSL_REASONCODE_DEST_EID_UNAVAILABLE = 5,  /// Destination endpoint ID unavailable
+    BSL_REASONCODE_NO_KNOWN_ROUTE       = 6,  /// No known route to destination from here
+    BSL_REASONCODE_NO_CONTACT_NEXT_NODE = 7,  /// No timely contact with next node on route
+    BSL_REASONCODE_BLOCK_UNINTELLIGIBLE = 8,  /// Block unintelligible
+    BSL_REASONCODE_HOP_LIMIT_EXCEEDED   = 9,  /// Hop limit exceeded
+    BSL_REASONCODE_TRAFFIC_PARED        = 10, /// Traffic pared
+    BSL_REASONCODE_BLOCK_UNSUPPORTED    = 11, /// Block unsupported
+    BSL_REASONCODE_MISSING_SECOP        = 12, /// Missing security operation
+    BSL_REASONCODE_UNKNOWN_SECOP        = 13, /// Unknown security operation
+    BSL_REASONCODE_UNEXPECTED_SECOP     = 14, /// Unexpected security operation
+    BSL_REASONCODE_FAILED_SECOP         = 15, /// Failed security operation
+    BSL_REASONCODE_CONFLICTING_SECOP    = 16  /// Conflicting security operation
+} BSL_ReasonCode_t;
 
 /** @brief Contains Bundle Primary Block fields and metadata.
  *
@@ -203,8 +267,8 @@ typedef struct
     /// User data pointer for callbacks
     void *user_data;
 
-    /// @brief Host BPA function to get its current EID
-    int (*get_host_eid_fn)(const void *user_data, BSL_HostEID_t *result);
+    /// @brief Host BPA function to get its security source EID
+    int (*get_sec_src_eid_fn)(void *user_data, BSL_HostEID_t *result);
 
     /// @brief Host BPA function to initialize/allocate an EID type.
     int (*eid_init)(void *user_data, BSL_HostEID_t *result);
@@ -251,8 +315,9 @@ typedef struct
      */
     struct BSL_SeqWriter_s *(*block_write_btsd_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t total_size);
 
-    /// @brief Host BPA function to delete Bundle
-    int (*bundle_delete_fn)(BSL_BundleRef_t *bundle_ref);
+    /// @brief Host BPA function to delete Bundle with a reason code. This can be called multiple times per-bundle with
+    /// different reason codes
+    int (*bundle_delete_fn)(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason);
 
     /// @brief Host BPA function to encode an EID to CBOR.
     int (*eid_to_cbor)(void *encoder, const BSL_HostEID_t *eid);
@@ -278,7 +343,7 @@ typedef struct
 
 /** Set the BPA descriptor (callbacks) for this process.
  *
- * @warning This function is not thread safe and should be set before any
+ * @warning This function is not thread safe and should be used before any
  * ::BSL_LibCtx_t is initialized or other BSL interfaces used.
  *
  * @param desc The descriptor to use for future BPA functions.
@@ -292,6 +357,13 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc);
  * @param[out] desc The descriptor to copy into.
  */
 void BSL_HostDescriptors_Get(BSL_HostDescriptors_t *desc);
+
+/** Reset the host descriptors to their default, unusable state.
+ *
+ * @warning This function is not thread safe and should be used after any
+ * ::BSL_LibCtx_t is deinitialized.
+ */
+void BSL_HostDescriptors_Clear(void);
 
 /** @brief Initialize the BPSecLib (BSL) library context.
  *

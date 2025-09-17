@@ -34,7 +34,7 @@
 struct BSL_SecOper_s
 {
     /// @brief Security context ID
-    uint64_t context_id;
+    int64_t context_id;
 
     /// @brief Bundle's block ID over which the security operation is applied.
     uint64_t target_block_num;
@@ -42,11 +42,16 @@ struct BSL_SecOper_s
     /// @brief Bundle's block ID which contains the security parameters and results for this operation.
     uint64_t sec_block_num;
 
-    /// @brief Code for handing what to do to the block or bundle if security processing fails.
-    BSL_PolicyAction_e failure_code;
+    /// @brief Policy for handing what to do to the block or bundle if security processing fails.
+    /// @note Currently the implementation is for the Policy Provider to use the policy action on failure to determine
+    /// and execute course of action (e.g., remove block, etc.)
+    BSL_PolicyAction_e policy_action;
 
     /// @brief Conclusion state of security operation processing
     BSL_SecOper_ConclusionState_e conclusion;
+
+    /// @brief Reason code for security operation
+    BSL_ReasonCode_t reason_code;
 
     /// @brief Private enumeration indicating the role (e.g., acceptor vs verifier)
     BSL_SecRole_e       _role;

@@ -26,6 +26,7 @@ target_compile_options(bsl_mock_bpa PRIVATE -Wshadow -Wpointer-arith -Wstrict-pr
 target_sources(
   bsl_mock_bpa PUBLIC 
   ${CMAKE_CURRENT_SOURCE_DIR}/agent.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bundle.h
   ${CMAKE_CURRENT_SOURCE_DIR}/crc.h
   ${CMAKE_CURRENT_SOURCE_DIR}/eid.h
   ${CMAKE_CURRENT_SOURCE_DIR}/eidpat.h
@@ -41,6 +42,7 @@ target_sources(
 target_sources(
   bsl_mock_bpa PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/agent.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bundle.c
   ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
   ${CMAKE_CURRENT_SOURCE_DIR}/eid.c
   ${CMAKE_CURRENT_SOURCE_DIR}/eidpat.c
@@ -74,7 +76,7 @@ install(
         COMPONENT devel
 )
 
-if(BUILD_MOCK_BPA)
+if(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)
   add_executable(bsl-mock-bpa)
   target_sources(bsl-mock-bpa PRIVATE mock_bpa.c)
   target_link_libraries(bsl-mock-bpa PUBLIC bsl_mock_bpa bsl_crypto)
@@ -87,4 +89,4 @@ if(BUILD_MOCK_BPA)
       RUNTIME
           COMPONENT test
   )
-endif(BUILD_MOCK_BPA)
+endif(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)

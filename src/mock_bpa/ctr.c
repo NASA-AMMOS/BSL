@@ -20,6 +20,7 @@
  * subcontract 1700763.
  */
 #include <BPSecLib_Private.h>
+#include <m-algo.h>
 
 #include "ctr.h"
 #include "decode.h"
@@ -91,12 +92,21 @@ int mock_bpa_decode(mock_bpa_ctr_t *ctr)
 // TODO this is not really defined by BPSec or BPv7
 static int block_cmp(const MockBPA_CanonicalBlock_t *block_a, const MockBPA_CanonicalBlock_t *block_b)
 {
-    return block_b->blk_type - block_a->blk_type;
+    if (block_b->blk_type > block_a->blk_type)
+    {
+        return 1;
+    }
+    else if (block_b->blk_type < block_a->blk_type)
+    {
+        return -1;
+    }
+    return 0;
 }
 
-#include <m-algo.h>
-
+// Add comparison by block type to sort just before encoding
+// GCOV_EXCL_START
 M_ALGO_DEF(MockBPA_BlockList, M_DEQUE_OPLIST(MockBPA_BlockList, M_OPEXTEND(M_POD_OPLIST, CMP(API_6(block_cmp)))))
+// GCOV_EXCL_STOP
 
 int mock_bpa_encode(mock_bpa_ctr_t *ctr)
 {

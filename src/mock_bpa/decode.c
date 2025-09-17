@@ -36,11 +36,8 @@ int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
 {
     ASSERT_ARG_NONNULL(dec);
     ASSERT_ARG_NONNULL(eid);
-    ASSERT_ARG_NONNULL(eid->handle);
     bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
     ASSERT_ARG_NONNULL(obj);
-    CHKERR1(dec);
-    CHKERR1(obj);
 
     bsl_mock_eid_deinit(obj);
     bsl_mock_eid_init(obj);

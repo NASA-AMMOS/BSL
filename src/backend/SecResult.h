@@ -72,6 +72,7 @@
 #include <stdint.h>
 
 #include <m-array.h>
+#include <m-bstring.h>
 
 #include <BPSecLib_Private.h>
 
@@ -81,25 +82,29 @@ struct BSL_SecResult_s
     uint64_t result_id;
 
     /// @brief Context ID, put in here for convenience.
-    uint64_t context_id;
+    int64_t context_id;
 
     /// @brief Target block id, put in here for convenience.
     uint64_t target_block_num;
 
-    /// @brief Result as byte array, up to a given maximum
-    uint8_t _bytes[BSL_DEFAULT_BYTESTR_LEN + 1];
-
-    /// @brief Length of data (in bytes) of the contained bytestring. Always less than BSL_DEFAULT_BYTESTR_LEN.
-    size_t _bytelen;
+    /// @brief Result as byte array
+    m_bstring_t _bytes;
 };
+
+/// OPLIST for ::BSL_SecParam_t
+#define M_OPL_BSL_SecResult_t()                                                                                   \
+    (INIT(API_2(BSL_SecResult_Init)), INIT_SET(API_6(BSL_SecResult_InitSet)), CLEAR(API_2(BSL_SecResult_Deinit)), \
+     SET(API_6(BSL_SecResult_Set)))
 
 /** @struct BSLB_SecResultList_t
  * Defines a basic list of Security Results (::BSL_SecResult_t).
  */
-// NOLINTBEGIN
 /// @cond Doxygen_Suppress
-M_ARRAY_DEF(BSLB_SecResultList, BSL_SecResult_t, M_POD_OPLIST)
-/// @endcond
+// NOLINTBEGIN
+// GCOV_EXCL_START
+M_ARRAY_DEF(BSLB_SecResultList, BSL_SecResult_t, M_OPL_BSL_SecResult_t())
+// GCOV_EXCL_STOP
 // NOLINTEND
+/// @endcond
 
 #endif /* BSLB_SECRESULT_H_ */

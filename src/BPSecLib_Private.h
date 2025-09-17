@@ -169,9 +169,9 @@ typedef enum
  * @param dstlen The length in bytes of @c dstbuf
  * @param srcbuf Pointer to the buffer containing the byte stream to be printed.
  * @param srclen The length in bytes of @c srcbuf.
- * @return The number of bytes written to @c dstbuf. It will not exceed @c dstlen.
+ * @return A copy of @c dstbuf.
  */
-uint8_t *BSL_Log_DumpAsHexString(uint8_t *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen);
+char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen);
 
 /** Opens the event log.
  * @note This should be called once per process, not thread or library instance.
@@ -263,11 +263,11 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 #define CHK_ARG_NONNULL(var) \
     CHK_TEMPL((var) != NULL, "Illegal Argument: Argument null check failed to satisfy", BSL_ERR_ARG_NULL)
 
-#define CHK_PRECONDITION(expr) CHK_TEMPL(expr, "Precondition Failed: Did not satisfy", BSL_ERR_FAILURE);
+#define CHK_PRECONDITION(expr) CHK_TEMPL(expr, "Precondition Failed: Did not satisfy", BSL_ERR_FAILURE)
 
-#define CHK_PROPERTY(expr) CHK_TEMPL(expr, "Property Failed: Did not satisfy", BSL_ERR_FAILURE);
+#define CHK_PROPERTY(expr) CHK_TEMPL(expr, "Property Failed: Did not satisfy", BSL_ERR_FAILURE)
 
-#define CHK_POSTCONDITION(expr) CHK_TEMPL(expr, "Postcondition Failed: Did not satisfy", BSL_ERR_FAILURE);
+#define CHK_POSTCONDITION(expr) CHK_TEMPL(expr, "Postcondition Failed: Did not satisfy", BSL_ERR_FAILURE)
 
 #define ASSERT_TEMPL(expr, msg)                 \
     do                                          \
@@ -371,17 +371,22 @@ int BSL_Host_GetSecSrcEID(BSL_HostEID_t *eid);
  */
 int BSL_HostEID_DecodeFromText(BSL_HostEID_t *eid, const char *text);
 
-/** Load an EID from CBOR
+/** Decode an EID from CBOR.
  *
- * @param[in,out] eid This eid
- * @param[in] CBOR decoder context
+ * @param[in,out] eid The value to decode into
+ * @param[in] decoder CBOR decoder context
  * @return 0 on success
  */
 int BSL_HostEID_DecodeFromCBOR(BSL_HostEID_t *eid, void *decoder);
 
-/** Opaque pointer to BPA-specific Endpoint ID Pattern storage.
- * Ownership of the object is kept by the BPA, and these are only references.
+/** Encode a EID into CBOR.
+ *
+ * @param[in] eid The value to encode
+ * @param[in] encoder CBOR encoder context
+ * @return Zero if successful.
  */
+int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, void *encoder);
+
 /** Static initializer for an invalid ::BSL_HostEIDPattern_t.
  * Even after this, BSL_HostEIDPattern_Init() must be used to get into a valid state.
  */
@@ -402,14 +407,6 @@ int BSL_HostEIDPattern_Init(BSL_HostEIDPattern_t *pat);
  * @param[in,out] pat The object to de-initialize.
  */
 void BSL_HostEIDPattern_Deinit(BSL_HostEIDPattern_t *pat);
-
-/**
- * Encode a EID into a CBOR sequence
- * @param[in] eid
- * @param[in] user_data
- * @return Zero if successful.
- */
-int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, void *user_data);
 
 /** Decode an EID Pattern from its text form.
  *
@@ -518,9 +515,10 @@ int BSL_BundleCtx_RemoveBlock(BSL_BundleRef_t *bundle, uint64_t block_num);
 /** @brief Requests dropping of bundle
  *
  * @param[in] bundle    Context bundle
+ * @param[in] reason_code reason code indicating reason for bundle deletion
  * @return 0 on success, negative on failure.
  */
-int BSL_BundleCtx_DeleteBundle(BSL_BundleRef_t *bundle);
+int BSL_BundleCtx_DeleteBundle(BSL_BundleRef_t *bundle, BSL_ReasonCode_t reason_code);
 
 /** @brief Requests the re-allocation of a block's BTSD, useful for BCB.
  *
@@ -536,8 +534,6 @@ int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_
 BSL_SeqReader_t *BSL_BundleCtx_ReadBTSD(const BSL_BundleRef_t *bundle, uint64_t block_num);
 
 BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_len);
-
-#define BSL_DEFAULT_BYTESTR_LEN (128)
 
 /** @brief Security role of an operation
  */
@@ -567,23 +563,54 @@ typedef enum
 /// @brief Represents a security result, being a 2-tuple of (result-id, bytes).
 typedef struct BSL_SecResult_s BSL_SecResult_t;
 
-/** Populate a pre-allocated result.
+/** Initialize to a default empty state.
+ * @param[out] self The object to initialize.
+ */
+void BSL_SecResult_Init(BSL_SecResult_t *self);
+
+/** Initialize to a copy of another value.
+ * @param[out] self The object to initialize.
+ * @param[in] src The source of the copy.
+ */
+void BSL_SecResult_InitSet(BSL_SecResult_t *self, const BSL_SecResult_t *src);
+
+/** De-initialize a result.
+ * @param[in,out] self The object to deinitialize.
+ */
+void BSL_SecResult_Deinit(BSL_SecResult_t *self);
+
+/** Initialize and populate a pre-allocated result.
  *
- * @param[in,out] self Non-NULL pointer to allocated result.
+ * @param[out] self Non-NULL pointer to uninitialized result.
  * @param[in] result_id Result ID of corresponding result bytestring, meaning dependent on security context.
  * @param[in] context_id ID of security context.
  * @param[in] target_block_num Target of the given security result, included here for convenience.
  * @param[in] content Read-only view to data containing the bytes of the security result, which is copied out of here.
  * @return 0 on success, negative on error
  */
-int BSL_SecResult_Init(BSL_SecResult_t *self, uint64_t result_id, uint64_t context_id, uint64_t target_block_num,
-                       const BSL_Data_t *content);
+int BSL_SecResult_InitFull(BSL_SecResult_t *self, uint64_t result_id, uint64_t context_id, uint64_t target_block_num,
+                           const BSL_Data_t *content);
+
+/** Overwrite with a copy of another value.
+ * @param[in,out] self The object to overwrite.
+ * @param[in] src The source of the copy.
+ */
+void BSL_SecResult_Set(BSL_SecResult_t *self, const BSL_SecResult_t *src);
 
 /** Return true when internal invariant checks pass
  *
  * @param self This security result
  */
 bool BSL_SecResult_IsConsistent(const BSL_SecResult_t *self);
+
+/** Retrieve byte string value of result.
+ *
+ * @todo Clarify whether result contains copy or view of content
+ * @param[in] self This Security Parameter
+ * @param[out] out Pointer to data struct which will be made a view onto this parameter value.
+ * @return Negative on error.
+ */
+int BSL_SecResult_GetAsBytestr(const BSL_SecResult_t *self, BSL_Data_t *out);
 
 /// @brief Returns size in bytes of ::BSL_SecResult_s
 size_t BSL_SecResult_Sizeof(void);
@@ -596,7 +623,7 @@ enum BSL_SecParam_Types_e
     BSL_SECPARAM_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
     BSL_SECPARAM_TYPE_INT64,       ///< Indicates value type is an unsigned integer.
     BSL_SECPARAM_TYPE_BYTESTR,     ///< Indicates the value type is a byte string.
-    BSL_SECPARAM_TYPE_STR
+    BSL_SECPARAM_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
 };
 
 /** Defines supplementary Security Parameter type used internally by
@@ -630,9 +657,32 @@ typedef enum
  */
 typedef struct BSL_SecParam_s BSL_SecParam_t;
 
-/// @brief Get parameter ID of this param
-/// @param[in] self This BPSec Param type
-/// @return
+/** Initialize to a default empty state.
+ * @param[out] self The object to initialize.
+ */
+void BSL_SecParam_Init(BSL_SecParam_t *self);
+
+/** Initialize to a copy of another value.
+ * @param[out] self The object to initialize.
+ * @param[in] src The source of the copy.
+ */
+void BSL_SecParam_InitSet(BSL_SecParam_t *self, const BSL_SecParam_t *src);
+
+/** De-initialize a parameter.
+ * @param[in,out] self The object to deinitialize.
+ */
+void BSL_SecParam_Deinit(BSL_SecParam_t *self);
+
+/** Overwrite with a copy of another value.
+ * @param[in,out] self The object to overwrite.
+ * @param[in] src The source of the copy.
+ */
+void BSL_SecParam_Set(BSL_SecParam_t *self, const BSL_SecParam_t *src);
+
+/** @brief Get parameter ID of this param
+ * @param[in] self This BPSec Param type
+ * @return The parameter ID value
+ */
 uint64_t BSL_SecParam_GetId(const BSL_SecParam_t *self);
 
 /** @brief Return true if invariant conditions pass
@@ -670,20 +720,22 @@ int BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t
  */
 int BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value);
 
-/**
+/** Initialize as a parameter containing a byte string with a null-terminated
+ * text value.
+ *
  * @param[in,out] self This Security Parameter
  * @param[in] param_id ID of the parameter
  * @param[in] value text string of the parameter, copied into self
  * @return Negative on an error.
  */
-int BSL_SecParam_InitStr(BSL_SecParam_t *self, uint64_t param_id, const char *value);
+int BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char *value);
 
 /** Returns true when the value type is an integer.
  *
  * @param[in] self This Security Parameter
  * @return True when value type is integer.
  */
-int BSL_SecParam_IsInt64(const BSL_SecParam_t *self);
+bool BSL_SecParam_IsInt64(const BSL_SecParam_t *self);
 
 /** Retrieve integer value of result when this result type is integer.
  * @warning Always check using BSL_SecParam_IsInt64() first.
@@ -693,15 +745,32 @@ int BSL_SecParam_IsInt64(const BSL_SecParam_t *self);
  */
 uint64_t BSL_SecParam_GetAsUInt64(const BSL_SecParam_t *self);
 
-/** Retrieve bytestring value of result when security parameter type is bytestring. WARNING: Always check type before
- * using.
+/** Returns true when the value type is a byte string.
+ *
+ * @param[in] self This Security Parameter
+ * @return True when value type is integer.
+ */
+bool BSL_SecParam_IsBytestr(const BSL_SecParam_t *self);
+
+/** Retrieve byte string value of a parameter.
+ * @warning Always check BSL_SecParam_IsBytestr() before using this.
  *
  * @todo Clarify whether result contains copy or view of content
  * @param[in] self This Security Parameter
- * @param[in,out] result Pointer to pre-allocated data into which the bytestring is copied.
+ * @param[out] out Pointer to data struct which will be made a view onto this parameter value.
  * @return Negative on error.
  */
-int BSL_SecParam_GetAsBytestr(const BSL_SecParam_t *self, BSL_Data_t *result);
+int BSL_SecParam_GetAsBytestr(const BSL_SecParam_t *self, BSL_Data_t *out);
+
+/** Retrieve bytestring value of result when security parameter type is bytestring.
+ * @warning Always check type before using this.
+ *
+ * @todo Clarify whether result contains copy or view of content
+ * @param[in] self This Security Parameter
+ * @param[in,out] out Pointer to data struct which will be made a view onto this parameter value.
+ * @return Negative on error.
+ */
+int BSL_SecParam_GetAsTextstr(const BSL_SecParam_t *self, const char **out);
 
 /** Represents a Security Operation produced by a policy provider to inform the security context.
  *
@@ -747,9 +816,10 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src);
  * @param[in] sec_block_num Block ID of security block.
  * @param[in] sec_type Member of ::BSL_SecBlockType_e enum indicating BIB or BCB
  * @param[in] sec_role Member of ::BSL_SecRole_e enum indicating role.
+ * @param[in] policy_action Member of ::BSL_PolicyAction_e enum indicating failure policy
  */
-void BSL_SecOper_Populate(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
-                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e failure_code);
+void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
+                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action);
 
 /** Returns true if internal consistency and sanity checks pass
  *
@@ -814,6 +884,13 @@ bool BSL_SecOper_IsRoleAcceptor(const BSL_SecOper_t *self);
 bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self);
 
 /**
+ * Retrieve the policy action of a security operation
+ * @param[in] self The security operation
+ * @return the policy action
+ */
+BSL_PolicyAction_e BSL_SecOper_GetPolicyAction(const BSL_SecOper_t *self);
+
+/**
  * Retrieve the conclusion state of a security operation
  * @param[in] self The security operation
  * @return the conclusion state
@@ -826,6 +903,20 @@ BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(const BSL_SecOper_t *sel
  * @param[in] new_conclusion new conclusion to set to
  */
 void BSL_SecOper_SetConclusion(BSL_SecOper_t *self, BSL_SecOper_ConclusionState_e new_conclusion);
+
+/**
+ * Get security operation reason code
+ * @param[in] self the security operation
+ * @returns the reason code of the security operation
+ */
+BSL_ReasonCode_t BSL_SecOper_GetReasonCode(const BSL_SecOper_t *self);
+
+/**
+ * Set the security operation reason code
+ * @param[in,out] self security operation to change reason code of
+ * @param[in] new_reason_code new reason code to set to
+ */
+void BSL_SecOper_SetReasonCode(BSL_SecOper_t *self, BSL_ReasonCode_t new_reason_code);
 
 /// Forward declaration of this struct
 typedef struct BSL_AbsSecBlock_s BSL_AbsSecBlock_t;
@@ -874,9 +965,16 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self);
  */
 bool BSL_AbsSecBlock_IsEmpty(const BSL_AbsSecBlock_t *self);
 
+/** Get the security context ID from a security block.
+ *
+ * @param[in] self This ASB.
+ * @return The context ID integer.
+ */
+int64_t BSL_AbsSecBlock_GetContextID(const BSL_AbsSecBlock_t *self);
+
 /** Returns true if a given ASB contains the given block number as a security target.
  *
- * @param[in,out] self This ASB.
+ * @param[in] self This ASB.
  * @param[in] target_block_num ID of a block, 0 indicates primary block
  * @return true if ASB contains target
  */
@@ -894,7 +992,7 @@ void BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uint64_t target_block_id
  * @todo - Can be backend-only.
  *
  * @param[in,out] self This security block
- * @param[in] param Non-Null Security parameter pointer to add to list
+ * @param[in] param Non-Null Security parameter pointer to copy into list
  */
 void BSL_AbsSecBlock_AddParam(BSL_AbsSecBlock_t *self, const BSL_SecParam_t *param);
 
@@ -903,9 +1001,9 @@ void BSL_AbsSecBlock_AddParam(BSL_AbsSecBlock_t *self, const BSL_SecParam_t *par
  * @todo - Can be backend-only.
  *
  * @param[in,out] self This security block
- * @param[in] result Non-Null Security result pointer to add to list
+ * @param[in] result Non-Null Security result pointer to copy into list
  */
-void BSL_AbsSecBlock_AddResult(BSL_AbsSecBlock_t *self, const BSL_SecResult_t *result);
+void BSL_AbsSecBlock_AddResult(BSL_AbsSecBlock_t *self, const BSL_SecResult_t *out);
 
 /** Remove security parameters and results found in `outcome` from this ASB
  *
@@ -934,6 +1032,13 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
  * @return Negative on error
  */
 int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *buf);
+
+/** Increments a telemetry counter in the ctx based on telemetry index
+ *
+ * @todo
+ *
+ */
+int BSL_TlmCounters_IncrementCounter(BSL_LibCtx_t *bsl, BSL_TlmCounterIndex_e tlm_index, uint64_t count);
 
 /** @brief Represents the output following execution of a security operation.
  */
@@ -1151,7 +1256,7 @@ size_t BSL_SecurityResponseSet_Sizeof(void);
  * @todo This is still undefined.
  *
  */
-void BSL_SecurityResponseSet_Init(BSL_SecurityResponseSet_t *self, size_t noperations, size_t nfailed);
+void BSL_SecurityResponseSet_Init(BSL_SecurityResponseSet_t *self);
 
 /** Zeroize itself and release any owned resources
  *
@@ -1171,6 +1276,14 @@ bool BSL_SecurityResponseSet_IsConsistent(const BSL_SecurityResponseSet_t *self)
  */
 size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *self);
 
+/** Append a result code to the security response set
+ * @param[in,out] self the response set to append result to
+ * @param[in] result the result code to append
+ * @param[in] policy_action the on-failure policy action associated with the response
+ */
+void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result,
+                                          BSL_PolicyAction_e policy_action);
+
 /** Queries the policy provider for any security operations to take on the bundle.
  *
  * @note The caller is obligated to allocate space for the policy_action_set output.
@@ -1187,6 +1300,11 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
                                       const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location);
 
 /** Finalizes policy provider for sec ops & sec results for a bundle
+ *
+ * @note Currently the implementation is such that the Policy Provider callback handles the policy action on failure
+ * that is stored in the the Security Operations in the Action Set. As such, the backend and Security Context do not use
+ * the policy action field of the ::BSL_SecOper_s and the Policy Provider is the sole executor of policy actions
+ * regarding failures.
  *
  * @param[in] bsl BSL library context
  * @param[in] policy_actions A policy action set, which may contain error codes and other info. @preallocated

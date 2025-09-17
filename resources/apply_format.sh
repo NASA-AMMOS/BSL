@@ -34,11 +34,14 @@ fi
 
 cd ${SELFDIR}
 
+# Library sources
 if [[ "$#" -ne 0 ]]
 then
     ARGS="$@"
 else
     ARGS=$(find src test -iname '*.h' -o -iname '*.c' -o -iname '*.cpp')
 fi
-
 clang-format --style=file -i $ARGS
+
+# Python test fixtures
+autopep8 --max-line-length=100 -ir mock-bpa-test/

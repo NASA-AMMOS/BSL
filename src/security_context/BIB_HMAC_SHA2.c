@@ -118,9 +118,9 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
         if (param_id == BSL_SECPARAM_TYPE_KEY_ID)
         {
             ASSERT_PRECONDITION(!is_int);
-            BSL_Data_t res;
-            BSL_SecParam_GetAsBytestr(param, &res);
-            self->key_id = (char *)res.ptr;
+            const char *res;
+            BSL_SecParam_GetAsTextstr(param, &res);
+            self->key_id = res;
         }
         else if (param_id == RFC9173_BIB_PARAMID_SHA_VARIANT)
         {
@@ -216,17 +216,24 @@ void BSLX_BIB_Deinit(BSLX_BIB_t *self)
 }
 
 /**
- * Computes the Integrity-Protected Plaintext (IPPT) for a canonical bundle block (non-primary)
+ * Computes the Integrity-Protected Plaintext (IPPT) according to
+ * Section 3.7 of RFC 9173 @cite rfc9173.
+ *
+ * @param[in,out] ippt_space Storage for the output, or empty to calculate
+ * the needed size.
+ * @return A positive value to indicate the needed size, or negative for error.
  */
-int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
+int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
 {
     ASSERT_ARG_NONNULL(self);
-    ASSERT_ARG_EXPR(ippt_space.len > 0);
-    ASSERT_ARG_NONNULL(ippt_space.ptr);
+    CHK_ARG_NONNULL(ippt_space);
 
+    QCBORError cbor_err = QCBOR_ERR_UNSUPPORTED;
+
+    UsefulBuf result_ub =
+        ippt_space->ptr ? (UsefulBuf) { .ptr = ippt_space->ptr, ippt_space->len } : SizeCalculateUsefulBuf;
     QCBOREncodeContext encoder;
-    QCBORError         cbor_err  = QCBOR_ERR_UNSUPPORTED;
-    UsefulBuf          result_ub = { .ptr = ippt_space.ptr, ippt_space.len };
+
     QCBOREncode_Init(&encoder, result_ub);
     QCBOREncode_AddInt64(&encoder, self->integrity_scope_flags);
 
@@ -294,16 +301,17 @@ int BSLX_BIB_GenIPPT(BSLX_BIB_t *self, BSL_Data_t ippt_space)
  * Negative indicates error.
  * NOTE: This does NOT resize the result, the caller must do so.
  */
-int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
+int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
 {
     CHK_ARG_NONNULL(self);
+    CHK_ARG_NONNULL(ippt_data);
 
     BSL_AuthCtx_t hmac_ctx;
     int           res = 0;
 
     void *key_id_handle;
     void *cipher_key;
-    if (BSL_SUCCESS != BSLB_Crypto_GetRegistryKey(self->key_id, &key_id_handle))
+    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(self->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -327,7 +335,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
             if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &cipher_key))
             {
                 BSL_LOG_ERR("Failed to generate AES key");
-                BSL_Crypto_ClearKeyHandle(cipher_key);
+                BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
                 return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
 
@@ -337,7 +345,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
             if (BSL_SUCCESS != BSL_Data_InitBuffer(&self->wrapped_key, keysize + 8))
             {
                 BSL_LOG_ERR("Failed to allocate wrapped key");
-                BSL_Crypto_ClearKeyHandle(cipher_key);
+                BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
                 return BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
 
@@ -346,7 +354,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
             if (BSL_SUCCESS != wrap_result)
             {
                 BSL_LOG_ERR("Failed to wrap key");
-                BSL_Crypto_ClearKeyHandle(cipher_key);
+                BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
                 return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
         }
@@ -362,7 +370,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
             if (BSL_SUCCESS != unwrap_result)
             {
                 BSL_LOG_ERR("Failed to unwrap key");
-                BSL_Crypto_ClearKeyHandle(cipher_key);
+                BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
                 return BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
         }
@@ -374,17 +382,17 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         BSL_AuthCtx_Deinit(&hmac_ctx);
         if (self->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(cipher_key);
+            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
         }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
-    if ((res = BSL_AuthCtx_DigestBuffer(&hmac_ctx, ippt_data.ptr, ippt_data.len)) != 0)
+    if ((res = BSL_AuthCtx_DigestBuffer(&hmac_ctx, ippt_data->ptr, ippt_data->len)) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_input_data_buffer failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
         if (self->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(cipher_key);
+            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
         }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
@@ -397,7 +405,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         BSL_AuthCtx_Deinit(&hmac_ctx);
         if (self->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(cipher_key);
+            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
         }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
@@ -408,13 +416,13 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, BSL_Data_t ippt_data)
         BSL_LOG_ERR("bsl_hmac_ctx_deinit failed with code %d", res);
         if (self->keywrap)
         {
-            BSL_Crypto_ClearKeyHandle(cipher_key);
+            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
         }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
     if (self->keywrap)
     {
-        BSL_Crypto_ClearKeyHandle(cipher_key);
+        BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
     }
     return (int)hmaclen;
 }
@@ -429,26 +437,11 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
 
     CHK_PRECONDITION(BSL_SecOper_IsConsistent(sec_oper));
 
-    BSL_Data_t scratch_buffer = { 0 };
-    if (BSL_SUCCESS != BSL_Data_InitBuffer(&scratch_buffer, 4096 * 4))
-    {
-        BSL_LOG_ERR("Failed to allocate scratch space");
-        return BSL_ERR_INSUFFICIENT_SPACE;
-    }
-
-    BSLX_ScratchSpace_t scratch;
-    scratch.buffer   = scratch_buffer.ptr;
-    scratch.size     = scratch_buffer.len;
-    scratch.position = 1;
-
-    BSL_Data_t ippt_space = { .ptr = BSLX_ScratchSpace_take(&scratch, 5000), .len = 5000 };
-
     BSLX_BIB_t bib_context = { 0 };
     if (BSL_SUCCESS != BSLX_BIB_InitFromSecOper(&bib_context, bundle, sec_oper))
     {
         BSL_LOG_ERR("Failed to init bib context from security operation");
         BSLX_BIB_Deinit(&bib_context);
-        BSL_Data_Deinit(&scratch_buffer);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
@@ -456,7 +449,6 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
     {
         BSL_LOG_ERR("Failed to get bundle data");
         BSLX_BIB_Deinit(&bib_context);
-        BSL_Data_Deinit(&scratch_buffer);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
@@ -468,7 +460,6 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
         {
             BSL_LOG_ERR("Failed to get block data");
             BSLX_BIB_Deinit(&bib_context);
-            BSL_Data_Deinit(&scratch_buffer);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
@@ -483,25 +474,35 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
         BSL_LOG_WARNING("Failed to get security block data");
     }
 
-    const int ippt_len = BSLX_BIB_GenIPPT(&bib_context, ippt_space);
+    // first determine the size needed, then encode actual IPPT
+    BSL_Data_t ippt_space = BSL_DATA_INIT_NULL;
+    int        ippt_len   = BSLX_BIB_GenIPPT(&bib_context, &ippt_space);
     if (ippt_len <= 0)
     {
         BSL_LOG_ERR("GenIPPT returned %d", ippt_len);
         BSLX_BIB_Deinit(&bib_context);
-        BSL_Data_Deinit(&scratch_buffer);
+        BSL_Data_Deinit(&ippt_space);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
-    ASSERT_POSTCONDITION(ippt_len > 0);
-    ippt_space.len = (size_t)ippt_len;
+    BSL_Data_InitBuffer(&ippt_space, ippt_len);
+    ippt_len = BSLX_BIB_GenIPPT(&bib_context, &ippt_space);
+    if (ippt_len <= 0)
+    {
+        BSL_LOG_ERR("GenIPPT returned %d", ippt_len);
+        BSLX_BIB_Deinit(&bib_context);
+        BSL_Data_Deinit(&ippt_space);
+        return BSL_ERR_SECURITY_CONTEXT_FAILED;
+    }
 
-    const int hmac_nbytes = BSLX_BIB_GenHMAC(&bib_context, ippt_space);
+    const int hmac_nbytes = BSLX_BIB_GenHMAC(&bib_context, &ippt_space);
     if (hmac_nbytes < BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to generate BIB HMAC");
         BSLX_BIB_Deinit(&bib_context);
-        BSL_Data_Deinit(&scratch_buffer);
+        BSL_Data_Deinit(&ippt_space);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
+    BSL_Data_Deinit(&ippt_space);
 
     // This gets all the parameters that need to be placed in the output
     for (size_t index = 0; index < BSL_SecOper_CountParams(sec_oper); index++)
@@ -509,24 +510,27 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
         const BSL_SecParam_t *sec_param = BSL_SecOper_GetParamAt(sec_oper, index);
         if (BSL_SecParam_IsParamIDOutput(BSL_SecParam_GetId(sec_param)))
         {
-            BSL_SecParam_t *dst_param = BSLX_ScratchSpace_take(&scratch, BSL_SecParam_Sizeof());
-            memcpy(dst_param, sec_param, BSL_SecParam_Sizeof());
-            BSL_SecOutcome_AppendParam(sec_outcome, dst_param);
+            BSL_SecOutcome_AppendParam(sec_outcome, sec_param);
         }
     }
 
-    BSL_SecResult_t *bib_result = BSLX_ScratchSpace_take(&scratch, BSL_SecResult_Sizeof());
-    BSL_SecResult_Init(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
-                       BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
-    BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
+    {
+        BSL_SecResult_t *bib_result = BSL_CALLOC(1, BSL_SecResult_Sizeof());
+        BSL_SecResult_InitFull(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
+                               BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
+        BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
+        BSL_SecResult_Deinit(bib_result);
+        BSL_FREE(bib_result);
+    }
 
     if (bib_context.wrapped_key.len > 0)
     {
-        BSL_SecParam_t *wrapped_key_param = BSL_CALLOC(1, BSL_SecResult_Sizeof());
+        BSL_SecParam_t *wrapped_key_param = BSL_CALLOC(1, BSL_SecParam_Sizeof());
         if (BSL_SUCCESS
             != BSL_SecParam_InitBytestr(wrapped_key_param, RFC9173_BIB_PARAMID_WRAPPED_KEY, bib_context.wrapped_key))
         {
             BSL_LOG_ERR("Failed to append BIB wrapped key param");
+            BSL_SecParam_Deinit(wrapped_key_param);
             BSL_FREE(wrapped_key_param);
             BSLX_BIB_Deinit(&bib_context);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -536,10 +540,10 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
             BSL_LOG_INFO("Appending BIB wrapped key param");
             BSL_SecOutcome_AppendParam(sec_outcome, wrapped_key_param);
         }
+        BSL_SecParam_Deinit(wrapped_key_param);
         BSL_FREE(wrapped_key_param);
     }
 
     BSLX_BIB_Deinit(&bib_context);
-    BSL_Data_Deinit(&scratch_buffer);
     return BSL_SUCCESS;
 }

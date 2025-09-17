@@ -38,8 +38,6 @@ void BSL_SecOper_Init(BSL_SecOper_t *self)
 
     memset(self, 0, sizeof(*self));
     BSLB_SecParamList_init(self->_param_list);
-
-    ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
 
 void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
@@ -51,8 +49,9 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->context_id       = src->context_id;
     self->target_block_num = src->target_block_num;
     self->sec_block_num    = src->sec_block_num;
-    self->failure_code     = src->failure_code;
+    self->policy_action    = src->policy_action;
     self->conclusion       = src->conclusion;
+    self->reason_code      = src->reason_code;
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
     BSLB_SecParamList_init_set(self->_param_list, src->_param_list);
@@ -62,7 +61,8 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
 
 void BSL_SecOper_Deinit(BSL_SecOper_t *self)
 {
-    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(self->_param_list);
     BSLB_SecParamList_clear(self->_param_list);
 }
 
@@ -73,24 +73,26 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->context_id       = src->context_id;
     self->target_block_num = src->target_block_num;
     self->sec_block_num    = src->sec_block_num;
-    self->failure_code     = src->failure_code;
+    self->policy_action    = src->policy_action;
     self->conclusion       = src->conclusion;
+    self->reason_code      = src->reason_code;
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
     BSLB_SecParamList_set(self->_param_list, src->_param_list);
 }
 
-void BSL_SecOper_Populate(BSL_SecOper_t *self, uint64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
-                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e failure_code)
+void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
+                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action)
 {
     ASSERT_ARG_NONNULL(self);
     self->context_id       = context_id;
     self->target_block_num = target_block_num;
     self->sec_block_num    = sec_block_num;
-    self->failure_code     = failure_code;
+    self->policy_action    = policy_action;
     self->_service_type    = sec_type;
     self->_role            = sec_role;
     self->conclusion       = BSL_SECOP_CONCLUSION_PENDING;
+    self->reason_code      = BSL_REASONCODE_NO_ADDITIONAL_INFO;
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
@@ -106,13 +108,9 @@ bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self)
 {
     // NOLINTBEGIN
     CHK_AS_BOOL(self != NULL);
-    CHK_AS_BOOL(self->context_id > 0);
-    CHK_AS_BOOL(self->target_block_num < 10000);
-    // CHK_AS_BOOL(self->sec_block_num > 0);
     CHK_AS_BOOL(self->_service_type == BSL_SECBLOCKTYPE_BCB || self->_service_type == BSL_SECBLOCKTYPE_BIB);
     CHK_AS_BOOL(self->_role == BSL_SECROLE_ACCEPTOR || self->_role == BSL_SECROLE_VERIFIER
                 || self->_role == BSL_SECROLE_SOURCE);
-    CHK_AS_BOOL(BSLB_SecParamList_size(self->_param_list) < 1000);
     CHK_AS_BOOL(self->conclusion >= BSL_SECOP_CONCLUSION_PENDING && self->conclusion <= BSL_SECOP_CONCLUSION_FAILURE);
     // NOLINTEND
     return true;
@@ -172,6 +170,25 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
     return self->_service_type == BSL_SECBLOCKTYPE_BIB;
+}
+
+BSL_PolicyAction_e BSL_SecOper_GetPolicyAction(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    return self->policy_action;
+}
+
+BSL_ReasonCode_t BSL_SecOper_GetReasonCode(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    return self->reason_code;
+}
+
+void BSL_SecOper_SetReasonCode(BSL_SecOper_t *self, BSL_ReasonCode_t new_reason_code)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    self->reason_code = new_reason_code;
+    ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
 
 BSL_SecOper_ConclusionState_e BSL_SecOper_GetConclusion(const BSL_SecOper_t *self)

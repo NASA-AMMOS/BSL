@@ -32,10 +32,18 @@
 #include <m-array.h>
 #include <m-string.h>
 #include <BPSecLib_Private.h>
+#include <backend/SecParam.h>
 
+/** @struct BSLP_SecOperPtrList_t
+ * Defines a basic list of ::BSL_SecOper_t pointers.
+ */
+/// @cond Doxygen_Suppress
 // NOLINTBEGIN
+// GCOV_EXCL_START
 M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t *, M_PTR_OPLIST)
+// GCOV_EXCL_STOP
 // NOLINTEND
+/// @endcond
 
 /**
  * THE key function that matches a bundle against a rule to provide the output action and specific parameters to use for
@@ -82,8 +90,6 @@ void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
 bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
                                   BSL_HostEID_t src_eid, BSL_HostEID_t dst_eid);
 
-// FIXME remove hard limit on params
-#define BSL_PP_POLICYRULE_PARAM_MAX_COUNT 10
 /**
  * @brief Represents a policy rule
  *
@@ -104,9 +110,8 @@ typedef struct BSLP_PolicyRule_s
     BSL_SecRole_e             role;
     BSL_BundleBlockTypeCode_e target_block_type;
     BSL_SecBlockType_e        sec_block_type;
-    uint64_t                  context_id;
-    BSL_SecParam_t           *params;
-    size_t                    nparams;
+    int64_t                   context_id;
+    BSLB_SecParamList_t       params;
     BSL_PolicyAction_e        failure_action_code;
 } BSLP_PolicyRule_t;
 
@@ -120,11 +125,12 @@ typedef struct BSLP_PolicyRule_s
  * @param[in] role Such as source, acceptor, etc
  * @param[in] sec_block_type Block type (BIB or BCB)
  * @param[in] target_block_type Target block type (anything, such as primary or payload)
+ * @param[in] failure_action_code Code to indicate fate of security block/bundle if error occurs
  *
  * @returns Zero on success
  */
 int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyPredicate_t *predicate,
-                         uint64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type,
+                         int64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type,
                          BSL_BundleBlockTypeCode_e target_block_type, BSL_PolicyAction_e failure_action_code);
 
 /**
@@ -138,9 +144,17 @@ void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self);
  * @brief Include a BPSec parameter to this rule. Used immediately after Init.
  *
  * @param[in] self This rule
- * @param[in] param Pointer to the Parameter.
+ * @param[in,out] param Pointer to the Parameter to move from.
  */
-void BSLP_PolicyRule_AddParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *param);
+void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *param);
+
+/**
+ * @brief Include a BPSec parameter to this rule. Used immediately after Init.
+ *
+ * @param[in] self This rule
+ * @param[in,out] param Pointer to the Parameter to move from.
+ */
+void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param);
 
 /**
  * @brief Critical function creating a security operation from a bundle and location.

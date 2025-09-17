@@ -118,8 +118,10 @@ static void BSL_LogEvent_event_set(BSL_LogEvent_event_t *obj, const BSL_LogEvent
 
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
+// GCOV_EXCL_START
 M_BUFFER_DEF(BSL_LogEvent_queue, BSL_LogEvent_event_t, BSL_LOG_QUEUE_SIZE,
              M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING | M_BUFFER_PUSH_INIT_POP_MOVE)
+// GCOV_EXCL_STOP
 /// @endcond
 
 /// Shared least severity
@@ -133,7 +135,7 @@ static pthread_t thr_sink;
 static atomic_bool thr_valid = ATOMIC_VAR_INIT(false);
 // NOLINTEND
 
-uint8_t *BSL_Log_DumpAsHexString(uint8_t *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen)
+char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen)
 {
     ASSERT_ARG_NONNULL(dstbuf);
     ASSERT_ARG_NONNULL(srcbuf);
@@ -144,8 +146,8 @@ uint8_t *BSL_Log_DumpAsHexString(uint8_t *dstbuf, size_t dstlen, const uint8_t *
     const char hex_digits[] = "0123456789ABCDEF";
     for (size_t i = 0; i < srclen && (((i * 2) + 1) < dstlen - 1); i++)
     {
-        dstbuf[(i * 2)]     = (uint8_t)hex_digits[(srcbuf[i] >> 4) & 0x0F];
-        dstbuf[(i * 2) + 1] = (uint8_t)hex_digits[srcbuf[i] & 0x0F];
+        dstbuf[(i * 2)]     = hex_digits[(srcbuf[i] >> 4) & 0x0F];
+        dstbuf[(i * 2) + 1] = hex_digits[srcbuf[i] & 0x0F];
     }
     return dstbuf;
 }

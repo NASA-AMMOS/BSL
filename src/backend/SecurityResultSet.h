@@ -28,8 +28,22 @@
 
 #include <BPSecLib_Private.h>
 
-#define BSL_SECURITYRESPONSESET_ARRAYLEN (10)
-#define BSL_SECURITYRESPONSESET_STRLEN   (256)
+#include <m-array.h>
+
+/** @struct BSL_SecResultSet_ResultCodes
+ * Defines a basic list of ::int64_t for result values.
+ */
+/** @struct BSL_SecResultSet_ErrorActionCodes_t
+ * Defines a basic list of ::BSL_PolicyAction_e.
+ */
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
+M_ARRAY_DEF(BSL_SecResultSet_ResultCodes, int64_t, M_POD_OPLIST)
+M_ARRAY_DEF(BSL_SecResultSet_ErrorActionCodes, BSL_PolicyAction_e, M_POD_OPLIST)
+// GCOV_EXCL_STOP
+// NOLINTEND
+/// @endcond
 
 /// @brief Contains the results and outcomes after performing the security operations.
 /// @note This struct is still in-concept
@@ -37,12 +51,10 @@ struct BSL_SecurityResponseSet_s
 {
     /// @brief This maps to the Security Action sec_op_list,
     ///        and contains the result code of that security operation.
-    int                results[BSL_SECURITYRESPONSESET_ARRAYLEN];
-    char               err_msg[BSL_SECURITYRESPONSESET_STRLEN];
-    BSL_PolicyAction_e err_action_codes[BSL_SECURITYRESPONSESET_ARRAYLEN];
-    int                err_code;
-    size_t             total_operations;
-    size_t             failure_count;
+    BSL_SecResultSet_ResultCodes_t      results;
+    BSL_SecResultSet_ErrorActionCodes_t err_action_codes;
+    size_t                              total_operations;
+    size_t                              failure_count;
 };
 
 #endif /* BSLB_SECURITYRESULTSET_H_ */

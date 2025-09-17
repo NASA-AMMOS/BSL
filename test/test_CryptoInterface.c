@@ -198,6 +198,18 @@ static uint8_t test_256[32] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 
 void suiteSetUp(void)
 {
     BSL_openlog();
+}
+
+int suiteTearDown(int failures)
+{
+    BSL_closelog();
+    return failures;
+}
+
+void setUp(void)
+{
+    TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&bsl));
+
     BSL_CryptoInit();
 
     // static keys
@@ -221,20 +233,9 @@ void suiteSetUp(void)
     BSL_Crypto_AddRegistryKey("Key9", test_128, 16);
 }
 
-int suiteTearDown(int failures)
-{
-    BSL_CryptoDeinit();
-    BSL_closelog();
-    return failures;
-}
-
-void setUp(void)
-{
-    TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&bsl));
-}
-
 void tearDown(void)
 {
+    BSL_CryptoDeinit();
     TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&bsl));
 }
 
@@ -342,12 +343,11 @@ void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_
                                   "BSL_TestUtils_DecodeBase16() failed");
 
     void *keyhandle;
-    TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &keyhandle));
+    TEST_ASSERT_EQUAL(0, BSL_Crypto_GetRegistryKey(keyid, &keyhandle));
 
     BSL_AuthCtx_t hmac;
     TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Init(&hmac, keyhandle, sha_var));
 
-    ;
     switch (input_case)
     {
         case 0:
@@ -422,7 +422,7 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
 
     BSL_Cipher_t ctx;
     void        *ekey;
-    TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &ekey));
+    TEST_ASSERT_EQUAL(0, BSL_Crypto_GetRegistryKey(keyid, &ekey));
     res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_ENCRYPT, aes_var, iv, iv_len, ekey);
     TEST_ASSERT_EQUAL(0, res);
 
@@ -449,7 +449,7 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     int     plaintext_len;
 
     void *key;
-    TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key));
+    TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_GetRegistryKey(keyid, &key));
     TEST_ASSERT_NOT_NULL(key);
 
     bool              is_key8 = (0 == strcmp(keyid, "Key8"));
@@ -491,7 +491,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     int     ciphertext_len;
 
     void *key;
-    TEST_ASSERT_EQUAL_INT(0, BSLB_Crypto_GetRegistryKey(keyid, &key));
+    TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_GetRegistryKey(keyid, &key));
     TEST_ASSERT_NOT_NULL(key);
 
     bool              is_key8 = (0 == strcmp(keyid, "Key8"));
@@ -509,7 +509,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
     void *ckey;
-    TEST_ASSERT_EQUAL(0, BSLB_Crypto_GetRegistryKey(keyid, &ckey));
+    TEST_ASSERT_EQUAL(0, BSL_Crypto_GetRegistryKey(keyid, &ckey));
     BSL_Cipher_t ctx;
     res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_DECRYPT, aes_var, iv, iv_len, ckey);
     TEST_ASSERT_EQUAL(0, res);
@@ -597,11 +597,11 @@ void test_key_wrap(const char *kek, const char *cek, const char *expected)
     // convert bytedata to keyhandles
     BSL_Crypto_AddRegistryKey("kek", kek_data.ptr, kek_data.len);
     void *kek_handle;
-    BSLB_Crypto_GetRegistryKey("kek", &kek_handle);
+    BSL_Crypto_GetRegistryKey("kek", &kek_handle);
 
     BSL_Crypto_AddRegistryKey("cek", cek_data.ptr, cek_data.len);
     void *cek_handle;
-    BSLB_Crypto_GetRegistryKey("cek", &cek_handle);
+    BSL_Crypto_GetRegistryKey("cek", &cek_handle);
 
     void      *wrapped_key_handle;
     BSL_Data_t wrapped_key;
@@ -614,9 +614,9 @@ void test_key_wrap(const char *kek, const char *cek, const char *expected)
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&expected_data);
     BSL_Data_Deinit(&wrapped_key);
-    BSL_Crypto_ClearKeyHandle((void *)wrapped_key_handle);
-    BSLB_Crypto_RemoveRegistryKey("kek");
-    BSLB_Crypto_RemoveRegistryKey("cek");
+    BSL_Crypto_ClearGeneratedKeyHandle((void *)wrapped_key_handle);
+    BSL_Crypto_RemoveRegistryKey("kek");
+    BSL_Crypto_RemoveRegistryKey("cek");
 }
 
 // rfc3394 test vectors
@@ -657,11 +657,11 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
     // convert bytedata to keyhandles
     BSL_Crypto_AddRegistryKey("kek", kek_data.ptr, kek_data.len);
     void *kek_handle;
-    BSLB_Crypto_GetRegistryKey("kek", &kek_handle);
+    BSL_Crypto_GetRegistryKey("kek", &kek_handle);
 
     BSL_Crypto_AddRegistryKey("cek", cek_data.ptr, cek_data.len);
     void *expected_cek_handle;
-    BSLB_Crypto_GetRegistryKey("cek", &expected_cek_handle);
+    BSL_Crypto_GetRegistryKey("cek", &expected_cek_handle);
 
     void *cek_handle;
     BSL_Crypto_UnwrapKey(kek_handle, &wrapped_key_data, &cek_handle);
@@ -685,9 +685,132 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
     BSL_Data_Deinit(&wrapped_key_data);
     BSL_Data_Deinit(&wrapped_key1);
     BSL_Data_Deinit(&wrapped_key2);
-    BSL_Crypto_ClearKeyHandle((void *)cek_handle);
-    BSL_Crypto_ClearKeyHandle((void *)wrapped_key_handle1);
-    BSL_Crypto_ClearKeyHandle((void *)wrapped_key_handle2);
-    BSLB_Crypto_RemoveRegistryKey("kek");
-    BSLB_Crypto_RemoveRegistryKey("cek");
+    BSL_Crypto_ClearGeneratedKeyHandle((void *)cek_handle);
+    BSL_Crypto_ClearGeneratedKeyHandle((void *)wrapped_key_handle1);
+    BSL_Crypto_ClearGeneratedKeyHandle((void *)wrapped_key_handle2);
+    BSL_Crypto_RemoveRegistryKey("kek");
+    BSL_Crypto_RemoveRegistryKey("cek");
+}
+
+#define TEST_THREADS 10
+static pthread_t threads[TEST_THREADS];
+
+static void *add_key_to_reg_fn(void *arg)
+{
+    const char          *name        = (const char *)arg;
+    static const uint8_t key_bytes[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                                         0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+    int                  res         = BSL_Crypto_AddRegistryKey(name, key_bytes, sizeof(key_bytes));
+    if (BSL_SUCCESS == res)
+    {
+        BSL_LOG_INFO("ADDED %s KEY TO CRYPTO REG", name);
+        return (void *)name;
+    }
+    else
+    {
+        BSL_LOG_INFO("FAILED TO ADD %s KEY TO CRYPTO REG", name);
+        return NULL;
+    }
+}
+
+static void *get_key_from_reg_fn(void *arg)
+{
+    const char *name = (const char *)arg;
+    void       *handle;
+    int         res = BSL_Crypto_GetRegistryKey(name, &handle);
+    if (BSL_SUCCESS == res)
+    {
+        BSL_LOG_INFO("GOT %s KEY FROM CRYPTO REG", name);
+        return (void *)name;
+    }
+    else
+    {
+        BSL_LOG_INFO("FAILED TO GET %s KEY FROM CRYPTO REG", name);
+        return NULL;
+    }
+}
+
+void test_add_key_concurrency(void)
+{
+    char names[TEST_THREADS][10];
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        sprintf(names[i], "thread%zu", i);
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        if (pthread_create(threads + i, NULL, add_key_to_reg_fn, (void *)names[i]))
+        {
+            TEST_FAIL_MESSAGE("pthread_create() failed");
+        }
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        void *ret;
+        if (pthread_join(threads[i], &ret))
+        {
+            TEST_FAIL_MESSAGE("pthread_join() failed");
+        }
+        TEST_ASSERT_NOT_NULL(ret);
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        void *handle;
+        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_Crypto_GetRegistryKey(names[i], &handle));
+    }
+}
+
+void test_get_key_concurrency(void)
+{
+    char names[TEST_THREADS][10];
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        sprintf(names[i], "thread%zu", i);
+    }
+
+    static const uint8_t key_bytes[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                                         0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        TEST_ASSERT_EQUAL(0, BSL_Crypto_AddRegistryKey(names[i], key_bytes, sizeof(key_bytes)));
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        if (pthread_create(threads + i, NULL, get_key_from_reg_fn, (void *)names[i]))
+        {
+            TEST_FAIL_MESSAGE("pthread_create() failed");
+        }
+    }
+
+    for (size_t i = 0; i < TEST_THREADS; i++)
+    {
+        void *ret;
+        if (pthread_join(threads[i], &ret))
+        {
+            TEST_FAIL_MESSAGE("pthread_join() failed");
+        }
+        TEST_ASSERT_NOT_NULL(ret);
+    }
+}
+
+void test_key_stats(void)
+{
+    BSL_Crypto_AddRegistryKey("testkeystats", test_128, 16);
+
+    test_encrypt("hello world!", "testkeystats");
+
+    BSL_Crypto_KeyStats_t stats;
+    BSL_Crypto_GetKeyStatistics("testkeystats", &stats);
+    TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED], 1);
+    TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED], 14);
+
+    test_encrypt("hello world again!", "testkeystats");
+
+    BSL_Crypto_GetKeyStatistics("testkeystats", &stats);
+    TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED], 2);
+    TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED], 34);
 }

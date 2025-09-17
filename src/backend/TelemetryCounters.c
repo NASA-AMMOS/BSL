@@ -19,37 +19,21 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-/** @file
- * @brief Implementation of construct holding details of security operations for a bundle
+/**
+ * @file
  * @ingroup backend_dyn
+ * @brief Defines interactions with an external Policy Provider.
  */
-#ifndef BSLB_SECACTIONSET_H_
-#define BSLB_SECACTIONSET_H_
-
 #include <BPSecLib_Private.h>
-#include "SecurityAction.h"
 
-/** @struct BSL_SecActionList_t
- * Defines a basic list of ::BSL_SecurityAction_t.
- */
-/// @cond Doxygen_Suppress
-// NOLINTBEGIN
-// GCOV_EXCL_START
-M_ARRAY_DEF(BSL_SecActionList, BSL_SecurityAction_t,
-            (INIT(API_2(BSL_SecurityAction_Init)), INIT_SET(API_6(BSL_SecurityAction_InitSet)), SET(0),
-             CLEAR(API_2(BSL_SecurityAction_Deinit))))
-// GCOV_EXCL_STOP
-// NOLINTEND
-/// @endcond
+#include "PublicInterfaceImpl.h"
 
-/// @brief Contains the populated security operations for this bundle.
-/// @note This is intended to be a write-once, read-only struct
-struct BSL_SecurityActionSet_s
+int BSL_TlmCounters_IncrementCounter(BSL_LibCtx_t *bsl, BSL_TlmCounterIndex_e tlm_index, uint64_t count)
 {
-    BSL_SecActionList_t actions;
-    size_t              action_count;
-    size_t              err_count;
-    size_t              operation_count;
-};
+    CHK_ARG_NONNULL(bsl);
 
-#endif /* BSLB_SECACTIONSET_H_ */
+    bsl->tlm_counters.counters[tlm_index] += count;
+    bsl->tlm_counters.counters[BSL_TLM_TOTAL_COUNT]++;
+
+    return BSL_SUCCESS;
+}

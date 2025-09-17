@@ -43,6 +43,8 @@ int BSL_API_InitLib(BSL_LibCtx_t *lib)
 {
     CHK_ARG_NONNULL(lib);
 
+    memset(&lib->tlm_counters, 0, sizeof(BSL_TlmCounters_t));
+
     BSL_SecCtxDict_init(lib->sc_reg);
     BSL_PolicyDict_init(lib->policy_reg);
     return BSL_SUCCESS;
@@ -73,6 +75,18 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
     return BSL_SUCCESS;
 }
 
+int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t *tlm)
+{
+    CHK_ARG_NONNULL(lib);
+
+    for (size_t ix = 0; ix < sizeof(tlm->counters) / sizeof(uint64_t); ++ix)
+    {
+        tlm->counters[ix] += lib->tlm_counters.counters[ix];
+    }
+
+    return BSL_SUCCESS;
+}
+
 void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
 {
     ASSERT_ARG_NONNULL(obj);
@@ -98,7 +112,6 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
     CHK_ARG_NONNULL(lib);
     CHK_ARG_EXPR(desc.query_fn != NULL);
     CHK_ARG_EXPR(desc.finalize_fn != NULL);
-    CHK_ARG_EXPR(desc.deinit_fn != NULL);
 
     BSL_PolicyDict_set_at(lib->policy_reg, pp_id, desc);
     return BSL_SUCCESS;
@@ -115,6 +128,8 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
     BSL_SecurityActionSet_Init(output_action_set);
     int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
     BSL_LOG_INFO("Completed query: status=%d", query_status);
+
+    BSL_TlmCounters_IncrementCounter((BSL_LibCtx_t *)bsl, BSL_TLM_BUNDLE_INSPECTED_COUNT, 1);
 
     // Here - find the sec block numbers for all ASBs
 
@@ -160,6 +175,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                 BSL_SeqReader_Destroy(btsd_read);
 
                 BSL_AbsSecBlock_t *abs_sec_block = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
+                BSL_AbsSecBlock_InitEmpty(abs_sec_block);
                 if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, &btsd_copy) == 0)
                 {
                     if (BSL_AbsSecBlock_ContainsTarget(abs_sec_block, sec_oper->target_block_num))
@@ -170,6 +186,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                 else
                 {
                     BSL_LOG_WARNING("Failed to parse ASB from BTSD");
+                    BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
                 }
                 BSL_AbsSecBlock_Deinit(abs_sec_block);
                 BSL_FREE(abs_sec_block);
@@ -197,14 +214,13 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(policy_actions);
 
+    BSL_SecurityResponseSet_Init(response_output);
+
     int exec_code = BSL_SecCtx_ExecutePolicyActionSet((BSL_LibCtx_t *)bsl, response_output, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to execute policy action set");
     }
-
-    int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);
-    BSL_LOG_INFO("Completed finalize: status=%d", finalize_status);
 
     BSL_SecActionList_it_t act_it;
     for (BSL_SecActionList_it(act_it, policy_actions->actions); !BSL_SecActionList_end_p(act_it);
@@ -221,44 +237,18 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
             if (conclusion == BSL_SECOP_CONCLUSION_SUCCESS)
             {
                 BSL_LOG_DEBUG("Security operation success, target block num = %" PRIu64, sec_oper->target_block_num);
-                continue;
             }
-
-            BSL_PolicyAction_e err_action_code = sec_oper->failure_code;
-
-            // Now handle a specific error
-            switch (err_action_code)
+            else
             {
-                case BSL_POLICYACTION_NOTHING:
-                {
-                    // Do nothing, per policy (Indicate in telemetry.)
-                    BSL_LOG_WARNING("Instructed to do nothing for failed security operation");
-                    break;
-                }
-                case BSL_POLICYACTION_DROP_BLOCK:
-                {
-                    // Drop the failed target block, but otherwise continue
-                    BSL_LOG_WARNING("***** Dropping block over which security operation failed *******");
-                    BSL_BundleCtx_RemoveBlock(bundle, sec_oper->target_block_num);
-                    break;
-                }
-                case BSL_POLICYACTION_DROP_BUNDLE:
-                {
-                    BSL_LOG_WARNING("Deleting bundle due to block target num %" PRIu64 " security failure",
-                                    sec_oper->target_block_num);
-                    // Drop the bundle and return operation error
-                    BSL_LOG_WARNING("***** Delete bundle due to failed security operation *******");
-                    BSL_BundleCtx_DeleteBundle(bundle);
-                    break;
-                }
-                case BSL_POLICYACTION_UNDEFINED:
-                default:
-                {
-                    BSL_LOG_ERR("Unhandled policy action: %" PRIu64, err_action_code);
-                }
+                BSL_LOG_DEBUG("Security operation failure, target block num = %" PRIu64, sec_oper->target_block_num);
             }
         }
     }
+
+    int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);
+    BSL_LOG_INFO("Completed finalize: status=%d", finalize_status);
+
+    BSL_SecurityResponseSet_Deinit(response_output);
 
     // TODO CHK_POSTCONDITION
     return BSL_SUCCESS;
