@@ -32,7 +32,6 @@ add_custom_command(
     OUTPUT "${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz"
     DEPENDS ${CMAKE_BINARY_DIR}/CPackSourceConfig.cmake
     COMMAND ${CPACK_EXECUTABLE} -G TGZ --config ${CMAKE_BINARY_DIR}/CPackSourceConfig.cmake
-    COMMAND ls -l "${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz" && tar -tzf "${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz" && false
     COMMENT "CPack generating ${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz"
 )
 
@@ -40,14 +39,14 @@ add_custom_command(
 add_custom_command(
     OUTPUT "${RPMBUILD_TOPDIR}/SOURCES/${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz"
     DEPENDS "${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz"
-    COMMAND mkdir -p ${RPMBUILD_TOPDIR}/SOURCES
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_TOPDIR}/SOURCES
     COMMAND ${CMAKE_COMMAND} -E create_hardlink "${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz" "${RPMBUILD_TOPDIR}/SOURCES/${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz"
     COMMENT "Placing ${PROJECT_NAME} source"
 )
 add_custom_command(
     OUTPUT "${RPMBUILD_TOPDIR}/SPECS/bsl.spec"
     DEPENDS bsl.spec
-    COMMAND mkdir -p ${RPMBUILD_TOPDIR}/SPECS
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${RPMBUILD_TOPDIR}/SPECS
     COMMAND ${CMAKE_COMMAND} -E create_hardlink ${CMAKE_CURRENT_BINARY_DIR}/bsl.spec ${RPMBUILD_TOPDIR}/SPECS/bsl.spec
     COMMENT "Placing ${PROJECT_NAME} spec"
 )
