@@ -198,6 +198,7 @@ if(BUILD_PACKAGE)
     set(CPACK_SOURCE_IGNORE_FILES
         "/\\.git/"
         "/\\.github/"
+        "/\\.ccache/"
         "/\\.pytest_cache/"
         "/__pycache__/"
         build/
