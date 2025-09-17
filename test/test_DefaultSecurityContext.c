@@ -267,7 +267,7 @@ int rfc3394_cek(unsigned char *buf, int len)
 }
 
 TEST_MATRIX([ true, false ], [ true, false ])
-void ntest_sec_source_keywrap(bool wrap, bool bib)
+void test_sec_source_keywrap(bool wrap, bool bib)
 {
     string_t cek_str;
     string_init_set_str(cek_str, "00112233445566778899AABBCCDDEEFF");

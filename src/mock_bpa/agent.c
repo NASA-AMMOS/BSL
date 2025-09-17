@@ -398,8 +398,8 @@ BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent)
         // Old-style callbacks
         .eid_init      = MockBPA_EID_Init,
         .eid_deinit    = MockBPA_EID_Deinit,
-        .eid_to_cbor   = (int (*)(void *, const BSL_HostEID_t *))bsl_mock_encode_eid,
-        .eid_from_cbor = (int (*)(void *, BSL_HostEID_t *))bsl_mock_decode_eid,
+        .eid_to_cbor   = bsl_mock_encode_eid,
+        .eid_from_cbor = bsl_mock_decode_eid,
         .eid_from_text = mock_bpa_eid_from_text,
         // .eid_to_text      = mock_bpa_eid_to_text,
         .eidpat_init      = mock_bpa_eidpat_init,

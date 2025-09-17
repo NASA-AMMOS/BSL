@@ -30,47 +30,89 @@
 #include "agent.h"
 #include "crc.h"
 
-int bsl_mock_encode_eid(QCBOREncodeContext *enc, const BSL_HostEID_t *eid)
+int bsl_mock_encode_eid(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes)
 {
     bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
+
+    // GCOV_EXCL_START
     CHKERR1(obj);
+    // GCOV_EXCL_STOP
 
-    QCBOREncode_OpenArray(enc);
+    QCBOREncodeContext enc;
+    UsefulBuf qcbor_buf = encoded_bytes != NULL ? (UsefulBuf) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len }
+                                                : SizeCalculateUsefulBuf;
+    QCBOREncode_Init(&enc, qcbor_buf);
 
-    QCBOREncode_AddUInt64(enc, obj->scheme);
+    QCBOREncode_OpenArray(&enc);
+
+    QCBOREncode_AddUInt64(&enc, obj->scheme);
     switch (obj->scheme)
     {
         case BSL_MOCK_EID_IPN:
         {
             const bsl_eid_ipn_ssp_t *ipn = &(obj->ssp.as_ipn);
-            QCBOREncode_OpenArray(enc);
+            QCBOREncode_OpenArray(&enc);
             switch (ipn->ncomp)
             {
                 case 2:
-                    QCBOREncode_AddUInt64(enc, (ipn->auth_num << 32) | ipn->node_num);
-                    QCBOREncode_AddUInt64(enc, ipn->svc_num);
+                    QCBOREncode_AddUInt64(&enc, (ipn->auth_num << 32) | ipn->node_num);
+                    QCBOREncode_AddUInt64(&enc, ipn->svc_num);
                     break;
                 case 3:
-                    QCBOREncode_AddUInt64(enc, ipn->auth_num);
-                    QCBOREncode_AddUInt64(enc, ipn->node_num);
-                    QCBOREncode_AddUInt64(enc, ipn->svc_num);
+                    QCBOREncode_AddUInt64(&enc, ipn->auth_num);
+                    QCBOREncode_AddUInt64(&enc, ipn->node_num);
+                    QCBOREncode_AddUInt64(&enc, ipn->svc_num);
                     break;
                 default:
                     // nothing to really do here
                     break;
             }
-            QCBOREncode_CloseArray(enc);
+            QCBOREncode_CloseArray(&enc);
             break;
         }
         default:
         {
             const BSL_Data_t *raw = &(obj->ssp.as_raw);
-            QCBOREncode_AddEncoded(enc, (UsefulBufC) { raw->ptr, raw->len });
+            QCBOREncode_AddEncoded(&enc, (UsefulBufC) { raw->ptr, raw->len });
             break;
         }
     }
 
-    QCBOREncode_CloseArray(enc);
+    QCBOREncode_CloseArray(&enc);
+
+    size_t     encode_sz;
+    QCBORError qcbor_err = QCBOREncode_FinishGetSize(&enc, &encode_sz);
+    if (qcbor_err != QCBOR_SUCCESS)
+    {
+        BSL_LOG_ERR("Encoding host eid FAIL: %s", qcbor_err_to_str(qcbor_err));
+        return BSL_ERR_ENCODING;
+    }
+    BSL_LOG_DEBUG("QCBOR ENCODE SIZE: %zu", encode_sz);
+    return (ssize_t)encode_sz;
+}
+
+int bsl_mock_encode_eid_from_ctx(QCBOREncodeContext *enc, const BSL_HostEID_t *eid)
+{
+    ssize_t encode_result = BSL_HostEID_EncodeToCBOR(eid, NULL);
+    if (encode_result <= 0)
+    {
+        BSL_LOG_ERR("Failed to calculate EID size");
+        return BSL_ERR_ENCODING;
+    }
+
+    BSL_Data_t eid_data;
+    BSL_Data_InitBuffer(&eid_data, (size_t)encode_result);
+    encode_result = BSL_HostEID_EncodeToCBOR(eid, &eid_data);
+    if (encode_result <= BSL_SUCCESS)
+    {
+        BSL_LOG_ERR("Failed to encode EID");
+        return BSL_ERR_ENCODING;
+    }
+
+    UsefulBufC eid_buf = (UsefulBufC) { .ptr = eid_data.ptr, .len = eid_data.len };
+    QCBOREncode_AddEncoded(enc, eid_buf);
+
+    BSL_Data_Deinit(&eid_data);
     return 0;
 }
 
@@ -85,9 +127,9 @@ int bsl_mock_encode_primary(QCBOREncodeContext *enc, const MockBPA_PrimaryBlock_
     QCBOREncode_AddUInt64(enc, blk->flags);
     QCBOREncode_AddUInt64(enc, blk->crc_type);
 
-    bsl_mock_encode_eid(enc, &(blk->dest_eid));
-    bsl_mock_encode_eid(enc, &(blk->src_node_id));
-    bsl_mock_encode_eid(enc, &(blk->report_to_eid));
+    bsl_mock_encode_eid_from_ctx(enc, &(blk->dest_eid));
+    bsl_mock_encode_eid_from_ctx(enc, &(blk->src_node_id));
+    bsl_mock_encode_eid_from_ctx(enc, &(blk->report_to_eid));
 
     QCBOREncode_OpenArray(enc);
     QCBOREncode_AddUInt64(enc, blk->timestamp.bundle_creation_time);
