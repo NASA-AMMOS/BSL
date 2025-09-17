@@ -42,7 +42,7 @@ jobs:
           dnf install -y epel-release
           dnf install -y \
               rsync cmake git ninja-build gcc gcc-c++ ccache ruby \
-              openssl-devel jansson-devel valgrind-devel \
+              openssl-devel jansson-devel \
               doxygen graphviz plantuml texlive-bibtex \
               asciidoctor \
               rpm-build rpmlint

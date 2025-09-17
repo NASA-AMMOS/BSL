@@ -116,7 +116,7 @@ if(BUILD_LIB)
     find_package(QCBOR REQUIRED)
     find_package(OpenSSL REQUIRED)
     find_package(Threads REQUIRED)
-    find_package(jansson REQUIRED)
+    find_package(Jansson REQUIRED)
 endif(BUILD_LIB)
 
 include(CheckSymbolExists)

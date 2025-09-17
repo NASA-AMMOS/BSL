@@ -1,3 +1,6 @@
+# Imports targets for using Jansson libraries:
+#  Jansson::Jansson
+#
 
 # Try pkg-config first
 pkg_search_module(JANSSON jansson IMPORTED_TARGET)

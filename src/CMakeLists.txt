@@ -68,9 +68,9 @@ set_target_properties(bsl_crypto
 target_link_libraries(bsl_crypto PUBLIC bsl_front)
 target_link_libraries(bsl_crypto PUBLIC MLIB::mlib)
 target_link_libraries(bsl_crypto INTERFACE OpenSSL::Crypto)
-if(TEST_MEMCHECK)
-    target_compile_definitions(bsl_crypto PRIVATE HAVE_VALGRIND)
-endif(TEST_MEMCHECK)
+if(TARGET valgrind::valgrind)
+  target_compile_definitions(bsl_crypto PRIVATE HAVE_VALGRIND)
+endif(TARGET valgrind::valgrind)
 
 # Default Security Context library
 set(BSL_DEFAULT_SC_H
