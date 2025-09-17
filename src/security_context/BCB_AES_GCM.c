@@ -381,15 +381,11 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (retval == BSL_SUCCESS)
     {
         BSL_Data_InitBuffer(&bcb_context->authtag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
-        BSL_LOG_INFO("authtag data SHOULD BE 0s ?? %lu %02x ", bcb_context->authtag.len, bcb_context->authtag.ptr[0]);
-
         if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, (void **)&bcb_context->authtag.ptr))
         {
             BSL_LOG_ERR("Failed to get authentication tag");
             retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
-
-        BSL_LOG_INFO("authtag data WHAT ?? %lu %02x ", bcb_context->authtag.len, bcb_context->authtag.ptr[0]);
     }
 
     // close write after read
@@ -614,7 +610,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
     }
 
     // Create the BCB context containing all parameters and other metadata.
-    BSLX_BCB_t bcb_context;
+    BSLX_BCB_t bcb_context = { 0 };
 
     // First initialize the BCB context (allocate, etc).
     if (BSL_SUCCESS != BSLX_BCB_Init(&bcb_context, bundle, sec_oper))

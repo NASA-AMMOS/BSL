@@ -46,6 +46,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     BSL_AbsSecBlock_t *asb = (BSL_AbsSecBlock_t *)BSL_MALLOC(BSL_AbsSecBlock_Sizeof());
     BSL_AbsSecBlock_InitEmpty(asb);
+
     {
         BSL_Data_t buf;
         BSL_Data_InitView(&buf, size, (BSL_DataPtr_t)data);

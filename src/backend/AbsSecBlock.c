@@ -323,6 +323,7 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
     if (encode_result <= BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to encode EID");
+        BSL_Data_Deinit(&eid_data);
         return BSL_ERR_ENCODING;
     }
 
@@ -465,19 +466,15 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
     // Host-specific parsing of EID
 
     UsefulBufC all = QCBORDecode_RetrieveUndecodedInput(&asbdec);
+    QCBORItem eid_item;
 
     // Get size of next CBOR item
     uint32_t eid_item_start_index = QCBORDecode_Tell(&asbdec);
-    if (eid_item_start_index > all.len)
-    {
-        BSL_LOG_ERR("BSL DECODE FAIL");
-        return BSL_ERR_DECODING;
-    }
-
-    QCBORItem eid_item;
     QCBORDecode_VGetNextConsume(&asbdec, &eid_item);
     uint32_t eid_item_end_index = QCBORDecode_Tell(&asbdec);
-    if (eid_item_end_index > all.len)
+
+    // Validate indexes
+    if ((QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec)) || (eid_item_end_index <= eid_item_start_index))
     {
         BSL_LOG_ERR("BSL DECODE FAIL");
         return BSL_ERR_DECODING;
@@ -487,8 +484,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
         (UsefulBufC) { ((const uint8_t *)all.ptr) + eid_item_start_index, eid_item_end_index - eid_item_start_index };
 
     BSL_Data_t eid_cbor_data;
-    BSL_Data_Init(&eid_cbor_data);
-    BSL_Data_CopyFrom(&eid_cbor_data, eid_raw.len, eid_raw.ptr);
+    BSL_Data_InitView(&eid_cbor_data, eid_raw.len, (uint8_t *) eid_raw.ptr);
 
     BSL_HostEID_Init(&self->source_eid);
     int res = BSL_HostEID_DecodeFromCBOR(&eid_cbor_data, &self->source_eid);
