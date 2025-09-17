@@ -6,10 +6,11 @@
 .pydevproject
 
 # Build files
-/deps/build
+/deps/build/
 /build/
 /testroot/
 /venv/
-__pycache__
+/.ccache/
+__pycache__/
 .pytest_cache/
 mock-bpa-test/ccsds_bpsec_redbook_requirements_modified.yaml
