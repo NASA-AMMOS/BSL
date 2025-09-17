@@ -143,5 +143,8 @@ popd
 
 
 %changelog
+* Wed Sep 17 2025 Brian Sipos - 1.0.0-0
+- Initial release version.
+
 * Mon Oct 07 2024 Brian Sipos - 0.0.0-0
 - Initial development before version tagging.
