@@ -561,7 +561,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
                     return BSL_ERR_DECODING;
             }
             const size_t item_end = QCBORDecode_Tell(&asbdec);
-            
+
             QCBORDecode_ExitArray(&asbdec);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec))
             {
