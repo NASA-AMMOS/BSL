@@ -380,6 +380,8 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, void *keyhandle, BSL_CryptoCipherS
     res = BSL_Data_InitBuffer(&hmac_ctx->in_buf, hmac_ctx->block_size);
     CHK_PROPERTY(!res);
 
+    key_info->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
+
     return 0;
 }
 
