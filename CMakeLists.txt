@@ -27,6 +27,7 @@ option(BUILD_DOCS_API "Enable API documentation building" OFF)
 option(BUILD_DOCS_MAN "Enable manpage building" OFF)
 option(BUILD_MOCK_BPA "Enable building the Mock BPA executable" ON)
 option(BUILD_UNITTEST "Enable building unit tests" ON)
+option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
 option(BUILD_COVERAGE "Enable runtime coverage logging and reporting" OFF)
 option(BUILD_FUZZING "Enable building fuzzing executables" OFF)
 option(BUILD_PACKAGE "Enable building package outputs" OFF)
@@ -127,23 +128,24 @@ include(CheckTypeSize)
 check_type_size("int" SIZE_INT LANGUAGE C)
 check_type_size("size_t" SIZE_SIZET LANGUAGE C)
 
-find_program(MEMCHECK_CMD valgrind)
-if(NOT MEMCHECK_CMD)
-    message(FATAL_ERROR "Valgrind not found")
-endif()
+if(BUILD_UNITTEST)
+  if(TEST_MEMCHECK)
+    find_package(valgrind REQUIRED)
 
-message(STATUS "Using valgrind memcheck for build & tests: ${MEMCHECK_CMD}")
-set(MEMCHECK_OPTIONS
-  "--tool=memcheck"
-  "--trace-children=yes"
-  "--track-origins=yes"
-  "--leak-check=full" "--show-leak-kinds=all"
-  "--suppressions=${CMAKE_CURRENT_SOURCE_DIR}/resources/memcheck.supp"
-  "--error-exitcode=2"
-)
-
-# Arguments as list into global scope for Findunitytools.cmake
-set(TEST_EXEC_PREFIX "${MEMCHECK_CMD}" ${MEMCHECK_OPTIONS})
+    find_program(MEMCHECK_CMD valgrind REQUIRED)
+    message(STATUS "Using valgrind memcheck for tests: ${MEMCHECK_CMD}")
+    set(MEMCHECK_OPTIONS
+      "--tool=memcheck"
+      "--trace-children=yes"
+      "--track-origins=yes"
+      "--leak-check=full" "--show-leak-kinds=all"
+      "--suppressions=${CMAKE_CURRENT_SOURCE_DIR}/resources/memcheck.supp"
+      "--error-exitcode=2"
+    )
+    # Arguments as list into global scope for Findunitytools.cmake
+    set(TEST_EXEC_PREFIX "${MEMCHECK_CMD}" ${MEMCHECK_OPTIONS})
+  endif(TEST_MEMCHECK)
+endif(BUILD_UNITTEST)
 if(BUILD_FUZZING)
   find_package(libfuzzer)
 endif(BUILD_FUZZING)

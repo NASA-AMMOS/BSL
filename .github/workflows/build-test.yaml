@@ -70,7 +70,7 @@ jobs:
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
               openssl-devel jansson-devel \
-              valgrind-devel xmlstarlet \
+              valgrind valgrind-devel xmlstarlet \
               python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Checkout repository
@@ -145,7 +145,7 @@ jobs:
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch \
               openssl-devel jansson-devel \
-              valgrind-devel xmlstarlet \
+              valgrind valgrind-devel xmlstarlet \
               python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Checkout repository
