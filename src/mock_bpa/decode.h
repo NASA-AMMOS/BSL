@@ -35,13 +35,21 @@
 extern "C" {
 #endif
 
-/** Encode a single EID.
+/** Decode a single EID.
+ *  Matches the signature for the BSL_HostDescriptors_t::eid_from_cbor function.
  *
- * @param[in] dec The decoder.
- * @param[in] eid The EID value.
+ * @param[in] dec The encoded bytes to be decoded.
+ * @param[in,out] eid The EID value.
  * The struct must already be initialized.
  */
-int bsl_mock_decode_eid(QCBORDecodeContext *dec, BSL_HostEID_t *eid);
+int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid);
+
+/** Decode a single EID from a QCBOR Decode Context
+ *
+ * @param[in] dec QCBOR Decode Context.
+ * @param[in,out] eid The EID Value.
+ */
+int bsl_mock_decode_eid_from_ctx(QCBORDecodeContext *dec, BSL_HostEID_t *eid);
 
 /**
  * Encode primary block to a CBOR bytestring.

@@ -47,11 +47,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_HostEID_t eid;
     BSL_HostEID_Init(&eid);
     {
-        QCBORDecodeContext decoder;
-        QCBORDecode_Init(&decoder, (UsefulBufC) { data, size }, QCBOR_DECODE_MODE_NORMAL);
-        int res_eid  = BSL_HostEID_DecodeFromCBOR(&eid, &decoder);
-        int res_cbor = QCBORDecode_Finish(&decoder);
-        if (res_eid || (res_cbor != QCBOR_SUCCESS))
+        BSL_Data_t eid_data;
+        BSL_Data_InitView(&eid_data, size, (uint8_t *)data);
+        int res_eid = BSL_HostEID_DecodeFromCBOR(&eid_data, &eid);
+        if (res_eid)
         {
             retval = -1;
         }
@@ -61,19 +60,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_Data_Init(&out_data);
     if (!retval)
     {
-        QCBOREncodeContext encoder;
-        size_t             needlen;
-
-        QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
-        EXPECT_EQ(0, BSL_HostEID_EncodeToCBOR(&eid, &encoder));
-        assert(QCBOR_SUCCESS == QCBOREncode_FinishGetSize(&encoder, &needlen));
+        ssize_t needlen;
+        needlen = BSL_HostEID_EncodeToCBOR(&eid, NULL);
+        EXPECT_EQ(needlen <= 0, 0);
 
         EXPECT_EQ(0, BSL_Data_Resize(&out_data, needlen));
-        QCBOREncode_Init(&encoder, (UsefulBuf) { out_data.ptr, out_data.len });
-        EXPECT_EQ(0, bsl_mock_encode_eid(&encoder, &eid));
-
-        UsefulBufC out;
-        EXPECT_EQ(QCBOR_SUCCESS, QCBOREncode_Finish(&encoder, &out));
+        needlen = BSL_HostEID_EncodeToCBOR(&eid, &out_data);
+        EXPECT_EQ(needlen <= 0, 0);
     }
 
     if (!retval)
