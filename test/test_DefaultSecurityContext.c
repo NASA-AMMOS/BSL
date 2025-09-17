@@ -94,7 +94,7 @@ void tearDown(void)
  *  - Common repeated patterns are in the process of being factored out
  *  - All values are drawn from RFC9173 Appendix A.
  */
-void ntest_RFC9173_AppendixA_Example1_BIB_Source(void)
+void test_RFC9173_AppendixA_Example1_BIB_Source(void)
 {
     BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a1);
 
@@ -137,10 +137,10 @@ void ntest_RFC9173_AppendixA_Example1_BIB_Source(void)
 }
 
 // /// @brief Purpose: Exercise BIB verifying a security block.
-// void ntest_DefaultSecuritContext_RFC9173_A1_BIB_Verifier(void) {}
+// void test_DefaultSecuritContext_RFC9173_A1_BIB_Verifier(void) {}
 
 // /// @brief Purpose: Exercise BIB verifying a security block with cryptographic mismatch.
-// void ntest_DefaultSecuritContext_RFC9173_A1_BIB_Verifier_Failure(void) {}
+// void test_DefaultSecuritContext_RFC9173_A1_BIB_Verifier_Failure(void) {}
 
 /**
  * @brief Purpose: Exercise BCB applying security to a target payload block.
@@ -209,7 +209,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     BCBTestContext_Deinit(&bcb_test_context);
 }
 
-void ntest_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
+void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
 {
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb));
@@ -267,7 +267,7 @@ int rfc3394_cek(unsigned char *buf, int len)
 }
 
 TEST_MATRIX([ true, false ], [ true, false ])
-void ntest_sec_source_keywrap(bool wrap, bool bib)
+void test_sec_source_keywrap(bool wrap, bool bib)
 {
     string_t cek_str;
     string_init_set_str(cek_str, "00112233445566778899AABBCCDDEEFF");
@@ -465,7 +465,7 @@ void ntest_sec_source_keywrap(bool wrap, bool bib)
 }
 
 TEST_MATRIX([ true, false ])
-void ntest_sec_accept_keyunwrap(bool bib)
+void test_sec_accept_keyunwrap(bool bib)
 {
 
     const char *bundle_bib = ("9F88070000820282010282028202018202820201820018281A000F424085010100005823526561647920746F"
@@ -621,7 +621,7 @@ void ntest_sec_accept_keyunwrap(bool bib)
 }
 
 // /// @brief Purpose: Exercises BCB as a security acceptor
-// void ntest_DefaultSecuritContext_RFC9173_A2_BCB_Acceptor(void) {}
+// void test_DefaultSecuritContext_RFC9173_A2_BCB_Acceptor(void) {}
 
 // /// @brief Purpose: Exercises BCB as a security acceptor with cryptographic mismatch
-// void ntest_DefaultSecuritContext_RFC9173_A2_BCB_Acceptor_Failure(void) {}
+// void test_DefaultSecuritContext_RFC9173_A2_BCB_Acceptor_Failure(void) {}
