@@ -32,7 +32,7 @@ add_custom_command(
     OUTPUT "${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz"
     DEPENDS ${CMAKE_BINARY_DIR}/CPackSourceConfig.cmake
     COMMAND ${CPACK_EXECUTABLE} -G TGZ --config ${CMAKE_BINARY_DIR}/CPackSourceConfig.cmake
-    COMMAND ls -l "${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz" && false
+    COMMAND ls -l "${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz" && tar -tzf "${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz" && false
     COMMENT "CPack generating ${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz"
 )
 
