@@ -135,7 +135,6 @@ void setUp(void)
     TEST_ASSERT_EQUAL(0, BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, BSL_SAMPLE_PP_ID, policy_desc));
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
-    string_init_set_str(policy->name, "Unit Test Policy Provider!");
 
     policy->pp_id = 1;
 
@@ -569,8 +568,6 @@ void setUp(void)
 void tearDown(void)
 {
     BSL_SecurityActionSet_Deinit(&action_set);
-    BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
-    string_clear(policy->name);
     mock_bpa_ctr_deinit(&LocalTestCtx.mock_bpa_ctr);
     BSL_CryptoDeinit();
     TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));

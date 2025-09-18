@@ -27,11 +27,23 @@
  */
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <m-array.h>
 
 #include <BPSecLib_Private.h>
-#include <sys/types.h>
-
 #include "SamplePolicyProvider.h"
+
+/** @struct BSLP_SecOperPtrList_t
+ * Defines a basic list of ::BSL_SecOper_t pointers.
+ */
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
+M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t *, M_PTR_OPLIST)
+// GCOV_EXCL_STOP
+// NOLINTEND
+/// @endcond
 
 static bool BSLP_PolicyProvider_IsConsistent(const BSLP_PolicyProvider_t *self)
 {
@@ -164,15 +176,15 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         const BSLP_PolicyRule_t *rule = &self->rules[index];
         if (!BSLP_PolicyRule_IsConsistent(rule))
         {
-            BSL_LOG_ERR("Rule `%s` is not consistent", m_string_get_cstr(rule->description));
+            BSL_LOG_ERR("Rule `%s` is not consistent", rule->description);
             continue;
         }
-        BSL_LOG_DEBUG("Evaluating against rule `%s`", m_string_get_cstr(rule->description));
+        BSL_LOG_DEBUG("Evaluating against rule `%s`", rule->description);
 
         if (!BSLP_PolicyPredicate_IsMatch(rule->predicate, location, primary_block.field_src_node_id,
                                           primary_block.field_dest_eid))
         {
-            BSL_LOG_DEBUG("Rule `%s` not a match", m_string_get_cstr(rule->description));
+            BSL_LOG_DEBUG("Rule `%s` not a match", rule->description);
             continue;
         }
 
@@ -258,7 +270,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
             BSL_LOG_INFO("append to end");
             BSLP_SecOperPtrList_push_back(secops, sec_oper);
         }
-        BSL_LOG_INFO("Created sec operation for rule `%s`", m_string_get_cstr(rule->description));
+        BSL_LOG_INFO("Created sec operation for rule `%s`", rule->description);
     }
     BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -408,7 +420,12 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
-    string_init_set_str(self->description, desc);
+
+    size_t desc_sz    = strnlen(desc, BSLP_POLICYPREDICATE_ARRAY_CAPACITY);
+    self->description = BSL_MALLOC(desc_sz + 1);
+    strncpy(self->description, desc, desc_sz);
+    self->description[desc_sz] = '\0';
+
     self->sec_block_type    = sec_block_type;
     self->target_block_type = target_block_type;
     self->predicate         = predicate;
@@ -424,9 +441,8 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
-    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", m_string_get_cstr(self->description),
-                 BSLB_SecParamList_size(self->params));
-    string_clear(self->description);
+    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", self->description, BSLB_SecParamList_size(self->params));
+    BSL_FREE(self->description);
     BSLB_SecParamList_clear(self->params);
     memset(self, 0, sizeof(*self));
 }
@@ -486,7 +502,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
         const BSL_SecParam_t *param = BSLB_SecParamList_cref(pit);
         BSL_SecOper_AppendParam(sec_oper, param);
     }
-    BSL_LOG_INFO("Created sec operation for rule `%s`", m_string_get_cstr(self->description));
+    BSL_LOG_INFO("Created sec operation for rule `%s`", self->description);
 
     return BSL_SUCCESS;
 }
