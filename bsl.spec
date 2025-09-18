@@ -1,13 +1,13 @@
 %bcond_with apidoc
 
 Name: bsl
-Version: @PROJECT_VERSION@
-Release: @GIT_TAG_MOD@%{?dist}
+Version: 1.0.0
+Release: 1%{?dist}
 Summary: The Bundle Protocol Security Library (BSL)
 URL: https://github.com/NASA-AMMOS/BSL
 # License "Apache-2.0" is not accepted by rpmlint
 License: ASL 2.0
-Source0: @CPACK_SOURCE_PACKAGE_FILE_NAME@.tar.gz
+Source0: %{name}-%{version}.tar.gz
 
 BuildRequires: cmake
 BuildRequires: gcc
@@ -143,7 +143,10 @@ popd
 
 
 %changelog
-* Wed Sep 17 2025 Brian Sipos - 1.0.0-0
+* Thu Sep 18 2025 Brian Sipos <brian.sipos@jhuapl.edu> 1.0.0-1
+- new package built with tito
+
+* Wed Sep 17 2025 Brian Sipos - 1.0.0-1
 - Initial release version.
 
 * Mon Oct 07 2024 Brian Sipos - 0.0.0-0
