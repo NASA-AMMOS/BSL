@@ -61,8 +61,9 @@ from the API with Doxygen.
 
 %cmake -DCMAKE_PREFIX_PATH=${PWD}/testroot/usr \
        -DPROJECT_VERSION=%{version} \
-       -DBUILD_UNITTEST=YES -DTEST_MEMCHECK=NO -DTEST_COVERAGE=NO \
+       -DBUILD_UNITTEST=YES -DTEST_MEMCHECK=NO -DBUILD_COVERAGE=NO \
        -DBUILD_DOCS_MAN=YES %{?with_apidoc:-DBUILD_DOCS_API=YES}
+
 
 %build
 %cmake_build 
@@ -70,6 +71,7 @@ from the API with Doxygen.
 %if %{with apidoc}
 %cmake_build --target docs-api-html
 %endif
+
 
 %install
 # Only during this stage can the {buildroot} be written to
@@ -94,6 +96,10 @@ done
 popd
 
 %cmake_install
+
+
+%check
+%cmake_build --target check
 
 
 %files
