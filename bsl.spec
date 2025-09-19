@@ -144,7 +144,7 @@ popd
 
 
 %changelog
-* Thu Sep 18 2025 Brian Sipos <brian.sipos@jhuapl.edu> 1.0.0-1
+* Thu Sep 18 2025 Brian Sipos <brian.sipos@jhuapl.edu> 1.0.0-2
 - New package built with tito
 
 * Wed Sep 17 2025 Brian Sipos - 1.0.0-1
