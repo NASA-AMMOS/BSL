@@ -2,7 +2,7 @@
 
 Name: bsl
 Version: 1.0.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: The Bundle Protocol Security Library (BSL)
 URL: https://github.com/NASA-AMMOS/BSL
 # License "Apache-2.0" is not accepted by rpmlint
