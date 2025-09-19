@@ -9,6 +9,7 @@ URL: https://github.com/NASA-AMMOS/BSL
 License: ASL 2.0
 Source0: %{name}-%{version}.tar.gz
 
+BuildRequires: rsync
 BuildRequires: cmake
 BuildRequires: gcc
 BuildRequires: gcc-c++
