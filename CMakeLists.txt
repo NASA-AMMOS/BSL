@@ -36,6 +36,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(NOT PROJECT_VERSION)
 # Ingest the git tag as project version name
 find_package(Git)
 execute_process(
@@ -59,10 +60,12 @@ STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+).*]] [[\1]] GIT_TAG_VERS ${GIT_
 STRING(REGEX REPLACE [[^v[0-9\.]*-(.+)]] [[\1]] GIT_TAG_MOD ${GIT_TAG_REV})
 STRING(REPLACE "-" "." GIT_TAG_MOD ${GIT_TAG_MOD})
 message(STATUS "Using version marking ${GIT_TAG_VERS} - ${GIT_TAG_MOD}")
+set(PROJECT_VERSION ${GIT_TAG_VERS})
+endif(NOT PROJECT_VERSION)
 
 project(bsl
     LANGUAGES C CXX
-    VERSION ${GIT_TAG_VERS}
+    VERSION ${PROJECT_VERSION}
 )
 
 # Language options

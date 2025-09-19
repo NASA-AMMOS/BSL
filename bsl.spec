@@ -59,6 +59,7 @@ from the API with Doxygen.
 ./build.sh deps
 
 %cmake -DCMAKE_PREFIX_PATH=${PWD}/testroot/usr \
+       -DPROJECT_VERSION=%{version} \
        -DBUILD_UNITTEST=YES -DTEST_MEMCHECK=NO -DTEST_COVERAGE=NO \
        -DBUILD_DOCS_MAN=YES %{?with_apidoc:-DBUILD_DOCS_API=YES}
 
@@ -144,7 +145,7 @@ popd
 
 %changelog
 * Thu Sep 18 2025 Brian Sipos <brian.sipos@jhuapl.edu> 1.0.0-1
-- new package built with tito
+- New package built with tito
 
 * Wed Sep 17 2025 Brian Sipos - 1.0.0-1
 - Initial release version.
