@@ -65,7 +65,7 @@ jobs:
           echo "## rpmlint results:" >> $GITHUB_STEP_SUMMARY
           echo >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cat build/default/pkg/rpmlint.txt >> $GITHUB_STEP_SUMMARY
+          cat build/default/pkg/rpmlint.txt >> $GITHUB_STEP_SUMMARY || true
           echo >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
       - name: Archive
@@ -74,6 +74,6 @@ jobs:
           name: bsl-rpm
           path: |
             build/default/pkg/*.rpm
-            build/default/pkg/x86_64/*.rpm
+            build/default/pkg/*/*.rpm
             build/default/pkg/rpmlint.txt
           retention-days: 1
