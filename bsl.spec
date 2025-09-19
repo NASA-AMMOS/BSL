@@ -99,7 +99,7 @@ popd
 
 
 %check
-%cmake_build --target check
+%cmake_build --target test
 
 
 %files
