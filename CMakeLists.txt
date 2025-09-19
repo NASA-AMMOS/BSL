@@ -30,39 +30,41 @@ option(BUILD_UNITTEST "Enable building unit tests" ON)
 option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
 option(BUILD_COVERAGE "Enable runtime coverage logging and reporting" OFF)
 option(BUILD_FUZZING "Enable building fuzzing executables" OFF)
-option(BUILD_PACKAGE "Enable building package outputs" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Ingest the git tag as project version name
-find_package(Git)
-execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe --tags --long --dirty
-    RESULT_VARIABLE GIT_TAG_EXIT
-    OUTPUT_VARIABLE GIT_TAG_REV
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
-)
-if(NOT GIT_TAG_EXIT EQUAL 0)
+if(NOT PROJECT_VERSION)
+    # Ingest the git tag as project version name
+    find_package(Git)
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --always --dirty
-        OUTPUT_VARIABLE GIT_COMMIT
+        COMMAND ${GIT_EXECUTABLE} describe --tags --long --dirty
+        RESULT_VARIABLE GIT_TAG_EXIT
+        OUTPUT_VARIABLE GIT_TAG_REV
         OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
     )
-    set(GIT_TAG_REV "v0.0.0-0-g${GIT_COMMIT}")
-    message(WARNING "No git tag found, marking as ${GIT_TAG_REV}")
-endif()
-# Make version compatible with CMake and RPM needs
-STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+).*]] [[\1]] GIT_TAG_VERS ${GIT_TAG_REV})
-STRING(REGEX REPLACE [[^v[0-9\.]*-(.+)]] [[\1]] GIT_TAG_MOD ${GIT_TAG_REV})
-STRING(REPLACE "-" "." GIT_TAG_MOD ${GIT_TAG_MOD})
-message(STATUS "Using version marking ${GIT_TAG_VERS} - ${GIT_TAG_MOD}")
+    if(NOT GIT_TAG_EXIT EQUAL 0)
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} describe --always --dirty
+            OUTPUT_VARIABLE GIT_COMMIT
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        set(GIT_TAG_REV "v0.0.0-0-g${GIT_COMMIT}")
+        message(WARNING "No git tag found, marking as ${GIT_TAG_REV}")
+    endif()
+    # Make version compatible with CMake and RPM needs
+    STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+).*]] [[\1]] GIT_TAG_VERS ${GIT_TAG_REV})
+    STRING(REGEX REPLACE [[^v[0-9\.]*-(.+)]] [[\1]] GIT_TAG_MOD ${GIT_TAG_REV})
+    STRING(REPLACE "-" "." GIT_TAG_MOD ${GIT_TAG_MOD})
+    message(STATUS "Using version marking ${GIT_TAG_VERS} - ${GIT_TAG_MOD}")
+    set(PROJECT_VERSION ${GIT_TAG_VERS})
+endif(NOT PROJECT_VERSION)
 
 project(bsl
     LANGUAGES C CXX
-    VERSION ${GIT_TAG_VERS}
+    VERSION ${PROJECT_VERSION}
 )
 
 # Language options
@@ -194,25 +196,6 @@ set(TEST_INSTALL_PREFIX "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}")
 add_subdirectory(test)
 add_subdirectory(docs)
 
-if(BUILD_PACKAGE)
-    # Source packaging as tarball build with target package_source
-    set(CPACK_SOURCE_GENERATOR "TGZ")
-    set(CPACK_SOURCE_IGNORE_FILES
-        "/\\.git/"
-        "/\\.github/"
-        "/\\.ccache/"
-        "/\\.pytest_cache/"
-        "/__pycache__/"
-        build/
-        testroot/
-        ".*~$"
-    )
-    set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}")
-    set(CPACK_VERBATIM_VARIABLES YES)
-    include(CPack)
-
-    add_subdirectory(pkg)
-endif(BUILD_PACKAGE)
 
 add_custom_command(
     DEPENDS CMakeGraphVizOptions.cmake

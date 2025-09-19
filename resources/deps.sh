@@ -56,7 +56,6 @@ then
   cmake --build ${BUILDDIR}/QCBOR
   cmake --install ${BUILDDIR}/QCBOR
   rm -rf ${BUILDDIR}/QCBOR
-  ! git status || git restore .
   popd
 fi
 
