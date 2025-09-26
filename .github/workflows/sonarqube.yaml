@@ -52,7 +52,7 @@ jobs:
         uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
       - name: Run Build Wrapper
         run: |
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./build.sh
+          build-wrapper-linux-x86-64 --out-dir ${{env.BUILD_WRAPPER_OUT_DIR}} ./build.sh
       - name: Install
         run: ./build.sh install
       - name: Test
@@ -67,8 +67,8 @@ jobs:
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
         with:
           args: >
             --define sonar.coverageReportPaths=build/default/coverage-sonarqube.xml
-            --define sonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json
+            "--define sonar.cfamily.compile-commands=${{env.BUILD_WRAPPER_OUT_DIR}}/compile_commands.json"
