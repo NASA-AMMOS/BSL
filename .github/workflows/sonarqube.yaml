@@ -71,4 +71,4 @@ jobs:
         with:
           args: >
             --define sonar.coverageReportPaths=build/default/coverage-sonarqube.xml
-            "--define sonar.cfamily.compile-commands=${{env.BUILD_WRAPPER_OUT_DIR}}/compile_commands.json"
+            --define "sonar.cfamily.compile-commands=${{env.BUILD_WRAPPER_OUT_DIR}}/compile_commands.json"
