@@ -44,7 +44,6 @@ function usage {
     echo "  install        - Install"
     echo "  lint           - Run clang-tidy code linter"
     echo "  prep [args...] - Generate makefiles with config options"
-    echo "  rpm-prep       - Prepare for RPM package building"
     echo "  rpm-build      - Build RPM package after rpm-prep"
     echo "  rpm-check      - Check RPM packages after rpm-build"
     echo "  rpm-container  - Build and check RPM packages inside container"
@@ -112,31 +111,22 @@ function cmd_prep {
     ./resources/prep.sh "$@"
 }
 
-function cmd_rpm_prep {
+function cmd_rpm_build {
     if ! git describe 2>/dev/null >/dev/null
     then
         git config --global --add safe.directory ${PWD}
     fi
-    ./resources/prep.sh -DBUILD_LIB=OFF -DBUILD_UNITTEST=OFF -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DBUILD_PACKAGE=ON
-}
-
-function cmd_rpm_build {
-    cmake --build build/default --target package_srpm
-    cmake --build build/default --target package_rpm
+    tito build -o build/default/pkg --test --srpm
+    tito build -o build/default/pkg --test --rpm
 }
 
 function cmd_rpm_check {
     # Package scanning
-    cd build/default/pkg/rpmbuild
-    for PKG in RPMS/x86_64/*.rpm
-    do
-        echo
-        rpm -qilp ${PKG}
-    done
+    pushd build/default/pkg
     rpmlint --file=${SELFDIR}/pkg/rpmlintrc . | tee rpmlint.txt
 
     # Trial install
-    dnf install -y RPMS/x86_64/*.rpm
+    dnf install -y x86_64/*.rpm
     dnf repoquery -l 'bsl*'
 }
 
@@ -158,8 +148,8 @@ function cmd_rpm_container {
     echo "Executing in container..."
     ${DOCKER} container start -a ${CID}
 
-    mkdir -p build/default/pkg/rpmbuild
-    ${DOCKER} container cp ${CID}:/usr/local/src/bsl/build/default/pkg/rpmbuild/. ${SELFDIR}/build/default/pkg/rpmbuild
+    mkdir -p build/default/pkg
+    ${DOCKER} container cp ${CID}:/usr/local/src/bsl/build/default/pkg/. ${SELFDIR}/build/default/pkg
 
     echo "Removing container..."
     ${DOCKER} container rm ${CID}
@@ -228,9 +218,6 @@ case "$1" in
         ;;
     prep)
         cmd_prep "$@"
-        ;;
-    rpm-prep)
-        cmd_rpm_prep
         ;;
     rpm-build)
         cmd_rpm_build

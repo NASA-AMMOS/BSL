@@ -1,14 +1,15 @@
 %bcond_with apidoc
 
 Name: bsl
-Version: @PROJECT_VERSION@
-Release: @GIT_TAG_MOD@%{?dist}
+Version: 1.0.0
+Release: 2%{?dist}
 Summary: The Bundle Protocol Security Library (BSL)
 URL: https://github.com/NASA-AMMOS/BSL
 # License "Apache-2.0" is not accepted by rpmlint
 License: ASL 2.0
-Source0: @CPACK_SOURCE_PACKAGE_FILE_NAME@.tar.gz
+Source0: %{name}-%{version}.tar.gz
 
+BuildRequires: rsync
 BuildRequires: cmake
 BuildRequires: gcc
 BuildRequires: gcc-c++
@@ -59,8 +60,10 @@ from the API with Doxygen.
 ./build.sh deps
 
 %cmake -DCMAKE_PREFIX_PATH=${PWD}/testroot/usr \
-       -DBUILD_UNITTEST=YES -DTEST_MEMCHECK=NO -DTEST_COVERAGE=NO \
+       -DPROJECT_VERSION=%{version} \
+       -DBUILD_UNITTEST=YES -DTEST_MEMCHECK=NO -DBUILD_COVERAGE=NO \
        -DBUILD_DOCS_MAN=YES %{?with_apidoc:-DBUILD_DOCS_API=YES}
+
 
 %build
 %cmake_build 
@@ -68,6 +71,7 @@ from the API with Doxygen.
 %if %{with apidoc}
 %cmake_build --target docs-api-html
 %endif
+
 
 %install
 # Only during this stage can the {buildroot} be written to
@@ -92,6 +96,10 @@ done
 popd
 
 %cmake_install
+
+
+%check
+%cmake_build --target test
 
 
 %files
@@ -143,7 +151,10 @@ popd
 
 
 %changelog
-* Wed Sep 17 2025 Brian Sipos - 1.0.0-0
+* Thu Sep 18 2025 Brian Sipos <brian.sipos@jhuapl.edu> 1.0.0-2
+- New package built with tito
+
+* Wed Sep 17 2025 Brian Sipos - 1.0.0-1
 - Initial release version.
 
 * Mon Oct 07 2024 Brian Sipos - 0.0.0-0

@@ -45,7 +45,7 @@ jobs:
               openssl-devel jansson-devel \
               doxygen graphviz plantuml texlive-bibtex \
               asciidoctor \
-              rpm-build rpmlint
+              tito rpm-build rpmlint
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -55,8 +55,6 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
-      - name: Prep
-        run: ./build.sh rpm-prep
       - name: Build
         run: ./build.sh rpm-build
       - name: Check
@@ -67,7 +65,7 @@ jobs:
           echo "## rpmlint results:" >> $GITHUB_STEP_SUMMARY
           echo >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cat build/default/pkg/rpmbuild/rpmlint.txt >> $GITHUB_STEP_SUMMARY
+          cat build/default/pkg/rpmlint.txt >> $GITHUB_STEP_SUMMARY || true
           echo >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
       - name: Archive
@@ -75,7 +73,7 @@ jobs:
         with:
           name: bsl-rpm
           path: |
-            build/default/pkg/rpmbuild/SRPMS
-            build/default/pkg/rpmbuild/RPMS
-            build/default/pkg/rpmbuild/rpmlint.txt
+            build/default/pkg/*.rpm
+            build/default/pkg/*/*.rpm
+            build/default/pkg/rpmlint.txt
           retention-days: 1
