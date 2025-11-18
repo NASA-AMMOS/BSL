@@ -42,7 +42,6 @@ jobs:
           submodules: recursive
       - name: Set up OS
         run: |
-          sudo rm /var/lib/man-db/auto-update
           sudo apt-get update
           sudo apt-get install -y \
               cmake ninja-build ruby build-essential \
