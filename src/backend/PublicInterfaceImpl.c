@@ -91,8 +91,8 @@ void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
 {
     ASSERT_ARG_NONNULL(obj);
 
-    // Only free block_numbers if BSL owns the memory
-    if (obj->block_numbers_owned && obj->block_numbers)
+    // Unconditionally free - BSL_FREE will use correct allocator
+    if (obj->block_numbers)
     {
         BSL_FREE(obj->block_numbers);
     }

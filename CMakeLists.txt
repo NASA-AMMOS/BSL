@@ -30,6 +30,7 @@ option(BUILD_UNITTEST "Enable building unit tests" ON)
 option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
 option(BUILD_COVERAGE "Enable runtime coverage logging and reporting" OFF)
 option(BUILD_FUZZING "Enable building fuzzing executables" OFF)
+option(ION_INTEGRATION "Build BSL with ION memory allocators" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -67,10 +68,54 @@ project(bsl
     VERSION ${PROJECT_VERSION}
 )
 
+# ION Integration - build with ION memory allocators
+if(ION_INTEGRATION)
+    message(STATUS "Building BSL with ION memory allocators")
+
+    # Define ION_INTEGRATION for C preprocessor
+    add_definitions(-DION_INTEGRATION)
+
+    # Find ION installation
+    find_path(ION_INCLUDE_DIR ion.h
+        HINTS ${ION_ROOT}/include ${CMAKE_SOURCE_DIR}/../../ici/include /usr/local/include
+        REQUIRED)
+    find_library(ION_ICI_LIBRARY ici
+        HINTS ${ION_ROOT}/lib ${CMAKE_SOURCE_DIR}/../../ici/x86_64-linux/lib /usr/local/lib
+        REQUIRED)
+
+    message(STATUS "ION headers: ${ION_INCLUDE_DIR}")
+    message(STATUS "ION libici: ${ION_ICI_LIBRARY}")
+
+    # Add ionpatch.c as a static library
+    add_library(bsl_ionpatch STATIC
+        src/ION_integration/ionpatch.c)
+    target_include_directories(bsl_ionpatch PRIVATE ${ION_INCLUDE_DIR})
+    target_link_libraries(bsl_ionpatch PRIVATE ${ION_ICI_LIBRARY})
+
+    # All BSL libraries must link against ionpatch
+    set(BSL_ION_DEPS bsl_ionpatch ${ION_ICI_LIBRARY})
+endif()
+
 # Language options
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
+# Add platform flag BEFORE POSIX flags (required by ION's platform.h)
+if(ION_INTEGRATION)
+    # Add _DEFAULT_SOURCE to make MAXPATHLEN and other system defs visible
+    add_definitions(-D_DEFAULT_SOURCE)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        add_definitions(-Dlinux)
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        add_definitions(-Ddarwin)
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+        add_definitions(-Dfreebsd)
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
+        add_definitions(-Dsolaris)
+    elseif(WIN32)
+        add_definitions(-Dmingw)
+    endif()
+endif()
 # Force specific POSIX compatibility version
 add_definitions(
   -D_XOPEN_SOURCE

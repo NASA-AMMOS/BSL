@@ -52,6 +52,9 @@ target_include_directories(
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/bsl>
 )
+if(ION_INTEGRATION)
+    target_link_libraries(bsl_front PUBLIC ${BSL_ION_DEPS})
+endif()
 
 # Crypto Library
 set(BSL_CRYPTO_C
@@ -71,6 +74,9 @@ target_link_libraries(bsl_crypto INTERFACE OpenSSL::Crypto)
 if(TARGET valgrind::valgrind)
   target_compile_definitions(bsl_crypto PRIVATE HAVE_VALGRIND)
 endif(TARGET valgrind::valgrind)
+if(ION_INTEGRATION)
+    target_link_libraries(bsl_crypto PUBLIC ${BSL_ION_DEPS})
+endif()
 
 # Default Security Context library
 set(BSL_DEFAULT_SC_H
@@ -95,6 +101,9 @@ set_target_properties(bsl_default_sc
 target_link_libraries(bsl_default_sc PUBLIC bsl_front)
 target_link_libraries(bsl_default_sc PUBLIC bsl_crypto)
 target_link_libraries(bsl_default_sc PUBLIC QCBOR::qcbor)
+if(ION_INTEGRATION)
+    target_link_libraries(bsl_default_sc PUBLIC ${BSL_ION_DEPS})
+endif()
 
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
@@ -115,6 +124,9 @@ set_target_properties(bsl_sample_pp
 )
 target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
+if(ION_INTEGRATION)
+    target_link_libraries(bsl_sample_pp PUBLIC ${BSL_ION_DEPS})
+endif()
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H
@@ -151,6 +163,9 @@ set_target_properties(bsl_dynamic
 target_link_libraries(bsl_dynamic PUBLIC bsl_front)
 target_link_libraries(bsl_dynamic PUBLIC MLIB::mlib)
 target_link_libraries(bsl_dynamic PUBLIC QCBOR::qcbor)
+if(ION_INTEGRATION)
+    target_link_libraries(bsl_dynamic PUBLIC ${BSL_ION_DEPS})
+endif()
 
 add_subdirectory(mock_bpa)
 

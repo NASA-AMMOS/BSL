@@ -80,7 +80,6 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
     {
         return -2;
     }
-    result_primary_block->block_numbers_owned = true;  // BSL owns this memory
     size_t                 ix = 0;
     MockBPA_BlockList_it_t bit;
     for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
