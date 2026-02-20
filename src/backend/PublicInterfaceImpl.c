@@ -91,7 +91,11 @@ void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
 {
     ASSERT_ARG_NONNULL(obj);
 
-    BSL_FREE(obj->block_numbers);
+    // Only free block_numbers if BSL owns the memory
+    if (obj->block_numbers_owned && obj->block_numbers)
+    {
+        BSL_FREE(obj->block_numbers);
+    }
     obj->block_numbers = NULL;
 
     BSL_Data_Deinit(&obj->encoded);

@@ -235,6 +235,12 @@ typedef struct BSL_PrimaryBlock_s
      * the same order in which they appear in the bundle.
      */
     uint64_t *block_numbers;
+    /** Flag indicating whether BSL owns the block_numbers array and should free it.
+     * Set to true if BSL allocated the array (via BSL_CALLOC/BSL_MALLOC).
+     * Set to false if the host BPA owns the memory (e.g., ION's MTAKE or shared memory).
+     * Matches the ownership pattern used by BSL_Data_t.owned.
+     */
+    bool block_numbers_owned;
 
     /** The encoded form of the primary block as contiguous data.
      */

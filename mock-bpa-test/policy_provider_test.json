@@ -2,12 +2,14 @@
   "policyrule_set": [
     {
       "policyrule": {
-      "desc": "Integrity source rule",
+      "desc": "Integrity source rule for outgoing bundles",
       "filter": {
         "rule_id": "1",
         "role": "s",
+        "src": "ipn:2.*",
+        "dest": "ipn:3.*",
         "tgt": 1,
-        "loc": "clin",
+        "loc": "appin",
         "sc_id": 1
       },
       "spec": {
@@ -47,12 +49,14 @@
   },
   {
       "policyrule": {
-      "desc": "Confidentiality source rule",
+      "desc": "Confidentiality source rule for outgoing bundles",
       "filter": {
         "rule_id": "2",
         "role": "s",
+        "src": "ipn:2.*",
+        "dest": "ipn:3.*",
         "tgt": 1,
-        "loc": "clin",
+        "loc": "appin",
         "sc_id": 2
       },
       "spec": {
