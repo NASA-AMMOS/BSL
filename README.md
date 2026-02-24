@@ -62,7 +62,7 @@ _Required: Build and Run Unit Tests_
  * CMake, GCC or Clang, OpenSSL (Development), Ninja Build, Valgrind, Memcheck.
 
 _Optional: To Construct Docs, etc..._
- * Doxygen, Ruby, gcovr (as Python package).
+ * Doxygen, Ruby, gcovr (as Python package), graphviz, plantuml, texlive-bibtex, asciidoctor.
 
 ## Building BSL
 
@@ -101,6 +101,12 @@ Code Coverage
 ```
 ./build.sh coverage
 ```
+> [!NOTE]
+> The coverage target requires that the build prepare stage was run with the CLI flag `-DBUILD_COVERAGE=ON`:
+> ```
+> ./build.sh prep -DBUILD_COVERAGE=ON
+> ```
+> For a full list of optional build flags, see [section 3.4.1 of the BSL product guide](https://nasa-ammos.github.io/BSL-docs/product-guide/html/index.html#sec-proc-build-devel-cmake).
 
 The output HTML can be opened in a browser using:
 ```
