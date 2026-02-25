@@ -101,6 +101,10 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
 
     CHK_PROPERTY(created_block_num > 1);
 
+    // Store the created block number in the security operation so the
+    // security context can find it
+    sec_oper->sec_block_num = created_block_num;
+
     const int bib_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
     if (bib_result != 0) // || outcome->is_success == false)
     {
