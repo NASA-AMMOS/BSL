@@ -134,6 +134,19 @@ BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block
     {
         return NULL;
     }
+
+    /* Ensure the BTSD buffer is large enough before writing */
+    if (btsd_len > 0 && HostDescriptorTable.block_realloc_btsd_fn)
+    {
+        int realloc_result = HostDescriptorTable.block_realloc_btsd_fn(bundle, block_num, btsd_len);
+        if (realloc_result != 0)
+        {
+            BSL_LOG_ERR("Failed to realloc BTSD buffer: block=%llu size=%zu result=%d",
+                        (unsigned long long)block_num, btsd_len, realloc_result);
+            return NULL;
+        }
+    }
+
     return HostDescriptorTable.block_write_btsd_fn(bundle, block_num, btsd_len);
 }
 
