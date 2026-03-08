@@ -80,7 +80,7 @@ if(ION_INTEGRATION)
         HINTS ${ION_ROOT}/include ${CMAKE_SOURCE_DIR}/../../ici/include /usr/local/include
         REQUIRED)
     find_library(ION_ICI_LIBRARY ici
-        HINTS ${ION_ROOT}/lib ${CMAKE_SOURCE_DIR}/../../ici/x86_64-linux/lib /usr/local/lib
+        HINTS ${ION_ROOT}/lib ${ION_ROOT}/.libs ${CMAKE_SOURCE_DIR}/../../ici/x86_64-linux/lib /usr/local/lib
         REQUIRED)
 
     message(STATUS "ION headers: ${ION_INCLUDE_DIR}")
