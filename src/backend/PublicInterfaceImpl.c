@@ -91,7 +91,11 @@ void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
 {
     ASSERT_ARG_NONNULL(obj);
 
-    BSL_FREE(obj->block_numbers);
+    // Unconditionally free - BSL_FREE will use correct allocator
+    if (obj->block_numbers)
+    {
+        BSL_FREE(obj->block_numbers);
+    }
     obj->block_numbers = NULL;
 
     BSL_Data_Deinit(&obj->encoded);
@@ -153,6 +157,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
             BSL_LOG_WARNING("Failed to get block number %" PRIu64, primary_block.block_numbers[ix]);
             continue;
         }
+
         BSL_SecActionList_it_t act_it;
         for (BSL_SecActionList_it(act_it, output_action_set->actions); !BSL_SecActionList_end_p(act_it);
              BSL_SecActionList_next(act_it))
@@ -166,7 +171,6 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                     continue;
                 }
 
-                // ASB decoder needs the whole BTSD now
                 BSL_Data_t btsd_copy;
                 BSL_Data_InitBuffer(&btsd_copy, block.btsd_len);
 

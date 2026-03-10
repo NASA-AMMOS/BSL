@@ -135,9 +135,13 @@ typedef enum
         return val;       \
     }
 /// Return from void functions if condition fails.
+#ifndef CHKVOID
 #define CHKVOID(cond) CHKRET(cond, )
+#endif
 /// Return a null pointer if condition fails.
+#ifndef CHKNULL
 #define CHKNULL(cond) CHKRET(cond, NULL)
+#endif
 /// Return false if condition fails.
 #define CHKFALSE(cond) CHKRET(cond, false)
 /// Return the error value 1 if condition fails.

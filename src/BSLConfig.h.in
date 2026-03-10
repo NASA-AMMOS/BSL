@@ -32,6 +32,16 @@
 extern "C" {
 #endif
 
+/*	--------- Start of modifications for ION integration -----------*/
+#ifdef ION_INTEGRATION
+    /*  Include ionpatch.h to redefine BSL memory allocators.
+     *  This must come BEFORE the #ifndef guards for BSL_MALLOC, etc.
+     *  Path is relative to the include directories set by CMake.
+     */
+    #include "ION_integration/ionpatch.h"
+#endif  /* ION_INTEGRATION */
+/*	---------- End of modifications for ION integration ------------*/
+
 /** Part of POSIX.1-2008
  */
 #cmakedefine HAVE_CLOCK_GETTIME
