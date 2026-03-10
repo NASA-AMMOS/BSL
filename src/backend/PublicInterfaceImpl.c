@@ -157,6 +157,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
             BSL_LOG_WARNING("Failed to get block number %" PRIu64, primary_block.block_numbers[ix]);
             continue;
         }
+
         BSL_SecActionList_it_t act_it;
         for (BSL_SecActionList_it(act_it, output_action_set->actions); !BSL_SecActionList_end_p(act_it);
              BSL_SecActionList_next(act_it))
@@ -170,7 +171,6 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                     continue;
                 }
 
-                // ASB decoder needs the whole BTSD now
                 BSL_Data_t btsd_copy;
                 BSL_Data_InitBuffer(&btsd_copy, block.btsd_len);
 

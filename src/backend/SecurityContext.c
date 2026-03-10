@@ -273,6 +273,87 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     return auth_success ? BSL_SUCCESS : BSL_ERR_SECURITY_OPERATION_FAILED;
 }
 
+/** Lightweight BCB verifier: validates ASB is decodable and parameters are
+ *  present, but does NOT decrypt the payload.  A verifier must not modify
+ *  the bundle so that downstream acceptors can still process it.
+ */
+static int BSL_ExecBCBVerifier(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                               BSL_SecOper_t *sec_oper)
+{
+    CHK_ARG_NONNULL(lib);
+    CHK_ARG_NONNULL(bundle);
+    CHK_PRECONDITION(BSL_SecOper_IsConsistent(sec_oper));
+
+    BSL_CanonicalBlock_t sec_blk = { 0 };
+    if (BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk) != BSL_SUCCESS)
+    {
+        BSL_LOG_ERR("BCB Verifier: could not get block metadata");
+        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
+        return BSL_ERR_HOST_CALLBACK_FAILED;
+    }
+
+    /* Decode the ASB to validate it is well-formed. */
+    BSL_Data_t btsd_copy;
+    BSL_Data_InitBuffer(&btsd_copy, sec_blk.btsd_len);
+
+    BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, sec_blk.block_num);
+    BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
+    BSL_SeqReader_Destroy(btsd_read);
+
+    BSL_AbsSecBlock_t abs_sec_block;
+    BSL_AbsSecBlock_InitEmpty(&abs_sec_block);
+    if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_copy) != BSL_SUCCESS)
+    {
+        BSL_LOG_ERR("BCB Verifier: failed to parse ASB CBOR");
+        BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_Data_Deinit(&btsd_copy);
+        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
+        return BSL_ERR_DECODING;
+    }
+    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_BYTES, sec_blk.btsd_len);
+    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_COUNT, 1);
+    BSL_Data_Deinit(&btsd_copy);
+
+    CHK_PROPERTY(BSL_AbsSecBlock_IsConsistent(&abs_sec_block));
+
+    /* Copy ASB params to the security operation for policy inspection. */
+    for (size_t i = 0; i < BSLB_SecParamList_size(abs_sec_block.params); i++)
+    {
+        const BSL_SecParam_t *param = BSLB_SecParamList_cget(abs_sec_block.params, i);
+        CHK_PROPERTY(BSL_SecParam_IsConsistent(param));
+        BSLB_SecParamList_push_back(sec_oper->_param_list, *param);
+    }
+
+    /* Intentionally do NOT call the security context execute function.
+     * Decryption would modify the payload in-place, which a verifier
+     * must never do.  We only confirm the ASB is decodable and contains
+     * the expected results for our target block. */
+    bool found_result = false;
+    for (size_t i = 0; i < BSLB_SecResultList_size(abs_sec_block.results); i++)
+    {
+        BSL_SecResult_t *result = BSLB_SecResultList_get(abs_sec_block.results, i);
+        if (result->target_block_num == sec_oper->target_block_num)
+        {
+            found_result = true;
+            break;
+        }
+    }
+
+    BSL_AbsSecBlock_Deinit(&abs_sec_block);
+
+    if (!found_result)
+    {
+        BSL_LOG_ERR("BCB Verifier: no result found for target block %" PRIu64,
+                    sec_oper->target_block_num);
+        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
+        return BSL_ERR_SECURITY_OPERATION_FAILED;
+    }
+
+    BSL_LOG_INFO("BCB Verify SUCCESS");
+    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_VERIFIER_COUNT, 1);
+    return BSL_SUCCESS;
+}
+
 static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                                BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
 {
@@ -514,6 +595,10 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
                 if (BSL_SecOper_IsRoleSource(sec_oper))
                 {
                     errcode = BSL_ExecBCBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                }
+                else if (BSL_SecOper_IsRoleVerifier(sec_oper))
+                {
+                    errcode = BSL_ExecBCBVerifier(lib, bundle, sec_oper);
                 }
                 else
                 {
