@@ -226,11 +226,11 @@ When heap memory is needed at BSL runtime, the following macros are used and hav
 To help with the error reporting conventions above, the following macros can be used to simplify function precondition checking.
 The precondition checks (on function parameters or on any other state generally) should be the first thing inside the function definition.
 
-- [CHKRET(cond, val)](@ref CHKRET) for general error values
-- [CHKNULL(cond)](@ref CHKNULL) when the function has a pointer return type
-- [CHKERR1(cond)](@ref CHKERR1) when the function has an `int` return type
-- [CHKVOID(cond)](@ref CHKVOID) when the function has an `void` return type
-- [CHKFALSE(cond)](@ref CHKFALSE) when the function has an `bool` return type
+- [BSL_CHKRET(cond, val)](@ref BSL_CHKRET) for general error values
+- [BSL_CHKNULL(cond)](@ref BSL_CHKNULL) when the function has a pointer return type
+- [BSL_CHKERR1(cond)](@ref BSL_CHKERR1) when the function has an `int` return type
+- [BSL_CHKVOID(cond)](@ref BSL_CHKVOID) when the function has an `void` return type
+- [BSL_CHKFALSE(cond)](@ref BSL_CHKFALSE) when the function has an `bool` return type
 
 # Enumerations
 

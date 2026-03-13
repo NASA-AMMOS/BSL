@@ -261,8 +261,8 @@ void BSL_closelog(void)
 
 int BSL_LogGetSeverity(int *severity, const char *name)
 {
-    CHKERR1(severity)
-    CHKERR1(name)
+    BSL_CHKERR1(severity);
+    BSL_CHKERR1(name);
 
     for (size_t ix = 0; ix < sizeof(sev_names) / sizeof(const char *); ++ix)
     {

@@ -150,8 +150,8 @@ int bsl_mock_decode_eid_from_ctx(QCBORDecodeContext *dec, BSL_HostEID_t *eid)
 int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk)
 {
     // GCOV_EXCL_START
-    CHKERR1(dec);
-    CHKERR1(blk);
+    BSL_CHKERR1(dec);
+    BSL_CHKERR1(blk);
     // GCOV_EXCL_STOP
 
     const size_t begin = QCBORDecode_Tell(dec);
@@ -236,8 +236,8 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
 int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t *blk)
 {
     // GCOV_EXCL_START
-    CHKERR1(dec);
-    CHKERR1(blk);
+    BSL_CHKERR1(dec);
+    BSL_CHKERR1(blk);
     // GCOV_EXCL_STOP
 
     const size_t begin = QCBORDecode_Tell(dec);
@@ -299,8 +299,8 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
 int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
 {
     // GCOV_EXCL_START
-    CHKERR1(dec);
-    CHKERR1(bundle);
+    BSL_CHKERR1(dec);
+    BSL_CHKERR1(bundle);
     // GCOV_EXCL_STOP
 
     QCBORItem decitem;

@@ -35,13 +35,13 @@
 
 void bsl_mock_eid_init(bsl_mock_eid_t *eid)
 {
-    CHKVOID(eid);
+    BSL_CHKVOID(eid);
     memset(eid, 0, sizeof(bsl_mock_eid_t));
 }
 
 void bsl_mock_eid_deinit(bsl_mock_eid_t *eid)
 {
-    CHKVOID(eid);
+    BSL_CHKVOID(eid);
     switch (eid->scheme)
     {
         case BSL_MOCK_EID_IPN:
@@ -55,7 +55,7 @@ void bsl_mock_eid_deinit(bsl_mock_eid_t *eid)
 
 int MockBPA_EID_Init(void *user_data _U_, BSL_HostEID_t *eid)
 {
-    CHKERR1(eid);
+    BSL_CHKERR1(eid);
     memset(eid, 0, sizeof(BSL_HostEID_t));
     eid->handle = BSL_MALLOC(sizeof(bsl_mock_eid_t));
     if (!(eid->handle))
@@ -68,7 +68,7 @@ int MockBPA_EID_Init(void *user_data _U_, BSL_HostEID_t *eid)
 
 void MockBPA_EID_Deinit(void *user_data _U_, BSL_HostEID_t *eid)
 {
-    CHKVOID(eid);
+    BSL_CHKVOID(eid);
     if (eid->handle)
     {
         bsl_mock_eid_deinit(eid->handle);
@@ -79,8 +79,8 @@ void MockBPA_EID_Deinit(void *user_data _U_, BSL_HostEID_t *eid)
 
 int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data _U_)
 {
-    CHKERR1(eid);
-    CHKERR1(text);
+    BSL_CHKERR1(eid);
+    BSL_CHKERR1(text);
 
     // any spaces are invalid URI
     // agrees with isspace()
@@ -174,8 +174,8 @@ int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data
 
 // int mock_bpa_eid_to_text(string_t out, const BSL_HostEID_t *eid, void *user_data _U_)
 // {
-//     CHKERR1(eid);
-//     CHKERR1(eid->handle);
+//     BSL_CHKERR1(eid);
+//     BSL_CHKERR1(eid->handle);
 //     bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
 
 //     switch (obj->scheme)
