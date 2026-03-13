@@ -1,5 +1,5 @@
 ##
-## Copyright (c) 2025 The Johns Hopkins University Applied Physics
+## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Bundle Protocol Security Library (BSL).
@@ -29,6 +29,8 @@ on:
 jobs:
   build:
     name: Build and analyze
+    environment:
+      name: sonarcloud
     runs-on: ubuntu-latest
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
