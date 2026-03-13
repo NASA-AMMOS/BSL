@@ -130,9 +130,9 @@ typedef enum
  * @deprecated
  */
 #define BSL_CHKRET(cond, val) \
-    if (!LIKELY(cond))    \
-    {                     \
-        return val;       \
+    if (!LIKELY(cond))        \
+    {                         \
+        return val;           \
     }
 /// Return from void functions if condition fails.
 #define BSL_CHKVOID(cond) BSL_CHKRET(cond, )
@@ -335,10 +335,7 @@ int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t bufsize);
 /** Static initializer for an invalid ::BSL_HostEID_t.
  * Even after this, BSL_HostEID_Init() must be used to get into a valid state.
  */
-#define BSL_HOSTEID_INIT_INVALID \
-    {                            \
-        .handle = NULL           \
-    }
+#define BSL_HOSTEID_INIT_INVALID { .handle = NULL }
 
 /** Initialize an abstract EID.
  *
@@ -390,10 +387,7 @@ int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes
 /** Static initializer for an invalid ::BSL_HostEIDPattern_t.
  * Even after this, BSL_HostEIDPattern_Init() must be used to get into a valid state.
  */
-#define BSL_HOSTEID_INIT_INVALID \
-    {                            \
-        .handle = NULL           \
-    }
+#define BSL_HOSTEID_INIT_INVALID { .handle = NULL }
 
 /** Initialize an abstract EID Pattern.
  *
