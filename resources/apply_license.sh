@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## Copyright (c) 2026 The Johns Hopkins University Applied Physics
+## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Bundle Protocol Security Library (BSL).
@@ -39,7 +39,7 @@ fi
 cd $SELFDIR
 
 LICENSEOPTS="${LICENSEOPTS} --tmpl ${SELFDIR}/resources/apply_license.tmpl"
-LICENSEOPTS="${LICENSEOPTS} --years $(date +%Y)"
+LICENSEOPTS="${LICENSEOPTS} --years 2025-2026"
 # Excludes only apply to directory (--dir) mode and not file mode
 LICENSEOPTS="${LICENSEOPTS} --exclude=${SELFDIR}/docs/api/*.md"
 
