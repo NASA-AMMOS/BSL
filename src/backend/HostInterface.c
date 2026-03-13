@@ -48,6 +48,13 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
     CHK_PRECONDITION(desc.eidpat_deinit);
     CHK_PRECONDITION(desc.eidpat_from_text);
     CHK_PRECONDITION(desc.eidpat_match);
+
+    // Dyanmic mem callbacks
+    CHK_PRECONDITION(desc.malloc_cb);
+    CHK_PRECONDITION(desc.realloc_cb);
+    CHK_PRECONDITION(desc.calloc_cb);
+    CHK_PRECONDITION(desc.free_cb);
+
     // GCOV_EXCL_STOP
 
     HostDescriptorTable = desc;
@@ -223,4 +230,24 @@ bool BSL_HostEIDPattern_IsMatch(const BSL_HostEIDPattern_t *pat, const BSL_HostE
     ASSERT_ARG_NONNULL(eid);
     ASSERT_PRECONDITION(HostDescriptorTable.eidpat_match);
     return HostDescriptorTable.eidpat_match(pat, eid, HostDescriptorTable.user_data);
+}
+
+void *BSL_MALLOC(size_t size)
+{
+    return HostDescriptorTable.malloc_cb(size);
+}
+
+void *BSL_REALLOC(void *ptr, size_t size)
+{
+    return HostDescriptorTable.realloc_cb(ptr, size);
+}
+
+void *BSL_CALLOC(size_t nmemb, size_t size)
+{
+    return HostDescriptorTable.calloc_cb(nmemb, size);
+}
+
+void BSL_FREE(void *ptr)
+{
+    HostDescriptorTable.free_cb(ptr);
 }

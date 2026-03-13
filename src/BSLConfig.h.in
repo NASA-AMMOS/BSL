@@ -53,30 +53,6 @@ extern "C" {
  */
 const char * bsl_version(void);
 
-#ifndef BSL_MALLOC
-/** Uses the same function signature as C99 malloc().
- */
-#define BSL_MALLOC malloc
-#endif /* BSL_MALLOC */
-
-#ifndef BSL_REALLOC
-/** Uses the same function signature as C99 realloc().
- */
-#define BSL_REALLOC realloc
-#endif /* BSL_REALLOC */
-
-#ifndef BSL_FREE
-/** Uses the same function signature as C99 free().
- */
-#define BSL_FREE free
-#endif /* BSL_FREE */
-
-#ifndef BSL_CALLOC
-/** Uses the same function signature as C99 calloc().
- */
-#define BSL_CALLOC calloc
-#endif /* BSL_CALLOC */
-
 /** Force the use of M_ prefixed macros for M*LIB
  */
 //#define M_USE_SMALL_NAME 0

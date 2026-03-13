@@ -406,6 +406,11 @@ BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent)
         .eidpat_deinit    = mock_bpa_eidpat_deinit,
         .eidpat_from_text = mock_bpa_eidpat_from_text,
         .eidpat_match     = mock_bpa_eidpat_match,
+
+        .malloc_cb = malloc,
+        .realloc_cb = realloc,
+        .calloc_cb = calloc,
+        .free_cb = free,
     };
     return bpa;
 }

@@ -425,6 +425,11 @@ int BSL_HostEIDPattern_DecodeFromText(BSL_HostEIDPattern_t *pat, const char *tex
  */
 bool BSL_HostEIDPattern_IsMatch(const BSL_HostEIDPattern_t *pat, const BSL_HostEID_t *eid);
 
+void *BSL_MALLOC(size_t size);
+void *BSL_REALLOC(void *ptr, size_t size);
+void *BSL_CALLOC(size_t nmemb, size_t size);
+void BSL_FREE(void *ptr);
+
 /** Block types using IANA-assigned code points from @cite iana:bundle.
  */
 typedef enum

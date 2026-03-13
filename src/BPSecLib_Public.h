@@ -350,6 +350,19 @@ typedef struct
 
     /// @brief Host BPA function that returns true if the given EID matched an EID pattern.
     bool (*eidpat_match)(const BSL_HostEIDPattern_t *pat, const BSL_HostEID_t *eid, void *user_data);
+
+    /// @brief Dynamic memory allocation callback. Returns valid heap pointer on success, NULL on failure.
+    void *(*malloc_cb)(size_t size);
+
+    /// @brief Dynamic memory re-allocation callback. Returns valid heap pointer on success, NULL on failure.
+    void *(*realloc_cb)(void *ptr, size_t size);
+
+    /// @brief Contiguous dynamic memory allocation callback. Returns valid 0-initialized heap pointer on success, NULL on failure.
+    void *(*calloc_cb)(size_t nmemb, size_t size);
+
+    /// @brief Free dynamic memory allocation callback.
+    void (*free_cb)(void* ptr);
+
 } BSL_HostDescriptors_t;
 
 /** Set the BPA descriptor (callbacks) for this process.
