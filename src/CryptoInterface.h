@@ -124,6 +124,10 @@ typedef struct BSL_AuthCtx_s
      * @note Private value
      */
     size_t block_size;
+    /** Storage for input blocks.
+     * After init this is sized to #block_size.
+     */
+    BSL_Data_t in_buf;
 } BSL_AuthCtx_t;
 
 /**
@@ -141,6 +145,14 @@ typedef struct BSL_Cipher_s
     void *keyhandle;
     /// block size of cipher context
     size_t block_size;
+    /** Storage for input blocks.
+     * After init this is sized to #block_size.
+     */
+    BSL_Data_t in_buf;
+    /** Storage for output blocks.
+     * After init this is sized to #block_size.
+     */
+    BSL_Data_t out_buf;
 } BSL_Cipher_t;
 
 /**
@@ -242,12 +254,12 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
 
 /**
  * Initialize crypto context resources and set as encoding or decoding
- * @param cipher_ctx pointer to context to initialize
+ * @param[out] cipher_ctx pointer to context to initialize
  * @param aes_var AES GCM variant to use
  * @param enc enum for BSL_CRYPTO_ENCRYPT or BSL_CRYPTO_DECRYPT
- * @param init_vec pointer to initialization vector (IV) data
- * @param iv_len length of IV data
- * @param key_handle key handle to use
+ * @param[in] init_vec pointer to initialization vector (IV) data
+ * @param[in] iv_len length of IV data
+ * @param[in] key_handle key handle to use
  * @return 0 if successful
  */
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
@@ -276,11 +288,6 @@ int BSL_Crypto_RemoveRegistryKey(const char *keyid);
 int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len);
 
 /**
- * @todo Doxygen
- */
-int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, BSL_Data_t plaintext, BSL_Data_t ciphertext);
-
-/**
  * Add data to encrypt or decrypt to the context sequentially
  * @param cipher_ctx pointer to context to add data to
  * @param[in] reader pointer to sequential reader - input to crypto operation
@@ -288,6 +295,9 @@ int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, BSL_Data_t plaintext, BSL_Data_
  * @return 0 if successful
  */
 int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer);
+
+/// @overload
+int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, const BSL_Data_t *input, BSL_Data_t *output);
 
 /**
  * Get the tag of the crypto operation
@@ -314,6 +324,7 @@ int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const void *tag);
  * @return 0 if successful
  */
 int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer);
+/// @overload
 int BSL_Cipher_FinalizeData(BSL_Cipher_t *cipher_ctx, BSL_Data_t *extra);
 
 /**
