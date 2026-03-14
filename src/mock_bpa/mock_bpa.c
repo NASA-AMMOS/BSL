@@ -104,8 +104,13 @@ static void show_usage(const char *argv0)
 
 int main(int argc, char **argv)
 {
-    BSL_openlog();
     int retval = 0;
+    if (BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(&agent)))
+    {
+        retval = 2;
+    }
+
+    BSL_openlog();
     int res;
 
     BSL_CryptoInit();
@@ -121,11 +126,7 @@ int main(int argc, char **argv)
         sigaction(SIGINT, &stopper, NULL);
         sigaction(SIGTERM, &stopper, NULL);
     }
-    // always run these steps
-    if (BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(&agent)))
-    {
-        retval = 2;
-    }
+
     BSL_HostEID_Init(&app_eid);
     BSL_HostEID_Init(&sec_eid);
 

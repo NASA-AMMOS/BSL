@@ -50,10 +50,25 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
     CHK_PRECONDITION(desc.eidpat_match);
 
     // Dyanmic mem callbacks
-    CHK_PRECONDITION(desc.malloc_cb);
-    CHK_PRECONDITION(desc.realloc_cb);
-    CHK_PRECONDITION(desc.calloc_cb);
-    CHK_PRECONDITION(desc.free_cb);
+    if (NULL == desc.malloc_cb)
+    {
+        desc.malloc_cb = malloc;
+    }
+
+    if (NULL == desc.realloc_cb)
+    {
+        desc.realloc_cb = realloc;
+    }
+
+    if (NULL == desc.calloc_cb)
+    {
+        desc.calloc_cb = calloc;
+    }
+
+    if (NULL == desc.free_cb)
+    {
+        desc.free_cb = free;
+    }
 
     // GCOV_EXCL_STOP
 

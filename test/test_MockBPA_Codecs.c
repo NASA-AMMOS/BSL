@@ -50,14 +50,14 @@ static void printencoded(const uint8_t *pEncoded, size_t nLen)
 
 void suiteSetUp(void)
 {
-    BSL_openlog();
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
+    BSL_openlog();
 }
 
 int suiteTearDown(int failures)
 {
-    BSL_HostDescriptors_Clear();
     BSL_closelog();
+    BSL_HostDescriptors_Clear();
     return failures;
 }
 

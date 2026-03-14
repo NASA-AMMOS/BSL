@@ -30,6 +30,7 @@
 
 #include <backend/UtilDefs_SeqReadWrite.h>
 #include <backend/PublicInterfaceImpl.h>
+#include <mock_bpa/agent.h>
 
 #include "bsl_test_utils.h"
 
@@ -197,6 +198,7 @@ static uint8_t test_256[32] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 
 
 void suiteSetUp(void)
 {
+    TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
     BSL_openlog();
 }
 
