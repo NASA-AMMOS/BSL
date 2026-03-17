@@ -110,8 +110,8 @@ int main(int argc, char **argv)
     }
 
     BSL_openlog();
-    int res;
     int retval = 0;
+    int res;
 
     BSL_CryptoInit();
     if ((res = MockBPA_Agent_Init(&agent)))
