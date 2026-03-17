@@ -431,7 +431,7 @@ bool BSL_HostEIDPattern_IsMatch(const BSL_HostEIDPattern_t *pat, const BSL_HostE
 void *BSL_MALLOC(size_t size);
 
 /// @brief Dynamic memory reallocation
-/// @param ptr exisitng dynamic memory pointer
+/// @param ptr existing dynamic memory pointer
 /// @param size new allocation size
 /// @return valid heap pointer
 void *BSL_REALLOC(void *ptr, size_t size);
