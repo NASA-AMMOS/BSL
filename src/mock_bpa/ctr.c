@@ -28,7 +28,7 @@
 
 void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr)
 {
-    CHKVOID(ctr);
+    BSL_CHKVOID(ctr);
     memset(ctr, 0, sizeof(*ctr));
 
     BSL_Data_Init(&(ctr->encoded));
@@ -41,8 +41,8 @@ void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr)
 
 void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src)
 {
-    CHKVOID(ctr);
-    CHKVOID(src);
+    BSL_CHKVOID(ctr);
+    BSL_CHKVOID(src);
     BSL_Data_InitMove(&(ctr->encoded), &(src->encoded));
 
     ctr->bundle     = src->bundle;
@@ -54,7 +54,7 @@ void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src)
 
 void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr)
 {
-    CHKVOID(ctr);
+    BSL_CHKVOID(ctr);
     BSL_Data_Deinit(&(ctr->encoded));
 
     if (ctr->bundle)
@@ -66,7 +66,7 @@ void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr)
 
 int mock_bpa_decode(mock_bpa_ctr_t *ctr)
 {
-    CHKERR1(ctr);
+    BSL_CHKERR1(ctr);
     MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
 
     if (ctr->bundle_ref.data)
@@ -110,9 +110,9 @@ M_ALGO_DEF(MockBPA_BlockList, M_DEQUE_OPLIST(MockBPA_BlockList, M_OPEXTEND(M_POD
 
 int mock_bpa_encode(mock_bpa_ctr_t *ctr)
 {
-    CHKERR1(ctr);
+    BSL_CHKERR1(ctr);
     MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
-    CHKERR1(bundle);
+    BSL_CHKERR1(bundle);
 
     // TODO this is not really defined by BPSec or BPv7
     MockBPA_BlockList_sort(bundle->blocks);

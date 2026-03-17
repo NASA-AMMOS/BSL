@@ -396,8 +396,8 @@ static int BSL_TestUtils_DecodeBase16_char(uint8_t chr)
 
 int BSL_TestUtils_DecodeBase16(BSL_Data_t *out, const string_t in)
 {
-    CHKERR1(out);
-    CHKERR1(in);
+    BSL_CHKERR1(out);
+    BSL_CHKERR1(in);
 
     const size_t in_len = string_size(in);
     if (in_len % 2 != 0)

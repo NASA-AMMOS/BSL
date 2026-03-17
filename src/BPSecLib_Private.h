@@ -129,25 +129,25 @@ typedef enum
  * @param val The return value if the check fails.
  * @deprecated
  */
-#define CHKRET(cond, val) \
-    if (!LIKELY(cond))    \
-    {                     \
-        return val;       \
+#define BSL_CHKRET(cond, val) \
+    if (!LIKELY(cond))        \
+    {                         \
+        return val;           \
     }
 /// Return from void functions if condition fails.
-#define CHKVOID(cond) CHKRET(cond, )
+#define BSL_CHKVOID(cond) BSL_CHKRET(cond, )
 /// Return a null pointer if condition fails.
-#define CHKNULL(cond) CHKRET(cond, NULL)
+#define BSL_CHKNULL(cond) BSL_CHKRET(cond, NULL)
 /// Return false if condition fails.
-#define CHKFALSE(cond) CHKRET(cond, false)
+#define BSL_CHKFALSE(cond) BSL_CHKRET(cond, false)
 /// Return the error value 1 if condition fails.
-#define CHKERR1(cond) CHKRET(cond, 1)
+#define BSL_CHKERR1(cond) BSL_CHKRET(cond, 1)
 /** Check a value for non-zero and return that value.
  * @warning The parameter is evaluated twice so should be a simple variable.
  *
  * @param value The value to check and conditionally return.
  */
-#define CHKERRVAL(value) CHKRET(!(value), (value))
+#define BSL_CHKERRVAL(value) BSL_CHKRET(!(value), (value))
 
 /** @brief Codes indicating the fate of a block if a security operation over it fails
  *

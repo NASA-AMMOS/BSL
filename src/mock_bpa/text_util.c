@@ -67,8 +67,8 @@ static const char *unreserved = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstu
 
 int mock_bpa_uri_percent_encode(m_string_t out, const m_string_t in, const char *safe)
 {
-    CHKERR1(out);
-    CHKERR1(in);
+    BSL_CHKERR1(out);
+    BSL_CHKERR1(in);
 
     const size_t in_len = m_string_size(in);
     const char  *curs   = m_string_get_cstr(in);
@@ -113,8 +113,8 @@ int mock_bpa_uri_percent_encode(m_string_t out, const m_string_t in, const char 
 
 int mock_bpa_uri_percent_decode(m_string_t out, const m_string_t in)
 {
-    CHKERR1(out);
-    CHKERR1(in);
+    BSL_CHKERR1(out);
+    BSL_CHKERR1(in);
 
     const size_t in_len = m_string_size(in);
     const char  *curs   = m_string_get_cstr(in);
@@ -158,8 +158,8 @@ int mock_bpa_uri_percent_decode(m_string_t out, const m_string_t in)
 
 int mock_bpa_slash_escape(m_string_t out, const m_string_t in, const char quote)
 {
-    CHKERR1(out);
-    CHKERR1(in);
+    BSL_CHKERR1(out);
+    BSL_CHKERR1(in);
 
     // unicode iterator
     m_string_it_t it;
@@ -214,8 +214,8 @@ int mock_bpa_slash_escape(m_string_t out, const m_string_t in, const char quote)
 
 int mock_bpa_slash_unescape(m_string_t out, const m_string_t in)
 {
-    CHKERR1(out);
-    CHKERR1(in);
+    BSL_CHKERR1(out);
+    BSL_CHKERR1(in);
 
     const size_t in_len = m_string_size(in);
     if (in_len == 0)
@@ -369,7 +369,7 @@ void mock_bpa_strip_space(m_string_t out, const char *in, size_t in_len)
 
 void mock_bpa_string_tolower(m_string_t out)
 {
-    CHKVOID(out);
+    BSL_CHKVOID(out);
     size_t len = m_string_size(out);
     for (size_t i = 0; i < len; i++)
     {
@@ -379,7 +379,7 @@ void mock_bpa_string_tolower(m_string_t out)
 
 void mock_bpa_string_toupper(m_string_t out)
 {
-    CHKVOID(out);
+    BSL_CHKVOID(out);
     size_t len = m_string_size(out);
     for (size_t i = 0; i < len; i++)
     {
@@ -436,8 +436,8 @@ static int base16_decode_char(uint8_t chr)
 
 int mock_bpa_base16_decode(m_bstring_t out, const m_string_t in)
 {
-    CHKERR1(out);
-    CHKERR1(in);
+    BSL_CHKERR1(out);
+    BSL_CHKERR1(in);
 
     const size_t in_len = m_string_size(in);
     if (in_len % 2 != 0)
@@ -588,8 +588,8 @@ static int base64_decode_char(uint8_t chr)
 
 int mock_bpa_base64_decode(m_bstring_t out, const m_string_t in)
 {
-    CHKERR1(out);
-    CHKERR1(in);
+    BSL_CHKERR1(out);
+    BSL_CHKERR1(in);
 
     size_t      in_len = m_string_size(in);
     const char *curs   = m_string_get_cstr(in);
