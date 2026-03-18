@@ -261,30 +261,30 @@ typedef struct BSL_CanonicalBlock_s
 } BSL_CanonicalBlock_t;
 
 /** Dynamic memory callback descriptors used by Dynamic BPA descriptor.
-*/
+ */
 typedef struct
 {
-    /** Dynamic memory allocation callback. 
-     * 
+    /** Dynamic memory allocation callback.
+     *
      *  @return valid heap pointer on success, NULL on failure.
      */
     void *(*malloc_cb)(size_t size);
 
-    /** Dynamic memory re-allocation callback. 
-     * 
+    /** Dynamic memory re-allocation callback.
+     *
      *  @return valid heap pointer on success, NULL on failure.
      */
     void *(*realloc_cb)(void *ptr, size_t size);
 
     /** Contiguous dynamic memory allocation callback.
-     * 
+     *
      *  @return valid 0-initialized heap pointer on success, NULL on failure.
-    */
+     */
     void *(*calloc_cb)(size_t nmemb, size_t size);
 
-    /** Free dynamic memory allocation callback. 
+    /** Free dynamic memory allocation callback.
      */
-    void (*free_cb)(void* ptr);
+    void (*free_cb)(void *ptr);
 } BSL_DynMemHostDescriptors_t;
 
 /** Dynamic BPA descriptor.

@@ -69,13 +69,12 @@ static void free_test(void *ptr)
 
 void suiteSetUp(void)
 {
-    BSL_HostDescriptors_t host_desc = MockBPA_Agent_Descriptors(NULL);
-    BSL_DynMemHostDescriptors_t dyn_mem_desc = 
-    {
-        .malloc_cb             = malloc_test,
-        .realloc_cb            = realloc_test,
-        .calloc_cb             = calloc_test,
-        .free_cb               = free_test,
+    BSL_HostDescriptors_t       host_desc    = MockBPA_Agent_Descriptors(NULL);
+    BSL_DynMemHostDescriptors_t dyn_mem_desc = {
+        .malloc_cb  = malloc_test,
+        .realloc_cb = realloc_test,
+        .calloc_cb  = calloc_test,
+        .free_cb    = free_test,
     };
     host_desc.dyn_mem_desc = dyn_mem_desc;
 
