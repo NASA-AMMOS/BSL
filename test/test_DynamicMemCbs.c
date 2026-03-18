@@ -70,10 +70,14 @@ static void free_test(void *ptr)
 void suiteSetUp(void)
 {
     BSL_HostDescriptors_t host_desc = MockBPA_Agent_Descriptors(NULL);
-    host_desc.malloc_cb             = malloc_test;
-    host_desc.realloc_cb            = realloc_test;
-    host_desc.calloc_cb             = calloc_test;
-    host_desc.free_cb               = free_test;
+    BSL_DynMemHostDescriptors_t dyn_mem_desc = 
+    {
+        .malloc_cb             = malloc_test,
+        .realloc_cb            = realloc_test,
+        .calloc_cb             = calloc_test,
+        .free_cb               = free_test,
+    };
+    host_desc.dyn_mem_desc = dyn_mem_desc;
 
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(host_desc));
     BSL_openlog();

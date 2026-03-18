@@ -29,6 +29,14 @@
 // NOLINTNEXTLINE
 static BSL_HostDescriptors_t HostDescriptorTable = { 0 };
 
+static BSL_DynMemHostDescriptors_t defaultDynMemCbs = 
+{
+    .malloc_cb = malloc,
+    .realloc_cb = realloc,
+    .calloc_cb = calloc,
+    .free_cb = free,
+};
+
 int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
 {
     // GCOV_EXCL_START
@@ -50,24 +58,10 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
     CHK_PRECONDITION(desc.eidpat_match);
 
     // Dyanmic mem callbacks
-    if (NULL == desc.malloc_cb)
+    if (NULL == desc.dyn_mem_desc.malloc_cb || NULL == desc.dyn_mem_desc.realloc_cb || 
+        NULL == desc.dyn_mem_desc.calloc_cb || NULL == desc.dyn_mem_desc.free_cb)
     {
-        desc.malloc_cb = malloc;
-    }
-
-    if (NULL == desc.realloc_cb)
-    {
-        desc.realloc_cb = realloc;
-    }
-
-    if (NULL == desc.calloc_cb)
-    {
-        desc.calloc_cb = calloc;
-    }
-
-    if (NULL == desc.free_cb)
-    {
-        desc.free_cb = free;
+        desc.dyn_mem_desc = defaultDynMemCbs;
     }
 
     // GCOV_EXCL_STOP
@@ -249,20 +243,20 @@ bool BSL_HostEIDPattern_IsMatch(const BSL_HostEIDPattern_t *pat, const BSL_HostE
 
 void *BSL_MALLOC(size_t size)
 {
-    return HostDescriptorTable.malloc_cb(size);
+    return HostDescriptorTable.dyn_mem_desc.malloc_cb(size);
 }
 
 void *BSL_REALLOC(void *ptr, size_t size)
 {
-    return HostDescriptorTable.realloc_cb(ptr, size);
+    return HostDescriptorTable.dyn_mem_desc.realloc_cb(ptr, size);
 }
 
 void *BSL_CALLOC(size_t nmemb, size_t size)
 {
-    return HostDescriptorTable.calloc_cb(nmemb, size);
+    return HostDescriptorTable.dyn_mem_desc.calloc_cb(nmemb, size);
 }
 
 void BSL_FREE(void *ptr)
 {
-    HostDescriptorTable.free_cb(ptr);
+    HostDescriptorTable.dyn_mem_desc.free_cb(ptr);
 }
