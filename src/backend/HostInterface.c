@@ -56,13 +56,18 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
     CHK_PRECONDITION(desc.eidpat_from_text);
     CHK_PRECONDITION(desc.eidpat_match);
 
-    // Dyanmic mem callbacks
-    if (NULL == desc.dyn_mem_desc.malloc_cb || NULL == desc.dyn_mem_desc.realloc_cb
-        || NULL == desc.dyn_mem_desc.calloc_cb || NULL == desc.dyn_mem_desc.free_cb)
+    // If all callbacks are unset/NULL, use default
+    if (NULL == desc.dyn_mem_desc.malloc_cb && NULL == desc.dyn_mem_desc.realloc_cb
+        && NULL == desc.dyn_mem_desc.calloc_cb && NULL == desc.dyn_mem_desc.free_cb)
     {
         desc.dyn_mem_desc = defaultDynMemCbs;
     }
-
+    // otherwiese, if any one are unset, return error
+    else if (NULL == desc.dyn_mem_desc.malloc_cb || NULL == desc.dyn_mem_desc.realloc_cb 
+        || NULL == desc.dyn_mem_desc.calloc_cb || NULL == desc.dyn_mem_desc.free_cb)
+    {
+        return BSL_ERR_ARG_NULL;
+    }
     // GCOV_EXCL_STOP
 
     HostDescriptorTable = desc;
