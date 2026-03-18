@@ -389,7 +389,7 @@ int mock_bpa_eidpat_init(BSL_HostEIDPattern_t *pat, void *user_data _U_)
     BSL_CHKERR1(pat); // GCOV_EXCL_LINE
 
     memset(pat, 0, sizeof(BSL_HostEIDPattern_t));
-    pat->handle = BSL_MALLOC(sizeof(bsl_mock_eidpat_t));
+    pat->handle = BSL_malloc(sizeof(bsl_mock_eidpat_t));
     if (!(pat->handle))
     {
         return 2; // GCOV_EXCL_LINE
@@ -416,7 +416,7 @@ void mock_bpa_eidpat_deinit(BSL_HostEIDPattern_t *pat, void *user_data _U_)
     if (pat->handle)
     {
         bsl_mock_eidpat_deinit(pat->handle);
-        BSL_FREE(pat->handle);
+        BSL_free(pat->handle);
     }
     memset(pat, 0, sizeof(BSL_HostEIDPattern_t));
 }

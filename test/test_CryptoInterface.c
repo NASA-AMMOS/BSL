@@ -288,7 +288,7 @@ void test_SeqWriter_flat(void)
     const uint8_t expect[] = { 0x01, 0x02, 0x03, 0x01, 0x02 };
     TEST_ASSERT_EQUAL_MEMORY(expect, dest, sizeof(expect));
 
-    BSL_FREE(dest);
+    BSL_free(dest);
 }
 
 // test vectors from RFC 4231
@@ -470,7 +470,7 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     res = BSL_Cipher_Deinit(&ctx);
     TEST_ASSERT_EQUAL(0, res);
 
-    BSL_FREE(ciphertext);
+    BSL_free(ciphertext);
 }
 
 /**
@@ -541,7 +541,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     TEST_ASSERT_EQUAL(0, res);
 
     TEST_ASSERT_EQUAL(0, BSL_SeqReader_Destroy(reader));
-    BSL_FREE(plaintext);
+    BSL_free(plaintext);
 }
 
 TEST_RANGE(<6, 18, 1>)

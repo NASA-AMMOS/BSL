@@ -33,7 +33,7 @@ void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr)
 
     BSL_Data_Init(&(ctr->encoded));
 
-    ctr->bundle = BSL_CALLOC(1, sizeof(MockBPA_Bundle_t));
+    ctr->bundle = BSL_calloc(1, sizeof(MockBPA_Bundle_t));
     MockBPA_Bundle_Init(ctr->bundle);
 
     ctr->bundle_ref.data = ctr->bundle;
@@ -60,7 +60,7 @@ void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr)
     if (ctr->bundle)
     {
         MockBPA_Bundle_Deinit(ctr->bundle);
-        BSL_FREE(ctr->bundle);
+        BSL_free(ctr->bundle);
     }
 }
 

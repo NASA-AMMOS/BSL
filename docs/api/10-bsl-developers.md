@@ -217,9 +217,9 @@ This section contains references to commonly used macros defined for the BSL
 
 When heap memory is needed at BSL runtime, the following macros are used and have the same signature and semantics as the corresponding C99 functions indicated below.
 
-- [BSL_MALLOC](@ref BSL_MALLOC) as `malloc()`
-- [BSL_REALLOC](@ref BSL_REALLOC) as `realloc()`
-- [BSL_FREE](@ref BSL_FREE) as `free()`
+- [BSL_malloc](@ref BSL_malloc) as `malloc()`
+- [BSL_realloc](@ref BSL_realloc) as `realloc()`
+- [BSL_free](@ref BSL_free) as `free()`
 
 ## Error Checking Handler Macros
 

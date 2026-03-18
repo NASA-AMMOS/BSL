@@ -91,7 +91,7 @@ void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
 {
     ASSERT_ARG_NONNULL(obj);
 
-    BSL_FREE(obj->block_numbers);
+    BSL_free(obj->block_numbers);
     obj->block_numbers = NULL;
 
     BSL_Data_Deinit(&obj->encoded);
@@ -174,7 +174,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                 BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
                 BSL_SeqReader_Destroy(btsd_read);
 
-                BSL_AbsSecBlock_t *abs_sec_block = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
+                BSL_AbsSecBlock_t *abs_sec_block = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
                 BSL_AbsSecBlock_InitEmpty(abs_sec_block);
                 if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, &btsd_copy) == 0)
                 {
@@ -189,7 +189,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                     BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
                 }
                 BSL_AbsSecBlock_Deinit(abs_sec_block);
-                BSL_FREE(abs_sec_block);
+                BSL_free(abs_sec_block);
 
                 BSL_Data_Deinit(&btsd_copy);
             }

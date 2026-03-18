@@ -254,14 +254,14 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
     {
         if (blk->btsd)
         {
-            BSL_FREE(blk->btsd);
+            BSL_free(blk->btsd);
             blk->btsd = NULL;
         }
 
         blk->btsd_len = view.len;
         if (blk->btsd_len > 0)
         {
-            blk->btsd = BSL_MALLOC(view.len);
+            blk->btsd = BSL_malloc(view.len);
             // GCOV_EXCL_START
             ASSERT_ARG_NONNULL(blk->btsd);
             // GCOV_EXCL_STOP

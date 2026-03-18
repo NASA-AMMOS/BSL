@@ -52,7 +52,7 @@ void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int6
 {
     BSL_Data_t asb_cbor_data;
     BSL_Data_InitView(&asb_cbor_data, asb_cbor_bytelen, asb_cbor);
-    BSL_AbsSecBlock_t *asb = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
+    BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
     BSL_AbsSecBlock_InitEmpty(asb);
 
     const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, &asb_cbor_data);
@@ -82,7 +82,7 @@ void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int6
 
     BSL_Data_Deinit(&encoded_cbor);
     BSL_AbsSecBlock_Deinit(asb);
-    BSL_FREE(asb);
+    BSL_free(asb);
 }
 
 // See: https://www.rfc-editor.org/rfc/rfc9173.html#name-abstract-security-block-2
@@ -146,14 +146,14 @@ void test_AbsSecBlock_Decode_failure(const char *hexdata)
         string_clear(in_text);
     }
 
-    BSL_AbsSecBlock_t *asb = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
+    BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
     BSL_AbsSecBlock_InitEmpty(asb);
 
     const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, &in_data);
     TEST_ASSERT_EQUAL_INT(BSL_ERR_DECODING, decode_result);
 
     BSL_AbsSecBlock_Deinit(asb);
-    BSL_FREE(asb);
+    BSL_free(asb);
 
     BSL_Data_Deinit(&in_data);
 }

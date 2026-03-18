@@ -241,22 +241,22 @@ bool BSL_HostEIDPattern_IsMatch(const BSL_HostEIDPattern_t *pat, const BSL_HostE
     return HostDescriptorTable.eidpat_match(pat, eid, HostDescriptorTable.user_data);
 }
 
-void *BSL_MALLOC(size_t size)
+void *BSL_malloc(size_t size)
 {
     return HostDescriptorTable.dyn_mem_desc.malloc_cb(size);
 }
 
-void *BSL_REALLOC(void *ptr, size_t size)
+void *BSL_realloc(void *ptr, size_t size)
 {
     return HostDescriptorTable.dyn_mem_desc.realloc_cb(ptr, size);
 }
 
-void *BSL_CALLOC(size_t nmemb, size_t size)
+void *BSL_calloc(size_t nmemb, size_t size)
 {
     return HostDescriptorTable.dyn_mem_desc.calloc_cb(nmemb, size);
 }
 
-void BSL_FREE(void *ptr)
+void BSL_free(void *ptr)
 {
     HostDescriptorTable.dyn_mem_desc.free_cb(ptr);
 }
