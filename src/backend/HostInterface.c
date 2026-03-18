@@ -63,8 +63,8 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
         desc.dyn_mem_desc = defaultDynMemCbs;
     }
     // otherwiese, if any one are unset, return error
-    else if (NULL == desc.dyn_mem_desc.malloc_cb || NULL == desc.dyn_mem_desc.realloc_cb 
-        || NULL == desc.dyn_mem_desc.calloc_cb || NULL == desc.dyn_mem_desc.free_cb)
+    else if (NULL == desc.dyn_mem_desc.malloc_cb || NULL == desc.dyn_mem_desc.realloc_cb
+             || NULL == desc.dyn_mem_desc.calloc_cb || NULL == desc.dyn_mem_desc.free_cb)
     {
         return BSL_ERR_ARG_NULL;
     }
