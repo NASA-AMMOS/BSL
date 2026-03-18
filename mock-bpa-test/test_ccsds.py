@@ -178,7 +178,7 @@ def load_ccsds():
                 expected_output=output if (
                     output_format == DataFormat.BUNDLEARRAY) else r".*Delete bundle due to failed security operation",
                 policy_config=finame,
-                key_set="src/mock_bpa/key_set_1.json",
+                key_set="mock-bpa-test/key_set_1.json",
                 is_working=True,
                 input_data_format=input_format,
                 expected_output_format=output_format
