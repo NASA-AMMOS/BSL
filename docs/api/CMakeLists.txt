@@ -20,8 +20,6 @@ the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 ]]
 
-include(GNUInstallDirs)
-
 find_package(Doxygen REQUIRED)
 
 find_program(XMLSTARLET_EXECUTABLE xmlstarlet)
@@ -97,10 +95,6 @@ if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
     add_custom_target(
         docs-api-misspelling
         DEPENDS "${MISSPELLING_TXT}"
-        COMMAND cat "${MISSPELLING_TXT}"
-        # success means file is present and empty
-        COMMAND test -f "${MISSPELLING_TXT}" -a ! -s "${MISSPELLING_TXT}"
-        COMMENT "Checking ${MISSPELLING_TXT}"
     )
 endif(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
 
