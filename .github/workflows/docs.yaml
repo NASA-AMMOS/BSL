@@ -58,6 +58,11 @@ jobs:
           -DBUILD_DOCS_API=ON
       - name: Build
         run: ./build.sh --target docs-api-html docs-api-pdf docs-api-misspelling
+      - name: Misspelling
+        env:
+          MISSPELLING_TXT: 'build/default/docs/api/misspelling.txt'
+        # success means file is present and empty
+        run: test -f "${MISSPELLING_TXT}" -a ! -s "${MISSPELLING_TXT}" || (cat "${MISSPELLING_TXT}"; exit 1)
       - name: Install
         run: ./build.sh install --component docs-api
       - name: Compress
