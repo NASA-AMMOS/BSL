@@ -27,7 +27,8 @@
 #include "UtilDefs_SeqReadWrite.h"
 
 // NOLINTNEXTLINE
-static BSL_HostDescriptors_t HostDescriptorTable = { 0 };
+/// Initialized to library default
+static BSL_HostDescriptors_t HostDescriptorTable = { .dyn_mem_desc = BSL_DynMemHostDescriptors_DEFAULT };
 
 int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
 {
@@ -48,6 +49,19 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
     CHK_PRECONDITION(desc.eidpat_deinit);
     CHK_PRECONDITION(desc.eidpat_from_text);
     CHK_PRECONDITION(desc.eidpat_match);
+
+    // If all callbacks are unset/NULL, use default
+    if (NULL == desc.dyn_mem_desc.malloc_cb && NULL == desc.dyn_mem_desc.realloc_cb
+        && NULL == desc.dyn_mem_desc.calloc_cb && NULL == desc.dyn_mem_desc.free_cb)
+    {
+        desc.dyn_mem_desc = (BSL_DynMemHostDescriptors_t)BSL_DynMemHostDescriptors_DEFAULT;
+    }
+    // otherwiese, if any one are unset, return error
+    else if (NULL == desc.dyn_mem_desc.malloc_cb || NULL == desc.dyn_mem_desc.realloc_cb
+             || NULL == desc.dyn_mem_desc.calloc_cb || NULL == desc.dyn_mem_desc.free_cb)
+    {
+        return BSL_ERR_ARG_NULL;
+    }
     // GCOV_EXCL_STOP
 
     HostDescriptorTable = desc;
@@ -223,4 +237,24 @@ bool BSL_HostEIDPattern_IsMatch(const BSL_HostEIDPattern_t *pat, const BSL_HostE
     ASSERT_ARG_NONNULL(eid);
     ASSERT_PRECONDITION(HostDescriptorTable.eidpat_match);
     return HostDescriptorTable.eidpat_match(pat, eid, HostDescriptorTable.user_data);
+}
+
+void *BSL_malloc(size_t size)
+{
+    return HostDescriptorTable.dyn_mem_desc.malloc_cb(size);
+}
+
+void *BSL_realloc(void *ptr, size_t size)
+{
+    return HostDescriptorTable.dyn_mem_desc.realloc_cb(ptr, size);
+}
+
+void *BSL_calloc(size_t nmemb, size_t size)
+{
+    return HostDescriptorTable.dyn_mem_desc.calloc_cb(nmemb, size);
+}
+
+void BSL_free(void *ptr)
+{
+    HostDescriptorTable.dyn_mem_desc.free_cb(ptr);
 }

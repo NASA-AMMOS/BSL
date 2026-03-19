@@ -39,7 +39,7 @@ int BSL_SeqReader_Destroy(BSL_SeqReader_t *obj)
     CHK_ARG_NONNULL(obj->deinit);
 
     obj->deinit(obj->user_data);
-    BSL_FREE(obj);
+    BSL_free(obj);
     return BSL_SUCCESS;
 }
 
@@ -59,7 +59,7 @@ int BSL_SeqWriter_Destroy(BSL_SeqWriter_t *obj)
     CHK_ARG_NONNULL(obj->deinit);
 
     obj->deinit(obj->user_data);
-    BSL_FREE(obj);
+    BSL_free(obj);
     return BSL_SUCCESS;
 }
 

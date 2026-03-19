@@ -59,14 +59,14 @@ static BSL_TestPublInterfaceCtx_t ctx          = { 0 };
 
 void suiteSetUp(void)
 {
-    BSL_openlog();
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
+    BSL_openlog();
 }
 
 int suiteTearDown(int failures)
 {
-    BSL_HostDescriptors_Clear();
     BSL_closelog();
+    BSL_HostDescriptors_Clear();
     return failures;
 }
 
@@ -128,7 +128,7 @@ void setUp(void)
 
     /// Register the policy provider with some rules
     BSL_PolicyDesc_t policy_desc = { 0 };
-    policy_desc.user_data        = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+    policy_desc.user_data        = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
     policy_desc.query_fn         = BSLP_QueryPolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
     policy_desc.finalize_fn      = BSLP_FinalizePolicy;
