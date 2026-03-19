@@ -249,7 +249,7 @@ bool BSL_LogIsEnabledFor(int severity)
         return false;
     }
 
-    if(!HostDescriptorTable.log_is_enabled_for)
+    if (!HostDescriptorTable.log_is_enabled_for)
     {
         return true;
     }
@@ -270,7 +270,7 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
     va_list args;
     va_start(args, format);
 
-    if(!HostDescriptorTable.log_event)
+    if (!HostDescriptorTable.log_event)
     {
         char tmbuf[32]; // NOLINT
         {
@@ -289,7 +289,7 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
         const char *severity_name = log_sev_names[severity];
 
         pthread_t thread = pthread_self();
-        char thrbuf[2 * sizeof(pthread_t) + 1];
+        char      thrbuf[2 * sizeof(pthread_t) + 1];
         {
             const uint8_t *data = (const void *)&thread;
             char          *out  = thrbuf;
@@ -303,8 +303,8 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
         }
 
         // simplify filename
-        static const char dirsep = '/';
-        const char *filepos = strrchr(filename, dirsep);
+        static const char dirsep  = '/';
+        const char       *filepos = strrchr(filename, dirsep);
         if (filepos)
         {
             filepos += 1;

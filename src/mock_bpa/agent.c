@@ -409,7 +409,7 @@ BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent)
         .eidpat_match     = mock_bpa_eidpat_match,
 
         .log_is_enabled_for = mock_bpa_LogIsEnabledFor,
-        .log_event = mock_bpa_LogEvent,
+        .log_event          = mock_bpa_LogEvent,
     };
     return bpa;
 }

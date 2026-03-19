@@ -74,9 +74,9 @@ typedef struct
 
 static void mock_bpa_LogEvent_event_init(mock_bpa_LogEvent_event_t *obj)
 {
-    obj->thread = pthread_self();
-    obj->timestamp = (struct timeval){ 0};
-    obj->severity = LOG_DEBUG;
+    obj->thread    = pthread_self();
+    obj->timestamp = (struct timeval) { 0 };
+    obj->severity  = LOG_DEBUG;
     string_init(obj->context);
     string_init(obj->message);
 }
@@ -115,7 +115,7 @@ static void mock_bpa_LogEvent_event_set(mock_bpa_LogEvent_event_t *obj, const mo
 }
 
 /// OPLIST for mock_bpa_LogEvent_event_t
-#define M_OPL_mock_bpa_LogEvent_event_t()                                                     \
+#define M_OPL_mock_bpa_LogEvent_event_t()                                                          \
     (INIT(API_2(mock_bpa_LogEvent_event_init)), INIT_SET(API_6(mock_bpa_LogEvent_event_init_set)), \
      INIT_MOVE(API_6(mock_bpa_LogEvent_event_init_move)), SET(API_6(mock_bpa_LogEvent_event_set)), \
      CLEAR(API_2(mock_bpa_LogEvent_event_deinit)))
@@ -286,14 +286,15 @@ bool mock_bpa_LogIsEnabledFor(int severity)
 }
 
 // NOLINTBEGIN
-void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char *filename, int lineno, const char *funcname, const char *format, ...)
+void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char *filename, int lineno,
+                       const char *funcname, const char *format, ...)
 {
     BSL_CHKVOID(timestamp);
 
     mock_bpa_LogEvent_event_t event;
     mock_bpa_LogEvent_event_init(&event);
     event.timestamp = *timestamp;
-    event.severity = severity;
+    event.severity  = severity;
 
     if (filename)
     {

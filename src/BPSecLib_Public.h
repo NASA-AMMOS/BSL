@@ -380,7 +380,8 @@ typedef struct
      * @param[in] format The log message format string.
      * @param ... Values for the format string.
      */
-    void (*log_event)(const struct timeval *timestamp, int severity, const char *filename, int lineno, const char *funcname, const char *format, ...);
+    void (*log_event)(const struct timeval *timestamp, int severity, const char *filename, int lineno,
+                      const char *funcname, const char *format, ...);
 } BSL_HostDescriptors_t;
 
 /** Set the BPA descriptor (callbacks) for this process.
