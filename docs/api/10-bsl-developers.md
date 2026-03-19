@@ -215,7 +215,7 @@ When heap memory is needed at BSL runtime, the following functions are used and 
 
 - [BSL_malloc](@ref BSL_malloc) as `malloc()`
 - [BSL_realloc](@ref BSL_realloc) as `realloc()`
-- [BSL_cealloc](@ref BSL_cealloc) as `cealloc()`
+- [BSL_calloc](@ref BSL_calloc) as `calloc()`
 - [BSL_free](@ref BSL_free) as `free()`
 
 These can be modified using the @ref BSL_DynMemHostDescriptors_t interface.
