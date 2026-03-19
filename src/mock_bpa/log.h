@@ -31,6 +31,10 @@
 #include <stdarg.h>
 #include <sys/time.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** Opens the event log.
  * @note This should be called once per process, not thread or library instance.
  * At the end of the process there should be a call to mock_bpa_LogClose().
@@ -65,5 +69,9 @@ bool mock_bpa_LogIsEnabledFor(int severity);
 /// Interface for BSL_HostDescriptors_t::log_event
 void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char *filename, int lineno,
                        const char *funcname, const char *format, va_list args);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* BSL_MOCK_BPA_LOG_H_ */
