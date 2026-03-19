@@ -290,14 +290,16 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 
         pthread_t thread = pthread_self();
         char      thrbuf[2 * sizeof(pthread_t) + 1];
+        size_t    remain = sizeof(thrbuf);
         {
             const uint8_t *data = (const void *)&thread;
             char          *out  = thrbuf;
             for (size_t ix = 0; ix < sizeof(pthread_t); ++ix)
             {
-                sprintf(out, "%02X", *data);
+                snprintf(out, remain, "%02X", *data);
                 data++;
                 out += 2;
+                remain -= 2;
             }
             *out = '\0';
         }

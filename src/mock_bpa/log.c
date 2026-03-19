@@ -162,13 +162,15 @@ static void write_log(const mock_bpa_LogEvent_event_t *event)
     }
     char thrbuf[2 * sizeof(pthread_t) + 1];
     {
-        const uint8_t *data = (const void *)&(event->thread);
-        char          *out  = thrbuf;
+        const uint8_t *data   = (const void *)&(event->thread);
+        char          *out    = thrbuf;
+        size_t         remain = sizeof(thrbuf);
         for (size_t ix = 0; ix < sizeof(pthread_t); ++ix)
         {
-            sprintf(out, "%02X", *data);
+            snprintf(out, remain, "%02X", *data);
             data++;
             out += 2;
+            remain -= 2;
         }
         *out = '\0';
     }
