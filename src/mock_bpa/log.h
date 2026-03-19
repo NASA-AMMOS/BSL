@@ -33,7 +33,7 @@
 
 /** Opens the event log.
  * @note This should be called once per process, not thread or library instance.
- * At the end of the process there should be a call to BSL_closelog()
+ * At the end of the process there should be a call to mock_bpa_LogClose()
  *
  * This is a mimic to POSIX @c openlog()
  */

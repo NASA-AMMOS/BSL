@@ -370,7 +370,7 @@ typedef struct
      * referenced outside of that callback.
      *
      * @note If not provided by the host, this defaults to writing
-     * synchronously to stderr.
+     * synchronously to @c stderr.
      *
      * @param timestamp The timestamp of the original event.
      * @param severity The severity from a subset of the POSIX syslog values.
