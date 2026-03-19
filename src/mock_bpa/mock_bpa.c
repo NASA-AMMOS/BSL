@@ -36,6 +36,7 @@
 #include <CryptoInterface.h>
 
 #include "agent.h"
+#include "log.h"
 #include "policy_config.h"
 
 // Configuration
@@ -104,16 +105,24 @@ static void show_usage(const char *argv0)
 
 int main(int argc, char **argv)
 {
-    BSL_openlog();
     int retval = 0;
     int res;
 
-    BSL_CryptoInit();
-    if ((res = MockBPA_Agent_Init(&agent)))
+    if (BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(&agent)))
     {
-        BSL_LOG_ERR("Failed to initialize mock BPA, error %d", res);
         retval = 2;
     }
+    mock_bpa_LogOpen();
+    BSL_CryptoInit();
+    if (!retval)
+    {
+        if ((res = MockBPA_Agent_Init(&agent)))
+        {
+            BSL_LOG_ERR("Failed to initialize mock BPA, error %d", res);
+            retval = 2;
+        }
+    }
+    if (!retval)
     {
         struct sigaction stopper = {
             .sa_handler = sig_stop,
@@ -122,10 +131,6 @@ int main(int argc, char **argv)
         sigaction(SIGTERM, &stopper, NULL);
     }
     // always run these steps
-    if (BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(&agent)))
-    {
-        retval = 2;
-    }
     BSL_HostEID_Init(&app_eid);
     BSL_HostEID_Init(&sec_eid);
 
@@ -252,8 +257,8 @@ int main(int argc, char **argv)
     BSL_HostEID_Deinit(&sec_eid);
     BSL_HostEID_Deinit(&app_eid);
 
+    mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
     BSL_CryptoDeinit();
-    BSL_closelog();
     return retval;
 }

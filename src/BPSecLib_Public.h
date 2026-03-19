@@ -34,6 +34,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "BSLConfig.h"
 #include "Data.h"
@@ -261,6 +262,9 @@ typedef struct BSL_CanonicalBlock_s
 } BSL_CanonicalBlock_t;
 
 /** Dynamic BPA descriptor.
+ *
+ * @caution All functions in this structure must be thread safe, as they
+ * can be called by any number of BSL instances across any threads.
  */
 typedef struct
 {
@@ -271,7 +275,7 @@ typedef struct
     int (*get_sec_src_eid_fn)(void *user_data, BSL_HostEID_t *result);
 
     /// @brief Host BPA function to initialize/allocate an EID type.
-    int (*eid_init)(void *user_data, BSL_HostEID_t *result);
+    void (*eid_init)(void *user_data, BSL_HostEID_t *result);
 
     /// @brief Host BPA function to deinit/free an EID type.
     void (*eid_deinit)(void *user_data, BSL_HostEID_t *eid);
@@ -350,6 +354,33 @@ typedef struct
 
     /// @brief Host BPA function that returns true if the given EID matched an EID pattern.
     bool (*eidpat_match)(const BSL_HostEIDPattern_t *pat, const BSL_HostEID_t *eid, void *user_data);
+
+    /** Called to check if logging is enabled for at least a specific severity.
+     *
+     * @note If not provided by the host, this defaults to always-true.
+     *
+     * @param severity The severity from a subset of the POSIX syslog values.
+     * @return True if logging will occur for that severity level.
+     */
+    bool (*log_is_enabled_for)(int severity);
+
+    /** Called for each log event from the BSL and its PP and SC instances.
+     * All input text strings must be copied by the callback if they are
+     * referenced outside of that callback.
+     *
+     * @note If not provided by the host, this defaults to writing
+     * synchronously to stderr.
+     *
+     * @param timestamp The timestamp of the original event.
+     * @param severity The severity from a subset of the POSIX syslog values.
+     * This value has already been filtered by #log_is_enabled_for.
+     * @param[in] filename The originating file name, which may include directory parts.
+     * @param[in] lineno The originating file line number.
+     * @param[in] funcname The originating function name.
+     * @param[in] format The log message format string.
+     * @param ... Values for the format string.
+     */
+    void (*log_event)(const struct timeval *timestamp, int severity, const char *filename, int lineno, const char *funcname, const char *format, ...);
 } BSL_HostDescriptors_t;
 
 /** Set the BPA descriptor (callbacks) for this process.

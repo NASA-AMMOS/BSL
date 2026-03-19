@@ -197,12 +197,10 @@ static uint8_t test_256[32] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 
 
 void suiteSetUp(void)
 {
-    BSL_openlog();
 }
 
 int suiteTearDown(int failures)
 {
-    BSL_closelog();
     return failures;
 }
 
