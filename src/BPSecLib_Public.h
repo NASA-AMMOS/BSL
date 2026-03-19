@@ -262,6 +262,42 @@ typedef struct BSL_CanonicalBlock_s
     size_t   btsd_len;  ///< Length in bytes of the BTSD accessible through sequential APIs
 } BSL_CanonicalBlock_t;
 
+/** Dynamic memory callback descriptors used by Dynamic BPA descriptor.
+ *
+ * These are meant to be used as part of ::BSL_HostDescriptors_t for
+ * registering host callbacks.
+ */
+typedef struct
+{
+    /** Dynamic memory allocation callback.
+     *
+     *  @return valid heap pointer on success, NULL on failure.
+     */
+    void *(*malloc_cb)(size_t size);
+
+    /** Dynamic memory re-allocation callback.
+     *
+     *  @return valid heap pointer on success, NULL on failure.
+     */
+    void *(*realloc_cb)(void *ptr, size_t size);
+
+    /** Contiguous dynamic memory allocation callback.
+     *
+     *  @return valid 0-initialized heap pointer on success, NULL on failure.
+     */
+    void *(*calloc_cb)(size_t nmemb, size_t size);
+
+    /** Free dynamic memory allocation callback.
+     */
+    void (*free_cb)(void *ptr);
+} BSL_DynMemHostDescriptors_t;
+
+/// Default heap functions from libc
+#define BSL_DynMemHostDescriptors_DEFAULT                                                 \
+    {                                                                                     \
+        .malloc_cb = malloc, .realloc_cb = realloc, .calloc_cb = calloc, .free_cb = free, \
+    }
+
 /** Dynamic BPA descriptor.
  *
  * @caution All functions in this structure must be thread safe, as they
@@ -383,6 +419,9 @@ typedef struct
      */
     void (*log_event)(const struct timeval *timestamp, int severity, const char *filename, int lineno,
                       const char *funcname, const char *format, va_list args);
+
+    /// @brief Optionally set dynamic memory management callbacks. Defaults to libc calls if unset.
+    BSL_DynMemHostDescriptors_t dyn_mem_desc;
 } BSL_HostDescriptors_t;
 
 /** Set the BPA descriptor (callbacks) for this process.

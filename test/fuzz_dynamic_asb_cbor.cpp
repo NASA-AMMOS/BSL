@@ -44,7 +44,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     int retval = 0;
 
-    BSL_AbsSecBlock_t *asb = (BSL_AbsSecBlock_t *)BSL_MALLOC(BSL_AbsSecBlock_Sizeof());
+    BSL_AbsSecBlock_t *asb = (BSL_AbsSecBlock_t *)BSL_malloc(BSL_AbsSecBlock_Sizeof());
     BSL_AbsSecBlock_InitEmpty(asb);
 
     {
@@ -90,7 +90,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     BSL_Data_Deinit(&out_data);
     BSL_AbsSecBlock_Deinit(asb);
-    BSL_FREE(asb);
+    BSL_free(asb);
 
     return retval;
 }

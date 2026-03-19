@@ -110,17 +110,14 @@ int main(int argc, char **argv)
 
     if (BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(&agent)))
     {
-        retval = 2;
+        return 2;
     }
     mock_bpa_LogOpen();
     BSL_CryptoInit();
-    if (!retval)
+    if ((res = MockBPA_Agent_Init(&agent)))
     {
-        if ((res = MockBPA_Agent_Init(&agent)))
-        {
-            BSL_LOG_ERR("Failed to initialize mock BPA, error %d", res);
-            retval = 2;
-        }
+        BSL_LOG_ERR("Failed to initialize mock BPA, error %d", res);
+        retval = 2;
     }
     if (!retval)
     {
@@ -257,8 +254,8 @@ int main(int argc, char **argv)
     BSL_HostEID_Deinit(&sec_eid);
     BSL_HostEID_Deinit(&app_eid);
 
+    BSL_CryptoDeinit();
     mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
-    BSL_CryptoDeinit();
     return retval;
 }

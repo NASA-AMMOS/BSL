@@ -67,7 +67,7 @@ void setUp(void)
     TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&bsl));
 
     buf.len = 10000;
-    buf.ptr = BSL_MALLOC(buf.len);
+    buf.ptr = BSL_malloc(buf.len);
     TEST_ASSERT_NOT_NULL(buf.ptr);
     QCBOREncode_Init(&encoder, buf);
 }
@@ -76,7 +76,7 @@ void tearDown(void)
 {
     if (buf.ptr)
     {
-        BSL_FREE(buf.ptr);
+        BSL_free(buf.ptr);
     }
     buf = NULLUsefulBuf;
 
@@ -192,7 +192,7 @@ void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
     blk.blk_num                  = 45;
     blk.flags                    = 0;
     blk.crc_type                 = crc_type;
-    blk.btsd                     = BSL_MALLOC(dummy_size);
+    blk.btsd                     = BSL_malloc(dummy_size);
     blk.btsd_len                 = dummy_size;
     memcpy(blk.btsd, dummy_btsd, dummy_size);
 
@@ -206,7 +206,7 @@ void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
     TEST_ASSERT_EQUAL_INT(expect_data.len, encoded.len);
     TEST_ASSERT_EQUAL_MEMORY(expect_data.ptr, encoded.ptr, expect_data.len);
 
-    BSL_FREE(blk.btsd);
+    BSL_free(blk.btsd);
     BSL_Data_Deinit(&expect_data);
     string_clear(expect_text);
 }
@@ -238,7 +238,7 @@ void test_bsl_mock_encode_bundle(void)
         blk->blk_num                  = 45;
         blk->flags                    = 0;
         blk->crc_type                 = 0;
-        blk->btsd                     = BSL_CALLOC(1, dummy_size);
+        blk->btsd                     = BSL_calloc(1, dummy_size);
         blk->btsd_len                 = dummy_size;
         memcpy(blk->btsd, dummy_btsd, dummy_size);
     }

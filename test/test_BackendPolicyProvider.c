@@ -62,7 +62,7 @@ void setUp(void)
     TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
 
     BSL_PolicyDesc_t policy_desc = { 0 };
-    policy_desc.user_data        = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+    policy_desc.user_data        = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
     policy_desc.query_fn         = BSLP_QueryPolicy;
     policy_desc.finalize_fn      = BSLP_FinalizePolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
@@ -172,7 +172,7 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
 void test_MultiplePolicyProviders(void)
 {
     BSL_PolicyDesc_t policy_desc_2 = { 0 };
-    policy_desc_2.user_data        = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+    policy_desc_2.user_data        = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
     policy_desc_2.query_fn         = BSLP_QueryPolicy;
     policy_desc_2.finalize_fn      = BSLP_FinalizePolicy;
     policy_desc_2.deinit_fn        = BSLP_Deinit;
@@ -244,5 +244,5 @@ void test_MultiplePolicyProviders(void)
                                                             &LocalTestCtx.mock_bpa_ctr.bundle_ref, response_set));
 
     BSL_SecurityActionSet_Deinit(&action_set);
-    BSL_FREE(response_set);
+    BSL_free(response_set);
 }

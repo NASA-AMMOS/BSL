@@ -144,22 +144,22 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
 
 BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context)
 {
-    BSL_SecurityActionSet_t *action_set = BSL_CALLOC(1, sizeof(BSL_SecurityActionSet_t));
+    BSL_SecurityActionSet_t *action_set = BSL_calloc(1, sizeof(BSL_SecurityActionSet_t));
     BSL_SecurityActionSet_Init(action_set);
-    BSL_SecurityAction_t *act = BSL_CALLOC(1, sizeof(BSL_SecurityAction_t));
+    BSL_SecurityAction_t *act = BSL_calloc(1, sizeof(BSL_SecurityAction_t));
     BSL_SecurityAction_Init(act);
     BSL_SecurityAction_AppendSecOper(act, &bib_context->sec_oper);
     // ensure consistent context state
     BSL_SecOper_Init(&bib_context->sec_oper);
     BSL_SecurityActionSet_AppendAction(action_set, act);
     BSL_SecurityAction_Deinit(act);
-    BSL_FREE(act);
+    BSL_free(act);
     return action_set;
 }
 
 BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void)
 {
-    return BSL_CALLOC(1, BSL_SecurityResponseSet_Sizeof());
+    return BSL_calloc(1, BSL_SecurityResponseSet_Sizeof());
 }
 
 int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len)
@@ -490,12 +490,12 @@ static void BSL_TestUtils_ReadBTSD_Deinit(void *user_data)
 
     fclose(obj->file);
     // buffer is external data, no cleanup
-    BSL_FREE(obj);
+    BSL_free(obj);
 }
 
 BSL_SeqReader_t *BSL_TestUtils_FlatReader(const void *buf, size_t bufsize)
 {
-    struct BSL_TestUtils_Flat_Data_s *obj = BSL_CALLOC(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
+    struct BSL_TestUtils_Flat_Data_s *obj = BSL_calloc(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
     ASSERT_PROPERTY(obj);
     obj->origbuf  = NULL;
     obj->origsize = NULL;
@@ -503,7 +503,7 @@ BSL_SeqReader_t *BSL_TestUtils_FlatReader(const void *buf, size_t bufsize)
     obj->size     = bufsize;
     obj->file     = fmemopen(obj->ptr, obj->size, "rb");
 
-    BSL_SeqReader_t *reader = BSL_MALLOC(sizeof(BSL_SeqReader_t));
+    BSL_SeqReader_t *reader = BSL_malloc(sizeof(BSL_SeqReader_t));
     ASSERT_PROPERTY(reader);
     reader->user_data = obj;
     reader->read      = BSL_TestUtils_ReadBTSD_Read;
@@ -548,12 +548,12 @@ static void BSL_TestUtils_WriteBTSD_Deinit(void *user_data)
         *obj->origsize = obj->size;
     }
 
-    BSL_FREE(obj);
+    BSL_free(obj);
 }
 
 BSL_SeqWriter_t *BSL_TestUtils_FlatWriter(void **buf, size_t *bufsize)
 {
-    struct BSL_TestUtils_Flat_Data_s *obj = BSL_CALLOC(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
+    struct BSL_TestUtils_Flat_Data_s *obj = BSL_calloc(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
     ASSERT_PROPERTY(obj);
     // double-buffer for this write
     obj->origbuf  = buf;
@@ -562,7 +562,7 @@ BSL_SeqWriter_t *BSL_TestUtils_FlatWriter(void **buf, size_t *bufsize)
     obj->size     = 0;
     obj->file     = open_memstream(&obj->ptr, &obj->size);
 
-    BSL_SeqWriter_t *writer = BSL_MALLOC(sizeof(BSL_SeqWriter_t));
+    BSL_SeqWriter_t *writer = BSL_malloc(sizeof(BSL_SeqWriter_t));
     ASSERT_PROPERTY(writer);
     writer->user_data = obj;
     writer->write     = BSL_TestUtils_WriteBTSD_Write;

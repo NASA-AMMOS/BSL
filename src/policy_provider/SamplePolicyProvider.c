@@ -164,7 +164,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
-    BSL_SecurityAction_t *action = BSL_CALLOC(1, BSL_SecurityAction_Sizeof());
+    BSL_SecurityAction_t *action = BSL_calloc(1, BSL_SecurityAction_Sizeof());
     BSL_SecurityAction_Init(action);
 
     BSLP_SecOperPtrList_t secops;
@@ -195,14 +195,14 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
             continue;
         }
 
-        BSL_SecOper_t *sec_oper = BSL_CALLOC(1, BSL_SecOper_Sizeof());
+        BSL_SecOper_t *sec_oper = BSL_calloc(1, BSL_SecOper_Sizeof());
         BSL_SecOper_Init(sec_oper);
         if (BSLP_PolicyRule_EvaluateAsSecOper(rule, sec_oper, bundle, location) < 0)
         {
             BSL_LOG_WARNING("SecOp evaluate failed");
             BSL_SecurityAction_IncrError(action);
             BSL_SecOper_Deinit(sec_oper);
-            BSL_FREE(sec_oper);
+            BSL_free(sec_oper);
             continue;
         }
 
@@ -279,13 +279,13 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     {
         BSL_SecOper_t **secop = BSLP_SecOperPtrList_get(secops, i);
         BSL_SecurityAction_AppendSecOper(action, *secop);
-        BSL_FREE(*secop);
+        BSL_free(*secop);
     }
     BSLP_SecOperPtrList_clear(secops);
 
     BSL_SecurityActionSet_AppendAction(output_action_set, action);
     BSL_SecurityAction_Deinit(action);
-    BSL_FREE(action);
+    BSL_free(action);
 
     CHK_POSTCONDITION(BSL_SecurityActionSet_IsConsistent(output_action_set));
     return (int)BSL_SecurityActionSet_CountErrors(output_action_set);
@@ -370,7 +370,7 @@ void BSLP_Deinit(void *user_data)
         BSLP_PolicyPredicate_Deinit(&self->predicates[index]);
     }
     memset(self, 0, sizeof(*self));
-    BSL_FREE(user_data);
+    BSL_free(user_data);
 }
 
 void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
@@ -422,7 +422,7 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
     memset(self, 0, sizeof(*self));
 
     size_t desc_sz    = strnlen(desc, BSLP_POLICYPREDICATE_ARRAY_CAPACITY);
-    self->description = BSL_MALLOC(desc_sz + 1);
+    self->description = BSL_malloc(desc_sz + 1);
     strncpy(self->description, desc, desc_sz);
     self->description[desc_sz] = '\0';
 
@@ -442,7 +442,7 @@ void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
     BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", self->description, BSLB_SecParamList_size(self->params));
-    BSL_FREE(self->description);
+    BSL_free(self->description);
     BSLB_SecParamList_clear(self->params);
     memset(self, 0, sizeof(*self));
 }

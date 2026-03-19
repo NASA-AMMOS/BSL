@@ -393,6 +393,27 @@ int BSL_HostEIDPattern_DecodeFromText(BSL_HostEIDPattern_t *pat, const char *tex
  */
 bool BSL_HostEIDPattern_IsMatch(const BSL_HostEIDPattern_t *pat, const BSL_HostEID_t *eid);
 
+/// @brief Dynamic memory allocation
+/// @param size size of allocation
+/// @return valid heap pointer
+void *BSL_malloc(size_t size);
+
+/// @brief Dynamic memory reallocation
+/// @param ptr existing dynamic memory pointer
+/// @param size new allocation size
+/// @return valid heap pointer
+void *BSL_realloc(void *ptr, size_t size);
+
+/// @brief Contiguous dynamic memory allocation
+/// @param nmemb number of members to allocate
+/// @param size size of each member
+/// @return valid heap pointer
+void *BSL_calloc(size_t nmemb, size_t size);
+
+/// @brief Free dynamically allocated memory
+/// @param ptr pointer to memory to free
+void BSL_free(void *ptr);
+
 /** Block types using IANA-assigned code points from @cite iana:bundle.
  */
 typedef enum

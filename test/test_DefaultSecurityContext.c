@@ -52,10 +52,13 @@ static BSL_TestContext_t LocalTestCtx;
 void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
+    mock_bpa_LogOpen();
+    mock_bpa_LogSetLeastSeverity(LOG_CRIT);
 }
 
 int suiteTearDown(int failures)
 {
+    mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
     return failures;
 }
@@ -104,7 +107,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     BIBTestContext_Init(&bib_test_context);
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_SOURCE, RFC9173_EXAMPLE_A1_KEY);
 
-    BSL_SecOutcome_t *sec_outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
+    BSL_SecOutcome_t *sec_outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
     BSL_SecOutcome_Init(sec_outcome, &bib_test_context.sec_oper, BSL_SecOutcome_Sizeof());
 
     /// Confirm running BIB as source executes without error
@@ -130,7 +133,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     }
 
     BSL_SecOutcome_Deinit(sec_outcome);
-    BSL_FREE(sec_outcome);
+    BSL_free(sec_outcome);
     BIBTestContext_Deinit(&bib_test_context);
 }
 
@@ -166,7 +169,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     BCBTestContext_Init(&bcb_test_context);
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_SOURCE);
 
-    BSL_SecOutcome_t *outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
+    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
     BSL_SecOutcome_Init(outcome, &bcb_test_context.sec_oper, 10000);
 
     // Execute BCB as source, confirm result is 0 (success)
@@ -203,7 +206,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     TEST_ASSERT_EQUAL_MEMORY(ApxA2_Ciphertext, target_block->btsd, sizeof(ApxA2_Ciphertext));
 
     BSL_SecOutcome_Deinit(outcome);
-    BSL_FREE(outcome);
+    BSL_free(outcome);
     BCBTestContext_Deinit(&bcb_test_context);
 }
 
@@ -217,7 +220,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     BCBTestContext_Init(&bcb_test_context);
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_ACCEPTOR);
 
-    BSL_SecOutcome_t *outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
+    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
     BSL_SecOutcome_Init(outcome, &bcb_test_context.sec_oper, 10000);
 
     /// Confirm that BCB executes with SUCCESS
@@ -244,7 +247,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     TEST_ASSERT_EQUAL_MEMORY(ApxA2_PayloadData, target_block->btsd, sizeof(ApxA2_PayloadData));
 
     BSL_SecOutcome_Deinit(outcome);
-    BSL_FREE(outcome);
+    BSL_free(outcome);
     BCBTestContext_Deinit(&bcb_test_context);
 }
 
@@ -309,7 +312,7 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
-    BSL_SecOutcome_t      *sec_outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
+    BSL_SecOutcome_t      *sec_outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
     const BSL_SecResult_t *result;
     BIBTestContext         bibcontext;
     BCBTestContext         bcbcontext;
@@ -457,7 +460,7 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&wrapped_key_data);
-    BSL_FREE(sec_outcome);
+    BSL_free(sec_outcome);
     BIBTestContext_Deinit(&bibcontext);
     BCBTestContext_Deinit(&bcbcontext);
 }
@@ -524,7 +527,7 @@ void test_sec_accept_keyunwrap(bool bib)
     }
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
-    BSL_SecOutcome_t *sec_outcome = BSL_CALLOC(1, BSL_SecOutcome_Sizeof());
+    BSL_SecOutcome_t *sec_outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
     BIBTestContext    bibcontext;
     BCBTestContext    bcbcontext;
     BIBTestContext_Init(&bibcontext);
@@ -613,7 +616,7 @@ void test_sec_accept_keyunwrap(bool bib)
     BSL_Data_Deinit(&wrapped_key_data);
     BSL_Data_Deinit(&result_data);
     BSL_Data_Deinit(&iv_data);
-    BSL_FREE(sec_outcome);
+    BSL_free(sec_outcome);
     BIBTestContext_Deinit(&bibcontext);
     BCBTestContext_Deinit(&bcbcontext);
 }

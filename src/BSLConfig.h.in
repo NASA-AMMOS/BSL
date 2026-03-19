@@ -53,30 +53,6 @@ extern "C" {
  */
 const char * bsl_version(void);
 
-#ifndef BSL_MALLOC
-/** Uses the same function signature as C99 malloc().
- */
-#define BSL_MALLOC malloc
-#endif /* BSL_MALLOC */
-
-#ifndef BSL_REALLOC
-/** Uses the same function signature as C99 realloc().
- */
-#define BSL_REALLOC realloc
-#endif /* BSL_REALLOC */
-
-#ifndef BSL_FREE
-/** Uses the same function signature as C99 free().
- */
-#define BSL_FREE free
-#endif /* BSL_FREE */
-
-#ifndef BSL_CALLOC
-/** Uses the same function signature as C99 calloc().
- */
-#define BSL_CALLOC calloc
-#endif /* BSL_CALLOC */
-
 /** Force the use of M_ prefixed macros for M*LIB
  */
 //#define M_USE_SMALL_NAME 0
@@ -85,25 +61,25 @@ const char * bsl_version(void);
 /** Define to override value/struct allocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_ALLOC(type) ((type *) BSL_MALLOC(sizeof(type)))
+#define M_MEMORY_ALLOC(type) ((type *) BSL_malloc(sizeof(type)))
 
 #undef M_MEMORY_DEL
 /** Define to override value/struct deallocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_DEL(ptr) BSL_FREE(ptr)
+#define M_MEMORY_DEL(ptr) BSL_free(ptr)
 
 #undef M_MEMORY_REALLOC
 /** Define to override array allocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_REALLOC(type, ptr, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? (type *) NULL : (type *) BSL_REALLOC((ptr), (n)*sizeof (type)))
+#define M_MEMORY_REALLOC(type, ptr, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? (type *) NULL : (type *) BSL_realloc((ptr), (n)*sizeof (type)))
 
 #undef M_MEMORY_FREE
 /** Define to override array deallocation.
  * See m-core.h for details.
  */
-#define M_MEMORY_FREE(ptr) BSL_FREE(ptr)
+#define M_MEMORY_FREE(ptr) BSL_free(ptr)
 
 #ifdef __cplusplus
 } // extern C

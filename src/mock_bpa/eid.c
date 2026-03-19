@@ -57,7 +57,7 @@ void MockBPA_EID_Init(void *user_data _U_, BSL_HostEID_t *eid)
 {
     BSL_CHKVOID(eid);
     memset(eid, 0, sizeof(BSL_HostEID_t));
-    eid->handle = BSL_MALLOC(sizeof(bsl_mock_eid_t));
+    eid->handle = BSL_malloc(sizeof(bsl_mock_eid_t));
     if (eid->handle)
     {
         bsl_mock_eid_init(eid->handle);
@@ -70,7 +70,7 @@ void MockBPA_EID_Deinit(void *user_data _U_, BSL_HostEID_t *eid)
     if (eid->handle)
     {
         bsl_mock_eid_deinit(eid->handle);
-        BSL_FREE(eid->handle);
+        BSL_free(eid->handle);
     }
     memset(eid, 0, sizeof(BSL_HostEID_t));
 }

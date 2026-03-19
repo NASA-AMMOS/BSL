@@ -24,14 +24,17 @@
 #include "bsl_test_utils.h"
 #include <mock_bpa/ctr.h>
 #include <mock_bpa/agent.h>
+#include <mock_bpa/log.h>
 
 void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
+    mock_bpa_LogOpen();
 }
 
 int suiteTearDown(int failures)
 {
+    mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
     return failures;
 }
