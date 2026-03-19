@@ -34,6 +34,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <sys/time.h>
 
 #include "BSLConfig.h"
@@ -378,10 +379,10 @@ typedef struct
      * @param[in] lineno The originating file line number.
      * @param[in] funcname The originating function name.
      * @param[in] format The log message format string.
-     * @param ... Values for the format string.
+     * @param args Values for the format string.
      */
     void (*log_event)(const struct timeval *timestamp, int severity, const char *filename, int lineno,
-                      const char *funcname, const char *format, ...);
+                      const char *funcname, const char *format, va_list args);
 } BSL_HostDescriptors_t;
 
 /** Set the BPA descriptor (callbacks) for this process.

@@ -287,7 +287,7 @@ bool mock_bpa_LogIsEnabledFor(int severity)
 
 // NOLINTBEGIN
 void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char *filename, int lineno,
-                       const char *funcname, const char *format, ...)
+                       const char *funcname, const char *format, va_list args)
 {
     BSL_CHKVOID(timestamp);
 
@@ -312,12 +312,7 @@ void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char
         string_printf(event.context, "%s:%d:%s", pos, lineno, funcname);
     }
 
-    {
-        va_list val;
-        va_start(val, format);
-        string_vprintf(event.message, format, val);
-        va_end(val);
-    }
+    string_vprintf(event.message, format, args);
 
     // ignore empty messages
     if (!string_empty_p(event.message))

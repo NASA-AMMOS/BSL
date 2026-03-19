@@ -28,6 +28,7 @@
 #define BSL_MOCK_BPA_LOG_H_
 
 #include <stdbool.h>
+#include <stdarg.h>
 #include <sys/time.h>
 
 /** Opens the event log.
@@ -63,6 +64,6 @@ void mock_bpa_LogSetLeastSeverity(int severity);
 bool mock_bpa_LogIsEnabledFor(int severity);
 /// Interface for BSL_HostDescriptors_t::log_event
 void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char *filename, int lineno,
-                       const char *funcname, const char *format, ...);
+                       const char *funcname, const char *format, va_list args);
 
 #endif /* BSL_MOCK_BPA_LOG_H_ */
