@@ -209,17 +209,20 @@ After its de-initialization the members of the struct will no longer have well d
 
 To help with troubleshooting, de-initialization should set pointers set to NULL and other values to a well-defined state. One option is to use `memset()` to zeroize the entire struct.
 
-# Macros
+## Memory Management Functions
 
-This section contains references to commonly used macros defined for the BSL
-
-## Memory Management Macros
-
-When heap memory is needed at BSL runtime, the following macros are used and have the same signature and semantics as the corresponding C99 functions indicated below.
+When heap memory is needed at BSL runtime, the following functions are used and have the same signature and semantics as the corresponding C99 functions indicated below.
 
 - [BSL_malloc](@ref BSL_malloc) as `malloc()`
 - [BSL_realloc](@ref BSL_realloc) as `realloc()`
+- [BSL_cealloc](@ref BSL_cealloc) as `cealloc()`
 - [BSL_free](@ref BSL_free) as `free()`
+
+These can be modified using the @ref BSL_DynMemHostDescriptors_t interface.
+
+# Macros
+
+This section contains references to commonly used macros defined for the BSL
 
 ## Error Checking Handler Macros
 

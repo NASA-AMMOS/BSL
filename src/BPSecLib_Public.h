@@ -261,6 +261,9 @@ typedef struct BSL_CanonicalBlock_s
 } BSL_CanonicalBlock_t;
 
 /** Dynamic memory callback descriptors used by Dynamic BPA descriptor.
+ *
+ * These are meant to be used as part of ::BSL_HostDescriptors_t for
+ * registering host callbacks.
  */
 typedef struct
 {
@@ -286,6 +289,15 @@ typedef struct
      */
     void (*free_cb)(void *ptr);
 } BSL_DynMemHostDescriptors_t;
+
+/// Default heap functions from libc
+#define BSL_DynMemHostDescriptors_DEFAULT \
+    {                                     \
+        .malloc_cb  = malloc,             \
+        .realloc_cb = realloc,            \
+        .calloc_cb  = calloc,             \
+        .free_cb    = free,               \
+    }
 
 /** Dynamic BPA descriptor.
  */

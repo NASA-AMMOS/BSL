@@ -27,14 +27,8 @@
 #include "UtilDefs_SeqReadWrite.h"
 
 // NOLINTNEXTLINE
-static BSL_HostDescriptors_t HostDescriptorTable = { 0 };
-
-static BSL_DynMemHostDescriptors_t defaultDynMemCbs = {
-    .malloc_cb  = malloc,
-    .realloc_cb = realloc,
-    .calloc_cb  = calloc,
-    .free_cb    = free,
-};
+/// Initialized to library default
+static BSL_HostDescriptors_t HostDescriptorTable = { .dyn_mem_desc = BSL_DynMemHostDescriptors_DEFAULT };
 
 int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
 {
@@ -60,7 +54,7 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
     if (NULL == desc.dyn_mem_desc.malloc_cb && NULL == desc.dyn_mem_desc.realloc_cb
         && NULL == desc.dyn_mem_desc.calloc_cb && NULL == desc.dyn_mem_desc.free_cb)
     {
-        desc.dyn_mem_desc = defaultDynMemCbs;
+        desc.dyn_mem_desc = (BSL_DynMemHostDescriptors_t)BSL_DynMemHostDescriptors_DEFAULT;
     }
     // otherwiese, if any one are unset, return error
     else if (NULL == desc.dyn_mem_desc.malloc_cb || NULL == desc.dyn_mem_desc.realloc_cb
