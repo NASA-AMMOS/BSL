@@ -173,37 +173,6 @@ typedef enum
  */
 char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen);
 
-/** Opens the event log.
- * @note This should be called once per process, not thread or library instance.
- * At the end of the process there should be a call to BSL_closelog()
- *
- * This is a mimic to POSIX @c openlog()
- */
-void BSL_openlog(void);
-
-/** Closes the event log.
- * This is a mimic to POSIX @c closelog()
- * @sa BSL_openlog
- */
-void BSL_closelog(void);
-
-/** Interpret a text name as a severity level.
- *
- * @param[out] severity The associated severity level.
- * @param[in] name The text name, which is case insensitive.
- * @return Zero if successful.
- */
-int BSL_LogGetSeverity(int *severity, const char *name);
-
-/** Set the least severity enabled for logging.
- * Other events will be dropped by the logging facility.
- * This function is multi-thread safe.
- *
- * @param severity The severity from a subset of the POSIX syslog values.
- * @sa BSL_log_is_enabled_for()
- */
-void BSL_LogSetLeastSeverity(int severity);
-
 /** Determine if a particular severity is being logged.
  * This function is multi-thread safe.
  *
@@ -343,9 +312,8 @@ int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t bufsize);
 /** Initialize an abstract EID.
  *
  * @param[out] eid The object to initialize.
- * @return Zero if successful.
  */
-int BSL_HostEID_Init(BSL_HostEID_t *eid);
+void BSL_HostEID_Init(BSL_HostEID_t *eid);
 
 /** De-initialize an abstract EID.
  *

@@ -41,12 +41,12 @@ static BSL_TestContext_t LocalTestCtx;
 void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
-    BSL_openlog();
+    mock_bpa_LogOpen();
 }
 
 int suiteTearDown(int failures)
 {
-    BSL_closelog();
+    mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
     return failures;
 }

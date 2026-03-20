@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <poll.h>
 #include "agent.h"
+#include "log.h"
 #include "eid.h"
 #include "eidpat.h"
 #include "encode.h"
@@ -406,6 +407,9 @@ BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent)
         .eidpat_deinit    = mock_bpa_eidpat_deinit,
         .eidpat_from_text = mock_bpa_eidpat_from_text,
         .eidpat_match     = mock_bpa_eidpat_match,
+
+        .log_is_enabled_for = mock_bpa_LogIsEnabledFor,
+        .log_event          = mock_bpa_LogEvent,
     };
     return bpa;
 }
