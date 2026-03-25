@@ -147,9 +147,10 @@ BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent);
 /** Initialize and register this mock BPA for the current process.
  *
  * @param[out] agent The agent to initialize.
+ * @param[in, out] policy *policy should point to dynamically allocated policy provider data
  * @return Zero if successful.
  */
-int MockBPA_Agent_Init(MockBPA_Agent_t *agent);
+int MockBPA_Agent_Init(MockBPA_Agent_t *agent, BSLP_PolicyProvider_t **policy);
 
 /** Clean up the mock BPA for the current process.
  *

@@ -410,7 +410,7 @@ BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent)
     return bpa;
 }
 
-int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
+int MockBPA_Agent_Init(MockBPA_Agent_t *agent, BSLP_PolicyProvider_t **policy)
 {
     int retval = 0;
 
@@ -466,10 +466,14 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
         bcb_sec_desc.validate = BSLX_BCB_Validate;
         ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, 2, bcb_sec_desc));
     }
-    // TODO find a better way to deal with this
+
+    BSLP_PolicyProvider_Init(policy, 1);
+    agent->appin.policy = *policy;
+    agent->appout.policy = *policy;
+    agent->clin.policy = *policy;
+    agent->clout.policy = *policy;
+
     {
-        agent->appin.policy               = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
-        agent->appin.policy->pp_id        = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,
@@ -477,8 +481,6 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
         ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->appin.bsl, 1, policy_callbacks));
     }
     {
-        agent->appout.policy              = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
-        agent->appout.policy->pp_id       = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,
@@ -486,8 +488,6 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
         ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->appout.bsl, 1, policy_callbacks));
     }
     {
-        agent->clin.policy                = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
-        agent->clin.policy->pp_id         = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,
@@ -495,8 +495,6 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
         ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->clin.bsl, 1, policy_callbacks));
     }
     {
-        agent->clout.policy               = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
-        agent->clout.policy->pp_id        = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
                                                                  .finalize_fn = BSLP_FinalizePolicy,

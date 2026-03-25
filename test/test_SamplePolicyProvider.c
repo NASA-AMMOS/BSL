@@ -37,6 +37,7 @@
 #include <policy_provider/SamplePolicyProvider.h>
 
 static BSL_TestContext_t LocalTestCtx;
+static BSL_HostEIDPattern_t eid_pat_all;
 
 void suiteSetUp(void)
 {
@@ -57,10 +58,12 @@ void setUp(void)
     memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
     TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
     mock_bpa_ctr_init(&LocalTestCtx.mock_bpa_ctr);
+    eid_pat_all = BSL_TestUtils_GetEidPatternFromText("*:**");
 }
 
 void tearDown(void)
 {
+    BSL_HostEIDPattern_Deinit(&eid_pat_all);
     mock_bpa_ctr_deinit(&LocalTestCtx.mock_bpa_ctr);
     // BSL_BundleCtx_Deinit(LocalTestCtx.bundle);
     TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));
@@ -92,13 +95,19 @@ void test_SamplePolicyProvider_WildcardPolicyRuleVerifiesBIB(void)
 
     // Create a predicate: "At location APPIN, match Bundles from anywhere, to anywhere, with any security source"
     BSLP_PolicyPredicate_t predicate;
-    BSLP_PolicyPredicate_Init(&predicate, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
-                              BSL_TestUtils_GetEidPatternFromText("*:**"), BSL_TestUtils_GetEidPatternFromText("*:**"));
+    BSLP_PolicyPredicate_Init(&predicate, BSL_POLICYLOCATION_APPIN, eid_pat_all, eid_pat_all, eid_pat_all);
 
     // Create a rule to verify the bundle contains a BIB block covering the payload
     BSLP_PolicyRule_t rule;
-    BSLP_PolicyRule_Init(&rule, "Confirm bundle has BIB protecting payload", &predicate, 1, BSL_SECROLE_VERIFIER,
-                         BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
+    BSLP_PolicyRule_Init(&rule);
+
+    string_set_str(rule.description, "Confirm bundle has BIB protecting payload");
+    rule.sec_block_type = BSL_SECBLOCKTYPE_BIB;
+    rule.target_block_type = BSL_BLOCK_TYPE_PAYLOAD;
+    memcpy(&rule.predicate, &predicate, sizeof(BSLP_PolicyPredicate_t));
+    rule.context_id = 1;
+    rule.failure_action_code = BSL_POLICYACTION_DROP_BUNDLE;
+    rule.role = BSL_SECROLE_VERIFIER;
 
     // Now evaluate the rule to get as a SecOper
     // This populates it with actual parameters.
@@ -121,42 +130,3 @@ void test_SamplePolicyProvider_WildcardPolicyRuleVerifiesBIB(void)
     BSLP_PolicyRule_Deinit(&rule);
     BSLP_PolicyPredicate_Deinit(&predicate);
 }
-
-TEST_CASE("")
-TEST_CASE("1")
-TEST_CASE(
-    "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789") // 100 char
-TEST_CASE(
-    "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890") // 101 char
-void test_SamplePolicyProvider_PolicyRuleInit_Description(const char *description)
-{
-    BSLP_PolicyPredicate_t predicate;
-    BSLP_PolicyPredicate_Init(&predicate, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
-                              BSL_TestUtils_GetEidPatternFromText("*:**"), BSL_TestUtils_GetEidPatternFromText("*:**"));
-
-    BSLP_PolicyRule_t rule;
-    BSLP_PolicyRule_Init(&rule, description, &predicate, 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
-                         BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
-
-    TEST_ASSERT_LESS_OR_EQUAL(BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN, strlen(rule.description));
-
-    if (strlen(description) <= BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN)
-    {
-        TEST_ASSERT_EQUAL(strlen(description), strlen(rule.description));
-    }
-    else
-    {
-        TEST_ASSERT_EQUAL(BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN, strlen(rule.description));
-    }
-
-    // unity doesn't like TEST_ASSERT_EQUAL_MEMORY call on 0 length buffer
-    if (strlen(description) > 0)
-    {
-        TEST_ASSERT_EQUAL_MEMORY(description, rule.description, strlen(rule.description));
-    }
-
-    BSLP_PolicyRule_Deinit(&rule);
-    BSLP_PolicyPredicate_Deinit(&predicate);
-}
-
-// TODO(bvb) more tests with more granular predicates and rules

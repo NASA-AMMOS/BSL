@@ -522,12 +522,10 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
             }
         }
 
-        BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
-        BSLP_PolicyPredicate_Init(predicate, policy_loc_enum, src_eid, sec_src_eid, dest_eid);
-
-        BSLP_PolicyRule_t *rule = &policy->rules[policy->rule_count++];
-        BSLP_PolicyRule_Init(rule, rule_id_str, predicate, sec_ctx_id, sec_role, sec_block_type, target_block_type,
-                             policy_action_enum);
+        BSLP_PolicyPredicate_t predicate;
+        BSLP_PolicyPredicate_Init(&predicate, policy_loc_enum, src_eid, sec_src_eid, dest_eid);
+        BSLP_PolicyRule_t *rule = BSLP_PolicyProvider_AddRule(policy, rule_id_str, &predicate, sec_ctx_id, sec_role, 
+            sec_block_type, target_block_type, policy_action_enum);
 
         // TODO validate params_got
         (void)params_got;
@@ -700,15 +698,16 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     }
 
     // Create a rule to verify security block at APP/CLA Ingress
+    // FIXME memory leak for mockbpa eid patterns
     char policybits_str[100];
     snprintf(policybits_str, 100, "Policy: %x", policy_bits);
-    BSLP_PolicyPredicate_t *predicate_all_in = &policy->predicates[policy->predicate_count++];
-    BSLP_PolicyPredicate_Init(predicate_all_in, policy_loc_enum, eid_src_pat,
+    BSLP_PolicyPredicate_t predicate_all_in;
+    BSLP_PolicyPredicate_Init(&predicate_all_in, policy_loc_enum, eid_src_pat,
                               mock_bpa_util_get_eid_pattern_from_text("*:**"),
                               mock_bpa_util_get_eid_pattern_from_text("*:**"));
-    BSLP_PolicyRule_t *rule_all_in = &policy->rules[policy->rule_count++];
-    BSLP_PolicyRule_Init(rule_all_in, policybits_str, predicate_all_in, sec_context, sec_role_enum, sec_block_emum,
-                         bundle_block_enum, policy_action_enum);
+                                                            
+    BSLP_PolicyRule_t *rule_all_in = BSLP_PolicyProvider_AddRule(policy, policybits_str, &predicate_all_in, sec_context, 
+        sec_role_enum, sec_block_emum, bundle_block_enum, policy_action_enum);
 
     if (sec_block_emum == BSL_SECBLOCKTYPE_BCB)
     {

@@ -45,13 +45,6 @@ M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t *, M_PTR_OPLIST)
 // NOLINTEND
 /// @endcond
 
-static bool BSLP_PolicyProvider_IsConsistent(const BSLP_PolicyProvider_t *self)
-{
-    ASSERT_ARG_NONNULL(self);
-    ASSERT_ARG_EXPR(self->rule_count < (sizeof(self->rules) / sizeof(BSLP_PolicyRule_t)));
-    return true;
-}
-
 static bool BSLP_PolicyPredicate_IsConsistent(const BSLP_PolicyPredicate_t *self)
 {
     ASSERT_ARG_NONNULL(self);
@@ -70,7 +63,7 @@ static bool BSLP_PolicyRule_IsConsistent(const BSLP_PolicyRule_t *self)
     ASSERT_ARG_EXPR(self->sec_block_type > 0);
     ASSERT_ARG_EXPR(self->context_id != 0);
     // NOLINTBEGIN
-    ASSERT_ARG_EXPR(BSLP_PolicyPredicate_IsConsistent(self->predicate));
+    ASSERT_ARG_EXPR(BSLP_PolicyPredicate_IsConsistent(&self->predicate));
     // NOLINTEND
     return true;
 }
@@ -155,7 +148,6 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
 {
     // This is an output struct. The caller only provides the allocation for it (which must be zero)
     const BSLP_PolicyProvider_t *self = user_data;
-    ASSERT_ARG_EXPR(BSLP_PolicyProvider_IsConsistent(self));
 
     BSL_PrimaryBlock_t primary_block = { 0 };
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
@@ -170,21 +162,21 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     BSLP_SecOperPtrList_t secops;
     BSLP_SecOperPtrList_init(secops);
 
-    const size_t capacity = sizeof(self->rules) / sizeof(BSLP_PolicyRule_t);
-    for (size_t index = 0; (index < self->rule_count) && (index < capacity); index++)
+    BSLP_PolicyRuleList_it_t rule_it;
+    for (BSLP_PolicyRuleList_it(rule_it, self->rules); !BSLP_PolicyRuleList_end_p(rule_it); BSLP_PolicyRuleList_next(rule_it))
     {
-        const BSLP_PolicyRule_t *rule = &self->rules[index];
+        const BSLP_PolicyRule_t *rule = BSLP_PolicyRuleList_cref(rule_it);
         if (!BSLP_PolicyRule_IsConsistent(rule))
         {
-            BSL_LOG_ERR("Rule `%s` is not consistent", rule->description);
+            BSL_LOG_ERR("Rule `%s` is not consistent", string_get_cstr(rule->description));
             continue;
         }
-        BSL_LOG_DEBUG("Evaluating against rule `%s`", rule->description);
+        BSL_LOG_DEBUG("Evaluating against rule `%s`", string_get_cstr(rule->description));
 
-        if (!BSLP_PolicyPredicate_IsMatch(rule->predicate, location, primary_block.field_src_node_id,
+        if (!BSLP_PolicyPredicate_IsMatch(&rule->predicate, location, primary_block.field_src_node_id,
                                           primary_block.field_dest_eid))
         {
-            BSL_LOG_DEBUG("Rule `%s` not a match", rule->description);
+            BSL_LOG_DEBUG("Rule `%s` not a match", string_get_cstr(rule->description));
             continue;
         }
 
@@ -270,7 +262,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
             BSL_LOG_INFO("append to end");
             BSLP_SecOperPtrList_push_back(secops, sec_oper);
         }
-        BSL_LOG_INFO("Created sec operation for rule `%s`", rule->description);
+        BSL_LOG_INFO("Created sec operation for rule `%s`", string_get_cstr(rule->description));
     }
     BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -296,7 +288,6 @@ int BSLP_FinalizePolicy(const void *user_data _U_, const BSL_SecurityActionSet_t
 {
     int                          error_ret = BSL_SUCCESS;
     const BSLP_PolicyProvider_t *self      = user_data;
-    ASSERT_ARG_EXPR(BSLP_PolicyProvider_IsConsistent(self));
 
     for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(output_action_set); i++)
     {
@@ -347,30 +338,51 @@ int BSLP_FinalizePolicy(const void *user_data _U_, const BSL_SecurityActionSet_t
     return error_ret;
 }
 
-void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self)
+void BSLP_PolicyProvider_Init(BSLP_PolicyProvider_t **self, uint64_t pp_id)
 {
-    BSL_HostEIDPattern_Deinit(&self->dst_eid_pattern);
-    BSL_HostEIDPattern_Deinit(&self->secsrc_eid_pattern);
-    BSL_HostEIDPattern_Deinit(&self->src_eid_pattern);
-    memset(self, 0, sizeof(*self));
+    *self = BSL_malloc(sizeof(BSLP_PolicyProvider_t));
+    (*self)->pp_id = pp_id;
+
+    BSLP_PolicyRuleList_init((*self)->rules);
+    pthread_mutex_init(&(*self)->mutex, NULL);
 }
 
-void BSLP_Deinit(void *user_data)
+BSLP_PolicyRule_t *BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, const char *desc, BSLP_PolicyPredicate_t *predicate,
+                                int64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type,
+                                BSL_BundleBlockTypeCode_e target_block_type, BSL_PolicyAction_e failure_action_code)
 {
-    BSLP_PolicyProvider_t *self = user_data;
-    ASSERT_ARG_EXPR(BSLP_PolicyProvider_IsConsistent(self));
-    for (size_t index = 0; index < self->rule_count; index++)
-    {
-        BSL_LOG_INFO("Sample Policy Provider deinit rule index %zu", index);
-        BSLP_PolicyRule_Deinit(&self->rules[index]);
-    }
+    BSLP_PolicyRule_t rule;
+    BSLP_PolicyRule_Init(&rule);
 
-    for (size_t index = 0; index < self->predicate_count; index++)
-    {
-        BSLP_PolicyPredicate_Deinit(&self->predicates[index]);
-    }
-    memset(self, 0, sizeof(*self));
-    BSL_free(user_data);
+    BSL_LOG_INFO("SELF! %x", self);
+    BSL_LOG_INFO("SELF! %d", self->pp_id);
+
+    string_set_str(rule.description, desc);
+    memcpy(&rule.predicate, predicate, sizeof(BSLP_PolicyPredicate_t));
+    rule.context_id = context_id;
+    rule.role = role;
+    rule.sec_block_type = sec_block_type;
+    rule.target_block_type = target_block_type;
+    rule.failure_action_code = failure_action_code;
+
+    BSLP_PolicyRuleList_push_move(self->rules, &rule);
+    
+    return BSLP_PolicyRuleList_back(self->rules);
+}
+
+void BSLP_PolicyProvider_Deinit(BSLP_PolicyProvider_t *self)
+{
+    BSLP_PolicyRuleList_clear(self->rules);
+
+    pthread_mutex_destroy(&self->mutex);
+
+    BSL_free(self);
+}
+
+// is this needed anymore if policy provider is shared?
+void BSLP_Deinit(void *user_data) 
+{
+    (void) user_data;
 }
 
 void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
@@ -385,8 +397,11 @@ void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_
     self->src_eid_pattern    = src_eid_pattern;
     self->secsrc_eid_pattern = secsrc_eid_pattern;
     self->dst_eid_pattern    = dst_eid_pattern;
+}
 
-    ASSERT_POSTCONDITION(BSLP_PolicyPredicate_IsConsistent(self));
+void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self)
+{
+    memset(self, 0, sizeof(*self));
 }
 
 bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
@@ -404,45 +419,35 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
     return is_location_match && is_src_pattern_match && is_dst_pattern_match;
 }
 
-/*
-Example Rules:
- - Template: "If Bundle src/dst match PREDICATE, then (ADD|REMOVE|VALIDATE) SEC_BLOCK_TYPE using PARAM-KEY-VALUES"
- - "At ingress from the convergence layer, Bundles matching *.* must have a single BIB covering the primary and payload
-block using key 9" Step 1: Match the Bundle struct with all Rule structs to find a Rule that matches. If no match,
-reject
-   - Things to match on:
-     - Bitmask/something for HAS_BIB_ON_PRIMARY, HAS_BIB_ON_PAYLOAD, submasks for BIB_COVERS_PRIMARY, BIB_COVERS_TARGET
- Step 2: Populate security parameters unique to bundle and src/dst pair.
-*/
-int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyPredicate_t *predicate,
-                         int64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type,
-                         BSL_BundleBlockTypeCode_e target_block_type, BSL_PolicyAction_e failure_action_code)
+void BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self)
 {
-    ASSERT_ARG_NONNULL(self);
-    memset(self, 0, sizeof(*self));
-
-    size_t desc_sz    = strnlen(desc, BSLP_POLICYPREDICATE_ARRAY_CAPACITY);
-    self->description = BSL_malloc(desc_sz + 1);
-    strncpy(self->description, desc, desc_sz);
-    self->description[desc_sz] = '\0';
-
-    self->sec_block_type    = sec_block_type;
-    self->target_block_type = target_block_type;
-    self->predicate         = predicate;
-    self->context_id        = context_id;
-    // TODO(bvb) assert Role in expected range
-    self->failure_action_code = failure_action_code;
-    self->role                = role;
+    string_init(self->description);
+    self->sec_block_type = 0;
+    self->target_block_type = 0;
+    memset(&self->predicate, 0, sizeof(BSLP_PolicyPredicate_t));
+    self->context_id = 0;
+    self->failure_action_code = 0;
+    self->role = 0;
     BSLB_SecParamList_init(self->params);
-    ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
-    return BSL_SUCCESS;
+}
+
+void BSLP_PolicyRule_InitSet(BSLP_PolicyRule_t *self, const BSLP_PolicyRule_t *src) 
+{
+    string_init_set(self->description, src->description);
+    self->sec_block_type    = src->sec_block_type;
+    self->target_block_type = src->target_block_type;
+    memcpy(&self->predicate, &src->predicate, sizeof(BSLP_PolicyPredicate_t));
+    self->context_id        = src->context_id;
+    self->failure_action_code = src->failure_action_code;
+    self->role                = src->role;
+    BSLB_SecParamList_init_set(self->params, src->params);
 }
 
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
-    ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
-    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", self->description, BSLB_SecParamList_size(self->params));
-    BSL_free(self->description);
+    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", string_get_cstr(self->description), BSLB_SecParamList_size(self->params));
+    BSLP_PolicyPredicate_Deinit(&self->predicate);
+    string_clear(self->description);
     BSLB_SecParamList_clear(self->params);
     memset(self, 0, sizeof(*self));
 }
@@ -478,7 +483,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
         // Confirm that the rule matches the bundle.
         BSL_PrimaryBlock_t primary_block = { 0 };
         BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block);
-        CHK_PRECONDITION(BSLP_PolicyPredicate_IsMatch(self->predicate, location, primary_block.field_src_node_id,
+        CHK_PRECONDITION(BSLP_PolicyPredicate_IsMatch(&self->predicate, location, primary_block.field_src_node_id,
                                                       primary_block.field_dest_eid));
         BSL_PrimaryBlock_deinit(&primary_block);
     }
@@ -502,7 +507,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper
         const BSL_SecParam_t *param = BSLB_SecParamList_cref(pit);
         BSL_SecOper_AppendParam(sec_oper, param);
     }
-    BSL_LOG_INFO("Created sec operation for rule `%s`", self->description);
+    BSL_LOG_INFO("Created sec operation for rule `%s`", string_get_cstr(self->description));
 
     return BSL_SUCCESS;
 }
