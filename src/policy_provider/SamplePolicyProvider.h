@@ -71,8 +71,6 @@ void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_
                                BSL_HostEIDPattern_t src_eid_pattern, BSL_HostEIDPattern_t secsrc_eid_pattern,
                                BSL_HostEIDPattern_t dst_eid_pattern);
 
-void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
-
 /**
  * @brief Returns true if the given predicate matches the arguments
  *
@@ -142,22 +140,6 @@ M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRule_t,
 /// @endcond
 
 /**
- * @brief Include a BPSec parameter to this rule. Used immediately after Init.
- *
- * @param[in] self This rule
- * @param[in,out] param Pointer to the Parameter to move from.
- */
-void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *param);
-
-/**
- * @brief Include a BPSec parameter to this rule. Used immediately after Init.
- *
- * @param[in] self This rule
- * @param[in,out] param Pointer to the Parameter to move from.
- */
-void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param);
-
-/**
  * @brief Critical function creating a security operation from a bundle and location.
  *
  * @param[in] self This policy rule
@@ -187,10 +169,26 @@ void BSLP_PolicyProvider_Init(BSLP_PolicyProvider_t **self, uint64_t pp_id);
 /**
  * FIXME docs
  */
-BSLP_PolicyRule_t *BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, const char *desc, BSLP_PolicyPredicate_t *predicate,
+int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, const char *desc, BSLP_PolicyPredicate_t *predicate,
                                 int64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type,
                                 BSL_BundleBlockTypeCode_e target_block_type, BSL_PolicyAction_e failure_action_code);
                                 
+
+/**
+ * @brief Include a BPSec parameter to this rule. Used immediately after Init.
+ *
+ * @param[in] self This rule
+ * @param[in,out] param Pointer to the Parameter to move from.
+ */
+void BSLP_PolicyRule_CopyParam(BSLP_PolicyProvider_t *self, int rule_idx, const BSL_SecParam_t *param);
+
+/**
+ * @brief Include a BPSec parameter to this rule. Used immediately after Init.
+ *
+ * @param[in] self This rule
+ * @param[in,out] param Pointer to the Parameter to move from.
+ */
+void BSLP_PolicyRule_MoveParam(BSLP_PolicyProvider_t *self, int rule_idx, BSL_SecParam_t *param);
 
 /** De-initialize policy provider data
  */

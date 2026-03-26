@@ -146,12 +146,12 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
     BSLP_PolicyPredicate_t predicate;
     BSLP_PolicyPredicate_Init(&predicate, BSL_POLICYLOCATION_APPIN, eid_pat_all,
                               eid_pat_all, eid_pat_all);
-    BSLP_PolicyRule_t *rule = BSLP_PolicyProvider_AddRule(policy, "Verify BIB on APPIN from anywhere", &predicate, 1, BSL_SECROLE_VERIFIER,
+    int rule_idx = BSLP_PolicyProvider_AddRule(policy, "Verify BIB on APPIN from anywhere", &predicate, 1, BSL_SECROLE_VERIFIER,
                          BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
     RFC9173_A1_Params bib_params = BSL_TestUtils_GetRFC9173_A1Params(RFC9173_EXAMPLE_A1_KEY);
-    BSLP_PolicyRule_MoveParam(rule, &bib_params.sha_variant);
-    BSLP_PolicyRule_MoveParam(rule, &bib_params.scope_flags);
-    BSLP_PolicyRule_MoveParam(rule, &bib_params.test_key_id);
+    BSLP_PolicyRule_MoveParam(policy, rule_idx, &bib_params.sha_variant);
+    BSLP_PolicyRule_MoveParam(policy, rule_idx, &bib_params.scope_flags);
+    BSLP_PolicyRule_MoveParam(policy, rule_idx, &bib_params.test_key_id);
 
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
@@ -195,23 +195,23 @@ void test_MultiplePolicyProviders(void)
     BSLP_PolicyPredicate_Init(&predicate, BSL_POLICYLOCATION_APPIN, eid_pat_all,
                               eid_pat_all, eid_pat_all);
 
-    BSLP_PolicyRule_t *rule = BSLP_PolicyProvider_AddRule(policy, "Source BIB over primary on APPIN from anywhere", &predicate, 1, BSL_SECROLE_SOURCE,
+    int rule_idx = BSLP_PolicyProvider_AddRule(policy, "Source BIB over primary on APPIN from anywhere", &predicate, 1, BSL_SECROLE_SOURCE,
                          BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PRIMARY, BSL_POLICYACTION_DROP_BUNDLE);
     RFC9173_A1_Params bib_params = BSL_TestUtils_GetRFC9173_A1Params(RFC9173_EXAMPLE_A1_KEY);
-    BSLP_PolicyRule_MoveParam(rule, &bib_params.sha_variant);
-    BSLP_PolicyRule_MoveParam(rule, &bib_params.scope_flags);
-    BSLP_PolicyRule_MoveParam(rule, &bib_params.test_key_id);
+    BSLP_PolicyRule_MoveParam(policy, rule_idx, &bib_params.sha_variant);
+    BSLP_PolicyRule_MoveParam(policy, rule_idx, &bib_params.scope_flags);
+    BSLP_PolicyRule_MoveParam(policy, rule_idx, &bib_params.test_key_id);
 
     BSLP_PolicyPredicate_t predicate2;
     BSLP_PolicyPredicate_Init(&predicate2, BSL_POLICYLOCATION_APPIN, eid_pat_all,
                               eid_pat_all, eid_pat_all);
 
-    BSLP_PolicyRule_t *rule2 = BSLP_PolicyProvider_AddRule(policy2, "Source BIB over payload on APPIN from anywhere", &predicate2, 1, BSL_SECROLE_SOURCE,
+    int rule2_idx = BSLP_PolicyProvider_AddRule(policy2, "Source BIB over payload on APPIN from anywhere", &predicate2, 1, BSL_SECROLE_SOURCE,
                          BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
     RFC9173_A1_Params bib_params2 = BSL_TestUtils_GetRFC9173_A1Params(RFC9173_EXAMPLE_A1_KEY);
-    BSLP_PolicyRule_MoveParam(rule2, &bib_params2.sha_variant);
-    BSLP_PolicyRule_MoveParam(rule2, &bib_params2.scope_flags);
-    BSLP_PolicyRule_MoveParam(rule2, &bib_params2.test_key_id);
+    BSLP_PolicyRule_MoveParam(policy, rule2_idx, &bib_params2.sha_variant);
+    BSLP_PolicyRule_MoveParam(policy, rule2_idx, &bib_params2.scope_flags);
+    BSLP_PolicyRule_MoveParam(policy, rule2_idx, &bib_params2.test_key_id);
 
     TEST_ASSERT_EQUAL(
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));

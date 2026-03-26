@@ -131,19 +131,19 @@ void _setUp(void)
     // BSL_32
     BSLP_PolicyPredicate_t predicate_bsl_32a;
     BSLP_PolicyPredicate_Init(&predicate_bsl_32a, BSL_POLICYLOCATION_CLOUT, eid_pat_all, eid_pat_all, eid_pat_3_2);
-    BSLP_PolicyRule_t *rule_bsl_32a = BSLP_PolicyProvider_AddRule(policy , "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:3.2)", &predicate_bsl_32a, 2,
+    int rule_bsl_32a_idx = BSLP_PolicyProvider_AddRule(policy , "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:3.2)", &predicate_bsl_32a, 2,
                          BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32a, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32a, &param_aes_variant_128);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32a, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(policy, rule_bsl_32a_idx, &param_test_bcb_key_correct);
+    BSLP_PolicyRule_CopyParam(policy, rule_bsl_32a_idx, &param_aes_variant_128);
+    BSLP_PolicyRule_CopyParam(policy, rule_bsl_32a_idx, &param_use_wrap_key);
 
     BSLP_PolicyPredicate_t predicate_bsl_32b;
     BSLP_PolicyPredicate_Init(&predicate_bsl_32b, BSL_POLICYLOCATION_CLOUT, eid_pat_all, eid_pat_all, eid_pat_3_2);
-    BSLP_PolicyRule_t *rule_bsl_32b = BSLP_PolicyProvider_AddRule(policy, "SOURCE BCB OVER BIB AT CLOUT FILTER(DEST=ipn:3.2)", &predicate_bsl_32b, 2,
+    int rule_bsl_32b_idx = BSLP_PolicyProvider_AddRule(policy, "SOURCE BCB OVER BIB AT CLOUT FILTER(DEST=ipn:3.2)", &predicate_bsl_32b, 2,
                          BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_BIB, BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32b, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32b, &param_aes_variant_128);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32b, &param_use_wrap_key);
+    BSLP_PolicyRule_CopyParam(policy, rule_bsl_32b_idx, &param_test_bcb_key_correct);
+    BSLP_PolicyRule_CopyParam(policy, rule_bsl_32b_idx, &param_aes_variant_128);
+    BSLP_PolicyRule_CopyParam(policy, rule_bsl_32b_idx, &param_use_wrap_key);
 
     /// Register the Security Context
     BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
