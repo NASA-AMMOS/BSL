@@ -44,6 +44,7 @@ static BSL_HostEID_t app_eid;
 static BSL_HostEID_t sec_eid;
 /// Agent for this process
 static MockBPA_Agent_t agent;
+static BSLP_PolicyProvider_t *policy;
 
 static int ingest_netaddr(struct sockaddr_in *addr, const char *arg)
 {
@@ -108,13 +109,15 @@ int main(int argc, char **argv)
     int retval = 0;
     int res;
 
+    BSL_LOG_INFO("HELLO, MOCK BPA");
+
     if (BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(&agent)))
     {
         return 2;
     }
     mock_bpa_LogOpen();
     BSL_CryptoInit();
-    if ((res = MockBPA_Agent_Init(&agent)))
+    if ((res = MockBPA_Agent_Init(&agent, &policy)))
     {
         BSL_LOG_ERR("Failed to initialize mock BPA, error %d", res);
         retval = 2;
@@ -171,30 +174,12 @@ int main(int argc, char **argv)
                     break;
                 case 'p':
                 {
-                    // TODO better way to handle this
-                    int anyerr = 0;
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.appin.policy, &policy_registry));
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.appout.policy, &policy_registry));
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.clin.policy, &policy_registry));
-                    anyerr += abs(mock_bpa_handle_policy_config(optarg, agent.clout.policy, &policy_registry));
-                    if (anyerr)
-                    {
-                        retval = 1;
-                    }
-
+                    retval = !!(mock_bpa_handle_policy_config(optarg, policy, &policy_registry));
                     break;
                 }
                 case 'j':
                 {
-                    int anyerr = 0;
-                    anyerr += abs(mock_bpa_register_policy_from_json(optarg, agent.appin.policy, &policy_registry));
-                    anyerr += abs(mock_bpa_register_policy_from_json(optarg, agent.appout.policy, &policy_registry));
-                    anyerr += abs(mock_bpa_register_policy_from_json(optarg, agent.clin.policy, &policy_registry));
-                    anyerr += abs(mock_bpa_register_policy_from_json(optarg, agent.clout.policy, &policy_registry));
-                    if (anyerr)
-                    {
-                        retval = 1;
-                    }
+                    retval = !!(mock_bpa_register_policy_from_json(optarg, policy, &policy_registry));
                     break;
                 }
                 case 'k':
@@ -250,6 +235,7 @@ int main(int argc, char **argv)
     }
 
     mock_bpa_policy_registry_deinit(&policy_registry);
+    BSLP_PolicyProvider_Deinit(policy);
     MockBPA_Agent_Deinit(&agent);
     BSL_HostEID_Deinit(&sec_eid);
     BSL_HostEID_Deinit(&app_eid);
