@@ -853,7 +853,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
     return retval;
 }
 
-void mock_bpa_policy_eid_pat_deinit()
+void mock_bpa_policy_eid_pat_deinit(void)
 {
     BSL_HostEIDPattern_Deinit(&src_eid);
     BSL_HostEIDPattern_Deinit(&dest_eid);
