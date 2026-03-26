@@ -78,7 +78,7 @@ void bsl_mock_eid_init(bsl_mock_eid_t *eid);
 void bsl_mock_eid_deinit(bsl_mock_eid_t *eid);
 
 /// Interface for BSL_HostDescriptors_t::eid_init
-int MockBPA_EID_Init(void *user_data, BSL_HostEID_t *eid);
+void MockBPA_EID_Init(void *user_data, BSL_HostEID_t *eid);
 
 /// Interface for BSL_HostDescriptors_t::eid_deinit
 void MockBPA_EID_Deinit(void *user_data, BSL_HostEID_t *eid);

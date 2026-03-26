@@ -23,6 +23,9 @@
  * @brief Implementation of the host BPA and its callback functions.
  * @ingroup backend_dyn
  */
+#include <stdarg.h>
+#include <pthread.h>
+#include <sys/time.h>
 #include <BPSecLib_Private.h>
 #include "UtilDefs_SeqReadWrite.h"
 
@@ -162,11 +165,11 @@ void BSL_HostDescriptors_Clear(void)
     HostDescriptorTable = (BSL_HostDescriptors_t) { 0 };
 }
 
-int BSL_HostEID_Init(BSL_HostEID_t *eid)
+void BSL_HostEID_Init(BSL_HostEID_t *eid)
 {
-    CHK_ARG_NONNULL(eid);
-    CHK_PRECONDITION(HostDescriptorTable.eid_init != NULL);
-    return HostDescriptorTable.eid_init(HostDescriptorTable.user_data, eid);
+    ASSERT_ARG_NONNULL(eid);
+    ASSERT_PRECONDITION(HostDescriptorTable.eid_init != NULL);
+    HostDescriptorTable.eid_init(HostDescriptorTable.user_data, eid);
 }
 
 void BSL_HostEID_Deinit(BSL_HostEID_t *eid)
@@ -237,6 +240,110 @@ bool BSL_HostEIDPattern_IsMatch(const BSL_HostEIDPattern_t *pat, const BSL_HostE
     ASSERT_ARG_NONNULL(eid);
     ASSERT_PRECONDITION(HostDescriptorTable.eidpat_match);
     return HostDescriptorTable.eidpat_match(pat, eid, HostDescriptorTable.user_data);
+}
+
+// NOLINTBEGIN
+static const char *log_sev_names[] = {
+    NULL,      // LOG_EMERG
+    NULL,      // LOG_ALERT
+    "CRIT",    // LOG_CRIT
+    "ERROR",   // LOG_ERR
+    "WARNING", // LOG_WARNING
+    NULL,      // LOG_NOTICE
+    "INFO",    // LOG_INFO
+    "DEBUG",   // LOG_DEBUG
+};
+// NOLINTEND
+
+bool BSL_LogIsEnabledFor(int severity)
+{
+    if ((severity < 0) || (severity >= 7))
+    {
+        // not valid
+        return false;
+    }
+
+    if (!HostDescriptorTable.log_is_enabled_for)
+    {
+        return true;
+    }
+
+    return HostDescriptorTable.log_is_enabled_for(severity);
+}
+
+void BSL_LogEvent(int severity, const char *filename, int lineno, const char *funcname, const char *format, ...)
+{
+    if (!BSL_LogIsEnabledFor(severity))
+    {
+        return;
+    }
+
+    struct timeval timestamp;
+    gettimeofday(&timestamp, NULL);
+
+    va_list args;
+    va_start(args, format);
+
+    if (!HostDescriptorTable.log_event)
+    {
+        char tmbuf[32]; // NOLINT
+        {
+            time_t    nowtime = timestamp.tv_sec;
+            struct tm nowtm;
+            gmtime_r(&nowtime, &nowtm);
+
+            char  *curs   = tmbuf;
+            size_t remain = sizeof(tmbuf) - 1;
+            size_t len    = strftime(curs, remain, "%Y-%m-%dT%H:%M:%S", &nowtm);
+            curs += len;
+            remain -= len;
+            snprintf(curs, remain, ".%06ld", timestamp.tv_usec);
+        }
+
+        const char *severity_name = log_sev_names[severity];
+
+        pthread_t thread = pthread_self();
+        char      thrbuf[2 * sizeof(pthread_t) + 1];
+        size_t    remain = sizeof(thrbuf);
+        {
+            const uint8_t *data = (const void *)&thread;
+            char          *out  = thrbuf;
+            for (size_t ix = 0; ix < sizeof(pthread_t); ++ix)
+            {
+                snprintf(out, remain, "%02X", *data);
+                data++;
+                out += 2;
+                remain -= 2;
+            }
+            *out = '\0';
+        }
+
+        // simplify filename
+        static const char dirsep  = '/';
+        const char       *filepos = strrchr(filename, dirsep);
+        if (filepos)
+        {
+            filepos += 1;
+        }
+        else
+        {
+            filepos = filename;
+        }
+
+        fprintf(stderr, "%s T:%s <%s> [%s:%d:%s] ", tmbuf, thrbuf, severity_name, filepos, lineno, funcname);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+        vfprintf(stderr, format, args);
+#pragma GCC diagnostic pop
+        fprintf(stderr, "\n");
+        fflush(stderr);
+    }
+    else
+    {
+        HostDescriptorTable.log_event(&timestamp, severity, filename, lineno, funcname, format, args);
+    }
+
+    va_end(args);
 }
 
 void *BSL_malloc(size_t size)
