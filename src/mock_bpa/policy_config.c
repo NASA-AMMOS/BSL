@@ -28,6 +28,10 @@
 #include "policy_config.h"
 #include "text_util.h"
 
+static BSL_HostEIDPattern_t src_eid;
+static BSL_HostEIDPattern_t dest_eid;
+static BSL_HostEIDPattern_t sec_src_eid;
+
 static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *text)
 {
     BSL_HostEIDPattern_t pat;
@@ -69,9 +73,6 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
     const char          *src_str;
     const char          *dest_str;
     const char          *sec_src_str;
-    BSL_HostEIDPattern_t src_eid;
-    BSL_HostEIDPattern_t dest_eid;
-    BSL_HostEIDPattern_t sec_src_eid;
 
     const char *rule_id_str;
 
@@ -686,26 +687,25 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
             break;
     }
 
-    BSL_HostEIDPattern_t eid_src_pat;
     if (policy_ignore)
     {
         BSL_LOG_INFO("Creating src eid pattern to match none - bundle should be ignored!");
-        eid_src_pat = mock_bpa_util_get_eid_pattern_from_text("");
+        src_eid = mock_bpa_util_get_eid_pattern_from_text("");
     }
     else
     {
-        eid_src_pat = mock_bpa_util_get_eid_pattern_from_text("*:**");
+        src_eid = mock_bpa_util_get_eid_pattern_from_text("*:**");
     }
 
+    sec_src_eid = mock_bpa_util_get_eid_pattern_from_text("*:**");
+    dest_eid = mock_bpa_util_get_eid_pattern_from_text("*:**");
+
     // Create a rule to verify security block at APP/CLA Ingress
-    // FIXME memory leak for mockbpa eid patterns
     char policybits_str[100];
     snprintf(policybits_str, 100, "Policy: %x", policy_bits);
     BSLP_PolicyPredicate_t predicate_all_in;
-    BSLP_PolicyPredicate_Init(&predicate_all_in, policy_loc_enum, eid_src_pat,
-                              mock_bpa_util_get_eid_pattern_from_text("*:**"),
-                              mock_bpa_util_get_eid_pattern_from_text("*:**"));
-                                                            
+    BSLP_PolicyPredicate_Init(&predicate_all_in, policy_loc_enum, src_eid, sec_src_eid, dest_eid);
+
     BSLP_PolicyRule_t *rule_all_in = BSLP_PolicyProvider_AddRule(policy, policybits_str, &predicate_all_in, sec_context, 
         sec_role_enum, sec_block_emum, bundle_block_enum, policy_action_enum);
 
@@ -851,4 +851,11 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
     json_decref(root);
 
     return retval;
+}
+
+void mock_bpa_policy_eid_pat_deinit()
+{
+    BSL_HostEIDPattern_Deinit(&src_eid);
+    BSL_HostEIDPattern_Deinit(&dest_eid);
+    BSL_HostEIDPattern_Deinit(&sec_src_eid);
 }

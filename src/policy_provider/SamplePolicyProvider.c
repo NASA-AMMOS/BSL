@@ -354,9 +354,6 @@ BSLP_PolicyRule_t *BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, cons
     BSLP_PolicyRule_t rule;
     BSLP_PolicyRule_Init(&rule);
 
-    BSL_LOG_INFO("SELF! %x", self);
-    BSL_LOG_INFO("SELF! %d", self->pp_id);
-
     string_set_str(rule.description, desc);
     memcpy(&rule.predicate, predicate, sizeof(BSLP_PolicyPredicate_t));
     rule.context_id = context_id;

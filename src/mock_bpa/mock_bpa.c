@@ -239,6 +239,7 @@ int main(int argc, char **argv)
     }
 
     mock_bpa_policy_registry_deinit(&policy_registry);
+    mock_bpa_policy_eid_pat_deinit();
     BSLP_PolicyProvider_Deinit(policy);
     MockBPA_Agent_Deinit(&agent);
     BSL_HostEID_Deinit(&sec_eid);
