@@ -518,7 +518,7 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
         BSLP_PolicyPredicate_InitFrom(&predicate, policy_loc_enum, src_eid_str, sec_src_eid_str, dest_eid_str);
 
         BSLP_PolicyRule_t rule; 
-        BSLP_PolicyRule_InitFrom(&rule, rule_id_str, &predicate, sec_ctx_id, sec_role, sec_block_type, target_block_type,
+        BSLP_PolicyRule_InitFrom(&rule, rule_id_str, sec_ctx_id, sec_role, sec_block_type, target_block_type,
                              policy_action_enum);
 
         // TODO validate params_got
@@ -541,7 +541,7 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
         BSLP_PolicyRule_CopyParam(&rule, params->param_test_key);
         BSLP_PolicyRule_CopyParam(&rule, params->param_use_wrapped_key);
 
-        BSLP_PolicyProvider_AddRule(policy, &rule);
+        BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
     }
 
     json_decref(root);
@@ -701,7 +701,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     BSLP_PolicyPredicate_InitFrom(&predicate_all_in, policy_loc_enum, eid_src_pat_str, "*:**", "*:**");
 
     BSLP_PolicyRule_t rule_all_in;
-    BSLP_PolicyRule_InitFrom(&rule_all_in, policybits_str, &predicate_all_in, sec_context, sec_role_enum, sec_block_emum, bundle_block_enum, policy_action_enum);
+    BSLP_PolicyRule_InitFrom(&rule_all_in, policybits_str, sec_context, sec_role_enum, sec_block_emum, bundle_block_enum, policy_action_enum);
 
     if (sec_block_emum == BSL_SECBLOCKTYPE_BCB)
     {
@@ -720,7 +720,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_use_wrapped_key);
     BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_test_key);
 
-    BSLP_PolicyProvider_AddRule(policy, &rule_all_in);
+    BSLP_PolicyProvider_AddRule(policy, &rule_all_in, &predicate_all_in);
 }
 
 int mock_bpa_handle_policy_config(const char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg)
