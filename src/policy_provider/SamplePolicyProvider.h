@@ -29,8 +29,15 @@
 #define BSLP_SAMPLE_POLICY_PROVIDER_H
 
 #include <stdint.h>
+#include <pthread.h>
+
+#include <m-array.h>
+#include <m-string.h>
+
 #include <BPSecLib_Private.h>
 #include <backend/SecParam.h>
+
+void BSLP_Deinit(void *user_data);
 
 /**
  * THE key function that matches a bundle against a rule to provide the output action and specific parameters to use for
@@ -48,23 +55,46 @@ typedef struct
 } BSLP_PolicyPredicate_t;
 
 /**
- * @brief Initialize this policy predicate
+ * @brief Initialize policy predicate from c string patterns
  *
  * A policy predicate represents a way to match whether a rule applies to a bundle.
  *
  * @param[in] self This predicate
  * @param[in] location The ::BSL_PolicyLocation_e location in the BPA
- * @param[in] src_eid_pattern Host-defined EID pattern to match for
- * @param[in] srcsrc_eid_pattern Host-defined EID pattern for SECURITY SOURCE in security block
- * @param[in] dst_eid_pattern Host-defined EID pattern for DESTINATION EID
+ * @param[in] src_eid_pattern c string pattern for SOURCE matching
+ * @param[in] srcsrc_eid_pattern c string pattern for SECURITY SOURCE matching
+ * @param[in] dst_eid_pattern c string pattern for DESTINATION matching
  *
- * @returns Nothing
+ * @returns 0 on success
  */
-void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
-                               BSL_HostEIDPattern_t src_eid_pattern, BSL_HostEIDPattern_t secsrc_eid_pattern,
-                               BSL_HostEIDPattern_t dst_eid_pattern);
+int BSLP_PolicyPredicate_InitFrom(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
+                                  const char *src_eid_pattern, const char *secsrc_eid_pattern,
+                                  const char *dst_eid_pattern);
 
+/** Initialize policy predicate and associated host eid pattern structures
+ * @param self policy predicate
+ */
+void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self);
+
+/** Shallow copy of policy predicate
+ * @param self destination policy predicate
+ * @param src source policy predicate
+ */
+void BSLP_PolicyPredicate_ShallowCopy(BSLP_PolicyPredicate_t *self, const BSLP_PolicyPredicate_t *src);
+
+/** Deinitialize policy predicate and associated host eid pattern structures
+ * @param self policy predicate
+ */
 void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
+
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
+M_ARRAY_DEF(BSLP_PolicyPredicateList, BSLP_PolicyPredicate_t,
+            (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(API_6(BSLP_PolicyPredicate_ShallowCopy)), SET(0),
+             CLEAR(API_2(BSLP_PolicyPredicate_Deinit)))) // GCOV_EXCL_STOP
+// NOLINTEND
+/// @endcond
 
 /**
  * @brief Returns true if the given predicate matches the arguments
@@ -98,8 +128,7 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
  */
 typedef struct BSLP_PolicyRule_s
 {
-    char                     *description;
-    BSLP_PolicyPredicate_t   *predicate;
+    string_t                  description;
     BSL_SecRole_e             role;
     BSL_BundleBlockTypeCode_e target_block_type;
     BSL_SecBlockType_e        sec_block_type;
@@ -109,12 +138,11 @@ typedef struct BSLP_PolicyRule_s
 } BSLP_PolicyRule_t;
 
 /**
- * @brief Initialize this policy rule
+ * @brief Initialize this policy rule from parameters
  *
  * @param[in] self This policy rule
  * @param[in] dest Description of this rule (C-string). Will copy characters of parameter from index 0 to
  * ::BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN - 1.
- * @param[in] predicate Predicate used to identify which bundles apply
  * @param[in] context_id Security context ID
  * @param[in] role Such as source, acceptor, etc
  * @param[in] sec_block_type Block type (BIB or BCB)
@@ -123,9 +151,19 @@ typedef struct BSLP_PolicyRule_s
  *
  * @returns Zero on success
  */
-int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyPredicate_t *predicate,
-                         int64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type,
-                         BSL_BundleBlockTypeCode_e target_block_type, BSL_PolicyAction_e failure_action_code);
+int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, const char *desc, int64_t context_id, BSL_SecRole_e role,
+                             BSL_SecBlockType_e sec_block_type, BSL_BundleBlockTypeCode_e target_block_type,
+                             BSL_PolicyAction_e failure_action_code);
+
+/** Initialize policy rule
+ * @param self policy rule
+ */
+void BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self);
+
+/** Deinitialize policy rule
+ * @param self policy rule
+ */
+void BSLP_PolicyRule_InitSet(BSLP_PolicyRule_t *self, const BSLP_PolicyRule_t *src);
 
 /**
  * @brief De-initialize, release any resources, and zero this struct.
@@ -133,6 +171,15 @@ int BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self, const char *desc, BSLP_PolicyP
  * @param[in] self This rule
  */
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self);
+
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
+M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRule_t,
+            (INIT(API_2(BSLP_PolicyRule_Init)), INIT_SET(API_6(BSLP_PolicyRule_InitSet)), SET(0),
+             CLEAR(API_2(BSLP_PolicyRule_Deinit)))) // GCOV_EXCL_STOP
+// NOLINTEND
+/// @endcond
 
 /**
  * @brief Include a BPSec parameter to this rule. Used immediately after Init.
@@ -150,31 +197,46 @@ void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *pa
  */
 void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param);
 
-/**
- * @brief Critical function creating a security operation from a bundle and location.
- *
- * @param[in] self This policy rule
- * @param[in] sec_oper @preallocated Caller-allocated space for the output security action.
- * @param[in] bundle Bundle to test match against
- * @param[in] location Location in the BPA
- *
- * @return Zero on success, negative on failure.
- */
-int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, BSL_SecOper_t *sec_oper,
-                                      const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location);
-
 #define BSLP_POLICYPREDICATE_ARRAY_CAPACITY (100)
 /// @brief Concrete definition of a policy provider
 typedef struct BSLP_PolicyProvider_s
 {
-    BSLP_PolicyPredicate_t predicates[BSLP_POLICYPREDICATE_ARRAY_CAPACITY];
-    size_t                 predicate_count;
-    BSLP_PolicyRule_t      rules[BSLP_POLICYPREDICATE_ARRAY_CAPACITY];
-    size_t                 rule_count;
-    uint64_t               pp_id;
+    BSLP_PolicyRuleList_t      rules;
+    BSLP_PolicyPredicateList_t predicates;
+    pthread_mutex_t            mutex;
+    uint64_t                   pp_id;
 } BSLP_PolicyProvider_t;
 
-void BSLP_Deinit(void *user_data);
+/** Initialize policy provider
+ * @param pp_id policy provider id (must be > 0)
+ * @return valid pointer to dynamically allocated policy provider
+ */
+BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id);
+
+/** Add rule and corresponding predicate to policy provider
+ * @param self policy provider
+ * @param rule policy rule to add
+ * @param predicate predicate to be associated with policy rule
+ */
+int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule,
+                                BSLP_PolicyPredicate_t *predicate);
+
+/** Deinitialize policy provider
+ * @param self policy provider
+ */
+void BSLP_PolicyProvider_Deinit(BSLP_PolicyProvider_t *self);
+
+/**  Evaluate policy rule as security operation
+ * @param self policy rule
+ * @param predicate associated predicate
+ * @param sec_oper security operation
+ * @param bundle bundle reference
+ * @param location policy location
+ * @return 0 on success
+ */
+int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_PolicyPredicate_t *predicate,
+                                      BSL_SecOper_t *sec_oper, const BSL_BundleRef_t *bundle,
+                                      BSL_PolicyLocation_e location);
 
 int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,
                      BSL_PolicyLocation_e location);

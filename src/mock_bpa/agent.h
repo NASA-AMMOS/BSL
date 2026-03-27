@@ -149,7 +149,7 @@ BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent);
  * @param[out] agent The agent to initialize.
  * @return Zero if successful.
  */
-int MockBPA_Agent_Init(MockBPA_Agent_t *agent);
+int MockBPA_Agent_Init(MockBPA_Agent_t *agent, BSLP_PolicyProvider_t **policy);
 
 /** Clean up the mock BPA for the current process.
  *
