@@ -55,7 +55,7 @@ typedef struct
 } BSLP_PolicyPredicate_t;
 
 /**
- * @brief Initialize policy predicate from cstring patterns
+ * @brief Initialize policy predicate from c string patterns
  *
  * A policy predicate represents a way to match whether a rule applies to a bundle.
  *
@@ -77,8 +77,8 @@ int BSLP_PolicyPredicate_InitFrom(BSLP_PolicyPredicate_t *self, BSL_PolicyLocati
 void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self);
 
 /** Shallow copy of policy predicate
- * @param self dest policy predicate
- * @param src source policy prediate
+ * @param self destination policy predicate
+ * @param src source policy predicate
  */
 void BSLP_PolicyPredicate_ShallowCopy(BSLP_PolicyPredicate_t *self, const BSLP_PolicyPredicate_t *src);
 
@@ -213,7 +213,7 @@ typedef struct BSLP_PolicyProvider_s
  */
 BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id);
 
-/** Add rule and corresponding prediate to policy provider
+/** Add rule and corresponding predicate to policy provider
  * @param self policy provider
  * @param rule policy rule to add
  * @param predicate predicate to be associated with policy rule
