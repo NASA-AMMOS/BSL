@@ -55,30 +55,41 @@ typedef struct
 } BSLP_PolicyPredicate_t;
 
 /**
- * @brief Initialize this policy predicate
+ * @brief Initialize policy predicate from cstring patterns
  *
  * A policy predicate represents a way to match whether a rule applies to a bundle.
  *
  * @param[in] self This predicate
  * @param[in] location The ::BSL_PolicyLocation_e location in the BPA
- * @param[in] src_eid_pattern Host-defined EID pattern to match for
- * @param[in] srcsrc_eid_pattern Host-defined EID pattern for SECURITY SOURCE in security block
- * @param[in] dst_eid_pattern Host-defined EID pattern for DESTINATION EID
+ * @param[in] src_eid_pattern c string pattern for SOURCE matching
+ * @param[in] srcsrc_eid_pattern c string pattern for SECURITY SOURCE matching
+ * @param[in] dst_eid_pattern c string pattern for DESTINATION matching
  *
- * @returns Nothing
+ * @returns 0 on success
  */
-void BSLP_PolicyPredicate_InitFrom(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location, const char *src_eid_pattern, const char *secsrc_eid_pattern, const char *dst_eid_pattern);
+int BSLP_PolicyPredicate_InitFrom(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location, const char *src_eid_pattern, const char *secsrc_eid_pattern, const char *dst_eid_pattern);
 
-// TODO docs
+/** Initialize policy predicate and associated host eid pattern structures
+ * @param self policy predicate
+ */
 void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self);
-void BSLP_PolicyPredicate_InitSet(BSLP_PolicyPredicate_t *self, const BSLP_PolicyPredicate_t *src);
+
+/** Shallow copy of policy predicate
+ * @param self dest policy predicate
+ * @param src source policy prediate
+ */
+void BSLP_PolicyPredicate_ShallowCopy(BSLP_PolicyPredicate_t *self, const BSLP_PolicyPredicate_t *src);
+
+/** Deinitialize policy predicate and associated host eid pattern structures
+ * @param self policy predicate
+ */
 void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
 
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
 // GCOV_EXCL_START
 M_ARRAY_DEF(BSLP_PolicyPredicateList, BSLP_PolicyPredicate_t,
-            (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(API_6(BSLP_PolicyPredicate_InitSet)), SET(0),
+            (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(API_6(BSLP_PolicyPredicate_ShallowCopy)), SET(0),
              CLEAR(API_2(BSLP_PolicyPredicate_Deinit))))// GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond
@@ -125,7 +136,7 @@ typedef struct BSLP_PolicyRule_s
 } BSLP_PolicyRule_t;
 
 /**
- * @brief Initialize this policy rule
+ * @brief Initialize this policy rule from paramteres
  *
  * @param[in] self This policy rule
  * @param[in] dest Description of this rule (C-string). Will copy characters of parameter from index 0 to
@@ -140,8 +151,14 @@ typedef struct BSLP_PolicyRule_s
  */
 int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, const char *desc, int64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type, BSL_BundleBlockTypeCode_e target_block_type, BSL_PolicyAction_e failure_action_code);
 
-// TODO docs
+/** Initialize policy rule
+ * @param self policy rule
+ */
 void BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self);
+
+/** Deinitialize policy rule
+ * @param self policy rule
+ */
 void BSLP_PolicyRule_InitSet(BSLP_PolicyRule_t *self, const BSLP_PolicyRule_t *src);
 
 /**
@@ -186,12 +203,33 @@ typedef struct BSLP_PolicyProvider_s
     uint64_t                    pp_id;
 } BSLP_PolicyProvider_t;
 
-/// TODO docs
+/** Initialize policy provider
+* @param pp_id policy provider id (must be > 0)
+* @return valid pointer to dynamically allocated policy provider
+*/
 BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id);
-void BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule, BSLP_PolicyPredicate_t *predicate);
+
+/** Add rule and corresponding prediate to policy provider
+* @param self policy provider
+* @param rule policy rule to add
+* @param predicate predicate to be associated with policy rule
+*/
+int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule, BSLP_PolicyPredicate_t *predicate);
+
+/** Deinitialize policy provider
+ * @param self policy provider
+ */
 void BSLP_PolicyProvider_Deinit(BSLP_PolicyProvider_t *self);
 
-// TODO
+
+/**  Evaluate policy rule as security operation 
+ * @param self policy rule
+ * @param predicate associated predicate
+ * @param sec_oper security operation
+ * @param bundle bundle reference
+ * @param location policy location
+ * @return 0 on success
+*/
 int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_PolicyPredicate_t *predicate, BSL_SecOper_t *sec_oper, const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location);
 
 int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,

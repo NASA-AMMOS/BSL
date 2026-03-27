@@ -48,7 +48,7 @@ M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t *, M_PTR_OPLIST)
 static bool BSLP_PolicyPredicate_IsConsistent(const BSLP_PolicyPredicate_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    ASSERT_ARG_EXPR(self->location > 0);
+    ASSERT_ARG_EXPR(self->location >= BSL_POLICYLOCATION_APPIN && self->location <= BSL_POLICYLOCATION_CLOUT);
     ASSERT_ARG_NONNULL(self->dst_eid_pattern.handle);
     ASSERT_ARG_NONNULL(self->src_eid_pattern.handle);
     ASSERT_ARG_NONNULL(self->secsrc_eid_pattern.handle);
@@ -353,7 +353,11 @@ void BSLP_Deinit(void *user_data)
 BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id)
 {
     BSLP_PolicyProvider_t *pp = BSL_malloc(sizeof(BSLP_PolicyProvider_t));
+    ASSERT_ARG_NONNULL(pp);
+    
+    ASSERT_ARG_EXPR(pp_id > 0);
     pp->pp_id = pp_id;
+
     BSLP_PolicyRuleList_init(pp->rules);
     BSLP_PolicyPredicateList_init(pp->predicates);
     pthread_mutex_init(&pp->mutex, NULL);
@@ -361,12 +365,19 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id)
     return pp;
 }
 
-void BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule, BSLP_PolicyPredicate_t *predicate)
+int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule, BSLP_PolicyPredicate_t *predicate)
 {
+    if (!BSLP_PolicyRule_IsConsistent(rule) || !BSLP_PolicyPredicate_IsConsistent(predicate))
+    {
+        return BSL_ERR_ARG_INVALID;
+    }
+
     pthread_mutex_lock(&self->mutex);
     BSLP_PolicyRuleList_push_move(self->rules, rule);
     BSLP_PolicyPredicateList_push_back(self->predicates, *predicate);
     pthread_mutex_unlock(&self->mutex);
+
+    return BSL_SUCCESS;
 }
 
 void BSLP_PolicyProvider_Deinit(BSLP_PolicyProvider_t *self)
@@ -388,7 +399,7 @@ void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self)
     BSL_HostEIDPattern_Init(&self->dst_eid_pattern);
 }
 
-void BSLP_PolicyPredicate_InitSet(BSLP_PolicyPredicate_t *self, const BSLP_PolicyPredicate_t *src)
+void BSLP_PolicyPredicate_ShallowCopy(BSLP_PolicyPredicate_t *self, const BSLP_PolicyPredicate_t *src)
 {
     // todo - eid patterns should be pointers since they are non-trivial copyable.
     self->location = src->location;
@@ -397,16 +408,24 @@ void BSLP_PolicyPredicate_InitSet(BSLP_PolicyPredicate_t *self, const BSLP_Polic
     self->dst_eid_pattern.handle = src->dst_eid_pattern.handle;
 }
 
-void BSLP_PolicyPredicate_InitFrom(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location, const char *src_eid_pattern, const char *secsrc_eid_pattern, const char *dst_eid_pattern)
-{
+int BSLP_PolicyPredicate_InitFrom(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location, const char *src_eid_pattern, const char *secsrc_eid_pattern, const char *dst_eid_pattern)
+{    
     BSLP_PolicyPredicate_Init(self);
-
     self->location = location;
 
-    // FIXME check response from decode
-    BSL_HostEIDPattern_DecodeFromText(&self->src_eid_pattern, src_eid_pattern);
-    BSL_HostEIDPattern_DecodeFromText(&self->secsrc_eid_pattern, secsrc_eid_pattern);
-    BSL_HostEIDPattern_DecodeFromText(&self->dst_eid_pattern, dst_eid_pattern);
+    if (BSL_HostEIDPattern_DecodeFromText(&self->src_eid_pattern, src_eid_pattern) ||
+        BSL_HostEIDPattern_DecodeFromText(&self->secsrc_eid_pattern, secsrc_eid_pattern) ||
+        BSL_HostEIDPattern_DecodeFromText(&self->dst_eid_pattern, dst_eid_pattern))
+    {
+        return BSL_ERR_HOST_CALLBACK_FAILED;
+    }
+
+    if (!BSLP_PolicyPredicate_IsConsistent(self))
+    {
+        return BSL_ERR_PROPERTY_CHECK_FAILED;
+    }
+
+    return BSL_SUCCESS;
 }
 
 void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self)
@@ -433,16 +452,6 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
     return is_location_match && is_src_pattern_match && is_dst_pattern_match;
 }
 
-/*
-Example Rules:
- - Template: "If Bundle src/dst match PREDICATE, then (ADD|REMOVE|VALIDATE) SEC_BLOCK_TYPE using PARAM-KEY-VALUES"
- - "At ingress from the convergence layer, Bundles matching *.* must have a single BIB covering the primary and payload
-block using key 9" Step 1: Match the Bundle struct with all Rule structs to find a Rule that matches. If no match,
-reject
-   - Things to match on:
-     - Bitmask/something for HAS_BIB_ON_PRIMARY, HAS_BIB_ON_PAYLOAD, submasks for BIB_COVERS_PRIMARY, BIB_COVERS_TARGET
- Step 2: Populate security parameters unique to bundle and src/dst pair.
-*/
 int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, const char *desc, int64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type, BSL_BundleBlockTypeCode_e target_block_type, BSL_PolicyAction_e failure_action_code)
 {
     BSLP_PolicyRule_Init(self);
@@ -453,6 +462,11 @@ int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, const char *desc, int64_t 
     self->context_id = context_id;
     self->failure_action_code = failure_action_code;
     self->role = role;
+
+    if (!BSLP_PolicyRule_IsConsistent(self))
+    {
+        return BSL_ERR_PROPERTY_CHECK_FAILED;
+    }
 
     return BSL_SUCCESS;
 }
