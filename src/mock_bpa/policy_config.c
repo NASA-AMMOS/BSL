@@ -682,7 +682,7 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
             break;
     }
 
-    char *eid_src_pat_str;
+    const char *eid_src_pat_str;
     if (policy_ignore)
     {
         BSL_LOG_INFO("Creating src eid pattern to match none - bundle should be ignored!");
