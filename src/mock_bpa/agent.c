@@ -472,11 +472,11 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent, BSLP_PolicyProvider_t **policy)
     }
     // TODO find a better way to deal with this
 
-    *policy = BSLP_PolicyProvider_Init(1);
-    agent->appin.policy = *policy;
+    *policy              = BSLP_PolicyProvider_Init(1);
+    agent->appin.policy  = *policy;
     agent->appout.policy = *policy;
-    agent->clin.policy = *policy;
-    agent->clout.policy = *policy;
+    agent->clin.policy   = *policy;
+    agent->clout.policy  = *policy;
 
     {
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,

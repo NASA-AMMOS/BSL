@@ -58,9 +58,9 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
     BSL_PolicyLocation_e policy_loc_enum;
     BSL_PolicyAction_e   policy_action_enum;
 
-    const char          *src_str;
-    const char          *dest_str;
-    const char          *sec_src_str;
+    const char *src_str;
+    const char *dest_str;
+    const char *sec_src_str;
     const char *src_eid_str;
     const char *dest_eid_str;
     const char *sec_src_eid_str;
@@ -517,9 +517,9 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
         BSLP_PolicyPredicate_t predicate;
         BSLP_PolicyPredicate_InitFrom(&predicate, policy_loc_enum, src_eid_str, sec_src_eid_str, dest_eid_str);
 
-        BSLP_PolicyRule_t rule; 
+        BSLP_PolicyRule_t rule;
         BSLP_PolicyRule_InitFrom(&rule, rule_id_str, sec_ctx_id, sec_role, sec_block_type, target_block_type,
-                             policy_action_enum);
+                                 policy_action_enum);
 
         // TODO validate params_got
         (void)params_got;
@@ -696,12 +696,13 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     // Create a rule to verify security block at APP/CLA Ingress
     char policybits_str[100];
     snprintf(policybits_str, 100, "Policy: %x", policy_bits);
-    
+
     BSLP_PolicyPredicate_t predicate_all_in;
     BSLP_PolicyPredicate_InitFrom(&predicate_all_in, policy_loc_enum, eid_src_pat_str, "*:**", "*:**");
 
     BSLP_PolicyRule_t rule_all_in;
-    BSLP_PolicyRule_InitFrom(&rule_all_in, policybits_str, sec_context, sec_role_enum, sec_block_emum, bundle_block_enum, policy_action_enum);
+    BSLP_PolicyRule_InitFrom(&rule_all_in, policybits_str, sec_context, sec_role_enum, sec_block_emum,
+                             bundle_block_enum, policy_action_enum);
 
     if (sec_block_emum == BSL_SECBLOCKTYPE_BCB)
     {

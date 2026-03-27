@@ -43,7 +43,7 @@
 static BSL_HostEID_t app_eid;
 static BSL_HostEID_t sec_eid;
 /// Agent for this process
-static MockBPA_Agent_t agent;
+static MockBPA_Agent_t        agent;
 static BSLP_PolicyProvider_t *policy;
 
 static int ingest_netaddr(struct sockaddr_in *addr, const char *arg)

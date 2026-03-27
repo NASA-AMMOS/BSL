@@ -92,18 +92,19 @@ void test_SamplePolicyProvider_WildcardPolicyRuleVerifiesBIB(void)
 
     // Create a predicate: "At location APPIN, match Bundles from anywhere, to anywhere, with any security source"
     BSLP_PolicyPredicate_t predicate;
-    BSLP_PolicyPredicate_InitFrom(&predicate, BSL_POLICYLOCATION_APPIN, "*:**","*:**", "*:**");
+    BSLP_PolicyPredicate_InitFrom(&predicate, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "*:**");
 
     // Create a rule to verify the bundle contains a BIB block covering the payload
     BSLP_PolicyRule_t rule;
     BSLP_PolicyRule_InitFrom(&rule, "Confirm bundle has BIB protecting payload", 1, BSL_SECROLE_VERIFIER,
-                         BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
+                             BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
 
     // Now evaluate the rule to get as a SecOper
     // This populates it with actual parameters.
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    TEST_ASSERT_EQUAL(0, BSLP_PolicyRule_EvaluateAsSecOper(&rule, &predicate, &sec_oper, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
+    TEST_ASSERT_EQUAL(0, BSLP_PolicyRule_EvaluateAsSecOper(&rule, &predicate, &sec_oper,
+                                                           &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
 
     // Confirm the security operation uses BIB

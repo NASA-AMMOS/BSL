@@ -159,12 +159,13 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     BSLP_SecOperPtrList_t secops;
     BSLP_SecOperPtrList_init(secops);
 
-    pthread_mutex_lock((pthread_mutex_t *) &self->mutex);
+    pthread_mutex_lock((pthread_mutex_t *)&self->mutex);
     BSLP_PolicyRuleList_it_t rule_it;
-    size_t rule_pred_index = 0;
-    for (BSLP_PolicyRuleList_it(rule_it, self->rules); !BSLP_PolicyRuleList_end_p(rule_it); BSLP_PolicyRuleList_next(rule_it), rule_pred_index++)
+    size_t                   rule_pred_index = 0;
+    for (BSLP_PolicyRuleList_it(rule_it, self->rules); !BSLP_PolicyRuleList_end_p(rule_it);
+         BSLP_PolicyRuleList_next(rule_it), rule_pred_index++)
     {
-        const BSLP_PolicyRule_t *rule = BSLP_PolicyRuleList_cref(rule_it);
+        const BSLP_PolicyRule_t      *rule      = BSLP_PolicyRuleList_cref(rule_it);
         const BSLP_PolicyPredicate_t *predicate = BSLP_PolicyPredicateList_cget(self->predicates, rule_pred_index);
         if (!BSLP_PolicyRule_IsConsistent(rule))
         {
@@ -264,7 +265,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         }
         BSL_LOG_INFO("Created sec operation for rule `%s`", string_get_cstr(rule->description));
     }
-    pthread_mutex_unlock((pthread_mutex_t *) &self->mutex);
+    pthread_mutex_unlock((pthread_mutex_t *)&self->mutex);
 
     BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -295,10 +296,10 @@ int BSLP_FinalizePolicy(const void *user_data _U_, const BSL_SecurityActionSet_t
     {
         const BSL_SecurityAction_t *action = BSL_SecurityActionSet_GetActionAtIndex(output_action_set, i);
 
-        pthread_mutex_lock((pthread_mutex_t *) &self->mutex);
+        pthread_mutex_lock((pthread_mutex_t *)&self->mutex);
         uint64_t pp_id = self->pp_id;
-        pthread_mutex_unlock((pthread_mutex_t *) &self->mutex);
-        
+        pthread_mutex_unlock((pthread_mutex_t *)&self->mutex);
+
         if (BSL_SecurityAction_GetPPID(action) != pp_id)
         {
             continue;
@@ -347,14 +348,14 @@ int BSLP_FinalizePolicy(const void *user_data _U_, const BSL_SecurityActionSet_t
 // is this needed w/ shared mem model?
 void BSLP_Deinit(void *user_data)
 {
-    (void) user_data;
+    (void)user_data;
 }
 
 BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id)
 {
     BSLP_PolicyProvider_t *pp = BSL_malloc(sizeof(BSLP_PolicyProvider_t));
     ASSERT_ARG_NONNULL(pp);
-    
+
     ASSERT_ARG_EXPR(pp_id > 0);
     pp->pp_id = pp_id;
 
@@ -402,20 +403,22 @@ void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self)
 void BSLP_PolicyPredicate_ShallowCopy(BSLP_PolicyPredicate_t *self, const BSLP_PolicyPredicate_t *src)
 {
     // todo - eid patterns should be pointers since they are non-trivial copyable.
-    self->location = src->location;
-    self->src_eid_pattern.handle = src->src_eid_pattern.handle;
+    self->location                  = src->location;
+    self->src_eid_pattern.handle    = src->src_eid_pattern.handle;
     self->secsrc_eid_pattern.handle = src->secsrc_eid_pattern.handle;
-    self->dst_eid_pattern.handle = src->dst_eid_pattern.handle;
+    self->dst_eid_pattern.handle    = src->dst_eid_pattern.handle;
 }
 
-int BSLP_PolicyPredicate_InitFrom(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location, const char *src_eid_pattern, const char *secsrc_eid_pattern, const char *dst_eid_pattern)
-{    
+int BSLP_PolicyPredicate_InitFrom(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
+                                  const char *src_eid_pattern, const char *secsrc_eid_pattern,
+                                  const char *dst_eid_pattern)
+{
     BSLP_PolicyPredicate_Init(self);
     self->location = location;
 
-    if (BSL_HostEIDPattern_DecodeFromText(&self->src_eid_pattern, src_eid_pattern) ||
-        BSL_HostEIDPattern_DecodeFromText(&self->secsrc_eid_pattern, secsrc_eid_pattern) ||
-        BSL_HostEIDPattern_DecodeFromText(&self->dst_eid_pattern, dst_eid_pattern))
+    if (BSL_HostEIDPattern_DecodeFromText(&self->src_eid_pattern, src_eid_pattern)
+        || BSL_HostEIDPattern_DecodeFromText(&self->secsrc_eid_pattern, secsrc_eid_pattern)
+        || BSL_HostEIDPattern_DecodeFromText(&self->dst_eid_pattern, dst_eid_pattern))
     {
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
@@ -452,16 +455,18 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
     return is_location_match && is_src_pattern_match && is_dst_pattern_match;
 }
 
-int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, const char *desc, int64_t context_id, BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type, BSL_BundleBlockTypeCode_e target_block_type, BSL_PolicyAction_e failure_action_code)
+int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, const char *desc, int64_t context_id, BSL_SecRole_e role,
+                             BSL_SecBlockType_e sec_block_type, BSL_BundleBlockTypeCode_e target_block_type,
+                             BSL_PolicyAction_e failure_action_code)
 {
     BSLP_PolicyRule_Init(self);
     string_set_str(self->description, desc);
 
-    self->sec_block_type = sec_block_type;
-    self->target_block_type = target_block_type;
-    self->context_id = context_id;
+    self->sec_block_type      = sec_block_type;
+    self->target_block_type   = target_block_type;
+    self->context_id          = context_id;
     self->failure_action_code = failure_action_code;
-    self->role = role;
+    self->role                = role;
 
     if (!BSLP_PolicyRule_IsConsistent(self))
     {
@@ -483,16 +488,17 @@ void BSLP_PolicyRule_InitSet(BSLP_PolicyRule_t *self, const BSLP_PolicyRule_t *s
     string_init_set(self->description, src->description);
     BSLB_SecParamList_init_set(self->params, src->params);
 
-    self->role = src->role;
-    self->target_block_type = src->target_block_type;
-    self->sec_block_type = src->sec_block_type;
-    self->context_id = src->context_id;
+    self->role                = src->role;
+    self->target_block_type   = src->target_block_type;
+    self->sec_block_type      = src->sec_block_type;
+    self->context_id          = src->context_id;
     self->failure_action_code = src->failure_action_code;
 }
 
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
-    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", string_get_cstr(self->description), BSLB_SecParamList_size(self->params));
+    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", string_get_cstr(self->description),
+                 BSLB_SecParamList_size(self->params));
 
     string_clear(self->description);
     BSLB_SecParamList_clear(self->params);
@@ -518,7 +524,9 @@ void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param)
     ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
 }
 
-int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_PolicyPredicate_t *predicate, BSL_SecOper_t *sec_oper, const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location)
+int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_PolicyPredicate_t *predicate,
+                                      BSL_SecOper_t *sec_oper, const BSL_BundleRef_t *bundle,
+                                      BSL_PolicyLocation_e location)
 {
     CHK_ARG_NONNULL(sec_oper);
     CHK_ARG_NONNULL(bundle);

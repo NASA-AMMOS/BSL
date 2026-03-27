@@ -43,7 +43,7 @@ static BSL_SecParam_t param_test_bcb_key_correct;
 
 static BSL_TestContext_t       LocalTestCtx = { 0 };
 static BSL_SecurityActionSet_t action_set   = { 0 };
-static BSLP_PolicyProvider_t *policy_provider;
+static BSLP_PolicyProvider_t  *policy_provider;
 
 static void *malloc_test(size_t size)
 {
@@ -124,20 +124,21 @@ void _setUp(void)
 
     // BSL_32
     BSLP_PolicyPredicate_t predicate_bsl_32a;
-    BSLP_PolicyPredicate_InitFrom(&predicate_bsl_32a, BSL_POLICYLOCATION_CLOUT,"*:**", "*:**", "ipn:*.3.2");
+    BSLP_PolicyPredicate_InitFrom(&predicate_bsl_32a, BSL_POLICYLOCATION_CLOUT, "*:**", "*:**", "ipn:*.3.2");
     BSLP_PolicyRule_t rule_bsl_32a;
     BSLP_PolicyRule_InitFrom(&rule_bsl_32a, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:3.2)", 2,
-                         BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
+                             BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
+                             BSL_POLICYACTION_DROP_BLOCK);
     BSLP_PolicyRule_CopyParam(&rule_bsl_32a, &param_test_bcb_key_correct);
     BSLP_PolicyRule_CopyParam(&rule_bsl_32a, &param_aes_variant_128);
     BSLP_PolicyRule_CopyParam(&rule_bsl_32a, &param_use_wrap_key);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32a, &predicate_bsl_32a);
 
     BSLP_PolicyPredicate_t predicate_bsl_32b;
-    BSLP_PolicyPredicate_InitFrom(&predicate_bsl_32b, BSL_POLICYLOCATION_CLOUT,"*:**", "*:**", "ipn:*.3.2");
+    BSLP_PolicyPredicate_InitFrom(&predicate_bsl_32b, BSL_POLICYLOCATION_CLOUT, "*:**", "*:**", "ipn:*.3.2");
     BSLP_PolicyRule_t rule_bsl_32b;
-    BSLP_PolicyRule_InitFrom(&rule_bsl_32b, "SOURCE BCB OVER BIB AT CLOUT FILTER(DEST=ipn:3.2)", 2,
-                         BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_BIB, BSL_POLICYACTION_DROP_BLOCK);
+    BSLP_PolicyRule_InitFrom(&rule_bsl_32b, "SOURCE BCB OVER BIB AT CLOUT FILTER(DEST=ipn:3.2)", 2, BSL_SECROLE_SOURCE,
+                             BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_BIB, BSL_POLICYACTION_DROP_BLOCK);
     BSLP_PolicyRule_CopyParam(&rule_bsl_32b, &param_test_bcb_key_correct);
     BSLP_PolicyRule_CopyParam(&rule_bsl_32b, &param_aes_variant_128);
     BSLP_PolicyRule_CopyParam(&rule_bsl_32b, &param_use_wrap_key);
