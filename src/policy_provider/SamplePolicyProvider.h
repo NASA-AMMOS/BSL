@@ -138,7 +138,7 @@ typedef struct BSLP_PolicyRule_s
 } BSLP_PolicyRule_t;
 
 /**
- * @brief Initialize this policy rule from paramteres
+ * @brief Initialize this policy rule from parameters
  *
  * @param[in] self This policy rule
  * @param[in] dest Description of this rule (C-string). Will copy characters of parameter from index 0 to

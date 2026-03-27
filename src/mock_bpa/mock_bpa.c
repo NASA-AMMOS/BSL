@@ -109,8 +109,6 @@ int main(int argc, char **argv)
     int retval = 0;
     int res;
 
-    BSL_LOG_INFO("HELLO, MOCK BPA");
-
     if (BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(&agent)))
     {
         return 2;
