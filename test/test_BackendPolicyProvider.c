@@ -57,9 +57,8 @@ int suiteTearDown(int failures)
 
 void setUp(void)
 {
-    memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, false));
 
     BSL_PolicyDesc_t policy_desc = { 0 };
     policy_desc.user_data        = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
@@ -68,14 +67,11 @@ void setUp(void)
     policy_desc.deinit_fn        = BSLP_Deinit;
 
     TEST_ASSERT_EQUAL(0, BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, BSL_SAMPLE_PP_ID, policy_desc));
-
-    mock_bpa_ctr_init(&LocalTestCtx.mock_bpa_ctr);
 }
 
 void tearDown(void)
 {
-    mock_bpa_ctr_deinit(&LocalTestCtx.mock_bpa_ctr);
-    TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 }
 
 /**
