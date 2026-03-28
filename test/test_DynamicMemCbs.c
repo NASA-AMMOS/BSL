@@ -97,7 +97,6 @@ void _setUp(void)
     BSL_CryptoInit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, true));
 
-
     BSL_SecParam_Init(&param_aes_variant_128);
     BSL_SecParam_Init(&param_use_wrap_key);
     BSL_SecParam_Init(&param_test_bcb_key_correct);
