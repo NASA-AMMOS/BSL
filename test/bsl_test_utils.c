@@ -227,6 +227,32 @@ int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len)
     return 1;
 }
 
+int BSL_TestContext_Init(BSL_TestContext_t *ctx, bool setupDefaultSecCtxs)
+{
+    memset(ctx, 0, sizeof(BSL_TestContext_t));
+    if (BSL_SUCCESS != BSL_API_InitLib(&ctx->bsl))
+    {
+        return 1;
+    }
+    mock_bpa_ctr_init(&ctx->mock_bpa_ctr);
+    if (setupDefaultSecCtxs)
+    {
+        BSL_TestUtils_SetupDefaultSecurityContext(&ctx->bsl);
+    }
+    return BSL_SUCCESS;
+}
+
+int BSL_TestContext_Deinit(BSL_TestContext_t *ctx)
+{
+    mock_bpa_ctr_deinit(&ctx->mock_bpa_ctr);
+    if (BSL_SUCCESS != BSL_API_DeinitLib(&ctx->bsl))
+    {
+        return 1;
+    }
+    memset(ctx, 0, sizeof(BSL_TestContext_t));
+    return BSL_SUCCESS;
+}
+
 void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib)
 {
     assert(bsl_lib != NULL);
