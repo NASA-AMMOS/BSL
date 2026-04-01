@@ -21,8 +21,8 @@
  */
 
 /** @file
- * Definitions for permutations of policy configurations.
  * @ingroup mock_bpa
+ * Definitions for permutations of policy configurations.
  */
 
 #ifndef BSL_MOCK_BPA_POLICY_CONFIG_H_
