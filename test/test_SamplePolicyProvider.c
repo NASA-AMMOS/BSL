@@ -54,16 +54,12 @@ int suiteTearDown(int failures)
 void setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
-    TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
-    mock_bpa_ctr_init(&LocalTestCtx.mock_bpa_ctr);
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, false));
 }
 
 void tearDown(void)
 {
-    mock_bpa_ctr_deinit(&LocalTestCtx.mock_bpa_ctr);
-    // BSL_BundleCtx_Deinit(LocalTestCtx.bundle);
-    TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 }
 
 /**

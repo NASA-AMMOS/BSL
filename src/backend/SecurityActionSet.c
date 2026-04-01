@@ -39,6 +39,7 @@ size_t BSL_SecurityActionSet_Sizeof(void)
 void BSL_SecurityActionSet_Init(BSL_SecurityActionSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
+    memset(self, 0, sizeof(BSL_SecurityActionSet_t));
     BSL_SecActionList_init(self->actions);
     self->action_count = 0;
     self->err_count    = 0;

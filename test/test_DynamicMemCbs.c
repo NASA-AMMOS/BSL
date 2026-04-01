@@ -95,12 +95,8 @@ int suiteTearDown(int failures)
 void _setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
-    TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
-    mock_bpa_ctr_init(&LocalTestCtx.mock_bpa_ctr);
-    memset(&action_set, 0, sizeof(action_set));
-
     BSL_CryptoInit();
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, true));
 
     BSL_SecParam_Init(&param_aes_variant_128);
     BSL_SecParam_Init(&param_use_wrap_key);
@@ -143,9 +139,6 @@ void _setUp(void)
     BSLP_PolicyRule_CopyParam(&rule_bsl_32b, &param_aes_variant_128);
     BSLP_PolicyRule_CopyParam(&rule_bsl_32b, &param_use_wrap_key);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32b, &predicate_bsl_32b);
-
-    /// Register the Security Context
-    BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
 }
 
 // manually call this to control dynamic mem callback tracking for test
@@ -153,9 +146,8 @@ void _tearDown(void)
 {
     BSL_SecurityActionSet_Deinit(&action_set);
     BSLP_PolicyProvider_Deinit(policy_provider);
-    mock_bpa_ctr_deinit(&LocalTestCtx.mock_bpa_ctr);
     BSL_CryptoDeinit();
-    TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 
     BSL_SecParam_Deinit(&param_aes_variant_128);
     BSL_SecParam_Deinit(&param_use_wrap_key);

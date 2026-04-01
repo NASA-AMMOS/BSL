@@ -347,6 +347,9 @@ typedef struct BSL_TestContext_s
     uint64_t       key_id;
 } BSL_TestContext_t;
 
+int BSL_TestContext_Init(BSL_TestContext_t *ctx, bool setupDefaultSecCtxs);
+int BSL_TestContext_Deinit(BSL_TestContext_t *ctx);
+
 BSL_SecurityActionSet_t   *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context);
 BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void);
 
