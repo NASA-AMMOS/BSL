@@ -87,12 +87,19 @@ void BSLP_PolicyPredicate_ShallowCopy(BSLP_PolicyPredicate_t *self, const BSLP_P
  */
 void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
 
+/// OPLIST for ::BSLP_PolicyPredicate_t
+#define M_OPL_BSLP_PolicyPredicate_t() \
+   (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(API_6(BSLP_PolicyPredicate_ShallowCopy)), \
+    SET(0), CLEAR(API_2(BSLP_PolicyPredicate_Deinit)))
+
+/** @struct BSLP_PolicyPredicateList_t
+ * Defines list of policy predicates (::BSLP_PolicyPredicate_t)
+ */
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
 // GCOV_EXCL_START
-M_ARRAY_DEF(BSLP_PolicyPredicateList, BSLP_PolicyPredicate_t,
-            (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(API_6(BSLP_PolicyPredicate_ShallowCopy)), SET(0),
-             CLEAR(API_2(BSLP_PolicyPredicate_Deinit)))) // GCOV_EXCL_STOP
+M_ARRAY_DEF(BSLP_PolicyPredicateList, BSLP_PolicyPredicate_t, M_OPL_BSLP_PolicyPredicate_t())
+// GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond
 
@@ -172,12 +179,19 @@ void BSLP_PolicyRule_InitSet(BSLP_PolicyRule_t *self, const BSLP_PolicyRule_t *s
  */
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self);
 
+/// OPLIST for ::BSLP_PolicyRule_t
+#define M_OPL_BSLP_PolicyRule_t() \
+    (INIT(API_2(BSLP_PolicyRule_Init)), INIT_SET(API_6(BSLP_PolicyRule_InitSet)), \
+        SET(0), CLEAR(API_2(BSLP_PolicyRule_Deinit)))
+
+/** @struct BSLP_PolicyRuleList_t
+ * Defines list of policy rules (::BSLP_PolicyRule_t)
+ */
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
 // GCOV_EXCL_START
-M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRule_t,
-            (INIT(API_2(BSLP_PolicyRule_Init)), INIT_SET(API_6(BSLP_PolicyRule_InitSet)), SET(0),
-             CLEAR(API_2(BSLP_PolicyRule_Deinit)))) // GCOV_EXCL_STOP
+M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t()) // GCOV_EXCL_STOP
+// GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond
 
@@ -238,10 +252,10 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
                                       BSL_SecOper_t *sec_oper, const BSL_BundleRef_t *bundle,
                                       BSL_PolicyLocation_e location);
 
-int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,
+int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,
                      BSL_PolicyLocation_e location);
 
-int BSLP_FinalizePolicy(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
+int BSLP_FinalizePolicy(void *user_data, const BSL_SecurityActionSet_t *output_action_set,
                         const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
 
 #endif // BSLP_SAMPLE_POLICY_PROVIDER_H

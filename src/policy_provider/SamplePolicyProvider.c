@@ -140,11 +140,11 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
 /**
  * Note that criticality is HIGH
  */
-int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,
+int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,
                      BSL_PolicyLocation_e location)
 {
     // This is an output struct. The caller only provides the allocation for it (which must be zero)
-    const BSLP_PolicyProvider_t *self = user_data;
+    BSLP_PolicyProvider_t *self = user_data;
 
     BSL_PrimaryBlock_t primary_block = { 0 };
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
@@ -159,7 +159,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     BSLP_SecOperPtrList_t secops;
     BSLP_SecOperPtrList_init(secops);
 
-    pthread_mutex_lock((pthread_mutex_t *)&self->mutex);
+    pthread_mutex_lock(&self->mutex);
     BSLP_PolicyRuleList_it_t rule_it;
     size_t                   rule_pred_index = 0;
     for (BSLP_PolicyRuleList_it(rule_it, self->rules); !BSLP_PolicyRuleList_end_p(rule_it);
@@ -265,7 +265,7 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
         }
         BSL_LOG_INFO("Created sec operation for rule `%s`", string_get_cstr(rule->description));
     }
-    pthread_mutex_unlock((pthread_mutex_t *)&self->mutex);
+    pthread_mutex_unlock(&self->mutex);
 
     BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -286,19 +286,19 @@ int BSLP_QueryPolicy(const void *user_data, BSL_SecurityActionSet_t *output_acti
     return (int)BSL_SecurityActionSet_CountErrors(output_action_set);
 }
 
-int BSLP_FinalizePolicy(const void *user_data _U_, const BSL_SecurityActionSet_t *output_action_set _U_,
+int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *output_action_set _U_,
                         const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output _U_)
 {
     int                          error_ret = BSL_SUCCESS;
-    const BSLP_PolicyProvider_t *self      = user_data;
+    BSLP_PolicyProvider_t *self      = user_data;
 
     for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(output_action_set); i++)
     {
         const BSL_SecurityAction_t *action = BSL_SecurityActionSet_GetActionAtIndex(output_action_set, i);
 
-        pthread_mutex_lock((pthread_mutex_t *)&self->mutex);
+        pthread_mutex_lock(&self->mutex);
         uint64_t pp_id = self->pp_id;
-        pthread_mutex_unlock((pthread_mutex_t *)&self->mutex);
+        pthread_mutex_unlock(&self->mutex);
 
         if (BSL_SecurityAction_GetPPID(action) != pp_id)
         {

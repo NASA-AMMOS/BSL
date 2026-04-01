@@ -61,9 +61,6 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
     const char *src_str;
     const char *dest_str;
     const char *sec_src_str;
-    const char *src_eid_str;
-    const char *dest_eid_str;
-    const char *sec_src_eid_str;
 
     const char *rule_id_str;
 
@@ -162,11 +159,10 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
             {
                 src_str = json_string_value(src);
                 BSL_LOG_DEBUG("     src    : %s", src_str);
-                src_eid_str = src_str;
             }
             else
             {
-                src_eid_str = "*:**";
+                src_str = "*:**";
             }
 
             json_t *dest = json_object_get(filter, "dest");
@@ -174,11 +170,10 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
             {
                 dest_str = json_string_value(dest);
                 BSL_LOG_DEBUG("     dest    : %s", dest_str);
-                dest_eid_str = dest_str;
             }
             else
             {
-                dest_eid_str = "*:**";
+                dest_str = "*:**";
             }
 
             json_t *sec_src = json_object_get(filter, "sec_src");
@@ -186,11 +181,10 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
             {
                 sec_src_str = json_string_value(sec_src);
                 BSL_LOG_DEBUG("     sec_src    : %s", sec_src_str);
-                sec_src_eid_str = sec_src_str;
             }
             else
             {
-                sec_src_eid_str = "*:**";
+                sec_src_str = "*:**";
             }
 
             // check tgt (target block type)
@@ -515,7 +509,7 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
         }
 
         BSLP_PolicyPredicate_t predicate;
-        BSLP_PolicyPredicate_InitFrom(&predicate, policy_loc_enum, src_eid_str, sec_src_eid_str, dest_eid_str);
+        BSLP_PolicyPredicate_InitFrom(&predicate, policy_loc_enum, src_str, sec_src_str, dest_str);
 
         BSLP_PolicyRule_t rule;
         BSLP_PolicyRule_InitFrom(&rule, rule_id_str, sec_ctx_id, sec_role, sec_block_type, target_block_type,
