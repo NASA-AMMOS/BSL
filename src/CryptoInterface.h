@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -227,7 +227,7 @@ int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 /**
  * Deinit and free generated key handle
  * @param[in] keyhandle key handle to clear.
- * Key handle assumed to be generated, not present in key registry, and allocated with ::BSL_MALLOC().
+ * Key handle assumed to be generated, not present in key registry, and allocated with ::BSL_malloc().
  * @returns 0 if successfully cleared key handle
  */
 int BSL_Crypto_ClearGeneratedKeyHandle(void *keyhandle);
@@ -238,7 +238,7 @@ int BSL_Crypto_ClearGeneratedKeyHandle(void *keyhandle);
  * @param[in] kek_handle key encryption key handle (encryption key)
  * @param[in] cek_handle content encryption key handle (encryption data)
  * @param[in,out] wrapped_key output wrapped key (ciphertext) bytes
- * @param[in,out] wrapped_key_handle output wrapped key (ciphertext) handle, allocated with ::BSL_MALLOC(). Set to NULL
+ * @param[in,out] wrapped_key_handle output wrapped key (ciphertext) handle, allocated with ::BSL_malloc(). Set to NULL
  * if handle not needed.
  */
 int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_key, void **wrapped_key_handle);
@@ -248,7 +248,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
  * CEK size expected to match size of KEK
  * @param[in] kek_handle key encryption key handle (decryption key)
  * @param[in] wrapped_key input wrapped key (ciphertext) bytes
- * @param[in,out] cek_handle output content encryption key (plaintext) handle, allocated with ::BSL_MALLOC()
+ * @param[in,out] cek_handle output content encryption key (plaintext) handle, allocated with ::BSL_malloc()
  */
 int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_handle);
 
@@ -337,7 +337,7 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
 /**
  * Generate a new cryptographic key
  * @param[in] key_length length of new key. Should be 16 or 32
- * @param[in, out] key_out pointer to pointer for new key handle, allocated with ::BSL_MALLOC()
+ * @param[in, out] key_out pointer to pointer for new key handle, allocated with ::BSL_malloc()
  */
 int BSL_Crypto_GenKey(size_t key_length, void **key_out);
 

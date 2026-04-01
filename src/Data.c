@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -42,7 +42,7 @@ static void bsl_data_int_free(BSL_Data_t *data)
 
     if (data->owned && data->ptr)
     {
-        BSL_FREE(data->ptr);
+        BSL_free(data->ptr);
     }
 }
 
@@ -59,7 +59,7 @@ int BSL_Data_InitBuffer(BSL_Data_t *data, size_t bytelen)
     CHK_ARG_EXPR(bytelen > 0);
 
     bsl_data_int_reset(data);
-    data->ptr   = BSL_MALLOC(bytelen);
+    data->ptr   = BSL_malloc(bytelen);
     data->len   = bytelen;
     data->owned = true;
     memset(data->ptr, 0, bytelen);
@@ -145,7 +145,7 @@ int BSL_Data_Resize(BSL_Data_t *data, size_t len)
     {
         data->ptr = NULL;
     }
-    BSL_DataPtr_t got = BSL_REALLOC(data->ptr, len);
+    BSL_DataPtr_t got = BSL_realloc(data->ptr, len);
     if (UNLIKELY(!got))
     {
         bsl_data_int_reset(data);

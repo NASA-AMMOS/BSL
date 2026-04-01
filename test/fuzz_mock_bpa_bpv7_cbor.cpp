@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -34,9 +34,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
 
 extern "C" int LLVMFuzzerInitialize(int *argc _U_, char ***argv _U_)
 {
-    BSL_openlog();
-    BSL_LogSetLeastSeverity(LOG_CRIT);
     BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL));
+    mock_bpa_LogOpen();
+    mock_bpa_LogSetLeastSeverity(LOG_CRIT);
     return 0;
 }
 

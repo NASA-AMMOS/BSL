@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -283,9 +283,9 @@ void bsl_mock_eidpat_item_deinit(bsl_mock_eidpat_item_t *obj)
 int mock_bpa_eidpat_item_from_text(bsl_mock_eidpat_item_t *item, const char *text, const char **endptr)
 {
     // GCOV_EXCL_START
-    CHKERR1(item);
-    CHKERR1(text);
-    CHKERR1(endptr);
+    BSL_CHKERR1(item);
+    BSL_CHKERR1(text);
+    BSL_CHKERR1(endptr);
     // GCOV_EXCL_STOP
 
     // clean up if necessary
@@ -361,8 +361,8 @@ int mock_bpa_eidpat_item_from_text(bsl_mock_eidpat_item_t *item, const char *tex
 bool mock_bpa_eidpat_item_match(const bsl_mock_eidpat_item_t *item, const bsl_mock_eid_t *eid)
 {
     // GCOV_EXCL_START
-    CHKERR1(item);
-    CHKERR1(eid);
+    BSL_CHKERR1(item);
+    BSL_CHKERR1(eid);
     // GCOV_EXCL_STOP
 
     if (item->scheme != eid->scheme)
@@ -386,10 +386,10 @@ bool mock_bpa_eidpat_item_match(const bsl_mock_eidpat_item_t *item, const bsl_mo
 
 int mock_bpa_eidpat_init(BSL_HostEIDPattern_t *pat, void *user_data _U_)
 {
-    CHKERR1(pat); // GCOV_EXCL_LINE
+    BSL_CHKERR1(pat); // GCOV_EXCL_LINE
 
     memset(pat, 0, sizeof(BSL_HostEIDPattern_t));
-    pat->handle = BSL_MALLOC(sizeof(bsl_mock_eidpat_t));
+    pat->handle = BSL_malloc(sizeof(bsl_mock_eidpat_t));
     if (!(pat->handle))
     {
         return 2; // GCOV_EXCL_LINE
@@ -404,7 +404,7 @@ int mock_bpa_eidpat_init(BSL_HostEIDPattern_t *pat, void *user_data _U_)
 
 static void bsl_mock_eidpat_deinit(bsl_mock_eidpat_t *pat)
 {
-    CHKVOID(pat); // GCOV_EXCL_LINE
+    BSL_CHKVOID(pat); // GCOV_EXCL_LINE
 
     bsl_mock_eidpat_item_list_clear(pat->items);
     memset(pat, 0, sizeof(bsl_mock_eidpat_t));
@@ -412,11 +412,11 @@ static void bsl_mock_eidpat_deinit(bsl_mock_eidpat_t *pat)
 
 void mock_bpa_eidpat_deinit(BSL_HostEIDPattern_t *pat, void *user_data _U_)
 {
-    CHKVOID(pat);
+    BSL_CHKVOID(pat);
     if (pat->handle)
     {
         bsl_mock_eidpat_deinit(pat->handle);
-        BSL_FREE(pat->handle);
+        BSL_free(pat->handle);
     }
     memset(pat, 0, sizeof(BSL_HostEIDPattern_t));
 }
@@ -424,10 +424,10 @@ void mock_bpa_eidpat_deinit(BSL_HostEIDPattern_t *pat, void *user_data _U_)
 int mock_bpa_eidpat_from_text(BSL_HostEIDPattern_t *pat, const char *text, void *user_data _U_)
 {
     // GCOV_EXCL_START
-    CHKERR1(pat);
-    CHKERR1(text);
+    BSL_CHKERR1(pat);
+    BSL_CHKERR1(text);
     bsl_mock_eidpat_t *obj = pat->handle;
-    CHKERR1(obj);
+    BSL_CHKERR1(obj);
     // GCOV_EXCL_STOP
 
     // clean up if necessary
@@ -475,10 +475,10 @@ int mock_bpa_eidpat_from_text(BSL_HostEIDPattern_t *pat, const char *text, void 
 bool mock_bpa_eidpat_match(const BSL_HostEIDPattern_t *pat, const BSL_HostEID_t *eid, void *user_data _U_)
 {
     // GCOV_EXCL_START
-    CHKERR1(pat);
-    CHKERR1(pat->handle);
-    CHKERR1(eid);
-    CHKERR1(eid->handle);
+    BSL_CHKERR1(pat);
+    BSL_CHKERR1(pat->handle);
+    BSL_CHKERR1(eid);
+    BSL_CHKERR1(eid->handle);
     // GCOV_EXCL_STOP
 
     bsl_mock_eidpat_t *patobj = (bsl_mock_eidpat_t *)pat->handle;

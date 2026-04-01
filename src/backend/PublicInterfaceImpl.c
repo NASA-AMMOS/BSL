@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -33,6 +33,23 @@
 #include "PublicInterfaceImpl.h"
 #include "SecurityActionSet.h"
 #include "SecurityResultSet.h"
+
+char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen)
+{
+    ASSERT_ARG_NONNULL(dstbuf);
+    ASSERT_ARG_NONNULL(srcbuf);
+    ASSERT_ARG_EXPR(dstlen > 0);
+    ASSERT_ARG_EXPR(srclen > 0);
+
+    memset(dstbuf, 0, dstlen);
+    const char hex_digits[] = "0123456789ABCDEF";
+    for (size_t i = 0; i < srclen && (((i * 2) + 1) < dstlen - 1); i++)
+    {
+        dstbuf[(i * 2)]     = hex_digits[(srcbuf[i] >> 4) & 0x0F];
+        dstbuf[(i * 2) + 1] = hex_digits[srcbuf[i] & 0x0F];
+    }
+    return dstbuf;
+}
 
 size_t BSL_LibCtx_Sizeof(void)
 {
@@ -91,7 +108,7 @@ void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
 {
     ASSERT_ARG_NONNULL(obj);
 
-    BSL_FREE(obj->block_numbers);
+    BSL_free(obj->block_numbers);
     obj->block_numbers = NULL;
 
     BSL_Data_Deinit(&obj->encoded);
@@ -174,7 +191,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                 BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
                 BSL_SeqReader_Destroy(btsd_read);
 
-                BSL_AbsSecBlock_t *abs_sec_block = BSL_CALLOC(1, BSL_AbsSecBlock_Sizeof());
+                BSL_AbsSecBlock_t *abs_sec_block = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
                 BSL_AbsSecBlock_InitEmpty(abs_sec_block);
                 if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, &btsd_copy) == 0)
                 {
@@ -189,7 +206,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
                     BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
                 }
                 BSL_AbsSecBlock_Deinit(abs_sec_block);
-                BSL_FREE(abs_sec_block);
+                BSL_free(abs_sec_block);
 
                 BSL_Data_Deinit(&btsd_copy);
             }

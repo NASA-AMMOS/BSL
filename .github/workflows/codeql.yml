@@ -1,5 +1,5 @@
 ##
-## Copyright (c) 2025 The Johns Hopkins University Applied Physics
+## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Bundle Protocol Security Library (BSL).
@@ -64,6 +64,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+        - language: actions
+          build-mode: none
         - language: c-cpp
           build-mode: manual
         # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
@@ -84,8 +86,8 @@ jobs:
     - name: Prep
       if: matrix.build-mode == 'manual'
       run: |
-        sudo rm /var/lib/man-db/auto-update
-        sudo apt-get update && sudo apt-get install -y \
+        sudo apt-get update
+        sudo apt-get install -y \
           cmake ninja-build ruby build-essential \
           libssl-dev libjansson-dev
         ./build.sh deps
@@ -93,7 +95,7 @@ jobs:
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
@@ -109,6 +111,6 @@ jobs:
         ./build.sh
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       with:
         category: "/language:${{matrix.language}}"

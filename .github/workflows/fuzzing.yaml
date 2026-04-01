@@ -1,5 +1,5 @@
 ##
-## Copyright (c) 2025 The Johns Hopkins University Applied Physics
+## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Bundle Protocol Security Library (BSL).
@@ -49,14 +49,13 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo rm /var/lib/man-db/auto-update
           sudo apt-get update
           sudo apt-get install -y \
               cmake ninja-build \
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
               libssl-dev libjansson-dev \
-              valgrind gcovr xmlstarlet
+              gcovr xmlstarlet
           sudo gem install cbor-diag
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')
@@ -69,7 +68,7 @@ jobs:
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
               openssl-devel jansson-devel \
-              valgrind xmlstarlet python3-pip
+              xmlstarlet python3-pip
           pip3 install gcovr
           gem install cbor-diag
       - name: Checkout repository

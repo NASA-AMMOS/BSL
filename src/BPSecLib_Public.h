@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -34,6 +34,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdarg.h>
+#include <sys/time.h>
 
 #include "BSLConfig.h"
 #include "Data.h"
@@ -260,7 +262,46 @@ typedef struct BSL_CanonicalBlock_s
     size_t   btsd_len;  ///< Length in bytes of the BTSD accessible through sequential APIs
 } BSL_CanonicalBlock_t;
 
+/** Dynamic memory callback descriptors used by Dynamic BPA descriptor.
+ *
+ * These are meant to be used as part of ::BSL_HostDescriptors_t for
+ * registering host callbacks.
+ */
+typedef struct
+{
+    /** Dynamic memory allocation callback.
+     *
+     *  @return valid heap pointer on success, NULL on failure.
+     */
+    void *(*malloc_cb)(size_t size);
+
+    /** Dynamic memory re-allocation callback.
+     *
+     *  @return valid heap pointer on success, NULL on failure.
+     */
+    void *(*realloc_cb)(void *ptr, size_t size);
+
+    /** Contiguous dynamic memory allocation callback.
+     *
+     *  @return valid 0-initialized heap pointer on success, NULL on failure.
+     */
+    void *(*calloc_cb)(size_t nmemb, size_t size);
+
+    /** Free dynamic memory allocation callback.
+     */
+    void (*free_cb)(void *ptr);
+} BSL_DynMemHostDescriptors_t;
+
+/// Default heap functions from libc
+#define BSL_DynMemHostDescriptors_DEFAULT                                                 \
+    {                                                                                     \
+        .malloc_cb = malloc, .realloc_cb = realloc, .calloc_cb = calloc, .free_cb = free, \
+    }
+
 /** Dynamic BPA descriptor.
+ *
+ * @caution All functions in this structure must be thread safe, as they
+ * can be called by any number of BSL instances across any threads.
  */
 typedef struct
 {
@@ -271,7 +312,7 @@ typedef struct
     int (*get_sec_src_eid_fn)(void *user_data, BSL_HostEID_t *result);
 
     /// @brief Host BPA function to initialize/allocate an EID type.
-    int (*eid_init)(void *user_data, BSL_HostEID_t *result);
+    void (*eid_init)(void *user_data, BSL_HostEID_t *result);
 
     /// @brief Host BPA function to deinit/free an EID type.
     void (*eid_deinit)(void *user_data, BSL_HostEID_t *eid);
@@ -319,11 +360,22 @@ typedef struct
     /// different reason codes
     int (*bundle_delete_fn)(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason);
 
-    /// @brief Host BPA function to encode an EID to CBOR.
-    int (*eid_to_cbor)(void *encoder, const BSL_HostEID_t *eid);
+    /** Host BPA function to encode an EID to CBOR.
+     * @param[in] eid EID value to encode.
+     * @param[in, out] encoded_bytes Output encoded bytes. Initialized and deinitialized by BSL. The encoded EID must
+     * contain a CBOR array head. If set to NULL, function should return needed size of encoded CBOR bytestring without
+     * actually copying data into param.
+     * @returns Number of bytes CBOR encoded EID must be
+     */
+    int (*eid_to_cbor)(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes);
 
-    /// @brief Host BPA function to decode an EID from a CBOR context
-    int (*eid_from_cbor)(void *encoder, BSL_HostEID_t *eid);
+    /** Host BPA function to decode an EID from CBOR.
+     * @param[in] encoded_bytes Input encoded bytes. Initialized and deinitialized by BSL. The encoded EID must contain
+     * a CBOR array head.
+     * @param[in, out] eid EID value to encode.
+     * @returns 0 if successful
+     */
+    int (*eid_from_cbor)(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid);
 
     /// @brief Host BPA function to parse an EID from a C-string
     int (*eid_from_text)(BSL_HostEID_t *eid, const char *text, void *user_data);
@@ -339,6 +391,37 @@ typedef struct
 
     /// @brief Host BPA function that returns true if the given EID matched an EID pattern.
     bool (*eidpat_match)(const BSL_HostEIDPattern_t *pat, const BSL_HostEID_t *eid, void *user_data);
+
+    /** Called to check if logging is enabled for at least a specific severity.
+     *
+     * @note If not provided by the host, this defaults to always-true.
+     *
+     * @param severity The severity from a subset of the POSIX syslog values.
+     * @return True if logging will occur for that severity level.
+     */
+    bool (*log_is_enabled_for)(int severity);
+
+    /** Called for each log event from the BSL and its PP and SC instances.
+     * All input text strings must be copied by the callback if they are
+     * referenced outside of that callback.
+     *
+     * @note If not provided by the host, this defaults to writing
+     * synchronously to @c stderr.
+     *
+     * @param timestamp The timestamp of the original event.
+     * @param severity The severity from a subset of the POSIX syslog values.
+     * This value has already been filtered by #log_is_enabled_for.
+     * @param[in] filename The originating file name, which may include directory parts.
+     * @param[in] lineno The originating file line number.
+     * @param[in] funcname The originating function name.
+     * @param[in] format The log message format string.
+     * @param args Values for the format string.
+     */
+    void (*log_event)(const struct timeval *timestamp, int severity, const char *filename, int lineno,
+                      const char *funcname, const char *format, va_list args);
+
+    /// @brief Optionally set dynamic memory management callbacks. Defaults to libc calls if unset.
+    BSL_DynMemHostDescriptors_t dyn_mem_desc;
 } BSL_HostDescriptors_t;
 
 /** Set the BPA descriptor (callbacks) for this process.

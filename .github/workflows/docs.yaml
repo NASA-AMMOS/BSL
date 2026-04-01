@@ -1,5 +1,5 @@
 ##
-## Copyright (c) 2025 The Johns Hopkins University Applied Physics
+## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Bundle Protocol Security Library (BSL).
@@ -42,7 +42,6 @@ jobs:
           submodules: recursive
       - name: Set up OS
         run: |
-          sudo rm /var/lib/man-db/auto-update
           sudo apt-get update
           sudo apt-get install -y \
               cmake ninja-build ruby build-essential \
@@ -59,6 +58,11 @@ jobs:
           -DBUILD_DOCS_API=ON
       - name: Build
         run: ./build.sh --target docs-api-html docs-api-pdf docs-api-misspelling
+      - name: Misspelling
+        env:
+          MISSPELLING_TXT: 'build/default/docs/api/misspelling.txt'
+        # success means file is present and empty
+        run: test -f "${MISSPELLING_TXT}" -a ! -s "${MISSPELLING_TXT}" || (cat "${MISSPELLING_TXT}"; exit 1)
       - name: Install
         run: ./build.sh install --component docs-api
       - name: Compress

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -346,6 +346,9 @@ typedef struct BSL_TestContext_s
     mock_bpa_ctr_t mock_bpa_ctr;
     uint64_t       key_id;
 } BSL_TestContext_t;
+
+int BSL_TestContext_Init(BSL_TestContext_t *ctx, bool setupDefaultSecCtxs);
+int BSL_TestContext_Deinit(BSL_TestContext_t *ctx);
 
 BSL_SecurityActionSet_t   *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context);
 BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void);

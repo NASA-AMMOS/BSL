@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -129,25 +129,25 @@ typedef enum
  * @param val The return value if the check fails.
  * @deprecated
  */
-#define CHKRET(cond, val) \
-    if (!LIKELY(cond))    \
-    {                     \
-        return val;       \
+#define BSL_CHKRET(cond, val) \
+    if (!LIKELY(cond))        \
+    {                         \
+        return val;           \
     }
 /// Return from void functions if condition fails.
-#define CHKVOID(cond) CHKRET(cond, )
+#define BSL_CHKVOID(cond) BSL_CHKRET(cond, )
 /// Return a null pointer if condition fails.
-#define CHKNULL(cond) CHKRET(cond, NULL)
+#define BSL_CHKNULL(cond) BSL_CHKRET(cond, NULL)
 /// Return false if condition fails.
-#define CHKFALSE(cond) CHKRET(cond, false)
+#define BSL_CHKFALSE(cond) BSL_CHKRET(cond, false)
 /// Return the error value 1 if condition fails.
-#define CHKERR1(cond) CHKRET(cond, 1)
+#define BSL_CHKERR1(cond) BSL_CHKRET(cond, 1)
 /** Check a value for non-zero and return that value.
  * @warning The parameter is evaluated twice so should be a simple variable.
  *
  * @param value The value to check and conditionally return.
  */
-#define CHKERRVAL(value) CHKRET(!(value), (value))
+#define BSL_CHKERRVAL(value) BSL_CHKRET(!(value), (value))
 
 /** @brief Codes indicating the fate of a block if a security operation over it fails
  *
@@ -172,37 +172,6 @@ typedef enum
  * @return A copy of @c dstbuf.
  */
 char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen);
-
-/** Opens the event log.
- * @note This should be called once per process, not thread or library instance.
- * At the end of the process there should be a call to BSL_closelog()
- *
- * This is a mimic to POSIX @c openlog()
- */
-void BSL_openlog(void);
-
-/** Closes the event log.
- * This is a mimic to POSIX @c closelog()
- * @sa BSL_openlog
- */
-void BSL_closelog(void);
-
-/** Interpret a text name as a severity level.
- *
- * @param[out] severity The associated severity level.
- * @param[in] name The text name, which is case insensitive.
- * @return Zero if successful.
- */
-int BSL_LogGetSeverity(int *severity, const char *name);
-
-/** Set the least severity enabled for logging.
- * Other events will be dropped by the logging facility.
- * This function is multi-thread safe.
- *
- * @param severity The severity from a subset of the POSIX syslog values.
- * @sa BSL_log_is_enabled_for()
- */
-void BSL_LogSetLeastSeverity(int severity);
 
 /** Determine if a particular severity is being logged.
  * This function is multi-thread safe.
@@ -343,9 +312,8 @@ int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t bufsize);
 /** Initialize an abstract EID.
  *
  * @param[out] eid The object to initialize.
- * @return Zero if successful.
  */
-int BSL_HostEID_Init(BSL_HostEID_t *eid);
+void BSL_HostEID_Init(BSL_HostEID_t *eid);
 
 /** De-initialize an abstract EID.
  *
@@ -373,19 +341,19 @@ int BSL_HostEID_DecodeFromText(BSL_HostEID_t *eid, const char *text);
 
 /** Decode an EID from CBOR.
  *
+ * @param[in] encoded_bytes CBOR encoded bytes
  * @param[in,out] eid The value to decode into
- * @param[in] decoder CBOR decoder context
  * @return 0 on success
  */
-int BSL_HostEID_DecodeFromCBOR(BSL_HostEID_t *eid, void *decoder);
+int BSL_HostEID_DecodeFromCBOR(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid);
 
 /** Encode a EID into CBOR.
  *
  * @param[in] eid The value to encode
- * @param[in] encoder CBOR encoder context
+ * @param[in, out] encoded_bytes CBOR encoded bytes
  * @return Zero if successful.
  */
-int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, void *encoder);
+int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes);
 
 /** Static initializer for an invalid ::BSL_HostEIDPattern_t.
  * Even after this, BSL_HostEIDPattern_Init() must be used to get into a valid state.
@@ -424,6 +392,27 @@ int BSL_HostEIDPattern_DecodeFromText(BSL_HostEIDPattern_t *pat, const char *tex
  * @return True if the EID is a match to the pattern.
  */
 bool BSL_HostEIDPattern_IsMatch(const BSL_HostEIDPattern_t *pat, const BSL_HostEID_t *eid);
+
+/// @brief Dynamic memory allocation
+/// @param size size of allocation
+/// @return valid heap pointer
+void *BSL_malloc(size_t size);
+
+/// @brief Dynamic memory reallocation
+/// @param ptr existing dynamic memory pointer
+/// @param size new allocation size
+/// @return valid heap pointer
+void *BSL_realloc(void *ptr, size_t size);
+
+/// @brief Contiguous dynamic memory allocation
+/// @param nmemb number of members to allocate
+/// @param size size of each member
+/// @return valid heap pointer
+void *BSL_calloc(size_t nmemb, size_t size);
+
+/// @brief Free dynamically allocated memory
+/// @param ptr pointer to memory to free
+void BSL_free(void *ptr);
 
 /** Block types using IANA-assigned code points from @cite iana:bundle.
  */

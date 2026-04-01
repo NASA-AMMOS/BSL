@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -30,6 +30,10 @@
 #include <m-string.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+
+#if defined(HAVE_VALGRIND)
+#include <valgrind/memcheck.h>
+#endif /* defined(HAVE_VALGRIND) */
 
 /**
  * Struct to hold private key information
@@ -120,7 +124,7 @@ int BSL_Crypto_ClearGeneratedKeyHandle(void *keyhandle)
 
     BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)keyhandle;
     BSL_CryptoKey_Deinit(key);
-    BSL_FREE(key);
+    BSL_free(key);
 
     return BSL_SUCCESS;
 }
@@ -160,7 +164,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
-    BSL_CryptoKey_t *cek = BSL_MALLOC(sizeof(BSL_CryptoKey_t));
+    BSL_CryptoKey_t *cek = BSL_malloc(sizeof(BSL_CryptoKey_t));
     if (cek == NULL)
     {
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -176,7 +180,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     if (dec_result != 1)
     {
         BSL_CryptoKey_Deinit(cek);
-        BSL_FREE(cek);
+        BSL_free(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     EVP_CIPHER_CTX_set_padding(ctx, 0);
@@ -189,7 +193,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         BSL_LOG_ERR("EVP_DecryptUpdate: %s", ERR_error_string(ERR_get_error(), NULL));
         EVP_CIPHER_CTX_free(ctx);
         BSL_CryptoKey_Deinit(cek);
-        BSL_FREE(cek);
+        BSL_free(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
@@ -203,7 +207,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
         EVP_CIPHER_CTX_free(ctx);
         BSL_CryptoKey_Deinit(cek);
-        BSL_FREE(cek);
+        BSL_free(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
@@ -219,7 +223,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     if (res != 1)
     {
         BSL_CryptoKey_Deinit(cek);
-        BSL_FREE(cek);
+        BSL_free(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
@@ -318,7 +322,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
         int           res  = EVP_PKEY_keygen_init(pctx);
         CHK_PROPERTY(res == 1);
 
-        BSL_CryptoKey_t *new_wrapped_key_handle = BSL_MALLOC(sizeof(BSL_CryptoKey_t));
+        BSL_CryptoKey_t *new_wrapped_key_handle = BSL_malloc(sizeof(BSL_CryptoKey_t));
         BSL_CryptoKey_Init(new_wrapped_key_handle);
         new_wrapped_key_handle->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, wrapped_key->len);
         BSL_Data_Init(&new_wrapped_key_handle->raw);
@@ -555,6 +559,9 @@ int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, void **tag)
 {
     int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN, *tag);
     CHK_PROPERTY(res == 1);
+#if defined(HAVE_VALGRIND)
+    VALGRIND_MAKE_MEM_DEFINED(*tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
+#endif /* defined(HAVE_VALGRIND) */
     return 0;
 }
 
@@ -632,7 +639,7 @@ int BSL_Crypto_GenKey(size_t key_length, void **key_out)
     CHK_ARG_NONNULL(key_out);
     CHK_ARG_EXPR(key_length == 16 || key_length == 32);
 
-    BSL_CryptoKey_t *new_key = BSL_MALLOC(sizeof(BSL_CryptoKey_t));
+    BSL_CryptoKey_t *new_key = BSL_malloc(sizeof(BSL_CryptoKey_t));
     CHK_PROPERTY(new_key);
     BSL_CryptoKey_Init(new_key);
 

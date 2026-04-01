@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2025 The Johns Hopkins University Applied Physics
+# Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 # Laboratory LLC.
 #
 # This file is part of the Bundle Protocol Security Library (BSL).
@@ -87,7 +87,7 @@ class TestAgent(unittest.TestCase):
             key_set = testcase.key_set
         else:
             policy_config = "0x00"
-            key_set = "src/mock_bpa/key_set_1.json"
+            key_set = "mock-bpa-test/key_set_1.json"
 
         args = compose_args([
             'bsl-mock-bpa',

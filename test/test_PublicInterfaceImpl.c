@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -28,6 +28,7 @@
 #include <policy_provider/SamplePolicyProvider.h>
 #include <security_context/rfc9173.h>
 #include <mock_bpa/agent.h>
+#include <mock_bpa/log.h>
 
 #include "bsl_test_utils.h"
 
@@ -59,14 +60,14 @@ static BSL_TestPublInterfaceCtx_t ctx          = { 0 };
 
 void suiteSetUp(void)
 {
-    BSL_openlog();
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
+    mock_bpa_LogOpen();
 }
 
 int suiteTearDown(int failures)
 {
+    mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
-    BSL_closelog();
     return failures;
 }
 
@@ -117,25 +118,19 @@ void PublicInterfaceTestCtx_deinit(BSL_TestPublInterfaceCtx_t *ctx)
 void setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
-    TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
-    mock_bpa_ctr_init(&LocalTestCtx.mock_bpa_ctr);
-    memset(&action_set, 0, sizeof(action_set));
-
     BSL_CryptoInit();
-
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, true));
     PublicInterfaceTestCtx_init(&ctx);
 
     /// Register the policy provider with some rules
     BSL_PolicyDesc_t policy_desc = { 0 };
-    policy_desc.user_data        = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+    policy_desc.user_data        = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
     policy_desc.query_fn         = BSLP_QueryPolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
     policy_desc.finalize_fn      = BSLP_FinalizePolicy;
     TEST_ASSERT_EQUAL(0, BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, BSL_SAMPLE_PP_ID, policy_desc));
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
-    string_init_set_str(policy->name, "Unit Test Policy Provider!");
 
     policy->pp_id = 1;
 
@@ -561,20 +556,13 @@ void setUp(void)
     BSLP_PolicyRule_CopyParam(rule_bsl_32b, &ctx.param_test_bcb_key_correct);
     BSLP_PolicyRule_CopyParam(rule_bsl_32b, &ctx.param_aes_variant_128);
     BSLP_PolicyRule_CopyParam(rule_bsl_32b, &ctx.param_use_wrap_key);
-
-    /// Register the Security Context
-    BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
 }
 
 void tearDown(void)
 {
     BSL_SecurityActionSet_Deinit(&action_set);
-    BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
-    string_clear(policy->name);
-    mock_bpa_ctr_deinit(&LocalTestCtx.mock_bpa_ctr);
     BSL_CryptoDeinit();
-    TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));
-
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
     PublicInterfaceTestCtx_deinit(&ctx);
 }
 

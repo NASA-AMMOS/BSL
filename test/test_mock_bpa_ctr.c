@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -24,17 +24,18 @@
 #include "bsl_test_utils.h"
 #include <mock_bpa/ctr.h>
 #include <mock_bpa/agent.h>
+#include <mock_bpa/log.h>
 
 void suiteSetUp(void)
 {
-    BSL_openlog();
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
+    mock_bpa_LogOpen();
 }
 
 int suiteTearDown(int failures)
 {
+    mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
-    BSL_closelog();
     return failures;
 }
 

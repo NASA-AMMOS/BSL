@@ -1,5 +1,5 @@
 ##
-## Copyright (c) 2025 The Johns Hopkins University Applied Physics
+## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
 ##
 ## This file is part of the Bundle Protocol Security Library (BSL).
@@ -35,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ['ubuntu-24.04', 'centos-9']
-        compiler: ['gcc']
+        compiler: ['gcc', 'clang']
     name: Unit Test (${{matrix.os}} ${{matrix.compiler}})
     runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
     container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
@@ -49,7 +49,6 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo rm /var/lib/man-db/auto-update
           sudo apt-get update
           sudo apt-get install -y \
               cmake ninja-build \
@@ -70,7 +69,7 @@ jobs:
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
               openssl-devel jansson-devel \
-              valgrind xmlstarlet \
+              valgrind valgrind-devel xmlstarlet \
               python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Checkout repository
@@ -127,7 +126,6 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          sudo rm /var/lib/man-db/auto-update
           sudo apt-get update
           sudo apt-get install -y \
               cmake ninja-build ruby gcc g++ ccache patch \
@@ -145,7 +143,7 @@ jobs:
               cmake ninja-build \
               ruby pkg-config gcc gcc-c++ ccache patch \
               openssl-devel jansson-devel \
-              valgrind xmlstarlet \
+              valgrind valgrind-devel xmlstarlet \
               python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Checkout repository

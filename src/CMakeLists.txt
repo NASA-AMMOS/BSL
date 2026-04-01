@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2025 The Johns Hopkins University Applied Physics
+Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Bundle Protocol Security Library (BSL).
@@ -68,6 +68,9 @@ set_target_properties(bsl_crypto
 target_link_libraries(bsl_crypto PUBLIC bsl_front)
 target_link_libraries(bsl_crypto PUBLIC MLIB::mlib)
 target_link_libraries(bsl_crypto INTERFACE OpenSSL::Crypto)
+if(TARGET valgrind::valgrind)
+  target_compile_definitions(bsl_crypto PRIVATE HAVE_VALGRIND)
+endif(TARGET valgrind::valgrind)
 
 # Default Security Context library
 set(BSL_DEFAULT_SC_H
@@ -123,7 +126,6 @@ set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/HostInterface.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/LoggingStderr.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PolicyProvider.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/TelemetryCounters.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.c

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -26,6 +26,7 @@
 #include "encode.h"
 #include "decode.h"
 #include "eidpat.h"
+#include "log.h"
 #include "agent.h"
 
 #endif //_BSL_MockBPA_MockBPA_H_

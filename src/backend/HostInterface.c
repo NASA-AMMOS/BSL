@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -23,14 +23,19 @@
  * @brief Implementation of the host BPA and its callback functions.
  * @ingroup backend_dyn
  */
+#include <stdarg.h>
+#include <pthread.h>
+#include <sys/time.h>
 #include <BPSecLib_Private.h>
 #include "UtilDefs_SeqReadWrite.h"
 
 // NOLINTNEXTLINE
-static BSL_HostDescriptors_t HostDescriptorTable = { 0 };
+/// Initialized to library default
+static BSL_HostDescriptors_t HostDescriptorTable = { .dyn_mem_desc = BSL_DynMemHostDescriptors_DEFAULT };
 
 int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
 {
+    // GCOV_EXCL_START
     CHK_PRECONDITION(desc.eid_init);
     CHK_PRECONDITION(desc.get_sec_src_eid_fn);
     CHK_PRECONDITION(desc.eid_deinit);
@@ -48,16 +53,32 @@ int BSL_HostDescriptors_Set(BSL_HostDescriptors_t desc)
     CHK_PRECONDITION(desc.eidpat_from_text);
     CHK_PRECONDITION(desc.eidpat_match);
 
+    // If all callbacks are unset/NULL, use default
+    if (NULL == desc.dyn_mem_desc.malloc_cb && NULL == desc.dyn_mem_desc.realloc_cb
+        && NULL == desc.dyn_mem_desc.calloc_cb && NULL == desc.dyn_mem_desc.free_cb)
+    {
+        desc.dyn_mem_desc = (BSL_DynMemHostDescriptors_t)BSL_DynMemHostDescriptors_DEFAULT;
+    }
+    // otherwiese, if any one are unset, return error
+    else if (NULL == desc.dyn_mem_desc.malloc_cb || NULL == desc.dyn_mem_desc.realloc_cb
+             || NULL == desc.dyn_mem_desc.calloc_cb || NULL == desc.dyn_mem_desc.free_cb)
+    {
+        return BSL_ERR_ARG_NULL;
+    }
+    // GCOV_EXCL_STOP
+
     HostDescriptorTable = desc;
     return BSL_SUCCESS;
 }
 
 int BSL_BundleCtx_GetBundleMetadata(const BSL_BundleRef_t *bundle, BSL_PrimaryBlock_t *result_primary_block)
 {
+    // GCOV_EXCL_START
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(result_primary_block);
 
     CHK_PRECONDITION(HostDescriptorTable.bundle_metadata_fn != NULL);
+    // GCOV_EXCL_STOP
 
     memset(result_primary_block, 0, sizeof(*result_primary_block));
     int result = HostDescriptorTable.bundle_metadata_fn(bundle, result_primary_block);
@@ -144,11 +165,11 @@ void BSL_HostDescriptors_Clear(void)
     HostDescriptorTable = (BSL_HostDescriptors_t) { 0 };
 }
 
-int BSL_HostEID_Init(BSL_HostEID_t *eid)
+void BSL_HostEID_Init(BSL_HostEID_t *eid)
 {
-    CHK_ARG_NONNULL(eid);
-    CHK_PRECONDITION(HostDescriptorTable.eid_init != NULL);
-    return HostDescriptorTable.eid_init(HostDescriptorTable.user_data, eid);
+    ASSERT_ARG_NONNULL(eid);
+    ASSERT_PRECONDITION(HostDescriptorTable.eid_init != NULL);
+    HostDescriptorTable.eid_init(HostDescriptorTable.user_data, eid);
 }
 
 void BSL_HostEID_Deinit(BSL_HostEID_t *eid)
@@ -165,20 +186,19 @@ int BSL_Host_GetSecSrcEID(BSL_HostEID_t *eid)
     return HostDescriptorTable.get_sec_src_eid_fn(HostDescriptorTable.user_data, eid);
 }
 
-int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, void *encoder)
+int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes)
 {
     CHK_ARG_NONNULL(eid);
-    CHK_ARG_NONNULL(encoder);
-    return HostDescriptorTable.eid_to_cbor(encoder, eid);
+    return HostDescriptorTable.eid_to_cbor(eid, encoded_bytes);
 }
 
-int BSL_HostEID_DecodeFromCBOR(BSL_HostEID_t *eid, void *decoder)
+int BSL_HostEID_DecodeFromCBOR(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
 {
     CHK_ARG_NONNULL(eid);
-    CHK_ARG_NONNULL(decoder);
+    CHK_ARG_NONNULL(encoded_bytes);
 
     CHK_PRECONDITION(eid->handle != NULL);
-    int ecode = HostDescriptorTable.eid_from_cbor(decoder, eid);
+    int ecode = HostDescriptorTable.eid_from_cbor(encoded_bytes, eid);
     return ecode;
 }
 
@@ -220,4 +240,128 @@ bool BSL_HostEIDPattern_IsMatch(const BSL_HostEIDPattern_t *pat, const BSL_HostE
     ASSERT_ARG_NONNULL(eid);
     ASSERT_PRECONDITION(HostDescriptorTable.eidpat_match);
     return HostDescriptorTable.eidpat_match(pat, eid, HostDescriptorTable.user_data);
+}
+
+// NOLINTBEGIN
+static const char *log_sev_names[] = {
+    NULL,      // LOG_EMERG
+    NULL,      // LOG_ALERT
+    "CRIT",    // LOG_CRIT
+    "ERROR",   // LOG_ERR
+    "WARNING", // LOG_WARNING
+    NULL,      // LOG_NOTICE
+    "INFO",    // LOG_INFO
+    "DEBUG",   // LOG_DEBUG
+};
+// NOLINTEND
+
+bool BSL_LogIsEnabledFor(int severity)
+{
+    if ((severity < 0) || (severity >= 7))
+    {
+        // not valid
+        return false;
+    }
+
+    if (!HostDescriptorTable.log_is_enabled_for)
+    {
+        return true;
+    }
+
+    return HostDescriptorTable.log_is_enabled_for(severity);
+}
+
+void BSL_LogEvent(int severity, const char *filename, int lineno, const char *funcname, const char *format, ...)
+{
+    if (!BSL_LogIsEnabledFor(severity))
+    {
+        return;
+    }
+
+    struct timeval timestamp;
+    gettimeofday(&timestamp, NULL);
+
+    va_list args;
+    va_start(args, format);
+
+    if (!HostDescriptorTable.log_event)
+    {
+        char tmbuf[32]; // NOLINT
+        {
+            time_t    nowtime = timestamp.tv_sec;
+            struct tm nowtm;
+            gmtime_r(&nowtime, &nowtm);
+
+            char  *curs   = tmbuf;
+            size_t remain = sizeof(tmbuf) - 1;
+            size_t len    = strftime(curs, remain, "%Y-%m-%dT%H:%M:%S", &nowtm);
+            curs += len;
+            remain -= len;
+            snprintf(curs, remain, ".%06ld", timestamp.tv_usec);
+        }
+
+        const char *severity_name = log_sev_names[severity];
+
+        pthread_t thread = pthread_self();
+        char      thrbuf[2 * sizeof(pthread_t) + 1];
+        size_t    remain = sizeof(thrbuf);
+        {
+            const uint8_t *data = (const void *)&thread;
+            char          *out  = thrbuf;
+            for (size_t ix = 0; ix < sizeof(pthread_t); ++ix)
+            {
+                snprintf(out, remain, "%02X", *data);
+                data++;
+                out += 2;
+                remain -= 2;
+            }
+            *out = '\0';
+        }
+
+        // simplify filename
+        static const char dirsep  = '/';
+        const char       *filepos = strrchr(filename, dirsep);
+        if (filepos)
+        {
+            filepos += 1;
+        }
+        else
+        {
+            filepos = filename;
+        }
+
+        fprintf(stderr, "%s T:%s <%s> [%s:%d:%s] ", tmbuf, thrbuf, severity_name, filepos, lineno, funcname);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+        vfprintf(stderr, format, args);
+#pragma GCC diagnostic pop
+        fprintf(stderr, "\n");
+        fflush(stderr);
+    }
+    else
+    {
+        HostDescriptorTable.log_event(&timestamp, severity, filename, lineno, funcname, format, args);
+    }
+
+    va_end(args);
+}
+
+void *BSL_malloc(size_t size)
+{
+    return HostDescriptorTable.dyn_mem_desc.malloc_cb(size);
+}
+
+void *BSL_realloc(void *ptr, size_t size)
+{
+    return HostDescriptorTable.dyn_mem_desc.realloc_cb(ptr, size);
+}
+
+void *BSL_calloc(size_t nmemb, size_t size)
+{
+    return HostDescriptorTable.dyn_mem_desc.calloc_cb(nmemb, size);
+}
+
+void BSL_free(void *ptr)
+{
+    HostDescriptorTable.dyn_mem_desc.free_cb(ptr);
 }

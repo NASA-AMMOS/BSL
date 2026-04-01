@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -40,30 +40,26 @@ static BSL_TestContext_t LocalTestCtx;
 
 void suiteSetUp(void)
 {
-    BSL_openlog();
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
+    mock_bpa_LogOpen();
 }
 
 int suiteTearDown(int failures)
 {
+    mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
-    BSL_closelog();
     return failures;
 }
 
 void setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
-    TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
-    mock_bpa_ctr_init(&LocalTestCtx.mock_bpa_ctr);
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, false));
 }
 
 void tearDown(void)
 {
-    mock_bpa_ctr_deinit(&LocalTestCtx.mock_bpa_ctr);
-    // BSL_BundleCtx_Deinit(LocalTestCtx.bundle);
-    TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 }
 
 /**
@@ -117,6 +113,43 @@ void test_SamplePolicyProvider_WildcardPolicyRuleVerifiesBIB(void)
     // TEST_ASSERT_EQUAL(2, sec_oper.sec_block_num);
 
     // TODO - Test security parameters.
+
+    BSLP_PolicyRule_Deinit(&rule);
+    BSLP_PolicyPredicate_Deinit(&predicate);
+}
+
+TEST_CASE("")
+TEST_CASE("1")
+TEST_CASE(
+    "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789") // 100 char
+TEST_CASE(
+    "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890") // 101 char
+void test_SamplePolicyProvider_PolicyRuleInit_Description(const char *description)
+{
+    BSLP_PolicyPredicate_t predicate;
+    BSLP_PolicyPredicate_Init(&predicate, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
+                              BSL_TestUtils_GetEidPatternFromText("*:**"), BSL_TestUtils_GetEidPatternFromText("*:**"));
+
+    BSLP_PolicyRule_t rule;
+    BSLP_PolicyRule_Init(&rule, description, &predicate, 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+                         BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
+
+    TEST_ASSERT_LESS_OR_EQUAL(BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN, strlen(rule.description));
+
+    if (strlen(description) <= BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN)
+    {
+        TEST_ASSERT_EQUAL(strlen(description), strlen(rule.description));
+    }
+    else
+    {
+        TEST_ASSERT_EQUAL(BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN, strlen(rule.description));
+    }
+
+    // unity doesn't like TEST_ASSERT_EQUAL_MEMORY call on 0 length buffer
+    if (strlen(description) > 0)
+    {
+        TEST_ASSERT_EQUAL_MEMORY(description, rule.description, strlen(rule.description));
+    }
 
     BSLP_PolicyRule_Deinit(&rule);
     BSLP_PolicyPredicate_Deinit(&predicate);

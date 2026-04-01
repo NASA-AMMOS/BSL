@@ -209,28 +209,31 @@ After its de-initialization the members of the struct will no longer have well d
 
 To help with troubleshooting, de-initialization should set pointers set to NULL and other values to a well-defined state. One option is to use `memset()` to zeroize the entire struct.
 
+## Memory Management Functions
+
+When heap memory is needed at BSL runtime, the following functions are used and have the same signature and semantics as the corresponding C99 functions indicated below.
+
+- [BSL_malloc](@ref BSL_malloc) as `malloc()`
+- [BSL_realloc](@ref BSL_realloc) as `realloc()`
+- [BSL_calloc](@ref BSL_calloc) as `calloc()`
+- [BSL_free](@ref BSL_free) as `free()`
+
+These can be modified using the @ref BSL_DynMemHostDescriptors_t interface.
+
 # Macros
 
 This section contains references to commonly used macros defined for the BSL
-
-## Memory Management Macros
-
-When heap memory is needed at BSL runtime, the following macros are used and have the same signature and semantics as the corresponding C99 functions indicated below.
-
-- [BSL_MALLOC](@ref BSL_MALLOC) as `malloc()`
-- [BSL_REALLOC](@ref BSL_REALLOC) as `realloc()`
-- [BSL_FREE](@ref BSL_FREE) as `free()`
 
 ## Error Checking Handler Macros
 
 To help with the error reporting conventions above, the following macros can be used to simplify function precondition checking.
 The precondition checks (on function parameters or on any other state generally) should be the first thing inside the function definition.
 
-- [CHKRET(cond, val)](@ref CHKRET) for general error values
-- [CHKNULL(cond)](@ref CHKNULL) when the function has a pointer return type
-- [CHKERR1(cond)](@ref CHKERR1) when the function has an `int` return type
-- [CHKVOID(cond)](@ref CHKVOID) when the function has an `void` return type
-- [CHKFALSE(cond)](@ref CHKFALSE) when the function has an `bool` return type
+- [BSL_CHKRET(cond, val)](@ref BSL_CHKRET) for general error values
+- [BSL_CHKNULL(cond)](@ref BSL_CHKNULL) when the function has a pointer return type
+- [BSL_CHKERR1(cond)](@ref BSL_CHKERR1) when the function has an `int` return type
+- [BSL_CHKVOID(cond)](@ref BSL_CHKVOID) when the function has an `void` return type
+- [BSL_CHKFALSE(cond)](@ref BSL_CHKFALSE) when the function has an `bool` return type
 
 # Enumerations
 

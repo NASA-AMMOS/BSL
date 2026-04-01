@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2025 The Johns Hopkins University Applied Physics
+Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Bundle Protocol Security Library (BSL).
@@ -89,6 +89,10 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   # Exercises the MockBPA using the publicly exposed BSL front end
   add_unity_test(SOURCE test_PublicInterfaceImpl.c)
   target_link_libraries(test_PublicInterfaceImpl PUBLIC ${LIB_ORDERED})
+
+  # Test user-specified dynamic mem mgmt callbacks
+  add_unity_test(SOURCE test_DynamicMemCbs.c)
+  target_link_libraries(test_DynamicMemCbs PUBLIC ${LIB_ORDERED})
 endif(BUILD_UNITTEST AND NOT BUILD_FUZZING)
 
 if(BUILD_FUZZING)

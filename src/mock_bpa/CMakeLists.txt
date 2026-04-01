@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2025 The Johns Hopkins University Applied Physics
+Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Bundle Protocol Security Library (BSL).
@@ -25,6 +25,7 @@ target_compile_options(bsl_mock_bpa PRIVATE -Wshadow -Wpointer-arith -Wstrict-pr
 
 target_sources(
   bsl_mock_bpa PUBLIC 
+  ${CMAKE_CURRENT_SOURCE_DIR}/log.h
   ${CMAKE_CURRENT_SOURCE_DIR}/agent.h
   ${CMAKE_CURRENT_SOURCE_DIR}/bundle.h
   ${CMAKE_CURRENT_SOURCE_DIR}/crc.h
@@ -41,6 +42,7 @@ target_sources(
 )
 target_sources(
   bsl_mock_bpa PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/log.c
   ${CMAKE_CURRENT_SOURCE_DIR}/agent.c
   ${CMAKE_CURRENT_SOURCE_DIR}/bundle.c
   ${CMAKE_CURRENT_SOURCE_DIR}/crc.c

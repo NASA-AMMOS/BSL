@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -30,6 +30,8 @@
 
 #include <backend/UtilDefs_SeqReadWrite.h>
 #include <backend/PublicInterfaceImpl.h>
+#include <mock_bpa/agent.h>
+#include <mock_bpa/log.h>
 
 #include "bsl_test_utils.h"
 
@@ -197,12 +199,14 @@ static uint8_t test_256[32] = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 
 
 void suiteSetUp(void)
 {
-    BSL_openlog();
+    TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
+    mock_bpa_LogOpen();
+    mock_bpa_LogSetLeastSeverity(LOG_CRIT);
 }
 
 int suiteTearDown(int failures)
 {
-    BSL_closelog();
+    mock_bpa_LogClose();
     return failures;
 }
 
@@ -286,7 +290,7 @@ void test_SeqWriter_flat(void)
     const uint8_t expect[] = { 0x01, 0x02, 0x03, 0x01, 0x02 };
     TEST_ASSERT_EQUAL_MEMORY(expect, dest, sizeof(expect));
 
-    BSL_FREE(dest);
+    BSL_free(dest);
 }
 
 // test vectors from RFC 4231
@@ -468,7 +472,7 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     res = BSL_Cipher_Deinit(&ctx);
     TEST_ASSERT_EQUAL(0, res);
 
-    BSL_FREE(ciphertext);
+    BSL_free(ciphertext);
 }
 
 /**
@@ -539,7 +543,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     TEST_ASSERT_EQUAL(0, res);
 
     TEST_ASSERT_EQUAL(0, BSL_SeqReader_Destroy(reader));
-    BSL_FREE(plaintext);
+    BSL_free(plaintext);
 }
 
 TEST_RANGE(<6, 18, 1>)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -24,19 +24,20 @@
 #include <mock_bpa/agent.h>
 #include <mock_bpa/eid.h>
 #include <mock_bpa/eidpat.h>
+#include <mock_bpa/log.h>
 
 #define TEST_CASE(...)
 
 void suiteSetUp(void)
 {
-    BSL_openlog();
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
+    mock_bpa_LogOpen();
 }
 
 int suiteTearDown(int failures)
 {
+    mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
-    BSL_closelog();
     return failures;
 }
 
@@ -85,7 +86,7 @@ TEST_CASE("ipn:4294967296.0") // authority present
 void test_BSL_HostEID_DecodeFromText_valid(const char *text)
 {
     BSL_HostEID_t eid;
-    TEST_ASSERT_EQUAL_INT(0, BSL_HostEID_Init(&eid));
+    BSL_HostEID_Init(&eid);
 
     int res = BSL_HostEID_DecodeFromText(&eid, text);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "BSL_HostEID_DecodeFromText() failed");

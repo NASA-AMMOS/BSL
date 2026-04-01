@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -49,7 +49,7 @@ int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle)
     {
         MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_ref(bit);
         BSL_LOG_DEBUG("freeing block number %" PRIu64, blk->blk_num);
-        BSL_FREE(blk->btsd);
+        BSL_free(blk->btsd);
     }
     MockBPA_BlockList_clear(bundle->blocks);
 

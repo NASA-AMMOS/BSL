@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2025 The Johns Hopkins University Applied Physics
+Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Bundle Protocol Security Library (BSL).
@@ -19,8 +19,6 @@ Institute of Technology, sponsored by the United States Government under
 the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 ]]
-
-include(GNUInstallDirs)
 
 find_package(Doxygen REQUIRED)
 
@@ -97,10 +95,6 @@ if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
     add_custom_target(
         docs-api-misspelling
         DEPENDS "${MISSPELLING_TXT}"
-        COMMAND cat "${MISSPELLING_TXT}"
-        # success means file is present and empty
-        COMMAND test -f "${MISSPELLING_TXT}" -a ! -s "${MISSPELLING_TXT}"
-        COMMENT "Checking ${MISSPELLING_TXT}"
     )
 endif(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
 

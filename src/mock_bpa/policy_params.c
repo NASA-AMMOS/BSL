@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -29,13 +29,13 @@
 
 void mock_bpa_policy_params_init(mock_bpa_policy_params_t *params, int policy_num)
 {
-    params->param_integ_scope_flag = BSL_CALLOC(1, BSL_SecParam_Sizeof());
-    params->param_sha_variant      = BSL_CALLOC(1, BSL_SecParam_Sizeof());
-    params->param_aad_scope_flag   = BSL_CALLOC(1, BSL_SecParam_Sizeof());
-    params->param_init_vector      = BSL_CALLOC(1, BSL_SecParam_Sizeof());
-    params->param_aes_variant      = BSL_CALLOC(1, BSL_SecParam_Sizeof());
-    params->param_test_key         = BSL_CALLOC(1, BSL_SecParam_Sizeof());
-    params->param_use_wrapped_key  = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+    params->param_integ_scope_flag = BSL_calloc(1, BSL_SecParam_Sizeof());
+    params->param_sha_variant      = BSL_calloc(1, BSL_SecParam_Sizeof());
+    params->param_aad_scope_flag   = BSL_calloc(1, BSL_SecParam_Sizeof());
+    params->param_init_vector      = BSL_calloc(1, BSL_SecParam_Sizeof());
+    params->param_aes_variant      = BSL_calloc(1, BSL_SecParam_Sizeof());
+    params->param_test_key         = BSL_calloc(1, BSL_SecParam_Sizeof());
+    params->param_use_wrapped_key  = BSL_calloc(1, BSL_SecParam_Sizeof());
 
     params->active = true;
 
@@ -45,19 +45,19 @@ void mock_bpa_policy_params_init(mock_bpa_policy_params_t *params, int policy_nu
 void mock_bpa_policy_params_deinit(mock_bpa_policy_params_t *params, int policy_num)
 {
     BSL_SecParam_Deinit(params->param_integ_scope_flag);
-    BSL_FREE(params->param_integ_scope_flag);
+    BSL_free(params->param_integ_scope_flag);
     BSL_SecParam_Deinit(params->param_sha_variant);
-    BSL_FREE(params->param_sha_variant);
+    BSL_free(params->param_sha_variant);
     BSL_SecParam_Deinit(params->param_aad_scope_flag);
-    BSL_FREE(params->param_aad_scope_flag);
+    BSL_free(params->param_aad_scope_flag);
     BSL_SecParam_Deinit(params->param_init_vector);
-    BSL_FREE(params->param_init_vector);
+    BSL_free(params->param_init_vector);
     BSL_SecParam_Deinit(params->param_aes_variant);
-    BSL_FREE(params->param_aes_variant);
+    BSL_free(params->param_aes_variant);
     BSL_SecParam_Deinit(params->param_test_key);
-    BSL_FREE(params->param_test_key);
+    BSL_free(params->param_test_key);
     BSL_SecParam_Deinit(params->param_use_wrapped_key);
-    BSL_FREE(params->param_use_wrapped_key);
+    BSL_free(params->param_use_wrapped_key);
 
     params->active = false;
 

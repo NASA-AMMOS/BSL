@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <poll.h>
 #include "agent.h"
+#include "log.h"
 #include "eid.h"
 #include "eidpat.h"
 #include "encode.h"
@@ -75,7 +76,7 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
 
     result_primary_block->block_count = MockBPA_BlockList_size(bundle->blocks);
 
-    result_primary_block->block_numbers = BSL_CALLOC(result_primary_block->block_count, sizeof(uint64_t));
+    result_primary_block->block_numbers = BSL_calloc(result_primary_block->block_count, sizeof(uint64_t));
     if (!result_primary_block->block_numbers)
     {
         return -2;
@@ -136,12 +137,12 @@ int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t 
 
     if (found_block->btsd == NULL)
     {
-        found_block->btsd     = BSL_CALLOC(1, bytesize);
+        found_block->btsd     = BSL_calloc(1, bytesize);
         found_block->btsd_len = bytesize;
     }
     else
     {
-        found_block->btsd     = BSL_REALLOC(found_block->btsd, bytesize);
+        found_block->btsd     = BSL_realloc(found_block->btsd, bytesize);
         found_block->btsd_len = bytesize;
     }
 
@@ -185,7 +186,7 @@ static void MockBPA_ReadBTSD_Deinit(void *user_data)
 
     fclose(obj->file);
     // buffer is external data, no cleanup
-    BSL_FREE(obj);
+    BSL_free(obj);
 }
 
 static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_ref, uint64_t block_num)
@@ -198,7 +199,7 @@ static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_re
     }
     MockBPA_CanonicalBlock_t *found_block = *found_ptr;
 
-    struct MockBPA_BTSD_Data_s *obj = BSL_CALLOC(1, sizeof(struct MockBPA_BTSD_Data_s));
+    struct MockBPA_BTSD_Data_s *obj = BSL_calloc(1, sizeof(struct MockBPA_BTSD_Data_s));
     if (!obj)
     {
         return NULL;
@@ -208,10 +209,10 @@ static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_re
     obj->size  = found_block->btsd_len;
     obj->file  = fmemopen(obj->ptr, obj->size, "rb");
 
-    BSL_SeqReader_t *reader = BSL_CALLOC(1, sizeof(BSL_SeqReader_t));
+    BSL_SeqReader_t *reader = BSL_calloc(1, sizeof(BSL_SeqReader_t));
     if (!reader)
     {
-        BSL_FREE(obj);
+        BSL_free(obj);
         return NULL;
     }
     reader->user_data = obj;
@@ -247,11 +248,11 @@ static void MockBPA_WriteBTSD_Deinit(void *user_data)
     BSL_LOG_DEBUG("closed block %p with size %zu", obj->block, obj->size);
 
     // now write-back the BTSD
-    BSL_FREE(obj->block->btsd);
+    BSL_free(obj->block->btsd);
     obj->block->btsd     = obj->ptr;
     obj->block->btsd_len = obj->size;
 
-    BSL_FREE(obj);
+    BSL_free(obj);
 }
 
 static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t total_size)
@@ -265,7 +266,7 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
     MockBPA_CanonicalBlock_t *found_block = *found_ptr;
     BSL_LOG_DEBUG("opened block %p for size %zu", found_block, total_size);
 
-    struct MockBPA_BTSD_Data_s *obj = BSL_CALLOC(1, sizeof(struct MockBPA_BTSD_Data_s));
+    struct MockBPA_BTSD_Data_s *obj = BSL_calloc(1, sizeof(struct MockBPA_BTSD_Data_s));
     if (!obj)
     {
         return NULL;
@@ -276,11 +277,11 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
     obj->size  = 0;
     obj->file  = open_memstream(&obj->ptr, &obj->size);
 
-    BSL_SeqWriter_t *writer = BSL_CALLOC(1, sizeof(BSL_SeqWriter_t));
+    BSL_SeqWriter_t *writer = BSL_calloc(1, sizeof(BSL_SeqWriter_t));
     if (!writer)
     {
-        BSL_FREE(obj->ptr);
-        BSL_FREE(obj);
+        BSL_free(obj->ptr);
+        BSL_free(obj);
         return NULL;
     }
     writer->user_data = obj;
@@ -356,7 +357,7 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
     }
 
     // Deinit and clear the target block for removal
-    BSL_FREE(found_block->btsd);
+    BSL_free(found_block->btsd);
 
     MockBPA_BlockByNum_erase(bundle->blocks_num, block_num);
     MockBPA_BlockList_remove(bundle->blocks, bit);
@@ -398,14 +399,17 @@ BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent)
         // Old-style callbacks
         .eid_init      = MockBPA_EID_Init,
         .eid_deinit    = MockBPA_EID_Deinit,
-        .eid_to_cbor   = (int (*)(void *, const BSL_HostEID_t *))bsl_mock_encode_eid,
-        .eid_from_cbor = (int (*)(void *, BSL_HostEID_t *))bsl_mock_decode_eid,
+        .eid_to_cbor   = bsl_mock_encode_eid,
+        .eid_from_cbor = bsl_mock_decode_eid,
         .eid_from_text = mock_bpa_eid_from_text,
         // .eid_to_text      = mock_bpa_eid_to_text,
         .eidpat_init      = mock_bpa_eidpat_init,
         .eidpat_deinit    = mock_bpa_eidpat_deinit,
         .eidpat_from_text = mock_bpa_eidpat_from_text,
         .eidpat_match     = mock_bpa_eidpat_match,
+
+        .log_is_enabled_for = mock_bpa_LogIsEnabledFor,
+        .log_event          = mock_bpa_LogEvent,
     };
     return bpa;
 }
@@ -444,7 +448,7 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
     {
         MockBPA_Agent_BSL_Ctx_t *ctx = ctxs[ix];
 
-        ctx->bsl = BSL_CALLOC(1, BSL_LibCtx_Sizeof());
+        ctx->bsl = BSL_calloc(1, BSL_LibCtx_Sizeof());
         if (BSL_API_InitLib(ctx->bsl))
         {
             BSL_LOG_ERR("Failed BSL_API_InitLib()");
@@ -468,7 +472,7 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
     }
     // TODO find a better way to deal with this
     {
-        agent->appin.policy               = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->appin.policy               = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
         agent->appin.policy->pp_id        = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
@@ -477,7 +481,7 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
         ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->appin.bsl, 1, policy_callbacks));
     }
     {
-        agent->appout.policy              = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->appout.policy              = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
         agent->appout.policy->pp_id       = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
@@ -486,7 +490,7 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
         ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->appout.bsl, 1, policy_callbacks));
     }
     {
-        agent->clin.policy                = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->clin.policy                = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
         agent->clin.policy->pp_id         = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
@@ -495,7 +499,7 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent)
         ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->clin.bsl, 1, policy_callbacks));
     }
     {
-        agent->clout.policy               = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+        agent->clout.policy               = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
         agent->clout.policy->pp_id        = 1;
         BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
                                                                  .query_fn    = BSLP_QueryPolicy,
@@ -534,7 +538,7 @@ void MockBPA_Agent_Deinit(MockBPA_Agent_t *agent)
         {
             BSL_LOG_ERR("Failed BSL_API_DeinitLib()");
         }
-        BSL_FREE(ctx->bsl);
+        BSL_free(ctx->bsl);
         ctx->bsl = NULL;
     }
 
@@ -648,8 +652,8 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
         return 2;
     }
 
-    BSL_SecurityActionSet_t   *malloced_action_set   = BSL_CALLOC(1, BSL_SecurityActionSet_Sizeof());
-    BSL_SecurityResponseSet_t *malloced_response_set = BSL_CALLOC(1, BSL_SecurityResponseSet_Sizeof());
+    BSL_SecurityActionSet_t   *malloced_action_set   = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
+    BSL_SecurityResponseSet_t *malloced_response_set = BSL_calloc(1, BSL_SecurityResponseSet_Sizeof());
 
     BSL_BundleRef_t bundle_ref = { .data = bundle };
     BSL_LOG_INFO("calling BSL_API_QuerySecurity");
@@ -677,8 +681,8 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
     MockBPA_Agent_DumpTelemetry(agent);
 
     BSL_SecurityActionSet_Deinit(malloced_action_set);
-    BSL_FREE(malloced_action_set);
-    BSL_FREE(malloced_response_set);
+    BSL_free(malloced_action_set);
+    BSL_free(malloced_response_set);
     BSL_LOG_INFO("result code %d", returncode);
     return returncode;
 }

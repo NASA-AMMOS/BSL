@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -20,25 +20,29 @@
  * subcontract 1700763.
  */
 /** @file
- * Implementation of event logging using @c stderr output stream.
- * @ingroup backend_dyn
+ * @ingroup mock_bpa
+ * Logging implementation for the Mock BPA.
+ * This uses the @c stderr output stream in a work thread to ensure thread
+ * safety of event sources.
  */
+#include "log.h"
+#include <BPSecLib_Private.h>
+#include <BSLConfig.h>
+
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <strings.h>
+#include <syslog.h>
 #include <sys/time.h>
 #include <time.h>
-
-#include <BPSecLib_Private.h>
-#include <BSLConfig.h>
 
 #include <m-buffer.h>
 #include <m-string.h>
 #include <m-atomic.h>
 
 /// Number of events to buffer to I/O thread
-#define BSL_LOG_QUEUE_SIZE 100
+#define MOCK_BPA_LOG_QUEUE_SIZE 100
 
 // NOLINTBEGIN
 static const char *sev_names[] = {
@@ -66,24 +70,24 @@ typedef struct
     string_t context;
     /// Fully formatted message
     string_t message;
-} BSL_LogEvent_event_t;
+} mock_bpa_LogEvent_event_t;
 
-static void BSL_LogEvent_event_init(BSL_LogEvent_event_t *obj)
+static void mock_bpa_LogEvent_event_init(mock_bpa_LogEvent_event_t *obj)
 {
-    obj->thread = pthread_self();
-    gettimeofday(&(obj->timestamp), NULL);
-    obj->severity = LOG_DEBUG;
+    obj->thread    = pthread_self();
+    obj->timestamp = (struct timeval) { 0 };
+    obj->severity  = LOG_DEBUG;
     string_init(obj->context);
     string_init(obj->message);
 }
 
-static void BSL_LogEvent_event_deinit(BSL_LogEvent_event_t *obj)
+static void mock_bpa_LogEvent_event_deinit(mock_bpa_LogEvent_event_t *obj)
 {
     string_clear(obj->message);
     string_clear(obj->context);
 }
 
-static void BSL_LogEvent_event_init_set(BSL_LogEvent_event_t *obj, const BSL_LogEvent_event_t *src)
+static void mock_bpa_LogEvent_event_init_set(mock_bpa_LogEvent_event_t *obj, const mock_bpa_LogEvent_event_t *src)
 {
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
@@ -92,7 +96,7 @@ static void BSL_LogEvent_event_init_set(BSL_LogEvent_event_t *obj, const BSL_Log
     string_init_set(obj->message, src->message);
 }
 
-static void BSL_LogEvent_event_init_move(BSL_LogEvent_event_t *obj, BSL_LogEvent_event_t *src)
+static void mock_bpa_LogEvent_event_init_move(mock_bpa_LogEvent_event_t *obj, mock_bpa_LogEvent_event_t *src)
 {
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
@@ -101,7 +105,7 @@ static void BSL_LogEvent_event_init_move(BSL_LogEvent_event_t *obj, BSL_LogEvent
     string_init_move(obj->message, src->message);
 }
 
-static void BSL_LogEvent_event_set(BSL_LogEvent_event_t *obj, const BSL_LogEvent_event_t *src)
+static void mock_bpa_LogEvent_event_set(mock_bpa_LogEvent_event_t *obj, const mock_bpa_LogEvent_event_t *src)
 {
     obj->thread    = src->thread;
     obj->timestamp = src->timestamp;
@@ -110,16 +114,16 @@ static void BSL_LogEvent_event_set(BSL_LogEvent_event_t *obj, const BSL_LogEvent
     string_set(obj->message, src->message);
 }
 
-/// OPLIST for BSL_LogEvent_event_t
-#define M_OPL_BSL_LogEvent_event_t()                                                     \
-    (INIT(API_2(BSL_LogEvent_event_init)), INIT_SET(API_6(BSL_LogEvent_event_init_set)), \
-     INIT_MOVE(API_6(BSL_LogEvent_event_init_move)), SET(API_6(BSL_LogEvent_event_set)), \
-     CLEAR(API_2(BSL_LogEvent_event_deinit)))
+/// OPLIST for mock_bpa_LogEvent_event_t
+#define M_OPL_mock_bpa_LogEvent_event_t()                                                          \
+    (INIT(API_2(mock_bpa_LogEvent_event_init)), INIT_SET(API_6(mock_bpa_LogEvent_event_init_set)), \
+     INIT_MOVE(API_6(mock_bpa_LogEvent_event_init_move)), SET(API_6(mock_bpa_LogEvent_event_set)), \
+     CLEAR(API_2(mock_bpa_LogEvent_event_deinit)))
 
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_BUFFER_DEF(BSL_LogEvent_queue, BSL_LogEvent_event_t, BSL_LOG_QUEUE_SIZE,
+M_BUFFER_DEF(mock_bpa_LogEvent_queue, mock_bpa_LogEvent_event_t, MOCK_BPA_LOG_QUEUE_SIZE,
              M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING | M_BUFFER_PUSH_INIT_POP_MOVE)
 // GCOV_EXCL_STOP
 /// @endcond
@@ -128,37 +132,20 @@ M_BUFFER_DEF(BSL_LogEvent_queue, BSL_LogEvent_event_t, BSL_LOG_QUEUE_SIZE,
 static atomic_int least_severity = LOG_DEBUG;
 
 /// Shared safe queue
-static BSL_LogEvent_queue_t event_queue;
+static mock_bpa_LogEvent_queue_t event_queue;
 /// Sink thread ID
 static pthread_t thr_sink;
 /// True if ::thr_sink is valid
 static atomic_bool thr_valid = ATOMIC_VAR_INIT(false);
 // NOLINTEND
 
-char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen)
-{
-    ASSERT_ARG_NONNULL(dstbuf);
-    ASSERT_ARG_NONNULL(srcbuf);
-    ASSERT_ARG_EXPR(dstlen > 0);
-    ASSERT_ARG_EXPR(srclen > 0);
-
-    memset(dstbuf, 0, dstlen);
-    const char hex_digits[] = "0123456789ABCDEF";
-    for (size_t i = 0; i < srclen && (((i * 2) + 1) < dstlen - 1); i++)
-    {
-        dstbuf[(i * 2)]     = hex_digits[(srcbuf[i] >> 4) & 0x0F];
-        dstbuf[(i * 2) + 1] = hex_digits[srcbuf[i] & 0x0F];
-    }
-    return dstbuf;
-}
-
 // NOLINTBEGIN
-static void write_log(const BSL_LogEvent_event_t *event)
+static void write_log(const mock_bpa_LogEvent_event_t *event)
 {
     ASSERT_ARG_NONNULL(event);
 
     // already domain validated
-    const char *prioname = sev_names[event->severity];
+    const char *severity_name = sev_names[event->severity];
 
     char tmbuf[32]; // NOLINT
     {
@@ -175,17 +162,19 @@ static void write_log(const BSL_LogEvent_event_t *event)
     }
     char thrbuf[2 * sizeof(pthread_t) + 1];
     {
-        const uint8_t *data = (const void *)&(event->thread);
-        char          *out  = thrbuf;
+        const uint8_t *data   = (const void *)&(event->thread);
+        char          *out    = thrbuf;
+        size_t         remain = sizeof(thrbuf);
         for (size_t ix = 0; ix < sizeof(pthread_t); ++ix)
         {
-            sprintf(out, "%02X", *data);
+            snprintf(out, remain, "%02X", *data);
             data++;
             out += 2;
+            remain -= 2;
         }
         *out = '\0';
     }
-    fprintf(stderr, "%s T:%s <%s> [%s] %s\n", tmbuf, thrbuf, prioname, string_get_cstr(event->context),
+    fprintf(stderr, "%s T:%s <%s> [%s] %s\n", tmbuf, thrbuf, severity_name, string_get_cstr(event->context),
             string_get_cstr(event->message));
     fflush(stderr);
 }
@@ -196,8 +185,8 @@ static void *work_sink(void *arg _U_)
     bool running = true;
     while (running)
     {
-        BSL_LogEvent_event_t event;
-        BSL_LogEvent_queue_pop(&event, event_queue);
+        mock_bpa_LogEvent_event_t event;
+        mock_bpa_LogEvent_queue_pop(&event, event_queue);
         if (string_empty_p(event.message))
         {
             running = false;
@@ -206,24 +195,24 @@ static void *work_sink(void *arg _U_)
         {
             write_log(&event);
         }
-        BSL_LogEvent_event_deinit(&event);
+        mock_bpa_LogEvent_event_deinit(&event);
     }
     return NULL;
 }
 
-void BSL_openlog(void)
+void mock_bpa_LogOpen(void)
 {
-    BSL_LogEvent_queue_init(event_queue, BSL_LOG_QUEUE_SIZE);
+    mock_bpa_LogEvent_queue_init(event_queue, MOCK_BPA_LOG_QUEUE_SIZE);
 
     if (pthread_create(&thr_sink, NULL, work_sink, NULL))
     {
         // unsynchronized write
-        BSL_LogEvent_event_t manual;
-        BSL_LogEvent_event_init(&manual);
+        mock_bpa_LogEvent_event_t manual;
+        mock_bpa_LogEvent_event_init(&manual);
         manual.severity = LOG_CRIT;
-        string_set_str(manual.message, "BSL_openlog() failed");
+        string_set_str(manual.message, "mock_bpa_LogOpen() failed");
         write_log(&manual);
-        BSL_LogEvent_event_deinit(&manual);
+        mock_bpa_LogEvent_event_deinit(&manual);
     }
     else
     {
@@ -231,24 +220,24 @@ void BSL_openlog(void)
     }
 }
 
-void BSL_closelog(void)
+void mock_bpa_LogClose(void)
 {
     // sentinel empty message
-    BSL_LogEvent_event_t event;
-    BSL_LogEvent_event_init(&event);
-    BSL_LogEvent_queue_push(event_queue, event);
-    BSL_LogEvent_event_deinit(&event);
+    mock_bpa_LogEvent_event_t event;
+    mock_bpa_LogEvent_event_init(&event);
+    mock_bpa_LogEvent_queue_push(event_queue, event);
+    mock_bpa_LogEvent_event_deinit(&event);
 
     int res = pthread_join(thr_sink, NULL);
     if (res)
     {
         // unsynchronized write
-        BSL_LogEvent_event_t manual;
-        BSL_LogEvent_event_init(&manual);
+        mock_bpa_LogEvent_event_t manual;
+        mock_bpa_LogEvent_event_init(&manual);
         manual.severity = LOG_CRIT;
-        string_set_str(manual.message, "BSL_closelog() failed");
+        string_set_str(manual.message, "mock_bpa_LogClose() failed");
         write_log(&manual);
-        BSL_LogEvent_event_deinit(&manual);
+        mock_bpa_LogEvent_event_deinit(&manual);
     }
     else
     {
@@ -256,13 +245,13 @@ void BSL_closelog(void)
     }
 
     // no consumer after join above
-    BSL_LogEvent_queue_clear(event_queue);
+    mock_bpa_LogEvent_queue_clear(event_queue);
 }
 
-int BSL_LogGetSeverity(int *severity, const char *name)
+int mock_bpa_LogGetSeverity(int *severity, const char *name)
 {
-    CHKERR1(severity)
-    CHKERR1(name)
+    BSL_CHKERR1(severity);
+    BSL_CHKERR1(name);
 
     for (size_t ix = 0; ix < sizeof(sev_names) / sizeof(const char *); ++ix)
     {
@@ -279,7 +268,7 @@ int BSL_LogGetSeverity(int *severity, const char *name)
     return 2;
 }
 
-void BSL_LogSetLeastSeverity(int severity)
+void mock_bpa_LogSetLeastSeverity(int severity)
 {
     if ((severity < 0) || (severity > LOG_DEBUG))
     {
@@ -289,13 +278,8 @@ void BSL_LogSetLeastSeverity(int severity)
     atomic_store(&least_severity, severity);
 }
 
-bool BSL_LogIsEnabledFor(int severity)
+bool mock_bpa_LogIsEnabledFor(int severity)
 {
-    if ((severity < 0) || (severity > LOG_DEBUG))
-    {
-        return false;
-    }
-
     const int limit = atomic_load(&least_severity);
     // lower severity has higher define value
     const bool enabled = (limit >= severity);
@@ -304,16 +288,15 @@ bool BSL_LogIsEnabledFor(int severity)
 }
 
 // NOLINTBEGIN
-void BSL_LogEvent(int severity, const char *filename, int lineno, const char *funcname, const char *format, ...)
+void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char *filename, int lineno,
+                       const char *funcname, const char *format, va_list args)
 {
-    if (!BSL_LogIsEnabledFor(severity))
-    {
-        return;
-    }
+    BSL_CHKVOID(timestamp);
 
-    BSL_LogEvent_event_t event;
-    BSL_LogEvent_event_init(&event);
-    event.severity = severity;
+    mock_bpa_LogEvent_event_t event;
+    mock_bpa_LogEvent_event_init(&event);
+    event.timestamp = *timestamp;
+    event.severity  = severity;
 
     if (filename)
     {
@@ -331,32 +314,27 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
         string_printf(event.context, "%s:%d:%s", pos, lineno, funcname);
     }
 
-    {
-        va_list val;
-        va_start(val, format);
-        string_vprintf(event.message, format, val);
-        va_end(val);
-    }
+    string_vprintf(event.message, format, args);
 
     // ignore empty messages
     if (!string_empty_p(event.message))
     {
         if (atomic_load(&thr_valid))
         {
-            BSL_LogEvent_queue_push(event_queue, event);
+            mock_bpa_LogEvent_queue_push(event_queue, event);
         }
         else
         {
-            BSL_LogEvent_event_t manual;
-            BSL_LogEvent_event_init(&manual);
+            mock_bpa_LogEvent_event_t manual;
+            mock_bpa_LogEvent_event_init(&manual);
             manual.severity = LOG_CRIT;
-            string_set_str(manual.message, "BSL_LogEvent() called before BSL_openlog()");
+            string_set_str(manual.message, "mock_bpa_LogEvent() called before mock_bpa_openlog()");
             write_log(&manual);
-            BSL_LogEvent_event_deinit(&manual);
+            mock_bpa_LogEvent_event_deinit(&manual);
 
             write_log(&event);
         }
     }
-    BSL_LogEvent_event_deinit(&event);
+    mock_bpa_LogEvent_event_deinit(&event);
 }
 // NOLINTEND

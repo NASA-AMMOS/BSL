@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -44,38 +44,34 @@ static BSL_TestContext_t LocalTestCtx;
 
 void suiteSetUp(void)
 {
-    BSL_openlog();
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
+    mock_bpa_LogOpen();
 }
 
 int suiteTearDown(int failures)
 {
+    mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
-    BSL_closelog();
     return failures;
 }
 
 void setUp(void)
 {
-    memset(&LocalTestCtx, 0, sizeof(LocalTestCtx));
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&LocalTestCtx.bsl));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, false));
 
     BSL_PolicyDesc_t policy_desc = { 0 };
-    policy_desc.user_data        = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+    policy_desc.user_data        = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
     policy_desc.query_fn         = BSLP_QueryPolicy;
     policy_desc.finalize_fn      = BSLP_FinalizePolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
 
     TEST_ASSERT_EQUAL(0, BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, BSL_SAMPLE_PP_ID, policy_desc));
-
-    mock_bpa_ctr_init(&LocalTestCtx.mock_bpa_ctr);
 }
 
 void tearDown(void)
 {
-    mock_bpa_ctr_deinit(&LocalTestCtx.mock_bpa_ctr);
-    TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&LocalTestCtx.bsl));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 }
 
 /**
@@ -83,8 +79,6 @@ void tearDown(void)
  */
 void test_PolicyProvider_InspectEmptyRuleset(void)
 {
-    BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
-    string_init_set_str(policy->name, "Unit Test Policy Provider!");
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
 
@@ -98,7 +92,6 @@ void test_PolicyProvider_InspectEmptyRuleset(void)
     TEST_ASSERT_EQUAL(0, BSL_SecurityAction_CountSecOpers(act));
 
     BSL_SecurityActionSet_Deinit(&action_set);
-    string_clear(policy->name);
 }
 
 /**
@@ -110,7 +103,6 @@ void test_PolicyProvider_InspectEmptyRuleset(void)
 void test_PolicyProvider_InspectSingleBIBRuleset(void)
 {
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
-    string_init_set_str(policy->name, "Unit Test Policy Provider!");
 
     BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
@@ -131,7 +123,6 @@ void test_PolicyProvider_InspectSingleBIBRuleset(void)
     TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
 
     BSL_SecurityActionSet_Deinit(&action_set);
-    string_clear(policy->name);
 }
 
 /**
@@ -140,7 +131,6 @@ void test_PolicyProvider_InspectSingleBIBRuleset(void)
 void test_PolicyProvider_Inspect_RFC9173_BIB(void)
 {
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
-    string_init_set_str(policy->name, "Unit Test Policy Provider!");
 
     BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
@@ -167,7 +157,6 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
     TEST_ASSERT_EQUAL(3, BSL_SecOper_CountParams(BSL_SecurityAction_GetSecOperAtIndex(act, 0)));
 
     BSL_SecurityActionSet_Deinit(&action_set);
-    string_clear(policy->name);
 }
 
 // TODO - test with also setting sec pararms and other things and test the RFC 9173 things.
@@ -179,7 +168,7 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
 void test_MultiplePolicyProviders(void)
 {
     BSL_PolicyDesc_t policy_desc_2 = { 0 };
-    policy_desc_2.user_data        = BSL_CALLOC(1, sizeof(BSLP_PolicyProvider_t));
+    policy_desc_2.user_data        = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
     policy_desc_2.query_fn         = BSLP_QueryPolicy;
     policy_desc_2.finalize_fn      = BSLP_FinalizePolicy;
     policy_desc_2.deinit_fn        = BSLP_Deinit;
@@ -187,11 +176,9 @@ void test_MultiplePolicyProviders(void)
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
     policy->pp_id                 = BSL_SAMPLE_PP_ID;
-    string_init_set_str(policy->name, "Unit Test Policy Provider 1!");
 
     BSLP_PolicyProvider_t *policy2 = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID_2)->user_data;
     policy2->pp_id                 = BSL_SAMPLE_PP_ID_2;
-    string_init_set_str(policy2->name, "Unit Test Policy Provider 2!");
 
     BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
     BSLP_PolicyPredicate_Init(predicate, BSL_POLICYLOCATION_APPIN, BSL_TestUtils_GetEidPatternFromText("*:**"),
@@ -253,7 +240,5 @@ void test_MultiplePolicyProviders(void)
                                                             &LocalTestCtx.mock_bpa_ctr.bundle_ref, response_set));
 
     BSL_SecurityActionSet_Deinit(&action_set);
-    BSL_FREE(response_set);
-    string_clear(policy->name);
-    string_clear(policy2->name);
+    BSL_free(response_set);
 }

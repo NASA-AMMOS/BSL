@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -23,6 +23,7 @@
 #include <unity.h>
 
 #include <BPSecLib_Private.h>
+#include <mock_bpa/log.h>
 #include <mock_bpa/agent.h>
 #include <mock_bpa/decode.h>
 #include <mock_bpa/encode.h>
@@ -50,14 +51,14 @@ static void printencoded(const uint8_t *pEncoded, size_t nLen)
 
 void suiteSetUp(void)
 {
-    BSL_openlog();
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
+    mock_bpa_LogOpen();
 }
 
 int suiteTearDown(int failures)
 {
+    mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
-    BSL_closelog();
     return failures;
 }
 
@@ -66,7 +67,7 @@ void setUp(void)
     TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&bsl));
 
     buf.len = 10000;
-    buf.ptr = BSL_MALLOC(buf.len);
+    buf.ptr = BSL_malloc(buf.len);
     TEST_ASSERT_NOT_NULL(buf.ptr);
     QCBOREncode_Init(&encoder, buf);
 }
@@ -75,7 +76,7 @@ void tearDown(void)
 {
     if (buf.ptr)
     {
-        BSL_FREE(buf.ptr);
+        BSL_free(buf.ptr);
     }
     buf = NULLUsefulBuf;
 
@@ -191,7 +192,7 @@ void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
     blk.blk_num                  = 45;
     blk.flags                    = 0;
     blk.crc_type                 = crc_type;
-    blk.btsd                     = BSL_MALLOC(dummy_size);
+    blk.btsd                     = BSL_malloc(dummy_size);
     blk.btsd_len                 = dummy_size;
     memcpy(blk.btsd, dummy_btsd, dummy_size);
 
@@ -205,7 +206,7 @@ void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
     TEST_ASSERT_EQUAL_INT(expect_data.len, encoded.len);
     TEST_ASSERT_EQUAL_MEMORY(expect_data.ptr, encoded.ptr, expect_data.len);
 
-    BSL_FREE(blk.btsd);
+    BSL_free(blk.btsd);
     BSL_Data_Deinit(&expect_data);
     string_clear(expect_text);
 }
@@ -237,7 +238,7 @@ void test_bsl_mock_encode_bundle(void)
         blk->blk_num                  = 45;
         blk->flags                    = 0;
         blk->crc_type                 = 0;
-        blk->btsd                     = BSL_CALLOC(1, dummy_size);
+        blk->btsd                     = BSL_calloc(1, dummy_size);
         blk->btsd_len                 = dummy_size;
         memcpy(blk->btsd, dummy_btsd, dummy_size);
     }
@@ -345,7 +346,7 @@ void test_bsl_loopback_eid(const char *hexdata)
     {
         QCBORDecodeContext decoder;
         QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, bsl_mock_decode_eid(&decoder, &eid), "bsl_mock_decode_eid() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, bsl_mock_decode_eid_from_ctx(&decoder, &eid), "bsl_mock_decode_eid() failed");
         TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_Finish(&decoder));
     }
 
@@ -356,12 +357,12 @@ void test_bsl_loopback_eid(const char *hexdata)
         size_t             needlen;
 
         QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, bsl_mock_encode_eid(&encoder, &eid), "bsl_mock_encode_eid() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, bsl_mock_encode_eid_from_ctx(&encoder, &eid), "bsl_mock_encode_eid() failed");
         TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBOREncode_FinishGetSize(&encoder, &needlen));
 
         TEST_ASSERT_EQUAL_INT(0, BSL_Data_Resize(&out_data, needlen));
         QCBOREncode_Init(&encoder, (UsefulBuf) { out_data.ptr, out_data.len });
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, bsl_mock_encode_eid(&encoder, &eid), "bsl_mock_encode_eid() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, bsl_mock_encode_eid_from_ctx(&encoder, &eid), "bsl_mock_encode_eid() failed");
 
         UsefulBufC out;
         TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBOREncode_Finish(&encoder, &out));

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 The Johns Hopkins University Applied Physics
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
  * Laboratory LLC.
  *
  * This file is part of the Bundle Protocol Security Library (BSL).
@@ -515,23 +515,23 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
     }
 
     {
-        BSL_SecResult_t *bib_result = BSL_CALLOC(1, BSL_SecResult_Sizeof());
+        BSL_SecResult_t *bib_result = BSL_calloc(1, BSL_SecResult_Sizeof());
         BSL_SecResult_InitFull(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
                                BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
         BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
         BSL_SecResult_Deinit(bib_result);
-        BSL_FREE(bib_result);
+        BSL_free(bib_result);
     }
 
     if (bib_context.wrapped_key.len > 0)
     {
-        BSL_SecParam_t *wrapped_key_param = BSL_CALLOC(1, BSL_SecParam_Sizeof());
+        BSL_SecParam_t *wrapped_key_param = BSL_calloc(1, BSL_SecParam_Sizeof());
         if (BSL_SUCCESS
             != BSL_SecParam_InitBytestr(wrapped_key_param, RFC9173_BIB_PARAMID_WRAPPED_KEY, bib_context.wrapped_key))
         {
             BSL_LOG_ERR("Failed to append BIB wrapped key param");
             BSL_SecParam_Deinit(wrapped_key_param);
-            BSL_FREE(wrapped_key_param);
+            BSL_free(wrapped_key_param);
             BSLX_BIB_Deinit(&bib_context);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
@@ -541,7 +541,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
             BSL_SecOutcome_AppendParam(sec_outcome, wrapped_key_param);
         }
         BSL_SecParam_Deinit(wrapped_key_param);
-        BSL_FREE(wrapped_key_param);
+        BSL_free(wrapped_key_param);
     }
 
     BSLX_BIB_Deinit(&bib_context);
