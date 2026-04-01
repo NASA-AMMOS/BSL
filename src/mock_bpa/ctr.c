@@ -19,6 +19,10 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+/** @file
+ * @ingroup mock_bpa
+ * Container structs for BPv7 data.
+ */
 #include <BPSecLib_Private.h>
 #include <m-algo.h>
 
