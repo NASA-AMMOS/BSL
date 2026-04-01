@@ -366,7 +366,7 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id)
     return pp;
 }
 
-int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule, BSLP_PolicyPredicate_t *predicate)
+int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule, const BSLP_PolicyPredicate_t *predicate)
 {
     if (!BSLP_PolicyRule_IsConsistent(rule) || !BSLP_PolicyPredicate_IsConsistent(predicate))
     {

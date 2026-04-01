@@ -233,7 +233,7 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id);
  * @param predicate predicate to be associated with policy rule
  */
 int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule,
-                                BSLP_PolicyPredicate_t *predicate);
+                                const BSLP_PolicyPredicate_t *predicate);
 
 /** Deinitialize policy provider
  * @param self policy provider
