@@ -289,7 +289,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
 int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *output_action_set _U_,
                         const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output _U_)
 {
-    int                          error_ret = BSL_SUCCESS;
+    int                    error_ret = BSL_SUCCESS;
     BSLP_PolicyProvider_t *self      = user_data;
 
     for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(output_action_set); i++)

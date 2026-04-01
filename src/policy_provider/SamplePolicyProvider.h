@@ -88,9 +88,9 @@ void BSLP_PolicyPredicate_ShallowCopy(BSLP_PolicyPredicate_t *self, const BSLP_P
 void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
 
 /// OPLIST for ::BSLP_PolicyPredicate_t
-#define M_OPL_BSLP_PolicyPredicate_t() \
-   (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(API_6(BSLP_PolicyPredicate_ShallowCopy)), \
-    SET(0), CLEAR(API_2(BSLP_PolicyPredicate_Deinit)))
+#define M_OPL_BSLP_PolicyPredicate_t()                                                                  \
+    (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(API_6(BSLP_PolicyPredicate_ShallowCopy)), SET(0), \
+     CLEAR(API_2(BSLP_PolicyPredicate_Deinit)))
 
 /** @struct BSLP_PolicyPredicateList_t
  * Defines list of policy predicates (::BSLP_PolicyPredicate_t)
@@ -180,9 +180,9 @@ void BSLP_PolicyRule_InitSet(BSLP_PolicyRule_t *self, const BSLP_PolicyRule_t *s
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self);
 
 /// OPLIST for ::BSLP_PolicyRule_t
-#define M_OPL_BSLP_PolicyRule_t() \
-    (INIT(API_2(BSLP_PolicyRule_Init)), INIT_SET(API_6(BSLP_PolicyRule_InitSet)), \
-        SET(0), CLEAR(API_2(BSLP_PolicyRule_Deinit)))
+#define M_OPL_BSLP_PolicyRule_t()                                                         \
+    (INIT(API_2(BSLP_PolicyRule_Init)), INIT_SET(API_6(BSLP_PolicyRule_InitSet)), SET(0), \
+     CLEAR(API_2(BSLP_PolicyRule_Deinit)))
 
 /** @struct BSLP_PolicyRuleList_t
  * Defines list of policy rules (::BSLP_PolicyRule_t)
