@@ -276,7 +276,7 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
         return NULL;
     }
     MockBPA_CanonicalBlock_t *found_block = *found_ptr;
-    BSL_LOG_DEBUG("opened block %p for size %zu", found_block, total_size);
+    BSL_LOG_DEBUG("opened block %p for size %zu, previous size %zu", found_block, total_size, found_block->btsd_len);
 
     struct MockBPA_BTSD_Data_s *obj = BSL_calloc(1, sizeof(struct MockBPA_BTSD_Data_s));
     if (!obj)
@@ -289,6 +289,14 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
     obj->size  = 0;
     obj->file  = open_memstream(&obj->ptr, &obj->size);
     obj->curs  = 0;
+
+    if (total_size)
+    {
+        // pre-allocate BTSD size
+        fseeko(obj->file, total_size, SEEK_SET);
+        fflush(obj->file);
+        fseeko(obj->file, 0UL, SEEK_SET);
+    }
 
     BSL_SeqWriter_t *writer = BSL_calloc(1, sizeof(BSL_SeqWriter_t));
     if (!writer)
