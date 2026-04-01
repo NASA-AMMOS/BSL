@@ -119,9 +119,9 @@ int MockBPA_GetBlockMetadata(const BSL_BundleRef_t *bundle_ref, uint64_t block_n
     return 0;
 }
 
-int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t bytesize)
+int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t btsd_size)
 {
-    if (!bundle_ref || !bundle_ref->data || block_num == 0 || bytesize == 0)
+    if (!bundle_ref || !bundle_ref->data || block_num == 0 || btsd_size == 0)
     {
         return -1;
     }
@@ -137,13 +137,13 @@ int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t 
 
     if (found_block->btsd == NULL)
     {
-        found_block->btsd     = BSL_calloc(1, bytesize);
-        found_block->btsd_len = bytesize;
+        found_block->btsd     = BSL_calloc(1, btsd_size);
+        found_block->btsd_len = btsd_size;
     }
     else
     {
-        found_block->btsd     = BSL_realloc(found_block->btsd, bytesize);
-        found_block->btsd_len = bytesize;
+        found_block->btsd     = BSL_realloc(found_block->btsd, btsd_size);
+        found_block->btsd_len = btsd_size;
     }
 
     // Return -9 if malloc/realloc faile. Return 0 for success.
@@ -257,7 +257,11 @@ static void MockBPA_WriteBTSD_Deinit(void *user_data)
     ASSERT_PRECONDITION(obj->file);
 
     fclose(obj->file);
-    BSL_LOG_DEBUG("closed block %p with size %zu", obj->block, obj->size);
+    BSL_LOG_DEBUG("closed block %p with size %zu and cursor %zu", obj->block, obj->size, obj->curs);
+    if (obj->curs < obj->size)
+    {
+        BSL_LOG_ERR("closed block %p for writing with only %zu of %zu written", obj->block, obj->curs, obj->size);
+    }
 
     // now write-back the BTSD
     BSL_free(obj->block->btsd);
@@ -267,7 +271,7 @@ static void MockBPA_WriteBTSD_Deinit(void *user_data)
     BSL_free(obj);
 }
 
-static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t total_size)
+static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t btsd_size)
 {
     MockBPA_Bundle_t          *bundle    = bundle_ref->data;
     MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
@@ -276,7 +280,7 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
         return NULL;
     }
     MockBPA_CanonicalBlock_t *found_block = *found_ptr;
-    BSL_LOG_DEBUG("opened block %p for size %zu, previous size %zu", found_block, total_size, found_block->btsd_len);
+    BSL_LOG_DEBUG("opened block %p for size %zu, previous size %zu", found_block, btsd_size, found_block->btsd_len);
 
     struct MockBPA_BTSD_Data_s *obj = BSL_calloc(1, sizeof(struct MockBPA_BTSD_Data_s));
     if (!obj)
@@ -290,10 +294,10 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
     obj->file  = open_memstream(&obj->ptr, &obj->size);
     obj->curs  = 0;
 
-    if (total_size)
+    if (btsd_size)
     {
         // pre-allocate BTSD size
-        fseeko(obj->file, total_size, SEEK_SET);
+        fseeko(obj->file, btsd_size, SEEK_SET);
         fflush(obj->file);
         fseeko(obj->file, 0UL, SEEK_SET);
     }
