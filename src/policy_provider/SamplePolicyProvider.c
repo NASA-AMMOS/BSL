@@ -345,7 +345,6 @@ int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *outp
     return error_ret;
 }
 
-/// @todo Do we need a deinit callback with shared mem model?
 void BSLP_Deinit(void *user_data)
 {
     (void)user_data;

@@ -1321,10 +1321,10 @@ typedef void (*BSL_PolicyDeinit_f)(void *user_data);
 /// @brief Descriptor of opaque data and callbacks for Policy Provider.
 struct BSL_PolicyDesc_s
 {
-    void                *user_data;
+    void                *user_data;   ///< Reference to policy provider -specific data
     BSL_PolicyInspect_f  query_fn;    ///< Function pointer to query policy
     BSL_PolicyFinalize_f finalize_fn; ///< Function pointer to finalize policy
-    BSL_PolicyDeinit_f   deinit_fn;   ///< Function to deinit the policy provider at termination of BSL.
+    BSL_PolicyDeinit_f   deinit_fn;   ///< Function to deinit the policy provider at termination of BSL context
 };
 
 /** Call the underlying security context to perform the given action

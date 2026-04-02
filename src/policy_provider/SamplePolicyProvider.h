@@ -37,6 +37,10 @@
 #include <BPSecLib_Private.h>
 #include <backend/SecParam.h>
 
+/** De-initialize polocy provider user_data.
+ *  Called during de-initialization of each library instance.
+ *  @param user_data reference to shared data. Not owned by library context's policy provider
+ */
 void BSLP_Deinit(void *user_data);
 
 /**
@@ -212,16 +216,18 @@ void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *pa
 void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param);
 
 #define BSLP_POLICYPREDICATE_ARRAY_CAPACITY (100)
-/// @brief Concrete definition of a policy provider
+
+/// @brief Policy provider data. References shared among individual providers in BSL context
 typedef struct BSLP_PolicyProvider_s
 {
-    BSLP_PolicyRuleList_t      rules;
-    BSLP_PolicyPredicateList_t predicates;
-    pthread_mutex_t            mutex;
-    uint64_t                   pp_id;
+    BSLP_PolicyRuleList_t      rules;       ///< Variable-length list of policy rules
+    BSLP_PolicyPredicateList_t predicates;  ///< Variable-length list of policy predicates
+    pthread_mutex_t            mutex;       ///< Mutex for shared data
+    uint64_t                   pp_id;       ///< ID of policy provider
 } BSLP_PolicyProvider_t;
 
-/** Initialize policy provider
+/** Initialize policy provider data
+ * Data owned by BPA, reference should be provided to BSL library context(s)
  * @param pp_id policy provider id (must be > 0)
  * @return valid pointer to dynamically allocated policy provider
  */
@@ -235,8 +241,9 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id);
 int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule,
                                 const BSLP_PolicyPredicate_t *predicate);
 
-/** Deinitialize policy provider
- * @param self policy provider
+/** Deinitialize policy provider data
+ * References to this data will become invalid 
+ * @param self policy provider data to de-initialize
  */
 void BSLP_PolicyProvider_Deinit(BSLP_PolicyProvider_t *self);
 
