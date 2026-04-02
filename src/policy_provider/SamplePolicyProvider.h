@@ -37,7 +37,7 @@
 #include <BPSecLib_Private.h>
 #include <backend/SecParam.h>
 
-/** De-initialize polocy provider user_data.
+/** De-initialize policy provider user_data.
  *  Called during de-initialization of each library instance.
  *  @param user_data reference to shared data. Not owned by library context's policy provider
  */
