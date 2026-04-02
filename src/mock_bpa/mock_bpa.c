@@ -20,6 +20,7 @@
  * subcontract 1700763.
  */
 /** @file
+ * @ingroup mock_bpa
  * This is the main entry for a mock BPA daemon that communicates through
  * unix domain sockets.
  */

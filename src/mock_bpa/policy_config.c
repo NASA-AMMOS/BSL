@@ -21,8 +21,8 @@
  */
 
 /** @file
- * Implementations for permutations of policy configurations.
  * @ingroup mock_bpa
+ * Implementations for permutations of policy configurations.
  */
 
 #include "policy_config.h"

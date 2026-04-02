@@ -330,9 +330,11 @@ typedef struct
     /// @brief Host BPA function to remove a given canonical block from the bundle
     int (*block_remove_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num);
 
-    /// @brief Host BPA function to reallocate a canonical block's BTSD, keeping existing data in-place.
-    /// @deprecated use sequential writer to do this
-    int (*block_realloc_btsd_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t bytesize);
+    /** Host BPA function to reallocate a canonical block's BTSD content, keeping existing data in-place.
+     *
+     * @deprecated use sequential writer to do replace BTSD content
+     */
+    int (*block_realloc_btsd_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t btsd_size);
 
     /** Host BPA function do create a new sequential reader on a single block-type-specific data.
      *
@@ -350,11 +352,14 @@ typedef struct
      *
      * @param[in] bundle_ref The bundle to read data from.
      * @param block_num The specific block number to write BTSD into.
-     * @param total_size A hint as to the total size that will be written.
+     * @param btsd_size The total total size of BTSD content that will be written.
+     * The actual sequence of writes must not exceed this total size or it will be considered an error.
+     * If the actual sequence of writes does not reach this size it should be zero-padded and logged
+     * as an anomaly.
      * @return A pointer to a reader struct or NULL if the reader cannot
      * be configured for any reason.
      */
-    struct BSL_SeqWriter_s *(*block_write_btsd_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t total_size);
+    struct BSL_SeqWriter_s *(*block_write_btsd_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t btsd_size);
 
     /// @brief Host BPA function to delete Bundle with a reason code. This can be called multiple times per-bundle with
     /// different reason codes

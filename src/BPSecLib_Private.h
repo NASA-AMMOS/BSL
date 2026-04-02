@@ -514,15 +514,31 @@ int BSL_BundleCtx_DeleteBundle(BSL_BundleRef_t *bundle, BSL_ReasonCode_t reason_
  * @note Uses semantics similar to @c memcpy().
  *
  * @param[in] bundle Context bundle
- * @param[in] block_num Number of block requesting re-allocated of BTSD
- * @param[in] bytesize Size of new BTSD
+ * @param[in] block_num The unique block number for which BTSD will be resized.
+ * @param[in] btsd_size Size of new BTSD content.
  * @return 0 on success, negative on failure.
  */
-int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t bytesize);
+int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_size);
 
+/** Construct a new sequential reader for BTSD content.
+ *
+ * @param[in] bundle Context bundle
+ * @param[in] block_num The unique block number for which BTSD will be read from.
+ * @return Pointer to the new reader or NULL if some failure occurs.
+ */
 BSL_SeqReader_t *BSL_BundleCtx_ReadBTSD(const BSL_BundleRef_t *bundle, uint64_t block_num);
 
-BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_len);
+/** Construct a new sequential writer for BTSD content.
+ *
+ * @param[in] bundle Context bundle
+ * @param[in] block_num The unique block number for which BTSD will be overwritten.
+ * @param btsd_size The total total size of BTSD content that will be written.
+ * The actual sequence of writes must not exceed this total size or it will be considered an error.
+ * If the actual sequence of writes does not reach this size it should be zero-padded and logged
+ * as an anomaly.
+ * @return Pointer to the new writer or NULL if some failure occurs.
+ */
+BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_size);
 
 /** @brief Security role of an operation
  */
