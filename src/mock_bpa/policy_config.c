@@ -28,14 +28,6 @@
 #include "policy_config.h"
 #include "text_util.h"
 
-static BSL_HostEIDPattern_t mock_bpa_util_get_eid_pattern_from_text(const char *text)
-{
-    BSL_HostEIDPattern_t pat;
-    BSL_HostEIDPattern_Init(&pat);
-    ASSERT_PROPERTY(0 == BSL_HostEIDPattern_DecodeFromText(&pat, text));
-    return pat;
-}
-
 int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len)
 {
     if (len == 12) // IV
@@ -66,12 +58,9 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
     BSL_PolicyLocation_e policy_loc_enum;
     BSL_PolicyAction_e   policy_action_enum;
 
-    const char          *src_str;
-    const char          *dest_str;
-    const char          *sec_src_str;
-    BSL_HostEIDPattern_t src_eid;
-    BSL_HostEIDPattern_t dest_eid;
-    BSL_HostEIDPattern_t sec_src_eid;
+    const char *src_str;
+    const char *dest_str;
+    const char *sec_src_str;
 
     const char *rule_id_str;
 
@@ -170,11 +159,10 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
             {
                 src_str = json_string_value(src);
                 BSL_LOG_DEBUG("     src    : %s", src_str);
-                src_eid = mock_bpa_util_get_eid_pattern_from_text(src_str);
             }
             else
             {
-                src_eid = mock_bpa_util_get_eid_pattern_from_text("*:**");
+                src_str = "*:**";
             }
 
             json_t *dest = json_object_get(filter, "dest");
@@ -182,11 +170,10 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
             {
                 dest_str = json_string_value(dest);
                 BSL_LOG_DEBUG("     dest    : %s", dest_str);
-                dest_eid = mock_bpa_util_get_eid_pattern_from_text(dest_str);
             }
             else
             {
-                dest_eid = mock_bpa_util_get_eid_pattern_from_text("*:**");
+                dest_str = "*:**";
             }
 
             json_t *sec_src = json_object_get(filter, "sec_src");
@@ -194,11 +181,10 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
             {
                 sec_src_str = json_string_value(sec_src);
                 BSL_LOG_DEBUG("     sec_src    : %s", sec_src_str);
-                sec_src_eid = mock_bpa_util_get_eid_pattern_from_text(sec_src_str);
             }
             else
             {
-                sec_src_eid = mock_bpa_util_get_eid_pattern_from_text("*:**");
+                sec_src_str = "*:**";
             }
 
             // check tgt (target block type)
@@ -522,32 +508,34 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
             }
         }
 
-        BSLP_PolicyPredicate_t *predicate = &policy->predicates[policy->predicate_count++];
-        BSLP_PolicyPredicate_Init(predicate, policy_loc_enum, src_eid, sec_src_eid, dest_eid);
+        BSLP_PolicyPredicate_t predicate;
+        BSLP_PolicyPredicate_InitFrom(&predicate, policy_loc_enum, src_str, sec_src_str, dest_str);
 
-        BSLP_PolicyRule_t *rule = &policy->rules[policy->rule_count++];
-        BSLP_PolicyRule_Init(rule, rule_id_str, predicate, sec_ctx_id, sec_role, sec_block_type, target_block_type,
-                             policy_action_enum);
+        BSLP_PolicyRule_t rule;
+        BSLP_PolicyRule_InitFrom(&rule, rule_id_str, sec_ctx_id, sec_role, sec_block_type, target_block_type,
+                                 policy_action_enum);
 
         // TODO validate params_got
         (void)params_got;
 
         if (sec_ctx_id == 2) // BCB
         {
-            BSLP_PolicyRule_CopyParam(rule, params->param_aes_variant);
+            BSLP_PolicyRule_CopyParam(&rule, params->param_aes_variant);
             if (sec_role == BSL_SECROLE_SOURCE)
             {
-                BSLP_PolicyRule_CopyParam(rule, params->param_aad_scope_flag);
+                BSLP_PolicyRule_CopyParam(&rule, params->param_aad_scope_flag);
                 BSL_Crypto_SetRngGenerator(mock_bpa_rfc9173_bcb_cek);
             }
         }
         else
         {
-            BSLP_PolicyRule_CopyParam(rule, params->param_sha_variant);
-            BSLP_PolicyRule_CopyParam(rule, params->param_integ_scope_flag);
+            BSLP_PolicyRule_CopyParam(&rule, params->param_sha_variant);
+            BSLP_PolicyRule_CopyParam(&rule, params->param_integ_scope_flag);
         }
-        BSLP_PolicyRule_CopyParam(rule, params->param_test_key);
-        BSLP_PolicyRule_CopyParam(rule, params->param_use_wrapped_key);
+        BSLP_PolicyRule_CopyParam(&rule, params->param_test_key);
+        BSLP_PolicyRule_CopyParam(&rule, params->param_use_wrapped_key);
+
+        BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
     }
 
     json_decref(root);
@@ -688,44 +676,46 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
             break;
     }
 
-    BSL_HostEIDPattern_t eid_src_pat;
+    const char *eid_src_pat_str;
     if (policy_ignore)
     {
         BSL_LOG_INFO("Creating src eid pattern to match none - bundle should be ignored!");
-        eid_src_pat = mock_bpa_util_get_eid_pattern_from_text("");
+        eid_src_pat_str = "";
     }
     else
     {
-        eid_src_pat = mock_bpa_util_get_eid_pattern_from_text("*:**");
+        eid_src_pat_str = "*:**";
     }
 
     // Create a rule to verify security block at APP/CLA Ingress
     char policybits_str[100];
     snprintf(policybits_str, 100, "Policy: %x", policy_bits);
-    BSLP_PolicyPredicate_t *predicate_all_in = &policy->predicates[policy->predicate_count++];
-    BSLP_PolicyPredicate_Init(predicate_all_in, policy_loc_enum, eid_src_pat,
-                              mock_bpa_util_get_eid_pattern_from_text("*:**"),
-                              mock_bpa_util_get_eid_pattern_from_text("*:**"));
-    BSLP_PolicyRule_t *rule_all_in = &policy->rules[policy->rule_count++];
-    BSLP_PolicyRule_Init(rule_all_in, policybits_str, predicate_all_in, sec_context, sec_role_enum, sec_block_emum,
-                         bundle_block_enum, policy_action_enum);
+
+    BSLP_PolicyPredicate_t predicate_all_in;
+    BSLP_PolicyPredicate_InitFrom(&predicate_all_in, policy_loc_enum, eid_src_pat_str, "*:**", "*:**");
+
+    BSLP_PolicyRule_t rule_all_in;
+    BSLP_PolicyRule_InitFrom(&rule_all_in, policybits_str, sec_context, sec_role_enum, sec_block_emum,
+                             bundle_block_enum, policy_action_enum);
 
     if (sec_block_emum == BSL_SECBLOCKTYPE_BCB)
     {
-        BSLP_PolicyRule_CopyParam(rule_all_in, params->param_aes_variant);
+        BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_aes_variant);
         if (sec_role_enum == BSL_SECROLE_SOURCE)
         {
-            BSLP_PolicyRule_CopyParam(rule_all_in, params->param_aad_scope_flag);
+            BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_aad_scope_flag);
             BSL_Crypto_SetRngGenerator(mock_bpa_rfc9173_bcb_cek);
         }
     }
     else
     {
-        BSLP_PolicyRule_CopyParam(rule_all_in, params->param_sha_variant);
-        BSLP_PolicyRule_CopyParam(rule_all_in, params->param_integ_scope_flag);
+        BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_sha_variant);
+        BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_integ_scope_flag);
     }
-    BSLP_PolicyRule_CopyParam(rule_all_in, params->param_use_wrapped_key);
-    BSLP_PolicyRule_CopyParam(rule_all_in, params->param_test_key);
+    BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_use_wrapped_key);
+    BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_test_key);
+
+    BSLP_PolicyProvider_AddRule(policy, &rule_all_in, &predicate_all_in);
 }
 
 int mock_bpa_handle_policy_config(const char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg)

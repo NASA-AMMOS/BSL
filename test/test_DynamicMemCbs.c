@@ -43,6 +43,7 @@ static BSL_SecParam_t param_test_bcb_key_correct;
 
 static BSL_TestContext_t       LocalTestCtx = { 0 };
 static BSL_SecurityActionSet_t action_set   = { 0 };
+static BSLP_PolicyProvider_t  *policy_provider;
 
 static void *malloc_test(size_t size)
 {
@@ -101,9 +102,11 @@ void _setUp(void)
     BSL_SecParam_Init(&param_use_wrap_key);
     BSL_SecParam_Init(&param_test_bcb_key_correct);
 
+    policy_provider = BSLP_PolicyProvider_Init(1);
+
     /// Register the policy provider with some rules
     BSL_PolicyDesc_t policy_desc = { 0 };
-    policy_desc.user_data        = BSL_calloc(1, sizeof(BSLP_PolicyProvider_t));
+    policy_desc.user_data        = policy_provider;
     policy_desc.query_fn         = BSLP_QueryPolicy;
     policy_desc.deinit_fn        = BSLP_Deinit;
     policy_desc.finalize_fn      = BSLP_FinalizePolicy;
@@ -111,40 +114,38 @@ void _setUp(void)
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
 
-    policy->pp_id = 1;
-
     BSL_SecParam_InitInt64(&param_aes_variant_128, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
     BSL_SecParam_InitInt64(&param_use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
     BSL_SecParam_InitTextstr(&param_test_bcb_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
 
     // BSL_32
-    BSLP_PolicyPredicate_t *predicate_bsl_32a = &policy->predicates[policy->predicate_count++];
-    BSLP_PolicyPredicate_Init(predicate_bsl_32a, BSL_POLICYLOCATION_CLOUT, BSL_TestUtils_GetEidPatternFromText("*:**"),
-                              BSL_TestUtils_GetEidPatternFromText("*:**"),
-                              BSL_TestUtils_GetEidPatternFromText("ipn:*.3.2"));
-    BSLP_PolicyRule_t *rule_bsl_32a = &policy->rules[policy->rule_count++];
-    BSLP_PolicyRule_Init(rule_bsl_32a, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:3.2)", predicate_bsl_32a, 2,
-                         BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32a, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32a, &param_aes_variant_128);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32a, &param_use_wrap_key);
+    BSLP_PolicyPredicate_t predicate_bsl_32a;
+    BSLP_PolicyPredicate_InitFrom(&predicate_bsl_32a, BSL_POLICYLOCATION_CLOUT, "*:**", "*:**", "ipn:*.3.2");
+    BSLP_PolicyRule_t rule_bsl_32a;
+    BSLP_PolicyRule_InitFrom(&rule_bsl_32a, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:3.2)", 2,
+                             BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
+                             BSL_POLICYACTION_DROP_BLOCK);
+    BSLP_PolicyRule_CopyParam(&rule_bsl_32a, &param_test_bcb_key_correct);
+    BSLP_PolicyRule_CopyParam(&rule_bsl_32a, &param_aes_variant_128);
+    BSLP_PolicyRule_CopyParam(&rule_bsl_32a, &param_use_wrap_key);
+    BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32a, &predicate_bsl_32a);
 
-    BSLP_PolicyPredicate_t *predicate_bsl_32b = &policy->predicates[policy->predicate_count++];
-    BSLP_PolicyPredicate_Init(predicate_bsl_32b, BSL_POLICYLOCATION_CLOUT, BSL_TestUtils_GetEidPatternFromText("*:**"),
-                              BSL_TestUtils_GetEidPatternFromText("*:**"),
-                              BSL_TestUtils_GetEidPatternFromText("ipn:*.3.2"));
-    BSLP_PolicyRule_t *rule_bsl_32b = &policy->rules[policy->rule_count++];
-    BSLP_PolicyRule_Init(rule_bsl_32b, "SOURCE BCB OVER BIB AT CLOUT FILTER(DEST=ipn:3.2)", predicate_bsl_32b, 2,
-                         BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_BIB, BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32b, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32b, &param_aes_variant_128);
-    BSLP_PolicyRule_CopyParam(rule_bsl_32b, &param_use_wrap_key);
+    BSLP_PolicyPredicate_t predicate_bsl_32b;
+    BSLP_PolicyPredicate_InitFrom(&predicate_bsl_32b, BSL_POLICYLOCATION_CLOUT, "*:**", "*:**", "ipn:*.3.2");
+    BSLP_PolicyRule_t rule_bsl_32b;
+    BSLP_PolicyRule_InitFrom(&rule_bsl_32b, "SOURCE BCB OVER BIB AT CLOUT FILTER(DEST=ipn:3.2)", 2, BSL_SECROLE_SOURCE,
+                             BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_BIB, BSL_POLICYACTION_DROP_BLOCK);
+    BSLP_PolicyRule_CopyParam(&rule_bsl_32b, &param_test_bcb_key_correct);
+    BSLP_PolicyRule_CopyParam(&rule_bsl_32b, &param_aes_variant_128);
+    BSLP_PolicyRule_CopyParam(&rule_bsl_32b, &param_use_wrap_key);
+    BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32b, &predicate_bsl_32b);
 }
 
 // manually call this to control dynamic mem callback tracking for test
 void _tearDown(void)
 {
     BSL_SecurityActionSet_Deinit(&action_set);
+    BSLP_PolicyProvider_Deinit(policy_provider);
     BSL_CryptoDeinit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 
