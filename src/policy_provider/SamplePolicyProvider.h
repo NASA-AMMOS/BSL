@@ -220,10 +220,10 @@ void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param);
 /// @brief Policy provider data. References shared among individual providers in BSL context
 typedef struct BSLP_PolicyProvider_s
 {
-    BSLP_PolicyRuleList_t      rules;       ///< Variable-length list of policy rules
-    BSLP_PolicyPredicateList_t predicates;  ///< Variable-length list of policy predicates
-    pthread_mutex_t            mutex;       ///< Mutex for shared data
-    uint64_t                   pp_id;       ///< ID of policy provider
+    BSLP_PolicyRuleList_t      rules;      ///< Variable-length list of policy rules
+    BSLP_PolicyPredicateList_t predicates; ///< Variable-length list of policy predicates
+    pthread_mutex_t            mutex;      ///< Mutex for shared data
+    uint64_t                   pp_id;      ///< ID of policy provider
 } BSLP_PolicyProvider_t;
 
 /** Initialize policy provider data
@@ -242,7 +242,7 @@ int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *
                                 const BSLP_PolicyPredicate_t *predicate);
 
 /** Deinitialize policy provider data
- * References to this data will become invalid 
+ * References to this data will become invalid
  * @param self policy provider data to de-initialize
  */
 void BSLP_PolicyProvider_Deinit(BSLP_PolicyProvider_t *self);
