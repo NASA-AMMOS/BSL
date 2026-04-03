@@ -794,3 +794,26 @@ class TestRequirements(TestAgent):
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
+
+    def test_BCB_verifier(self):
+        self._single_test(_TestCase(
+            input_data=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [12, 2, 1, 0, bytes.fromhex(
+                    '8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
+            ],
+            expected_output=[
+                [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                [12, 2, 1, 0, bytes.fromhex(
+                    '8101020182028202018482014c5477656c76653132313231328202018203581869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150efa4b5ac0108e3816c5606479801bc04')],
+                [1, 1, 0, 0, bytes.fromhex(
+                    '3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
+            ],
+            policy_config='0x165',
+            key_set="mock-bpa-test/key_set_1.json",
+            is_working=True,
+            input_data_format=DataFormat.BUNDLEARRAY,
+            expected_output_format=DataFormat.BUNDLEARRAY
+        ))

@@ -176,8 +176,17 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         btsd_read = BSL_BundleCtx_ReadBTSD(bcb_context->bundle, bcb_context->target_block.block_num);
         // output is same size
-        btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
+
+        if (bcb_context->overwrite_btsd)
+        {
+            btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
                                              bcb_context->target_block.btsd_len);
+        }
+        else
+        {
+            // TOOD
+        }
+
         if (!btsd_read)
         {
             BSL_LOG_ERR("Failed to construct reader");
@@ -635,6 +644,8 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
         BSLX_BCB_Deinit(&bcb_context);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
+
+    bcb_context.overwrite_btsd = BSL_SecOper_IsRoleAcceptor(sec_oper);
 
     // Select whether to call the encrypt or decrypt function
     int (*crypto_fn)(BSLX_BCB_t *) = BSL_SecOper_IsRoleSource(sec_oper) ? BSLX_BCB_Encrypt : BSLX_BCB_Decrypt;
