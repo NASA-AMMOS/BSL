@@ -543,9 +543,6 @@ void tearDown(void)
 
 #define TEST_BOTH_BIB_BCB 99
 
-uint8_t btsd_buf_before[1024];
-uint8_t btsd_buf_after[1024];
-
 TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.1", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB,
           BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
 TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.2", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB,
@@ -720,8 +717,10 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             BSL_CanonicalBlock_t blk_before;
             TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, target_block, &blk_before));
             size_t buf_sz_before = blk_before.btsd_len;
-            BSL_SeqReader_t *reader = BSL_BundleCtx_ReadBTSD(&LocalTestCtx.mock_bpa_ctr.bundle_ref, target_block);
-            BSL_SeqReader_Get(reader, btsd_buf_before, &buf_sz_before);
+            uint8_t btsd_buf_before[buf_sz_before];
+
+            BSL_SeqReader_t *reader_before = BSL_BundleCtx_ReadBTSD(&LocalTestCtx.mock_bpa_ctr.bundle_ref, target_block);
+            BSL_SeqReader_Get(reader_before, btsd_buf_before, &buf_sz_before);
 
             query_result = BSL_API_QuerySecurity(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                  policy_loc);
@@ -749,19 +748,24 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                     }
                 }
 
+                // Verify BCB verification did not modify target BTSD
                 if (sec_block_type == BSL_SECBLOCKTYPE_BCB)
                 {
                     BSL_CanonicalBlock_t blk_after;
                     TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, target_block, &blk_after));
                     size_t buf_sz_after = blk_after.btsd_len;
-                    BSL_SeqReader_t *reader = BSL_BundleCtx_ReadBTSD(&LocalTestCtx.mock_bpa_ctr.bundle_ref, target_block);
-                    BSL_SeqReader_Get(reader, btsd_buf_after, &buf_sz_after);
+                    uint8_t btsd_buf_after[buf_sz_after];
+                    
+                    BSL_SeqReader_t *reader_after = BSL_BundleCtx_ReadBTSD(&LocalTestCtx.mock_bpa_ctr.bundle_ref, target_block);
+                    BSL_SeqReader_Get(reader_after, btsd_buf_after, &buf_sz_after);
                     
                     TEST_ASSERT_EQUAL(buf_sz_after, buf_sz_before);
                     TEST_ASSERT_EQUAL_HEX8_ARRAY(btsd_buf_after, btsd_buf_before, buf_sz_after);
 
                     TEST_ASSERT_EQUAL(0, BSL_LibCtx_AccumulateTlmCounters(&LocalTestCtx.bsl, &tlm));
                     TEST_ASSERT_NOT_EQUAL(0, tlm.counters[BSL_TLM_SECOP_VERIFIER_COUNT]);
+
+                    BSL_SeqReader_Destroy(reader_after);
                 }
             }
             else
@@ -801,6 +805,8 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                     TEST_ASSERT_EQUAL(false, ((MockBPA_Bundle_t *)LocalTestCtx.mock_bpa_ctr.bundle_ref.data)->retain);
                 }
             }
+            
+            BSL_SeqReader_Destroy(reader_before);
             BSL_PrimaryBlock_deinit(&primary_block);
 
             break;
