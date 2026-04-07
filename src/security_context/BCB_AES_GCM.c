@@ -184,7 +184,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         if (bcb_context->overwrite_btsd)
         {
             btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
-                                             bcb_context->target_block.btsd_len);
+                                                 bcb_context->target_block.btsd_len);
             if (!btsd_write)
             {
                 BSL_LOG_ERR("Failed to construct writer");
@@ -235,7 +235,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         BSL_SeqWriter_Destroy(btsd_write);
     }
-    
+
     BSL_Data_Deinit(&bcb_context->authtag);
     if (bcb_context->keywrap)
     {

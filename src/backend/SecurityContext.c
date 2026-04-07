@@ -102,7 +102,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     CHK_PROPERTY(created_block_num > 1);
 
     sec_oper->sec_block_num = created_block_num;
-    const int bib_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
+    const int bib_result    = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
     if (bib_result != 0) // || outcome->is_success == false)
     {
         BSL_LOG_ERR("BIB Source failed!");
@@ -317,7 +317,7 @@ static int BSL_ExecBCBVerifier(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
         BSLB_SecParamList_push_back(sec_oper->_param_list, *param);
     }
 
-    const size_t result_count = BSLB_SecResultList_size(abs_sec_block.results);
+    const size_t   result_count = BSLB_SecResultList_size(abs_sec_block.results);
     BSL_SecParam_t results_as_params[result_count];
     for (size_t i = 0; i < result_count; i++)
     {
