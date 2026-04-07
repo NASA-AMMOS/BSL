@@ -284,7 +284,7 @@ int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, BSL_Data_t plaintext, BSL_Data_
  * Add data to encrypt or decrypt to the context sequentially
  * @param cipher_ctx pointer to context to add data to
  * @param[in] reader pointer to sequential reader - input to crypto operation
- * @param[in] writer pointer to sequential writer - output of crypto operation
+ * @param[in] writer pointer to sequential writer (output of crypto operation), or NULL (crypto output will not be written)
  * @return 0 if successful
  */
 int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer);
