@@ -175,27 +175,21 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (retval == BSL_SUCCESS)
     {
         btsd_read = BSL_BundleCtx_ReadBTSD(bcb_context->bundle, bcb_context->target_block.block_num);
-        // output is same size
-
-        if (bcb_context->overwrite_btsd)
-        {
-            btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
-                                             bcb_context->target_block.btsd_len);
-        }
-        else
-        {
-            // TOOD
-        }
-
         if (!btsd_read)
         {
             BSL_LOG_ERR("Failed to construct reader");
             retval = BSL_ERR_HOST_CALLBACK_FAILED;
         }
-        if (!btsd_write)
+
+        if (bcb_context->overwrite_btsd)
         {
-            BSL_LOG_ERR("Failed to construct writer");
-            retval = BSL_ERR_HOST_CALLBACK_FAILED;
+            btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
+                                             bcb_context->target_block.btsd_len);
+            if (!btsd_write)
+            {
+                BSL_LOG_ERR("Failed to construct writer");
+                retval = BSL_ERR_HOST_CALLBACK_FAILED;
+            }
         }
     }
 
@@ -237,8 +231,11 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     // close write after read
     BSL_SeqReader_Destroy(btsd_read);
-    BSL_SeqWriter_Destroy(btsd_write);
-
+    if (NULL != btsd_write)
+    {
+        BSL_SeqWriter_Destroy(btsd_write);
+    }
+    
     BSL_Data_Deinit(&bcb_context->authtag);
     if (bcb_context->keywrap)
     {

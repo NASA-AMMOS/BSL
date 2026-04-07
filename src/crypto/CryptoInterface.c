@@ -539,7 +539,11 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
 
         key->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += block_size_int;
         block_size = (size_t)block_size_int;
-        BSL_SeqWriter_Put(writer, write_buf, block_size);
+
+        if (NULL != writer)
+        {
+            BSL_SeqWriter_Put(writer, write_buf, block_size);
+        }
     }
 
     return 0;
