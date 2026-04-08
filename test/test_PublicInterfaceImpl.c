@@ -135,16 +135,16 @@ void setUp(void)
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
 
     // FIXME these params need managed lifecycle to ensure Deinit (by some means)
-    BSL_SecParam_InitInt64(&ctx.param_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
-    BSL_SecParam_InitInt64(&ctx.param_scope_flag_7, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0x7);
-    BSL_SecParam_InitInt64(&ctx.param_sha_variant_512, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-    BSL_SecParam_InitInt64(&ctx.param_sha_variant_384, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
+    BSL_SecParam_InitUint64(&ctx.param_scope_flag, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
+    BSL_SecParam_InitUint64(&ctx.param_scope_flag_7, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0x7);
+    BSL_SecParam_InitUint64(&ctx.param_sha_variant_512, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+    BSL_SecParam_InitUint64(&ctx.param_sha_variant_384, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
 
-    BSL_SecParam_InitInt64(&ctx.param_aes_variant_128, RFC9173_BCB_SECPARAM_AESVARIANT,
+    BSL_SecParam_InitUint64(&ctx.param_aes_variant_128, RFC9173_BCB_SECPARAM_AESVARIANT,
                            RFC9173_BCB_AES_VARIANT_A128GCM);
-    BSL_SecParam_InitInt64(&ctx.param_aes_variant_256, RFC9173_BCB_SECPARAM_AESVARIANT,
+    BSL_SecParam_InitUint64(&ctx.param_aes_variant_256, RFC9173_BCB_SECPARAM_AESVARIANT,
                            RFC9173_BCB_AES_VARIANT_A256GCM);
-    BSL_SecParam_InitInt64(&ctx.param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
+    BSL_SecParam_InitUint64(&ctx.param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
 
     BSL_Data_t authtag_data;
     BSL_Data_Init(&authtag_data);
@@ -164,8 +164,8 @@ void setUp(void)
     wrapkey_data.len = sizeof(ApxA2_WrappedKey);
     BSL_SecParam_InitBytestr(&ctx.param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, wrapkey_data);
 
-    BSL_SecParam_InitInt64(&ctx.param_use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
-    BSL_SecParam_InitInt64(&ctx.param_dont_use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
+    BSL_SecParam_InitUint64(&ctx.param_use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
+    BSL_SecParam_InitUint64(&ctx.param_dont_use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
 
     BSL_SecParam_InitTextstr(&ctx.param_test_bib_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
     BSL_SecParam_InitTextstr(&ctx.param_test_bib_key_bad, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);

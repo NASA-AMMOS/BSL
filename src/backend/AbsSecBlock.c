@@ -57,7 +57,7 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
     for (size_t index = 0; index < BSLB_SecParamList_size(self->params); index++)
     {
         BSL_SecParam_t *param = BSLB_SecParamList_get(self->params, index);
-        if (BSL_SecParam_IsInt64(param))
+        if (BSL_SecParam_IsUint64(param))
         {
             BSL_LOG_INFO("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRIu64, index, param->param_id, param->_uint_value);
         }
@@ -340,9 +340,9 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
             const BSL_SecParam_t *param = BSLB_SecParamList_cref(pit);
             QCBOREncode_OpenArray(&encoder);
             QCBOREncode_AddUInt64(&encoder, param->param_id);
-            if (BSL_SecParam_IsInt64(param))
+            if (BSL_SecParam_IsUint64(param))
             {
-                QCBOREncode_AddUInt64(&encoder, BSL_SecParam_GetAsUInt64(param));
+                QCBOREncode_AddUInt64(&encoder, BSL_SecParam_GetAsUint64(param));
             }
             else if (BSL_SecParam_IsBytestr(param))
             {
@@ -529,7 +529,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
                     }
                     BSL_LOG_DEBUG("ASB: Parsed Param[%" PRIu64 "] = %" PRIu64, item_id, dec_value);
                     BSL_SecParam_t param;
-                    BSL_SecParam_InitInt64(&param, item_id, dec_value);
+                    BSL_SecParam_InitUint64(&param, item_id, dec_value);
                     BSLB_SecParamList_push_back(self->params, param);
                     BSL_SecParam_Deinit(&param);
                     break;
