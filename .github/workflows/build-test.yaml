@@ -73,7 +73,7 @@ jobs:
               python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive
@@ -106,7 +106,7 @@ jobs:
           ./build.sh coverage
           ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
       - name: Archive coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
           path: build/default/coverage*
@@ -147,7 +147,7 @@ jobs:
               python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive
@@ -179,7 +179,7 @@ jobs:
           ./build.sh coverage
           ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY
       - name: Archive coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{github.job}}-${{matrix.os}}-gcc-coverage
           path: build/default/coverage*
