@@ -365,21 +365,20 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
         }
     }
 
-    MockBPA_CanonicalBlock_t *const *pyld_ptr = MockBPA_BlockByNum_cget(bundle->blocks_num, 1);
-    if (!pyld_ptr)
+    const MockBPA_CanonicalBlock_t *last = MockBPA_BlockList_back(bundle->blocks);
+    if (!last)
     {
-        BSL_LOG_ERR("No payload block present, at least a payload block must be present to be valid");
+        BSL_LOG_ERR("No canonical blocks present, at least a payload block must be present to be valid");
         return 3;
     }
-    MockBPA_CanonicalBlock_t *pyld = *pyld_ptr;
-    if (pyld != MockBPA_BlockList_back(bundle->blocks))
+    if (last->blk_type != 1)
     {
-        BSL_LOG_ERR("The payload block must be the last block to be valid");
+        BSL_LOG_ERR("The payload block must be the last block to be valid, last block type is %" PRIu64, last->blk_type);
         return 3;
     }
-    if (pyld->blk_num != 1)
+    if (last->blk_num != 1)
     {
-        BSL_LOG_ERR("The payload block must have block number 1");
+        BSL_LOG_ERR("The payload block must have block number 1, block number is %" PRIu64, last->blk_num);
         return 3;
     }
 
