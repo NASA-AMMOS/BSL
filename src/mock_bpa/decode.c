@@ -360,6 +360,7 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
         }
         else
         {
+            BSL_free(blk->btsd);
             MockBPA_BlockList_pop_back(NULL, bundle->blocks);
         }
     }
