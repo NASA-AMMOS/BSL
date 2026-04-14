@@ -337,32 +337,23 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
             return 3;
         }
 
-        bool valid = true;
         if (blk->blk_type == 0)
         {
-            BSL_LOG_WARNING("Invalid block type 0, ignoring the block");
-            valid = false;
+            BSL_LOG_ERR("Invalid block type 0 on block number %" PRIu64, blk->blk_num);
+            return 3;
         }
         if (blk->blk_num == 0)
         {
-            BSL_LOG_WARNING("Invalid block number 0, ignoring the block");
-            valid = false;
+            BSL_LOG_ERR("Invalid block number 0 with block type %" PRIu64, blk->blk_type);
+            return 3;
         }
         if (MockBPA_BlockByNum_cget(bundle->blocks_num, blk->blk_num))
         {
-            BSL_LOG_WARNING("Duplicate block number %" PRIu64 " present, ignoring the duplicate", blk->blk_num);
-            valid = false;
+            BSL_LOG_ERR("Duplicate block number %" PRIu64 " present with block type %" PRIu64, blk->blk_num, blk->blk_type);
+            return 3;
         }
 
-        if (valid)
-        {
-            MockBPA_BlockByNum_set_at(bundle->blocks_num, blk->blk_num, blk);
-        }
-        else
-        {
-            BSL_free(blk->btsd);
-            MockBPA_BlockList_pop_back(NULL, bundle->blocks);
-        }
+        MockBPA_BlockByNum_set_at(bundle->blocks_num, blk->blk_num, blk);
     }
 
     if (MockBPA_BlockList_empty_p(bundle->blocks))

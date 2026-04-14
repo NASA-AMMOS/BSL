@@ -80,11 +80,45 @@ void test_mock_bpa_ctr_loopback_decode_encode(const char *hexdata)
     int res = mock_bpa_decode(&ctr);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "mock_bpa_decode() failed");
 
+    // no reordering of blocks
     res = mock_bpa_encode(&ctr);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "mock_bpa_encode() failed");
 
     TEST_ASSERT_EQUAL_INT(in_data.len, ctr.encoded.len);
     TEST_ASSERT_EQUAL_MEMORY(in_data.ptr, ctr.encoded.ptr, in_data.len);
+
+    mock_bpa_ctr_deinit(&ctr);
+    BSL_Data_Deinit(&in_data);
+}
+
+// only primary
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e90085ff")
+// no payload block type 1
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e9008518c001000043010203ff")
+// no payload block number 1
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850102000043010203ff")
+// payload is not last block
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e9008501010000430102038518c002000043010203ff")
+// duplicate block number
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e9008501010000430102038518c001000043010203ff")
+void test_mock_bpa_ctr_decode_invalid(const char *hexdata)
+{
+    BSL_Data_t in_data;
+    BSL_Data_Init(&in_data);
+    {
+        string_t in_text;
+        string_init_set_str(in_text, hexdata);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
+                                      "BSL_TestUtils_DecodeBase16() failed");
+        string_clear(in_text);
+    }
+
+    mock_bpa_ctr_t ctr;
+    mock_bpa_ctr_init(&ctr);
+    TEST_ASSERT_EQUAL_INT(0, BSL_Data_CopyFrom(&ctr.encoded, in_data.len, in_data.ptr));
+
+    int res = mock_bpa_decode(&ctr);
+    TEST_ASSERT_NOT_EQUAL_INT_MESSAGE(0, res, "mock_bpa_decode() succeded");
 
     mock_bpa_ctr_deinit(&ctr);
     BSL_Data_Deinit(&in_data);
