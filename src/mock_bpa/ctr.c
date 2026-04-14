@@ -24,7 +24,6 @@
  * Container structs for BPv7 data.
  */
 #include <BPSecLib_Private.h>
-#include <m-algo.h>
 
 #include "ctr.h"
 #include "decode.h"
@@ -68,7 +67,14 @@ void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr)
     }
 }
 
-int mock_bpa_decode(mock_bpa_ctr_t *ctr)
+void mock_bpa_ctr_sort_blocks(mock_bpa_ctr_t *ctr)
+{
+    BSL_CHKVOID(ctr);
+    // normalize block list by block number in descending order
+    MockBPA_BlockList_sort(ctr->bundle->blocks);
+}
+
+int mock_bpa_ctr_decode(mock_bpa_ctr_t *ctr)
 {
     BSL_CHKERR1(ctr);
     MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
@@ -93,33 +99,11 @@ int mock_bpa_decode(mock_bpa_ctr_t *ctr)
     return 0;
 }
 
-// TODO this is not really defined by BPSec or BPv7
-static int block_cmp(const MockBPA_CanonicalBlock_t *block_a, const MockBPA_CanonicalBlock_t *block_b)
-{
-    if (block_b->blk_type > block_a->blk_type)
-    {
-        return 1;
-    }
-    else if (block_b->blk_type < block_a->blk_type)
-    {
-        return -1;
-    }
-    return 0;
-}
-
-// Add comparison by block type to sort just before encoding
-// GCOV_EXCL_START
-M_ALGO_DEF(MockBPA_BlockList, M_DEQUE_OPLIST(MockBPA_BlockList, M_OPEXTEND(M_POD_OPLIST, CMP(API_6(block_cmp)))))
-// GCOV_EXCL_STOP
-
-int mock_bpa_encode(mock_bpa_ctr_t *ctr)
+int mock_bpa_ctr_encode(mock_bpa_ctr_t *ctr)
 {
     BSL_CHKERR1(ctr);
-    MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
+    const MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
     BSL_CHKERR1(bundle);
-
-    // TODO this is not really defined by BPSec or BPv7
-    MockBPA_BlockList_sort(bundle->blocks);
 
     QCBOREncodeContext encoder;
     // first round of encoding is to get the full size
