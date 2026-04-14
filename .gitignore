@@ -1,9 +1,10 @@
 # Editor files
 *~
-.vscode
-.project
-.cproject
-.pydevproject
+/.vscode
+/.project
+/.cproject
+/.pydevproject
+/.externalToolBuilders/
 
 # Build files
 /deps/build/

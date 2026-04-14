@@ -376,7 +376,7 @@ void test_bsl_loopback_eid(const char *hexdata)
     string_clear(in_text);
 }
 
-TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850a182d000043010203ff")
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850101000043010203ff")
 void test_bsl_loopback_bundle(const char *hexdata)
 {
     BSL_Data_t in_data;

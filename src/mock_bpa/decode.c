@@ -337,7 +337,49 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
             return 3;
         }
 
-        MockBPA_BlockByNum_set_at(bundle->blocks_num, blk->blk_num, blk);
+        bool valid = true;
+        if (blk->blk_type == 0)
+        {
+            BSL_LOG_WARNING("Invalid block type 0, ignoring the block");
+            valid = false;
+        }
+        if (blk->blk_num == 0)
+        {
+            BSL_LOG_WARNING("Invalid block number 0, ignoring the block");
+            valid = false;
+        }
+        if (MockBPA_BlockByNum_cget(bundle->blocks_num, blk->blk_num))
+        {
+            BSL_LOG_WARNING("Duplicate block number %" PRIu64 " present, ignoring the duplicate");
+            valid = false;
+        }
+
+        if (valid)
+        {
+            MockBPA_BlockByNum_set_at(bundle->blocks_num, blk->blk_num, blk);
+        }
+        else
+        {
+            MockBPA_BlockList_pop_back(NULL, bundle->blocks);
+        }
+    }
+
+    MockBPA_CanonicalBlock_t *const *pyld_ptr = MockBPA_BlockByNum_cget(bundle->blocks_num, 1);
+    if (!pyld_ptr)
+    {
+        BSL_LOG_ERR("No payload block present, at least a payload block must be present to be valid");
+        return 3;
+    }
+    MockBPA_CanonicalBlock_t *pyld = *pyld_ptr;
+    if (pyld != MockBPA_BlockList_back(bundle->blocks))
+    {
+        BSL_LOG_ERR("The payload block must be the last block to be valid");
+        return 3;
+    }
+    if (pyld->blk_num != 1)
+    {
+        BSL_LOG_ERR("The payload block must have block number 1");
+        return 3;
     }
 
     BSL_LOG_DEBUG("exiting array (at %zd)", QCBORDecode_Tell(dec));
