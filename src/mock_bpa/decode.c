@@ -350,7 +350,7 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
         }
         if (MockBPA_BlockByNum_cget(bundle->blocks_num, blk->blk_num))
         {
-            BSL_LOG_WARNING("Duplicate block number %" PRIu64 " present, ignoring the duplicate");
+            BSL_LOG_WARNING("Duplicate block number %" PRIu64 " present, ignoring the duplicate", blk->blk_num);
             valid = false;
         }
 
