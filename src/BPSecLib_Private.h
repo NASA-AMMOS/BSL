@@ -209,18 +209,20 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 #define BSL_LOG_DEBUG(...) BSL_LogEvent(LOG_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__)
 // NOLINTEND(misc-include-cleaner)
 
-/** @brief Helpful macros for expressing invariants, pre/post conditions, and arg validation
- *
+/** @brief Helpful macros for expressing invariants, pre/post conditions, and arg validation.
+ * The expression is nominally true and only false during exceptional cases.
  */
 #define CHK_TEMPL(expr, msg, return_code)                                      \
     do                                                                         \
     {                                                                          \
-        if (!(expr))                                                           \
+        /* GCOV_EXCL_START */                                                  \
+        if (!LIKELY(expr))                                                     \
         {                                                                      \
             BSL_LOG_ERR("" msg " (" #expr ") ... [errcode=" #return_code "]"); \
             assert(!(expr));                                                   \
             return return_code;                                                \
         }                                                                      \
+        /* GCOV_EXCL_STOP */                                                   \
     }                                                                          \
     while (0)
 
