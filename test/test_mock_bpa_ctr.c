@@ -79,7 +79,7 @@ void test_mock_bpa_ctr_loopback_decode_encode(const char *hexdata)
     mock_bpa_ctr_init(&ctr);
     TEST_ASSERT_EQUAL_INT(0, BSL_Data_CopyFrom(&ctr.encoded, in_data.len, in_data.ptr));
 
-    int res = mock_bpa_decode(&ctr);
+    int res = mock_bpa_ctr_decode(&ctr);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "mock_bpa_decode() failed");
 
     // no reordering of blocks

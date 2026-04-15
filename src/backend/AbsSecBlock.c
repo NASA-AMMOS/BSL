@@ -84,30 +84,19 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
     }
 }
 
-void BSL_AbsSecBlock_InitEmpty(BSL_AbsSecBlock_t *self)
+void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self)
 {
     // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(self);
     // GCOV_EXCL_STOP
 
     memset(self, 0, sizeof(*self));
+
+    uint64_list_init(self->targets);
+    self->sec_context_id = 0;
+    BSL_HostEID_Init(&self->source_eid);
     BSLB_SecParamList_init(self->params);
     BSLB_SecResultList_init(self->results);
-    uint64_list_init(self->targets);
-}
-
-void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self, int64_t sec_context_id, BSL_HostEID_t source_eid)
-{
-    // GCOV_EXCL_START
-    ASSERT_ARG_NONNULL(self);
-    // GCOV_EXCL_STOP
-
-    memset(self, 0, sizeof(*self));
-    self->sec_context_id = sec_context_id;
-    self->source_eid     = source_eid;
-    BSLB_SecParamList_init(self->params);
-    BSLB_SecResultList_init(self->results);
-    uint64_list_init(self->targets);
 
     // GCOV_EXCL_START
     ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
@@ -120,10 +109,11 @@ void BSL_AbsSecBlock_Deinit(BSL_AbsSecBlock_t *self)
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
     // GCOV_EXCL_STOP
 
-    BSLB_SecParamList_clear(self->params);
     BSLB_SecResultList_clear(self->results);
-    uint64_list_clear(self->targets);
+    BSLB_SecParamList_clear(self->params);
     BSL_HostEID_Deinit(&self->source_eid);
+    uint64_list_clear(self->targets);
+
     memset(self, 0, sizeof(*self));
 }
 
@@ -486,7 +476,6 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
     BSL_Data_t eid_cbor_data;
     BSL_Data_InitView(&eid_cbor_data, eid_raw.len, (uint8_t *)eid_raw.ptr);
 
-    BSL_HostEID_Init(&self->source_eid);
     int res = BSL_HostEID_DecodeFromCBOR(&eid_cbor_data, &self->source_eid);
     BSL_Data_Deinit(&eid_cbor_data);
     if (res != BSL_SUCCESS)

@@ -54,7 +54,7 @@ void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int6
     BSL_Data_t asb_cbor_data;
     BSL_Data_InitView(&asb_cbor_data, asb_cbor_bytelen, asb_cbor);
     BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
-    BSL_AbsSecBlock_InitEmpty(asb);
+    BSL_AbsSecBlock_Init(asb);
 
     const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, &asb_cbor_data);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, decode_result);
@@ -148,7 +148,7 @@ void test_AbsSecBlock_Decode_failure(const char *hexdata)
     }
 
     BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
-    BSL_AbsSecBlock_InitEmpty(asb);
+    BSL_AbsSecBlock_Init(asb);
 
     const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, &in_data);
     TEST_ASSERT_EQUAL_INT(BSL_ERR_DECODING, decode_result);

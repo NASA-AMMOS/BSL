@@ -219,10 +219,6 @@ void test_bsl_mock_encode_bundle(void)
     {
         MockBPA_PrimaryBlock_t *prim = &bundle.primary_block;
         prim->version                = 7;
-        BSL_HostEID_Init(&prim->src_node_id);
-        BSL_HostEID_Init(&prim->dest_eid);
-        BSL_HostEID_Init(&prim->report_to_eid);
-
         TEST_ASSERT_EQUAL_INT(0, BSL_HostEID_DecodeFromText(&(prim->src_node_id), "ipn:1.2"));
         TEST_ASSERT_EQUAL_INT(0, BSL_HostEID_DecodeFromText(&(prim->dest_eid), "ipn:3.4"));
         TEST_ASSERT_EQUAL_INT(0, BSL_HostEID_DecodeFromText(&(prim->report_to_eid), "ipn:0.0"));

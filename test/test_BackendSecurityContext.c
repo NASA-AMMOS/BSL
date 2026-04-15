@@ -108,7 +108,8 @@ void test_SecurityContext_BIB_Source(void)
                                            (BSL_Data_t) { .len = target_block->btsd_len, .ptr = target_block->btsd });
     TEST_ASSERT_TRUE(x);
 
-    TEST_ASSERT_EQUAL(0, mock_bpa_encode(mock_bpa_ctr));
+    mock_bpa_ctr_sort_blocks(mock_bpa_ctr);
+    TEST_ASSERT_EQUAL(0, mock_bpa_ctr_encode(mock_bpa_ctr));
     bool is_expected =
         (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib, mock_bpa_ctr->encoded));
 
@@ -149,7 +150,7 @@ void test_SecurityContext_BIB_Verifier(void)
 
     TEST_ASSERT_EQUAL(0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
                                                            &mock_bpa_ctr->bundle_ref, malloced_actionset));
-    TEST_ASSERT_EQUAL(0, mock_bpa_encode(mock_bpa_ctr));
+    TEST_ASSERT_EQUAL(0, mock_bpa_ctr_encode(mock_bpa_ctr));
     bool is_match =
         (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib, mock_bpa_ctr->encoded));
 
@@ -243,7 +244,7 @@ void test_SecurityContext_BIB_Acceptor(void)
     if (sec_context_result != 0)
         goto cleanup;
 
-    encode_result = mock_bpa_encode(mock_bpa_ctr);
+    encode_result = mock_bpa_ctr_encode(mock_bpa_ctr);
     if (encode_result != 0)
         goto cleanup;
 
@@ -528,7 +529,7 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     const char *expected_processed_bundle = ("9f88070000820282010282028202018202820201820018281a000f424085010100"
                                              "005823526561647920746f2067656e657261746520612033322d6279746520706179"
                                              "6c6f6164ff");
-    TEST_ASSERT_EQUAL(0, mock_bpa_encode(mock_bpa_ctr));
+    TEST_ASSERT_EQUAL(0, mock_bpa_ctr_encode(mock_bpa_ctr));
     TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(expected_processed_bundle, mock_bpa_ctr->encoded));
 
     BSL_SecurityAction_Deinit(malloced_action);
