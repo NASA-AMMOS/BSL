@@ -23,6 +23,7 @@ from enum import IntEnum, unique
 from dataclasses import dataclass
 from typing import Any
 
+
 @unique
 class DataFormat(IntEnum):
     BUNDLEARRAY = 0
@@ -30,10 +31,12 @@ class DataFormat(IntEnum):
     ERR = 2
     NONE = 3
 
+
 @unique
 class BundleDestLoc(IntEnum):
     APPIN = 0
     CLIN = 1
+
 
 @dataclass
 # Holds a simple test case
@@ -41,7 +44,7 @@ class _TestCase:
     # list representation of bundle
     input_data: Any
 
-    # either list representation of expected output bundle OR a string to search log output for match 
+    # either list representation of expected output bundle OR a string to search log output for match
     expected_output: DataFormat
 
     # decimal digit representing uint32 for policy configuration OR path to JSON-encoded ION-like policy rules
