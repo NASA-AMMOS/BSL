@@ -215,16 +215,14 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 #define CHK_TEMPL(expr, msg, return_code)                                      \
     do                                                                         \
     {                                                                          \
-        /* GCOV_EXCL_START */                                                  \
         if (!LIKELY(expr))                                                     \
         {                                                                      \
             BSL_LOG_ERR("" msg " (" #expr ") ... [errcode=" #return_code "]"); \
             assert(!(expr));                                                   \
             return return_code;                                                \
         }                                                                      \
-        /* GCOV_EXCL_STOP */                                                   \
     }                                                                          \
-    while (0)
+    while (0) /* GCOV_EXCL_LINE */
 
 #define CHK_AS_BOOL(expr) CHK_TEMPL(expr, "Failed Property Check: Failed to satisfy", BSL_ERR_ARG_INVALID)
 
