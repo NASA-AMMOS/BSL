@@ -46,7 +46,7 @@ class Test_ION_JSON_Policy(TestAgent):
                     '3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             policy_config='mock-bpa-test/policy_provider_test.json',
-            bundle_dest_loc = BundleDestLoc.APPIN,
+            bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
