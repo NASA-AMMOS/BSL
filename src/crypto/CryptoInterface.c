@@ -79,7 +79,6 @@ static void BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
     }
 }
 
-
 /** M*LIB OPLIST for ::BSL_CryptoKey_t
  */
 #define M_OPL_BSL_CryptoKey_t() \
@@ -681,9 +680,11 @@ int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t s
     CHK_ARG_EXPR(secret_len > 0);
 
     BSL_CryptoKeyPtr_t *key_ptr = BSL_CryptoKeyPtr_new();
+    CHK_PROPERTY(key_ptr != NULL);
+    // actual key struct
     BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref(key_ptr);
-    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
-    int           res = EVP_PKEY_keygen_init(ctx);
+    EVP_PKEY_CTX    *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
+    int              res = EVP_PKEY_keygen_init(ctx);
     CHK_PROPERTY(res == 1);
 
     key->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, secret, (int)secret_len);

@@ -90,12 +90,8 @@ int BSL_Data_InitBuffer(BSL_Data_t *data, size_t bytelen);
  */
 int BSL_Data_InitView(BSL_Data_t *data, size_t len, BSL_DataPtr_t src);
 
-/** Initialize a data struct as a copy of existing struct.
- * If the source is owned, the data will be copied. Otherwise, they will
- * both be a view onto the same data.
+/** Initialize a data struct with move semantics from an existing struct.
  */
-void BSL_Data_InitSet(BSL_Data_t *data, const BSL_Data_t *src);
-/// @overload
 void BSL_Data_InitMove(BSL_Data_t *data, BSL_Data_t *src);
 
 /** De-initialize a data struct, freeing if necessary.
