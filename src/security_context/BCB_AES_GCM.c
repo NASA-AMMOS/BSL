@@ -414,7 +414,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
     for (size_t param_index = 0; param_index < BSL_SecOper_CountParams(sec_oper); param_index++)
     {
         const BSL_SecParam_t *param  = BSL_SecOper_GetParamAt(sec_oper, param_index);
-        bool                  is_int = BSL_SecParam_IsInt64(param);
+        bool                  is_int = BSL_SecParam_IsUint64(param);
 
         uint64_t param_id = BSL_SecParam_GetId(param);
         BSL_LOG_DEBUG("BCB parsing param id %" PRIu64, param_id);
@@ -440,7 +440,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             {
                 BSL_LOG_DEBUG("BCB parsing AES variant (optid=%" PRIu64 ")", param_id);
                 ASSERT_PRECONDITION(is_int);
-                bcb_context->aes_variant = BSL_SecParam_GetAsUInt64(param);
+                bcb_context->aes_variant = BSL_SecParam_GetAsUint64(param);
                 if (bcb_context->aes_variant < RFC9173_BCB_AES_VARIANT_A128GCM
                     || bcb_context->aes_variant > RFC9173_BCB_AES_VARIANT_A256GCM)
                 {
@@ -470,7 +470,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             case RFC9173_BCB_SECPARAM_AADSCOPE:
             {
                 ASSERT_PRECONDITION(is_int);
-                uint64_t aad_scope = BSL_SecParam_GetAsUInt64(param);
+                uint64_t aad_scope = BSL_SecParam_GetAsUint64(param);
                 BSL_LOG_DEBUG("Param[%" PRIu64 "]: AAD_SCOPE value = %" PRIu64, param_id, aad_scope);
                 bcb_context->aad_scope = aad_scope;
                 if ((aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK) == 0)
@@ -505,7 +505,7 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             }
             case BSL_SECPARAM_USE_KEY_WRAP:
             {
-                const uint64_t arg_val = BSL_SecParam_GetAsUInt64(param);
+                const uint64_t arg_val = BSL_SecParam_GetAsUint64(param);
                 BSL_LOG_DEBUG("Param[%" PRIu64 "]: USE_WRAPPED_KEY value = %" PRIu64, param_id, arg_val);
                 bcb_context->keywrap = arg_val;
                 break;
@@ -692,7 +692,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
     }
 
     BSL_SecParam_t *aes_param = BSL_calloc(1, BSL_SecParam_Sizeof());
-    if (BSL_SUCCESS != BSL_SecParam_InitInt64(aes_param, RFC9173_BCB_SECPARAM_AESVARIANT, bcb_context.aes_variant))
+    if (BSL_SUCCESS != BSL_SecParam_InitUint64(aes_param, RFC9173_BCB_SECPARAM_AESVARIANT, bcb_context.aes_variant))
     {
         BSL_LOG_ERR("Failed to append BCB AES param");
         BSL_SecParam_Deinit(aes_param);
@@ -731,7 +731,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
     }
 
     BSL_SecParam_t *scope_flag_param = BSL_calloc(1, BSL_SecParam_Sizeof());
-    if (BSL_SUCCESS != BSL_SecParam_InitInt64(scope_flag_param, RFC9173_BCB_SECPARAM_AADSCOPE, bcb_context.aad_scope))
+    if (BSL_SUCCESS != BSL_SecParam_InitUint64(scope_flag_param, RFC9173_BCB_SECPARAM_AADSCOPE, bcb_context.aad_scope))
     {
         BSL_LOG_ERR("Failed to append BCB scope flag param");
         BSL_SecParam_Deinit(scope_flag_param);

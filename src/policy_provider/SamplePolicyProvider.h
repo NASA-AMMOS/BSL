@@ -194,7 +194,7 @@ void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self);
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
 // GCOV_EXCL_START
-M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t()) // GCOV_EXCL_STOP
+M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t())
 // GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond

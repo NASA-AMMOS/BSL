@@ -101,10 +101,10 @@ void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e rol
     quick_data(context->hmac, ApxA1_HMAC);
 
     BSL_SecParam_InitTextstr(&context->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, key_id);
-    BSL_SecParam_InitInt64(&context->param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
-    BSL_SecParam_InitInt64(&context->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+    BSL_SecParam_InitUint64(&context->param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
+    BSL_SecParam_InitUint64(&context->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
     BSL_SecParam_InitBytestr(&context->param_hmac, BSL_SECPARAM_TYPE_AUTH_TAG, context->hmac);
-    BSL_SecParam_InitInt64(&context->use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
+    BSL_SecParam_InitUint64(&context->use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
 
     BSL_SecOper_Populate(&context->sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BLOCK);
 
@@ -121,14 +121,14 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
     quick_data(context->wrapped_key, ApxA2_WrappedKey);
     quick_data(context->key_enc_key, ApxA2_KeyEncKey);
 
-    BSL_SecParam_InitInt64(&context->param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
+    BSL_SecParam_InitUint64(&context->param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
     BSL_SecParam_InitTextstr(&context->param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
-    BSL_SecParam_InitInt64(&context->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
-                           RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_SecParam_InitUint64(&context->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
+                            RFC9173_BCB_AES_VARIANT_A128GCM);
     BSL_SecParam_InitBytestr(&context->param_init_vec, RFC9173_BCB_SECPARAM_IV, context->init_vector);
     BSL_SecParam_InitBytestr(&context->param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, context->auth_tag);
     BSL_SecParam_InitBytestr(&context->param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, context->wrapped_key);
-    BSL_SecParam_InitInt64(&context->use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
+    BSL_SecParam_InitUint64(&context->use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
 
     BSL_SecOper_Populate(&context->sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_NOTHING);
 
@@ -365,12 +365,12 @@ BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text)
 RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id)
 {
     RFC9173_A1_Params params;
-    BSL_SecParam_InitInt64(&params.sha_variant, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key,
-                           RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value);
-    BSL_SecParam_InitInt64(&params.scope_flags, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key,
-                           RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value);
+    BSL_SecParam_InitUint64(&params.sha_variant, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key,
+                            RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value);
+    BSL_SecParam_InitUint64(&params.scope_flags, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key,
+                            RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value);
     BSL_SecParam_InitTextstr(&params.test_key_id, BSL_SECPARAM_TYPE_KEY_ID, key_id);
-    BSL_SecParam_InitInt64(&params.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
+    BSL_SecParam_InitUint64(&params.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
     return params;
 }
 

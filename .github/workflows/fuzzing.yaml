@@ -72,12 +72,12 @@ jobs:
           pip3 install gcovr
           gem install cbor-diag
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.22
         with:
           create-symlink: true
       - name: Dependencies
@@ -99,7 +99,7 @@ jobs:
       - name: Collect coverage
         run: ./build.sh coverage
       - name: Archive coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
           path: build/default/coverage*
