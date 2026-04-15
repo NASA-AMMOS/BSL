@@ -28,6 +28,7 @@ class DataFormat(Enum):
     ERR = 2
     NONE = 3
 
+
 class BundleDestLoc(Enum):
     APPIN = 0
     CLIN = 1
@@ -45,7 +46,7 @@ class _TestCase:
     @param input/output_data_format: data format of input/output
     '''
 
-    def __init__(self, input_data, expected_output: DataFormat, policy_config: str, bundle_dest_loc: BundleDestLoc, key_set: str, 
+    def __init__(self, input_data, expected_output: DataFormat, policy_config: str, bundle_dest_loc: BundleDestLoc, key_set: str,
                  is_working: bool, input_data_format: DataFormat, expected_output_format: DataFormat):
         self.input_data = input_data
         self.expected_output = expected_output
