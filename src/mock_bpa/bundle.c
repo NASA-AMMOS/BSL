@@ -21,12 +21,22 @@
  */
 #include "bundle.h"
 
+int MockBPA_CanonicalBlock_cmp(const MockBPA_CanonicalBlock_t *block_a, const MockBPA_CanonicalBlock_t *block_b)
+{
+    return M_CMP_DEFAULT(block_b->blk_num, block_a->blk_num);
+}
+
 int MockBPA_Bundle_Init(MockBPA_Bundle_t *bundle)
 {
     ASSERT_ARG_NONNULL(bundle);
     memset(bundle, 0, sizeof(*bundle));
 
     bundle->retain = true;
+
+    BSL_Data_Init(&bundle->primary_block.encoded);
+    BSL_HostEID_Init(&bundle->primary_block.src_node_id);
+    BSL_HostEID_Init(&bundle->primary_block.dest_eid);
+    BSL_HostEID_Init(&bundle->primary_block.report_to_eid);
 
     MockBPA_BlockList_init(bundle->blocks);
     MockBPA_BlockByNum_init(bundle->blocks_num);

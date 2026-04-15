@@ -166,19 +166,16 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     QCBORDecode_GetUInt64(dec, &(blk->flags));
     QCBORDecode_GetUInt64(dec, &(blk->crc_type));
 
-    MockBPA_EID_Init(NULL, &blk->dest_eid);
     if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->dest_eid)))
     {
         return 2;
     }
 
-    MockBPA_EID_Init(NULL, &blk->src_node_id);
     if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->src_node_id)))
     {
         return 2;
     }
 
-    MockBPA_EID_Init(NULL, &blk->report_to_eid);
     if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->report_to_eid)))
     {
         return 2;

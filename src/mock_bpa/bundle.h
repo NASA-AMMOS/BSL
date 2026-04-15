@@ -29,6 +29,7 @@
 
 #include "eid.h"
 
+#include <m-algo.h>
 #include <m-deque.h>
 #include <m-bptree.h>
 
@@ -68,16 +69,27 @@ typedef struct
  */
 typedef struct
 {
+    /// Block type code
     uint64_t blk_type;
+    /// Unique block number, with 0 reserved and 1 for payload
     uint64_t blk_num;
+    /// Block processing control flags
     uint64_t flags;
+    /// CRC type code
     uint64_t crc_type;
 
-    /// Pointer to memory managed by the BPA
+    /// Pointer to memory managed by the BPA outside this struct
     void *btsd;
     /// Known length of the #btsd
     size_t btsd_len;
 } MockBPA_CanonicalBlock_t;
+
+/** Block comparison which will order by block number in descending order.
+ */
+int MockBPA_CanonicalBlock_cmp(const MockBPA_CanonicalBlock_t *block_a, const MockBPA_CanonicalBlock_t *block_b);
+
+/// M*LIB OPLIST for ::MockBPA_CanonicalBlock_t
+#define M_OPL_MockBPA_CanonicalBlock_t() M_OPEXTEND(M_POD_OPLIST, CMP(API_6(MockBPA_CanonicalBlock_cmp)))
 
 /** @struct MockBPA_BlockList_t
  * An ordered list of ::MockBPA_CanonicalBlock_t storage
@@ -89,15 +101,20 @@ typedef struct
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_DEQUE_DEF(MockBPA_BlockList, MockBPA_CanonicalBlock_t, M_POD_OPLIST)
+M_DEQUE_DEF(MockBPA_BlockList, MockBPA_CanonicalBlock_t, M_OPL_MockBPA_CanonicalBlock_t())
+M_ALGO_DEF(MockBPA_BlockList, M_DEQUE_OPLIST(MockBPA_BlockList, M_OPL_MockBPA_CanonicalBlock_t()))
 M_BPTREE_DEF2(MockBPA_BlockByNum, 4, uint64_t, M_BASIC_OPLIST, MockBPA_CanonicalBlock_t *, M_PTR_OPLIST)
 // GCOV_EXCL_STOP
 /// @endcond
 
 typedef struct MockBPA_Bundle_s
 {
-    uint64_t               id;
-    bool                   retain;
+    /** Explicit retention constraint.
+     * When true, indicates to retain this bundle after forwarding or delivery.
+     * This defaults to true.
+     */
+    bool retain;
+    /// Primary block contents
     MockBPA_PrimaryBlock_t primary_block;
 
     /// Storage for blocks in this bundle

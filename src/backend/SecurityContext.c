@@ -117,17 +117,16 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
-    BSL_HostEID_t sec_source_eid = { 0 };
-    // TODO - The ownership of this should be cleaned up(!)
-    BSL_HostEID_Init(&sec_source_eid);
-    if (BSL_Host_GetSecSrcEID(&sec_source_eid) != BSL_SUCCESS)
+    BSL_AbsSecBlock_t abs_sec_block;
+    BSL_AbsSecBlock_Init(&abs_sec_block);
+    if (BSL_Host_GetSecSrcEID(&abs_sec_block.source_eid) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get local security source EID");
+        BSL_AbsSecBlock_Deinit(&abs_sec_block);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
-    BSL_AbsSecBlock_t abs_sec_block = { 0 };
-    BSL_AbsSecBlock_Init(&abs_sec_block, sec_oper->context_id, sec_source_eid);
+    abs_sec_block.sec_context_id = sec_oper->context_id;
     BSL_AbsSecBlock_AddTarget(&abs_sec_block, sec_oper->target_block_num);
 
     size_t n_results = BSL_SecOutcome_CountResults(outcome);
@@ -146,11 +145,10 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (res != BSL_SUCCESS)
     {
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return res;
     }
 
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
-    return BSL_SUCCESS;
+    return res;
 }
 
 static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
@@ -178,7 +176,7 @@ static int BSL_ExecBIBAccept(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     BSL_SeqReader_Destroy(btsd_read);
 
     BSL_AbsSecBlock_t abs_sec_block;
-    BSL_AbsSecBlock_InitEmpty(&abs_sec_block);
+    BSL_AbsSecBlock_Init(&abs_sec_block);
     if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_copy) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
@@ -295,7 +293,7 @@ static int BSL_ExecBCBAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t
     BSL_SeqReader_Destroy(btsd_read);
 
     BSL_AbsSecBlock_t abs_sec_block;
-    BSL_AbsSecBlock_InitEmpty(&abs_sec_block);
+    BSL_AbsSecBlock_Init(&abs_sec_block);
     if (BSL_AbsSecBlock_DecodeFromCBOR(&abs_sec_block, &btsd_copy) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
@@ -425,18 +423,15 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     }
 
     BSL_AbsSecBlock_t abs_sec_block;
+    BSL_AbsSecBlock_Init(&abs_sec_block);
+    if (BSL_SUCCESS != BSL_Host_GetSecSrcEID(&abs_sec_block.source_eid))
     {
-        BSL_HostEID_t src_eid = { 0 };
-        BSL_HostEID_Init(&src_eid);
-        if (BSL_SUCCESS != BSL_Host_GetSecSrcEID(&src_eid))
-        {
-            BSL_LOG_ERR("Failed to get host EID");
-            BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-            return BSL_ERR_HOST_CALLBACK_FAILED;
-        }
-        BSL_AbsSecBlock_Init(&abs_sec_block, sec_oper->context_id, src_eid);
+        BSL_LOG_ERR("Failed to get host EID");
+        BSL_AbsSecBlock_Deinit(&abs_sec_block);
+        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
+        return BSL_ERR_HOST_CALLBACK_FAILED;
     }
-
+    abs_sec_block.sec_context_id = sec_oper->context_id;
     BSL_AbsSecBlock_AddTarget(&abs_sec_block, sec_oper->target_block_num);
 
     size_t n_results = BSL_SecOutcome_CountResults(outcome);
@@ -457,11 +452,10 @@ static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     if (res != BSL_SUCCESS)
     {
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return res;
     }
 
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
-    return BSL_SUCCESS;
+    return res;
 }
 
 int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet_t *output_response,
