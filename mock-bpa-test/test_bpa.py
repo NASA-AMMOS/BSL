@@ -141,11 +141,9 @@ class TestAgent(unittest.TestCase):
         tx_data = testcase.input_data if (
             testcase.input_data_format == DataFormat.HEX) else self._encode(testcase.input_data)
 
-        test_sock = self._ul_sock
-        if (testcase.bundle_dest_loc == BundleDestLoc.APPIN):
-            test_sock = self._ol_sock
+        test_sock = self._ol_sock if testcase.bundle_dest_loc == BundleDestLoc.APPIN else self._ul_sock
 
-        if (testcase.expected_output_format == DataFormat.BUNDLEARRAY):
+        if testcase.expected_output_format == DataFormat.BUNDLEARRAY:
             expected_rx = testcase.expected_output if (
                 testcase.expected_output == "HEX") else self._encode(testcase.expected_output)
 
@@ -164,7 +162,7 @@ class TestAgent(unittest.TestCase):
 
             self.assertEqual(binascii.hexlify(expected_rx), binascii.hexlify(rx_data))
 
-        elif (testcase.expected_output_format == DataFormat.NONE):
+        elif testcase.expected_output_format == DataFormat.NONE:
             test_sock.send(tx_data)
             LOGGER.debug('waiting')
 
@@ -182,7 +180,7 @@ class TestAgent(unittest.TestCase):
             LOGGER.debug("\nFOUND OCCURENCE: %s", found)
             self.assertNotEqual("", found)
 
-        elif (testcase.expected_output_format == DataFormat.ERR):
+        elif testcase.expected_output_format == DataFormat.ERR:
             test_sock.send(tx_data)
             LOGGER.debug('waiting')
 

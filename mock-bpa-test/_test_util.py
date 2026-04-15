@@ -19,42 +19,45 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
-from enum import Enum
+from enum import IntEnum, unique
+from dataclasses import dataclass
+from typing import Any
 
-
-class DataFormat(Enum):
+@unique
+class DataFormat(IntEnum):
     BUNDLEARRAY = 0
     HEX = 1
     ERR = 2
     NONE = 3
 
-class BundleDestLoc(Enum):
+@unique
+class BundleDestLoc(IntEnum):
     APPIN = 0
     CLIN = 1
 
-# "structure" to hold a simple test case
-
-
+@dataclass
+# Holds a simple test case
 class _TestCase:
-    '''
-    @param input_data: list representation of bundle
-    @param expected_output: either list representation of expected output bundle OR a string to search log output for match 
-    @param policy_config: decimal digit representing uint32 for policy configuration OR path to JSON-encoded ION-like policy rules
-    @param key_set: path to JWK-encoded key set
-    @param is_working: True if test working
-    @param input/output_data_format: data format of input/output
-    '''
+    # list representation of bundle
+    input_data: Any
 
-    def __init__(self, input_data, expected_output: DataFormat, policy_config: str, bundle_dest_loc: BundleDestLoc, key_set: str, 
-                 is_working: bool, input_data_format: DataFormat, expected_output_format: DataFormat):
-        self.input_data = input_data
-        self.expected_output = expected_output
-        self.policy_config = policy_config
-        self.bundle_dest_loc = bundle_dest_loc
-        self.key_set = key_set
+    # either list representation of expected output bundle OR a string to search log output for match 
+    expected_output: DataFormat
 
-        # can be removed once all tests are working
-        self.is_working = is_working
+    # decimal digit representing uint32 for policy configuration OR path to JSON-encoded ION-like policy rules
+    policy_config: str
 
-        self.input_data_format = input_data_format
-        self.expected_output_format = expected_output_format
+    # path to JWK-encoded key set
+    key_set: str
+
+    # data format of input
+    input_data_format: DataFormat
+
+    # data format of output
+    expected_output_format: DataFormat
+
+    # True if test working (can be removed once all tests are working)
+    is_working: bool = True
+
+    # destination location of the bundle
+    bundle_dest_loc: BundleDestLoc = BundleDestLoc.CLIN
