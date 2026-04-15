@@ -82,6 +82,10 @@ void BSL_Data_InitMove(BSL_Data_t *data, BSL_Data_t *src)
 {
     ASSERT_ARG_NONNULL(data);
     ASSERT_ARG_NONNULL(src);
+    if (data == src)
+    {
+        return;
+    }
     *data = *src;
     bsl_data_int_reset(src);
 }
