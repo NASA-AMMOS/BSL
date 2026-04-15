@@ -100,29 +100,29 @@ int BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t
     return BSL_SUCCESS;
 }
 
-int BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value)
+int BSL_SecParam_InitUint64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value)
 {
     CHK_ARG_NONNULL(self);
 
     memset(self, 0, sizeof(*self));
     self->param_id    = param_id;
-    self->_type       = BSL_SECPARAM_TYPE_INT64;
+    self->_type       = BSL_SECPARAM_TYPE_UINT64;
     self->_uint_value = value;
     m_bstring_init(self->_bytes);
 
     return BSL_SUCCESS;
 }
 
-bool BSL_SecParam_IsInt64(const BSL_SecParam_t *self)
+bool BSL_SecParam_IsUint64(const BSL_SecParam_t *self)
 {
     CHK_AS_BOOL(self);
-    return (self->_type == BSL_SECPARAM_TYPE_INT64);
+    return (self->_type == BSL_SECPARAM_TYPE_UINT64);
 }
 
-uint64_t BSL_SecParam_GetAsUInt64(const BSL_SecParam_t *self)
+uint64_t BSL_SecParam_GetAsUint64(const BSL_SecParam_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    ASSERT_PRECONDITION(self->_type == BSL_SECPARAM_TYPE_INT64);
+    ASSERT_PRECONDITION(self->_type == BSL_SECPARAM_TYPE_UINT64);
 
     return self->_uint_value;
 }
@@ -169,7 +169,7 @@ bool BSL_SecParam_IsConsistent(const BSL_SecParam_t *self)
     CHK_AS_BOOL(self->param_id > 0);
     CHK_AS_BOOL(self->_type > BSL_SECPARAM_TYPE_UNKNOWN && self->_type <= BSL_SECPARAM_TYPE_TEXTSTR);
 
-    if (self->_type == BSL_SECPARAM_TYPE_INT64)
+    if (self->_type == BSL_SECPARAM_TYPE_UINT64)
     {
         CHK_AS_BOOL(m_bstring_empty_p(self->_bytes));
     }

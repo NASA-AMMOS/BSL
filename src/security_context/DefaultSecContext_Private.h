@@ -64,8 +64,6 @@ typedef struct BSLX_BIB_s
     int64_t              integrity_scope_flags;
     int64_t              sha_variant;
     uint64_t             hash_size;
-    uint64_t             sha_variant_uint;
-    int64_t              _crypto_sha_variant;
     BSL_Data_t           wrapped_key;
     int64_t              keywrap;
     uint64_t             hmac_result_id;

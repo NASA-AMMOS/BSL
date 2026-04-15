@@ -320,17 +320,18 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         {
             BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
             BSL_SecParam_InitTextstr(&bibcontext.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
-            BSL_SecParam_InitInt64(&bibcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
+            BSL_SecParam_InitUint64(&bibcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
             BSL_Crypto_SetRngGenerator(rfc3394_cek);
         }
         else
         {
             BSL_Crypto_AddRegistryKey("cek_wrap", cek_data.ptr, cek_data.len);
             BSL_SecParam_InitTextstr(&bibcontext.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "cek_wrap");
-            BSL_SecParam_InitInt64(&bibcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
+            BSL_SecParam_InitUint64(&bibcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
         }
-        BSL_SecParam_InitInt64(&bibcontext.param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
-        BSL_SecParam_InitInt64(&bibcontext.param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+        BSL_SecParam_InitUint64(&bibcontext.param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
+        BSL_SecParam_InitUint64(&bibcontext.param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT,
+                                RFC9173_BIB_SHA_HMAC512);
 
         BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
                              BSL_POLICYACTION_DROP_BLOCK);
@@ -358,18 +359,18 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         {
             BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
             BSL_SecParam_InitTextstr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
-            BSL_SecParam_InitInt64(&bcbcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
+            BSL_SecParam_InitUint64(&bcbcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
         }
         else
         {
             BSL_Crypto_AddRegistryKey("cek_wrap", cek_data.ptr, cek_data.len);
             BSL_SecParam_InitTextstr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "cek_wrap");
-            BSL_SecParam_InitInt64(&bcbcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
+            BSL_SecParam_InitUint64(&bcbcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
         }
-        BSL_SecParam_InitInt64(&bcbcontext.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE,
-                               RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
-        BSL_SecParam_InitInt64(&bcbcontext.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
-                               RFC9173_BCB_AES_VARIANT_A128GCM);
+        BSL_SecParam_InitUint64(&bcbcontext.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE,
+                                RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
+        BSL_SecParam_InitUint64(&bcbcontext.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
+                                RFC9173_BCB_AES_VARIANT_A128GCM);
 
         BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
                              BSL_POLICYACTION_DROP_BLOCK);
@@ -532,10 +533,11 @@ void test_sec_accept_keyunwrap(bool bib)
     {
         BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
         BSL_SecParam_InitTextstr(&bibcontext.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
-        BSL_SecParam_InitInt64(&bibcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
+        BSL_SecParam_InitUint64(&bibcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
         BSL_SecParam_InitBytestr(&bibcontext.param_wrapped_key, RFC9173_BIB_PARAMID_WRAPPED_KEY, wrapped_key_data);
-        BSL_SecParam_InitInt64(&bibcontext.param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
-        BSL_SecParam_InitInt64(&bibcontext.param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+        BSL_SecParam_InitUint64(&bibcontext.param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
+        BSL_SecParam_InitUint64(&bibcontext.param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT,
+                                RFC9173_BIB_SHA_HMAC512);
 
         BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
                              BSL_POLICYACTION_DROP_BLOCK);
@@ -557,14 +559,14 @@ void test_sec_accept_keyunwrap(bool bib)
 
         BSL_Crypto_AddRegistryKey("kek_wrap", kek_data.ptr, kek_data.len);
         BSL_SecParam_InitTextstr(&bcbcontext.param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, "kek_wrap");
-        BSL_SecParam_InitInt64(&bcbcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
+        BSL_SecParam_InitUint64(&bcbcontext.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
         BSL_SecParam_InitBytestr(&bcbcontext.param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, wrapped_key_data);
         BSL_SecParam_InitBytestr(&bcbcontext.param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, result_data);
         BSL_SecParam_InitBytestr(&bcbcontext.param_init_vec, RFC9173_BCB_SECPARAM_IV, iv_data);
-        BSL_SecParam_InitInt64(&bcbcontext.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE,
-                               RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
-        BSL_SecParam_InitInt64(&bcbcontext.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
-                               RFC9173_BCB_AES_VARIANT_A128GCM);
+        BSL_SecParam_InitUint64(&bcbcontext.param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE,
+                                RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
+        BSL_SecParam_InitUint64(&bcbcontext.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
+                                RFC9173_BCB_AES_VARIANT_A128GCM);
 
         BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
                              BSL_POLICYACTION_DROP_BLOCK);

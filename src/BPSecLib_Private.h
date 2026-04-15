@@ -626,7 +626,7 @@ size_t BSL_SecResult_Sizeof(void);
 enum BSL_SecParam_Types_e
 {
     BSL_SECPARAM_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
-    BSL_SECPARAM_TYPE_INT64,       ///< Indicates value type is an unsigned integer.
+    BSL_SECPARAM_TYPE_UINT64,      ///< Indicates value type is an unsigned integer.
     BSL_SECPARAM_TYPE_BYTESTR,     ///< Indicates the value type is a byte string.
     BSL_SECPARAM_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
 };
@@ -723,7 +723,7 @@ int BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t
  * @param[in] value View of bytes, which get copied into this Security Parameter.
  * @return Negative on an error.
  */
-int BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value);
+int BSL_SecParam_InitUint64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value);
 
 /** Initialize as a parameter containing a byte string with a null-terminated
  * text value.
@@ -740,15 +740,15 @@ int BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char
  * @param[in] self This Security Parameter
  * @return True when value type is integer.
  */
-bool BSL_SecParam_IsInt64(const BSL_SecParam_t *self);
+bool BSL_SecParam_IsUint64(const BSL_SecParam_t *self);
 
 /** Retrieve integer value of result when this result type is integer.
- * @warning Always check using BSL_SecParam_IsInt64() first.
+ * @warning Always check using BSL_SecParam_IsUint64() first.
  *
  * @param[in] self This Security Parameter
  * @return Integer value of parameter if present, panics/aborts otherwise.
  */
-uint64_t BSL_SecParam_GetAsUInt64(const BSL_SecParam_t *self);
+uint64_t BSL_SecParam_GetAsUint64(const BSL_SecParam_t *self);
 
 /** Returns true when the value type is a byte string.
  *

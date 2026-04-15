@@ -62,7 +62,7 @@ bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const B
  * Provides the mapping from the security-context-specific ID defined in RFC9173
  * to the local ID of the SHA variant used by the crypto engine (OpenSSL).
  */
-static int64_t map_rfc9173_sha_variant_to_crypto(int64_t rfc9173_sha_variant)
+static int64_t map_rfc9173_sha_variant_to_crypto(uint64_t rfc9173_sha_variant)
 {
     int64_t crypto_sha_variant = -1;
     if (rfc9173_sha_variant == RFC9173_BIB_SHA_HMAC512)
@@ -108,11 +108,11 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
     {
         const BSL_SecParam_t *param    = BSL_SecOper_GetParamAt(sec_oper, param_index);
         uint64_t              param_id = BSL_SecParam_GetId(param);
-        bool                  is_int   = BSL_SecParam_IsInt64(param);
-        int64_t               int_val  = -1;
+        bool                  is_int   = BSL_SecParam_IsUint64(param);
+        uint64_t              int_val  = 0;
         if (is_int)
         {
-            int_val = BSL_SecParam_GetAsUInt64(param);
+            int_val = BSL_SecParam_GetAsUint64(param);
         }
 
         if (param_id == BSL_SECPARAM_TYPE_KEY_ID)
@@ -149,7 +149,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
         }
         else if (param_id == BSL_SECPARAM_USE_KEY_WRAP)
         {
-            const uint64_t arg_val = BSL_SecParam_GetAsUInt64(param);
+            const uint64_t arg_val = BSL_SecParam_GetAsUint64(param);
             BSL_LOG_DEBUG("Param[%" PRIu64 "]: USE_WRAPPED_KEY value = %" PRIu64, param_id, arg_val);
             self->keywrap = arg_val;
         }
