@@ -763,7 +763,7 @@ int BSL_Crypto_GetKeyStatistics(const char *keyid, BSL_Crypto_KeyStats_t *stats)
     }
     else
     {
-        BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref(*found);
+        const BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_cref(*found);
 
         for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
         {
