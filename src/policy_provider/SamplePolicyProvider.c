@@ -108,6 +108,10 @@ static uint64_t BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, cons
     return error_ret;
 }
 
+/** Look up all canonical blocks of a particular type.
+ * @return The first block found, or zero if not found.
+ * A warning will be logged if there are others.
+ */
 static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t target_block_type)
 {
     uint64_t target_block_num = 0;
@@ -121,14 +125,28 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
 
     for (uint64_t ix = 0; ix < res_prim_blk.block_count; ix++)
     {
+        const uint64_t blk_num = res_prim_blk.block_numbers[ix];
+
         BSL_CanonicalBlock_t test_block = { 0 };
-        if (BSL_SUCCESS == BSL_BundleCtx_GetBlockMetadata(bundle, res_prim_blk.block_numbers[ix], &test_block))
+        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, blk_num, &test_block))
         {
-            if (test_block.type_code == target_block_type)
-            {
-                target_block_num = res_prim_blk.block_numbers[ix];
-                break;
-            }
+            BSL_LOG_WARNING("Failed to lookup metadata for block number %" PRIu64, blk_num);
+            continue;
+        }
+        if (test_block.type_code != target_block_type)
+        {
+            continue;
+        }
+
+        if (target_block_num)
+        {
+            BSL_LOG_WARNING("Multiple blocks of type %" PRIu64 " found, operating only on the first %" PRIu64
+                            " and ignoring %" PRIu64,
+                            target_block_type, target_block_num, blk_num);
+        }
+        else
+        {
+            target_block_num = blk_num;
         }
     }
     BSL_PrimaryBlock_deinit(&res_prim_blk);
@@ -542,7 +560,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
 
     // The rule gives us the target block TYPE, now we have to find the ID of the block with that type.
     uint64_t target_block_num = get_target_block_id(bundle, self->target_block_type);
-    if (target_block_num == 0 && self->target_block_type != BSL_BLOCK_TYPE_PRIMARY)
+    if ((target_block_num == 0) && (self->target_block_type != BSL_BLOCK_TYPE_PRIMARY))
     {
         BSL_LOG_WARNING("Cannot find target block type = %" PRIu64, self->target_block_type);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
