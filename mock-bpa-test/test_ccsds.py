@@ -157,7 +157,7 @@ def load_ccsds():
                             'sc_id': sec_ctx,
                             'sc_parms': params
                         },
-                        '_temp_not_ion_spec_policy_action_on_fail': 'delete_bundle'
+                        'policy_action_on_fail': 'delete_bundle'
                     }
                 }
                 print(f'Appending new Policy Rule {pr}')
