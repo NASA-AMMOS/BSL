@@ -35,7 +35,7 @@ import unittest
 import cbor2
 
 from helpers import CmdRunner, compose_args
-from _test_util import _TestCase, DataFormat
+from _test_util import _TestCase, DataFormat, BundleDestLoc
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
@@ -141,14 +141,18 @@ class TestAgent(unittest.TestCase):
         tx_data = testcase.input_data if (
             testcase.input_data_format == DataFormat.HEX) else self._encode(testcase.input_data)
 
+        test_sock = self._ul_sock
+        if (testcase.bundle_dest_loc == BundleDestLoc.APPIN):
+            test_sock = self._ol_sock
+
         if (testcase.expected_output_format == DataFormat.BUNDLEARRAY):
             expected_rx = testcase.expected_output if (
                 testcase.expected_output == "HEX") else self._encode(testcase.expected_output)
 
-            self._ul_sock.send(tx_data)
+            test_sock.send(tx_data)
             LOGGER.debug('waiting')
 
-            rx_data = self._wait_for(self._ul_sock)
+            rx_data = self._wait_for(test_sock)
 
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
             LOGGER.info('\nReceived data:\n%s\n', binascii.hexlify(rx_data))
@@ -161,11 +165,11 @@ class TestAgent(unittest.TestCase):
             self.assertEqual(binascii.hexlify(expected_rx), binascii.hexlify(rx_data))
 
         elif (testcase.expected_output_format == DataFormat.NONE):
-            self._ul_sock.send(tx_data)
+            test_sock.send(tx_data)
             LOGGER.debug('waiting')
 
             with self.assertRaises(TimeoutError):
-                self._wait_for(self._ul_sock)
+                self._wait_for(test_sock)
 
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
 
@@ -179,11 +183,11 @@ class TestAgent(unittest.TestCase):
             self.assertNotEqual("", found)
 
         elif (testcase.expected_output_format == DataFormat.ERR):
-            self._ul_sock.send(tx_data)
+            test_sock.send(tx_data)
             LOGGER.debug('waiting')
 
             with self.assertRaises(TimeoutError):
-                self._wait_for(self._ul_sock)
+                self._wait_for(test_sock)
 
             LOGGER.info('\nTransferred data:\n%s\n', binascii.hexlify(tx_data))
 

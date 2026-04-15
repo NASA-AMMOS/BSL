@@ -7,7 +7,7 @@
         "rule_id": "1",
         "role": "s",
         "tgt": 1,
-        "loc": "clin",
+        "loc": "appin",
         "sc_id": 1
       },
       "spec": {
@@ -52,7 +52,7 @@
         "rule_id": "2",
         "role": "s",
         "tgt": 1,
-        "loc": "clin",
+        "loc": "appin",
         "sc_id": 2
       },
       "spec": {

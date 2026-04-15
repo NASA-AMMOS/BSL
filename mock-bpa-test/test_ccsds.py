@@ -24,7 +24,7 @@ import cbor2
 import binascii
 import tempfile
 import json
-from _test_util import _TestCase, DataFormat
+from _test_util import _TestCase, DataFormat, BundleDestLoc
 from test_bpa import TestAgent
 
 
@@ -150,7 +150,7 @@ def load_ccsds():
                             'rule_id': str(i),
                             'role': sec_role,
                             'tgt': int(target),
-                            'loc': 'clin',
+                            'loc': 'appin',
                             'sc_id': sec_ctx,
                         },
                         'spec': {
@@ -178,6 +178,7 @@ def load_ccsds():
                 expected_output=output if (
                     output_format == DataFormat.BUNDLEARRAY) else r".*Delete bundle due to failed security operation",
                 policy_config=finame,
+                bundle_dest_loc = BundleDestLoc.APPIN,
                 key_set="mock-bpa-test/key_set_1.json",
                 is_working=True,
                 input_data_format=input_format,
