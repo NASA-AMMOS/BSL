@@ -114,8 +114,8 @@ void _setUp(void)
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
 
-    BSL_SecParam_InitInt64(&param_aes_variant_128, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-    BSL_SecParam_InitInt64(&param_use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
+    BSL_SecParam_InitUint64(&param_aes_variant_128, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_SecParam_InitUint64(&param_use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
     BSL_SecParam_InitTextstr(&param_test_bcb_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
 
     // BSL_32

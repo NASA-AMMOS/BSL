@@ -39,10 +39,12 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850a182d000043010203ff")
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850101000043010203ff")
+// private extension with non-contiguous number
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e9008518c00a000043010203850101000043010203ff")
 // random large payload
 TEST_CASE(
-    "9F88070000820282030482028201028202820000821903E81903E900850A182D00005903E8E059257BAE6D2D4AB0FB90EEF5FA695D8B07A466"
+    "9F88070000820282030482028201028202820000821903E81903E90085010100005903E8E059257BAE6D2D4AB0FB90EEF5FA695D8B07A466"
     "51CC45E5DE4E66F26EE329751A85D9C357DBEBF6D5EF38BA18629E7C17DF2D511ECE2FB2C99B3BD6C12E5746C530888F105D4835C3952DF922"
     "1EE17E51E9663FADC00194FBF0332BAF8025C6313B5922C39FB9A5C68EC20FA1717D0B224219417BD930CE1C6356F0044DF3989C47971E30A2"
     "94232A6E31CE6B05125A49CEB0AD606A0361658001AEA5A2D715F1D17CB2203E347D64DDF8CF8B9864B90541DB790EF1E9E97A6E042C7A4D48"
@@ -77,14 +79,54 @@ void test_mock_bpa_ctr_loopback_decode_encode(const char *hexdata)
     mock_bpa_ctr_init(&ctr);
     TEST_ASSERT_EQUAL_INT(0, BSL_Data_CopyFrom(&ctr.encoded, in_data.len, in_data.ptr));
 
-    int res = mock_bpa_decode(&ctr);
+    int res = mock_bpa_ctr_decode(&ctr);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "mock_bpa_decode() failed");
 
-    res = mock_bpa_encode(&ctr);
+    // no reordering of blocks
+    res = mock_bpa_ctr_encode(&ctr);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, res, "mock_bpa_encode() failed");
 
     TEST_ASSERT_EQUAL_INT(in_data.len, ctr.encoded.len);
     TEST_ASSERT_EQUAL_MEMORY(in_data.ptr, ctr.encoded.ptr, in_data.len);
+
+    mock_bpa_ctr_deinit(&ctr);
+    BSL_Data_Deinit(&in_data);
+}
+
+// no primary
+TEST_CASE("9fff")
+// only primary
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900ff")
+// no payload block type 1
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e9008518c001000043010203ff")
+// no payload block number 1
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850102000043010203ff")
+// payload is not last block
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e9008501010000430102038518c002000043010203ff")
+// duplicate block number
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e9008501010000430102038518c001000043010203ff")
+// invalid block type
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850001000043010203850101000043010203ff")
+// invalid block number
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e9008518c000000043010203850101000043010203ff")
+void test_mock_bpa_ctr_decode_invalid(const char *hexdata)
+{
+    BSL_Data_t in_data;
+    BSL_Data_Init(&in_data);
+    {
+        string_t in_text;
+        string_init_set_str(in_text, hexdata);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
+                                      "BSL_TestUtils_DecodeBase16() failed");
+        string_clear(in_text);
+    }
+
+    mock_bpa_ctr_t ctr;
+    mock_bpa_ctr_init(&ctr);
+    TEST_ASSERT_EQUAL_INT(0, BSL_Data_CopyFrom(&ctr.encoded, in_data.len, in_data.ptr));
+
+    int res = mock_bpa_ctr_decode(&ctr);
+    TEST_ASSERT_NOT_EQUAL_INT_MESSAGE(0, res, "mock_bpa_decode() succeded");
 
     mock_bpa_ctr_deinit(&ctr);
     BSL_Data_Deinit(&in_data);

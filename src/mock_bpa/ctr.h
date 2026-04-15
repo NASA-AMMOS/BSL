@@ -49,10 +49,25 @@ void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src);
 
 void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr);
 
-int mock_bpa_decode(mock_bpa_ctr_t *ctr);
+/** Sort canonical blocks in a bundle by descending block number.
+ * This ensures the primary block is the last block.
+ * @param[in,out] ctr The container to read and decode PDU data from.
+ */
+void mock_bpa_ctr_sort_blocks(mock_bpa_ctr_t *ctr);
 
-int mock_bpa_encode(mock_bpa_ctr_t *ctr);
+/** Decode a bundle PDU into a container.
+ * @param[in,out] ctr The container to read and decode PDU data from.
+ * @return Zero if successful.
+ */
+int mock_bpa_ctr_decode(mock_bpa_ctr_t *ctr);
 
+/** Encode to a bundle PDU in a container.
+ * @param[in,out] ctr The container to encode and write PDU data into.
+ * @return Zero if successful.
+ */
+int mock_bpa_ctr_encode(mock_bpa_ctr_t *ctr);
+
+/// M*LIB OPLIST for ::mock_bpa_ctr_t
 #define M_OPL_mock_bpa_ctr_t() \
     (INIT(API_2(mock_bpa_ctr_init)), INIT_MOVE(API_6(mock_bpa_ctr_init_move)), CLEAR(API_2(mock_bpa_ctr_deinit)))
 

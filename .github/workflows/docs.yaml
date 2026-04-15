@@ -36,7 +36,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive
@@ -71,7 +71,7 @@ jobs:
           tar -cf html.tar html
           rm -rf html
       - name: Archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: bsl-api
           path: testroot/usr/share/doc/bsl/
