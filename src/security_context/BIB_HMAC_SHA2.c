@@ -109,7 +109,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
         const BSL_SecParam_t *param    = BSL_SecOper_GetParamAt(sec_oper, param_index);
         uint64_t              param_id = BSL_SecParam_GetId(param);
         bool                  is_int   = BSL_SecParam_IsUint64(param);
-        uint64_t              int_val = 0;
+        uint64_t              int_val  = 0;
         if (is_int)
         {
             int_val = BSL_SecParam_GetAsUint64(param);

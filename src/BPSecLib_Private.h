@@ -626,7 +626,7 @@ size_t BSL_SecResult_Sizeof(void);
 enum BSL_SecParam_Types_e
 {
     BSL_SECPARAM_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
-    BSL_SECPARAM_TYPE_UINT64,       ///< Indicates value type is an unsigned integer.
+    BSL_SECPARAM_TYPE_UINT64,      ///< Indicates value type is an unsigned integer.
     BSL_SECPARAM_TYPE_BYTESTR,     ///< Indicates the value type is a byte string.
     BSL_SECPARAM_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
 };

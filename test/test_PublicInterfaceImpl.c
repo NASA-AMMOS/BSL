@@ -141,9 +141,9 @@ void setUp(void)
     BSL_SecParam_InitUint64(&ctx.param_sha_variant_384, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
 
     BSL_SecParam_InitUint64(&ctx.param_aes_variant_128, RFC9173_BCB_SECPARAM_AESVARIANT,
-                           RFC9173_BCB_AES_VARIANT_A128GCM);
+                            RFC9173_BCB_AES_VARIANT_A128GCM);
     BSL_SecParam_InitUint64(&ctx.param_aes_variant_256, RFC9173_BCB_SECPARAM_AESVARIANT,
-                           RFC9173_BCB_AES_VARIANT_A256GCM);
+                            RFC9173_BCB_AES_VARIANT_A256GCM);
     BSL_SecParam_InitUint64(&ctx.param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
 
     BSL_Data_t authtag_data;

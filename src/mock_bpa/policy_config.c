@@ -352,14 +352,14 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
                                 }
 
                                 BSL_SecParam_InitUint64(params->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT,
-                                                       sha_var);
+                                                        sha_var);
                                 params_got |= 0x2;
                             }
                             else if (0 == strcmp(id_str, "scope_flags"))
                             {
                                 uint64_t flag = strtol(value_str, NULL, 10); // FIXME
                                 BSL_SecParam_InitUint64(params->param_integ_scope_flag,
-                                                       RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, flag);
+                                                        RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, flag);
                                 params_got |= 0x4;
                             }
                             else if (0 == strcmp(id_str, "key_wrap"))
@@ -375,7 +375,7 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
                                 }
 
                                 BSL_SecParam_InitUint64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP,
-                                                       keywrap);
+                                                        keywrap);
                                 params_got |= 0x8;
                             }
                             else
@@ -411,14 +411,14 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
                                 }
 
                                 BSL_SecParam_InitUint64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
-                                                       aes_var);
+                                                        aes_var);
                                 params_got |= 0x4;
                             }
                             else if (0 == strcmp(id_str, "aad_scope"))
                             {
                                 uint64_t flag = strtol(value_str, NULL, 10); // FIXME
                                 BSL_SecParam_InitUint64(params->param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE,
-                                                       flag);
+                                                        flag);
                                 params_got |= 0x8;
                             }
                             else if (0 == strcmp(id_str, "key_wrap"))
@@ -434,7 +434,7 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
                                 }
 
                                 BSL_SecParam_InitUint64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP,
-                                                       keywrap);
+                                                        keywrap);
                                 params_got |= 0x10;
                             }
                             else
@@ -563,9 +563,9 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     if (sec_block_type == 1)
     {
         BSL_SecParam_InitUint64(params->param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE,
-                               RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
+                                RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
         BSL_SecParam_InitUint64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
-                               RFC9173_BCB_AES_VARIANT_A128GCM);
+                                RFC9173_BCB_AES_VARIANT_A128GCM);
         if (use_wrapped_key)
         {
             BSL_SecParam_InitTextstr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, "9103");

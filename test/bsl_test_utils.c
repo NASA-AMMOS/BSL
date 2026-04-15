@@ -124,7 +124,7 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
     BSL_SecParam_InitUint64(&context->param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
     BSL_SecParam_InitTextstr(&context->param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
     BSL_SecParam_InitUint64(&context->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
-                           RFC9173_BCB_AES_VARIANT_A128GCM);
+                            RFC9173_BCB_AES_VARIANT_A128GCM);
     BSL_SecParam_InitBytestr(&context->param_init_vec, RFC9173_BCB_SECPARAM_IV, context->init_vector);
     BSL_SecParam_InitBytestr(&context->param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, context->auth_tag);
     BSL_SecParam_InitBytestr(&context->param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, context->wrapped_key);
@@ -366,9 +366,9 @@ RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id)
 {
     RFC9173_A1_Params params;
     BSL_SecParam_InitUint64(&params.sha_variant, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key,
-                           RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value);
+                            RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value);
     BSL_SecParam_InitUint64(&params.scope_flags, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key,
-                           RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value);
+                            RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value);
     BSL_SecParam_InitTextstr(&params.test_key_id, BSL_SECPARAM_TYPE_KEY_ID, key_id);
     BSL_SecParam_InitUint64(&params.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
     return params;
