@@ -54,7 +54,7 @@ int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
     // See: https://www.rfc-editor.org/rfc/rfc9173.html#name-aad-scope-flags
     // Note, this over-allocates and is resized downward later.
     const size_t aad_len = 1024;
-    if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->aad, aad_len))
+    if (BSL_SUCCESS != BSL_Data_Resize(&bcb_context->aad, aad_len))
     {
         BSL_LOG_ERR("Failed to allocate AAD space");
         return BSL_ERR_INSUFFICIENT_SPACE;
@@ -260,7 +260,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     // https://www.rfc-editor.org/rfc/rfc9173.html#name-initialization-vector-iv
     // "A value of 12 bytes SHOULD be used unless local security policy requires a different length"
-    BSL_Data_InitBuffer(&bcb_context->iv, RFC9173_BCB_DEFAULT_IV_LEN);
+    BSL_Data_Resize(&bcb_context->iv, RFC9173_BCB_DEFAULT_IV_LEN);
     void        *iv_ptr = bcb_context->iv.ptr;
     const size_t iv_len = bcb_context->iv.len;
     if (BSL_SUCCESS != BSL_Crypto_GenIV(iv_ptr, iv_len))
@@ -550,7 +550,7 @@ int BSLX_BCB_Init(BSLX_BCB_t *bcb_context, BSL_BundleRef_t *bundle, const BSL_Se
 
     bcb_context->bundle = bundle;
 
-    if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->debugstr, 512))
+    if (BSL_SUCCESS != BSL_Data_Resize(&bcb_context->debugstr, 512))
     {
         BSL_LOG_ERR("Failed to allocated debug str");
         return BSL_ERR_INSUFFICIENT_SPACE;

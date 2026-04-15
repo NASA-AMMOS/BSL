@@ -78,10 +78,37 @@ int BSL_Data_InitView(BSL_Data_t *data, size_t len, const BSL_DataPtr_t src)
     return BSL_SUCCESS;
 }
 
+void BSL_Data_InitSet(BSL_Data_t *data, const BSL_Data_t *src)
+{
+    ASSERT_ARG_NONNULL(data);
+    ASSERT_ARG_NONNULL(src);
+    ASSERT_ARG_EXPR(data != src);
+
+    bsl_data_int_reset(data);
+    data->owned = src->owned;
+    data->len   = src->len;
+    if (src->owned)
+    {
+        data->ptr = BSL_malloc(data->len);
+        if (data->ptr)
+        {
+            memcpy(data->ptr, src->ptr, src->len);
+        }
+    }
+    else
+    {
+        data->ptr = src->ptr;
+    }
+}
+
 void BSL_Data_InitMove(BSL_Data_t *data, BSL_Data_t *src)
 {
     ASSERT_ARG_NONNULL(data);
     ASSERT_ARG_NONNULL(src);
+    if (data == src)
+    {
+        return;
+    }
     *data = *src;
     bsl_data_int_reset(src);
 }

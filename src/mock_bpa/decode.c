@@ -227,7 +227,7 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
         return 4;
     }
 
-    BSL_Data_InitBuffer(&blk->encoded, end - begin);
+    BSL_Data_Resize(&blk->encoded, end - begin);
     memcpy(blk->encoded.ptr, (const uint8_t *)buf.ptr + begin, blk->encoded.len);
 
     return 0;
