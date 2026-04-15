@@ -514,15 +514,31 @@ int BSL_BundleCtx_DeleteBundle(BSL_BundleRef_t *bundle, BSL_ReasonCode_t reason_
  * @note Uses semantics similar to @c memcpy().
  *
  * @param[in] bundle Context bundle
- * @param[in] block_num Number of block requesting re-allocated of BTSD
- * @param[in] bytesize Size of new BTSD
+ * @param[in] block_num The unique block number for which BTSD will be resized.
+ * @param[in] btsd_size Size of new BTSD content.
  * @return 0 on success, negative on failure.
  */
-int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t bytesize);
+int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_size);
 
+/** Construct a new sequential reader for BTSD content.
+ *
+ * @param[in] bundle Context bundle
+ * @param[in] block_num The unique block number for which BTSD will be read from.
+ * @return Pointer to the new reader or NULL if some failure occurs.
+ */
 BSL_SeqReader_t *BSL_BundleCtx_ReadBTSD(const BSL_BundleRef_t *bundle, uint64_t block_num);
 
-BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_len);
+/** Construct a new sequential writer for BTSD content.
+ *
+ * @param[in] bundle Context bundle
+ * @param[in] block_num The unique block number for which BTSD will be overwritten.
+ * @param btsd_size The total total size of BTSD content that will be written.
+ * The actual sequence of writes must not exceed this total size or it will be considered an error.
+ * If the actual sequence of writes does not reach this size it should be zero-padded and logged
+ * as an anomaly.
+ * @return Pointer to the new writer or NULL if some failure occurs.
+ */
+BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_size);
 
 /** @brief Security role of an operation
  */
@@ -1307,12 +1323,12 @@ int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_Securi
                                        const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
 
 /// @brief Callback interface to query policy provider to populate the action set
-typedef int (*BSL_PolicyInspect_f)(const void *user_data, BSL_SecurityActionSet_t *output_action_set,
+typedef int (*BSL_PolicyInspect_f)(void *user_data, BSL_SecurityActionSet_t *output_action_set,
                                    const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location);
 
 /// @brief Callback interface to finalize policy provider over the action set. Finalize should ignore actions from
 /// different policy providers
-typedef int (*BSL_PolicyFinalize_f)(const void *user_data, const BSL_SecurityActionSet_t *output_action_set,
+typedef int (*BSL_PolicyFinalize_f)(void *user_data, const BSL_SecurityActionSet_t *output_action_set,
                                     const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
 
 /// @brief Callback interface for policy provider to shut down and release any resources
@@ -1321,10 +1337,10 @@ typedef void (*BSL_PolicyDeinit_f)(void *user_data);
 /// @brief Descriptor of opaque data and callbacks for Policy Provider.
 struct BSL_PolicyDesc_s
 {
-    void                *user_data;
+    void                *user_data;   ///< Reference to policy provider -specific data
     BSL_PolicyInspect_f  query_fn;    ///< Function pointer to query policy
     BSL_PolicyFinalize_f finalize_fn; ///< Function pointer to finalize policy
-    BSL_PolicyDeinit_f   deinit_fn;   ///< Function to deinit the policy provider at termination of BSL.
+    BSL_PolicyDeinit_f   deinit_fn;   ///< Function to deinit the policy provider at termination of BSL context
 };
 
 /** Call the underlying security context to perform the given action

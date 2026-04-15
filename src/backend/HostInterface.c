@@ -127,12 +127,12 @@ int BSL_BundleCtx_DeleteBundle(BSL_BundleRef_t *bundle, BSL_ReasonCode_t reason_
     return (result == 0) ? BSL_SUCCESS : BSL_ERR_HOST_CALLBACK_FAILED;
 }
 
-int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t bytesize)
+int BSL_BundleCtx_ReallocBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_size)
 {
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_EXPR(block_num > 0);
     CHK_PRECONDITION(HostDescriptorTable.block_remove_fn != NULL);
-    int result = HostDescriptorTable.block_realloc_btsd_fn(bundle, block_num, bytesize);
+    int result = HostDescriptorTable.block_realloc_btsd_fn(bundle, block_num, btsd_size);
     return (result == 0) ? BSL_SUCCESS : BSL_ERR_HOST_CALLBACK_FAILED;
 }
 
@@ -145,13 +145,13 @@ BSL_SeqReader_t *BSL_BundleCtx_ReadBTSD(const BSL_BundleRef_t *bundle, uint64_t 
     return HostDescriptorTable.block_read_btsd_fn(bundle, block_num);
 }
 
-BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_len)
+BSL_SeqWriter_t *BSL_BundleCtx_WriteBTSD(BSL_BundleRef_t *bundle, uint64_t block_num, size_t btsd_size)
 {
     if (!bundle || !HostDescriptorTable.block_write_btsd_fn)
     {
         return NULL;
     }
-    return HostDescriptorTable.block_write_btsd_fn(bundle, block_num, btsd_len);
+    return HostDescriptorTable.block_write_btsd_fn(bundle, block_num, btsd_size);
 }
 
 void BSL_HostDescriptors_Get(BSL_HostDescriptors_t *desc)
