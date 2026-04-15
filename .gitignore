@@ -1,6 +1,6 @@
 # Editor files
 *~
-.vscode
+/.vscode
 /.project
 /.cproject
 /.pydevproject
