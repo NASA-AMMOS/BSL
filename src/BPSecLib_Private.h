@@ -935,19 +935,13 @@ size_t BSL_AbsSecBlock_Sizeof(void);
  *
  * @param[in,out] self This ASB
  * @param[in] sec_context_id Security Context ID
- * @param[in] source_eid Source EID in format native to host BPA.
  */
-void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self, int64_t sec_context_id, BSL_HostEID_t source_eid);
+void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self);
 
 /** Checks internal consistency and sanity of this structure.
  * @param[in] self This ASB
  */
 bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self);
-
-/** Initialize a pre-allocated ASB with no contents.
- * @param[in,out] self This ASB
- */
-void BSL_AbsSecBlock_InitEmpty(BSL_AbsSecBlock_t *self);
 
 /** Deinitializes and clears this ASB, clearing and releasing any owned memory.
  *
