@@ -822,6 +822,7 @@ static void *MockBPA_Agent_work_deliver(void *arg)
             continue;
         }
 
+        mock_bpa_ctr_sort_blocks(&item);
         mock_bpa_ctr_encode(&item);
         MockBPA_data_queue_push(agent->over_tx, item);
         {
@@ -867,6 +868,7 @@ static void *MockBPA_Agent_work_forward(void *arg)
             continue;
         }
 
+        mock_bpa_ctr_sort_blocks(&item);
         mock_bpa_ctr_encode(&item);
         MockBPA_data_queue_push(agent->under_tx, item);
         {
