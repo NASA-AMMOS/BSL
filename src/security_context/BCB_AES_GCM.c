@@ -642,7 +642,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    // If secop is accpeting BCB, target btsd should be overwritten with resulting plaintext 
+    // If secop is accpeting BCB, target btsd should be overwritten with resulting plaintext
     bcb_context.overwrite_btsd = BSL_SecOper_IsRoleAcceptor(sec_oper);
 
     // Select whether to call the encrypt or decrypt function

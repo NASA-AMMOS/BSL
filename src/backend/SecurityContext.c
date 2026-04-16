@@ -153,7 +153,7 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
 }
 
 static int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                             BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
+                                       BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
 {
     CHK_ARG_NONNULL(lib);
     CHK_ARG_NONNULL(bundle);
@@ -264,7 +264,7 @@ static int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_
 }
 
 static int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                               BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
+                                       BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
 {
     CHK_ARG_NONNULL(sec_context_fn);
     CHK_ARG_NONNULL(bundle);
