@@ -19,7 +19,7 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
-from _test_util import _TestCase, DataFormat
+from _test_util import _TestCase, DataFormat, BundleDestLoc
 from test_bpa import TestAgent
 
 # Test Cases specified by the Requirements Document
@@ -49,6 +49,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x1A6,0x1A7',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -75,6 +76,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x04',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -101,6 +103,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0xA6',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -127,6 +130,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x04',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -156,6 +160,7 @@ class TestRequirements(TestAgent):
             ],
             # policy_config = BIB_VERIFIER,
             policy_config='0x66',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -198,6 +203,7 @@ class TestRequirements(TestAgent):
             ],
             #
             policy_config='0x2A0',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -216,15 +222,16 @@ class TestRequirements(TestAgent):
             #
             expected_output=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [11, 2, 0, 0, bytes.fromhex(
-                    '810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
                 [11, 3, 0, 0, bytes.fromhex(
                     '810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [11, 2, 0, 0, bytes.fromhex(
+                    '810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92a8ec93df80b41620df5bc639d0c355e1cce6217e17d3b8c5560edc14aba3d005196b046e')],
                 [1, 1, 0, 0, bytes.fromhex(
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             #
             policy_config='0x04',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -252,6 +259,7 @@ class TestRequirements(TestAgent):
             #
             # policy_config = BIB_VERIFIER,
             policy_config='0x62',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -275,6 +283,7 @@ class TestRequirements(TestAgent):
             ],
             #
             policy_config='0xA2',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -309,6 +318,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x5E',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -333,6 +343,7 @@ class TestRequirements(TestAgent):
             # No output because it was deleted, logs to indicate deletion.
             expected_output=r".*Delete bundle due to failed security operation",
             policy_config='0x62',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -366,6 +377,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x1A6,0x1A7',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -394,6 +406,7 @@ class TestRequirements(TestAgent):
             ],
             #
             policy_config='0x04',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -421,6 +434,7 @@ class TestRequirements(TestAgent):
             ],
             #
             policy_config='0x04',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -451,6 +465,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             policy_config='0x04',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -472,6 +487,7 @@ class TestRequirements(TestAgent):
                     '3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             policy_config='0x105',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -499,6 +515,7 @@ class TestRequirements(TestAgent):
                     '3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
             policy_config='0x105',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -526,6 +543,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             policy_config='0x04',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -547,6 +565,7 @@ class TestRequirements(TestAgent):
             expected_output=r".*failed to decode bundle",
             # Execute as a BIB acceptor.
             policy_config='0x86',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.HEX,
@@ -560,17 +579,18 @@ class TestRequirements(TestAgent):
     # 37) need logs to show error
     def test_BSL_37(self):
         self._single_test(_TestCase(
-            # Using the Bundle from RFC 9173 Appendix A1.4, change the the block ID of the payload to number 99
+            # Using the Bundle from RFC 9173 Appendix A1.4, change the the target to non-existant block number 3
             input_data=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                 [11, 2, 0, 0, bytes.fromhex(
-                    '8101010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
-                [1, 99, 0, 0, bytes.fromhex(
+                    '8103010182028202018282010782034200008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1')],
+                [1, 1, 0, 0, bytes.fromhex(
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             # Ensure that the host interface returns an error code (since the block does not exist). Confirm that a log indicating this error is created.
-            expected_output=r".*Deleting bundle due to block target num 99 security failure",
+            expected_output=r".*Deleting bundle due to block target num 1 security failure",
             policy_config='0x66',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -599,6 +619,7 @@ class TestRequirements(TestAgent):
             # confirm that no further security operation processing was taken (specifically, no BIB operations should be seen).
             expected_output=r".*Failed to perform cryptographic action",
             policy_config='0x1A6,0x1A7',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -624,6 +645,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x0A',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -641,13 +663,14 @@ class TestRequirements(TestAgent):
             # Result asserts there are three blocks present, each with the expected type.
             expected_output=[
                 [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                [192, 2, 0, 0, bytes.fromhex('676f20647261676f6e666c7921')],
                 [11, 3, 0, 0, bytes.fromhex(
                     '8102010182028202018282010782030081818201584037f54fd9c08b1b9225e74e821ef4ead35dc850ea98a2b944105447d12d145416dadb83c5123c44bab0e57c20196eff060ddcdc7412e948fd46527101e54c201e')],
+                [192, 2, 0, 0, bytes.fromhex('676f20647261676f6e666c7921')],
                 [1, 1, 0, 0, bytes.fromhex(
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x0A',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -677,6 +700,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')],
             ],
             policy_config='0x46',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -708,6 +732,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x46',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -734,6 +759,7 @@ class TestRequirements(TestAgent):
                     '526561647920746F2067656E657261746520612033322D62797465207061796C6F6164')]
             ],
             policy_config='0x04',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -761,6 +787,7 @@ class TestRequirements(TestAgent):
             ],
             #
             policy_config='0x96',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
@@ -789,6 +816,7 @@ class TestRequirements(TestAgent):
             ],
             #
             policy_config='0x105',
+            bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,

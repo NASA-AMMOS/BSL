@@ -219,10 +219,6 @@ void test_bsl_mock_encode_bundle(void)
     {
         MockBPA_PrimaryBlock_t *prim = &bundle.primary_block;
         prim->version                = 7;
-        BSL_HostEID_Init(&prim->src_node_id);
-        BSL_HostEID_Init(&prim->dest_eid);
-        BSL_HostEID_Init(&prim->report_to_eid);
-
         TEST_ASSERT_EQUAL_INT(0, BSL_HostEID_DecodeFromText(&(prim->src_node_id), "ipn:1.2"));
         TEST_ASSERT_EQUAL_INT(0, BSL_HostEID_DecodeFromText(&(prim->dest_eid), "ipn:3.4"));
         TEST_ASSERT_EQUAL_INT(0, BSL_HostEID_DecodeFromText(&(prim->report_to_eid), "ipn:0.0"));
@@ -376,7 +372,7 @@ void test_bsl_loopback_eid(const char *hexdata)
     string_clear(in_text);
 }
 
-TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850a182d000043010203ff")
+TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850101000043010203ff")
 void test_bsl_loopback_bundle(const char *hexdata)
 {
     BSL_Data_t in_data;

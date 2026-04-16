@@ -166,19 +166,16 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     QCBORDecode_GetUInt64(dec, &(blk->flags));
     QCBORDecode_GetUInt64(dec, &(blk->crc_type));
 
-    MockBPA_EID_Init(NULL, &blk->dest_eid);
     if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->dest_eid)))
     {
         return 2;
     }
 
-    MockBPA_EID_Init(NULL, &blk->src_node_id);
     if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->src_node_id)))
     {
         return 2;
     }
 
-    MockBPA_EID_Init(NULL, &blk->report_to_eid);
     if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->report_to_eid)))
     {
         return 2;
@@ -227,7 +224,7 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
         return 4;
     }
 
-    BSL_Data_InitBuffer(&blk->encoded, end - begin);
+    BSL_Data_Resize(&blk->encoded, end - begin);
     memcpy(blk->encoded.ptr, (const uint8_t *)buf.ptr + begin, blk->encoded.len);
 
     return 0;
@@ -337,7 +334,42 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
             return 3;
         }
 
+        if (blk->blk_type == 0)
+        {
+            BSL_LOG_ERR("Invalid block type 0 on block number %" PRIu64, blk->blk_num);
+            return 3;
+        }
+        if (blk->blk_num == 0)
+        {
+            BSL_LOG_ERR("Invalid block number 0 with block type %" PRIu64, blk->blk_type);
+            return 3;
+        }
+        if (MockBPA_BlockByNum_cget(bundle->blocks_num, blk->blk_num))
+        {
+            BSL_LOG_ERR("Duplicate block number %" PRIu64 " present with block type %" PRIu64, blk->blk_num,
+                        blk->blk_type);
+            return 3;
+        }
+
         MockBPA_BlockByNum_set_at(bundle->blocks_num, blk->blk_num, blk);
+    }
+
+    if (MockBPA_BlockList_empty_p(bundle->blocks))
+    {
+        BSL_LOG_ERR("No canonical blocks present, at least a payload block must be present to be valid");
+        return 3;
+    }
+    const MockBPA_CanonicalBlock_t *last = MockBPA_BlockList_back(bundle->blocks);
+    if (last->blk_type != 1)
+    {
+        BSL_LOG_ERR("The payload block must be the last block to be valid, last block type is %" PRIu64,
+                    last->blk_type);
+        return 3;
+    }
+    if (last->blk_num != 1)
+    {
+        BSL_LOG_ERR("The payload block must have block number 1, block number is %" PRIu64, last->blk_num);
+        return 3;
     }
 
     BSL_LOG_DEBUG("exiting array (at %zd)", QCBORDecode_Tell(dec));

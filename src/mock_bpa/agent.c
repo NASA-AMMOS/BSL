@@ -725,7 +725,7 @@ static void *MockBPA_Agent_work_over_rx(void *arg)
             break;
         }
         BSL_LOG_INFO("over_rx item");
-        mock_bpa_decode(&item);
+        mock_bpa_ctr_decode(&item);
 
         MockBPA_Bundle_t *bundle = item.bundle_ref.data;
         if (MockBPA_Agent_process(agent, &agent->appin, BSL_POLICYLOCATION_APPIN, bundle))
@@ -764,7 +764,7 @@ static void *MockBPA_Agent_work_under_rx(void *arg)
         }
 
         BSL_LOG_INFO("under_rx item");
-        if (mock_bpa_decode(&item))
+        if (mock_bpa_ctr_decode(&item))
         {
             BSL_LOG_ERR("failed to decode bundle");
             mock_bpa_ctr_deinit(&item);
@@ -822,7 +822,8 @@ static void *MockBPA_Agent_work_deliver(void *arg)
             continue;
         }
 
-        mock_bpa_encode(&item);
+        mock_bpa_ctr_sort_blocks(&item);
+        mock_bpa_ctr_encode(&item);
         MockBPA_data_queue_push(agent->over_tx, item);
         {
             uint8_t buf    = 0;
@@ -867,7 +868,8 @@ static void *MockBPA_Agent_work_forward(void *arg)
             continue;
         }
 
-        mock_bpa_encode(&item);
+        mock_bpa_ctr_sort_blocks(&item);
+        mock_bpa_ctr_encode(&item);
         MockBPA_data_queue_push(agent->under_tx, item);
         {
             uint8_t buf    = 0;
