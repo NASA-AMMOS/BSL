@@ -175,18 +175,21 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (retval == BSL_SUCCESS)
     {
         btsd_read = BSL_BundleCtx_ReadBTSD(bcb_context->bundle, bcb_context->target_block.block_num);
-        // output is same size
-        btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
-                                             bcb_context->target_block.btsd_len);
         if (!btsd_read)
         {
             BSL_LOG_ERR("Failed to construct reader");
             retval = BSL_ERR_HOST_CALLBACK_FAILED;
         }
-        if (!btsd_write)
+
+        if (bcb_context->overwrite_btsd)
         {
-            BSL_LOG_ERR("Failed to construct writer");
-            retval = BSL_ERR_HOST_CALLBACK_FAILED;
+            btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
+                                                 bcb_context->target_block.btsd_len);
+            if (!btsd_write)
+            {
+                BSL_LOG_ERR("Failed to construct writer");
+                retval = BSL_ERR_HOST_CALLBACK_FAILED;
+            }
         }
     }
 
@@ -228,7 +231,10 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     // close write after read
     BSL_SeqReader_Destroy(btsd_read);
-    BSL_SeqWriter_Destroy(btsd_write);
+    if (NULL != btsd_write)
+    {
+        BSL_SeqWriter_Destroy(btsd_write);
+    }
 
     BSL_Data_Deinit(&bcb_context->authtag);
     if (bcb_context->keywrap)
@@ -635,6 +641,9 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
         BSLX_BCB_Deinit(&bcb_context);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
+
+    // If secop is accpeting BCB, target btsd should be overwritten with resulting plaintext
+    bcb_context.overwrite_btsd = BSL_SecOper_IsRoleAcceptor(sec_oper);
 
     // Select whether to call the encrypt or decrypt function
     int (*crypto_fn)(BSLX_BCB_t *) = BSL_SecOper_IsRoleSource(sec_oper) ? BSLX_BCB_Encrypt : BSLX_BCB_Decrypt;

@@ -1113,7 +1113,7 @@ size_t BSL_SecOutcome_CountParams(const BSL_SecOutcome_t *self);
  */
 const BSL_SecParam_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, size_t index);
 
-/// @brief Returns true if this (the parameters and results) is contained within the given ASK
+/// @brief Returns true if this (the parameters and results) is contained within the given ASB
 /// @todo Can move to backend
 /// @param[in] self
 /// @param[in] outcome

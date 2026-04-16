@@ -111,6 +111,7 @@ typedef struct BSLX_BCB_s
     bool    skip_aad_sec_block;
     bool    skip_aad_target_block;
     bool    skip_aad_prim_block;
+    bool    overwrite_btsd;
 } BSLX_BCB_t;
 
 int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, const BSL_SecOper_t *sec_oper);
