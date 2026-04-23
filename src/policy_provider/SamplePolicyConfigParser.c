@@ -550,7 +550,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
 
         BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
 
-        BSLP_InitParams_Init(&params);
+        BSLP_InitParams_Deinit(&params);
     }
 
     json_decref(root);
@@ -765,6 +765,8 @@ int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvid
             BSL_LOG_ERR("Failed to decode policy list (expecting comma) at: %s", curs);
         }
         curs += 1;
+
+        BSLP_InitParams_Deinit(&params);
     }
 
     return BSL_SUCCESS;
