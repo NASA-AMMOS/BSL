@@ -491,7 +491,8 @@ class TestRequirements(TestAgent):
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
-            expected_output_format=DataFormat.BUNDLEARRAY
+            expected_output_format=DataFormat.BUNDLEARRAY,
+            use_bcb_rng=True
         ))
 
     # BSL_28
@@ -519,7 +520,8 @@ class TestRequirements(TestAgent):
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
-            expected_output_format=DataFormat.BUNDLEARRAY
+            expected_output_format=DataFormat.BUNDLEARRAY,
+            use_bcb_rng=True
         ))
 
     # BSL_29
@@ -820,7 +822,8 @@ class TestRequirements(TestAgent):
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
-            expected_output_format=DataFormat.BUNDLEARRAY
+            expected_output_format=DataFormat.BUNDLEARRAY,
+            use_bcb_rng=True
         ))
 
     def test_BCB_verifier(self):

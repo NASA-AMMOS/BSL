@@ -34,9 +34,7 @@ target_sources(
   ${CMAKE_CURRENT_SOURCE_DIR}/encode.h
   ${CMAKE_CURRENT_SOURCE_DIR}/decode.h
   ${CMAKE_CURRENT_SOURCE_DIR}/text_util.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_config.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_params.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_registry.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/key_registry.h
   ${CMAKE_CURRENT_SOURCE_DIR}/ctr.h
   ${CMAKE_CURRENT_SOURCE_DIR}/MockBPA.h
 )
@@ -51,9 +49,7 @@ target_sources(
   ${CMAKE_CURRENT_SOURCE_DIR}/encode.c
   ${CMAKE_CURRENT_SOURCE_DIR}/decode.c
   ${CMAKE_CURRENT_SOURCE_DIR}/text_util.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_config.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_params.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_registry.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/key_registry.c
   ${CMAKE_CURRENT_SOURCE_DIR}/ctr.c
 )
 set_target_properties(bsl_mock_bpa

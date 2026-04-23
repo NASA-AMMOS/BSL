@@ -1,55 +1,77 @@
-/*
- * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
- * Laboratory LLC.
- *
- * This file is part of the Bundle Protocol Security Library (BSL).
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *     http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * This work was performed for the Jet Propulsion Laboratory, California
- * Institute of Technology, sponsored by the United States Government under
- * the prime contract 80NM0018D0004 between the Caltech and NASA under
- * subcontract 1700763.
- */
+#include "SamplePolicyConfigParser.h"
 
-/** @file
- * @ingroup mock_bpa
- * Implementations for permutations of policy configurations.
- */
-
-#include "policy_config.h"
-#include "text_util.h"
-
-int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len)
+int BSLP_InitParams_Init(BSLP_InitParams_t *params)
 {
-    if (len == 12) // IV
+    params->param_integ_scope_flag = BSL_calloc(1, BSL_SecParam_Sizeof());
+    if (NULL == params->param_integ_scope_flag)
     {
-        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
-        memcpy(buf, iv, 12);
+        return BSL_ERR_INSUFFICIENT_SPACE;
     }
-    else // A3 KEY
+
+    params->param_sha_variant = BSL_calloc(1, BSL_SecParam_Sizeof());
+    if (NULL == params->param_sha_variant)
     {
-        uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
-                                    0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
-        memcpy(buf, rfc9173A3_key, len);
+        return BSL_ERR_INSUFFICIENT_SPACE;
     }
-    return 1;
+
+    params->param_aad_scope_flag = BSL_calloc(1, BSL_SecParam_Sizeof());
+    if (NULL == params->param_aad_scope_flag)
+    {
+        return BSL_ERR_INSUFFICIENT_SPACE;
+    }
+
+    params->param_init_vector = BSL_calloc(1, BSL_SecParam_Sizeof());
+    if (NULL == params->param_init_vector)
+    {
+        return BSL_ERR_INSUFFICIENT_SPACE;
+    }
+
+    params->param_aes_variant = BSL_calloc(1, BSL_SecParam_Sizeof());
+    if (NULL == params->param_aes_variant)
+    {
+        return BSL_ERR_INSUFFICIENT_SPACE;
+    }
+
+    params->param_test_key = BSL_calloc(1, BSL_SecParam_Sizeof());
+    if (NULL == params->param_test_key)
+    {
+        return BSL_ERR_INSUFFICIENT_SPACE;
+    }
+
+    params->param_use_wrapped_key = BSL_calloc(1, BSL_SecParam_Sizeof());
+    if (NULL == params->param_use_wrapped_key)
+    {
+        return BSL_ERR_INSUFFICIENT_SPACE;
+    }
+
+    return BSL_SUCCESS;
+}
+
+void BSLP_InitParams_Deinit(BSLP_InitParams_t *params)
+{
+    BSL_SecParam_Deinit(params->param_integ_scope_flag);
+    BSL_free(params->param_integ_scope_flag);
+    BSL_SecParam_Deinit(params->param_sha_variant);
+    BSL_free(params->param_sha_variant);
+    BSL_SecParam_Deinit(params->param_aad_scope_flag);
+    BSL_free(params->param_aad_scope_flag);
+    BSL_SecParam_Deinit(params->param_init_vector);
+    BSL_free(params->param_init_vector);
+    BSL_SecParam_Deinit(params->param_aes_variant);
+    BSL_free(params->param_aes_variant);
+    BSL_SecParam_Deinit(params->param_test_key);
+    BSL_free(params->param_test_key);
+    BSL_SecParam_Deinit(params->param_use_wrapped_key);
+    BSL_free(params->param_use_wrapped_key);
 }
 
 /**
  * @todo Handle ION events as policy actions - dependent on other BSL issues/ future changes
  */
-int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_PolicyProvider_t *policy,
-                                       mock_bpa_policy_registry_t *reg)
+int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_t *policy)
 {
+    CHK_ARG_NONNULL(policy_cfg_path);
+    CHK_ARG_NONNULL(policy);
 
     uint32_t             sec_block_type;
     uint32_t             sec_ctx_id;
@@ -67,11 +89,11 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
     json_t      *root;
     json_error_t err;
 
-    root = json_load_file(pp_cfg_file_path, 0, &err);
+    root = json_load_file(policy_cfg_path, 0, &err);
     if (!root)
     {
         BSL_LOG_ERR("JSON error: line %d: %s", err.line, err.text);
-        return -2;
+        return BSL_ERR_POLICY_CONFIG;
     }
 
     // policyrule_set attr
@@ -80,7 +102,7 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
     {
         BSL_LOG_ERR("Missing policyrule set ");
         json_decref(root);
-        return -3;
+        return BSL_ERR_POLICY_CONFIG;
     }
 
     size_t policy_rule_idx, policy_rule_ct = json_array_size(policyrule_set);
@@ -102,11 +124,12 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
             continue;
         }
 
-        mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(reg);
-        if (!params)
+        BSLP_InitParams_t params;
+        int params_init_retval = BSLP_InitParams_Init(&params);
+        if (BSL_SUCCESS != params_init_retval)
         {
-            BSL_LOG_CRIT("POLICY COUNT EXCEEDED, NOT REGISTERING FURTHER");
-            return -1;
+            BSL_LOG_ERR("JSON Policy Parse: Error allocating params");
+            return params_init_retval;
         }
 
         // filter attr
@@ -332,7 +355,7 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
                         {
                             if (0 == strcmp(id_str, "key_name"))
                             {
-                                BSL_SecParam_InitTextstr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
+                                BSL_SecParam_InitTextstr(params.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
                                 params_got |= 0x1;
                             }
                             else if (0 == strcmp(id_str, "sha_variant"))
@@ -351,14 +374,14 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
                                     sha_var = RFC9173_BIB_SHA_HMAC512;
                                 }
 
-                                BSL_SecParam_InitUint64(params->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT,
+                                BSL_SecParam_InitUint64(params.param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT,
                                                         sha_var);
                                 params_got |= 0x2;
                             }
                             else if (0 == strcmp(id_str, "scope_flags"))
                             {
                                 uint64_t flag = strtol(value_str, NULL, 10); // FIXME
-                                BSL_SecParam_InitUint64(params->param_integ_scope_flag,
+                                BSL_SecParam_InitUint64(params.param_integ_scope_flag,
                                                         RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, flag);
                                 params_got |= 0x4;
                             }
@@ -374,7 +397,7 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
                                     keywrap = 1;
                                 }
 
-                                BSL_SecParam_InitUint64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP,
+                                BSL_SecParam_InitUint64(params.param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP,
                                                         keywrap);
                                 params_got |= 0x8;
                             }
@@ -389,35 +412,26 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
                         {
                             if (0 == strcmp(id_str, "key_name"))
                             {
-                                BSL_SecParam_InitTextstr(params->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
+                                BSL_SecParam_InitTextstr(params.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
                                 params_got |= 0x1;
                             }
                             else if (0 == strcmp(id_str, "iv"))
                             {
                                 // TODO covert value_str to bstring
-                                // BSL_SecParam_InitBytestr(params->param_init_vector, RFC9173_BCB_SECPARAM_IV, );
+                                // BSL_SecParam_InitBytestr(params.param_init_vector, RFC9173_BCB_SECPARAM_IV, );
                                 params_got |= 0x2;
                             }
                             else if (0 == strcmp(id_str, "aes_variant"))
                             {
-                                rfc9173_bcb_aes_variant_e aes_var;
-                                if (0 == strcmp(value_str, "1"))
-                                {
-                                    aes_var = RFC9173_BCB_AES_VARIANT_A128GCM;
-                                }
-                                else
-                                {
-                                    aes_var = RFC9173_BCB_AES_VARIANT_A256GCM;
-                                }
-
-                                BSL_SecParam_InitUint64(params->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
+                                uint64_t aes_var = strtol(value_str, NULL, 10);
+                                BSL_SecParam_InitUint64(params.param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
                                                         aes_var);
                                 params_got |= 0x4;
                             }
                             else if (0 == strcmp(id_str, "aad_scope"))
                             {
                                 uint64_t flag = strtol(value_str, NULL, 10); // FIXME
-                                BSL_SecParam_InitUint64(params->param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE,
+                                BSL_SecParam_InitUint64(params.param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE,
                                                         flag);
                                 params_got |= 0x8;
                             }
@@ -433,7 +447,7 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
                                     keywrap = 1;
                                 }
 
-                                BSL_SecParam_InitUint64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP,
+                                BSL_SecParam_InitUint64(params.param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP,
                                                         keywrap);
                                 params_got |= 0x10;
                             }
@@ -520,34 +534,33 @@ int mock_bpa_register_policy_from_json(const char *pp_cfg_file_path, BSLP_Policy
 
         if (sec_ctx_id == 2) // BCB
         {
-            BSLP_PolicyRule_CopyParam(&rule, params->param_aes_variant);
+            BSLP_PolicyRule_CopyParam(&rule, params.param_aes_variant);
             if (sec_role == BSL_SECROLE_SOURCE)
             {
-                BSLP_PolicyRule_CopyParam(&rule, params->param_aad_scope_flag);
-                BSL_Crypto_SetRngGenerator(mock_bpa_rfc9173_bcb_cek);
+                BSLP_PolicyRule_CopyParam(&rule, params.param_aad_scope_flag);
             }
         }
         else
         {
-            BSLP_PolicyRule_CopyParam(&rule, params->param_sha_variant);
-            BSLP_PolicyRule_CopyParam(&rule, params->param_integ_scope_flag);
+            BSLP_PolicyRule_CopyParam(&rule, params.param_sha_variant);
+            BSLP_PolicyRule_CopyParam(&rule, params.param_integ_scope_flag);
         }
-        BSLP_PolicyRule_CopyParam(&rule, params->param_test_key);
-        BSLP_PolicyRule_CopyParam(&rule, params->param_use_wrapped_key);
+        BSLP_PolicyRule_CopyParam(&rule, params.param_test_key);
+        BSLP_PolicyRule_CopyParam(&rule, params.param_use_wrapped_key);
 
         BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
+
+        BSLP_InitParams_Init(&params);
     }
 
     json_decref(root);
 
-    return 0;
+    return BSL_SUCCESS;
 }
 
-static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t policy_bits, BSLP_PolicyProvider_t *policy,
-                                     mock_bpa_policy_params_t *params)
+static void BSLP_RegisterPolicyFromBitstring(const BSLP_BitstringPolicyConfiguration_t policy_bits, BSLP_PolicyProvider_t *policy, BSLP_InitParams_t *params)
 {
-
-    BSL_LOG_DEBUG("Interpreted policy: 0x%X", policy_bits);
+    BSL_LOG_DEBUG("Interpreting policy: 0x%X", policy_bits);
 
     uint32_t sec_block_type     = policy_bits & 0x01;
     uint32_t policy_loc         = (policy_bits >> 1) & 0x01;
@@ -704,7 +717,6 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
         if (sec_role_enum == BSL_SECROLE_SOURCE)
         {
             BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_aad_scope_flag);
-            BSL_Crypto_SetRngGenerator(mock_bpa_rfc9173_bcb_cek);
         }
     }
     else
@@ -718,18 +730,22 @@ static void mock_bpa_register_policy(const bsl_mock_policy_configuration_t polic
     BSLP_PolicyProvider_AddRule(policy, &rule_all_in, &predicate_all_in);
 }
 
-int mock_bpa_handle_policy_config(const char *policies, BSLP_PolicyProvider_t *policy, mock_bpa_policy_registry_t *reg)
+int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvider_t *policy)
 {
+    CHK_ARG_NONNULL(policies);
+    CHK_ARG_NONNULL(policy);
+
     // Split up and register each policy
     const char *curs = policies;
     char       *pend;
     while (true)
     {
-        mock_bpa_policy_params_t *params = mock_bpa_policy_registry_get(reg);
-        if (!params)
+        BSLP_InitParams_t params;
+        int params_init_retval = BSLP_InitParams_Init(&params);
+        if (BSL_SUCCESS != params_init_retval)
         {
-            BSL_LOG_CRIT("POLICY COUNT EXCEEDED, NOT REGISTERING FURTHER");
-            return -1;
+            BSL_LOG_ERR("JSON Policy Parse: Error allocating params");
+            return params_init_retval;
         }
 
         uint32_t val = strtoul(curs, &pend, 0);
@@ -738,7 +754,7 @@ int mock_bpa_handle_policy_config(const char *policies, BSLP_PolicyProvider_t *p
             BSL_LOG_ERR("Failed to decode policy integer at: %s", curs);
         }
         curs = pend;
-        mock_bpa_register_policy(val, policy, params);
+        BSLP_RegisterPolicyFromBitstring(val, policy, &params);
 
         if (*curs == '\0')
         {
@@ -751,95 +767,5 @@ int mock_bpa_handle_policy_config(const char *policies, BSLP_PolicyProvider_t *p
         curs += 1;
     }
 
-    BSL_LOG_DEBUG("Successfully created policy registry of size: %d", mock_bpa_policy_registry_size(reg));
-    return 0;
-}
-
-int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
-{
-
-    int          retval = 0;
-    json_t      *root;
-    json_error_t err;
-
-    BSL_LOG_INFO("Reading keys from %s", pp_cfg_file_path);
-    root = json_load_file(pp_cfg_file_path, 0, &err);
-    if (!root)
-    {
-        BSL_LOG_ERR("JSON error: line %d: %s", err.line, err.text);
-        json_decref(root);
-        return 1;
-    }
-
-    json_t *keys = json_object_get(root, "keys");
-    if (!keys || !json_is_array(keys))
-    {
-        BSL_LOG_ERR("Missing \"keys\" ");
-        json_decref(root);
-        return 1;
-    }
-
-    size_t n = json_array_size(keys);
-    BSL_LOG_INFO("Found %zu key objects", n);
-
-    for (size_t i = 0; !retval && (i < n); ++i)
-    {
-        json_t *key_obj = json_array_get(keys, i);
-        if (!json_is_object(key_obj))
-        {
-            continue;
-        }
-
-        json_t *kty = json_object_get(key_obj, "kty");
-        if (!kty)
-        {
-            BSL_LOG_ERR("Missing \"kty\" ");
-            continue;
-        }
-
-        if (0 != strcmp("oct", json_string_value(kty)))
-        {
-            BSL_LOG_ERR("Not a symmetric key set");
-            continue;
-        }
-
-        json_t *kid = json_object_get(key_obj, "kid");
-        if (!kid || !json_is_string(kid))
-        {
-            BSL_LOG_ERR("Missing \"kid\" ");
-            continue;
-        }
-        const char *kid_str = json_string_value(kid);
-        BSL_LOG_DEBUG("kid: %s", kid_str);
-
-        json_t *k = json_object_get(key_obj, "k");
-        if (!k || !json_is_string(k))
-        {
-            BSL_LOG_ERR("Missing \"k\" ");
-            continue;
-        }
-        const char *k_str = json_string_value(k);
-        BSL_LOG_DEBUG("k: %s", k_str);
-
-        m_string_t k_text;
-        m_string_init_set_cstr(k_text, k_str);
-        m_bstring_t k_data;
-        m_bstring_init(k_data);
-
-        retval = mock_bpa_base64_decode(k_data, k_text);
-
-        if (!retval)
-        {
-            const size_t   k_len = m_bstring_size(k_data);
-            const uint8_t *k_ptr = m_bstring_view(k_data, 0, k_len);
-
-            retval = BSL_Crypto_AddRegistryKey(kid_str, k_ptr, k_len);
-        }
-        m_bstring_clear(k_data);
-        m_string_clear(k_text);
-    }
-
-    json_decref(root);
-
-    return retval;
+    return BSL_SUCCESS;
 }

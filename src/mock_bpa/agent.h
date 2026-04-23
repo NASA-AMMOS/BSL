@@ -28,7 +28,6 @@
 #define BSL_MOCK_BPA_AGENT_H_
 
 #include "ctr.h"
-#include "policy_registry.h"
 
 #include <BPSecLib_Public.h>
 #include <BPSecLib_Private.h>

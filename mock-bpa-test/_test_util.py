@@ -64,3 +64,6 @@ class _TestCase:
 
     # destination location of the bundle
     bundle_dest_loc: BundleDestLoc = BundleDestLoc.CLIN
+
+    # If true, test will use custom rng callback for BCB testing
+    use_bcb_rng: bool = False

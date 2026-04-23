@@ -38,8 +38,6 @@
 #include "eidpat.h"
 #include "encode.h"
 #include "decode.h"
-#include "policy_config.h"
-#include "policy_registry.h"
 
 static int MockBPA_GetEid(void *user_data, BSL_HostEID_t *result_eid)
 {

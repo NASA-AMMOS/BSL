@@ -35,10 +35,11 @@
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
 #include <CryptoInterface.h>
+#include <policy_provider/SamplePolicyConfigParser.h>
 
 #include "agent.h"
 #include "log.h"
-#include "policy_config.h"
+#include "key_registry.h"
 
 // Configuration
 static BSL_HostEID_t app_eid;
@@ -101,7 +102,10 @@ static void show_usage(const char *argv0)
             "          -u <under-socket address:port> -r <router address:port>\n"
             "          -e <app-EID> -s <sec-src-EID>\n"
             "          -p (optional - defaults to none) comma delimited hex list of <bsl_mock_policy_configuration_t>, "
-            "e.g. '0x000f,0x0021'\n",
+            "e.g. '0x000f,0x0021'\n"
+            "          -j (optional - defaults to none) path to JSON file containing policy configuration\n"
+            "          -k (optional - defaults to none) path to JSON file containing JWKs to register\n"
+            "          -c (optional - defaults to OpenSSL RAND) enable custom RNG generator for testing purposes\n",
             argv0);
 }
 
@@ -133,14 +137,10 @@ int main(int argc, char **argv)
     BSL_HostEID_Init(&app_eid);
     BSL_HostEID_Init(&sec_eid);
 
-    /// Definitions of policy for all BSL instances
-    mock_bpa_policy_registry_t policy_registry;
-    mock_bpa_policy_registry_init(&policy_registry);
-
     if (!retval)
     {
         int opt;
-        while ((opt = getopt(argc, argv, "ha:o:a:u:r:e:s:p:k:j:")) != -1)
+        while ((opt = getopt(argc, argv, "hca:o:a:u:r:e:s:p:k:j:")) != -1)
         {
             switch (opt)
             {
@@ -173,17 +173,20 @@ int main(int argc, char **argv)
                     break;
                 case 'p':
                 {
-                    retval = !!(mock_bpa_handle_policy_config(optarg, policy, &policy_registry));
+                    retval = !!(BSLP_RegisterPolicyFromBitstringList(optarg, policy));
                     break;
                 }
                 case 'j':
                 {
-                    retval = !!(mock_bpa_register_policy_from_json(optarg, policy, &policy_registry));
+                    retval = !!(BSLP_RegisterPolicyFromJSON(optarg, policy));
                     break;
                 }
                 case 'k':
                     if (mock_bpa_key_registry_init(optarg))
                         retval = 1;
+                    break;
+                case 'c':
+                    BSL_Crypto_SetRngGenerator(mock_bpa_rfc9173_bcb_cek);
                     break;
                 case 'h':
                     // fall-through to default
@@ -233,7 +236,6 @@ int main(int argc, char **argv)
         MockBPA_Agent_Join(&agent);
     }
 
-    mock_bpa_policy_registry_deinit(&policy_registry);
     BSLP_PolicyProvider_Deinit(policy);
     MockBPA_Agent_Deinit(&agent);
     BSL_HostEID_Deinit(&sec_eid);
