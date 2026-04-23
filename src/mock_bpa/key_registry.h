@@ -34,7 +34,7 @@
 #include <CryptoInterface.h>
 
 /// @brief Initialize JWKs
-/// @param pp_cfg_file_path path to JSON file with JWKs 
+/// @param pp_cfg_file_path path to JSON file with JWKs
 /// @return 0 if successful
 int mock_bpa_key_registry_init(const char *pp_cfg_file_path);
 
