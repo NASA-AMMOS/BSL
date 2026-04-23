@@ -125,7 +125,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
         }
 
         BSLP_InitParams_t params;
-        int params_init_retval = BSLP_InitParams_Init(&params);
+        int               params_init_retval = BSLP_InitParams_Init(&params);
         if (BSL_SUCCESS != params_init_retval)
         {
             BSL_LOG_ERR("JSON Policy Parse: Error allocating params");
@@ -558,7 +558,8 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
     return BSL_SUCCESS;
 }
 
-static void BSLP_RegisterPolicyFromBitstring(const BSLP_BitstringPolicyConfiguration_t policy_bits, BSLP_PolicyProvider_t *policy, BSLP_InitParams_t *params)
+static void BSLP_RegisterPolicyFromBitstring(const BSLP_BitstringPolicyConfiguration_t policy_bits,
+                                             BSLP_PolicyProvider_t *policy, BSLP_InitParams_t *params)
 {
     BSL_LOG_DEBUG("Interpreting policy: 0x%X", policy_bits);
 
@@ -741,7 +742,7 @@ int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvid
     while (true)
     {
         BSLP_InitParams_t params;
-        int params_init_retval = BSLP_InitParams_Init(&params);
+        int               params_init_retval = BSLP_InitParams_Init(&params);
         if (BSL_SUCCESS != params_init_retval)
         {
             BSL_LOG_ERR("JSON Policy Parse: Error allocating params");

@@ -39,7 +39,7 @@ void BSLP_InitParams_Deinit(BSLP_InitParams_t *params);
 /**
  * Initialize local policy provider from JSON file
  * @param[in] policy_cfg_path path to JSON file containing policy configuration
- * @param[in,out] policy policy provider to configure. Must be initialize/allocated 
+ * @param[in,out] policy policy provider to configure. Must be initialize/allocated
  */
 int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_t *policy);
 
@@ -77,6 +77,6 @@ typedef uint32_t BSLP_BitstringPolicyConfiguration_t;
 /**
  * Initialize local policy provider from list of bitstrings
  * @param[in] policies comma seperated policy bitstrings as described by @ref BSLP_BitstringPolicyConfiguration_t
- * @param[in,out] policy policy provider to configure. Must be initialize/allocated 
+ * @param[in,out] policy policy provider to configure. Must be initialize/allocated
  */
 int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvider_t *policy);
