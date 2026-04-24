@@ -123,9 +123,9 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
         return BSL_ERR_POLICY_CONFIG;
     }
 
-    size_t policy_rule_idx, policy_rule_ct = json_array_size(policyrule_set);
+    size_t policy_rule_ct = json_array_size(policyrule_set);
     BSL_LOG_DEBUG(" got (%zu) policyrules:", policy_rule_ct);
-    for (policy_rule_idx = 0; policy_rule_idx < policy_rule_ct; ++policy_rule_idx)
+    for (size_t policy_rule_idx = 0; policy_rule_idx < policy_rule_ct; ++policy_rule_idx)
     {
         const json_t *policy_rule_elm = json_array_get(policyrule_set, policy_rule_idx);
         if (!json_is_object(policy_rule_elm))
@@ -503,9 +503,9 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
             const json_t *events = json_object_get(event_set, "events");
             if (events && json_is_array(events))
             {
-                size_t i, n = json_array_size(events);
+                size_t n = json_array_size(events);
                 BSL_LOG_DEBUG("num events (%zu):", n);
-                for (i = 0; i < n; ++i)
+                for (size_t i = 0; i < n; ++i)
                 {
                     const json_t *entry = json_array_get(events, i);
                     if (!json_is_object(entry))

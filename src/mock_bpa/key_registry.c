@@ -54,7 +54,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
     const size_t n = json_array_size(keys);
     BSL_LOG_INFO("Found %zu key objects", n);
 
-    for (size_t i = 0; !retval && (i < n); ++i)
+    for (size_t i = 0; i < n; ++i)
     {
         const json_t *key_obj = json_array_get(keys, i);
         if (!json_is_object(key_obj))
@@ -109,6 +109,12 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         }
         m_bstring_clear(k_data);
         m_string_clear(k_text);
+
+        if (retval)
+        {
+            BSL_LOG_ERR("JKW register failure");
+            break;
+        }
     }
 
     json_decref(root);
