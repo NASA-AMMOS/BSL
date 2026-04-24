@@ -51,7 +51,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         return 1;
     }
 
-    size_t n = json_array_size(keys);
+    const size_t n = json_array_size(keys);
     BSL_LOG_INFO("Found %zu key objects", n);
 
     for (size_t i = 0; !retval && (i < n); ++i)
