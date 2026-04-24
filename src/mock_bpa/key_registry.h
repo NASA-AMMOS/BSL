@@ -37,7 +37,6 @@
 extern "C" {
 #endif
 
-
 /// @brief Initialize JWKs
 /// @param pp_cfg_file_path path to JSON file with JWKs
 /// @return 0 if successful
