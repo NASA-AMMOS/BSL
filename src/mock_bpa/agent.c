@@ -38,8 +38,6 @@
 #include "eidpat.h"
 #include "encode.h"
 #include "decode.h"
-#include "policy_config.h"
-#include "policy_registry.h"
 
 static int MockBPA_GetEid(void *user_data, BSL_HostEID_t *result_eid)
 {
@@ -960,9 +958,9 @@ int MockBPA_Agent_Exec(MockBPA_Agent_t *agent)
         int res = poll(pfds, sizeof(pfds) / sizeof(struct pollfd), -1);
         if (res < 0)
         {
-            BSL_LOG_ERR("poll failed with errno: %d", errno);
             if (errno != EINTR)
             {
+                BSL_LOG_ERR("poll failed with errno: %d", errno);
                 retval = 4;
             }
             break;

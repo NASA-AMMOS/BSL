@@ -50,5 +50,6 @@ class Test_ION_JSON_Policy(TestAgent):
             key_set="mock-bpa-test/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
-            expected_output_format=DataFormat.BUNDLEARRAY
+            expected_output_format=DataFormat.BUNDLEARRAY,
+            use_bcb_rng=True
         ))

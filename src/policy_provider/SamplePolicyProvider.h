@@ -139,13 +139,13 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
  */
 typedef struct BSLP_PolicyRule_s
 {
-    string_t                  description;
-    BSL_SecRole_e             role;
-    BSL_BundleBlockTypeCode_e target_block_type;
-    BSL_SecBlockType_e        sec_block_type;
-    int64_t                   context_id;
-    BSLB_SecParamList_t       params;
-    BSL_PolicyAction_e        failure_action_code;
+    string_t            description;
+    BSL_SecRole_e       role;
+    uint64_t            target_block_type;
+    BSL_SecBlockType_e  sec_block_type;
+    int64_t             context_id;
+    BSLB_SecParamList_t params;
+    BSL_PolicyAction_e  failure_action_code;
 } BSLP_PolicyRule_t;
 
 /**
@@ -163,7 +163,7 @@ typedef struct BSLP_PolicyRule_s
  * @returns Zero on success
  */
 int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, const char *desc, int64_t context_id, BSL_SecRole_e role,
-                             BSL_SecBlockType_e sec_block_type, BSL_BundleBlockTypeCode_e target_block_type,
+                             BSL_SecBlockType_e sec_block_type, uint64_t target_block_type,
                              BSL_PolicyAction_e failure_action_code);
 
 /** Initialize policy rule

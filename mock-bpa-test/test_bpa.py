@@ -78,25 +78,30 @@ class TestAgent(unittest.TestCase):
         self.assertIsNone(self._ol_sock)
 
         is_json = False
+        use_bcb_rng = False
 
         if testcase is not None:
             policy_config = testcase.policy_config
             LOGGER.info('Using policy config %s', policy_config)
             is_json = policy_config.endswith(".json")
 
+            use_bcb_rng = testcase.use_bcb_rng
             key_set = testcase.key_set
+
         else:
             policy_config = "0x00"
             key_set = "mock-bpa-test/key_set_1.json"
 
-        args = compose_args([
+        arglist = [
             'bsl-mock-bpa',
             '-s', 'ipn:2.1',  # security source
             '-u', 'localhost:4556', '-r', 'localhost:14556',
             '-o', 'localhost:24556', '-a', 'localhost:34556',
             '-j' if is_json else "-p", policy_config,
             '-k', key_set
-        ])
+        ]
+        arglist += ['-c'] if use_bcb_rng else []
+        args = compose_args(arglist)
         self._agent = CmdRunner(args, stderr=subprocess.STDOUT)
 
         # Bind underlayer messaging

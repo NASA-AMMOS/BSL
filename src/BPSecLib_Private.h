@@ -74,6 +74,7 @@ typedef enum
     BSL_ERR_POLICY_FAILED = -100, ///< General error code for errors arising from a Policy Provider
     BSL_ERR_POLICY_QUERY  = -101, ///< Error code for errors arising from Policy Provider query
     BSL_ERR_POLICY_FINAL  = -102, ///< Error code for errors arising from Policy Provider finalize
+    BSL_ERR_POLICY_CONFIG = -103, ///< Error code for errors arising from Policy Provider configuration
 
     /// Security Context errors start at 200
     BSL_ERR_SECURITY_CONTEXT_FAILED       = -200, ///< General error code for errors arising from a Security Context.

@@ -33,6 +33,7 @@ BPA's
 BPSec
 BPSecLib
 BPv
+bsl
 BSL
 BSLs
 BSLX
@@ -121,6 +122,7 @@ Josefsson
 JPL
 JSON
 JWK
+JWKs
 KEK
 len
 libc

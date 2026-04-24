@@ -99,10 +99,12 @@ target_link_libraries(bsl_default_sc PUBLIC QCBOR::qcbor)
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyConfigParser.h
 )
 
 set(BSL_SAMPLE_PP_C
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyConfigParser.c
 )
 
 add_library(bsl_sample_pp)
@@ -115,6 +117,7 @@ set_target_properties(bsl_sample_pp
 )
 target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
+target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H

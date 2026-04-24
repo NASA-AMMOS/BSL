@@ -21,43 +21,34 @@
  */
 
 /** @file
- * Data structure and calls for the mock bpa policy params
  * @ingroup mock_bpa
  */
 
-#ifndef MOCK_BPA_POLICY_PARAMS_H_
-#define MOCK_BPA_POLICY_PARAMS_H_
+#ifndef BSL_MOCK_BPA_KEY_REGISTRY_H_
+#define BSL_MOCK_BPA_KEY_REGISTRY_H_
 
-#include <BPSecLib_Private.h>
+#include <inttypes.h>
+#include <stdio.h>
+#include <jansson.h>
+
+#include <CryptoInterface.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct mock_bpa_policy_params
-{
-    // Params related to BIB
-    BSL_SecParam_t *param_integ_scope_flag;
-    BSL_SecParam_t *param_sha_variant;
+/// @brief Initialize JWKs
+/// @param pp_cfg_file_path path to JSON file with JWKs
+/// @return 0 if successful
+int mock_bpa_key_registry_init(const char *pp_cfg_file_path);
 
-    // Params related to BCB
-    BSL_SecParam_t *param_aad_scope_flag;
-    BSL_SecParam_t *param_init_vector;
-    BSL_SecParam_t *param_aes_variant;
-    BSL_SecParam_t *param_use_wrapped_key;
-
-    // Params agnostic to BIB vs BCB
-    BSL_SecParam_t *param_test_key;
-
-    bool active;
-} mock_bpa_policy_params_t;
-
-void mock_bpa_policy_params_init(mock_bpa_policy_params_t *params, int policy_num);
-
-void mock_bpa_policy_params_deinit(mock_bpa_policy_params_t *params, int policy_num);
+/**
+ * Custom RNG function for BCB testing
+ */
+int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif // MOCK_BPA_POLICY_PARAMS_H_
+#endif
