@@ -43,7 +43,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         return 1;
     }
 
-    json_t *keys = json_object_get(root, "keys");
+    const json_t *keys = json_object_get(root, "keys");
     if (!keys || !json_is_array(keys))
     {
         BSL_LOG_ERR("Missing \"keys\" ");
@@ -56,13 +56,13 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
 
     for (size_t i = 0; !retval && (i < n); ++i)
     {
-        json_t *key_obj = json_array_get(keys, i);
+        const json_t *key_obj = json_array_get(keys, i);
         if (!json_is_object(key_obj))
         {
             continue;
         }
 
-        json_t *kty = json_object_get(key_obj, "kty");
+        const json_t *kty = json_object_get(key_obj, "kty");
         if (!kty)
         {
             BSL_LOG_ERR("Missing \"kty\" ");
@@ -75,7 +75,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
             continue;
         }
 
-        json_t *kid = json_object_get(key_obj, "kid");
+        const json_t *kid = json_object_get(key_obj, "kid");
         if (!kid || !json_is_string(kid))
         {
             BSL_LOG_ERR("Missing \"kid\" ");
@@ -84,7 +84,7 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
         const char *kid_str = json_string_value(kid);
         BSL_LOG_DEBUG("kid: %s", kid_str);
 
-        json_t *k = json_object_get(key_obj, "k");
+        const json_t *k = json_object_get(key_obj, "k");
         if (!k || !json_is_string(k))
         {
             BSL_LOG_ERR("Missing \"k\" ");

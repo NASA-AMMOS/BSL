@@ -774,13 +774,13 @@ int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvid
             return params_init_retval;
         }
 
-        uint32_t val = strtoul(curs, &pend, 0);
-        if (pend == curs)
+        unsigned long val = strtoul(curs, &pend, 0);
+        if ((pend == curs) || (val > INT_MAX))
         {
             BSL_LOG_ERR("Failed to decode policy integer at: %s", curs);
         }
         curs = pend;
-        BSLP_RegisterPolicyFromBitstring(val, policy, &params);
+        BSLP_RegisterPolicyFromBitstring((int)val, policy, &params);
         BSLP_InitParams_Deinit(&params);
 
         if (*curs == '\0')
