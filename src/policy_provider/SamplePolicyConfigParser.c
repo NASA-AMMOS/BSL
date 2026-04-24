@@ -118,7 +118,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
     }
 
     // policyrule_set attr
-    json_t *policyrule_set = json_object_get(root, "policyrule_set");
+    const json_t *policyrule_set = json_object_get(root, "policyrule_set");
     if (!policyrule_set || !json_is_array(policyrule_set))
     {
         BSL_LOG_ERR("Missing policyrule set ");
@@ -130,7 +130,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
     BSL_LOG_DEBUG(" got (%zu) policyrules:", policy_rule_ct);
     for (policy_rule_idx = 0; policy_rule_idx < policy_rule_ct; ++policy_rule_idx)
     {
-        json_t *policy_rule_elm = json_array_get(policyrule_set, policy_rule_idx);
+        const json_t *policy_rule_elm = json_array_get(policyrule_set, policy_rule_idx);
         if (!json_is_object(policy_rule_elm))
         {
             BSL_LOG_ERR("Policy rule not JSON object");
@@ -138,7 +138,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
         }
 
         // policyrule attr
-        json_t *policyrule = json_object_get(policy_rule_elm, "policyrule");
+        const json_t *policyrule = json_object_get(policy_rule_elm, "policyrule");
         if (!policyrule || !json_is_object(policyrule))
         {
             BSL_LOG_ERR("Missing policyrule");
@@ -154,13 +154,13 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
         }
 
         // filter attr
-        json_t *filter = json_object_get(policyrule, "filter");
+        const json_t *filter = json_object_get(policyrule, "filter");
         if (filter && json_is_object(filter))
         {
             BSL_LOG_DEBUG("filter:");
 
             // Get rule_id
-            json_t *rule_id = json_object_get(filter, "rule_id");
+            const json_t *rule_id = json_object_get(filter, "rule_id");
             if (!rule_id)
             {
                 BSL_LOG_ERR("No rule ID ");
@@ -170,7 +170,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
             BSL_LOG_DEBUG("     rule_id: %s", rule_id_str);
 
             // get sec role
-            json_t *role = json_object_get(filter, "role");
+            const json_t *role = json_object_get(filter, "role");
             if (!role)
             {
                 BSL_LOG_ERR("No sec role");
@@ -198,7 +198,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                 continue;
             }
 
-            json_t *src = json_object_get(filter, "src");
+            const json_t *src = json_object_get(filter, "src");
             if (src)
             {
                 src_str = json_string_value(src);
@@ -209,7 +209,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                 src_str = "*:**";
             }
 
-            json_t *dest = json_object_get(filter, "dest");
+            const json_t *dest = json_object_get(filter, "dest");
             if (dest)
             {
                 dest_str = json_string_value(dest);
@@ -220,7 +220,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                 dest_str = "*:**";
             }
 
-            json_t *sec_src = json_object_get(filter, "sec_src");
+            const json_t *sec_src = json_object_get(filter, "sec_src");
             if (sec_src)
             {
                 sec_src_str = json_string_value(sec_src);
@@ -232,7 +232,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
             }
 
             // check tgt (target block type)
-            json_t *tgt = json_object_get(filter, "tgt");
+            const json_t *tgt = json_object_get(filter, "tgt");
             if (!tgt)
             {
                 BSL_LOG_ERR("No tgt");
@@ -248,7 +248,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
             target_block_type = (uint64_t)tgt_l;
 
             // check loc (sec location )
-            json_t *loc = json_object_get(filter, "loc");
+            const json_t *loc = json_object_get(filter, "loc");
             if (!loc)
             {
                 BSL_LOG_ERR("No loc");
@@ -279,7 +279,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                 continue;
             }
 
-            json_t *sc_id = json_object_get(filter, "sc_id");
+            const json_t *sc_id = json_object_get(filter, "sc_id");
             if (!sc_id || !json_is_integer(sc_id))
             {
                 BSL_LOG_DEBUG("NO SEC CTX ID");
@@ -298,14 +298,14 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
         }
 
         // es_ref
-        json_t *es_ref = json_object_get(policyrule, "es_ref");
+        const json_t *es_ref = json_object_get(policyrule, "es_ref");
         if (!es_ref || !json_is_string(es_ref))
         {
             BSL_LOG_DEBUG("NO ES REF");
         }
 
         // policy_action_on_fail
-        json_t *policy_action_on_fail = json_object_get(policyrule, "policy_action_on_fail");
+        const json_t *policy_action_on_fail = json_object_get(policyrule, "policy_action_on_fail");
         if (!policy_action_on_fail || !json_is_string(policy_action_on_fail))
         {
             BSL_LOG_ERR("NO POLICY ACTION");
@@ -334,7 +334,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
         uint64_t params_got = 0x0;
 
         // spec attr
-        json_t *spec = json_object_get(policyrule, "spec");
+        const json_t *spec = json_object_get(policyrule, "spec");
         if (spec && json_is_object(spec))
         {
             // check sec ctx id
@@ -344,27 +344,27 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
             BSL_LOG_DEBUG("spec:");
             BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT, sc_id_l);
 
-            json_t *sc_parms = json_object_get(spec, "sc_parms");
+            const json_t *sc_parms = json_object_get(spec, "sc_parms");
             if (sc_parms && json_is_array(sc_parms))
             {
                 size_t i, n = json_array_size(sc_parms);
                 BSL_LOG_DEBUG("     sc_parms (%zu):", n);
                 for (i = 0; i < n; ++i)
                 {
-                    json_t *entry = json_array_get(sc_parms, i);
+                    const json_t *entry = json_array_get(sc_parms, i);
                     if (!json_is_object(entry))
                     {
                         continue;
                     }
 
-                    json_t *id = json_object_get(entry, "id");
+                    const json_t *id = json_object_get(entry, "id");
                     if (!id || !json_is_string(id))
                     {
                         continue;
                     }
                     const char *id_str = json_string_value(id);
 
-                    json_t *value = json_object_get(entry, "value");
+                    const json_t *value = json_object_get(entry, "value");
                     if (!value || !json_is_string(value))
                     {
                         continue;
@@ -495,30 +495,30 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
 
         // event set
         // TODO currently not utilized
-        json_t *event_set = json_object_get(root, "event_set");
+        const json_t *event_set = json_object_get(root, "event_set");
         if (event_set && json_is_object(event_set))
         {
             // es_ref
-            json_t *es_ref_es = json_object_get(policyrule, "es_ref");
+            const json_t *es_ref_es = json_object_get(policyrule, "es_ref");
             if (!es_ref_es || !json_is_string(es_ref_es))
             {
                 BSL_LOG_DEBUG("NO ES REF");
             }
 
-            json_t *events = json_object_get(event_set, "events");
+            const json_t *events = json_object_get(event_set, "events");
             if (events && json_is_array(events))
             {
                 size_t i, n = json_array_size(events);
                 BSL_LOG_DEBUG("num events (%zu):", n);
                 for (i = 0; i < n; ++i)
                 {
-                    json_t *entry = json_array_get(events, i);
+                    const json_t *entry = json_array_get(events, i);
                     if (!json_is_object(entry))
                     {
                         continue;
                     }
 
-                    json_t *event_id = json_object_get(entry, "event_id");
+                    const json_t *event_id = json_object_get(entry, "event_id");
                     if (!event_id)
                     {
                         continue;
@@ -526,14 +526,14 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                     const char *event_id_str = json_string_value(event_id);
                     BSL_LOG_DEBUG("EVENT ID FOUND: %s", event_id_str);
 
-                    json_t *actions = json_object_get(entry, "actions");
+                    const json_t *actions = json_object_get(entry, "actions");
                     if (actions && json_is_array(actions))
                     {
                         size_t j, m = json_array_size(actions);
                         BSL_LOG_DEBUG("num actions in %s (%zu):", event_id_str, m);
                         for (j = 0; j < m; ++j)
                         {
-                            json_t *act = json_array_get(actions, j);
+                            const json_t *act = json_array_get(actions, j);
                             if (!json_is_string(act))
                             {
                                 continue;
