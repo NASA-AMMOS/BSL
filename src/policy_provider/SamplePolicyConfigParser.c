@@ -756,6 +756,7 @@ int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvid
         }
         curs = pend;
         BSLP_RegisterPolicyFromBitstring(val, policy, &params);
+        BSLP_InitParams_Deinit(&params);
 
         if (*curs == '\0')
         {
@@ -766,8 +767,6 @@ int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvid
             BSL_LOG_ERR("Failed to decode policy list (expecting comma) at: %s", curs);
         }
         curs += 1;
-
-        BSLP_InitParams_Deinit(&params);
     }
 
     return BSL_SUCCESS;
