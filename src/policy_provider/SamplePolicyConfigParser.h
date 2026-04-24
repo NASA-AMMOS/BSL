@@ -97,7 +97,7 @@ typedef uint32_t BSLP_BitstringPolicyConfiguration_t;
 
 /**
  * Initialize local policy provider from list of bit strings
- * @param[in] policies comma seperated policy bit strings as described by @ref BSLP_BitstringPolicyConfiguration_t
+ * @param[in] policies comma separated policy bit strings as described by @ref BSLP_BitstringPolicyConfiguration_t
  * @param[in,out] policy policy provider to configure. Must be initialize/allocated
  */
 int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvider_t *policy);
