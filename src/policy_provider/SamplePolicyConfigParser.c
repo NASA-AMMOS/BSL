@@ -335,7 +335,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
         if (spec && json_is_object(spec))
         {
             // check sec ctx id
-            json_t          *sc_id   = json_object_get(spec, "sc_id");
+            const json_t    *sc_id   = json_object_get(spec, "sc_id");
             const json_int_t sc_id_l = json_integer_value(sc_id);
 
             BSL_LOG_DEBUG("spec:");
@@ -344,9 +344,9 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
             const json_t *sc_parms = json_object_get(spec, "sc_parms");
             if (sc_parms && json_is_array(sc_parms))
             {
-                size_t i, n = json_array_size(sc_parms);
+                const size_t n = json_array_size(sc_parms);
                 BSL_LOG_DEBUG("     sc_parms (%zu):", n);
-                for (i = 0; i < n; ++i)
+                for (size_t i = 0; i < n; ++i)
                 {
                     const json_t *entry = json_array_get(sc_parms, i);
                     if (!json_is_object(entry))
@@ -526,9 +526,9 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                     const json_t *actions = json_object_get(entry, "actions");
                     if (actions && json_is_array(actions))
                     {
-                        size_t j, m = json_array_size(actions);
+                        const size_t m = json_array_size(actions);
                         BSL_LOG_DEBUG("num actions in %s (%zu):", event_id_str, m);
-                        for (j = 0; j < m; ++j)
+                        for (size_t j = 0; j < m; ++j)
                         {
                             const json_t *act = json_array_get(actions, j);
                             if (!json_is_string(act))
