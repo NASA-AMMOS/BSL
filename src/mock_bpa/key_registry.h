@@ -33,6 +33,11 @@
 
 #include <CryptoInterface.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /// @brief Initialize JWKs
 /// @param pp_cfg_file_path path to JSON file with JWKs
 /// @return 0 if successful
@@ -42,5 +47,9 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path);
  * Custom RNG function for BCB testing
  */
 int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif

@@ -86,9 +86,6 @@ void BSLP_InitParams_Deinit(BSLP_InitParams_t *params)
     BSL_free(params->param_use_wrapped_key);
 }
 
-/**
- * @todo Handle ION events as policy actions - dependent on other BSL issues/ future changes
- */
 int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_t *policy)
 {
     CHK_ARG_NONNULL(policy_cfg_path);

@@ -19,6 +19,14 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+
+/**
+ * @file
+ * @ingroup example_pp
+ */
+#ifndef BSLP_SAMPLE_POLICY_CONFIG_PARSER_H
+#define BSLP_SAMPLE_POLICY_CONFIG_PARSER_H
+
 #include <inttypes.h>
 #include <stdio.h>
 #include <jansson.h>
@@ -97,7 +105,9 @@ typedef uint32_t BSLP_BitstringPolicyConfiguration_t;
 
 /**
  * Initialize local policy provider from list of bit strings
- * @param[in] policies comma seperated policy bit strings as described by @ref BSLP_BitstringPolicyConfiguration_t
+ * @param[in] policies comma separated policy bit strings as described by @ref BSLP_BitstringPolicyConfiguration_t
  * @param[in,out] policy policy provider to configure. Must be initialize/allocated
  */
 int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvider_t *policy);
+
+#endif
