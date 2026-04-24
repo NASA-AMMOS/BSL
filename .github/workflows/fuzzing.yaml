@@ -48,6 +48,8 @@ jobs:
     steps:
       - name: Set up OS
         if: startsWith(matrix.os, 'ubuntu')
+        env:
+          PIP_BREAK_SYSTEM_PACKAGES: 1
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -55,7 +57,8 @@ jobs:
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
               libssl-dev libjansson-dev \
-              gcovr xmlstarlet
+              xmlstarlet python3-pip
+          sudo pip3 install gcovr
           sudo gem install cbor-diag
       - name: Set up OS
         if: startsWith(matrix.os, 'centos')

@@ -696,12 +696,8 @@ int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t s
     CHK_PROPERTY(key_ptr != NULL);
     // actual key struct
     BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref(key_ptr);
-    EVP_PKEY_CTX    *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
-    int              res = EVP_PKEY_keygen_init(ctx);
-    CHK_PROPERTY(res == 1);
 
     key->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, secret, (int)secret_len);
-    EVP_PKEY_CTX_free(ctx);
 
     int ecode = 0;
     if ((ecode = BSL_Data_CopyFrom(&key->raw, secret_len, secret)) < 0)
