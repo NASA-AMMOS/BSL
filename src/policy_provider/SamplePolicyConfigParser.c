@@ -409,16 +409,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             }
                             else if (0 == strcmp(id_str, "key_wrap"))
                             {
-                                uint64_t keywrap;
-                                if (0 == strcmp(value_str, "0"))
-                                {
-                                    keywrap = 0;
-                                }
-                                else
-                                {
-                                    keywrap = 1;
-                                }
-
+                                uint64_t keywrap = !!strcmp(value_str, "0");
                                 BSL_SecParam_InitUint64(params.param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP,
                                                         keywrap);
                                 params_got |= 0x8;
@@ -437,11 +428,6 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                                 BSL_SecParam_InitTextstr(params.param_test_key, BSL_SECPARAM_TYPE_KEY_ID, value_str);
                                 params_got |= 0x1;
                             }
-                            else if (0 == strcmp(id_str, "iv"))
-                            {
-                                // BSL_SecParam_InitBytestr(params.param_init_vector, RFC9173_BCB_SECPARAM_IV, );
-                                params_got |= 0x2;
-                            }
                             else if (0 == strcmp(id_str, "aes_variant"))
                             {
                                 uint64_t aes_var = strtol(value_str, NULL, 10);
@@ -458,16 +444,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             }
                             else if (0 == strcmp(id_str, "key_wrap"))
                             {
-                                uint64_t keywrap;
-                                if (0 == strcmp(value_str, "0"))
-                                {
-                                    keywrap = 0;
-                                }
-                                else
-                                {
-                                    keywrap = 1;
-                                }
-
+                                uint64_t keywrap = !!strcmp(value_str, "0");
                                 BSL_SecParam_InitUint64(params.param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP,
                                                         keywrap);
                                 params_got |= 0x10;
