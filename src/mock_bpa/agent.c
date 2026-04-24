@@ -958,9 +958,9 @@ int MockBPA_Agent_Exec(MockBPA_Agent_t *agent)
         int res = poll(pfds, sizeof(pfds) / sizeof(struct pollfd), -1);
         if (res < 0)
         {
-            BSL_LOG_ERR("poll failed with errno: %d", errno);
             if (errno != EINTR)
             {
+                BSL_LOG_ERR("poll failed with errno: %d", errno);
                 retval = 4;
             }
             break;

@@ -73,10 +73,10 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
     CHK_ARG_NONNULL(policy_cfg_path);
     CHK_ARG_NONNULL(policy);
 
-    uint32_t             sec_block_type;
-    uint32_t             sec_ctx_id;
+    BSL_SecBlockType_e   sec_block_type;
+    int64_t              sec_ctx_id;
     BSL_SecRole_e        sec_role;
-    uint32_t             target_block_type;
+    uint64_t             target_block_type;
     BSL_PolicyLocation_e policy_loc_enum;
     BSL_PolicyAction_e   policy_action_enum;
 
@@ -217,10 +217,14 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                 BSL_LOG_ERR("No tgt");
                 continue;
             }
-            const long tgt_l = json_integer_value(tgt);
+            const json_int_t tgt_l = json_integer_value(tgt);
             BSL_LOG_DEBUG("     tgt    : %" JSON_INTEGER_FORMAT, tgt_l);
-
-            target_block_type = tgt_l;
+            if (tgt_l < 0)
+            {
+                BSL_LOG_ERR("Invalid tgt");
+                continue;
+            }
+            target_block_type = (uint64_t)tgt_l;
 
             // check loc (sec location )
             json_t *loc = json_object_get(filter, "loc");
@@ -260,10 +264,10 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                 BSL_LOG_DEBUG("NO SEC CTX ID");
                 continue;
             }
-            long sc_id_l = json_integer_value(sc_id);
+            const json_int_t sc_id_l = json_integer_value(sc_id);
             BSL_LOG_DEBUG("     scid    : %" JSON_INTEGER_FORMAT, sc_id_l);
 
-            sec_ctx_id     = sc_id_l;
+            sec_ctx_id     = (int64_t)sc_id_l;
             sec_block_type = (sec_ctx_id == 1) ? BSL_SECBLOCKTYPE_BIB : BSL_SECBLOCKTYPE_BCB;
         }
         else
@@ -313,11 +317,11 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
         if (spec && json_is_object(spec))
         {
             // check sec ctx id
-            json_t *sc_id   = json_object_get(spec, "sc_id");
-            long    sc_id_l = json_integer_value(sc_id);
+            json_t          *sc_id   = json_object_get(spec, "sc_id");
+            const json_int_t sc_id_l = json_integer_value(sc_id);
 
             BSL_LOG_DEBUG("spec:");
-            BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT, sc_id_l ? sc_id_l : -1);
+            BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT, sc_id_l);
 
             json_t *sc_parms = json_object_get(spec, "sc_parms");
             if (sc_parms && json_is_array(sc_parms))
@@ -403,7 +407,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             }
                             else
                             {
-                                BSL_LOG_ERR("INVALID PARAM KEY %s FOR SC ID %d", id_str, sc_id_l);
+                                BSL_LOG_ERR("INVALID PARAM KEY %s FOR SC ID %" JSON_INTEGER_FORMAT, id_str, sc_id_l);
                                 continue;
                             }
                             break;
@@ -453,7 +457,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             }
                             else
                             {
-                                BSL_LOG_ERR("INVALID PARAM KEY %s FOR SC ID %d", id_str, sc_id_l);
+                                BSL_LOG_ERR("INVALID PARAM KEY %s FOR SC ID %" JSON_INTEGER_FORMAT, id_str, sc_id_l);
                                 continue;
                             }
                             break;
@@ -571,7 +575,7 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_BitstringPolicyConfigura
     uint32_t use_wrapped_key    = (policy_bits >> 8) & 0x01;
     uint32_t policy_ignore      = (policy_bits >> 9) & 0x01;
 
-    uint64_t sec_context;
+    int64_t sec_context;
 
     // Init params for BCB if equal to 1, otherwise BIB
     if (sec_block_type == 1)
@@ -599,16 +603,16 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_BitstringPolicyConfigura
         BSL_SecParam_InitUint64(params->param_use_wrapped_key, BSL_SECPARAM_USE_KEY_WRAP, 0);
     }
 
-    BSL_SecBlockType_e sec_block_emum;
+    BSL_SecBlockType_e sec_block_enum;
     if (sec_block_type == 1)
     {
-        sec_block_emum = BSL_SECBLOCKTYPE_BCB;
+        sec_block_enum = BSL_SECBLOCKTYPE_BCB;
         sec_context    = 2;
         BSL_LOG_DEBUG("Policy: 0x%X - BSL Security Block Type: BCB", policy_bits);
     }
     else
     {
-        sec_block_emum = BSL_SECBLOCKTYPE_BIB;
+        sec_block_enum = BSL_SECBLOCKTYPE_BIB;
         sec_context    = 1;
         BSL_LOG_DEBUG("Policy: 0x%X - BSL Security Block Type: BIB", policy_bits);
     }
@@ -709,10 +713,10 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_BitstringPolicyConfigura
     BSLP_PolicyPredicate_InitFrom(&predicate_all_in, policy_loc_enum, eid_src_pat_str, "*:**", "*:**");
 
     BSLP_PolicyRule_t rule_all_in;
-    BSLP_PolicyRule_InitFrom(&rule_all_in, policybits_str, sec_context, sec_role_enum, sec_block_emum,
+    BSLP_PolicyRule_InitFrom(&rule_all_in, policybits_str, sec_context, sec_role_enum, sec_block_enum,
                              bundle_block_enum, policy_action_enum);
 
-    if (sec_block_emum == BSL_SECBLOCKTYPE_BCB)
+    if (sec_block_enum == BSL_SECBLOCKTYPE_BCB)
     {
         BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_aes_variant);
         if (sec_role_enum == BSL_SECROLE_SOURCE)
