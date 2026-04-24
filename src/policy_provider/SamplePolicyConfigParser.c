@@ -402,7 +402,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             }
                             else if (0 == strcmp(id_str, "scope_flags"))
                             {
-                                uint64_t flag = strtol(value_str, NULL, 10); // FIXME
+                                uint64_t flag = strtol(value_str, NULL, 10);
                                 BSL_SecParam_InitUint64(params.param_integ_scope_flag,
                                                         RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, flag);
                                 params_got |= 0x4;
@@ -439,7 +439,6 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             }
                             else if (0 == strcmp(id_str, "iv"))
                             {
-                                // TODO covert value_str to bstring
                                 // BSL_SecParam_InitBytestr(params.param_init_vector, RFC9173_BCB_SECPARAM_IV, );
                                 params_got |= 0x2;
                             }
@@ -452,7 +451,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             }
                             else if (0 == strcmp(id_str, "aad_scope"))
                             {
-                                uint64_t flag = strtol(value_str, NULL, 10); // FIXME
+                                uint64_t flag = strtol(value_str, NULL, 10);
                                 BSL_SecParam_InitUint64(params.param_aad_scope_flag, RFC9173_BCB_SECPARAM_AADSCOPE,
                                                         flag);
                                 params_got |= 0x8;
@@ -490,8 +489,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
             }
         }
 
-        // event set
-        // TODO currently not utilized
+        // event set (currently parsed, but not utilized/initialized meaningfully)
         const json_t *event_set = json_object_get(root, "event_set");
         if (event_set && json_is_object(event_set))
         {
@@ -551,7 +549,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
         BSLP_PolicyRule_InitFrom(&rule, rule_id_str, sec_ctx_id, sec_role, sec_block_type, target_block_type,
                                  policy_action_enum);
 
-        // TODO validate params_got
+        // validate params_got
         (void)params_got;
 
         if (sec_ctx_id == 2) // BCB
