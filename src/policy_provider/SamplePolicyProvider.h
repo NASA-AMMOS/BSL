@@ -119,12 +119,6 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
                                   BSL_HostEID_t src_eid, BSL_HostEID_t dst_eid);
 
 /**
- * Maximum string length of a policy rule description;
- * Affects ::BSLP_PolicyRule_Init `desc` parameter
- */
-#define BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN 100
-
-/**
  * @brief Represents a policy rule
  *
  * A policy rule contains parameters and other metadata
@@ -152,8 +146,7 @@ typedef struct BSLP_PolicyRule_s
  * @brief Initialize this policy rule from parameters
  *
  * @param[in] self This policy rule
- * @param[in] dest Description of this rule (C-string). Will copy characters of parameter from index 0 to
- * ::BSLP_POLICY_RULE_DESCRIPTION_MAX_STRLEN - 1.
+ * @param[in] dest Description of this rule (C-string)
  * @param[in] context_id Security context ID
  * @param[in] role Such as source, acceptor, etc
  * @param[in] sec_block_type Block type (BIB or BCB)
@@ -214,8 +207,6 @@ void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *pa
  * @param[in,out] param Pointer to the Parameter to move from.
  */
 void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param);
-
-#define BSLP_POLICYPREDICATE_ARRAY_CAPACITY (100)
 
 /// @brief Policy provider data. References shared among individual providers in BSL context
 typedef struct BSLP_PolicyProvider_s
