@@ -71,12 +71,10 @@ typedef struct BSL_Data_s
  */
 int BSL_Data_Init(BSL_Data_t *data);
 
-/** Initialize with an owned buffer of size bytelen
- *
- * @todo Clarify to indicate this calls MALLOC.
- *
+/** Initialize with a dynamically-allocated owned buffer of size bytelen
+ * *
  * @param[in,out] data The data to initialize.
- * @param[in] bytelen Length of buffer to allocate.
+ * @param[in] bytelen Length of buffer to dynamically allocate.
  * @return Zero upon success.
  */
 int BSL_Data_InitBuffer(BSL_Data_t *data, size_t bytelen);
