@@ -1349,8 +1349,12 @@ struct BSL_PolicyDesc_s
 int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet_t *output_response,
                                       BSL_BundleRef_t *bundle, const BSL_SecurityActionSet_t *action_set);
 
-/**
- * @todo Doxygen
+/** Validate policy action set
+ * 
+ * @param[in] lib This BSL context
+ * @param[in,out] bundle Pointer to bundle, which may be modified.
+ * @param[in] action_set Action containing all params and operations.
+ * @return true on success, false on failure.
  */
 bool BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
                                         const BSL_SecurityActionSet_t *action_set);

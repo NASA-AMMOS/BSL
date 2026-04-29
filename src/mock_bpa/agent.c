@@ -493,7 +493,6 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent, BSLP_PolicyProvider_t **policy)
         bcb_sec_desc.validate = BSLX_BCB_Validate;
         ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, 2, bcb_sec_desc));
     }
-    // TODO find a better way to deal with this
 
     *policy              = BSLP_PolicyProvider_Init(1);
     agent->appin.policy  = *policy;
