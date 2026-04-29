@@ -1350,7 +1350,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
                                       BSL_BundleRef_t *bundle, const BSL_SecurityActionSet_t *action_set);
 
 /** Validate policy action set
- * 
+ *
  * @param[in] lib This BSL context
  * @param[in,out] bundle Pointer to bundle, which may be modified.
  * @param[in] action_set Action containing all params and operations.
