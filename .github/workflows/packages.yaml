@@ -21,6 +21,7 @@
 ##
 name: Packages
 on:
+  workflow_dispatch: {} # manual trigger
   schedule:
     - cron: '0 0 * * 0'
   push:
