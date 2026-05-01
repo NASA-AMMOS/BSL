@@ -44,7 +44,7 @@ function usage {
     echo "  install        - Install"
     echo "  lint           - Run clang-tidy code linter"
     echo "  prep [args...] - Generate makefiles with config options"
-    echo "  rpm-build      - Build RPM package after rpm-prep"
+    echo "  rpm-build      - Build RPM package with Tito"
     echo "  rpm-check      - Check RPM packages after rpm-build"
     echo "  rpm-container  - Build and check RPM packages inside container"
     echo "  run [args...]  - Run a command with the environment vars"
