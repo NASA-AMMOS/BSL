@@ -152,7 +152,7 @@ popd
 
 %changelog
 * Fri May 15 2026 Brian Sipos <brian.sipos@jhuapl.edu> - 1.1.0-1
-- Updates for ION v4.2 integration.
+- Updates for ION v4.2 integration, adding memory and logging callbacks.
 - Reorganize JSON policy decoder from bsl_mock_bpa into bsl_sample_pp library.
 
 * Thu Sep 18 2025 Brian Sipos <brian.sipos@jhuapl.edu> 1.0.0-2
