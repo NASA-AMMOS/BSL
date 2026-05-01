@@ -1,8 +1,8 @@
 %bcond_with apidoc
 
 Name: bsl
-Version: 1.0.0
-Release: 2%{?dist}
+Version: 1.1.0
+Release: 1%{?dist}
 Summary: The Bundle Protocol Security Library (BSL)
 URL: https://github.com/NASA-AMMOS/BSL
 # License "Apache-2.0" is not accepted by rpmlint
@@ -151,10 +151,14 @@ popd
 
 
 %changelog
-* Thu Sep 18 2025 Brian Sipos <brian.sipos@jhuapl.edu> 1.0.0-2
-- New package built with tito
+* Fri May 15 2026 Brian Sipos <brian.sipos@jhuapl.edu> - 1.1.0-1
+- Updates for ION v4.2 integration, adding memory and logging callbacks.
+- Reorganize JSON policy decoder from bsl_mock_bpa into bsl_sample_pp library.
 
-* Wed Sep 17 2025 Brian Sipos - 1.0.0-1
+* Thu Sep 18 2025 Brian Sipos <brian.sipos@jhuapl.edu> 1.0.0-2
+- New package built with tito.
+
+* Wed Sep 17 2025 Brian Sipos <brian.sipos@jhuapl.edu> - 1.0.0-1
 - Initial release version.
 
 * Mon Oct 07 2024 Brian Sipos - 0.0.0-0
