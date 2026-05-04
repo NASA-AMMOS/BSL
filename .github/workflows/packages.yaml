@@ -42,10 +42,6 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
-              rsync cmake git ninja-build gcc gcc-c++ ccache ruby \
-              openssl-devel jansson-devel \
-              doxygen graphviz plantuml texlive-bibtex \
-              asciidoctor \
               tito rpm-build rpmlint
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -56,6 +52,8 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2.22
         with:
           create-symlink: true
+      - name: Dependencies
+        run: dnf builddep -y bsl.spec
       - name: Build
         run: ./build.sh rpm-build
       - name: Check
