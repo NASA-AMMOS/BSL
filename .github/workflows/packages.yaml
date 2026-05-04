@@ -79,6 +79,7 @@ jobs:
 
   rpm-install:
     name: Install RPM packages (RHEL-9)
+    needs: rpm-build
     runs-on: ubuntu-latest
     container: quay.io/centos/centos:stream9
     permissions:
