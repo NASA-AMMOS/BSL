@@ -30,8 +30,6 @@ jobs:
   build:
     name: Build and analyze
     runs-on: ubuntu-latest
-    env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     steps:
       - uses: actions/checkout@v6
         with:
@@ -47,12 +45,9 @@ jobs:
               python3 python3-pip python3-wheel
           pip3 install gcovr
           ./build.sh deps
-          ./build.sh prep -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=ON -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
-      - name: Install Build Wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v7
-      - name: Run Build Wrapper
-        run: |
-          build-wrapper-linux-x86-64 --out-dir ${{env.BUILD_WRAPPER_OUT_DIR}} ./build.sh
+          ./build.sh prep -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=ON -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Build
+        run: ./build.sh
       - name: Install
         run: ./build.sh install
       - name: Test
@@ -70,5 +65,5 @@ jobs:
           SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
         with:
           args: >
+            --define sonar.cfamily.compile-commands=build/default/compile_commands.json
             --define sonar.coverageReportPaths=build/default/coverage-sonarqube.xml
-            --define "sonar.cfamily.compile-commands=${{env.BUILD_WRAPPER_OUT_DIR}}/compile_commands.json"
