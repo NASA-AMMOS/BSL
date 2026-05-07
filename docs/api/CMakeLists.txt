@@ -58,6 +58,10 @@ add_custom_target(
     COMMENT "Generating API documentation with Doxygen"
     USES_TERMINAL
 )
+add_custom_target(
+    docs-api
+    DEPENDS docs-api-html
+)
 install(
     FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/index.html
@@ -74,7 +78,6 @@ if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
     # spellcheck on combined XML output
     set(DICTIONARY_TXT "${CMAKE_CURRENT_SOURCE_DIR}/dictionary.txt")
     set(SPELLCHECK_XSL "${CMAKE_CURRENT_SOURCE_DIR}/spellcheck.xsl")
-    set(MISSPELLING_TXT "misspelling.txt")
     add_custom_command(
         OUTPUT "dictionary.cwl"
         DEPENDS ${DICTIONARY_TXT}
@@ -82,19 +85,36 @@ if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
             ${ASPELL_EXECUTABLE} --lang=en create master "./dictionary.cwl"
     )
     add_custom_command(
-        OUTPUT ${MISSPELLING_TXT}
+        OUTPUT "spellcheck-combined.xml"
         DEPENDS
-            ${XML_COMBINE} ${XML_INDEX}
-            ${SPELLCHECK_XSL} "dictionary.cwl"
+            ${XML_COMBINE} ${XML_INDEX} ${SPELLCHECK_XSL}
         COMMAND
             ${XMLSTARLET_EXECUTABLE} tr "${XML_COMBINE}" "${XML_INDEX}" |
-            ${XMLSTARLET_EXECUTABLE} tr "${SPELLCHECK_XSL}" |
+            ${XMLSTARLET_EXECUTABLE} tr "${SPELLCHECK_XSL}" >"spellcheck-combined.xml"
+    )
+    add_custom_command(
+        OUTPUT "misspelling.txt"
+        DEPENDS
+            "spellcheck-combined.xml" "dictionary.cwl"
+        COMMAND
+            cat "spellcheck-combined.xml" |
             ${ASPELL_EXECUTABLE} --mode=html --lang=EN_US --extra-dicts=./dictionary.cwl list |
-            sort | uniq > "${MISSPELLING_TXT}"
+            sort -u >"misspelling.txt"
+    )
+    add_custom_command(
+        OUTPUT "misspelling-ctx.txt"
+        DEPENDS
+            "spellcheck-combined.xml" "misspelling.txt"
+        COMMAND
+            grep --file "misspelling.txt" "spellcheck-combined.xml" >"misspelling-ctx.txt" || true
     )
     add_custom_target(
         docs-api-misspelling
-        DEPENDS "${MISSPELLING_TXT}"
+        DEPENDS "misspelling.txt" "misspelling-ctx.txt"
+    )
+    add_dependencies(
+        docs-api
+        docs-api-misspelling
     )
 endif(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
 
@@ -109,6 +129,10 @@ if(MAKE_EXECUTABLE AND DBLATEX_EXECUTABLE)
         COMMAND ${MAKE_EXECUTABLE}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/latex
         COMMENT "Generating API documentation PDF"
+    )
+    add_dependencies(
+        docs-api
+        docs-api-pdf
     )
     install(
         FILES
