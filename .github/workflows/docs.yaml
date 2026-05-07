@@ -54,7 +54,6 @@ jobs:
       - name: Prep
         run: >
           ./build.sh prep
-          -DBUILD_LIB=OFF
           -DBUILD_TESTING=OFF -DBUILD_UNITTEST=OFF -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=OFF
           -DBUILD_DOCS_API=ON
       - name: Build
