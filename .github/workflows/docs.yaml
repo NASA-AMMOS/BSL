@@ -47,7 +47,7 @@ jobs:
               cmake ninja-build ruby build-essential \
               libssl-dev libjansson-dev \
               doxygen graphviz plantuml \
-              ${{github.event_name != 'pull_request' && 'dblatex texlive texlive-latex-extra texlive-font-utils' || ''}} \
+              ${{github.event_name != 'pull_request' && 'dblatex texlive texlive-latex-extra texlive-font-utils' || 'texlive-binaries'}} \
               xmlstarlet aspell
       - name: Dependency build
         run: ./build.sh deps
