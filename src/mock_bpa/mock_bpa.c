@@ -101,7 +101,7 @@ static void show_usage(const char *argv0)
             "Usage: %s -o <over-socket address:port> -a <application address:port>\n"
             "          -u <under-socket address:port> -r <router address:port>\n"
             "          -e <app-EID> -s <sec-src-EID>\n"
-            "          -p (optional - defaults to none) comma delimited hex list of <bsl_mock_policy_configuration_t>, "
+            "          -p (optional - defaults to none) comma delimited hex list of <BSLP_BitstringPolicyConfiguration_t>, "
             "e.g. '0x000f,0x0021'\n"
             "          -j (optional - defaults to none) path to JSON file containing policy configuration\n"
             "          -k (optional - defaults to none) path to JSON file containing JWKs to register\n"

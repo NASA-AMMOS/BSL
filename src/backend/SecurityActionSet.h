@@ -30,7 +30,7 @@
 #include "SecurityAction.h"
 
 /** @struct BSL_SecActionList_t
- * Defines a basic list of ::BSL_SecurityAction_t.
+ * Defines a basic list of ::BSL_SecurityAction_s.
  */
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN

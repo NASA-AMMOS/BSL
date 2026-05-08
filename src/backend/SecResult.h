@@ -91,13 +91,13 @@ struct BSL_SecResult_s
     m_bstring_t _bytes;
 };
 
-/// OPLIST for ::BSL_SecParam_t
+/// OPLIST for ::BSL_SecParam_s
 #define M_OPL_BSL_SecResult_t()                                                                                   \
     (INIT(API_2(BSL_SecResult_Init)), INIT_SET(API_6(BSL_SecResult_InitSet)), CLEAR(API_2(BSL_SecResult_Deinit)), \
      SET(API_6(BSL_SecResult_Set)))
 
 /** @struct BSLB_SecResultList_t
- * Defines a basic list of Security Results (::BSL_SecResult_t).
+ * Defines a basic list of Security Results (::BSL_SecResult_s).
  */
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
