@@ -303,7 +303,7 @@ typedef struct
 
 /** Dynamic BPA descriptor.
  *
- * @caution All functions in this structure must be thread safe, as they
+ * @warning All functions in this structure must be thread safe, as they
  * can be called by any number of BSL instances across any threads.
  */
 typedef struct
