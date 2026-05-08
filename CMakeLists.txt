@@ -122,13 +122,8 @@ if(BUILD_LIB)
 endif(BUILD_LIB)
 
 include(CheckSymbolExists)
-set(CMAKE_REQUIRED_DEFINITIONS "-D_POSIX_C_SOURCE=200809L")
 check_symbol_exists(timespec_get "time.h" HAVE_TIMESPEC_GET)
 check_symbol_exists(clock_gettime "time.h" HAVE_CLOCK_GETTIME)
-
-include(CheckTypeSize)
-check_type_size("int" SIZE_INT LANGUAGE C)
-check_type_size("size_t" SIZE_SIZET LANGUAGE C)
 
 if(BUILD_UNITTEST)
   if(TEST_MEMCHECK)
@@ -142,6 +137,7 @@ if(BUILD_UNITTEST)
       "--track-origins=yes"
       "--leak-check=full" "--show-leak-kinds=all"
       "--suppressions=${CMAKE_CURRENT_SOURCE_DIR}/resources/memcheck.supp"
+      "--gen-suppressions=all"
       "--error-exitcode=2"
     )
     # Arguments as list into global scope for Findunitytools.cmake
@@ -158,6 +154,7 @@ if(BUILD_COVERAGE)
   set(COVERAGE_EXCLUDES
     "${CMAKE_CURRENT_SOURCE_DIR}/deps/*"
     "${CMAKE_CURRENT_SOURCE_DIR}/testroot/*"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test/"
     "${CMAKE_CURRENT_BINARY_DIR}/test/*"
   )
   set(GCOVR_ADDITIONAL_ARGS
@@ -193,9 +190,12 @@ if(BUILD_LIB)
 endif(BUILD_LIB)
 
 set(TEST_INSTALL_PREFIX "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}")
-add_subdirectory(test)
-add_subdirectory(docs)
-
+if(BUILD_UNITTEST OR BUILD_FUZZING)
+    add_subdirectory(test)
+endif(BUILD_UNITTEST OR BUILD_FUZZING)
+if(BUILD_DOCS_API OR BUILD_DOCS_MAN)
+    add_subdirectory(docs)
+endif(BUILD_DOCS_API OR BUILD_DOCS_MAN)
 
 add_custom_command(
     DEPENDS CMakeGraphVizOptions.cmake
