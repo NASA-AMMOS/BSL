@@ -51,7 +51,7 @@ extern "C" {
 #define BSL_REQUIRE_CHECK
 #endif
 
-/// Forward declaration for BSL library context.
+// Forward declaration of this struct.
 typedef struct BSL_LibCtx_s BSL_LibCtx_t;
 
 /**
@@ -59,21 +59,24 @@ typedef struct BSL_LibCtx_s BSL_LibCtx_t;
  */
 size_t BSL_LibCtx_Sizeof(void);
 
-/// @brief Forward declaration of ::BSL_SecurityResponseSet_s, which contains information for BSL and the host BPA to
-/// process the Bundle.
+// Forward declaration of this struct.
+// This contains information for BSL and the host BPA to process the Bundle.
 typedef struct BSL_SecurityResponseSet_s BSL_SecurityResponseSet_t;
 
-/// @brief Forward declaration of ::BSL_SecurityActionSet_s, which contains actions for BSL to process the Bundle.
+// Forward declaration of this struct.
+// This contains actions for BSL to process the Bundle.
 typedef struct BSL_SecurityActionSet_s BSL_SecurityActionSet_t;
 
-/// @brief Forward declaration of ::BSL_SecurityAction_s, which contains security operations for BSL to process the
-/// Bundle.
+// Forward declaration of this struct.
+// This contains security operations for BSL to process the Bundle.
 typedef struct BSL_SecurityAction_s BSL_SecurityAction_t;
 
-/// @brief Forward-declaration for structure containing callbacks to a security context.
+// Forward declaration of this struct.
+// This contains callbacks to a security context.
 typedef struct BSL_SecCtxDesc_s BSL_SecCtxDesc_t;
 
-/// @brief Forward-declaration for structure containing callbacks to  provider.
+// Forward declaration of this struct.
+// This contains callbacks to a policy provider.
 typedef struct BSL_PolicyDesc_s BSL_PolicyDesc_t;
 
 /** @brief Indicates where in the lifecycle of the BPA the bundle is querying for security policy.
@@ -300,7 +303,7 @@ typedef struct
 
 /** Dynamic BPA descriptor.
  *
- * @caution All functions in this structure must be thread safe, as they
+ * @warning All functions in this structure must be thread safe, as they
  * can be called by any number of BSL instances across any threads.
  */
 typedef struct
@@ -432,7 +435,7 @@ typedef struct
 /** Set the BPA descriptor (callbacks) for this process.
  *
  * @warning This function is not thread safe and should be used before any
- * ::BSL_LibCtx_t is initialized or other BSL interfaces used.
+ * ::BSL_LibCtx_s is initialized or other BSL interfaces used.
  *
  * @param desc The descriptor to use for future BPA functions.
  * @return Zero if successful, negative on error.
@@ -449,7 +452,7 @@ void BSL_HostDescriptors_Get(BSL_HostDescriptors_t *desc);
 /** Reset the host descriptors to their default, unusable state.
  *
  * @warning This function is not thread safe and should be used after any
- * ::BSL_LibCtx_t is deinitialized.
+ * ::BSL_LibCtx_s is deinitialized.
  */
 void BSL_HostDescriptors_Clear(void);
 

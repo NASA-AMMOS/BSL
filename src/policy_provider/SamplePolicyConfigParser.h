@@ -74,7 +74,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
 
 /** Bitwise Diagram of the mock bpa config data structure:
  * @code{.unparsed}
- *                      uint32_t : bsl_mock_policy_configuration_t
+ *                      uint32_t : BSLP_BitstringPolicyConfiguration_t
  *
  *             [  x   x   x   x  |  x   x   x   x  |  x   x   x   x  |  x   x   x   x ]
  *             [ --------- unused -------]  |   |     [---]   [---]     [---]   |   |
