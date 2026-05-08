@@ -23,13 +23,13 @@
 #include <BPSecLib_Private.h>
 #include "SecOperation.h"
 
-/// OPLIST for ::BSL_SecOper_t
+/// OPLIST for ::BSL_SecOper_s
 #define M_OPL_BSL_SecOper_t()                                                                          \
     (INIT(API_2(BSL_SecOper_Init)), INIT_SET(API_6(BSL_SecOper_InitSet)), SET(API_6(BSL_SecOper_Set)), \
      CLEAR(API_2(BSL_SecOper_Deinit)))
 
 /** @struct BSL_SecOperList_t
- * Defines a basic list of ::BSL_SecOper_t.
+ * Defines a basic list of ::BSL_SecOper_s.
  */
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
