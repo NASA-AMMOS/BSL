@@ -924,10 +924,10 @@ BSL_ReasonCode_t BSL_SecOper_GetReasonCode(const BSL_SecOper_t *self);
  */
 void BSL_SecOper_SetReasonCode(BSL_SecOper_t *self, BSL_ReasonCode_t new_reason_code);
 
-/// Forward declaration of this struct
+// Forward declaration of this struct
 typedef struct BSL_AbsSecBlock_s BSL_AbsSecBlock_t;
 
-/// @brief Returns the size of the ::BSL_AbsSecBlock_t struct in bytes
+/// @brief Returns the size of the ::BSL_AbsSecBlock_s struct in bytes
 /// @return size of the struct
 size_t BSL_AbsSecBlock_Sizeof(void);
 

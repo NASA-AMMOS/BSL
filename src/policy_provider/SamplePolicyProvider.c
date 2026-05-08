@@ -35,7 +35,7 @@
 #include "SamplePolicyProvider.h"
 
 /** @struct BSLP_SecOperPtrList_t
- * Defines a basic list of ::BSL_SecOper_t pointers.
+ * Defines a basic list of ::BSL_SecOper_s pointers.
  */
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
