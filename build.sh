@@ -117,6 +117,13 @@ function cmd_rpm_build {
     if ! git describe 2>/dev/null >/dev/null
     then
         git config --global --add safe.directory ${PWD}
+        for NAME in ${PWD}/deps/*
+        do
+            if [[ -d ${NAME} ]]
+            then
+                git config --global --add safe.directory ${NAME}
+            fi
+        done
     fi
     tito build -o build/default/pkg --test --srpm
     tito build -o build/default/pkg --test --rpm
