@@ -24,8 +24,14 @@ SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 DESTDIR=${DESTDIR:-${SELFDIR}/testroot}
 PREFIX=${PREFIX:-/usr}
 
-if [ -n "${DESTDIR}" -o -n "${PREFIX}" ]
+if [[ -n "${DESTDIR}" || -n "${PREFIX}" ]]
 then
-    export LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib
+    if which dpkg-architecture >/dev/null
+    then
+        LIBDIR=/lib/$(dpkg-architecture -q DEB_BUILD_MULTIARCH)
+    else
+        LIBDIR=/lib
+    fi
+    export LD_LIBRARY_PATH=${DESTDIR}${PREFIX}${LIBDIR}
     export PATH=${PATH}:${DESTDIR}${PREFIX}/bin
 fi

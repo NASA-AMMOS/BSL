@@ -27,8 +27,9 @@
 set -e
 set -o pipefail
 
-source setenv.sh
 export SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+
+source ${SELFDIR}/setenv.sh
 BUILDDIR=${SELFDIR}/build/default
 
 function usage {
@@ -99,6 +100,7 @@ function cmd_docs {
 
 function cmd_install {
     shift
+    export DESTDIR
     cmake --install ${BUILDDIR} "$@"
 }
 
@@ -157,17 +159,8 @@ function cmd_rpm_container {
 }
 
 function cmd_run {
-    # testroot installed files
-    DESTDIR=${DESTDIR:-${SELFDIR}/testroot}
-    PREFIX=${PREFIX:-/usr}
-
-    if [ -n "${DESTDIR}" -o -n "${PREFIX}" ]
-    then
-        export LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib:${DESTDIR}${PREFIX}/lib64
-        export PATH=${PATH}:${DESTDIR}${PREFIX}/bin
-    fi
-
     shift
+    # Environment is already set by setenv.sh
     exec $@
 }
 
