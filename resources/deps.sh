@@ -40,6 +40,7 @@ DEPSDIR=${DEPSDIR:-${SELFDIR}/deps}
 BUILDDIR=${BUILDDIR:-${SELFDIR}/deps/build}
 echo "Building in ${BUILDDIR}"
 echo "Installing to ${DESTDIR}"
+export DESTDIR
 
 mkdir -p ${BUILDDIR}
 
