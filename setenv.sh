@@ -21,8 +21,9 @@
 ##
 
 SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
-DESTDIR=${DESTDIR:-${SELFDIR}/testroot}
-PREFIX=${PREFIX:-/usr}
+
+export DESTDIR=${DESTDIR:-${SELFDIR}/testroot}
+export PREFIX=${PREFIX:-/usr}
 
 if [[ -n "${DESTDIR}" || -n "${PREFIX}" ]]
 then

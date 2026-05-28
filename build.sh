@@ -52,15 +52,15 @@ function usage {
 }
 
 function cmd_check_format {
-    ./resources/check_format.sh
+    exec ./resources/check_format.sh
 }
 
 function cmd_apply_format {
-    ./resources/apply_format.sh
+    exec ./resources/apply_format.sh
 }
 
 function cmd_apply_license {
-    ./resources/apply_license.sh
+    exec ./resources/apply_license.sh
 }
 
 function cmd_check {
@@ -91,7 +91,7 @@ function cmd_coverage_summary {
 }
 
 function cmd_deps {
-    ./resources/deps.sh
+    exec ./resources/deps.sh
 }
 
 function cmd_docs {
@@ -110,7 +110,7 @@ function cmd_lint {
 
 function cmd_prep {
     shift
-    ./resources/prep.sh "$@"
+    exec ./resources/prep.sh "$@"
 }
 
 function cmd_rpm_build {
