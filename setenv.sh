@@ -30,7 +30,7 @@ then
     if which dpkg-architecture >/dev/null 2>/dev/null
     then
         # Debian or Ubuntu
-        LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib/$(dpkg-architecture -q DEB_BUILD_MULTIARCH)
+        LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib:${DESTDIR}${PREFIX}/lib/$(dpkg-architecture -q DEB_BUILD_MULTIARCH)
     else
         # Fedora or RHEL
         LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib:${DESTDIR}${PREFIX}/lib64
