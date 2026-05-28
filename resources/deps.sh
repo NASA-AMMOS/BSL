@@ -33,9 +33,6 @@ then
 fi
 cd $SELFDIR
 
-# SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
-source ${SELFDIR}/setenv.sh
-
 DEPSDIR=${DEPSDIR:-${SELFDIR}/deps}
 BUILDDIR=${BUILDDIR:-${SELFDIR}/deps/build}
 echo "Building in ${BUILDDIR}"

@@ -26,12 +26,14 @@ PREFIX=${PREFIX:-/usr}
 
 if [[ -n "${DESTDIR}" || -n "${PREFIX}" ]]
 then
-    if which dpkg-architecture >/dev/null
+    if which dpkg-architecture >/dev/null 2>/dev/null
     then
-        LIBDIR=/lib/$(dpkg-architecture -q DEB_BUILD_MULTIARCH)
+        # Debian or Ubuntu
+        LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib/$(dpkg-architecture -q DEB_BUILD_MULTIARCH)
     else
-        LIBDIR=/lib
+        # Fedora or RHEL
+        LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib:${DESTDIR}${PREFIX}/lib64
     fi
-    export LD_LIBRARY_PATH=${DESTDIR}${PREFIX}${LIBDIR}
+    export LD_LIBRARY_PATH
     export PATH=${PATH}:${DESTDIR}${PREFIX}/bin
 fi
