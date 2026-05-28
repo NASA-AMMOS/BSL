@@ -100,7 +100,6 @@ function cmd_docs {
 
 function cmd_install {
     shift
-    export DESTDIR
     cmake --install ${BUILDDIR} "$@"
 }
 
