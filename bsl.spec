@@ -57,15 +57,16 @@ from the API with Doxygen.
 %prep
 %setup -q
 
-./build.sh deps
+
+%build
+# non-package dependencies into ./testroot
+DESTDIR=${PWD}/testroot ./build.sh deps
 
 %cmake -DCMAKE_PREFIX_PATH=${PWD}/testroot/usr \
        -DPROJECT_VERSION=%{version} \
        -DBUILD_UNITTEST=YES -DTEST_MEMCHECK=NO -DBUILD_COVERAGE=NO \
-       -DBUILD_DOCS_MAN=YES %{?with_apidoc:-DBUILD_DOCS_API=YES}
+       -DBUILD_DOCS_MAN=YES -DBUILD_DOCS_API=%{?with_apidoc:YES}%{!?with_apidoc:NO}
 
-
-%build
 %cmake_build 
 %cmake_build --target docs-man
 %if %{with apidoc}

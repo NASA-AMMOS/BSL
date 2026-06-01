@@ -33,9 +33,6 @@ then
 fi
 cd $SELFDIR
 
-# SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
-source ${SELFDIR}/setenv.sh
-
 DEPSDIR=${DEPSDIR:-${SELFDIR}/deps}
 BUILDDIR=${BUILDDIR:-${SELFDIR}/deps/build}
 echo "Building in ${BUILDDIR}"
@@ -52,7 +49,7 @@ then
   cmake -S . -B ${BUILDDIR}/QCBOR \
     -DCMAKE_BUILD_TYPE=Debug \
     -DBUILD_SHARED_LIBS=ON \
-    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX}
+    -DCMAKE_INSTALL_PREFIX=${PREFIX}
   cmake --build ${BUILDDIR}/QCBOR
   cmake --install ${BUILDDIR}/QCBOR
   rm -rf ${BUILDDIR}/QCBOR
@@ -83,7 +80,7 @@ then
   cmake -S . -B ${BUILDDIR}/unity \
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX}
+    -DCMAKE_INSTALL_PREFIX=${PREFIX}
   cmake --build ${BUILDDIR}/unity
   cmake --install ${BUILDDIR}/unity
   rm -rf ${BUILDDIR}/unity

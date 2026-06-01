@@ -27,8 +27,9 @@
 set -e
 set -o pipefail
 
-source setenv.sh
 export SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+
+source ${SELFDIR}/setenv.sh
 BUILDDIR=${SELFDIR}/build/default
 
 function usage {
@@ -51,15 +52,15 @@ function usage {
 }
 
 function cmd_check_format {
-    ./resources/check_format.sh
+    exec ./resources/check_format.sh
 }
 
 function cmd_apply_format {
-    ./resources/apply_format.sh
+    exec ./resources/apply_format.sh
 }
 
 function cmd_apply_license {
-    ./resources/apply_license.sh
+    exec ./resources/apply_license.sh
 }
 
 function cmd_check {
@@ -90,7 +91,7 @@ function cmd_coverage_summary {
 }
 
 function cmd_deps {
-    ./resources/deps.sh
+    exec ./resources/deps.sh
 }
 
 function cmd_docs {
@@ -108,13 +109,20 @@ function cmd_lint {
 
 function cmd_prep {
     shift
-    ./resources/prep.sh "$@"
+    exec ./resources/prep.sh "$@"
 }
 
 function cmd_rpm_build {
     if ! git describe 2>/dev/null >/dev/null
     then
         git config --global --add safe.directory ${PWD}
+        for NAME in ${PWD}/deps/*
+        do
+            if [[ -d ${NAME} ]]
+            then
+                git config --global --add safe.directory ${NAME}
+            fi
+        done
     fi
     tito build -o build/default/pkg --test --srpm
     tito build -o build/default/pkg --test --rpm
@@ -157,17 +165,8 @@ function cmd_rpm_container {
 }
 
 function cmd_run {
-    # testroot installed files
-    DESTDIR=${DESTDIR:-${SELFDIR}/testroot}
-    PREFIX=${PREFIX:-/usr}
-
-    if [ -n "${DESTDIR}" -o -n "${PREFIX}" ]
-    then
-        export LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib:${DESTDIR}${PREFIX}/lib64
-        export PATH=${PATH}:${DESTDIR}${PREFIX}/bin
-    fi
-
     shift
+    # Environment is already set by setenv.sh
     exec $@
 }
 

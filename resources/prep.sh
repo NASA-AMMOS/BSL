@@ -31,13 +31,11 @@ then
   echo "SELFDIR not defined"
   exit 1
 fi
-
 cd $SELFDIR
-source ${SELFDIR}/setenv.sh
 
 cmake -S . -B ${SELFDIR}/build/default \
   -DCMAKE_PREFIX_PATH=${DESTDIR}${PREFIX} \
-  -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
+  -DCMAKE_INSTALL_PREFIX=${PREFIX} \
   -DCMAKE_BUILD_TYPE=Debug \
   -G Ninja \
   "$@"
