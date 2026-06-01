@@ -59,7 +59,7 @@ fi
 
 # Note: This checks for existence of this path, skips building
 # if already exists.
-if [ ! -e "${DESTDIR}${PREFIX}/include/m-lib" ]
+if [ ! -e ${DESTDIR}${PREFIX}/include/m-lib ]
 then
   echo "Building MLIB..."
   rsync --recursive ${DEPSDIR}/mlib/ ${BUILDDIR}/mlib/
