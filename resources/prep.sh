@@ -26,7 +26,7 @@
 #
 set -e
 
-if [ -z "$SELFDIR" ]
+if [[ -z "$SELFDIR" ]]
 then
   echo "SELFDIR not defined"
   exit 1
