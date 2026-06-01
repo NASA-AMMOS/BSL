@@ -42,7 +42,7 @@ mkdir -p ${BUILDDIR}
 
 # Note: This checks for existence of qcbor, and if exists
 # then skips rebuilding it.
-if [ ! -e ${DESTDIR}/usr/include/qcbor ]
+if [ ! -e ${DESTDIR}${PREFIX}/include/qcbor ]
 then
   echo "Building QCBOR..."
   pushd ${DEPSDIR}/QCBOR
@@ -59,7 +59,7 @@ fi
 
 # Note: This checks for existence of this path, skips building
 # if already exists.
-if [ ! -e ${DESTDIR}/usr/include/m-lib ]
+if [ ! -e "${DESTDIR}${PREFIX}/include/m-lib" ]
 then
   echo "Building MLIB..."
   rsync --recursive ${DEPSDIR}/mlib/ ${BUILDDIR}/mlib/
@@ -73,7 +73,7 @@ fi
 
 
 # Note: Skips building unity if this path already exists.
-if [ ! -e ${DESTDIR}/usr/include/unity ]
+if [ ! -e ${DESTDIR}${PREFIX}/include/unity ]
 then
   echo "Building Unity..."
   pushd ${DEPSDIR}/unity
