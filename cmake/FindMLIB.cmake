@@ -9,3 +9,7 @@ find_path(
 )
 add_library(MLIB::mlib INTERFACE IMPORTED)
 target_include_directories(MLIB::mlib INTERFACE ${MLIB_INCLUDE_DIR})
+
+if(NOT CMAKE_BUILD_TYPE MATCHES "^debug$")
+  target_compile_definitions(MLIB::mlib INTERFACE NDEBUG)
+endif()
