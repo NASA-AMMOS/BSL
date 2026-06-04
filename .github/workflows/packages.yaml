@@ -89,12 +89,13 @@ jobs:
         run: |
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
+          dnf install -y python3-pip python3-wheel
       - uses: actions/download-artifact@v8
         with:
           name: bsl-rpm
       - name: Install
         run: dnf install -y x86_64/bsl*.rpm
-      - name: Run tests
+      - name: Unit tests
         run: |
           FAILURES=0
           for TESTEXEC in /usr/libexec/bsl/test_*
@@ -102,3 +103,13 @@ jobs:
             $TESTEXEC || FAILURES=$(($FAILURES + 1))
           done
           exit $FAILURES
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          # root files and test subtree
+          sparse-checkout: |
+            mock-bpa-test
+      - name: Mock BPA tests
+        run: |
+          pip3 install -r mock-bpa-test/requirements.txt
+          python3 -m pytest mock-bpa-test

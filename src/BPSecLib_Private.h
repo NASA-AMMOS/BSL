@@ -34,8 +34,8 @@
 #ifndef BSL_BPSECLIB_PRIVATE_H_
 #define BSL_BPSECLIB_PRIVATE_H_
 
-#include <assert.h>
 #include <inttypes.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -213,16 +213,15 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 /** @brief Helpful macros for expressing invariants, pre/post conditions, and arg validation.
  * The expression is nominally true and only false during exceptional cases.
  */
-#define CHK_TEMPL(expr, msg, return_code)                                      \
-    do                                                                         \
-    {                                                                          \
-        if (!LIKELY(expr))                                                     \
-        {                                                                      \
-            BSL_LOG_ERR("" msg " (" #expr ") ... [errcode=" #return_code "]"); \
-            assert(!(expr));                                                   \
-            return return_code;                                                \
-        }                                                                      \
-    }                                                                          \
+#define CHK_TEMPL(expr, msg, return_code)                                 \
+    do                                                                    \
+    {                                                                     \
+        if (!LIKELY(expr))                                                \
+        {                                                                 \
+            BSL_LOG_ERR("%s (%s) [errcode=%d]", msg, #expr, return_code); \
+            return return_code;                                           \
+        }                                                                 \
+    }                                                                     \
     while (0) /* GCOV_EXCL_LINE */
 
 #define CHK_AS_BOOL(expr) CHK_TEMPL(expr, "Failed Property Check: Failed to satisfy", BSL_ERR_ARG_INVALID)
@@ -239,15 +238,15 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 
 #define CHK_POSTCONDITION(expr) CHK_TEMPL(expr, "Postcondition Failed: Did not satisfy", BSL_ERR_FAILURE)
 
-#define ASSERT_TEMPL(expr, msg)                 \
-    do                                          \
-    {                                           \
-        if (!(expr))                            \
-        {                                       \
-            BSL_LOG_ERR("" msg " (" #expr ")"); \
-            assert(!(expr));                    \
-        }                                       \
-    }                                           \
+#define ASSERT_TEMPL(expr, msg)                       \
+    do                                                \
+    {                                                 \
+        if (!LIKELY(expr))                            \
+        {                                             \
+            fprintf(stderr, "%s (%s)\n", msg, #expr); \
+            abort();                                  \
+        }                                             \
+    }                                                 \
     while (0)
 
 #define ASSERT_ARG_EXPR(expr) ASSERT_TEMPL(expr, "Panic: Argument expression check failed to satisfy")

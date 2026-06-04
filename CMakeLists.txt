@@ -20,6 +20,7 @@ the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 ]]
 cmake_minimum_required(VERSION 3.10)
+message(STATUS "Build mode ${CMAKE_BUILD_TYPE}")
 
 option(BUILD_LIB "Build the library itself" ON)
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
@@ -63,9 +64,12 @@ if(NOT PROJECT_VERSION)
 endif(NOT PROJECT_VERSION)
 
 project(bsl
-    LANGUAGES C CXX
+    LANGUAGES C
     VERSION ${PROJECT_VERSION}
 )
+if(BUILD_FUZZING)
+    enable_language(CXX)
+endif(BUILD_FUZZING)
 
 # Language options
 set(CMAKE_C_STANDARD 99)
