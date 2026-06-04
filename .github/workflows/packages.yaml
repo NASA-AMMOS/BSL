@@ -90,8 +90,6 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y python3-pip python3-wheel
-      - name: Checkout repository
-        uses: actions/checkout@v6
       - uses: actions/download-artifact@v8
         with:
           name: bsl-rpm
@@ -105,6 +103,12 @@ jobs:
             $TESTEXEC || FAILURES=$(($FAILURES + 1))
           done
           exit $FAILURES
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          # root files and test subtree
+          sparse-checkout: |
+            mock-bpa-test
       - name: Mock BPA tests
         run: |
           pip3 install -r mock-bpa-test/requirements.txt
