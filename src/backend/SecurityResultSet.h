@@ -31,7 +31,7 @@
 #include <m-array.h>
 
 /** @struct BSL_SecResultSet_ResultCodes
- * Defines a basic list of ::int64_t for result values.
+ * Defines a basic list of @c int64_t for result values.
  */
 /** @struct BSL_SecResultSet_ErrorActionCodes_t
  * Defines a basic list of ::BSL_PolicyAction_e.

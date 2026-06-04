@@ -33,9 +33,6 @@ then
 fi
 cd $SELFDIR
 
-# SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
-source ${SELFDIR}/setenv.sh
-
 DEPSDIR=${DEPSDIR:-${SELFDIR}/deps}
 BUILDDIR=${BUILDDIR:-${SELFDIR}/deps/build}
 echo "Building in ${BUILDDIR}"
@@ -45,14 +42,14 @@ mkdir -p ${BUILDDIR}
 
 # Note: This checks for existence of qcbor, and if exists
 # then skips rebuilding it.
-if [ ! -e ${DESTDIR}/usr/include/qcbor ]
+if [ ! -e ${DESTDIR}${PREFIX}/include/qcbor ]
 then
   echo "Building QCBOR..."
   pushd ${DEPSDIR}/QCBOR
   cmake -S . -B ${BUILDDIR}/QCBOR \
     -DCMAKE_BUILD_TYPE=Debug \
     -DBUILD_SHARED_LIBS=ON \
-    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX}
+    -DCMAKE_INSTALL_PREFIX=${PREFIX}
   cmake --build ${BUILDDIR}/QCBOR
   cmake --install ${BUILDDIR}/QCBOR
   rm -rf ${BUILDDIR}/QCBOR
@@ -62,7 +59,7 @@ fi
 
 # Note: This checks for existence of this path, skips building
 # if already exists.
-if [ ! -e ${DESTDIR}/usr/include/m-lib ]
+if [ ! -e ${DESTDIR}${PREFIX}/include/m-lib ]
 then
   echo "Building MLIB..."
   rsync --recursive ${DEPSDIR}/mlib/ ${BUILDDIR}/mlib/
@@ -76,14 +73,14 @@ fi
 
 
 # Note: Skips building unity if this path already exists.
-if [ ! -e ${DESTDIR}/usr/include/unity ]
+if [ ! -e ${DESTDIR}${PREFIX}/include/unity ]
 then
   echo "Building Unity..."
   pushd ${DEPSDIR}/unity
   cmake -S . -B ${BUILDDIR}/unity \
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-    -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX}
+    -DCMAKE_INSTALL_PREFIX=${PREFIX}
   cmake --build ${BUILDDIR}/unity
   cmake --install ${BUILDDIR}/unity
   rm -rf ${BUILDDIR}/unity

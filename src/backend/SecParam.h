@@ -78,13 +78,13 @@ struct BSL_SecParam_s
     m_bstring_t _bytes;
 };
 
-/// OPLIST for ::BSL_SecParam_t
+/// OPLIST for ::BSL_SecParam_s
 #define M_OPL_BSL_SecParam_t()                                                                                 \
     (INIT(API_2(BSL_SecParam_Init)), INIT_SET(API_6(BSL_SecParam_InitSet)), CLEAR(API_2(BSL_SecParam_Deinit)), \
      SET(API_6(BSL_SecParam_Set)))
 
 /** @struct BSLB_SecParamList_t
- * Defines a basic list of Security Parameters (::BSL_SecParam_t).
+ * Defines a basic list of Security Parameters (::BSL_SecParam_s).
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
