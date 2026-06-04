@@ -618,7 +618,6 @@ int BSL_Cipher_FinalizeData(BSL_Cipher_t *cipher_ctx, BSL_Data_t *extra)
 int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer)
 {
     CHK_ARG_NONNULL(cipher_ctx);
-    CHK_ARG_NONNULL(writer);
 
     int evp_len = 0;
     int res     = EVP_CipherFinal_ex(cipher_ctx->libhandle, cipher_ctx->out_buf.ptr, &evp_len);
@@ -628,7 +627,7 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer)
         return BSL_ERR_FAILURE;
     }
 
-    if (evp_len > 0)
+    if ((evp_len > 0) && writer)
     {
         size_t bsl_len = evp_len;
         BSL_SeqWriter_Put(writer, cipher_ctx->out_buf.ptr, bsl_len);
