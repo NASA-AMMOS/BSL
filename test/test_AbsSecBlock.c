@@ -131,11 +131,14 @@ void test_AbsSecBlock_loopback(const char *hexdata, int64_t expect_ctx_id, uint6
     BSL_Data_Deinit(&in_data);
 }
 
+TEST_CASE("", BSL_ERR_ARG_INVALID)
 TEST_CASE("438ed6208eb1c1ffb94d952175167df0902902064a2983910c4fb2340790bf420a7d1921d5bf7c4721e02ab87a93ab1e0b75cf62e494"
-          "8727c8b5dae46ed2af05439b88029191")
+          "8727c8b5dae46ed2af05439b88029191",
+          BSL_ERR_DECODING)
 // fuzzed input
-TEST_CASE("8200020101820282030082820158203ed614c0d97f49b3633727779aa18a338d212bf3c92b9aa18a338d212bf3c996")
-void test_AbsSecBlock_Decode_failure(const char *hexdata)
+TEST_CASE("8200020101820282030082820158203ed614c0d97f49b3633727779aa18a338d212bf3c92b9aa18a338d212bf3c996",
+          BSL_ERR_DECODING)
+void test_AbsSecBlock_Decode_failure(const char *hexdata, int expect)
 {
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
@@ -151,7 +154,7 @@ void test_AbsSecBlock_Decode_failure(const char *hexdata)
     BSL_AbsSecBlock_Init(asb);
 
     const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, &in_data);
-    TEST_ASSERT_EQUAL_INT(BSL_ERR_DECODING, decode_result);
+    TEST_ASSERT_EQUAL_INT(expect, decode_result);
 
     BSL_AbsSecBlock_Deinit(asb);
     BSL_free(asb);
