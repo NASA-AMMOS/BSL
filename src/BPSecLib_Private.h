@@ -34,8 +34,8 @@
 #ifndef BSL_BPSECLIB_PRIVATE_H_
 #define BSL_BPSECLIB_PRIVATE_H_
 
-#include <assert.h>
 #include <inttypes.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -218,9 +218,8 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
     {                                                                          \
         if (!LIKELY(expr))                                                     \
         {                                                                      \
-            BSL_LOG_ERR("" msg " (" #expr ") ... [errcode=" #return_code "]"); \
-            assert(!(expr));                                                   \
-            return return_code;                                                \
+            fprintf(stderr, "%s (%s)\n", msg, #expr); \
+            abort(); \
         }                                                                      \
     }                                                                          \
     while (0) /* GCOV_EXCL_LINE */
@@ -239,15 +238,15 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 
 #define CHK_POSTCONDITION(expr) CHK_TEMPL(expr, "Postcondition Failed: Did not satisfy", BSL_ERR_FAILURE)
 
-#define ASSERT_TEMPL(expr, msg)                 \
-    do                                          \
-    {                                           \
-        if (!(expr))                            \
-        {                                       \
-            BSL_LOG_ERR("" msg " (" #expr ")"); \
-            assert(!(expr));                    \
-        }                                       \
-    }                                           \
+#define ASSERT_TEMPL(expr, msg)                       \
+    do                                                \
+    {                                                 \
+        if (!LIKELY(expr))                                  \
+        {                                             \
+            fprintf(stderr, "%s (%s)\n", msg, #expr); \
+            abort();                                  \
+        }                                             \
+    }                                                 \
     while (0)
 
 #define ASSERT_ARG_EXPR(expr) ASSERT_TEMPL(expr, "Panic: Argument expression check failed to satisfy")

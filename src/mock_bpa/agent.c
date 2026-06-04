@@ -29,7 +29,6 @@
 #include <backend/UtilDefs_SeqReadWrite.h>
 #include <security_context/DefaultSecContext.h>
 #include <policy_provider/SamplePolicyProvider.h>
-#include <assert.h>
 #include <errno.h>
 #include <poll.h>
 #include "agent.h"
