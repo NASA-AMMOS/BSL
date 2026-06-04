@@ -216,17 +216,12 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        uint8_t aes_extra[BSLX_MAX_AES_PAD];
-        memset(aes_extra, 0, sizeof(aes_extra));
-        BSL_Data_t remainder_data = { 0 };
-        BSL_Data_InitView(&remainder_data, sizeof(aes_extra), aes_extra);
-        int finalize_bytes = BSL_Cipher_FinalizeData(&cipher, &remainder_data);
+        int finalize_bytes = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
         if (finalize_bytes < 0)
         {
             BSL_LOG_ERR("Failed to finalize");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
-        ASSERT_POSTCONDITION(finalize_bytes == 0);
     }
 
     // close write after read
