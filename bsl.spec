@@ -59,7 +59,8 @@ from the API with Doxygen.
 
 ./build.sh deps
 
-%cmake -DCMAKE_PREFIX_PATH=${PWD}/testroot/usr \
+%cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+       -DCMAKE_PREFIX_PATH=${PWD}/testroot/usr \
        -DPROJECT_VERSION=%{version} \
        -DBUILD_UNITTEST=YES -DTEST_MEMCHECK=NO -DBUILD_COVERAGE=NO \
        -DBUILD_DOCS_MAN=YES %{?with_apidoc:-DBUILD_DOCS_API=YES}
