@@ -61,6 +61,9 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   add_unity_test(SOURCE test_MockBPA_Codecs.c)
   target_link_libraries(test_MockBPA_Codecs PUBLIC ${LIB_ORDERED})
   
+  add_unity_test(SOURCE test_mock_bpa_crc.c)
+  target_link_libraries(test_mock_bpa_crc PUBLIC ${LIB_ORDERED})
+  
   add_unity_test(SOURCE test_mock_bpa_ctr.c)
   target_link_libraries(test_mock_bpa_ctr PUBLIC ${LIB_ORDERED})
   

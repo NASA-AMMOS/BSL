@@ -36,6 +36,26 @@
 extern "C" {
 #endif
 
+/// Length of CRC-16
+#define MOCK_BPA_CRC_CRC16_LEN 2
+
+/** Direct CRC-16 function for testing.
+ *
+ * @param[in] data The data to read.
+ * @return The BPv7-compatible CRC value in network endian.
+ */
+void mock_bpa_crc_crc16(uint8_t out[MOCK_BPA_CRC_CRC16_LEN], UsefulBufC data);
+
+/// Length of CRC-32C
+#define MOCK_BPA_CRC_CRC32C_LEN 4
+
+/** Direct CRC-32C function for testing.
+ *
+ * @param[in] data The data to read.
+ * @return The BPv7-compatible CRC value in network endian.
+ */
+void mock_bpa_crc_crc32c(uint8_t out[MOCK_BPA_CRC_CRC32C_LEN], UsefulBufC data);
+
 /** Apply a CRC function to an encoded block.
  *
  * @param buf The buffer holding the encoded block.
@@ -47,14 +67,16 @@ extern "C" {
 void mock_bpa_crc_apply(UsefulBuf buf, size_t begin, size_t end, BSL_BundleCRCType_e crc_type);
 
 /** Check the CRC of an encoded block.
+ * This will manipulate the block to clear its current value.
  *
  * @param buf The buffer holding the encoded block.
  * @param begin The start of the block array
  * @param end The end of the block array
  * @param crc_type The needed CRC type.
+ * @param got_len The actual byte string length decoded.
  * @return True if the CRC value agrees.
  */
-bool mock_bpa_crc_check(UsefulBufC buf, size_t begin, size_t end, BSL_BundleCRCType_e crc_type);
+bool mock_bpa_crc_check(UsefulBufC buf, size_t begin, size_t end, BSL_BundleCRCType_e crc_type, size_t got_len);
 
 #ifdef __cplusplus
 } // extern C

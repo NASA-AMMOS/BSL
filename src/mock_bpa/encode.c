@@ -160,7 +160,11 @@ int bsl_mock_encode_primary(QCBOREncodeContext *enc, const MockBPA_PrimaryBlock_
     QCBOREncode_CloseArray(enc);
     const size_t end = QCBOREncode_Tell(enc);
 
-    mock_bpa_crc_apply(QCBOREncode_RetrieveOutputStorage(enc), begin, end, blk->crc_type);
+    const UsefulBuf buf = QCBOREncode_RetrieveOutputStorage(enc);
+    if (!UsefulBuf_IsNULLOrEmpty(buf))
+    {
+        mock_bpa_crc_apply(buf, begin, end, blk->crc_type);
+    }
 
     return 0;
 }
@@ -192,7 +196,11 @@ int bsl_mock_encode_canonical(QCBOREncodeContext *enc, const MockBPA_CanonicalBl
     QCBOREncode_CloseArray(enc);
     const size_t end = QCBOREncode_Tell(enc);
 
-    mock_bpa_crc_apply(QCBOREncode_RetrieveOutputStorage(enc), begin, end, blk->crc_type);
+    const UsefulBuf buf = QCBOREncode_RetrieveOutputStorage(enc);
+    if (!UsefulBuf_IsNULLOrEmpty(buf))
+    {
+        mock_bpa_crc_apply(buf, begin, end, blk->crc_type);
+    }
 
     return 0;
 }
