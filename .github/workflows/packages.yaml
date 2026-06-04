@@ -30,22 +30,18 @@ on:
   pull_request: {} # any target
 
 jobs:
-  rpm:
-    runs-on: ubuntu-22.04
+  rpm-build:
+    name: Build RPM packages (RHEL-9)
+    runs-on: ubuntu-latest
     container: quay.io/centos/centos:stream9
     permissions:
       contents: read
-      actions: write
     steps:
       - name: Set up OS
         run: |
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
-              rsync cmake git ninja-build gcc gcc-c++ ccache ruby \
-              openssl-devel jansson-devel \
-              doxygen graphviz plantuml texlive-bibtex \
-              asciidoctor \
               tito rpm-build rpmlint
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -56,6 +52,8 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2.22
         with:
           create-symlink: true
+      - name: Dependencies
+        run: dnf builddep -y bsl.spec
       - name: Build
         run: ./build.sh rpm-build
       - name: Check
@@ -78,3 +76,36 @@ jobs:
             build/default/pkg/*/*.rpm
             build/default/pkg/rpmlint.txt
           retention-days: 1
+
+  rpm-install:
+    name: Install RPM packages (RHEL-9)
+    needs: rpm-build
+    runs-on: ubuntu-latest
+    container: quay.io/centos/centos:stream9
+    permissions:
+      contents: read
+    steps:
+      - name: Set up OS
+        run: |
+          dnf config-manager --set-enabled crb
+          dnf install -y epel-release
+          dnf install -y python3-pip python3-wheel
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - uses: actions/download-artifact@v8
+        with:
+          name: bsl-rpm
+      - name: Install
+        run: dnf install -y x86_64/bsl*.rpm
+      - name: Unit tests
+        run: |
+          FAILURES=0
+          for TESTEXEC in /usr/libexec/bsl/test_*
+          do
+            $TESTEXEC || FAILURES=$(($FAILURES + 1))
+          done
+          exit $FAILURES
+      - name: Mock BPA tests
+        run: |
+          pip3 install -r mock-bpa-test/requirements.txt
+          python3 -m pytest mock-bpa-test
