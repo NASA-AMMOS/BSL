@@ -146,7 +146,7 @@ int bsl_mock_encode_primary(QCBOREncodeContext *enc, const MockBPA_PrimaryBlock_
     {
         case BSL_BUNDLECRCTYPE_16:
         case BSL_BUNDLECRCTYPE_32:
-            QCBOREncode_AddBytes(enc, mock_bpa_crc_zero(blk->crc_type));
+            QCBOREncode_AddBytes(enc, mock_bpa_crc_zero((int)blk->crc_type));
             break;
         default:
             // nothing
@@ -159,7 +159,7 @@ int bsl_mock_encode_primary(QCBOREncodeContext *enc, const MockBPA_PrimaryBlock_
     const UsefulBuf buf = QCBOREncode_RetrieveOutputStorage(enc);
     if (!UsefulBuf_IsNULLOrEmpty(buf))
     {
-        mock_bpa_crc_apply(buf, begin, end, blk->crc_type);
+        mock_bpa_crc_apply(buf, begin, end, (int)blk->crc_type);
     }
 
     return 0;
@@ -180,7 +180,7 @@ int bsl_mock_encode_canonical(QCBOREncodeContext *enc, const MockBPA_CanonicalBl
     {
         case BSL_BUNDLECRCTYPE_16:
         case BSL_BUNDLECRCTYPE_32:
-            QCBOREncode_AddBytes(enc, mock_bpa_crc_zero(blk->crc_type));
+            QCBOREncode_AddBytes(enc, mock_bpa_crc_zero((int)blk->crc_type));
             break;
         default:
             // nothing
@@ -193,7 +193,7 @@ int bsl_mock_encode_canonical(QCBOREncodeContext *enc, const MockBPA_CanonicalBl
     const UsefulBuf buf = QCBOREncode_RetrieveOutputStorage(enc);
     if (!UsefulBuf_IsNULLOrEmpty(buf))
     {
-        mock_bpa_crc_apply(buf, begin, end, blk->crc_type);
+        mock_bpa_crc_apply(buf, begin, end, (int)blk->crc_type);
     }
 
     return 0;

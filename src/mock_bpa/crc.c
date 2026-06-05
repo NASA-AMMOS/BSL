@@ -212,7 +212,7 @@ void mock_bpa_crc_apply(UsefulBuf buf, size_t begin, size_t end, BSL_BundleCRCTy
     // block excluding CRC bytes
     UsefulBufC blk_enc = { .ptr = (const uint8_t *)buf.ptr + begin, .len = end - begin - desc->out_size };
     // position of CRC bytes
-    uint8_t *crc_pos = (uint8_t *)blk_enc.ptr + blk_enc.len;
+    uint8_t *crc_pos = (uint8_t *)buf.ptr + end - desc->out_size;
 
     uint8_t state[desc->state_size];
     (desc->init)(state);
@@ -239,7 +239,7 @@ bool mock_bpa_crc_check(UsefulBufC buf, size_t begin, size_t end, BSL_BundleCRCT
     // block excluding CRC bytes
     UsefulBufC blk_enc = { .ptr = (const uint8_t *)buf.ptr + begin, .len = end - begin - desc->out_size };
     // position of CRC bytes
-    uint8_t *crc_pos = (uint8_t *)blk_enc.ptr + blk_enc.len;
+    const uint8_t *crc_pos = (const uint8_t *)buf.ptr + end - desc->out_size;
 
     uint8_t state[desc->state_size];
     (desc->init)(state);
