@@ -121,11 +121,14 @@ void test_qcbor_decode_array_nested(void)
     TEST_ASSERT_EQUAL_INT(2, item.val.uCount);
     TEST_ASSERT_EQUAL_INT(2, QCBORDecode_Tell(&decoder));
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetNext(&decoder, &item),
-                                  "QCBORDecode_GetNext() failed");
+    int64_t dummy;
+    QCBORDecode_GetInt64(&decoder, &dummy);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder),
+                                  "QCBORDecode_GetInt64() failed");
 
-    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetNext(&decoder, &item),
-                                  "QCBORDecode_GetNext() failed");
+    QCBORDecode_GetInt64(&decoder, &dummy);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder),
+                                  "QCBORDecode_GetInt64() failed");
     TEST_ASSERT_EQUAL_INT(4, QCBORDecode_Tell(&decoder));
 
     // exit inner
