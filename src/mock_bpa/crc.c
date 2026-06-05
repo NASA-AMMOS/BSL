@@ -145,12 +145,12 @@ typedef struct
 } mock_bpa_crc_desc_t;
 
 static const mock_bpa_crc_desc_t mock_bpa_crc_desc_crc16  = { .out_size   = MOCK_BPA_CRC_CRC16_LEN,
-                                                              .state_size = MOCK_BPA_CRC_CRC16_LEN,
+                                                              .state_size = sizeof(uint16_t),
                                                               .init       = &mock_bpa_crc_crc16_init,
                                                               .update     = mock_bpa_crc_crc16_update,
                                                               .finalize   = mock_bpa_crc_crc16_finalize };
 static const mock_bpa_crc_desc_t mock_bpa_crc_desc_crc32c = { .out_size   = MOCK_BPA_CRC_CRC32C_LEN,
-                                                              .state_size = MOCK_BPA_CRC_CRC32C_LEN,
+                                                              .state_size = sizeof(uint32_t),
                                                               .init       = &mock_bpa_crc_crc32c_init,
                                                               .update     = mock_bpa_crc_crc32c_update,
                                                               .finalize   = mock_bpa_crc_crc32c_finalize };
