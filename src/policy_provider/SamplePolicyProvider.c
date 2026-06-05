@@ -355,7 +355,7 @@ int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *outp
 
             if (conclusion != BSL_SECOP_CONCLUSION_SUCCESS)
             {
-                error_ret = BSLP_PolicyProvider_HandleFailures((BSL_BundleRef_t *)bundle, secop);
+                error_ret = BSLP_PolicyProvider_HandleFailures(bundle, secop);
             }
         }
     }
