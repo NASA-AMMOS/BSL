@@ -30,87 +30,165 @@
 #include <inttypes.h>
 #include <BPSecLib_Private.h>
 
-void mock_bpa_crc_crc16(uint8_t out[MOCK_BPA_CRC_CRC16_LEN], UsefulBufC data)
+static void mock_bpa_crc_crc16_init(void *state)
 {
-    const uint16_t polynomial = 0x8408;
+    uint16_t *crc = state;
 
-    uint16_t crc = 0xFFFF;
+    *crc = 0xFFFF;
+}
+
+static void mock_bpa_crc_crc16_update(void *state, UsefulBufC data)
+{
+    static const uint16_t polynomial = 0x8408;
+
+    uint16_t *crc = state;
 
     const uint8_t *curs   = data.ptr;
     size_t         remain = data.len;
     while (remain--)
     {
-        crc ^= *(curs++);
+        *crc ^= *(curs++);
 
         for (unsigned k = 0; k < 8; k++)
         {
-            if (crc & 1)
+            if (*crc & 1)
             {
-                crc = (crc >> 1) ^ polynomial;
+                *crc = (*crc >> 1) ^ polynomial;
             }
             else
             {
-                crc >>= 1;
+                *crc >>= 1;
             }
         }
     }
-    crc = ~crc;
-
-    // Network byte order
-    out[0] = (crc >> 8) & 0xFF;
-    out[1] = crc & 0xFF;
 }
 
-void mock_bpa_crc_crc32c(uint8_t out[MOCK_BPA_CRC_CRC32C_LEN], UsefulBufC data)
+static void mock_bpa_crc_crc16_finalize(void *state, uint8_t out[MOCK_BPA_CRC_CRC16_LEN])
+{
+    uint16_t *crc = state;
+
+    *crc = ~*crc;
+
+    // Network byte order
+    out[0] = (*crc >> 8) & 0xFF;
+    out[1] = *crc & 0xFF;
+}
+
+static void mock_bpa_crc_crc32c_init(void *state)
+{
+    uint32_t *crc = state;
+
+    *crc = 0xFFFFFFFF;
+}
+
+static void mock_bpa_crc_crc32c_update(void *state, UsefulBufC data)
 {
     // The Castagnoli polynomial reflection (0x1EDC6F41 reversed)
     const uint32_t polynomial = 0x82F63B78;
 
-    uint32_t crc = 0xFFFFFFFF;
+    uint32_t *crc = state;
 
     const uint8_t *curs   = data.ptr;
     size_t         remain = data.len;
     while (remain--)
     {
-        crc ^= *(curs++);
+        *crc ^= *(curs++);
 
         // Process each of the 8 bits in the current byte byte
         for (unsigned bit = 0; bit < 8; bit++)
         {
-            if (crc & 1)
+            if (*crc & 1)
             {
-                crc = (crc >> 1) ^ polynomial;
+                *crc = (*crc >> 1) ^ polynomial;
             }
             else
             {
-                crc >>= 1;
+                *crc >>= 1;
             }
         }
     }
-    crc = ~crc;
-
-    // Network byte order
-    out[0] = (crc >> 24) & 0xFF;
-    out[1] = (crc >> 16) & 0xFF;
-    out[2] = (crc >> 8) & 0xFF;
-    out[3] = crc & 0xFF;
 }
 
-struct mock_bpa_crc_desc_s
+static void mock_bpa_crc_crc32c_finalize(void *state, uint8_t out[MOCK_BPA_CRC_CRC32C_LEN])
+{
+    uint32_t *crc = state;
+
+    *crc = ~*crc;
+
+    // Network byte order
+    out[0] = (*crc >> 24) & 0xFF;
+    out[1] = (*crc >> 16) & 0xFF;
+    out[2] = (*crc >> 8) & 0xFF;
+    out[3] = *crc & 0xFF;
+}
+
+typedef struct
 {
     /// Output size
-    size_t size;
-    /// Calculation function
-    void (*calc)(uint8_t out[], UsefulBufC data);
-};
-static const struct mock_bpa_crc_desc_s mock_bpa_crc_desc_crc16  = { MOCK_BPA_CRC_CRC16_LEN, &mock_bpa_crc_crc16 };
-static const struct mock_bpa_crc_desc_s mock_bpa_crc_desc_crc32c = { MOCK_BPA_CRC_CRC32C_LEN, &mock_bpa_crc_crc32c };
+    size_t out_size;
+    /// State size
+    size_t state_size;
+    /** Init function.
+     * @param state The uninitialized state.
+     */
+    void (*init)(void *state);
+    /** Update function.
+     * @param state The initialized state.
+     */
+    void (*update)(void *state, UsefulBufC data);
+    /** Finalize function.
+     * @param[in] state The initialized state.
+     * @param[out] out The output buffer.
+     * The buffer must be of size #out_size.
+     */
+    void (*finalize)(void *state, uint8_t *out);
+} mock_bpa_crc_desc_t;
 
+static const mock_bpa_crc_desc_t mock_bpa_crc_desc_crc16  = { .out_size   = MOCK_BPA_CRC_CRC16_LEN,
+                                                              .state_size = MOCK_BPA_CRC_CRC16_LEN,
+                                                              .init       = &mock_bpa_crc_crc16_init,
+                                                              .update     = mock_bpa_crc_crc16_update,
+                                                              .finalize   = mock_bpa_crc_crc16_finalize };
+static const mock_bpa_crc_desc_t mock_bpa_crc_desc_crc32c = { .out_size   = MOCK_BPA_CRC_CRC32C_LEN,
+                                                              .state_size = MOCK_BPA_CRC_CRC32C_LEN,
+                                                              .init       = &mock_bpa_crc_crc32c_init,
+                                                              .update     = mock_bpa_crc_crc32c_update,
+                                                              .finalize   = mock_bpa_crc_crc32c_finalize };
 
-static const uint8_t crc_zero_buffer[] = { 0, 0, 0, 0 };
+static const mock_bpa_crc_desc_t *get_desc(BSL_BundleCRCType_e crc_type)
+{
+    switch (crc_type)
+    {
+        case BSL_BUNDLECRCTYPE_NONE:
+            return NULL;
+        case BSL_BUNDLECRCTYPE_16:
+            return &mock_bpa_crc_desc_crc16;
+        case BSL_BUNDLECRCTYPE_32:
+            return &mock_bpa_crc_desc_crc32c;
+        default:
+            BSL_LOG_CRIT("Unhandled CRC type %d", crc_type);
+            return NULL;
+    }
+}
+
+void mock_bpa_crc_oneshot(uint8_t *out, UsefulBufC data, BSL_BundleCRCType_e crc_type)
+{
+    const mock_bpa_crc_desc_t *desc = get_desc(crc_type);
+    if (!desc)
+    {
+        return;
+    }
+
+    uint8_t state[desc->state_size];
+    (desc->init)(state);
+    (desc->update)(state, data);
+    (desc->finalize)(state, out);
+}
 
 UsefulBufC mock_bpa_crc_zero(BSL_BundleCRCType_e crc_type)
 {
+    static const uint8_t crc_zero_buffer[MOCK_BPA_CRC_CRC32C_LEN] = { 0 };
+
     switch (crc_type)
     {
         case BSL_BUNDLECRCTYPE_16:
@@ -123,76 +201,58 @@ UsefulBufC mock_bpa_crc_zero(BSL_BundleCRCType_e crc_type)
     }
 }
 
-
 void mock_bpa_crc_apply(UsefulBuf buf, size_t begin, size_t end, BSL_BundleCRCType_e crc_type)
 {
-    const struct mock_bpa_crc_desc_s *desc;
-    switch (crc_type)
+    const mock_bpa_crc_desc_t *desc = get_desc(crc_type);
+    if (!desc)
     {
-        case BSL_BUNDLECRCTYPE_NONE:
-            // nothing to do
-            return;
-        case BSL_BUNDLECRCTYPE_16:
-            desc = &mock_bpa_crc_desc_crc16;
-            break;
-        case BSL_BUNDLECRCTYPE_32:
-            desc = &mock_bpa_crc_desc_crc32c;
-            break;
-        default:
-            BSL_LOG_CRIT("Unhandled CRC type %d", crc_type);
-            return;
+        return;
     }
 
-    UsefulBufC blk_enc = { (const uint8_t *)buf.ptr + begin, end - begin };
+    // block excluding CRC bytes
+    UsefulBufC blk_enc = { .ptr = (const uint8_t *)buf.ptr + begin, .len = end - begin - desc->out_size };
+    // position of CRC bytes
+    uint8_t *crc_pos = (uint8_t *)blk_enc.ptr + blk_enc.len;
 
-    uint8_t *crc_pos = (uint8_t *)blk_enc.ptr + blk_enc.len - desc->size; // less one crc value
-    (desc->calc)(crc_pos, blk_enc);
+    uint8_t state[desc->state_size];
+    (desc->init)(state);
+    (desc->update)(state, blk_enc);
+    (desc->update)(state, mock_bpa_crc_zero(crc_type));
+    (desc->finalize)(state, crc_pos);
 }
 
 bool mock_bpa_crc_check(UsefulBufC buf, size_t begin, size_t end, BSL_BundleCRCType_e crc_type, size_t got_len)
 {
-    const struct mock_bpa_crc_desc_s *desc;
-    switch (crc_type)
+    const mock_bpa_crc_desc_t *desc = get_desc(crc_type);
+    if (!desc)
     {
-        case BSL_BUNDLECRCTYPE_NONE:
-            // nothing to do
-            return true;
-        case BSL_BUNDLECRCTYPE_16:
-            desc = &mock_bpa_crc_desc_crc16;
-            break;
-        case BSL_BUNDLECRCTYPE_32:
-            desc = &mock_bpa_crc_desc_crc32c;
-            break;
-        default:
-            BSL_LOG_CRIT("Unhandled CRC type %d", crc_type);
-            return false;
+        // nothing to do
+        return true;
     }
 
-    if (got_len != desc->size)
+    if (got_len != desc->out_size)
     {
         BSL_LOG_ERR("bad CRC length %zu", got_len);
         return false;
     }
 
-    const size_t blk_len = end - begin;
-    BSL_LOG_ERR("blk len %zu", blk_len);
-    // Working buffer from copy
-    UsefulBuf blk_cpy = { .ptr = BSL_malloc(blk_len), .len = blk_len };
-    memcpy(blk_cpy.ptr, (const uint8_t *)buf.ptr + begin, blk_len);
+    // block excluding CRC bytes
+    UsefulBufC blk_enc = { .ptr = (const uint8_t *)buf.ptr + begin, .len = end - begin - desc->out_size };
+    // position of CRC bytes
+    uint8_t *crc_pos = (uint8_t *)blk_enc.ptr + blk_enc.len;
 
-    uint8_t *cpy_crc = (uint8_t *)blk_cpy.ptr + blk_cpy.len - desc->size; // less one crc value
-    // zero out copy
-    memset(cpy_crc, 0, desc->size);
+    uint8_t state[desc->state_size];
+    (desc->init)(state);
+    (desc->update)(state, blk_enc);
+    (desc->update)(state, mock_bpa_crc_zero(crc_type));
 
-    const uint8_t *blk_crc = (const uint8_t *)buf.ptr + end - desc->size; // less one crc value
-
-    (desc->calc)(cpy_crc, UsefulBuf_Const(blk_cpy));
-    bool same = (memcmp(cpy_crc, blk_crc, desc->size) == 0);
+    uint8_t expect[desc->out_size];
+    (desc->finalize)(state, expect);
+    bool same = (memcmp(expect, crc_pos, desc->out_size) == 0);
     if (!same)
     {
-        BSL_LOG_ERR("Failed CRC check, first byte expect %02" PRIx8 " read %02" PRIx8, cpy_crc[0], blk_crc[0]);
+        BSL_LOG_ERR("Failed CRC check, first byte expect %02" PRIx8 " read %02" PRIx8, expect[0], crc_pos[0]);
     }
 
-    BSL_free(blk_cpy.ptr);
     return same;
 }

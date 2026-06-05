@@ -280,7 +280,7 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
             break;
     }
 
-    //FIXME this should be after exitarray
+    // FIXME this should be after exitarray
     const size_t end = QCBORDecode_Tell(dec);
     QCBORDecode_ExitArray(dec);
     if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))

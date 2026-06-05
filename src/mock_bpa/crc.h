@@ -39,22 +39,17 @@ extern "C" {
 /// Length of CRC-16
 #define MOCK_BPA_CRC_CRC16_LEN 2
 
-/** Direct CRC-16 function for testing.
- *
- * @param[in] data The data to read.
- * @return The BPv7-compatible CRC value in network endian.
- */
-void mock_bpa_crc_crc16(uint8_t out[MOCK_BPA_CRC_CRC16_LEN], UsefulBufC data);
-
 /// Length of CRC-32C
 #define MOCK_BPA_CRC_CRC32C_LEN 4
 
-/** Direct CRC-32C function for testing.
+/** Direct CRC function for testing.
  *
+ * @param[out] out The buffer to write into.
+ * The written value will be BPv7-compatible CRC value in network endian.
  * @param[in] data The data to read.
- * @return The BPv7-compatible CRC value in network endian.
+ * @param crc_type The needed CRC type.
  */
-void mock_bpa_crc_crc32c(uint8_t out[MOCK_BPA_CRC_CRC32C_LEN], UsefulBufC data);
+void mock_bpa_crc_oneshot(uint8_t *out, UsefulBufC data, BSL_BundleCRCType_e crc_type);
 
 /** Get an empty placeholder for a CRC value.
  *

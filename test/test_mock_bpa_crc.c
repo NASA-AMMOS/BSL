@@ -63,7 +63,7 @@ void test_mock_bpa_crc_crc16(const char *hexdata, const char *hexexpect)
     UsefulBufC buf = { .ptr = in_data.ptr, .len = in_data.len };
 
     uint8_t got[MOCK_BPA_CRC_CRC16_LEN];
-    mock_bpa_crc_crc16(got, buf);
+    mock_bpa_crc_oneshot(got, buf, BSL_BUNDLECRCTYPE_16);
 
     TEST_ASSERT_EQUAL_size_t(MOCK_BPA_CRC_CRC16_LEN, expect_data.len);
     TEST_ASSERT_EQUAL_MEMORY(got, expect_data.ptr, expect_data.len);
@@ -99,7 +99,7 @@ void test_mock_bpa_crc_crc32c(const char *hexdata, const char *hexexpect)
     UsefulBufC buf = { .ptr = in_data.ptr, .len = in_data.len };
 
     uint8_t got[MOCK_BPA_CRC_CRC32C_LEN];
-    mock_bpa_crc_crc32c(got, buf);
+    mock_bpa_crc_oneshot(got, buf, BSL_BUNDLECRCTYPE_32);
 
     TEST_ASSERT_EQUAL_size_t(MOCK_BPA_CRC_CRC32C_LEN, expect_data.len);
     TEST_ASSERT_EQUAL_MEMORY(got, expect_data.ptr, expect_data.len);
