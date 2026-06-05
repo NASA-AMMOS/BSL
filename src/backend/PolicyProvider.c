@@ -62,7 +62,7 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
 }
 
 int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions,
-                                       const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
+                                       BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
 {
     CHK_ARG_NONNULL(bsl);
     CHK_ARG_NONNULL(bsl->policy_reg);

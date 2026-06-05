@@ -512,7 +512,7 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
  * @returns 0 on success, negative on error. On zero, `output_action_set` will be populated.
  */
 BSL_REQUIRE_CHECK
-int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set,
+int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set,
                           const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location);
 
 /** @brief Performs the given security operations on a Bundle, modifying or even dropping it entirely.
@@ -523,7 +523,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
  * @param[in]     policy_actions  Pointer to policy actions, which was populated using the `QuerySecurity` function.
  */
 BSL_REQUIRE_CHECK
-int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
+int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
                           const BSL_SecurityActionSet_t *policy_actions);
 
 #ifdef __cplusplus
