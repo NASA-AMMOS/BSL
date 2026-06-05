@@ -107,40 +107,34 @@ void test_qcbor_decode_array_nested(void)
 
     // outer array
     QCBORDecode_EnterArray(&decoder, &item);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder),
-                                  "QCBORDecode_EnterArray() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder), "QCBORDecode_EnterArray() failed");
     TEST_ASSERT_EQUAL_INT(QCBOR_TYPE_ARRAY, item.uDataType);
     TEST_ASSERT_EQUAL_INT(UINT16_MAX, item.val.uCount);
     TEST_ASSERT_EQUAL_INT(1, QCBORDecode_Tell(&decoder));
 
     // inner array
     QCBORDecode_EnterArray(&decoder, &item);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder),
-                                  "QCBORDecode_EnterArray() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder), "QCBORDecode_EnterArray() failed");
     TEST_ASSERT_EQUAL_INT(QCBOR_TYPE_ARRAY, item.uDataType);
     TEST_ASSERT_EQUAL_INT(2, item.val.uCount);
     TEST_ASSERT_EQUAL_INT(2, QCBORDecode_Tell(&decoder));
 
     int64_t dummy;
     QCBORDecode_GetInt64(&decoder, &dummy);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder),
-                                  "QCBORDecode_GetInt64() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder), "QCBORDecode_GetInt64() failed");
 
     QCBORDecode_GetInt64(&decoder, &dummy);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder),
-                                  "QCBORDecode_GetInt64() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder), "QCBORDecode_GetInt64() failed");
     TEST_ASSERT_EQUAL_INT(4, QCBORDecode_Tell(&decoder));
 
     // exit inner
     QCBORDecode_ExitArray(&decoder);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder),
-                                  "QCBORDecode_ExitArray() failed");
-    TEST_ASSERT_EQUAL_INT(5, QCBORDecode_Tell(&decoder)); //QCBOR issue
+    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder), "QCBORDecode_ExitArray() failed");
+    TEST_ASSERT_EQUAL_INT(5, QCBORDecode_Tell(&decoder)); // QCBOR issue
 
     // exit outer
     QCBORDecode_ExitArray(&decoder);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder),
-                                  "QCBORDecode_ExitArray() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder), "QCBORDecode_ExitArray() failed");
     TEST_ASSERT_EQUAL_INT(5, QCBORDecode_Tell(&decoder));
 
     TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_Finish(&decoder));
