@@ -45,7 +45,8 @@ extern "C" {
 /** Direct CRC function for testing.
  *
  * @param[out] out The buffer to write into.
- * The written value will be BPv7-compatible CRC value in network endian.
+ * Its size must be appropriate for the @c crc_type.
+ * The written value will be BPv7-compatible CRC value in network byte order.
  * @param[in] data The data to read.
  * @param crc_type The needed CRC type.
  */
