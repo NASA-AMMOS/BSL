@@ -56,6 +56,13 @@ void mock_bpa_crc_crc16(uint8_t out[MOCK_BPA_CRC_CRC16_LEN], UsefulBufC data);
  */
 void mock_bpa_crc_crc32c(uint8_t out[MOCK_BPA_CRC_CRC32C_LEN], UsefulBufC data);
 
+/** Get an empty placeholder for a CRC value.
+ *
+ * @param crc_type The needed CRC type.
+ * @return A constant buffer to write.
+ */
+UsefulBufC mock_bpa_crc_zero(BSL_BundleCRCType_e crc_type);
+
 /** Apply a CRC function to an encoded block.
  *
  * @param buf The buffer holding the encoded block.

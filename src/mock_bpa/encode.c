@@ -116,8 +116,6 @@ int bsl_mock_encode_eid_from_ctx(QCBOREncodeContext *enc, const BSL_HostEID_t *e
     return 0;
 }
 
-static const uint8_t zero_crc[] = { 0, 0, 0, 0 };
-
 int bsl_mock_encode_primary(QCBOREncodeContext *enc, const MockBPA_PrimaryBlock_t *blk)
 {
     const size_t begin = QCBOREncode_Tell(enc);
@@ -147,10 +145,8 @@ int bsl_mock_encode_primary(QCBOREncodeContext *enc, const MockBPA_PrimaryBlock_
     switch (blk->crc_type)
     {
         case BSL_BUNDLECRCTYPE_16:
-            QCBOREncode_AddBytes(enc, (UsefulBufC) { zero_crc, 2 });
-            break;
         case BSL_BUNDLECRCTYPE_32:
-            QCBOREncode_AddBytes(enc, (UsefulBufC) { zero_crc, 4 });
+            QCBOREncode_AddBytes(enc, mock_bpa_crc_zero(blk->crc_type));
             break;
         default:
             // nothing
@@ -183,10 +179,8 @@ int bsl_mock_encode_canonical(QCBOREncodeContext *enc, const MockBPA_CanonicalBl
     switch (blk->crc_type)
     {
         case BSL_BUNDLECRCTYPE_16:
-            QCBOREncode_AddBytes(enc, (UsefulBufC) { zero_crc, 2 });
-            break;
         case BSL_BUNDLECRCTYPE_32:
-            QCBOREncode_AddBytes(enc, (UsefulBufC) { zero_crc, 4 });
+            QCBOREncode_AddBytes(enc, mock_bpa_crc_zero(blk->crc_type));
             break;
         default:
             // nothing

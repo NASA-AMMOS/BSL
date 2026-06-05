@@ -106,6 +106,24 @@ struct mock_bpa_crc_desc_s
 static const struct mock_bpa_crc_desc_s mock_bpa_crc_desc_crc16  = { MOCK_BPA_CRC_CRC16_LEN, &mock_bpa_crc_crc16 };
 static const struct mock_bpa_crc_desc_s mock_bpa_crc_desc_crc32c = { MOCK_BPA_CRC_CRC32C_LEN, &mock_bpa_crc_crc32c };
 
+
+static const uint8_t crc_zero_buffer[] = { 0, 0, 0, 0 };
+
+UsefulBufC mock_bpa_crc_zero(BSL_BundleCRCType_e crc_type)
+{
+    switch (crc_type)
+    {
+        case BSL_BUNDLECRCTYPE_16:
+            return (UsefulBufC) { crc_zero_buffer, MOCK_BPA_CRC_CRC16_LEN };
+        case BSL_BUNDLECRCTYPE_32:
+            return (UsefulBufC) { crc_zero_buffer, MOCK_BPA_CRC_CRC32C_LEN };
+        case BSL_BUNDLECRCTYPE_NONE:
+        default:
+            return NULLUsefulBufC;
+    }
+}
+
+
 void mock_bpa_crc_apply(UsefulBuf buf, size_t begin, size_t end, BSL_BundleCRCType_e crc_type)
 {
     const struct mock_bpa_crc_desc_s *desc;
