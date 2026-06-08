@@ -641,7 +641,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
     bcb_context.overwrite_btsd = BSL_SecOper_IsRoleAcceptor(sec_oper);
 
     // Select whether to call the encrypt or decrypt function
-    int (*crypto_fn)(BSLX_BCB_t *) = BSL_SecOper_IsRoleSource(sec_oper) ? BSLX_BCB_Encrypt : BSLX_BCB_Decrypt;
+    int (*crypto_fn)(BSLX_BCB_t *) = BSL_SecOper_IsRoleSource(sec_oper) ? &BSLX_BCB_Encrypt : &BSLX_BCB_Decrypt;
 
     // Perform the encryption/decryption
     if (BSL_SUCCESS != crypto_fn(&bcb_context))

@@ -305,7 +305,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
 }
 
 int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *output_action_set _U_,
-                        const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output _U_)
+                        BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output _U_)
 {
     int                    error_ret = BSL_SUCCESS;
     BSLP_PolicyProvider_t *self      = user_data;
@@ -355,7 +355,7 @@ int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *outp
 
             if (conclusion != BSL_SECOP_CONCLUSION_SUCCESS)
             {
-                error_ret = BSLP_PolicyProvider_HandleFailures((BSL_BundleRef_t *)bundle, secop);
+                error_ret = BSLP_PolicyProvider_HandleFailures(bundle, secop);
             }
         }
     }
