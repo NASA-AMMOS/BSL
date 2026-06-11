@@ -166,7 +166,7 @@ void test_dyn_mem_cbs_BSL_32(void)
     int                       apply_result = -1;
 
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
     int res = BSL_TestUtils_ModifyEIDs(&LocalTestCtx.mock_bpa_ctr.bundle_ref, NULL, "ipn:3.2", NULL);
     BSL_LOG_INFO("EID MODIFICATION RESULT: %d", res);

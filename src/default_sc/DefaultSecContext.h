@@ -31,8 +31,6 @@
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
 
-#define BSLX_MAX_AES_PAD (64)
-
 /// Match signature ::BSL_SecCtx_Execute_f
 int BSLX_BCB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
                      BSL_SecOutcome_t *sec_outcome);

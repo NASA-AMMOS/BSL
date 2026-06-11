@@ -20,17 +20,15 @@
  * subcontract 1700763.
  */
 /** @file
+ * @ingroup unit-tests
  *
  * @brief Specific low-level tests of the Default Security Context
  *
  * Notes:
- *  - These tests use constructs defined in the BSL to exercise the Default Security Context
+ *  - These tests use constructs defined in the BSL to exercise each context.
  *  - It uses test inputs and vectors from RFC9173 Appendix A.
  *  - It does NOT use any of the "Plumbing" inside the BSL.
  *  - It only directly calls the interfaces exposed by the Default Security Context.
- *  - BCB internally is functionally complete, however it needs better integration with BPA to overwrite BTSD.
- *
- * @ingroup unit-tests
  */
 #include <stdlib.h>
 #include <stdio.h>
@@ -96,7 +94,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a1);
 
     TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
+        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
@@ -120,13 +118,12 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     TEST_ASSERT_EQUAL(RFC9173_BIB_RESULTID_HMAC, bib_result->result_id);
     TEST_ASSERT_EQUAL(1, bib_result->target_block_num);
 
-    {
-        /// Confirm the actual HMAC signature matches what is in the RFC
-        BSL_Data_t view;
-        TEST_ASSERT_EQUAL(0, BSL_SecResult_GetAsBytestr(bib_result, &view));
-        TEST_ASSERT_EQUAL(sizeof(ApxA1_HMAC), view.len);
-        TEST_ASSERT_EQUAL_MEMORY(ApxA1_HMAC, view.ptr, sizeof(ApxA1_HMAC));
-    }
+    /// Confirm the actual HMAC signature matches what is in the RFC
+    BSL_Data_t mac_view;
+    TEST_ASSERT_EQUAL(0, BSL_SecResult_GetAsBytestr(bib_result, &mac_view));
+    bool is_equal = BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_hmac, mac_view);
+    TEST_ASSERT_TRUE(is_equal);
+    BSL_Data_Deinit(&mac_view);
 
     BSL_SecOutcome_Deinit(sec_outcome);
     BSL_free(sec_outcome);
@@ -158,7 +155,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a2_cek);
     // Loads the bundle
     TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
+        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BCBTestContext bcb_test_context;
@@ -209,7 +206,7 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
 void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
 {
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.hex_bundle_bcb));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BCBTestContext bcb_test_context;
@@ -305,7 +302,7 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     string_clear(result_data_str);
 
     TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
+        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BSL_SecOutcome_t      *sec_outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());

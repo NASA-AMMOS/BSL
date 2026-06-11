@@ -601,12 +601,12 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
         if (sec_role == BSL_SECROLE_SOURCE)
         {
             TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx,
-                                                                  RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
+                                                                  RFC9173_TestVectors_AppendixA1.hex_bundle_original));
         }
         else
         {
             TEST_ASSERT_EQUAL(
-                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
         }
     }
     else if (sec_block_type == BSL_SECBLOCKTYPE_BCB)
@@ -614,12 +614,12 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
         if (sec_role == BSL_SECROLE_SOURCE)
         {
             TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx,
-                                                                  RFC9173_TestVectors_AppendixA2.cbor_bundle_original));
+                                                                  RFC9173_TestVectors_AppendixA2.hex_bundle_original));
         }
         else
         {
             TEST_ASSERT_EQUAL(
-                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb));
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.hex_bundle_bcb));
         }
     }
     else if (sec_block_type == TEST_BOTH_BIB_BCB)
@@ -627,12 +627,12 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
         if (sec_role == BSL_SECROLE_SOURCE)
         {
             TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx,
-                                                                  RFC9173_TestVectors_AppendixA4.cbor_bundle_original));
+                                                                  RFC9173_TestVectors_AppendixA4.hex_bundle_original));
         }
         else
         {
             TEST_ASSERT_EQUAL(
-                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA4.cbor_bundle_final));
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA4.hex_bundle_final));
         }
     }
 
@@ -876,7 +876,7 @@ void n_test_BSL_6(void)
     int                       apply_result = -1;
 
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
     int res = BSL_TestUtils_ModifyEIDs(&LocalTestCtx.mock_bpa_ctr.bundle_ref, NULL, "ipn:0.6", NULL);
     BSL_LOG_INFO("EID MODIFICATION RESULT: %d", res);
@@ -917,7 +917,7 @@ void test_BSL_32(void)
     int                       apply_result = -1;
 
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
     int res = BSL_TestUtils_ModifyEIDs(&LocalTestCtx.mock_bpa_ctr.bundle_ref, NULL, "ipn:3.2", NULL);
     BSL_LOG_INFO("EID MODIFICATION RESULT: %d", res);

@@ -84,7 +84,7 @@ void tearDown(void)
 void test_PolicyProvider_InspectEmptyRuleset(void)
 {
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
     BSL_SecurityActionSet_t action_set = { 0 };
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,
@@ -118,7 +118,7 @@ void test_PolicyProvider_InspectSingleBIBRuleset(void)
     BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
 
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
     BSL_SecurityActionSet_t action_set = { 0 };
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,
@@ -151,7 +151,7 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
     BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
 
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
     BSL_SecurityActionSet_t action_set = { 0 };
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,
@@ -210,7 +210,7 @@ void test_MultiplePolicyProviders(void)
     BSLP_PolicyProvider_AddRule(policy2, &rule2, &predicate2);
 
     TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
+        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
 
     BSL_SecurityActionSet_t action_set = { 0 };
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,

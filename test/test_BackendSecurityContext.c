@@ -86,7 +86,7 @@ void tearDown(void)
 void test_SecurityContext_BIB_Source(void)
 {
     TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
+        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
@@ -104,22 +104,20 @@ void test_SecurityContext_BIB_Source(void)
     MockBPA_CanonicalBlock_t *target_block = *target_ptr;
     TEST_ASSERT_NOT_NULL(target_block);
 
-    bool x = BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bib_abs_sec_block,
+    bool is_equal = BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bib_abs_sec_block,
                                            (BSL_Data_t) { .len = target_block->btsd_len, .ptr = target_block->btsd });
-    TEST_ASSERT_TRUE(x);
+    TEST_ASSERT_TRUE(is_equal);
 
     mock_bpa_ctr_sort_blocks(mock_bpa_ctr);
     TEST_ASSERT_EQUAL(0, mock_bpa_ctr_encode(mock_bpa_ctr));
-    bool is_expected =
-        (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib, mock_bpa_ctr->encoded));
+    is_equal = BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bundle_bib, mock_bpa_ctr->encoded);
+    TEST_ASSERT_TRUE(is_equal);
 
     BSL_SecurityResponseSet_Deinit(malloced_responseset);
     BSL_free(malloced_responseset);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
     BIBTestContext_Deinit(&bib_test_context);
-
-    TEST_ASSERT_TRUE(is_expected);
 }
 
 /**
@@ -138,7 +136,7 @@ void test_SecurityContext_BIB_Source(void)
 void test_SecurityContext_BIB_Verifier(void)
 {
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
@@ -152,7 +150,7 @@ void test_SecurityContext_BIB_Verifier(void)
                                                            &mock_bpa_ctr->bundle_ref, malloced_actionset));
     TEST_ASSERT_EQUAL(0, mock_bpa_ctr_encode(mock_bpa_ctr));
     bool is_match =
-        (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_bib, mock_bpa_ctr->encoded));
+        (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bundle_bib, mock_bpa_ctr->encoded));
 
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
@@ -180,7 +178,7 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
 {
     // TODO(bvb) Note that this is basically identical to above except different key, they should be consolidated
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
@@ -225,7 +223,7 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
 void test_SecurityContext_BIB_Acceptor(void)
 {
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
@@ -249,7 +247,7 @@ void test_SecurityContext_BIB_Acceptor(void)
         goto cleanup;
 
     is_equal_test_vec =
-        BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_original, mock_bpa_ctr->encoded);
+        BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bundle_original, mock_bpa_ctr->encoded);
     if (!is_equal_test_vec)
         goto cleanup;
 

@@ -43,6 +43,7 @@
 
 void BIBTestContext_Init(BIBTestContext *obj)
 {
+    BSL_Data_Init(&obj->hmac);
     BSL_SecOper_Init(&obj->sec_oper);
 
     BSL_SecParam_Init(&obj->param_test_key);
@@ -65,6 +66,7 @@ void BIBTestContext_Deinit(BIBTestContext *obj)
     BSL_SecParam_Deinit(&obj->param_wrapped_key_aes);
 
     BSL_SecOper_Deinit(&obj->sec_oper);
+    BSL_Data_Deinit(&obj->hmac);
 }
 
 void BCBTestContext_Init(BCBTestContext *obj)
@@ -99,7 +101,7 @@ void BCBTestContext_Deinit(BCBTestContext *obj)
 
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id)
 {
-    quick_data(context->hmac, ApxA1_HMAC);
+    BSL_TestUtils_DecodeBase16_cstr(&context->hmac, RFC9173_TestVectors_AppendixA1.hex_hmac);
 
     BSL_SecParam_InitTextstr(&context->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, key_id);
     BSL_SecParam_InitUint64(&context->param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
@@ -142,6 +144,111 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
         BSL_SecOper_AppendParam(&context->sec_oper, &context->param_auth_tag);
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_test_key_id);
 }
+
+const struct RFC9173_TestVectors_AppendixA1 RFC9173_TestVectors_AppendixA1 = {
+    // BIB Abstract Security block fields
+    // Source: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.3.2
+    1, // bib_asb_sec_target
+    1, // bib_asb_context_id
+    1, // bib_asb_context_flags
+    1, // bib_asb_sha_variant_key
+    7, // bib_asb_sha_variant_value (HMAC 512/512)
+    3, // bib_asb_scope_flags_key
+    0, // bib_asb_scope_flags_value (No additional scope)
+
+    // bundle_original: The full bundle without any security
+    // Source: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.1.3
+    ("9f88070000820282010282028202018202820201820018281a000f424085010100"
+     "005823526561647920746f2067656e657261746520612033322d6279746520706179"
+     "6c6f6164ff"),
+
+    // bundle_bib: The full bundle encoding with BIB block
+    // Source: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.4
+    ("9f88070000820282010282028202018202820201820018281a000f4240850b0200"
+     "005856810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a"
+     "8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2"
+     "f1a73e303dcd4b6ccece003e95e8164dcc89a156e185010100005823526561647920"
+     "746f2067656e657261746520612033322d62797465207061796c6f6164ff"),
+
+    // payload_block: The CBOR of just the payload block
+    // Source: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.1.2
+    ("85010100005823526561647920746f2067656e657261746520612033322d627974"
+     "65207061796c6f6164"),
+
+    // primary_block: CBOR of just the primary block
+    // Source: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.1.1
+    ("88070000820282010282028202018202820201820018281a000f4240"),
+
+    // bib_block: CBOR encoding of the BIB block (headers and all)
+    // Source: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.3.3
+    ("850b0200005856810101018202820201828201078203008181820158403bdc69b3"
+     "a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1c"
+     "c636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1"),
+
+    // bib_abs_sec_block: Encoding of the BIB Block-Type-Specific Data (Abstract Security Block)
+    // Source: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.3.2
+    ("810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554"
+     "368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a7"
+     "3e303dcd4b6ccece003e95e8164dcc89a156e1"),
+
+    // hmac: The actual HMAC digest (not including result type)
+    // Source: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.1.3.2
+    ("3bdc69b3a34a2b5d3a8554368bd1e808"
+     "f606219d2a10a846eae3886ae4ecc83c"
+     "4ee550fdfb1cc636b904e2f1a73e303d"
+     "cd4b6ccece003e95e8164dcc89a156e1")
+};
+
+const struct RFC9173_TestVectorsA2 RFC9173_TestVectors_AppendixA2 = {
+    1, 2,
+
+    // Content enc key
+    "71776572747975696f70617364666768",
+
+    // Key encryption key
+    "6162636465666768696a6b6c6d6e6f70",
+
+    // Init vector
+    "5477656c7665313231323132",
+
+    // Original bundle with just payload
+    ("9f88070000820282010282028202018202820201820018281a000f424085010100"
+     "005823526561647920746f2067656e657261746520612033322d6279746520706179"
+     "6c6f6164ff"),
+
+    // Fully-encoded bundle with BCB
+    ("9f88070000820282010282028202018202820201820018281a000f4240850c0201"
+     "0058508101020182028202018482014c5477656c7665313231323132820201820358"
+     "1869c411276fecddc4780df42c8a2af89296fabf34d7fae7008204008181820150ef"
+     "a4b5ac0108e3816c5606479801bc04850101000058233a09c1e63fe23a7f66a59c73"
+     "03837241e070b02619fc59c5214a22f08cd70795e73e9aff"),
+
+    // Auth tag
+    "efa4b5ac0108e3816c5606479801bc04",
+
+    // Ciphertext
+    ("a09c1e63fe23a7f66a59c7303837241"
+     "e070b02619fc59c5214a22f08cd70795"
+     "e73e9a")
+};
+
+const struct RFC9173_TestVectors_A4_Modified RFC9173_TestVectors_AppendixA4 = {
+    .hex_bundle_original = ("9f88070000820282010282028202018202820201820018"
+                             "281A000F424085010100005823526561647920746F2067"
+                             "656E657261746520612033322D62797465207061796C6F"
+                             "6164ff"),
+    .hex_bundle_final    = ("9f88070000820282010282028202018202820201820018"
+                             "281A000F4240850B030000585681010101820282020182"
+                             "8201078203008181820158403BDC69B3A34A2B5D3A8554"
+                             "368BD1E808F606219D2A10A846EAE3886AE4ECC83C4EE5"
+                             "50FDFB1CC636B904E2F1A73E303DCD4B6CCECE003E95E8"
+                             "164DCC89A156E1850C0201005850810102018202820201"
+                             "8482014C5477656C766531323132313282020182035818"
+                             "69C411276FECDDC4780DF42C8A2AF89296FABF34D7FAE7"
+                             "008204008181820150EFA4B5AC0108E3816C5606479801"
+                             "BC04850101000058233A09C1E63FE23A7F66A59C730383"
+                             "7241E070B02619FC59C5214A22F08CD70795E73E9Aff"),
+};
 
 BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context)
 {
@@ -323,18 +430,19 @@ void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t b
     BSL_LOG_INFO("%s :: %s", message, ascii_buf);
 }
 
-int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cbor_seq)
+int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cborhex)
 {
     assert(test_ctx != NULL);
-    assert(cbor_seq != NULL);
+    assert(cborhex != NULL);
 
     string_t in_text;
-    string_init_set_str(in_text, cbor_seq);
+    string_init_set_str(in_text, cborhex);
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
     in_data.owned = 1;
     if (BSL_TestUtils_DecodeBase16(&in_data, in_text) != 0)
     {
+        BSL_LOG_ERR("Failed to decode base16 text from: %s", cborhex);
         BSL_Data_Deinit(&in_data);
         string_clear(in_text);
         return -1;
@@ -456,6 +564,15 @@ int BSL_TestUtils_DecodeBase16(BSL_Data_t *out, const string_t in)
         *(out_curs++)      = byte;
     }
     return 0;
+}
+
+int BSL_TestUtils_DecodeBase16_cstr(BSL_Data_t *output, const char *input)
+{
+    m_string_t mstr;
+    m_string_init_set_cstr(mstr, input);
+    int res = BSL_TestUtils_DecodeBase16(output, mstr);
+    m_string_clear(mstr);
+    return res;
 }
 
 int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid,
