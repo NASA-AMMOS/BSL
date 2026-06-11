@@ -89,15 +89,12 @@ jobs:
         run: |
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
-          dnf install -y python3-pip python3-wheel
+          dnf install -y python3-pip python3-wheel gcc pkgconf-pkg-config
       - uses: actions/download-artifact@v8
         with:
           name: bsl-rpm
       - name: Install
         run: dnf install -y x86_64/bsl*.rpm
-      - name: Inspect
-        run: |
-          pkg-config --print-provides --print-requires bsl
       - name: Unit tests
         run: |
           FAILURES=0
@@ -112,6 +109,11 @@ jobs:
           # root files and test subtree
           sparse-checkout: |
             mock-bpa-test
+	    lib-user-test
+      - name: Inspect
+        run: |
+          pkg-config --print-provides --print-requires bsl
+	  gcc
       - name: Mock BPA tests
         run: |
           pip3 install -r mock-bpa-test/requirements.txt
