@@ -21,8 +21,8 @@
  */
 
 /** @file
+ * @ingroup default_sc
  * Header for the implementation of an example default security context (RFC 9173).
- * @ingroup example_security_context
  */
 #include <stdio.h>
 #include <stdlib.h>

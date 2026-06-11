@@ -21,8 +21,8 @@
  */
 
 /** @file
- * @ingroup default_sc
- * Header for the implementation of an example default security context (RFC 9173).
+ * @ingroup cose_sc
+ * Header for the implementation of the COSE context @cite draft-ietf-dtn-bpsec-cose.
  */
 
 #ifndef BSLX_SECCTXERR_H_
@@ -31,20 +31,11 @@
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
 
-#define BSLX_MAX_AES_PAD (64)
-
 /// Match signature ::BSL_SecCtx_Execute_f
-int BSLX_BCB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                     BSL_SecOutcome_t *sec_outcome);
-
-/// Match signature ::BSL_SecCtx_Execute_f
-int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+int BSL_CoseSc_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
                      BSL_SecOutcome_t *sec_outcome);
 
 /// Match signature ::BSL_SecCtx_Validate_f
-bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
-
-/// Match signature ::BSL_SecCtx_Validate_f
-bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
+bool BSL_CoseSc_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
 
 #endif /* BSLX_SECCTXERR_H_ */

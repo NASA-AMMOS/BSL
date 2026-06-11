@@ -21,8 +21,8 @@
  */
 
 /** @file
+ * @ingroup default_sc
  * Contains constants as defined in IETF RFC 9173 (Default Security Context for BPSec)
- * @ingroup example_security_context
  */
 
 #ifndef BSLB_RFC9173_H_

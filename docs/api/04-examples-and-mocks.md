@@ -46,7 +46,7 @@ The two Default Security Contexts defined in RFC 9173 @cite rfc9173 offer minima
 An implementation of these two SCs is maintained as part of the BSL source and uses the BSL crypto library as an interface to the OpenSSL library @cite lib:openssl from the host OS.
 These SCs are registered and used by the @ref mock-bpa for BSL testing.
 
-Sources related to these example SCs are associated with the @ref example_security_context group.
+Sources related to these example SCs are associated with the @ref default_sc group.
 
 # Mock BPA {#mock-bpa}
 

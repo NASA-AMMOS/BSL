@@ -1378,8 +1378,6 @@ typedef int (*BSL_SecCtx_Execute_f)(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, 
  */
 struct BSL_SecCtxDesc_s
 {
-    /// @brief User data pointer for callbacks
-    void *user_data;
     /// @brief Callback to validate a sec op within a given bundle
     BSL_SecCtx_Validate_f validate;
     /// @brief Callback to execute a sec op within a given bundle
