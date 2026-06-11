@@ -142,14 +142,13 @@ bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t targ
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
     // GCOV_EXCL_STOP
 
-    for
+    uint64_list_it_t tgt_it;
+    for (uint64_list_it(tgt_it, self->targets); !uint64_list_end_p(tgt_it); uint64_list_next(tgt_it))
     {
-        M_EACH(target_num, self->targets, M_ARRAY_OPLIST(uint64_list))
+        const uint64_t *tgt_num = uint64_list_cref(tgt_it);
+        if (*tgt_num == target_block_num)
         {
-            if (*target_num == target_block_num)
-            {
-                return true;
-            }
+            return true;
         }
     }
     return false;
