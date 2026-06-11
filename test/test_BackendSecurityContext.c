@@ -38,7 +38,7 @@
 #include <BPSecLib_Private.h>
 #include <mock_bpa/MockBPA.h>
 #include <CryptoInterface.h>
-#include <security_context/rfc9173.h>
+#include <default_sc/rfc9173.h>
 
 #include "bsl_test_utils.h"
 

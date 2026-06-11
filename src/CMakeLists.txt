@@ -74,14 +74,14 @@ endif(TARGET valgrind::valgrind)
 
 # Default Security Context library
 set(BSL_DEFAULT_SC_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext_Private.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/DefaultSecContext.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/DefaultSecContext_Private.h
 )
 
 set(BSL_DEFAULT_SC_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BCB_AES_GCM.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BIB_HMAC_SHA2.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/DefaultSecContext.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/BCB_AES_GCM.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/BIB_HMAC_SHA2.c
 )
 
 add_library(bsl_default_sc)

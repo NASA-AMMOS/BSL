@@ -41,9 +41,9 @@
 #include <CryptoInterface.h>
 
 #include <backend/PublicInterfaceImpl.h>
-#include <security_context/DefaultSecContext.h>
-#include <security_context/DefaultSecContext_Private.h>
-#include <security_context/rfc9173.h>
+#include <default_sc/DefaultSecContext.h>
+#include <default_sc/DefaultSecContext_Private.h>
+#include <default_sc/rfc9173.h>
 
 #include "bsl_test_utils.h"
 

@@ -26,7 +26,7 @@
 #include <backend/SecurityActionSet.h>
 #include <backend/SecurityResultSet.h>
 #include <policy_provider/SamplePolicyProvider.h>
-#include <security_context/rfc9173.h>
+#include <default_sc/rfc9173.h>
 #include <mock_bpa/agent.h>
 #include <mock_bpa/log.h>
 

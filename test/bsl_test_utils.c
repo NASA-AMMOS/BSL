@@ -32,10 +32,10 @@
 #include <backend/SecurityActionSet.h>
 #include <backend/UtilDefs_SeqReadWrite.h>
 #include <policy_provider/SamplePolicyProvider.h>
-#include <security_context/DefaultSecContext.h>
+#include <default_sc/DefaultSecContext.h>
+#include <default_sc/rfc9173.h>
 
 #include "bsl_test_utils.h"
-#include <security_context/rfc9173.h>
 
 #define quick_data(field, tgt) \
     field.len = sizeof(tgt);   \
