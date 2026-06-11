@@ -31,17 +31,37 @@ then
     echo "SELFDIR not defined"
     exit 1
 fi
-
 cd ${SELFDIR}
 
-# Library sources
+function format {
+    FILEPATH=$1
+    FILENAME=$(basename ${FILEPATH,,})
+    EXT="${FILENAME##*.}"
+
+    if [[ "$EXT" = "cmake" || "$FILENAME" = "cmakelists.txt" ]]
+    then
+        cmake-format -i "${FILEPATH}"
+    elif [[ "$EXT" = "h" || "$EXT" = "c" || "$EXT" = "cpp" ]]
+    then
+        clang-format --style=file -i "${FILEPATH}"
+    elif [[ "$EXT" = "py" ]]
+    then
+        autopep8 --max-line-length=100 -i "${FILEPATH}"
+    fi
+}
+
 if [[ "$#" -ne 0 ]]
 then
     ARGS="$@"
+    echo "Formatting only files: ${ARGS}"
 else
-    ARGS=$(find src test -iname '*.h' -o -iname '*.c' -o -iname '*.cpp')
+    # All sources and test fixtures
+    ARGS="
+        $(find . \( \( -path './deps' -o -path './testroot' -o -path './build' \) -prune -o -iname CMakeLists.txt \) -a -type f) \
+        $(find src test \( -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' \) -a -type f) \
+        $(find mock-bpa-test -iname '*.py' -a -type f)"
 fi
-clang-format --style=file -i $ARGS
-
-# Python test fixtures
-autopep8 --max-line-length=100 -ir mock-bpa-test/
+for FN in ${ARGS}
+do
+    format "${FN}"
+done
