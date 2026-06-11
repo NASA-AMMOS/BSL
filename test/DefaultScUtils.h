@@ -19,8 +19,8 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#ifndef _BSL_TEST_UTILS_H_
-#define _BSL_TEST_UTILS_H_
+#ifndef _BSL_DEFAULTSCUTILS_H_
+#define _BSL_DEFAULTSCUTILS_H_
 
 #include <m-string.h>
 
@@ -31,13 +31,11 @@
 #include <backend/SecurityActionSet.h>
 #include <mock_bpa/ctr.h>
 
+#include "TestUtils.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define TEST_CASE(...)
-#define TEST_RANGE(...)
-#define TEST_MATRIX(...)
 
 /// @brief Key ID for the Appendix A1 key in OpenSSL
 #define RFC9173_EXAMPLE_A1_KEY "9100"
@@ -186,80 +184,18 @@ typedef struct
 
 RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A2Params(const char *key_id);
 
-typedef struct BSL_TestContext_s
-{
-    BSL_LibCtx_t   bsl;
-    mock_bpa_ctr_t mock_bpa_ctr;
-    uint64_t       key_id;
-} BSL_TestContext_t;
-
-int BSL_TestContext_Init(BSL_TestContext_t *ctx, bool setupDefaultSecCtxs);
-int BSL_TestContext_Deinit(BSL_TestContext_t *ctx);
-
 BSL_SecurityActionSet_t   *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context);
 BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void);
 
 void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib);
-
-int                  BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cborhex);
-
-BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text);
-
-void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t bufflen);
-bool BSL_TestUtils_IsB16StrEqualTo(const char *b16_string, BSL_Data_t encoded_val);
-
-/** Encode to base16 text form.
- * This is defined in Section 8 of RFC 4648 @cite rfc4648.
- * @note This function uses heap allocation for its output.
- *
- * @param[out] output The output buffer, which will be appended to.
- * @param[in] input The input buffer to read.
- * @param uppercase True to use upper-case letters, false to use lower-case.
- * @return Zero upon success.
- */
-int BSL_TestUtils_EncodeBase16(string_t output, const BSL_Data_t *input, bool uppercase);
-
-/** Decode base16 text form.
- * This is defined in Section 8 of RFC 4648 @cite rfc4648.
- * @note This function uses heap allocation for its output.
- *
- * @param[out] output The output buffer, which will be sized to its data.
- * @param[in] input The input buffer to read, which must be null terminated.
- * Whitespace in the input must have already been removed with strip_space().
- * @return Zero upon success.
- */
-int BSL_TestUtils_DecodeBase16(BSL_Data_t *output, const string_t input);
-
-/// @overload for C-string input
-int BSL_TestUtils_DecodeBase16_cstr(BSL_Data_t *output, const char *input);
-
-/**
- * Modify bundle's source eid, destination eid, and report-to eid
- * @param[in, out] input_bundle bundle to modify
- * @param[in] src_eid EID to set bundle source EID to. Set to NULL if bundle source EID should remain unchanged.
- * @param[in] dest_eid EID to set bundle destination EID to. Set to NULL if bundle destination EID should remain
- * unchanged.
- * @param[in] report_to_eid EID to set bundle report-to EID to. Set to NULL if bundle report-to EID should remain
- * unchanged.
- */
-int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid,
-                             const char *report_to_eid);
 
 int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a2_kek(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a2_cek(unsigned char *buf, int len);
 int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len);
 
-/** Initialize a flat-buffer reader object.
- */
-BSL_SeqReader_t *BSL_TestUtils_FlatReader(const void *buf, size_t bufsize);
-
-/** Initialize a flat-buffer reader object.
- */
-BSL_SeqWriter_t *BSL_TestUtils_FlatWriter(void **buf, size_t *bufsize);
-
 #ifdef __cplusplus
 } // extern "C"
 #endif
 
-#endif
+#endif // _BSL_DEFAULTSCUTILS_H_

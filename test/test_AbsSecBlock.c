@@ -29,7 +29,7 @@
 
 #include <backend/PublicInterfaceImpl.h>
 
-#include "bsl_test_utils.h"
+#include "DefaultScUtils.h"
 
 void suiteSetUp(void)
 {

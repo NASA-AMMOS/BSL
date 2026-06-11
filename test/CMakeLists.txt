@@ -22,8 +22,16 @@ subcontract 1700763.
 
 if(BUILD_UNITTEST OR BUILD_FUZZING)
   add_library(bsl_test_utils)
-  target_sources(bsl_test_utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/bsl_test_utils.h)
-  target_sources(bsl_test_utils PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/bsl_test_utils.c)
+  target_sources(
+      bsl_test_utils
+      PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/TestUtils.h
+             ${CMAKE_CURRENT_SOURCE_DIR}/DefaultScUtils.h
+  )
+  target_sources(
+      bsl_test_utils
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/TestUtils.c
+              ${CMAKE_CURRENT_SOURCE_DIR}/DefaultScUtils.c
+  )
   set_target_properties(bsl_test_utils
       PROPERTIES
           VERSION ${CMAKE_PROJECT_VERSION}

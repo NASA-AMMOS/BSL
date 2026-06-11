@@ -28,7 +28,7 @@
 #include <mock_bpa/decode.h>
 #include <mock_bpa/encode.h>
 
-#include "bsl_test_utils.h"
+#include "DefaultScUtils.h"
 
 static BSL_LibCtx_t bsl;
 

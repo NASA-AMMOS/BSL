@@ -35,11 +35,9 @@
 #include <default_sc/DefaultSecContext.h>
 #include <default_sc/rfc9173.h>
 
-#include "bsl_test_utils.h"
+#include "DefaultScUtils.h"
 
-#define quick_data(field, tgt) \
-    field.len = sizeof(tgt);   \
-    field.ptr = (uint8_t *)tgt
+#define quick_data(field, tgt) BSL_Data_InitView(&(field), sizeof(tgt), (BSL_DataPtr_t)(tgt))
 
 void BIBTestContext_Init(BIBTestContext *obj)
 {
@@ -234,21 +232,33 @@ const struct RFC9173_TestVectorsA2 RFC9173_TestVectors_AppendixA2 = {
 
 const struct RFC9173_TestVectors_A4_Modified RFC9173_TestVectors_AppendixA4 = {
     .hex_bundle_original = ("9f88070000820282010282028202018202820201820018"
-                             "281A000F424085010100005823526561647920746F2067"
-                             "656E657261746520612033322D62797465207061796C6F"
-                             "6164ff"),
+                            "281A000F424085010100005823526561647920746F2067"
+                            "656E657261746520612033322D62797465207061796C6F"
+                            "6164ff"),
     .hex_bundle_final    = ("9f88070000820282010282028202018202820201820018"
-                             "281A000F4240850B030000585681010101820282020182"
-                             "8201078203008181820158403BDC69B3A34A2B5D3A8554"
-                             "368BD1E808F606219D2A10A846EAE3886AE4ECC83C4EE5"
-                             "50FDFB1CC636B904E2F1A73E303DCD4B6CCECE003E95E8"
-                             "164DCC89A156E1850C0201005850810102018202820201"
-                             "8482014C5477656C766531323132313282020182035818"
-                             "69C411276FECDDC4780DF42C8A2AF89296FABF34D7FAE7"
-                             "008204008181820150EFA4B5AC0108E3816C5606479801"
-                             "BC04850101000058233A09C1E63FE23A7F66A59C730383"
-                             "7241E070B02619FC59C5214A22F08CD70795E73E9Aff"),
+                            "281A000F4240850B030000585681010101820282020182"
+                            "8201078203008181820158403BDC69B3A34A2B5D3A8554"
+                            "368BD1E808F606219D2A10A846EAE3886AE4ECC83C4EE5"
+                            "50FDFB1CC636B904E2F1A73E303DCD4B6CCECE003E95E8"
+                            "164DCC89A156E1850C0201005850810102018202820201"
+                            "8482014C5477656C766531323132313282020182035818"
+                            "69C411276FECDDC4780DF42C8A2AF89296FABF34D7FAE7"
+                            "008204008181820150EFA4B5AC0108E3816C5606479801"
+                            "BC04850101000058233A09C1E63FE23A7F66A59C730383"
+                            "7241E070B02619FC59C5214A22F08CD70795E73E9Aff"),
 };
+
+RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id)
+{
+    RFC9173_A1_Params params;
+    BSL_SecParam_InitUint64(&params.sha_variant, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key,
+                            RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value);
+    BSL_SecParam_InitUint64(&params.scope_flags, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key,
+                            RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value);
+    BSL_SecParam_InitTextstr(&params.test_key_id, BSL_SECPARAM_TYPE_KEY_ID, key_id);
+    BSL_SecParam_InitUint64(&params.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
+    return params;
+}
 
 BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context)
 {
@@ -335,32 +345,6 @@ int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len)
     return 1;
 }
 
-int BSL_TestContext_Init(BSL_TestContext_t *ctx, bool setupDefaultSecCtxs)
-{
-    memset(ctx, 0, sizeof(BSL_TestContext_t));
-    if (BSL_SUCCESS != BSL_API_InitLib(&ctx->bsl))
-    {
-        return 1;
-    }
-    mock_bpa_ctr_init(&ctx->mock_bpa_ctr);
-    if (setupDefaultSecCtxs)
-    {
-        BSL_TestUtils_SetupDefaultSecurityContext(&ctx->bsl);
-    }
-    return BSL_SUCCESS;
-}
-
-int BSL_TestContext_Deinit(BSL_TestContext_t *ctx)
-{
-    mock_bpa_ctr_deinit(&ctx->mock_bpa_ctr);
-    if (BSL_SUCCESS != BSL_API_DeinitLib(&ctx->bsl))
-    {
-        return 1;
-    }
-    memset(ctx, 0, sizeof(BSL_TestContext_t));
-    return BSL_SUCCESS;
-}
-
 void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib)
 {
     assert(bsl_lib != NULL);
@@ -391,329 +375,4 @@ void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib)
     sec_desc.validate = BSLX_BCB_Validate;
     res               = BSL_API_RegisterSecurityContext(bsl_lib, 2, sec_desc);
     assert(0 == res);
-}
-
-bool BSL_TestUtils_IsB16StrEqualTo(const char *b16_string, BSL_Data_t encoded_val)
-{
-    string_t in_text;
-    string_init_set_str(in_text, b16_string);
-    BSL_Data_t in_data;
-    BSL_Data_Init(&in_data);
-    in_data.owned = 1;
-    if (BSL_TestUtils_DecodeBase16(&in_data, in_text) != 0)
-    {
-        BSL_Data_Deinit(&in_data);
-        string_clear(in_text);
-        assert(0);
-        // TEST_ASSERT_MESSAGE(0, "Could not base16-decode sequence");
-    }
-    string_clear(in_text);
-
-    BSL_TestUtils_PrintHexToBuffer("actual str  : ", encoded_val.ptr, encoded_val.len);
-    BSL_TestUtils_PrintHexToBuffer("expected str: ", in_data.ptr, in_data.len);
-    if (encoded_val.len != in_data.len)
-    {
-        BSL_LOG_ERR("Mismatch, got %zu bytes, expected %zu bytes", encoded_val.len, in_data.len);
-        BSL_Data_Deinit(&in_data);
-        return false;
-    }
-
-    int r = memcmp(encoded_val.ptr, in_data.ptr, in_data.len);
-    BSL_Data_Deinit(&in_data);
-    return r == 0 ? true : false;
-}
-
-void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t bufflen)
-{
-    char ascii_buf[2 * bufflen + 1];
-    BSL_Log_DumpAsHexString(ascii_buf, sizeof(ascii_buf), buff, bufflen);
-    BSL_LOG_INFO("%s :: %s", message, ascii_buf);
-}
-
-int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cborhex)
-{
-    assert(test_ctx != NULL);
-    assert(cborhex != NULL);
-
-    string_t in_text;
-    string_init_set_str(in_text, cborhex);
-    BSL_Data_t in_data;
-    BSL_Data_Init(&in_data);
-    in_data.owned = 1;
-    if (BSL_TestUtils_DecodeBase16(&in_data, in_text) != 0)
-    {
-        BSL_LOG_ERR("Failed to decode base16 text from: %s", cborhex);
-        BSL_Data_Deinit(&in_data);
-        string_clear(in_text);
-        return -1;
-    }
-    string_clear(in_text);
-
-    test_ctx->mock_bpa_ctr.encoded       = in_data;
-    test_ctx->mock_bpa_ctr.encoded.owned = 1;
-
-    MockBPA_Bundle_t *bundle = test_ctx->mock_bpa_ctr.bundle_ref.data;
-    assert(bundle != NULL);
-
-    int decode_status = mock_bpa_ctr_decode(&(test_ctx->mock_bpa_ctr));
-    assert(bundle->primary_block.version == 7);
-    assert(bundle->primary_block.timestamp.seq_num > 0);
-    assert(bundle->primary_block.lifetime > 0);
-    assert(bundle->primary_block.flags <= 64);
-    assert(bundle->primary_block.crc_type <= 4);
-    assert(MockBPA_BlockList_size(bundle->blocks) > 0);
-    assert(MockBPA_BlockByNum_size(bundle->blocks_num) > 0);
-    return decode_status;
-}
-
-BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text)
-{
-    BSL_HostEIDPattern_t pat;
-    BSL_HostEIDPattern_Init(&pat);
-    assert(0 == BSL_HostEIDPattern_DecodeFromText(&pat, text));
-    return pat;
-}
-
-RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id)
-{
-    RFC9173_A1_Params params;
-    BSL_SecParam_InitUint64(&params.sha_variant, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key,
-                            RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value);
-    BSL_SecParam_InitUint64(&params.scope_flags, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key,
-                            RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value);
-    BSL_SecParam_InitTextstr(&params.test_key_id, BSL_SECPARAM_TYPE_KEY_ID, key_id);
-    BSL_SecParam_InitUint64(&params.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
-    return params;
-}
-
-int BSL_TestUtils_EncodeBase16(string_t out, const BSL_Data_t *in, bool uppercase)
-{
-    const char *fmt = uppercase ? "%02X" : "%02x";
-
-    const uint8_t *curs = in->ptr;
-    const uint8_t *end  = curs + in->len;
-    for (; curs < end; ++curs)
-    {
-        string_cat_printf(out, fmt, *curs);
-    }
-    return 0;
-}
-
-/// Size of the @c BSL_TestUtils_DecodeBase16_table
-static const size_t BSL_TestUtils_DecodeBase16_lim = 0x80;
-// clang-format off
-/// Decode table for base16
-static const int BSL_TestUtils_DecodeBase16_table[0x80] =
-{
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -2, -2, -1, -1, -2, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-     0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
-    -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-};
-// clang-format on
-
-/** Decode a single character.
- *
- * @param chr The character to decode.
- * @return If positive, the decoded value.
- * -1 to indicate error.
- * -2 to indicate whitespace.
- */
-static int BSL_TestUtils_DecodeBase16_char(uint8_t chr)
-{
-    if (chr >= BSL_TestUtils_DecodeBase16_lim)
-    {
-        return -1;
-    }
-    return BSL_TestUtils_DecodeBase16_table[chr];
-}
-
-int BSL_TestUtils_DecodeBase16(BSL_Data_t *out, const string_t in)
-{
-    BSL_CHKERR1(out);
-    BSL_CHKERR1(in);
-
-    const size_t in_len = string_size(in);
-    if (in_len % 2 != 0)
-    {
-        return 1;
-    }
-    const char *curs = string_get_cstr(in);
-    const char *end  = curs + in_len;
-
-    if (BSL_Data_Resize(out, in_len / 2))
-    {
-        return 2;
-    }
-    uint8_t *out_curs = out->ptr;
-
-    while (curs < end)
-    {
-        const int high = BSL_TestUtils_DecodeBase16_char(*(curs++));
-        const int low  = BSL_TestUtils_DecodeBase16_char(*(curs++));
-        if ((high < 0) || (low < 0))
-        {
-            return 3;
-        }
-
-        const uint8_t byte = (uint8_t)((high << 4) | low);
-        *(out_curs++)      = byte;
-    }
-    return 0;
-}
-
-int BSL_TestUtils_DecodeBase16_cstr(BSL_Data_t *output, const char *input)
-{
-    m_string_t mstr;
-    m_string_init_set_cstr(mstr, input);
-    int res = BSL_TestUtils_DecodeBase16(output, mstr);
-    m_string_clear(mstr);
-    return res;
-}
-
-int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid,
-                             const char *report_to_eid)
-{
-    BSL_PrimaryBlock_t primary_block;
-    BSL_BundleCtx_GetBundleMetadata(input_bundle, &primary_block);
-    int res = 0;
-    if (src_eid)
-    {
-        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_src_node_id), src_eid, NULL));
-    }
-    if (dest_eid)
-    {
-        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_dest_eid), dest_eid, NULL) << 1);
-    }
-    if (report_to_eid)
-    {
-        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_report_to_eid), report_to_eid, NULL) << 2);
-    }
-    BSL_PrimaryBlock_deinit(&primary_block);
-
-    return res;
-}
-
-/// Internal state for reader and writer
-struct BSL_TestUtils_Flat_Data_s
-{
-    /// Pointer to external buffer pointer
-    void **origbuf;
-    /// Pointer to external size
-    size_t *origsize;
-
-    /// Pointer to the head of the buffer
-    char *ptr;
-    /// Working size of the buffer
-    size_t size;
-    /// File opened for the buffer
-    FILE *file;
-};
-
-static int BSL_TestUtils_ReadBTSD_Read(void *user_data, void *buf, size_t *bufsize)
-{
-    struct BSL_TestUtils_Flat_Data_s *obj = user_data;
-    if (!obj || !obj->file)
-    {
-        return -1;
-    }
-
-    const size_t got = fread(buf, 1, *bufsize, obj->file);
-    *bufsize         = got;
-    return 0;
-}
-
-static void BSL_TestUtils_ReadBTSD_Deinit(void *user_data)
-{
-    struct BSL_TestUtils_Flat_Data_s *obj = user_data;
-    if (!obj || !obj->file)
-    {
-        return;
-    }
-
-    fclose(obj->file);
-    // buffer is external data, no cleanup
-    BSL_free(obj);
-}
-
-BSL_SeqReader_t *BSL_TestUtils_FlatReader(const void *buf, size_t bufsize)
-{
-    struct BSL_TestUtils_Flat_Data_s *obj = BSL_calloc(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
-    ASSERT_PROPERTY(obj);
-    obj->origbuf  = NULL;
-    obj->origsize = NULL;
-    obj->ptr      = (void *)buf;
-    obj->size     = bufsize;
-    obj->file     = fmemopen(obj->ptr, obj->size, "rb");
-
-    BSL_SeqReader_t *reader = BSL_malloc(sizeof(BSL_SeqReader_t));
-    ASSERT_PROPERTY(reader);
-    reader->user_data = obj;
-    reader->read      = BSL_TestUtils_ReadBTSD_Read;
-    reader->deinit    = BSL_TestUtils_ReadBTSD_Deinit;
-
-    return reader;
-}
-
-static int BSL_TestUtils_WriteBTSD_Write(void *user_data, const void *buf, size_t size)
-{
-    struct BSL_TestUtils_Flat_Data_s *obj = user_data;
-    if (!obj || !obj->file)
-    {
-        return -1;
-    }
-
-    const size_t got = fwrite(buf, 1, size, obj->file);
-    if (got < size)
-    {
-        return BSL_ERR_FAILURE;
-    }
-    return BSL_SUCCESS;
-}
-
-static void BSL_TestUtils_WriteBTSD_Deinit(void *user_data)
-{
-    struct BSL_TestUtils_Flat_Data_s *obj = user_data;
-    if (!obj || !obj->file)
-    {
-        return;
-    }
-
-    fclose(obj->file);
-
-    // now write-back the result
-    if (obj->origbuf)
-    {
-        *obj->origbuf = obj->ptr;
-    }
-    if (obj->origsize)
-    {
-        *obj->origsize = obj->size;
-    }
-
-    BSL_free(obj);
-}
-
-BSL_SeqWriter_t *BSL_TestUtils_FlatWriter(void **buf, size_t *bufsize)
-{
-    struct BSL_TestUtils_Flat_Data_s *obj = BSL_calloc(1, sizeof(struct BSL_TestUtils_Flat_Data_s));
-    ASSERT_PROPERTY(obj);
-    // double-buffer for this write
-    obj->origbuf  = buf;
-    obj->origsize = bufsize;
-    obj->ptr      = NULL;
-    obj->size     = 0;
-    obj->file     = open_memstream(&obj->ptr, &obj->size);
-
-    BSL_SeqWriter_t *writer = BSL_malloc(sizeof(BSL_SeqWriter_t));
-    ASSERT_PROPERTY(writer);
-    writer->user_data = obj;
-    writer->write     = BSL_TestUtils_WriteBTSD_Write;
-    writer->deinit    = BSL_TestUtils_WriteBTSD_Deinit;
-
-    return writer;
 }

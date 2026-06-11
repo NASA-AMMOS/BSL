@@ -43,7 +43,7 @@
 #include <default_sc/DefaultSecContext_Private.h>
 #include <default_sc/rfc9173.h>
 
-#include "bsl_test_utils.h"
+#include "DefaultScUtils.h"
 
 static BSL_TestContext_t LocalTestCtx;
 
@@ -65,7 +65,8 @@ void setUp(void)
 {
     BSL_CryptoInit();
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, true));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
+    BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
 }
 
 void tearDown(void)

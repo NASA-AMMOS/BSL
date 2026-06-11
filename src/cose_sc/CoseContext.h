@@ -33,7 +33,7 @@
 
 /// Match signature ::BSL_SecCtx_Execute_f
 int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                       BSL_SecOutcome_t *sec_outcome);
+                        BSL_SecOutcome_t *sec_outcome);
 
 /// Match signature ::BSL_SecCtx_Validate_f
 bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);

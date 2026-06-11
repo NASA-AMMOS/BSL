@@ -40,7 +40,7 @@
 #include <CryptoInterface.h>
 #include <default_sc/rfc9173.h>
 
-#include "bsl_test_utils.h"
+#include "DefaultScUtils.h"
 
 static BSL_TestContext_t LocalTestCtx;
 
@@ -61,7 +61,8 @@ void setUp(void)
 {
     BSL_CryptoInit();
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, true));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
+    BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
 }
 
 void tearDown(void)
@@ -104,8 +105,9 @@ void test_SecurityContext_BIB_Source(void)
     MockBPA_CanonicalBlock_t *target_block = *target_ptr;
     TEST_ASSERT_NOT_NULL(target_block);
 
-    bool is_equal = BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bib_abs_sec_block,
-                                           (BSL_Data_t) { .len = target_block->btsd_len, .ptr = target_block->btsd });
+    bool is_equal =
+        BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bib_abs_sec_block,
+                                      (BSL_Data_t) { .len = target_block->btsd_len, .ptr = target_block->btsd });
     TEST_ASSERT_TRUE(is_equal);
 
     mock_bpa_ctr_sort_blocks(mock_bpa_ctr);

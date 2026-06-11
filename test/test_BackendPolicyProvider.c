@@ -38,7 +38,7 @@
 
 #include <policy_provider/SamplePolicyProvider.h>
 
-#include "bsl_test_utils.h"
+#include "DefaultScUtils.h"
 
 static BSL_TestContext_t      LocalTestCtx;
 static BSLP_PolicyProvider_t *policy_provider;
@@ -59,7 +59,7 @@ int suiteTearDown(int failures)
 void setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, false));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
 
     policy_provider = BSLP_PolicyProvider_Init(BSL_SAMPLE_PP_ID);
 

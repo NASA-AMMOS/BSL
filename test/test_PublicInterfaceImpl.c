@@ -30,7 +30,7 @@
 #include <mock_bpa/agent.h>
 #include <mock_bpa/log.h>
 
-#include "bsl_test_utils.h"
+#include "DefaultScUtils.h"
 
 typedef struct
 {
@@ -120,7 +120,8 @@ void setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
     BSL_CryptoInit();
-    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, true));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
+    BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
     PublicInterfaceTestCtx_init(&ctx);
     policy_provider = BSLP_PolicyProvider_Init(1);
 
@@ -600,8 +601,8 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
-            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx,
-                                                                  RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+            TEST_ASSERT_EQUAL(
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
         }
         else
         {
@@ -613,8 +614,8 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
-            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx,
-                                                                  RFC9173_TestVectors_AppendixA2.hex_bundle_original));
+            TEST_ASSERT_EQUAL(
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.hex_bundle_original));
         }
         else
         {
@@ -626,8 +627,8 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
-            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx,
-                                                                  RFC9173_TestVectors_AppendixA4.hex_bundle_original));
+            TEST_ASSERT_EQUAL(
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA4.hex_bundle_original));
         }
         else
         {

@@ -42,7 +42,7 @@
 #include <default_sc/DefaultSecContext_Private.h>
 #include <default_sc/rfc9173.h>
 
-#include "bsl_test_utils.h"
+#include "TestUtils.h"
 
 static BSL_TestContext_t LocalTestCtx;
 
@@ -50,7 +50,7 @@ void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
     mock_bpa_LogOpen();
-    mock_bpa_LogSetLeastSeverity(LOG_CRIT);
+    mock_bpa_LogSetLeastSeverity(LOG_DEBUG); //FIXME
 }
 
 int suiteTearDown(int failures)
@@ -64,7 +64,7 @@ void setUp(void)
 {
     BSL_CryptoInit();
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, true));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
 }
 
 void tearDown(void)
@@ -87,11 +87,12 @@ void tearDown(void)
  */
 void test_AppendixA_Example1_BIB_Source(void)
 {
-#if 0
-    TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
-    mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
+    const char *hex_bundle = "9f890700028201692f2f6473742f7376638201692f2f7372632f7376638201662f2f"
+                             "7372632f821b000000bd51281400001a000f42404482a081c9860101000246656865"
+                             "6c6c6f444ec359d2ff";
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, hex_bundle));
 
+#if 0
     BIBTestContext bib_test_context;
     BIBTestContext_Init(&bib_test_context);
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_SOURCE, RFC9173_EXAMPLE_A1_KEY);
