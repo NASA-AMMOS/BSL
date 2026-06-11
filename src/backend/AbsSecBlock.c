@@ -143,6 +143,7 @@ bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t targ
     // GCOV_EXCL_STOP
 
     for
+    {
         M_EACH(target_num, self->targets, M_ARRAY_OPLIST(uint64_list))
         {
             if (*target_num == target_block_num)
@@ -150,6 +151,7 @@ bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t targ
                 return true;
             }
         }
+    }
     return false;
 }
 
