@@ -113,8 +113,8 @@ jobs:
       - name: Build
         run: |
           pkg-config --print-provides --print-requires bsl
-	  gcc $(pkg-config --cflags --libs bsl) lib-user-test/main.c
-	  ./a.out
+          gcc $(pkg-config --cflags --libs bsl) lib-user-test/main.c
+          ./a.out
       - name: Mock BPA tests
         run: |
           pip3 install -r mock-bpa-test/requirements.txt
