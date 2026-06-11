@@ -117,10 +117,14 @@ popd
 %files devel
 %license LICENSE
 %doc README.md
-%{_includedir}/bsl
-%{_includedir}/qcbor
 %{_includedir}/m-lib
+
+%{_includedir}/qcbor
+%{_libdir}/pkgconfig/qcbor.pc
 %{_libdir}/libqcbor.so
+
+%{_includedir}/bsl
+%{_libdir}/pkgconfig/bsl.pc
 %{_libdir}/libbsl_front.so
 %{_libdir}/libbsl_dynamic.so
 %{_libdir}/libbsl_crypto.so

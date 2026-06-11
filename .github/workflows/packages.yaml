@@ -95,6 +95,9 @@ jobs:
           name: bsl-rpm
       - name: Install
         run: dnf install -y x86_64/bsl*.rpm
+      - name: Inspect
+        run |
+          pkg-config --print-provides --print-requires bsl
       - name: Unit tests
         run: |
           FAILURES=0
