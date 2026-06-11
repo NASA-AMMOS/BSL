@@ -19,8 +19,8 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+#include "TestUtils.h"
 #include <mock_bpa/MockBPA.h>
-#include "bsl_test_utils.h"
 #include <cinttypes>
 
 #define EXPECT_EQ(expect, got)          \
