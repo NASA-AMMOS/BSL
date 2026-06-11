@@ -109,11 +109,12 @@ jobs:
           # root files and test subtree
           sparse-checkout: |
             mock-bpa-test
-	    lib-user-test
-      - name: Inspect
+            lib-user-test
+      - name: Build
         run: |
           pkg-config --print-provides --print-requires bsl
-	  gcc
+	  gcc $(pkg-config --cflags --libs bsl) lib-user-test/main.c
+	  ./a.out
       - name: Mock BPA tests
         run: |
           pip3 install -r mock-bpa-test/requirements.txt
