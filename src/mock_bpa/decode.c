@@ -225,7 +225,8 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
     if (!mock_bpa_crc_check(buf, begin, end, blk->crc_type))
     {
-//        return 4;
+        // FIXME pending actual CRC
+        //        return 4;
     }
 
     BSL_Data_Resize(&blk->encoded, end - begin);
@@ -291,7 +292,8 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
 
     if (!mock_bpa_crc_check(QCBORDecode_RetrieveUndecodedInput(dec), begin, end, blk->crc_type))
     {
-//        return 4;
+        // FIXME pending actual CRC
+        //        return 4;
     }
 
     return 0;
