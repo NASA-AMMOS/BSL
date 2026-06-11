@@ -43,8 +43,7 @@ if(NOT PROJECT_VERSION)
         COMMAND ${GIT_EXECUTABLE} describe --tags --long --dirty
         RESULT_VARIABLE GIT_TAG_EXIT
         OUTPUT_VARIABLE GIT_TAG_REV
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
+        OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
     )
     if(NOT GIT_TAG_EXIT EQUAL 0)
         execute_process(
@@ -56,14 +55,17 @@ if(NOT PROJECT_VERSION)
         message(WARNING "No git tag found, marking as ${GIT_TAG_REV}")
     endif()
     # Make version compatible with CMake and RPM needs
-    STRING(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+).*]] [[\1]] GIT_TAG_VERS ${GIT_TAG_REV})
-    STRING(REGEX REPLACE [[^v[0-9\.]*-(.+)]] [[\1]] GIT_TAG_MOD ${GIT_TAG_REV})
-    STRING(REPLACE "-" "." GIT_TAG_MOD ${GIT_TAG_MOD})
+    string(REGEX REPLACE [[^v([0-9]+\.[0-9]+\.[0-9]+).*]] [[\1]] GIT_TAG_VERS
+                         ${GIT_TAG_REV}
+    )
+    string(REGEX REPLACE [[^v[0-9\.]*-(.+)]] [[\1]] GIT_TAG_MOD ${GIT_TAG_REV})
+    string(REPLACE "-" "." GIT_TAG_MOD ${GIT_TAG_MOD})
     message(STATUS "Using version marking ${GIT_TAG_VERS} - ${GIT_TAG_MOD}")
     set(PROJECT_VERSION ${GIT_TAG_VERS})
 endif(NOT PROJECT_VERSION)
 
-project(bsl
+project(
+    bsl
     LANGUAGES C
     VERSION ${PROJECT_VERSION}
 )
@@ -76,10 +78,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 # Force specific POSIX compatibility version
-add_definitions(
-  -D_XOPEN_SOURCE
-  -D_POSIX_C_SOURCE=200809L
-)
+add_definitions(-D_XOPEN_SOURCE -D_POSIX_C_SOURCE=200809L)
 # Generic warn/error options
 add_compile_options(
     -Wall
@@ -87,10 +86,16 @@ add_compile_options(
     $<$<COMPILE_LANGUAGE:C>:-Wpedantic>
     $<$<COMPILE_LANGUAGE:C>:-Werror>
     $<$<COMPILE_LANGUAGE:C>:-Wformat>
-    -Wshadow -Wpointer-arith -Wstrict-prototypes
-    -Wmissing-prototypes -Wredundant-decls -Wcast-align
+    -Wshadow
+    -Wpointer-arith
+    -Wstrict-prototypes
+    -Wmissing-prototypes
+    -Wredundant-decls
+    -Wcast-align
     -Wformat=2
-    -fno-strict-aliasing -Werror=format-security -fno-common
+    -fno-strict-aliasing
+    -Werror=format-security
+    -fno-common
     -Wstrict-aliasing=2
     # -Wconversion
     -ffunction-sections
@@ -110,11 +115,16 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -gdwarf-4")
 endif()
 
-add_custom_target(clang-tidy
-  COMMAND clang-tidy -quiet --config-file=.clang-tidy src/*.h src/backend/*.h src/security_context/*.h src/policy_provider/*.h -- -I src -I deps/mlib -I deps/QCBOR/inc 
-          && clang-tidy -quiet --config-file=.clang-tidy src/backend/*.c src/security_context/*.c src/policy_provider/*.c -- -I src -I deps/mlib -I deps/QCBOR/inc 
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  COMMENT "Running clang-tidy..."
+add_custom_target(
+    clang-tidy
+    COMMAND
+        clang-tidy -quiet --config-file=.clang-tidy src/*.h src/backend/*.h
+        src/security_context/*.h src/policy_provider/*.h -- -I src -I deps/mlib
+        -I deps/QCBOR/inc && clang-tidy -quiet --config-file=.clang-tidy
+        src/backend/*.c src/security_context/*.c src/policy_provider/*.c -- -I
+        src -I deps/mlib -I deps/QCBOR/inc
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Running clang-tidy..."
 )
 
 if(BUILD_LIB)
@@ -130,61 +140,56 @@ check_symbol_exists(timespec_get "time.h" HAVE_TIMESPEC_GET)
 check_symbol_exists(clock_gettime "time.h" HAVE_CLOCK_GETTIME)
 
 if(BUILD_UNITTEST)
-  if(TEST_MEMCHECK)
-    find_package(valgrind REQUIRED)
+    if(TEST_MEMCHECK)
+        find_package(valgrind REQUIRED)
 
-    find_program(MEMCHECK_CMD valgrind REQUIRED)
-    message(STATUS "Using valgrind memcheck for tests: ${MEMCHECK_CMD}")
-    set(MEMCHECK_OPTIONS
-      "--tool=memcheck"
-      "--trace-children=yes"
-      "--track-origins=yes"
-      "--leak-check=full" "--show-leak-kinds=all"
-      "--suppressions=${CMAKE_CURRENT_SOURCE_DIR}/resources/memcheck.supp"
-      "--gen-suppressions=all"
-      "--error-exitcode=2"
-    )
-    # Arguments as list into global scope for Findunitytools.cmake
-    set(TEST_EXEC_PREFIX "${MEMCHECK_CMD}" ${MEMCHECK_OPTIONS})
-  endif(TEST_MEMCHECK)
+        find_program(MEMCHECK_CMD valgrind REQUIRED)
+        message(STATUS "Using valgrind memcheck for tests: ${MEMCHECK_CMD}")
+        set(MEMCHECK_OPTIONS
+            "--tool=memcheck"
+            "--trace-children=yes"
+            "--track-origins=yes"
+            "--leak-check=full"
+            "--show-leak-kinds=all"
+            "--suppressions=${CMAKE_CURRENT_SOURCE_DIR}/resources/memcheck.supp"
+            "--gen-suppressions=all"
+            "--error-exitcode=2"
+        )
+        # Arguments as list into global scope for Findunitytools.cmake
+        set(TEST_EXEC_PREFIX "${MEMCHECK_CMD}" ${MEMCHECK_OPTIONS})
+    endif(TEST_MEMCHECK)
 endif(BUILD_UNITTEST)
 if(BUILD_FUZZING)
-  find_package(libfuzzer)
+    find_package(libfuzzer)
 endif(BUILD_FUZZING)
 if(BUILD_COVERAGE)
-  include(CodeCoverage)
-  append_coverage_compiler_flags()
+    include(CodeCoverage)
+    append_coverage_compiler_flags()
 
-  set(COVERAGE_EXCLUDES
-    "${CMAKE_CURRENT_SOURCE_DIR}/deps/*"
-    "${CMAKE_CURRENT_SOURCE_DIR}/testroot/*"
-    "${CMAKE_CURRENT_SOURCE_DIR}/test/"
-    "${CMAKE_CURRENT_BINARY_DIR}/test/*"
-  )
-  set(GCOVR_ADDITIONAL_ARGS
-    --gcov-ignore-parse-errors=negative_hits.warn_once_per_file
-    --gcov-keep
-  )
-  setup_target_for_coverage_gcovr_xml(
-    NAME coverage-xml
-    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-  )
-  setup_target_for_coverage_gcovr_xml(
-    NAME coverage-sonarqube
-    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    SONARQUBE
-  )
-  setup_target_for_coverage_gcovr_html(
-    NAME coverage-html
-    BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
-  )
+    set(COVERAGE_EXCLUDES
+        "${CMAKE_CURRENT_SOURCE_DIR}/deps/*"
+        "${CMAKE_CURRENT_SOURCE_DIR}/testroot/*"
+        "${CMAKE_CURRENT_SOURCE_DIR}/test/"
+        "${CMAKE_CURRENT_BINARY_DIR}/test/*"
+    )
+    set(GCOVR_ADDITIONAL_ARGS
+        --gcov-ignore-parse-errors=negative_hits.warn_once_per_file --gcov-keep
+    )
+    setup_target_for_coverage_gcovr_xml(
+        NAME coverage-xml BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    )
+    setup_target_for_coverage_gcovr_xml(
+        NAME coverage-sonarqube
+        BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        SONARQUBE
+    )
+    setup_target_for_coverage_gcovr_html(
+        NAME coverage-html BASE_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    )
 endif(BUILD_COVERAGE)
 
 include(CTest)
-set(CMAKE_CTEST_ARGUMENTS
-  --output-junit testresults.xml
-  --output-on-failure
-)
+set(CMAKE_CTEST_ARGUMENTS --output-junit testresults.xml --output-on-failure)
 
 # Install config used by tall targets
 include(GNUInstallDirs)
@@ -219,7 +224,5 @@ if(CMD_DOT)
         OUTPUT dep_chart.png
         COMMAND ${CMD_DOT} -Tpng dep_chart.dot -o dep_chart.png
     )
-    add_custom_target(graphviz
-        DEPENDS dep_chart.svg dep_chart.png
-    )
+    add_custom_target(graphviz DEPENDS dep_chart.svg dep_chart.png)
 endif(CMD_DOT)

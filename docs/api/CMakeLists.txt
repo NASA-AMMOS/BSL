@@ -30,9 +30,9 @@ message(STATUS "Found make at ${MAKE_EXECUTABLE}")
 find_program(DBLATEX_EXECUTABLE dblatex)
 message(STATUS "Found dblatex at ${DBLATEX_EXECUTABLE}")
 find_file(
-  PLANTUML_JAR
-  NAMES plantuml.jar
-  PATH_SUFFIXES "share/java" "share/plantuml"
+    PLANTUML_JAR
+    NAMES plantuml.jar
+    PATH_SUFFIXES "share/java" "share/plantuml"
 )
 if(PLANTUML_JAR)
     message(STATUS "Found plantuml at ${PLANTUML_JAR}")
@@ -44,27 +44,22 @@ set(XML_COMBINE ${CMAKE_CURRENT_BINARY_DIR}/xml/combine.xslt)
 set(XML_INDEX ${CMAKE_CURRENT_BINARY_DIR}/xml/index.xml)
 add_custom_target(
     docs-api-html
-    BYPRODUCTS
-        ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
-        ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.tex
-        ${CMAKE_CURRENT_BINARY_DIR}/latex/Makefile
-        ${XML_COMBINE} ${XML_INDEX}
-    DEPENDS
-        ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-        ${CMAKE_CURRENT_SOURCE_DIR}/footer.html
-        ${CMAKE_CURRENT_SOURCE_DIR}/header.tex
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
+               ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.tex
+               ${CMAKE_CURRENT_BINARY_DIR}/latex/Makefile
+               ${XML_COMBINE}
+               ${XML_INDEX}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+            ${CMAKE_CURRENT_SOURCE_DIR}/footer.html
+            ${CMAKE_CURRENT_SOURCE_DIR}/header.tex
     COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating API documentation with Doxygen"
     USES_TERMINAL
 )
-add_custom_target(
-    docs-api
-    DEPENDS docs-api-html
-)
+add_custom_target(docs-api DEPENDS docs-api-html)
 install(
-    FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/index.html
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/index.html
     TYPE DOC
     COMPONENT docs-api
 )
@@ -81,62 +76,50 @@ if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
     add_custom_command(
         OUTPUT "dictionary.cwl"
         DEPENDS ${DICTIONARY_TXT}
-        COMMAND cat "${DICTIONARY_TXT}" |
-            ${ASPELL_EXECUTABLE} --lang=en create master "./dictionary.cwl"
+        COMMAND cat "${DICTIONARY_TXT}" | ${ASPELL_EXECUTABLE} --lang=en create
+                master "./dictionary.cwl"
     )
     add_custom_command(
         OUTPUT "spellcheck-combined.xml"
-        DEPENDS
-            ${XML_COMBINE} ${XML_INDEX} ${SPELLCHECK_XSL}
+        DEPENDS ${XML_COMBINE} ${XML_INDEX} ${SPELLCHECK_XSL}
         COMMAND
             ${XMLSTARLET_EXECUTABLE} tr "${XML_COMBINE}" "${XML_INDEX}" |
-            ${XMLSTARLET_EXECUTABLE} tr "${SPELLCHECK_XSL}" >"spellcheck-combined.xml"
+            ${XMLSTARLET_EXECUTABLE} tr "${SPELLCHECK_XSL}"
+            >"spellcheck-combined.xml"
     )
     add_custom_command(
         OUTPUT "misspelling.txt"
-        DEPENDS
-            "spellcheck-combined.xml" "dictionary.cwl"
+        DEPENDS "spellcheck-combined.xml" "dictionary.cwl"
         COMMAND
-            cat "spellcheck-combined.xml" |
-            ${ASPELL_EXECUTABLE} --mode=html --lang=EN_US --extra-dicts=./dictionary.cwl list |
-            sort -u >"misspelling.txt"
+            cat "spellcheck-combined.xml" | ${ASPELL_EXECUTABLE} --mode=html
+            --lang=EN_US --extra-dicts=./dictionary.cwl list | sort -u
+            >"misspelling.txt"
     )
     add_custom_command(
         OUTPUT "misspelling-ctx.txt"
-        DEPENDS
-            "spellcheck-combined.xml" "misspelling.txt"
-        COMMAND
-            grep --file "misspelling.txt" "spellcheck-combined.xml" >"misspelling-ctx.txt" || true
+        DEPENDS "spellcheck-combined.xml" "misspelling.txt"
+        COMMAND grep --file "misspelling.txt" "spellcheck-combined.xml"
+                >"misspelling-ctx.txt" || true
     )
     add_custom_target(
-        docs-api-misspelling
-        DEPENDS "misspelling.txt" "misspelling-ctx.txt"
+        docs-api-misspelling DEPENDS "misspelling.txt" "misspelling-ctx.txt"
     )
-    add_dependencies(
-        docs-api
-        docs-api-misspelling
-    )
+    add_dependencies(docs-api docs-api-misspelling)
 endif(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
 
 if(MAKE_EXECUTABLE AND DBLATEX_EXECUTABLE)
     add_custom_target(
         docs-api-pdf
-        BYPRODUCTS
-            ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
-        DEPENDS
-            ${CMAKE_CURRENT_BINARY_DIR}/latex/Makefile
-            ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.tex
+        BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/latex/Makefile
+                ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.tex
         COMMAND ${MAKE_EXECUTABLE}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/latex
         COMMENT "Generating API documentation PDF"
     )
-    add_dependencies(
-        docs-api
-        docs-api-pdf
-    )
+    add_dependencies(docs-api docs-api-pdf)
     install(
-        FILES
-            ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
+        FILES ${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf
         TYPE DOC
         RENAME "${PROJECT_NAME}-api.pdf"
         COMPONENT docs-api

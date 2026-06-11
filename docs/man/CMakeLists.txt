@@ -28,7 +28,11 @@ file(GLOB IN_MAN_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/" "man?")
 foreach(IN_DIR ${IN_MAN_DIRS})
     string(REGEX REPLACE ".*man([0-9])\$" "\\1" SECNUM ${IN_DIR})
 
-    file(GLOB IN_ADOC_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "man${SECNUM}/*.adoc")
+    file(
+        GLOB IN_ADOC_FILES
+        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+        "man${SECNUM}/*.adoc"
+    )
     foreach(IN_FILE ${IN_ADOC_FILES})
         get_filename_component(BASENAME ${IN_FILE} NAME_WE)
         set(OUT_FILE "${BASENAME}.${SECNUM}")
@@ -42,9 +46,8 @@ foreach(IN_DIR ${IN_MAN_DIRS})
             COMMAND
                 ${ASCIIDOCTOR_EXECUTABLE} -b manpage
                 --source-dir=${CMAKE_CURRENT_SOURCE_DIR}
-                --destination-dir=${CMAKE_CURRENT_BINARY_DIR}
-                -a "revnumber=v${CMAKE_PROJECT_VERSION}"
-                --out-file=${OUT_PATH}
+                --destination-dir=${CMAKE_CURRENT_BINARY_DIR} -a
+                "revnumber=v${CMAKE_PROJECT_VERSION}" --out-file=${OUT_PATH}
                 ${IN_PATH}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMENT "Generating manpage ${OUT_FILE}"
@@ -59,7 +62,4 @@ foreach(IN_DIR ${IN_MAN_DIRS})
     endforeach()
 endforeach()
 
-add_custom_target(
-    docs-man
-    DEPENDS ${OUT_MAN_FILES}
-)
+add_custom_target(docs-man DEPENDS ${OUT_MAN_FILES})

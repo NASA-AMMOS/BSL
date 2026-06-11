@@ -25,72 +25,66 @@ configure_file(BSLConfig.c.in BSLConfig.c @ONLY)
 
 # Frontend library
 set(BSL_FRONT_H
-  ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Private.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Public.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/CryptoInterface.h
+    ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Private.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Public.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CryptoInterface.h
 )
 
-set(BSL_FRONT_C
-  ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/Data.c
+set(BSL_FRONT_C ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.c
+                ${CMAKE_CURRENT_SOURCE_DIR}/Data.c
 )
 
 add_library(bsl_front)
 target_sources(bsl_front PUBLIC ${BSL_FRONT_H})
 target_sources(bsl_front PRIVATE ${BSL_FRONT_C})
 
-set_target_properties(bsl_front
-    PROPERTIES
-        VERSION ${CMAKE_PROJECT_VERSION}
-        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+set_target_properties(
+    bsl_front PROPERTIES VERSION ${CMAKE_PROJECT_VERSION}
+                         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_include_directories(
-  bsl_front PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/bsl>
+    bsl_front
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+           $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+           $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/bsl>
 )
 
 # Crypto Library
-set(BSL_CRYPTO_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/crypto/CryptoInterface.c
-)
+set(BSL_CRYPTO_C ${CMAKE_CURRENT_SOURCE_DIR}/crypto/CryptoInterface.c)
 
 add_library(bsl_crypto)
 target_sources(bsl_crypto PRIVATE ${BSL_CRYPTO_C})
-set_target_properties(bsl_crypto
-    PROPERTIES
-        VERSION ${CMAKE_PROJECT_VERSION}
-        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+set_target_properties(
+    bsl_crypto PROPERTIES VERSION ${CMAKE_PROJECT_VERSION}
+                          SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_crypto PUBLIC bsl_front)
 target_link_libraries(bsl_crypto PUBLIC MLIB::mlib)
 target_link_libraries(bsl_crypto INTERFACE OpenSSL::Crypto)
 if(TARGET valgrind::valgrind)
-  target_compile_definitions(bsl_crypto PRIVATE HAVE_VALGRIND)
+    target_compile_definitions(bsl_crypto PRIVATE HAVE_VALGRIND)
 endif(TARGET valgrind::valgrind)
 
 # Default Security Context library
 set(BSL_DEFAULT_SC_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext_Private.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext_Private.h
 )
 
 set(BSL_DEFAULT_SC_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BCB_AES_GCM.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BIB_HMAC_SHA2.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BCB_AES_GCM.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BIB_HMAC_SHA2.c
 )
 
 add_library(bsl_default_sc)
 target_sources(bsl_default_sc PUBLIC ${BSL_DEFAULT_SC_H})
 target_sources(bsl_default_sc PRIVATE ${BSL_DEFAULT_SC_C})
-set_target_properties(bsl_default_sc
-    PROPERTIES
-        VERSION ${CMAKE_PROJECT_VERSION}
-        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+set_target_properties(
+    bsl_default_sc PROPERTIES VERSION ${CMAKE_PROJECT_VERSION}
+                              SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_default_sc PUBLIC bsl_front)
 target_link_libraries(bsl_default_sc PUBLIC bsl_crypto)
@@ -98,57 +92,54 @@ target_link_libraries(bsl_default_sc PUBLIC QCBOR::qcbor)
 
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyConfigParser.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyConfigParser.h
 )
 
 set(BSL_SAMPLE_PP_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyConfigParser.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyConfigParser.c
 )
 
 add_library(bsl_sample_pp)
 target_sources(bsl_sample_pp PUBLIC ${BSL_SAMPLE_PP_H})
 target_sources(bsl_sample_pp PRIVATE ${BSL_SAMPLE_PP_C})
-set_target_properties(bsl_sample_pp
-    PROPERTIES
-        VERSION ${CMAKE_PROJECT_VERSION}
-        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+set_target_properties(
+    bsl_sample_pp PROPERTIES VERSION ${CMAKE_PROJECT_VERSION}
+                             SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
 target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
 
 # Dynamic backend library
-set(BSL_DYNAMIC_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.h
+set(BSL_DYNAMIC_H ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
+                  ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.h
 )
 
 set(BSL_DYNAMIC_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/HostInterface.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/PolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/TelemetryCounters.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOutcome.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecParam.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecResult.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityAction.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityActionSet.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/HostInterface.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/PolicyProvider.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/TelemetryCounters.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOutcome.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecParam.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecResult.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityAction.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityActionSet.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.c
 )
 
 add_library(bsl_dynamic)
 target_sources(bsl_dynamic PUBLIC ${BSL_DYNAMIC_H})
 target_sources(bsl_dynamic PRIVATE ${BSL_DYNAMIC_C})
-set_target_properties(bsl_dynamic
-    PROPERTIES
-        VERSION ${CMAKE_PROJECT_VERSION}
-        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+set_target_properties(
+    bsl_dynamic PROPERTIES VERSION ${CMAKE_PROJECT_VERSION}
+                           SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_dynamic PUBLIC bsl_front)
 target_link_libraries(bsl_dynamic PUBLIC MLIB::mlib)
@@ -159,12 +150,12 @@ add_subdirectory(mock_bpa)
 find_program(CLANG_FORMAT "clang-format")
 if(CLANG_FORMAT)
     # Define which files to format
-    file(GLOB_RECURSE ALL_SOURCE_FILES 
-        ${CMAKE_CURRENT_SOURCE_DIR}/**/*.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/**/*.h
+    file(GLOB_RECURSE ALL_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/**/*.c
+         ${CMAKE_CURRENT_SOURCE_DIR}/**/*.h
     )
 
-    add_custom_target(format-check
+    add_custom_target(
+        format-check
         COMMAND ${CLANG_FORMAT} --dry-run -Werror ${ALL_SOURCE_FILES}
         COMMENT "Formatting source code..."
     )
@@ -173,20 +164,17 @@ endif()
 # Installation config
 install(
     TARGETS bsl_front bsl_dynamic bsl_default_sc bsl_sample_pp bsl_crypto
-    RUNTIME
-        COMPONENT runtime
-    LIBRARY
-        COMPONENT runtime
-        NAMELINK_COMPONENT devel
-    ARCHIVE
-        COMPONENT devel
+    RUNTIME COMPONENT runtime
+    LIBRARY COMPONENT runtime NAMELINK_COMPONENT devel
+    ARCHIVE COMPONENT devel
 )
 install(
     DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/bsl"
     COMPONENT devel
     FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-    FILES_MATCHING PATTERN "*.h"
+    FILES_MATCHING
+    PATTERN "*.h"
 )
 install(
     FILES "${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h"

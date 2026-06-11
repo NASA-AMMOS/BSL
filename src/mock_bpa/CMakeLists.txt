@@ -21,70 +21,69 @@ subcontract 1700763.
 ]]
 add_library(bsl_mock_bpa)
 
-target_compile_options(bsl_mock_bpa PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls)
+target_compile_options(
+    bsl_mock_bpa PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes
+                         -Wmissing-prototypes -Wredundant-decls
+)
 
 target_sources(
-  bsl_mock_bpa PUBLIC 
-  ${CMAKE_CURRENT_SOURCE_DIR}/log.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/agent.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bundle.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/crc.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/eid.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/eidpat.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/encode.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/decode.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/text_util.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/key_registry.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/ctr.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/MockBPA.h
+    bsl_mock_bpa
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/log.h
+           ${CMAKE_CURRENT_SOURCE_DIR}/agent.h
+           ${CMAKE_CURRENT_SOURCE_DIR}/bundle.h
+           ${CMAKE_CURRENT_SOURCE_DIR}/crc.h
+           ${CMAKE_CURRENT_SOURCE_DIR}/eid.h
+           ${CMAKE_CURRENT_SOURCE_DIR}/eidpat.h
+           ${CMAKE_CURRENT_SOURCE_DIR}/encode.h
+           ${CMAKE_CURRENT_SOURCE_DIR}/decode.h
+           ${CMAKE_CURRENT_SOURCE_DIR}/text_util.h
+           ${CMAKE_CURRENT_SOURCE_DIR}/key_registry.h
+           ${CMAKE_CURRENT_SOURCE_DIR}/ctr.h
+           ${CMAKE_CURRENT_SOURCE_DIR}/MockBPA.h
 )
 target_sources(
-  bsl_mock_bpa PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/log.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/agent.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bundle.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/eid.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/eidpat.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/encode.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/decode.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/text_util.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/key_registry.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/ctr.c
+    bsl_mock_bpa
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/log.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/agent.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/bundle.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/crc.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/eid.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/eidpat.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/encode.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/decode.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/text_util.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/key_registry.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/ctr.c
 )
-set_target_properties(bsl_mock_bpa
-    PROPERTIES
-        VERSION ${CMAKE_PROJECT_VERSION}
-        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+set_target_properties(
+    bsl_mock_bpa PROPERTIES VERSION ${CMAKE_PROJECT_VERSION}
+                            SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
 target_link_libraries(bsl_mock_bpa PUBLIC QCBOR::qcbor)
 target_link_libraries(bsl_mock_bpa PUBLIC Jansson::Jansson)
-target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_sample_pp)
+target_link_libraries(
+    bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_sample_pp
+)
 # Installation config
 install(
-  TARGETS bsl_mock_bpa
-  PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/bsl"
-    RUNTIME
-        COMPONENT test
-    LIBRARY
-        COMPONENT test
-        NAMELINK_COMPONENT devel
-    ARCHIVE
-        COMPONENT devel
+    TARGETS bsl_mock_bpa
+    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/bsl"
+    RUNTIME COMPONENT test
+    LIBRARY COMPONENT test NAMELINK_COMPONENT devel
+    ARCHIVE COMPONENT devel
 )
 
 if(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)
-  add_executable(bsl-mock-bpa)
-  target_sources(bsl-mock-bpa PRIVATE mock_bpa.c)
-  target_link_libraries(bsl-mock-bpa PUBLIC bsl_mock_bpa bsl_crypto)
-  target_link_libraries(bsl-mock-bpa PUBLIC Threads::Threads)
+    add_executable(bsl-mock-bpa)
+    target_sources(bsl-mock-bpa PRIVATE mock_bpa.c)
+    target_link_libraries(bsl-mock-bpa PUBLIC bsl_mock_bpa bsl_crypto)
+    target_link_libraries(bsl-mock-bpa PUBLIC Threads::Threads)
 
-  # Installation config
-  install(
-    TARGETS bsl-mock-bpa
-    PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/bsl"
-      RUNTIME
-          COMPONENT test
-  )
+    # Installation config
+    install(
+        TARGETS bsl-mock-bpa
+        PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/bsl"
+        RUNTIME COMPONENT test
+    )
 endif(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)
