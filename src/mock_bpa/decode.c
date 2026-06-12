@@ -105,7 +105,6 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
                 BSL_Data_t *raw = &(obj->ssp.as_raw);
                 ASSERT_ARG_NONNULL(raw);
                 BSL_Data_Init(raw);
-                // FIXME expose this from the decoder
                 BSL_Data_CopyFrom(raw, end - begin, (const uint8_t *)buf.ptr + begin);
             }
             break;
@@ -198,13 +197,15 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
         blk->frag_offset = blk->adu_length = 0;
     }
 
-    UsefulBufC view;
+    UsefulBufC crc_view = NULLUsefulBufC;
     switch (blk->crc_type)
     {
+        case BSL_BUNDLECRCTYPE_NONE:
+            break;
         case BSL_BUNDLECRCTYPE_16:
         case BSL_BUNDLECRCTYPE_32:
             // just ignore the bytes, CRC check will use the encoded buffer
-            QCBORDecode_GetByteString(dec, &view);
+            QCBORDecode_GetByteString(dec, &crc_view);
             break;
         default:
             // nothing
@@ -219,7 +220,7 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     const size_t end = QCBORDecode_Tell(dec);
 
     const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
-    if (!mock_bpa_crc_check(buf, begin, end, blk->crc_type))
+    if (!mock_bpa_crc_check(buf, begin, end, (int)blk->crc_type, crc_view.len))
     {
         return 4;
     }
@@ -266,26 +267,30 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
         }
     }
 
+    UsefulBufC crc_view = NULLUsefulBufC;
     switch (blk->crc_type)
     {
         case BSL_BUNDLECRCTYPE_16:
         case BSL_BUNDLECRCTYPE_32:
             // just ignore the bytes
-            QCBORDecode_GetByteString(dec, &view);
+            QCBORDecode_GetByteString(dec, &crc_view);
             break;
         default:
             // nothing
             break;
     }
 
+    // Known QCBOR issue https://github.com/laurencelundblade/QCBOR/issues/379
+    // The tell should be after exitarray
+    const size_t end = QCBORDecode_Tell(dec);
     QCBORDecode_ExitArray(dec);
     if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
     {
         return 2;
     }
-    const size_t end = QCBORDecode_Tell(dec);
 
-    if (!mock_bpa_crc_check(QCBORDecode_RetrieveUndecodedInput(dec), begin, end, blk->crc_type))
+    const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
+    if (!mock_bpa_crc_check(buf, begin, end, (int)blk->crc_type, crc_view.len))
     {
         return 4;
     }
