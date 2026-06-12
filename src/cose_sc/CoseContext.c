@@ -36,4 +36,21 @@
 
 #include "CoseContext.h"
 
-// TODO
+
+bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+{
+    (void)lib;
+    (void)bundle;
+    (void)sec_oper;
+    return true;
+}
+
+int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+                        BSL_SecOutcome_t *sec_outcome)
+{
+    (void)lib;
+    (void)bundle;
+    (void)sec_oper;
+    (void)sec_outcome;
+    return BSL_SUCCESS;
+}

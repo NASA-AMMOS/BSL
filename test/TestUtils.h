@@ -41,9 +41,10 @@ extern "C" {
 
 typedef struct BSL_TestContext_s
 {
+    /// Library context for the test
     BSL_LibCtx_t   bsl;
+    /// Bundle container for test data
     mock_bpa_ctr_t mock_bpa_ctr;
-    uint64_t       key_id;
 } BSL_TestContext_t;
 
 int BSL_TestContext_Init(BSL_TestContext_t *ctx);

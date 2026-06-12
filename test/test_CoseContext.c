@@ -38,9 +38,7 @@
 #include <CryptoInterface.h>
 
 #include <backend/PublicInterfaceImpl.h>
-#include <default_sc/DefaultSecContext.h>
-#include <default_sc/DefaultSecContext_Private.h>
-#include <default_sc/rfc9173.h>
+#include <cose_sc/CoseContext.h>
 
 #include "TestUtils.h"
 
@@ -92,23 +90,33 @@ void test_AppendixA_Example1_BIB_Source(void)
                              "6c6c6f444ec359d2ff";
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, hex_bundle));
 
-#if 0
-    BIBTestContext bib_test_context;
-    BIBTestContext_Init(&bib_test_context);
-    BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_SOURCE, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecOper_t sec_oper;
+    BSL_SecOper_Init(&sec_oper);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 0, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BUNDLE);
 
-    BSL_SecOutcome_t *sec_outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(sec_outcome, &bib_test_context.sec_oper, BSL_SecOutcome_Sizeof());
+//    BSL_SecOper_AppendParam(&sec_oper, &context->param_sha_variant);
+//    BSL_SecOper_AppendParam(&sec_oper, &context->param_scope_flags);
+//    BSL_SecOper_AppendParam(&sec_oper, &context->param_test_key);
+//    BSL_SecOper_AppendParam(&sec_oper, &context->use_key_wrap);
 
-    /// Confirm running BIB as source executes without error
-    int bib_exec_status =
-        BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bib_test_context.sec_oper, sec_outcome);
-    TEST_ASSERT_EQUAL(BSL_SUCCESS, bib_exec_status);
+    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
+    BSL_SecOutcome_Init(outcome, &sec_oper, BSL_SecOutcome_Sizeof());
+
+    bool valid_status =
+            BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
+    TEST_ASSERT_TRUE(valid_status);
+
+    /// Confirm running secop as source executes without error
+    int exec_status =
+            BSLX_CoseSc_Execute(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     /// Confirm it produced only 1 result
-    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(sec_outcome));
-    const BSL_SecResult_t *bib_result = BSL_SecOutcome_GetResultAtIndex(sec_outcome, 0);
+    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
+    const BSL_SecResult_t *bib_result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
+    TEST_ASSERT_NOT_NULL(bib_result);
 
+#if 0
     /// Confirm the context and result result is the right ID (Defined in RFC)
     TEST_ASSERT_EQUAL(RFC9173_CONTEXTID_BIB_HMAC_SHA2, bib_result->context_id);
     TEST_ASSERT_EQUAL(RFC9173_BIB_RESULTID_HMAC, bib_result->result_id);
@@ -121,9 +129,9 @@ void test_AppendixA_Example1_BIB_Source(void)
         TEST_ASSERT_EQUAL(sizeof(ApxA1_HMAC), view.len);
         TEST_ASSERT_EQUAL_MEMORY(ApxA1_HMAC, view.ptr, sizeof(ApxA1_HMAC));
     }
-
-    BSL_SecOutcome_Deinit(sec_outcome);
-    BSL_free(sec_outcome);
-    BIBTestContext_Deinit(&bib_test_context);
 #endif
+
+    BSL_SecOutcome_Deinit(outcome);
+    BSL_free(outcome);
+    BSL_SecOper_Deinit(&sec_oper);
 }

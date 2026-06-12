@@ -107,7 +107,7 @@ void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e rol
     BSL_SecParam_InitBytestr(&context->param_hmac, BSL_SECPARAM_TYPE_AUTH_TAG, context->hmac);
     BSL_SecParam_InitUint64(&context->use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
 
-    BSL_SecOper_Populate(&context->sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BIB_HMAC_SHA2, 1, 2, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BLOCK);
 
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_sha_variant);
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_scope_flags);
@@ -131,7 +131,7 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
     BSL_SecParam_InitBytestr(&context->param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, context->wrapped_key);
     BSL_SecParam_InitUint64(&context->use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
 
-    BSL_SecOper_Populate(&context->sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_NOTHING);
+    BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BCB_AES_GCM, 1, 2, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_NOTHING);
 
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_init_vec);
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_aes_variant);
@@ -370,11 +370,11 @@ void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib)
 
     sec_desc.execute  = BSLX_BIB_Execute;
     sec_desc.validate = BSLX_BIB_Validate;
-    res               = BSL_API_RegisterSecurityContext(bsl_lib, 1, sec_desc);
+    res               = BSL_API_RegisterSecurityContext(bsl_lib, RFC9173_CONTEXTID_BIB_HMAC_SHA2, sec_desc);
     assert(0 == res);
 
     sec_desc.execute  = BSLX_BCB_Execute;
     sec_desc.validate = BSLX_BCB_Validate;
-    res               = BSL_API_RegisterSecurityContext(bsl_lib, 2, sec_desc);
+    res               = BSL_API_RegisterSecurityContext(bsl_lib, RFC9173_CONTEXTID_BCB_AES_GCM, sec_desc);
     assert(0 == res);
 }

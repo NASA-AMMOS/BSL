@@ -31,11 +31,14 @@
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
 
-/// Match signature ::BSL_SecCtx_Execute_f
-int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                        BSL_SecOutcome_t *sec_outcome);
+/// Registered BPSec context ID
+#define BSLX_COSESC_CTX_ID 3
 
 /// Match signature ::BSL_SecCtx_Validate_f
 bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
+
+/// Match signature ::BSL_SecCtx_Execute_f
+int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+                        BSL_SecOutcome_t *sec_outcome);
 
 #endif /* BSLX_SECCTXERR_H_ */
