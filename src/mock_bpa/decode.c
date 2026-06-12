@@ -226,8 +226,8 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
     if (!mock_bpa_crc_check(buf, begin, end, (int)blk->crc_type, crc_view.len))
     {
-        // FIXME pending actual CRC
-        //        return 4;
+        BSL_LOG_ERR("CRC check failed for primary block");
+        return 4;
     }
 
     BSL_Data_Resize(&blk->encoded, end - begin);
@@ -297,8 +297,8 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
     const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
     if (!mock_bpa_crc_check(buf, begin, end, (int)blk->crc_type, crc_view.len))
     {
-        // FIXME pending actual CRC
-        //        return 4;
+        BSL_LOG_ERR("CRC check failed for canonical block number %" PRIu64, blk->blk_num);
+        return 4;
     }
 
     return 0;
