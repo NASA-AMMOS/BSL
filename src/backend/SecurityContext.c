@@ -24,8 +24,6 @@
  * @brief Implementation of functions to interact with the security context
  * @ingroup backend_dyn
  *
- * @todo Enable checking (not just using a stub returning True.)
- * @todo Complete implementation for BCB acceptor.
  */
 #include <BPSecLib_Private.h>
 
@@ -81,7 +79,6 @@ static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_n
 static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                              BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
 {
-    (void)lib;
     CHK_ARG_NONNULL(sec_context_fn);
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
