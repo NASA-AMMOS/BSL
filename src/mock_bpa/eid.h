@@ -48,9 +48,11 @@ typedef struct
     uint64_t svc_num;
 } bsl_eid_ipn_ssp_t;
 
-/// Decodeable schemes
+/// Handled schemes
 enum bsl_mock_eid_scheme_e
 {
+    /// The "dtn" scheme
+    BSL_MOCK_EID_DTN = 1,
     /// The "ipn" scheme
     BSL_MOCK_EID_IPN = 2,
 };

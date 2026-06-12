@@ -21,8 +21,8 @@
  */
 
 /** @file
+ * @ingroup default_sc
  * Contains functions only used internally, however, test utilities can include this to unit test them.
- * @ingroup example_security_context
  */
 
 #ifndef BSLB_DEFAULT_SECURITY_CONTEXT_PRIVATE_H_

@@ -28,27 +28,28 @@ Runtime files needed to use the BPSec Library (BSL).
 
 %package devel
 Summary: Development files for the BSL
-Requires: %{name}%{?_isa} = %{version}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 %description devel
 Development files needed to build and link to the BSL.
 
 %package test
 Summary: Unit test and Mock BPA executables for the BSL
+Requires: %{name}%{?_isa} = %{version}-%{release}
 %description test
 This package contains executables needed to test the associated
 BSL library build.
 
 %package test-devel
 Summary: Development files for the BSL test fixtures
-Requires: %{name}-test%{?_isa} = %{version}
+Requires: %{name}-test%{?_isa} = %{version}-%{release}
 %description test-devel
 Development files needed to build and link to the BSL mock BPA.
 
 %if %{with apidoc}
-%package apidoc
+%package doc
 Summary: API documentation for the BSL
-Requires: %{name}%{?_isa} = %{version}
-%description apidoc
+Requires: %{name}%{?_isa} = %{version}-%{release}
+%description doc
 API documentation in the form of HTML package generated
 from the API with Doxygen.
 %endif
@@ -117,9 +118,9 @@ popd
 %files devel
 %license LICENSE
 %doc README.md
-%{_includedir}/bsl
-%{_includedir}/qcbor
-%{_includedir}/m-lib
+%{_includedir}/bsl/
+%{_includedir}/qcbor/
+%{_includedir}/m-lib/
 %{_libdir}/libqcbor.so
 %{_libdir}/libbsl_front.so
 %{_libdir}/libbsl_dynamic.so
@@ -139,16 +140,16 @@ popd
 %files test-devel
 %license LICENSE
 %doc README.md
-%{_includedir}/unity
-%{_libdir}/cmake/unity
+%{_includedir}/unity/
+%{_libdir}/cmake/unity/
 %{_libdir}/libunity.a
 %{_libdir}/libbsl_mock_bpa.so
 %{_libdir}/libbsl_test_utils.so
 
 %if %{with apidoc}
-%files apidoc
+%files doc
 %license LICENSE
-%{_docdir}/bsl
+%doc %lang(en) %{_docdir}/bsl
 %endif
 
 

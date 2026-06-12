@@ -45,8 +45,6 @@ typedef struct
 
 void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr);
 
-void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src);
-
 void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr);
 
 /** Sort canonical blocks in a bundle by descending block number.
@@ -68,7 +66,6 @@ int mock_bpa_ctr_decode(mock_bpa_ctr_t *ctr);
 int mock_bpa_ctr_encode(mock_bpa_ctr_t *ctr);
 
 /// M*LIB OPLIST for ::mock_bpa_ctr_t
-#define M_OPL_mock_bpa_ctr_t() \
-    (INIT(API_2(mock_bpa_ctr_init)), INIT_MOVE(API_6(mock_bpa_ctr_init_move)), CLEAR(API_2(mock_bpa_ctr_deinit)))
+#define M_OPL_mock_bpa_ctr_t() (INIT(API_2(mock_bpa_ctr_init)), INIT_SET(0), SET(0), CLEAR(API_2(mock_bpa_ctr_deinit)))
 
 #endif /* BSL_MOCK_BPA_CTR_H_ */

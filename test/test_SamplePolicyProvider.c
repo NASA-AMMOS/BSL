@@ -32,7 +32,7 @@
 #include <BPSecLib_Private.h>
 
 #include <mock_bpa/MockBPA.h>
-#include "bsl_test_utils.h"
+#include "DefaultScUtils.h"
 
 #include <policy_provider/SamplePolicyProvider.h>
 
@@ -54,7 +54,7 @@ int suiteTearDown(int failures)
 void setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, false));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
 }
 
 void tearDown(void)
@@ -84,7 +84,7 @@ void test_SamplePolicyProvider_WildcardPolicyRuleVerifiesBIB(void)
 {
     // Load the sample Bundle with a BIB block.
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
     // Create a predicate: "At location APPIN, match Bundles from anywhere, to anywhere, with any security source"
     BSLP_PolicyPredicate_t predicate;

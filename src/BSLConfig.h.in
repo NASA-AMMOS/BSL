@@ -26,6 +26,7 @@
 #ifndef BSL_BSL_CONFIG_H_
 #define BSL_BSL_CONFIG_H_
 
+#include "BSLMemory.h"
 #include <stdlib.h>
 
 #ifdef __cplusplus

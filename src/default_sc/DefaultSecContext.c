@@ -21,26 +21,30 @@
  */
 
 /** @file
+ * @ingroup default_sc
  * Header for the implementation of an example default security context (RFC 9173).
- * @ingroup example_security_context
  */
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-#ifndef BSLX_SECCTXERR_H_
-#define BSLX_SECCTXERR_H_
+#include <qcbor/qcbor_encode.h>
+#include <qcbor/qcbor_spiffy_decode.h>
 
 #include <BPSecLib_Private.h>
-#include <BPSecLib_Public.h>
+#include <CryptoInterface.h>
 
-#define BSLX_MAX_AES_PAD (64)
+#include "DefaultSecContext.h"
+#include "DefaultSecContext_Private.h"
+#include "rfc9173.h"
 
-int BSLX_BCB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                     BSL_SecOutcome_t *sec_outcome);
-
-int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                     BSL_SecOutcome_t *sec_outcome);
-
-bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
-
-bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
-
-#endif /* BSLX_SECCTXERR_H_ */
+void BSLX_EncodeHeader(const BSL_CanonicalBlock_t *block, QCBOREncodeContext *encoder)
+{
+    ASSERT_ARG_NONNULL(block);
+    ASSERT_ARG_NONNULL(encoder);
+    BSL_LOG_INFO("  >>> AAD Encoding: %" PRIu64 ", %" PRIu64 ", %" PRIu64, block->type_code, block->block_num,
+                 block->flags);
+    QCBOREncode_AddUInt64(encoder, block->type_code);
+    QCBOREncode_AddUInt64(encoder, block->block_num);
+    QCBOREncode_AddUInt64(encoder, block->flags);
+}
