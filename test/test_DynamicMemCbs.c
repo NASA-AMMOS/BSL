@@ -26,11 +26,11 @@
 #include <backend/SecurityActionSet.h>
 #include <backend/SecurityResultSet.h>
 #include <policy_provider/SamplePolicyProvider.h>
-#include <security_context/rfc9173.h>
+#include <default_sc/rfc9173.h>
 #include <mock_bpa/agent.h>
 #include <mock_bpa/log.h>
 
-#include "bsl_test_utils.h"
+#include "DefaultScUtils.h"
 
 static int malloc_cnt  = 0;
 static int realloc_cnt = 0;
@@ -96,7 +96,8 @@ void _setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
     BSL_CryptoInit();
-    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, true));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
+    BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
 
     BSL_SecParam_Init(&param_aes_variant_128);
     BSL_SecParam_Init(&param_use_wrap_key);
@@ -166,7 +167,7 @@ void test_dyn_mem_cbs_BSL_32(void)
     int                       apply_result = -1;
 
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
     int res = BSL_TestUtils_ModifyEIDs(&LocalTestCtx.mock_bpa_ctr.bundle_ref, NULL, "ipn:3.2", NULL);
     BSL_LOG_INFO("EID MODIFICATION RESULT: %d", res);

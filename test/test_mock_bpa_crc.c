@@ -21,7 +21,7 @@
  */
 #include <inttypes.h>
 #include <unity.h>
-#include "bsl_test_utils.h"
+#include "TestUtils.h"
 #include <mock_bpa/crc.h>
 #include <mock_bpa/log.h>
 

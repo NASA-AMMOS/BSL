@@ -42,19 +42,6 @@ void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr)
     ctr->bundle_ref.data = ctr->bundle;
 }
 
-void mock_bpa_ctr_init_move(mock_bpa_ctr_t *ctr, mock_bpa_ctr_t *src)
-{
-    BSL_CHKVOID(ctr);
-    BSL_CHKVOID(src);
-    BSL_Data_InitMove(&(ctr->encoded), &(src->encoded));
-
-    ctr->bundle     = src->bundle;
-    ctr->bundle_ref = src->bundle_ref;
-
-    src->bundle          = NULL;
-    src->bundle_ref.data = NULL;
-}
-
 void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr)
 {
     BSL_CHKVOID(ctr);

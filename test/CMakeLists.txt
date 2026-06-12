@@ -22,8 +22,16 @@ subcontract 1700763.
 
 if(BUILD_UNITTEST OR BUILD_FUZZING)
   add_library(bsl_test_utils)
-  target_sources(bsl_test_utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/bsl_test_utils.h)
-  target_sources(bsl_test_utils PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/bsl_test_utils.c)
+  target_sources(
+      bsl_test_utils
+      PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/TestUtils.h
+             ${CMAKE_CURRENT_SOURCE_DIR}/DefaultScUtils.h
+  )
+  target_sources(
+      bsl_test_utils
+      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/TestUtils.c
+              ${CMAKE_CURRENT_SOURCE_DIR}/DefaultScUtils.c
+  )
   set_target_properties(bsl_test_utils
       PROPERTIES
           VERSION ${CMAKE_PROJECT_VERSION}
@@ -46,7 +54,7 @@ if(BUILD_UNITTEST OR BUILD_FUZZING)
   )
 endif(BUILD_UNITTEST OR BUILD_FUZZING)
 
-set(LIB_ORDERED bsl_front bsl_dynamic bsl_mock_bpa bsl_test_utils)
+set(LIB_ORDERED bsl_mock_bpa bsl_test_utils)
 
 if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
@@ -72,26 +80,30 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   
   add_unity_test(SOURCE test_CryptoInterface.c)
   target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
-  
+
   add_unity_test(SOURCE test_AbsSecBlock.c)
   target_link_libraries(test_AbsSecBlock PUBLIC ${LIB_ORDERED})
-  
+
   # Exercises the portion of the backend that interacts with the policy providers
   add_unity_test(SOURCE test_BackendSecurityContext.c)
   target_link_libraries(test_BackendSecurityContext PUBLIC ${LIB_ORDERED})
-  
+
   # Exercises the portion of the backend that interacts with the security contexts
   add_unity_test(SOURCE test_BackendPolicyProvider.c)
   target_link_libraries(test_BackendPolicyProvider PUBLIC ${LIB_ORDERED})
-  
+
   # Specific unit tests for ONLY the "Sample Policy Provider" module (Offered as example provider)
   add_unity_test(SOURCE test_SamplePolicyProvider.c)
   target_link_libraries(test_SamplePolicyProvider PUBLIC ${LIB_ORDERED})
-  
+
   # Specific tests for ONLY the "Default Security Context" module (Implementation of RFC9173)
   add_unity_test(SOURCE test_DefaultSecurityContext.c)
   target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
-  
+
+  # Specific tests for ONLY the "COSE Context" module
+  add_unity_test(SOURCE test_CoseContext.c)
+  target_link_libraries(test_CoseContext PUBLIC ${LIB_ORDERED})
+
   # Exercises the MockBPA using the publicly exposed BSL front end
   add_unity_test(SOURCE test_PublicInterfaceImpl.c)
   target_link_libraries(test_PublicInterfaceImpl PUBLIC ${LIB_ORDERED})

@@ -23,7 +23,7 @@
 /** @file
  * @ingroup mock_bpa
  * Declarations for EID Pattern handling.
- * These are based on draft-sipos-dtn-eid-pattern @cite sipos-dtn-eid-pattern-02.
+ * These are based on draft-ietf-dtn-eid-pattern @cite draft-ietf-dtn-eid-pattern.
  */
 #ifndef BSL_MOCK_BPA_EIDPAT_H_
 #define BSL_MOCK_BPA_EIDPAT_H_

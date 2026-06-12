@@ -74,14 +74,14 @@ endif(TARGET valgrind::valgrind)
 
 # Default Security Context library
 set(BSL_DEFAULT_SC_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext_Private.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/DefaultSecContext.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/DefaultSecContext_Private.h
 )
 
 set(BSL_DEFAULT_SC_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/DefaultSecContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BCB_AES_GCM.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/security_context/BIB_HMAC_SHA2.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/DefaultSecContext.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/BCB_AES_GCM.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/BIB_HMAC_SHA2.c
 )
 
 add_library(bsl_default_sc)
@@ -95,6 +95,26 @@ set_target_properties(bsl_default_sc
 target_link_libraries(bsl_default_sc PUBLIC bsl_front)
 target_link_libraries(bsl_default_sc PUBLIC bsl_crypto)
 target_link_libraries(bsl_default_sc PUBLIC QCBOR::qcbor)
+
+# COSE Security Context library
+set(BSL_COSE_SC_H
+    ${CMAKE_CURRENT_SOURCE_DIR}/cose_sc/CoseContext.h
+)
+
+set(BSL_COSE_SC_C
+    ${CMAKE_CURRENT_SOURCE_DIR}/cose_sc/CoseContext.c
+)
+add_library(bsl_cose_sc)
+target_sources(bsl_cose_sc PUBLIC ${BSL_COSE_SC_H})
+target_sources(bsl_cose_sc PRIVATE ${BSL_COSE_SC_C})
+set_target_properties(bsl_cose_sc
+    PROPERTIES
+        VERSION ${CMAKE_PROJECT_VERSION}
+        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+)
+target_link_libraries(bsl_cose_sc PUBLIC bsl_front)
+target_link_libraries(bsl_cose_sc PUBLIC bsl_crypto)
+target_link_libraries(bsl_cose_sc PUBLIC QCBOR::qcbor)
 
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
@@ -172,7 +192,11 @@ endif()
 
 # Installation config
 install(
-    TARGETS bsl_front bsl_dynamic bsl_default_sc bsl_sample_pp bsl_crypto
+    TARGETS
+        bsl_front bsl_dynamic
+        bsl_default_sc bsl_cose_sc
+        bsl_crypto
+        bsl_sample_pp
     RUNTIME
         COMPONENT runtime
     LIBRARY

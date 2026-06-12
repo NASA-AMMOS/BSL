@@ -33,7 +33,7 @@
 
 #include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
-#include <security_context/rfc9173.h>
+#include <default_sc/rfc9173.h>
 
 #include "SamplePolicyProvider.h"
 

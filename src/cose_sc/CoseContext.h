@@ -21,30 +21,24 @@
  */
 
 /** @file
- * Header for the implementation of an example default security context (RFC 9173).
- * @ingroup example_security_context
+ * @ingroup cose_sc
+ * Header for the implementation of the COSE context @cite draft-ietf-dtn-bpsec-cose.
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 
-#include <qcbor/qcbor_encode.h>
-#include <qcbor/qcbor_spiffy_decode.h>
+#ifndef BSLX_SECCTXERR_H_
+#define BSLX_SECCTXERR_H_
 
 #include <BPSecLib_Private.h>
-#include <CryptoInterface.h>
+#include <BPSecLib_Public.h>
 
-#include "DefaultSecContext.h"
-#include "DefaultSecContext_Private.h"
-#include "rfc9173.h"
+/// Registered BPSec context ID
+#define BSLX_COSESC_CTX_ID 3
 
-void BSLX_EncodeHeader(const BSL_CanonicalBlock_t *block, QCBOREncodeContext *encoder)
-{
-    ASSERT_ARG_NONNULL(block);
-    ASSERT_ARG_NONNULL(encoder);
-    BSL_LOG_INFO("  >>> AAD Encoding: %" PRIu64 ", %" PRIu64 ", %" PRIu64, block->type_code, block->block_num,
-                 block->flags);
-    QCBOREncode_AddUInt64(encoder, block->type_code);
-    QCBOREncode_AddUInt64(encoder, block->block_num);
-    QCBOREncode_AddUInt64(encoder, block->flags);
-}
+/// Match signature ::BSL_SecCtx_Validate_f
+bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
+
+/// Match signature ::BSL_SecCtx_Execute_f
+int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+                        BSL_SecOutcome_t *sec_outcome);
+
+#endif /* BSLX_SECCTXERR_H_ */

@@ -94,10 +94,10 @@ It uses POSIX APIs to provide necessary Host functions for the BSL, and OpenSSL 
 This group contains files used by the Example Policy Provider library included with the BSL.
 
 
-@defgroup example_security_context Default Security Contexts
+@defgroup default_sc Default Security Contexts
 @brief Implementation of the default security contexts using the BSL crypto API.
 
-This group contains files used by the Default Security Contexts library included with the BSL.
+This group contains files used by the Default Security Contexts (RFC 9173 @cite rfc9173) library included with the BSL.
 
 @defgroup mock_bpa Example/Mock BP Agent
 @brief Files used in the Mock BPA used for testing.

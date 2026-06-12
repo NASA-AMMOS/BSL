@@ -30,6 +30,7 @@ Bitwise
 Bormann
 bpa
 BPA's
+bpsec
 BPSec
 BPSecLib
 BPv
@@ -63,6 +64,8 @@ CODEC
 config
 CONOPs
 const
+cose
+COSE
 CRC
 CRIT
 crypto
@@ -107,6 +110,7 @@ hmac
 Housley
 html
 IANA
+ietf
 IETF
 init
 Init

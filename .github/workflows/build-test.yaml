@@ -172,7 +172,8 @@ jobs:
           pip3 install -r mock-bpa-test/requirements.txt
       - name: Test
         env:
-          TEST_MEMCHECK: '1'
+          TEST_EXEC_WRAP: 'memcheck'
+          TEST_LOG_LEVEL: 'info'
         run: python3 -m pytest mock-bpa-test
       - name: Collect coverage
         run: |
