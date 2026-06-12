@@ -280,7 +280,8 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
             break;
     }
 
-    // Known QCBOR issue: this should be after exitarray
+    // Known QCBOR issue https://github.com/laurencelundblade/QCBOR/issues/379
+    // The tell should be after exitarray
     const size_t end = QCBORDecode_Tell(dec);
     QCBORDecode_ExitArray(dec);
     if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
