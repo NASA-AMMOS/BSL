@@ -60,14 +60,20 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
   find_package(unitytools)
 
+  add_unity_test(SOURCE test_qcbor.c)
+  target_link_libraries(test_qcbor PUBLIC ${LIB_ORDERED})
+  
   add_unity_test(SOURCE test_MockBPA_text_util.c)
-  target_link_libraries(test_MockBPA_text_util PUBLIC bsl_mock_bpa)
+  target_link_libraries(test_MockBPA_text_util PUBLIC ${LIB_ORDERED})
   
   add_unity_test(SOURCE test_MockBPA_EID.c)
   target_link_libraries(test_MockBPA_EID PUBLIC ${LIB_ORDERED})
   
   add_unity_test(SOURCE test_MockBPA_Codecs.c)
   target_link_libraries(test_MockBPA_Codecs PUBLIC ${LIB_ORDERED})
+  
+  add_unity_test(SOURCE test_mock_bpa_crc.c)
+  target_link_libraries(test_mock_bpa_crc PUBLIC ${LIB_ORDERED})
   
   add_unity_test(SOURCE test_mock_bpa_ctr.c)
   target_link_libraries(test_mock_bpa_ctr PUBLIC ${LIB_ORDERED})

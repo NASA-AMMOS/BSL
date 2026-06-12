@@ -139,7 +139,9 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
     BSL_SecOper_AppendParam(&context->sec_oper, &context->use_key_wrap);
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_scope_flags);
     if (role != BSL_SECROLE_SOURCE)
+    {
         BSL_SecOper_AppendParam(&context->sec_oper, &context->param_auth_tag);
+    }
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_test_key_id);
 }
 

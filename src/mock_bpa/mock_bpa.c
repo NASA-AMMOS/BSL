@@ -190,7 +190,9 @@ int main(int argc, char **argv)
                 }
                 case 'k':
                     if (mock_bpa_key_registry_init(optarg))
+                    {
                         retval = 1;
+                    }
                     break;
                 case 'c':
                     BSL_Crypto_SetRngGenerator(mock_bpa_rfc9173_bcb_cek);

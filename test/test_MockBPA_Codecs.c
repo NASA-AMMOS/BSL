@@ -129,9 +129,8 @@ void test_DecodeBase16(const char *text)
 }
 
 TEST_CASE(BSL_BUNDLECRCTYPE_NONE, "88070000820282030482028201028202820000821903e81903e900")
-TEST_CASE(BSL_BUNDLECRCTYPE_16,
-          "89070001820282030482028201028202820000821903e81903e9004204D2") // FIXME placeholder CRC value
-TEST_CASE(BSL_BUNDLECRCTYPE_32, "89070002820282030482028201028202820000821903e81903e900440012D687")
+TEST_CASE(BSL_BUNDLECRCTYPE_16, "89070001820282030482028201028202820000821903e81903e9004274FF")
+TEST_CASE(BSL_BUNDLECRCTYPE_32, "89070002820282030482028201028202820000821903e81903e90044D64C9E29")
 void test_bsl_mock_encode_primary(uint64_t crc_type, const char *expecthex)
 {
     string_t expect_text;
@@ -259,72 +258,6 @@ void test_bsl_mock_encode_bundle(void)
     MockBPA_Bundle_Deinit(&bundle);
 }
 
-void test_qcbor_decode_without_head(void)
-{
-    string_t in_text;
-    string_init_set_str(in_text, "58"); // not a full head
-    BSL_Data_t in_data;
-    BSL_Data_Init(&in_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
-
-    QCBORDecodeContext decoder;
-    QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);
-    QCBORItem item;
-    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_ERR_HIT_END, QCBORDecode_GetNext(&decoder, &item),
-                                  "QCBORDecode_VGetNext() failed");
-    TEST_ASSERT_EQUAL_INT(QCBOR_TYPE_NONE, item.uDataType);
-    TEST_ASSERT_EQUAL_INT(1, QCBORDecode_Tell(&decoder));
-    TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_Finish(&decoder));
-
-    BSL_Data_Deinit(&in_data);
-    string_clear(in_text);
-}
-
-void test_qcbor_decode_only_head(void)
-{
-    string_t in_text;
-    string_init_set_str(in_text, "586C"); // just a full head
-    BSL_Data_t in_data;
-    BSL_Data_Init(&in_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
-
-    QCBORDecodeContext decoder;
-    QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);
-    QCBORItem item;
-    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_ERR_HIT_END, QCBORDecode_GetNext(&decoder, &item),
-                                  "QCBORDecode_VGetNext() failed");
-    TEST_ASSERT_EQUAL_INT(QCBOR_TYPE_NONE, item.uDataType);
-    TEST_ASSERT_EQUAL_INT(2, QCBORDecode_Tell(&decoder));
-    TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_Finish(&decoder));
-
-    BSL_Data_Deinit(&in_data);
-    string_clear(in_text);
-}
-
-void test_qcbor_decode_with_head(void)
-{
-    string_t in_text;
-    string_init_set_str(in_text, "586C616263646566"); // front of a bstr value
-    BSL_Data_t in_data;
-    BSL_Data_Init(&in_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
-
-    QCBORDecodeContext decoder;
-    QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);
-    QCBORItem item;
-    TEST_ASSERT_EQUAL_INT_MESSAGE(QCBOR_ERR_HIT_END, QCBORDecode_GetNext(&decoder, &item),
-                                  "QCBORDecode_VGetNext() failed");
-    TEST_ASSERT_EQUAL_INT(QCBOR_TYPE_NONE, item.uDataType);
-    TEST_ASSERT_EQUAL_INT(2, QCBORDecode_Tell(&decoder));
-    TEST_ASSERT_EQUAL_INT(QCBOR_ERR_EXTRA_BYTES, QCBORDecode_Finish(&decoder));
-
-    BSL_Data_Deinit(&in_data);
-    string_clear(in_text);
-}
-
 TEST_CASE("8202820102")                   // IPN scheme
 TEST_CASE("821A00010000A203426869041819") // unknown scheme with complex data
 void test_bsl_loopback_eid(const char *hexdata)
@@ -373,6 +306,9 @@ void test_bsl_loopback_eid(const char *hexdata)
 }
 
 TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850101000043010203ff")
+// sample input from BPSec COSE draft
+TEST_CASE("9f890700028201692f2f6473742f7376638201692f2f7372632f7376638201662f2f7372632f821b000000bd51281400001a000f4240"
+          "4482a081c98601010002466568656c6c6f444ec359d2ff")
 void test_bsl_loopback_bundle(const char *hexdata)
 {
     BSL_Data_t in_data;
