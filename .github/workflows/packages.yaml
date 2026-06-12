@@ -114,6 +114,7 @@ jobs:
       - name: Trial build
         run: |
           pkg-config --print-provides --print-requires bsl
+          mkdir build
           gcc -c $(pkg-config --cflags bsl) -o build/example.o lib-user-test/main.c
           gcc $(pkg-config --libs bsl) -o build/example build/example.o
           ./build/example
