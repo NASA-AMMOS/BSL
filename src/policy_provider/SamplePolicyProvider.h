@@ -250,10 +250,12 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
                                       BSL_SecOper_t *sec_oper, const BSL_BundleRef_t *bundle,
                                       BSL_PolicyLocation_e location);
 
+/// Provides ::BSL_PolicyInspect_f
 int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,
                      BSL_PolicyLocation_e location);
 
-int BSLP_FinalizePolicy(void *user_data, const BSL_SecurityActionSet_t *output_action_set,
-                        const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
+/// Provides ::BSL_PolicyFinalize_f
+int BSLP_FinalizePolicy(void *user_data, const BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle,
+                        const BSL_SecurityResponseSet_t *response_output);
 
 #endif // BSLP_SAMPLE_POLICY_PROVIDER_H
