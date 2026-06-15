@@ -29,17 +29,11 @@ on:
 jobs:
   build:
     name: Build and analyze
-    environment:
-      name: sonarcloud
-    runs-on: ubuntu-latest
-    env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-          submodules: recursive
-      - name: Prep
+      - name: Set up OS
+        env:
+          PIP_BREAK_SYSTEM_PACKAGES: 1
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -48,18 +42,27 @@ jobs:
               xmlstarlet \
               python3 python3-pip python3-wheel
           pip3 install gcovr
-          ./build.sh deps
-          ./build.sh prep -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=ON -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
-      - name: Install Build Wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v7
-      - name: Run Build Wrapper
-        run: |
-          build-wrapper-linux-x86-64 --out-dir ${{env.BUILD_WRAPPER_OUT_DIR}} ./build.sh
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          submodules: recursive
+      - name: Dependencies
+        run: ./build.sh deps
+      - name: Prep
+        run: >
+          ./build.sh prep
+          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+          -DBUILD_UNITTEST=ON
+          -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=ON
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Build
+        run: ./build.sh
       - name: Install
         run: ./build.sh install
-      - name: Test
+      - name: Unit Test
+        run: ./build.sh check
+      - name: Mock BPA Test
         run: |
-          ./build.sh check
           pip3 install --upgrade pip
           pip3 install -r mock-bpa-test/requirements.txt
           python3 -m pytest mock-bpa-test
@@ -67,10 +70,10 @@ jobs:
         run: |
           ./build.sh --target coverage-sonarqube -v
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v7
+        uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7.2.1
         env:
           SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
         with:
           args: >
+            --define sonar.cfamily.compile-commands=build/default/compile_commands.json
             --define sonar.coverageReportPaths=build/default/coverage-sonarqube.xml
-            --define "sonar.cfamily.compile-commands=${{env.BUILD_WRAPPER_OUT_DIR}}/compile_commands.json"

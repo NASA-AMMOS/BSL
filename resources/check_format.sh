@@ -22,7 +22,7 @@
 ##
 set -e
 
-if [ -z "$SELFDIR" ];
+if [[ -z "$SELFDIR" ]];
 then
     echo "$SELFDIR not defined"
     exit 1
@@ -36,7 +36,7 @@ echo "Check format from root: $SELFDIR"
 ./resources/apply_license.sh
 
 changed=$(git status --porcelain=1)
-if [ -n "${changed}" ]; then
+if [[ -n "${changed}" ]]; then
   echo "Error: Files changed after formatting:"
   git diff
   exit 1

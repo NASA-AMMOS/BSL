@@ -242,16 +242,22 @@ void test_SecurityContext_BIB_Acceptor(void)
 
     // Note, we use the goto statements to better cleanup if failure happens
     if (sec_context_result != 0)
+    {
         goto cleanup;
+    }
 
     encode_result = mock_bpa_ctr_encode(mock_bpa_ctr);
     if (encode_result != 0)
+    {
         goto cleanup;
+    }
 
     is_equal_test_vec =
         BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.cbor_bundle_original, mock_bpa_ctr->encoded);
     if (!is_equal_test_vec)
+    {
         goto cleanup;
+    }
 
 cleanup:
     BSL_SecurityActionSet_Deinit(malloced_actionset);

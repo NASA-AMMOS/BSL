@@ -134,8 +134,8 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
     return BSL_SUCCESS;
 }
 
-int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set,
-                          const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location)
+int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,
+                          BSL_PolicyLocation_e location)
 {
     CHK_ARG_NONNULL(bsl);
     CHK_ARG_NONNULL(output_action_set);
@@ -146,7 +146,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
     int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
     BSL_LOG_INFO("Completed query: status=%d", query_status);
 
-    BSL_TlmCounters_IncrementCounter((BSL_LibCtx_t *)bsl, BSL_TLM_BUNDLE_INSPECTED_COUNT, 1);
+    BSL_TlmCounters_IncrementCounter(bsl, BSL_TLM_BUNDLE_INSPECTED_COUNT, 1);
 
     // Here - find the sec block numbers for all ASBs
 
@@ -214,7 +214,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
     }
     BSL_PrimaryBlock_deinit(&primary_block);
 
-    if (BSL_SecCtx_ValidatePolicyActionSet((BSL_LibCtx_t *)bsl, bundle, output_action_set) == false)
+    if (BSL_SecCtx_ValidatePolicyActionSet(bsl, bundle, output_action_set) == false)
     {
         query_status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         BSL_LOG_WARNING("Security Context validation failed");
@@ -223,7 +223,7 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
     return query_status;
 }
 
-int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
+int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
                           const BSL_SecurityActionSet_t *policy_actions)
 {
     CHK_ARG_NONNULL(bsl);
@@ -233,7 +233,7 @@ int BSL_API_ApplySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *re
 
     BSL_SecurityResponseSet_Init(response_output);
 
-    int exec_code = BSL_SecCtx_ExecutePolicyActionSet((BSL_LibCtx_t *)bsl, response_output, bundle, policy_actions);
+    int exec_code = BSL_SecCtx_ExecutePolicyActionSet(bsl, response_output, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to execute policy action set");

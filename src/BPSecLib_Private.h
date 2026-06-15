@@ -34,8 +34,8 @@
 #ifndef BSL_BPSECLIB_PRIVATE_H_
 #define BSL_BPSECLIB_PRIVATE_H_
 
-#include <assert.h>
 #include <inttypes.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -213,16 +213,15 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 /** @brief Helpful macros for expressing invariants, pre/post conditions, and arg validation.
  * The expression is nominally true and only false during exceptional cases.
  */
-#define CHK_TEMPL(expr, msg, return_code)                                      \
-    do                                                                         \
-    {                                                                          \
-        if (!LIKELY(expr))                                                     \
-        {                                                                      \
-            BSL_LOG_ERR("" msg " (" #expr ") ... [errcode=" #return_code "]"); \
-            assert(!(expr));                                                   \
-            return return_code;                                                \
-        }                                                                      \
-    }                                                                          \
+#define CHK_TEMPL(expr, msg, return_code)                                 \
+    do                                                                    \
+    {                                                                     \
+        if (!LIKELY(expr))                                                \
+        {                                                                 \
+            BSL_LOG_ERR("%s (%s) [errcode=%d]", msg, #expr, return_code); \
+            return return_code;                                           \
+        }                                                                 \
+    }                                                                     \
     while (0) /* GCOV_EXCL_LINE */
 
 #define CHK_AS_BOOL(expr) CHK_TEMPL(expr, "Failed Property Check: Failed to satisfy", BSL_ERR_ARG_INVALID)
@@ -239,15 +238,15 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 
 #define CHK_POSTCONDITION(expr) CHK_TEMPL(expr, "Postcondition Failed: Did not satisfy", BSL_ERR_FAILURE)
 
-#define ASSERT_TEMPL(expr, msg)                 \
-    do                                          \
-    {                                           \
-        if (!(expr))                            \
-        {                                       \
-            BSL_LOG_ERR("" msg " (" #expr ")"); \
-            assert(!(expr));                    \
-        }                                       \
-    }                                           \
+#define ASSERT_TEMPL(expr, msg)                       \
+    do                                                \
+    {                                                 \
+        if (!LIKELY(expr))                            \
+        {                                             \
+            fprintf(stderr, "%s (%s)\n", msg, #expr); \
+            abort();                                  \
+        }                                             \
+    }                                                 \
     while (0)
 
 #define ASSERT_ARG_EXPR(expr) ASSERT_TEMPL(expr, "Panic: Argument expression check failed to satisfy")
@@ -924,10 +923,10 @@ BSL_ReasonCode_t BSL_SecOper_GetReasonCode(const BSL_SecOper_t *self);
  */
 void BSL_SecOper_SetReasonCode(BSL_SecOper_t *self, BSL_ReasonCode_t new_reason_code);
 
-/// Forward declaration of this struct
+// Forward declaration of this struct
 typedef struct BSL_AbsSecBlock_s BSL_AbsSecBlock_t;
 
-/// @brief Returns the size of the ::BSL_AbsSecBlock_t struct in bytes
+/// @brief Returns the size of the ::BSL_AbsSecBlock_s struct in bytes
 /// @return size of the struct
 size_t BSL_AbsSecBlock_Sizeof(void);
 
@@ -1315,7 +1314,7 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
  * @return 0 if success
  */
 int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions,
-                                       const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
+                                       BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
 
 /// @brief Callback interface to query policy provider to populate the action set
 typedef int (*BSL_PolicyInspect_f)(void *user_data, BSL_SecurityActionSet_t *output_action_set,
@@ -1324,7 +1323,7 @@ typedef int (*BSL_PolicyInspect_f)(void *user_data, BSL_SecurityActionSet_t *out
 /// @brief Callback interface to finalize policy provider over the action set. Finalize should ignore actions from
 /// different policy providers
 typedef int (*BSL_PolicyFinalize_f)(void *user_data, const BSL_SecurityActionSet_t *output_action_set,
-                                    const BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
+                                    BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
 
 /// @brief Callback interface for policy provider to shut down and release any resources
 typedef void (*BSL_PolicyDeinit_f)(void *user_data);

@@ -1,8 +1,8 @@
 %bcond_with apidoc
 
 Name: bsl
-Version: 1.0.0
-Release: 2%{?dist}
+Version: 1.1.1
+Release: 1%{?dist}
 Summary: The Bundle Protocol Security Library (BSL)
 URL: https://github.com/NASA-AMMOS/BSL
 # License "Apache-2.0" is not accepted by rpmlint
@@ -57,15 +57,17 @@ from the API with Doxygen.
 %prep
 %setup -q
 
-./build.sh deps
-
-%cmake -DCMAKE_PREFIX_PATH=${PWD}/testroot/usr \
-       -DPROJECT_VERSION=%{version} \
-       -DBUILD_UNITTEST=YES -DTEST_MEMCHECK=NO -DBUILD_COVERAGE=NO \
-       -DBUILD_DOCS_MAN=YES %{?with_apidoc:-DBUILD_DOCS_API=YES}
-
 
 %build
+# non-package dependencies into ./testroot
+DESTDIR=${PWD}/testroot ./build.sh deps
+
+%cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+       -DCMAKE_PREFIX_PATH=${PWD}/testroot/usr \
+       -DPROJECT_VERSION=%{version} \
+       -DBUILD_UNITTEST=YES -DTEST_MEMCHECK=NO -DBUILD_COVERAGE=NO \
+       -DBUILD_DOCS_MAN=YES -DBUILD_DOCS_API=%{?with_apidoc:YES}%{!?with_apidoc:NO}
+
 %cmake_build 
 %cmake_build --target docs-man
 %if %{with apidoc}
@@ -151,10 +153,18 @@ popd
 
 
 %changelog
-* Thu Sep 18 2025 Brian Sipos <brian.sipos@jhuapl.edu> 1.0.0-2
-- New package built with tito
+* Thu Jun 04 2026 Brian Sipos <brian.sipos@jhuapl.edu> 1.1.1-1
+- Build RPM in release mode and fix uses of assert (#196)
+- This resolves bug #197 for BCB decrypt.
 
-* Wed Sep 17 2025 Brian Sipos - 1.0.0-1
+* Fri May 15 2026 Brian Sipos <brian.sipos@jhuapl.edu> - 1.1.0-1
+- Updates for ION v4.2 integration, adding memory and logging callbacks.
+- Reorganize JSON policy decoder from bsl_mock_bpa into bsl_sample_pp library.
+
+* Thu Sep 18 2025 Brian Sipos <brian.sipos@jhuapl.edu> 1.0.0-2
+- New package built with tito.
+
+* Wed Sep 17 2025 Brian Sipos <brian.sipos@jhuapl.edu> - 1.0.0-1
 - Initial release version.
 
 * Mon Oct 07 2024 Brian Sipos - 0.0.0-0

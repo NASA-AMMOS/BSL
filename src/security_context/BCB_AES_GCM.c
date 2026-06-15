@@ -216,17 +216,12 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        uint8_t aes_extra[BSLX_MAX_AES_PAD];
-        memset(aes_extra, 0, sizeof(aes_extra));
-        BSL_Data_t remainder_data = { 0 };
-        BSL_Data_InitView(&remainder_data, sizeof(aes_extra), aes_extra);
-        int finalize_bytes = BSL_Cipher_FinalizeData(&cipher, &remainder_data);
+        int finalize_bytes = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
         if (finalize_bytes < 0)
         {
             BSL_LOG_ERR("Failed to finalize");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
-        ASSERT_POSTCONDITION(finalize_bytes == 0);
     }
 
     // close write after read
@@ -646,7 +641,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
     bcb_context.overwrite_btsd = BSL_SecOper_IsRoleAcceptor(sec_oper);
 
     // Select whether to call the encrypt or decrypt function
-    int (*crypto_fn)(BSLX_BCB_t *) = BSL_SecOper_IsRoleSource(sec_oper) ? BSLX_BCB_Encrypt : BSLX_BCB_Decrypt;
+    int (*crypto_fn)(BSLX_BCB_t *) = BSL_SecOper_IsRoleSource(sec_oper) ? &BSLX_BCB_Encrypt : &BSLX_BCB_Decrypt;
 
     // Perform the encryption/decryption
     if (BSL_SUCCESS != crypto_fn(&bcb_context))

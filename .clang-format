@@ -53,6 +53,7 @@ IndentCaseLabels: true
 IndentExternBlock: NoIndent
 IndentPPDirectives: None
 IndentWidth:     4
+InsertBraces: true
 KeepEmptyLinesAtTheStartOfBlocks: true
 MacroBlockBegin: ''
 MacroBlockEnd:   ''

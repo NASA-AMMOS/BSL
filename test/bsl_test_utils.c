@@ -19,6 +19,7 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+#undef NDEBUG // force assertions
 #include <assert.h>
 
 #include <m-string.h>
@@ -138,7 +139,9 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
     BSL_SecOper_AppendParam(&context->sec_oper, &context->use_key_wrap);
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_scope_flags);
     if (role != BSL_SECROLE_SOURCE)
+    {
         BSL_SecOper_AppendParam(&context->sec_oper, &context->param_auth_tag);
+    }
     BSL_SecOper_AppendParam(&context->sec_oper, &context->param_test_key_id);
 }
 
@@ -271,15 +274,18 @@ void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib)
     BSL_Crypto_AddRegistryKey(RFC9173_EXAMPLE_A3_KEY, rfc9173A3_key, sizeof(rfc9173A3_key));
     BSL_Crypto_AddRegistryKey(RFC9173_EXAMPLE_A4_BCB_KEY, rfc9173A4_BCB_key, sizeof(rfc9173A4_BCB_key));
 
-    BSL_SecCtxDesc_t bib_sec_desc;
-    bib_sec_desc.execute  = BSLX_BIB_Execute;
-    bib_sec_desc.validate = BSLX_BIB_Validate;
-    assert(0 == BSL_API_RegisterSecurityContext(bsl_lib, 1, bib_sec_desc));
+    BSL_SecCtxDesc_t sec_desc;
+    int              res;
 
-    BSL_SecCtxDesc_t bcb_sec_desc;
-    bcb_sec_desc.execute  = BSLX_BCB_Execute;
-    bcb_sec_desc.validate = BSLX_BCB_Validate;
-    assert(0 == BSL_API_RegisterSecurityContext(bsl_lib, 2, bcb_sec_desc));
+    sec_desc.execute  = BSLX_BIB_Execute;
+    sec_desc.validate = BSLX_BIB_Validate;
+    res               = BSL_API_RegisterSecurityContext(bsl_lib, 1, sec_desc);
+    assert(0 == res);
+
+    sec_desc.execute  = BSLX_BCB_Execute;
+    sec_desc.validate = BSLX_BCB_Validate;
+    res               = BSL_API_RegisterSecurityContext(bsl_lib, 2, sec_desc);
+    assert(0 == res);
 }
 
 bool BSL_TestUtils_IsB16StrEqualTo(const char *b16_string, BSL_Data_t encoded_val)

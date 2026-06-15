@@ -98,15 +98,22 @@ static void sig_stop(int signum)
 static void show_usage(const char *argv0)
 {
     fprintf(stderr,
-            "Usage: %s -o <over-socket address:port> -a <application address:port>\n"
-            "          -u <under-socket address:port> -r <router address:port>\n"
-            "          -e <app-EID> -s <sec-src-EID>\n"
-            "          -p (optional - defaults to none) comma delimited hex list of <bsl_mock_policy_configuration_t>, "
-            "e.g. '0x000f,0x0021'\n"
-            "          -j (optional - defaults to none) path to JSON file containing policy configuration\n"
-            "          -k (optional - defaults to none) path to JSON file containing JWKs to register\n"
-            "          -c (optional - defaults to OpenSSL RAND) enable custom RNG generator for testing purposes\n",
-            argv0);
+            // options use the form of man-pages.7
+            "BSL Mock BPA v%s\n\n"
+            "Usage: %s [options]\n"
+            "Where the options are:\n"
+            "    {-o <address:port>} the over-socket UDP listen\n"
+            "    {-a <address:port>} the application UDP address\n"
+            "    {-u <address:port>} the under-socket UDP listen\n"
+            "    {-r <address:port>} the neighbor UDP address\n"
+            "    {-e <app-EID>} the overlayer application BPv7 EID\n"
+            "    {-s <sec-src-EID>} the security source BPv7 EID\n"
+            "    [-p <hex-list>] comma delimited hex list of <BSLP_BitstringPolicyConfiguration_t>, "
+            "e.g. '0x000f,0x0021' (default: none)\n"
+            "    [-j <file-path>] path to JSON file containing policy configuration (default: none)\n"
+            "    [-k <file-path>] path to JSON file containing JWKs to register (default: none)\n"
+            "    [-c] enable custom RNG generator for testing purposes (default: use OpenSSL RAND)\n",
+            BSL_VERSION, argv0);
 }
 
 int main(int argc, char **argv)
@@ -183,7 +190,9 @@ int main(int argc, char **argv)
                 }
                 case 'k':
                     if (mock_bpa_key_registry_init(optarg))
+                    {
                         retval = 1;
+                    }
                     break;
                 case 'c':
                     BSL_Crypto_SetRngGenerator(mock_bpa_rfc9173_bcb_cek);
