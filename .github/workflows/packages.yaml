@@ -67,7 +67,7 @@ jobs:
           cat build/default/pkg/rpmlint.txt >> $GITHUB_STEP_SUMMARY || true
           echo >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-      - name: Archive
+      - name: Archive packages
         uses: actions/upload-artifact@v6
         with:
           name: bsl-rpm
@@ -89,8 +89,9 @@ jobs:
         run: |
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
-          dnf install -y python3-pip python3-wheel
-      - uses: actions/download-artifact@v8
+          dnf install -y python3-pip python3-wheel gcc pkgconf-pkg-config
+      - name: Download packages
+        uses: actions/download-artifact@v8
         with:
           name: bsl-rpm
       - name: Install
@@ -109,6 +110,14 @@ jobs:
           # root files and test subtree
           sparse-checkout: |
             mock-bpa-test
+            lib-user-test
+      - name: Trial build
+        run: |
+          pkg-config --print-provides --print-requires bsl
+          mkdir build
+          gcc -c $(pkg-config --cflags bsl) -o build/example.o lib-user-test/main.c
+          gcc $(pkg-config --libs bsl) -o build/example build/example.o
+          ./build/example
       - name: Mock BPA tests
         run: |
           pip3 install -r mock-bpa-test/requirements.txt
