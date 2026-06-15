@@ -52,7 +52,6 @@
  * 5. Finalize cipher operation: calling BSL_Cipher_FinalizeSeq()
  * 6. Deinitialize the cipher context: BSL_Cipher_Deinit()
  *
- * @todo Significant perform tidying and housekeeping.
  */
 #ifndef BSL_FRONTEND_CRYPTO_INTERFACE_H_
 #define BSL_FRONTEND_CRYPTO_INTERFACE_H_
