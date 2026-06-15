@@ -86,7 +86,6 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
 
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_SOURCE_COUNT, 1);
 
-    // TODO(bvb) - This should already have been created ahead of time, around the time of inspect
     uint64_t created_block_num = 0;
     int      created_result    = BSL_BundleCtx_CreateBlock(bundle, BSL_SECBLOCKTYPE_BIB, &created_block_num);
     if (created_result != BSL_SUCCESS)
