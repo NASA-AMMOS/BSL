@@ -37,6 +37,7 @@
 #include <sys/time.h>
 #include <time.h>
 
+#include <m-shared-ptr.h>
 #include <m-buffer.h>
 #include <m-string.h>
 #include <m-atomic.h>
@@ -87,43 +88,15 @@ static void mock_bpa_LogEvent_event_deinit(mock_bpa_LogEvent_event_t *obj)
     string_clear(obj->context);
 }
 
-static void mock_bpa_LogEvent_event_init_set(mock_bpa_LogEvent_event_t *obj, const mock_bpa_LogEvent_event_t *src)
-{
-    obj->thread    = src->thread;
-    obj->timestamp = src->timestamp;
-    obj->severity  = src->severity;
-    string_init_set(obj->context, src->context);
-    string_init_set(obj->message, src->message);
-}
-
-static void mock_bpa_LogEvent_event_init_move(mock_bpa_LogEvent_event_t *obj, mock_bpa_LogEvent_event_t *src)
-{
-    obj->thread    = src->thread;
-    obj->timestamp = src->timestamp;
-    obj->severity  = src->severity;
-    string_init_move(obj->context, src->context);
-    string_init_move(obj->message, src->message);
-}
-
-static void mock_bpa_LogEvent_event_set(mock_bpa_LogEvent_event_t *obj, const mock_bpa_LogEvent_event_t *src)
-{
-    obj->thread    = src->thread;
-    obj->timestamp = src->timestamp;
-    obj->severity  = src->severity;
-    string_set(obj->context, src->context);
-    string_set(obj->message, src->message);
-}
-
 /// OPLIST for mock_bpa_LogEvent_event_t
-#define M_OPL_mock_bpa_LogEvent_event_t()                                                          \
-    (INIT(API_2(mock_bpa_LogEvent_event_init)), INIT_SET(API_6(mock_bpa_LogEvent_event_init_set)), \
-     INIT_MOVE(API_6(mock_bpa_LogEvent_event_init_move)), SET(API_6(mock_bpa_LogEvent_event_set)), \
-     CLEAR(API_2(mock_bpa_LogEvent_event_deinit)))
+#define M_OPL_mock_bpa_LogEvent_event_t() \
+    (INIT(API_2(mock_bpa_LogEvent_event_init)), INIT_SET(0), SET(0), CLEAR(API_2(mock_bpa_LogEvent_event_deinit)))
 
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_BUFFER_DEF(mock_bpa_LogEvent_queue, mock_bpa_LogEvent_event_t, MOCK_BPA_LOG_QUEUE_SIZE,
+M_SHARED_WEAK_PTR_DEF(mock_bpa_LogEvent_event_ptr, mock_bpa_LogEvent_event_t)
+M_BUFFER_DEF(mock_bpa_LogEvent_queue, mock_bpa_LogEvent_event_ptr_t *, MOCK_BPA_LOG_QUEUE_SIZE,
              M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING | M_BUFFER_PUSH_INIT_POP_MOVE)
 // GCOV_EXCL_STOP
 /// @endcond
@@ -185,17 +158,18 @@ static void *work_sink(void *arg _U_)
     bool running = true;
     while (running)
     {
-        mock_bpa_LogEvent_event_t event;
-        mock_bpa_LogEvent_queue_pop(&event, event_queue);
-        if (string_empty_p(event.message))
+        mock_bpa_LogEvent_event_ptr_t *event_ptr;
+        mock_bpa_LogEvent_queue_pop(&event_ptr, event_queue);
+        const mock_bpa_LogEvent_event_t *event = mock_bpa_LogEvent_event_ptr_cref(event_ptr);
+        if (string_empty_p(event->message))
         {
             running = false;
         }
         else
         {
-            write_log(&event);
+            write_log(event);
         }
-        mock_bpa_LogEvent_event_deinit(&event);
+        mock_bpa_LogEvent_event_ptr_release(event_ptr);
     }
     return NULL;
 }
@@ -223,10 +197,8 @@ void mock_bpa_LogOpen(void)
 void mock_bpa_LogClose(void)
 {
     // sentinel empty message
-    mock_bpa_LogEvent_event_t event;
-    mock_bpa_LogEvent_event_init(&event);
-    mock_bpa_LogEvent_queue_push(event_queue, event);
-    mock_bpa_LogEvent_event_deinit(&event);
+    mock_bpa_LogEvent_event_ptr_t *event_ptr = mock_bpa_LogEvent_event_ptr_new();
+    mock_bpa_LogEvent_queue_push(event_queue, event_ptr);
 
     int res = pthread_join(thr_sink, NULL);
     if (res)
@@ -293,10 +265,12 @@ void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char
 {
     BSL_CHKVOID(timestamp);
 
-    mock_bpa_LogEvent_event_t event;
-    mock_bpa_LogEvent_event_init(&event);
-    event.timestamp = *timestamp;
-    event.severity  = severity;
+    mock_bpa_LogEvent_event_ptr_t *event_ptr = mock_bpa_LogEvent_event_ptr_new();
+    // set the full state
+    mock_bpa_LogEvent_event_t *event = mock_bpa_LogEvent_event_ptr_ref(event_ptr);
+
+    event->timestamp = *timestamp;
+    event->severity  = severity;
 
     if (filename)
     {
@@ -311,17 +285,21 @@ void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char
         {
             pos = filename;
         }
-        string_printf(event.context, "%s:%d:%s", pos, lineno, funcname);
+        string_printf(event->context, "%s:%d:%s", pos, lineno, funcname);
     }
 
-    string_vprintf(event.message, format, args);
+    string_vprintf(event->message, format, args);
 
     // ignore empty messages
-    if (!string_empty_p(event.message))
+    if (string_empty_p(event->message))
+    {
+        mock_bpa_LogEvent_event_ptr_release(event_ptr);
+    }
+    else
     {
         if (atomic_load(&thr_valid))
         {
-            mock_bpa_LogEvent_queue_push(event_queue, event);
+            mock_bpa_LogEvent_queue_push(event_queue, event_ptr);
         }
         else
         {
@@ -332,9 +310,9 @@ void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char
             write_log(&manual);
             mock_bpa_LogEvent_event_deinit(&manual);
 
-            write_log(&event);
+            write_log(event);
+            mock_bpa_LogEvent_event_ptr_release(event_ptr);
         }
     }
-    mock_bpa_LogEvent_event_deinit(&event);
 }
 // NOLINTEND

@@ -21,8 +21,8 @@
  */
 
 /** @file
+ * @ingroup default_sc
  * Contains functionality and data structures to implement BCB using security context in RFC9173.
- * @ingroup example_security_context
  *
  */
 #include <stdlib.h>

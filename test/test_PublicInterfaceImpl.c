@@ -26,11 +26,11 @@
 #include <backend/SecurityActionSet.h>
 #include <backend/SecurityResultSet.h>
 #include <policy_provider/SamplePolicyProvider.h>
-#include <security_context/rfc9173.h>
+#include <default_sc/rfc9173.h>
 #include <mock_bpa/agent.h>
 #include <mock_bpa/log.h>
 
-#include "bsl_test_utils.h"
+#include "DefaultScUtils.h"
 
 typedef struct
 {
@@ -120,7 +120,8 @@ void setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
     BSL_CryptoInit();
-    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx, true));
+    TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
+    BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
     PublicInterfaceTestCtx_init(&ctx);
     policy_provider = BSLP_PolicyProvider_Init(1);
 
@@ -600,39 +601,39 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
-            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx,
-                                                                  RFC9173_TestVectors_AppendixA1.cbor_bundle_original));
+            TEST_ASSERT_EQUAL(
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
         }
         else
         {
             TEST_ASSERT_EQUAL(
-                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
         }
     }
     else if (sec_block_type == BSL_SECBLOCKTYPE_BCB)
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
-            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx,
-                                                                  RFC9173_TestVectors_AppendixA2.cbor_bundle_original));
+            TEST_ASSERT_EQUAL(
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.hex_bundle_original));
         }
         else
         {
             TEST_ASSERT_EQUAL(
-                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.cbor_bundle_bcb));
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.hex_bundle_bcb));
         }
     }
     else if (sec_block_type == TEST_BOTH_BIB_BCB)
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
-            TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx,
-                                                                  RFC9173_TestVectors_AppendixA4.cbor_bundle_original));
+            TEST_ASSERT_EQUAL(
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA4.hex_bundle_original));
         }
         else
         {
             TEST_ASSERT_EQUAL(
-                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA4.cbor_bundle_final));
+                0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA4.hex_bundle_final));
         }
     }
 
@@ -876,7 +877,7 @@ void n_test_BSL_6(void)
     int                       apply_result = -1;
 
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
     int res = BSL_TestUtils_ModifyEIDs(&LocalTestCtx.mock_bpa_ctr.bundle_ref, NULL, "ipn:0.6", NULL);
     BSL_LOG_INFO("EID MODIFICATION RESULT: %d", res);
@@ -917,7 +918,7 @@ void test_BSL_32(void)
     int                       apply_result = -1;
 
     TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.cbor_bundle_bib));
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
     int res = BSL_TestUtils_ModifyEIDs(&LocalTestCtx.mock_bpa_ctr.bundle_ref, NULL, "ipn:3.2", NULL);
     BSL_LOG_INFO("EID MODIFICATION RESULT: %d", res);

@@ -21,9 +21,9 @@
  */
 
 /** @file
+ * @ingroup default_sc
  * Header for the implementation of an example default security context (RFC 9173).
  * Note the prefix "xdefsc" means "Example Default Security Context".
- * @ingroup example_security_context
  */
 
 #include <qcbor/qcbor_encode.h>

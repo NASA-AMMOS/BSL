@@ -47,7 +47,7 @@ then
   echo "Building QCBOR..."
   pushd ${DEPSDIR}/QCBOR
   cmake -S . -B ${BUILDDIR}/QCBOR \
-    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DBUILD_SHARED_LIBS=ON \
     -DCMAKE_INSTALL_PREFIX=${PREFIX}
   cmake --build ${BUILDDIR}/QCBOR

@@ -33,7 +33,7 @@
 #include <mock_bpa/agent.h>
 #include <mock_bpa/log.h>
 
-#include "bsl_test_utils.h"
+#include "DefaultScUtils.h"
 
 static BSL_LibCtx_t bsl;
 

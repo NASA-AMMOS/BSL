@@ -159,6 +159,7 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     QCBORDecode_GetUInt64(dec, &(blk->version));
     if ((QCBOR_SUCCESS != QCBORDecode_GetError(dec)) || (blk->version != 7))
     {
+        BSL_LOG_ERR("bundle version needs 7 got %" PRIu64, blk->version);
         return 2;
     }
 
@@ -167,16 +168,19 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
 
     if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->dest_eid)))
     {
+        BSL_LOG_ERR("failed decoding destination EID");
         return 2;
     }
 
     if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->src_node_id)))
     {
+        BSL_LOG_ERR("failed decoding source EID");
         return 2;
     }
 
     if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->report_to_eid)))
     {
+        BSL_LOG_ERR("failed decoding report-to EID");
         return 2;
     }
 
@@ -222,6 +226,7 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
     if (!mock_bpa_crc_check(buf, begin, end, (int)blk->crc_type, crc_view.len))
     {
+        BSL_LOG_ERR("CRC check failed for primary block");
         return 4;
     }
 
@@ -292,6 +297,7 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
     const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
     if (!mock_bpa_crc_check(buf, begin, end, (int)blk->crc_type, crc_view.len))
     {
+        BSL_LOG_ERR("CRC check failed for canonical block number %" PRIu64, blk->blk_num);
         return 4;
     }
 
