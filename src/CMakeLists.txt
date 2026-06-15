@@ -94,7 +94,7 @@ set_target_properties(bsl_default_sc
 )
 target_link_libraries(bsl_default_sc PUBLIC bsl_front)
 target_link_libraries(bsl_default_sc PUBLIC bsl_crypto)
-target_link_libraries(bsl_default_sc PUBLIC QCBOR::qcbor)
+target_link_libraries(bsl_default_sc PUBLIC qcbor::qcbor)
 
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
@@ -152,7 +152,7 @@ set_target_properties(bsl_dynamic
 )
 target_link_libraries(bsl_dynamic PUBLIC bsl_front)
 target_link_libraries(bsl_dynamic PUBLIC MLIB::mlib)
-target_link_libraries(bsl_dynamic PUBLIC QCBOR::qcbor)
+target_link_libraries(bsl_dynamic PUBLIC qcbor::qcbor)
 
 add_subdirectory(mock_bpa)
 

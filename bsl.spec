@@ -7,7 +7,7 @@ Summary: The Bundle Protocol Security Library (BSL)
 URL: https://github.com/NASA-AMMOS/BSL
 # License "Apache-2.0" is not accepted by rpmlint
 License: ASL 2.0
-Source0: %{name}-%{version}.tar.gz
+Source0: %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 BuildRequires: rsync
 BuildRequires: cmake
@@ -118,10 +118,15 @@ popd
 %files devel
 %license LICENSE
 %doc README.md
-%{_includedir}/bsl/
-%{_includedir}/qcbor/
 %{_includedir}/m-lib/
+
+%{_includedir}/qcbor/
+%{_libdir}/pkgconfig/qcbor.pc
+%{_libdir}/cmake/qcbor/
 %{_libdir}/libqcbor.so
+
+%{_includedir}/bsl/
+%{_libdir}/pkgconfig/bsl.pc
 %{_libdir}/libbsl_front.so
 %{_libdir}/libbsl_dynamic.so
 %{_libdir}/libbsl_crypto.so
@@ -143,6 +148,7 @@ popd
 %{_includedir}/unity/
 %{_libdir}/cmake/unity/
 %{_libdir}/libunity.a
+
 %{_libdir}/libbsl_mock_bpa.so
 %{_libdir}/libbsl_test_utils.so
 
