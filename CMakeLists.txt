@@ -119,10 +119,13 @@ add_custom_target(clang-tidy
 
 if(BUILD_LIB)
     find_package(MLIB REQUIRED)
-    find_package(QCBOR REQUIRED)
-    find_package(OpenSSL REQUIRED)
+    find_package(qcbor 1.6 REQUIRED)
+    message(STATUS "Using QCBOR ${qcbor_VERSION}")
+    find_package(OpenSSL 3.0 REQUIRED)
+    message(STATUS "Using OpenSSL ${OPENSSL_VERSION}")
+    find_package(Jansson 2.14 REQUIRED)
+    message(STATUS "Using Jansson ${JANSSON_VERSION}")
     find_package(Threads REQUIRED)
-    find_package(Jansson REQUIRED)
 endif(BUILD_LIB)
 
 include(CheckSymbolExists)
@@ -191,6 +194,15 @@ include(GNUInstallDirs)
 
 if(BUILD_LIB)
     add_subdirectory(src)
+
+    configure_file(pkg/qcbor.pc.in pkg/qcbor.pc @ONLY)
+    configure_file(pkg/bsl.pc.in pkg/bsl.pc @ONLY)
+    install(
+        FILES
+            "${CMAKE_CURRENT_BINARY_DIR}/pkg/qcbor.pc"
+            "${CMAKE_CURRENT_BINARY_DIR}/pkg/bsl.pc"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+    )
 endif(BUILD_LIB)
 
 set(TEST_INSTALL_PREFIX "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}")

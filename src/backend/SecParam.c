@@ -173,11 +173,6 @@ bool BSL_SecParam_IsConsistent(const BSL_SecParam_t *self)
     {
         CHK_AS_BOOL(m_bstring_empty_p(self->_bytes));
     }
-    else
-    {
-        // TODO is this meaningful?
-        CHK_AS_BOOL(self->_uint_value == 0);
-    }
     return true;
 }
 

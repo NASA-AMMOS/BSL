@@ -58,7 +58,7 @@ set_target_properties(bsl_mock_bpa
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
-target_link_libraries(bsl_mock_bpa PUBLIC QCBOR::qcbor)
+target_link_libraries(bsl_mock_bpa PUBLIC qcbor::qcbor)
 target_link_libraries(bsl_mock_bpa PUBLIC Jansson::Jansson)
 target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_cose_sc bsl_sample_pp)
 # Installation config

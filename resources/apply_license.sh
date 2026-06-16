@@ -36,7 +36,7 @@ then
   exit 1
 fi
 
-cd $SELFDIR
+cd "${SELFDIR}"
 
 LICENSEOPTS="${LICENSEOPTS} --tmpl ${SELFDIR}/resources/apply_license.tmpl"
 LICENSEOPTS="${LICENSEOPTS} --years 2025-2026"
