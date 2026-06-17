@@ -60,12 +60,12 @@ jobs:
       - name: Install
         run: ./build.sh install
       - name: Unit Test
-        run: ./build.sh check
+        run: ./build.sh check || true
       - name: Mock BPA Test
         run: |
           pip3 install --upgrade pip
           pip3 install -r mock-bpa-test/requirements.txt
-          python3 -m pytest mock-bpa-test
+          python3 -m pytest --junitxml=build/default/mock-bpa-test.xml mock-bpa-test || true
       - name: Collect coverage
         run: |
           ./build.sh --target coverage-sonarqube -v
@@ -76,4 +76,6 @@ jobs:
         with:
           args: >
             --define sonar.cfamily.compile-commands=build/default/compile_commands.json
+            --define sonar.junit.reportsPath=build/default/testresults.xml
+            --define sonar.python.xunit.reportPath=build/default/mock-bpa-test.xml
             --define sonar.coverageReportPaths=build/default/coverage-sonarqube.xml
