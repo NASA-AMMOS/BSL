@@ -89,7 +89,6 @@ static const uint8_t ApxA2_PayloadData[]   = { 0x52, 0x65, 0x61, 0x64, 0x79, 0x2
 typedef struct
 {
     BSL_Data_t init_vector;
-    BSL_Data_t auth_tag;
     BSL_Data_t wrapped_key;
     BSL_Data_t key_enc_key;
     BSL_Data_t content_enc_key;
@@ -99,13 +98,6 @@ typedef struct
     BSL_SecParam_t opt_test_key_id;
     BSL_SecParam_t opt_use_key_wrap;
     BSL_SecParam_t opt_wrapped_key;
-
-    BSL_SecParam_t param_init_vec;
-    BSL_SecParam_t param_wrapped_key;
-    BSL_SecParam_t param_key_enc_key;
-    BSL_SecParam_t param_content_enc_key;
-
-    BSL_SecParam_t result_auth_tag;
 
     BSL_SecOper_t sec_oper;
 } BCBTestContext;
