@@ -38,8 +38,6 @@ char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf
 {
     ASSERT_ARG_NONNULL(dstbuf);
     ASSERT_ARG_NONNULL(srcbuf);
-    ASSERT_ARG_EXPR(dstlen > 0);
-    ASSERT_ARG_EXPR(srclen > 0);
 
     memset(dstbuf, 0, dstlen);
     const char hex_digits[] = "0123456789ABCDEF";
