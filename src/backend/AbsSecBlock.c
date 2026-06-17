@@ -54,20 +54,25 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
         BSL_LOG_INFO("ASB  target[%zu]: %" PRIu64, index, *uint64_list_cget(self->targets, index));
     }
 
-    for (size_t index = 0; index < BSLB_SecParamList_size(self->params); index++)
+    for (size_t index = 0; index < BSLB_SecParamPtrList_size(self->params); index++)
     {
-        BSL_SecParam_t *param = BSLB_SecParamList_get(self->params, index);
+        const BSL_SecParam_t *param = BSLB_SecParamPtr_cref(*BSLB_SecParamPtrList_cget(self->params, index));
+
         if (BSL_SecParam_IsUint64(param))
         {
-            BSL_LOG_INFO("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRIu64, index, param->param_id, param->_uint_value);
+            BSL_LOG_INFO("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRIu64, index, param->param_id, param->_val.as_uint);
+        }
+        if (BSL_SecParam_IsInt64(param))
+        {
+            BSL_LOG_INFO("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRIu64, index, param->param_id, param->_val.as_int);
         }
         else if (BSL_SecParam_IsBytestr(param))
         {
-            size_t         blen = m_bstring_size(param->_bytes);
-            const uint8_t *bptr = m_bstring_view(param->_bytes, 0, blen);
+            size_t         blen = m_bstring_size(param->_val.as_bytes);
+            const uint8_t *bptr = m_bstring_view(param->_val.as_bytes, 0, blen);
             char           hex_str[2 * blen + 1];
             BSL_Log_DumpAsHexString(hex_str, sizeof(hex_str), bptr, blen);
-            BSL_LOG_INFO("ASB  Param[%zu]: id=%" PRIu64 " %s", index, param->param_id, hex_str);
+            BSL_LOG_INFO("ASB  Param[%zu]: id=%" PRIu64 " val=%s", index, param->param_id, hex_str);
         }
     }
 
@@ -95,7 +100,7 @@ void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self)
     uint64_list_init(self->targets);
     self->sec_context_id = 0;
     BSL_HostEID_Init(&self->source_eid);
-    BSLB_SecParamList_init(self->params);
+    BSLB_SecParamPtrList_init(self->params);
     BSLB_SecResultList_init(self->results);
 
     // GCOV_EXCL_START
@@ -110,7 +115,7 @@ void BSL_AbsSecBlock_Deinit(BSL_AbsSecBlock_t *self)
     // GCOV_EXCL_STOP
 
     BSLB_SecResultList_clear(self->results);
-    BSLB_SecParamList_clear(self->params);
+    BSLB_SecParamPtrList_clear(self->params);
     BSL_HostEID_Deinit(&self->source_eid);
     uint64_list_clear(self->targets);
 
@@ -174,7 +179,8 @@ void BSL_AbsSecBlock_AddParam(BSL_AbsSecBlock_t *self, const BSL_SecParam_t *par
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
     // GCOV_EXCL_STOP
 
-    BSLB_SecParamList_push_back(self->params, *param);
+    BSL_SecParam_t *item = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->params));
+    BSL_SecParam_Set(item, param);
 
     // GCOV_EXCL_START
     ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
@@ -294,7 +300,7 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
 
     {
         uint64_t flags = 0;
-        if (!BSLB_SecParamList_empty_p(self->params))
+        if (!BSLB_SecParamPtrList_empty_p(self->params))
         {
             flags |= 0x1;
         }
@@ -325,10 +331,12 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
     {
         QCBOREncode_OpenArray(&encoder);
 
-        BSLB_SecParamList_it_t pit;
-        for (BSLB_SecParamList_it(pit, self->params); !BSLB_SecParamList_end_p(pit); BSLB_SecParamList_next(pit))
+        BSLB_SecParamPtrList_it_t pit;
+        for (BSLB_SecParamPtrList_it(pit, self->params); !BSLB_SecParamPtrList_end_p(pit);
+             BSLB_SecParamPtrList_next(pit))
         {
-            const BSL_SecParam_t *param = BSLB_SecParamList_cref(pit);
+            const BSL_SecParam_t *param = BSLB_SecParamPtr_cref(*BSLB_SecParamPtrList_cref(pit));
+
             QCBOREncode_OpenArray(&encoder);
             QCBOREncode_AddUInt64(&encoder, param->param_id);
             if (BSL_SecParam_IsUint64(param))
@@ -507,6 +515,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
             QCBORDecode_PeekNext(&asbdec, &asbitem);
             switch (asbitem.uDataType)
             {
+                    // FIXME reconcile int vs uint
                 case QCBOR_TYPE_INT64:
                 case QCBOR_TYPE_UINT64:
                 {
@@ -518,10 +527,9 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
                         break;
                     }
                     BSL_LOG_DEBUG("ASB: Parsed Param[%" PRIu64 "] = %" PRIu64, item_id, dec_value);
-                    BSL_SecParam_t param;
-                    BSL_SecParam_InitUint64(&param, item_id, dec_value);
-                    BSLB_SecParamList_push_back(self->params, param);
-                    BSL_SecParam_Deinit(&param);
+
+                    BSL_SecParam_t *param = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->params));
+                    BSL_SecParam_InitUint64(param, item_id, dec_value);
                     break;
                 }
                 case QCBOR_TYPE_BYTE_STRING:
@@ -537,10 +545,9 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
                                   target_buf.ptr);
                     BSL_Data_t data_view;
                     BSL_Data_InitView(&data_view, target_buf.len, (BSL_DataPtr_t)target_buf.ptr);
-                    BSL_SecParam_t param;
-                    BSL_SecParam_InitBytestr(&param, item_id, data_view);
-                    BSLB_SecParamList_push_back(self->params, param);
-                    BSL_SecParam_Deinit(&param);
+
+                    BSL_SecParam_t *param = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->params));
+                    BSL_SecParam_InitBytestr(param, item_id, data_view);
                     break;
                 }
                 default:

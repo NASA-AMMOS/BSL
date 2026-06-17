@@ -59,7 +59,9 @@
 #include <stdint.h>
 
 #include <m-bstring.h>
+#include <m-shared-ptr.h>
 #include <m-array.h>
+#include <m-dict.h>
 
 #include <BPSecLib_Private.h>
 
@@ -71,11 +73,15 @@ struct BSL_SecParam_s
     /// @brief Private. Indicates whether this is an integer or bytestring.
     enum BSL_SecParam_Types_e _type;
 
-    /// @brief Private. When an integer, this field is populated with the correct value.
-    uint64_t _uint_value;
-
-    /// @brief Private. When a bytestring, this field is used.
-    m_bstring_t _bytes;
+    union
+    {
+        /// Valid when #_type is ::BSL_SECPARAM_TYPE_UINT64
+        uint64_t as_uint;
+        /// Valid when #_type is ::BSL_SECPARAM_TYPE_INT64
+        int64_t as_int;
+        /// Valid when #_type is ::BSL_SECPARAM_TYPE_BYTESTR or ::BSL_SECPARAM_TYPE_TEXTSTR
+        m_bstring_t as_bytes;
+    } _val;
 };
 
 /// OPLIST for ::BSL_SecParam_s
@@ -84,12 +90,16 @@ struct BSL_SecParam_s
      SET(API_6(BSL_SecParam_Set)))
 
 /** @struct BSLB_SecParamList_t
- * Defines a basic list of Security Parameters (::BSL_SecParam_s).
+ * Defines an internal list of Security Parameter pointers (::BSLB_SecParamPtr_t).
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_ARRAY_DEF(BSLB_SecParamList, BSL_SecParam_t, M_OPL_BSL_SecParam_t())
+M_SHARED_PTR_DEF(BSLB_SecParamPtr, BSL_SecParam_t, M_OPL_BSL_SecParam_t())
+#define M_OPL_BSLB_SecParamPtr_t() M_SHARED_PTR_OPLIST(BSLB_SecParamPtr, M_OPL_BSL_SecParam_t())
+
+M_ARRAY_DEF(BSLB_SecParamPtrList, BSLB_SecParamPtr_t *, M_OPL_BSLB_SecParamPtr_t())
+M_DICT_DEF2(BSLB_SecParamPtrDict, uint64_t, M_BASIC_OPLIST, BSLB_SecParamPtr_t *, M_OPL_BSLB_SecParamPtr_t())
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND

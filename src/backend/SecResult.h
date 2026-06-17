@@ -99,10 +99,14 @@ struct BSL_SecResult_s
 /** @struct BSLB_SecResultList_t
  * Defines a basic list of Security Results (::BSL_SecResult_s).
  */
+/** @struct BSLB_SecResultPtrList_t
+ * Defines a basic list of pointers to existing results (::BSL_SecParam_s).
+ */
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
 // GCOV_EXCL_START
 M_ARRAY_DEF(BSLB_SecResultList, BSL_SecResult_t, M_OPL_BSL_SecResult_t())
+M_ARRAY_DEF(BSLB_SecResultPtrList, BSL_SecResult_t *, M_PTR_OPLIST)
 // GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond

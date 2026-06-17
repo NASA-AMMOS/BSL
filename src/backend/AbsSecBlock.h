@@ -68,8 +68,9 @@ struct BSL_AbsSecBlock_s
     BSL_HostEID_t source_eid;
 
     /// @brief List of pointers to security parameters
-    BSLB_SecParamList_t params;
+    BSLB_SecParamPtrList_t params;
 
+    //FIXME these results need stronger correlation to individual target order
     /// @brief List of pointers to security results.
     BSLB_SecResultList_t results;
 };

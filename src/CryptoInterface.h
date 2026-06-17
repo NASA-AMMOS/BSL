@@ -219,9 +219,19 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
 /**
  * Deinitialize HMAC context resources
  * @param[in,out] hmac_ctx pointer to hmac context struct to add data to
- * @return 0 if successful
  */
-int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
+void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
+
+/** Compare two blocks of data in a time-invariant way.
+ * This avoids side channel attacks which depend on comparison time.
+ *
+ * @param[in] data1 The first pointer.
+ * @param size1 The size of @c data1 block.
+ * @param[in] data2 The second pointer.
+ * @param size2 The size of @c data2 block.
+ * @return True if they compare equal.
+ */
+bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size_t size2);
 
 /**
  * Deinit and free generated key handle

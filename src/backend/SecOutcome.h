@@ -51,7 +51,7 @@ struct BSL_SecOutcome_s
     const BSL_SecOper_t *sec_oper;
 
     /// @brief List of security parameters with metadata for receiver. Must be encoded into the BTSD.
-    BSLB_SecParamList_t param_list;
+    BSLB_SecParamPtrList_t param_list;
 
     /// @brief List of security results with metadata for receiver. Must be encoded into BTSD.
     BSLB_SecResultList_t result_list;

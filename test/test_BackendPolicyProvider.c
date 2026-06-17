@@ -160,7 +160,7 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
     const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0);
     TEST_ASSERT_EQUAL(BSL_SAMPLE_PP_ID, act->pp_id);
     TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(act));
-    TEST_ASSERT_EQUAL(3, BSL_SecOper_CountParams(BSL_SecurityAction_GetSecOperAtIndex(act, 0)));
+    TEST_ASSERT_EQUAL(3, BSL_SecOper_CountOptions(BSL_SecurityAction_GetSecOperAtIndex(act, 0)));
 
     BSL_SecurityActionSet_Deinit(&action_set);
 }

@@ -114,7 +114,7 @@ set_target_properties(bsl_cose_sc
 )
 target_link_libraries(bsl_cose_sc PUBLIC bsl_front)
 target_link_libraries(bsl_cose_sc PUBLIC bsl_crypto)
-target_link_libraries(bsl_cose_sc PUBLIC QCBOR::qcbor)
+target_link_libraries(bsl_cose_sc PUBLIC qcbor::qcbor)
 
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H

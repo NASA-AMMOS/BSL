@@ -35,7 +35,7 @@ void BSL_SecParam_Init(BSL_SecParam_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
-    m_bstring_init(self->_bytes);
+    self->_type = BSL_SECPARAM_TYPE_UNKNOWN;
 }
 
 void BSL_SecParam_InitSet(BSL_SecParam_t *self, const BSL_SecParam_t *src)
@@ -47,24 +47,54 @@ void BSL_SecParam_InitSet(BSL_SecParam_t *self, const BSL_SecParam_t *src)
 void BSL_SecParam_Deinit(BSL_SecParam_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    m_bstring_clear(self->_bytes);
+    switch (self->_type)
+    {
+        case BSL_SECPARAM_TYPE_UNKNOWN:
+        case BSL_SECPARAM_TYPE_UINT64:
+        case BSL_SECPARAM_TYPE_INT64:
+            break;
+        case BSL_SECPARAM_TYPE_BYTESTR:
+        case BSL_SECPARAM_TYPE_TEXTSTR:
+            m_bstring_clear(self->_val.as_bytes);
+            break;
+        default:
+            break;
+    }
+    self->_type = BSL_SECPARAM_TYPE_UNKNOWN;
 }
 
 void BSL_SecParam_Set(BSL_SecParam_t *self, const BSL_SecParam_t *src)
 {
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(src);
-    self->param_id    = src->param_id;
-    self->_type       = src->_type;
-    self->_uint_value = src->_uint_value;
-    // workaround m_bstring issue https://github.com/P-p-H-d/mlib/issues/142
-    if (m_bstring_empty_p(src->_bytes))
+    BSL_SecParam_Deinit(self);
+
+    self->param_id = src->param_id;
+    self->_type    = src->_type;
+    switch (self->_type)
     {
-        m_bstring_reset(self->_bytes);
-    }
-    else
-    {
-        m_bstring_set(self->_bytes, src->_bytes);
+        case BSL_SECPARAM_TYPE_UNKNOWN:
+            break;
+        case BSL_SECPARAM_TYPE_UINT64:
+            self->_val.as_uint = src->_val.as_uint;
+            break;
+        case BSL_SECPARAM_TYPE_INT64:
+            self->_val.as_int = src->_val.as_int;
+            break;
+        case BSL_SECPARAM_TYPE_BYTESTR:
+        case BSL_SECPARAM_TYPE_TEXTSTR:
+            // workaround m_bstring issue https://github.com/P-p-H-d/mlib/issues/142
+            if (m_bstring_empty_p(src->_val.as_bytes))
+            {
+                m_bstring_reset(self->_val.as_bytes);
+            }
+            else
+            {
+                m_bstring_init_set(self->_val.as_bytes, src->_val.as_bytes);
+            }
+            break;
+        default:
+            break;
     }
 }
 
@@ -78,8 +108,8 @@ int BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char
     self->param_id = param_id;
     self->_type    = BSL_SECPARAM_TYPE_TEXTSTR;
     // include terminating null
-    m_bstring_init(self->_bytes);
-    m_bstring_push_back_bytes(self->_bytes, value_strlen + 1, value);
+    m_bstring_init(self->_val.as_bytes);
+    m_bstring_push_back_bytes(self->_val.as_bytes, value_strlen + 1, value);
 
     return BSL_SUCCESS;
 }
@@ -91,10 +121,10 @@ int BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t
     memset(self, 0, sizeof(*self));
     self->param_id = param_id;
     self->_type    = BSL_SECPARAM_TYPE_BYTESTR;
-    m_bstring_init(self->_bytes);
+    m_bstring_init(self->_val.as_bytes);
     if (value.len)
     {
-        m_bstring_push_back_bytes(self->_bytes, value.len, value.ptr);
+        m_bstring_push_back_bytes(self->_val.as_bytes, value.len, value.ptr);
     }
 
     return BSL_SUCCESS;
@@ -105,10 +135,9 @@ int BSL_SecParam_InitUint64(BSL_SecParam_t *self, uint64_t param_id, uint64_t va
     CHK_ARG_NONNULL(self);
 
     memset(self, 0, sizeof(*self));
-    self->param_id    = param_id;
-    self->_type       = BSL_SECPARAM_TYPE_UINT64;
-    self->_uint_value = value;
-    m_bstring_init(self->_bytes);
+    self->param_id     = param_id;
+    self->_type        = BSL_SECPARAM_TYPE_UINT64;
+    self->_val.as_uint = value;
 
     return BSL_SUCCESS;
 }
@@ -124,7 +153,25 @@ uint64_t BSL_SecParam_GetAsUint64(const BSL_SecParam_t *self)
     ASSERT_ARG_NONNULL(self);
     ASSERT_PRECONDITION(self->_type == BSL_SECPARAM_TYPE_UINT64);
 
-    return self->_uint_value;
+    return self->_val.as_uint;
+}
+
+int BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, int64_t value)
+{
+    CHK_ARG_NONNULL(self);
+
+    memset(self, 0, sizeof(*self));
+    self->param_id    = param_id;
+    self->_type       = BSL_SECPARAM_TYPE_INT64;
+    self->_val.as_int = value;
+
+    return BSL_SUCCESS;
+}
+
+bool BSL_SecParam_IsInt64(const BSL_SecParam_t *self)
+{
+    CHK_AS_BOOL(self);
+    return (self->_type == BSL_SECPARAM_TYPE_INT64);
 }
 
 bool BSL_SecParam_IsBytestr(const BSL_SecParam_t *self)
@@ -139,8 +186,8 @@ int BSL_SecParam_GetAsBytestr(const BSL_SecParam_t *self, BSL_Data_t *out)
     CHK_PRECONDITION(BSL_SecParam_IsConsistent(self));
     CHK_PROPERTY(self->_type == BSL_SECPARAM_TYPE_BYTESTR);
 
-    const size_t   size = m_bstring_size(self->_bytes);
-    const uint8_t *ptr  = m_bstring_view(self->_bytes, 0, size);
+    const size_t   size = m_bstring_size(self->_val.as_bytes);
+    const uint8_t *ptr  = m_bstring_view(self->_val.as_bytes, 0, size);
     return BSL_Data_InitView(out, size, (uint8_t *)ptr);
 }
 
@@ -150,8 +197,8 @@ int BSL_SecParam_GetAsTextstr(const BSL_SecParam_t *self, const char **out)
     CHK_PRECONDITION(BSL_SecParam_IsConsistent(self));
     CHK_PROPERTY(self->_type == BSL_SECPARAM_TYPE_TEXTSTR);
 
-    const size_t   size = m_bstring_size(self->_bytes);
-    const uint8_t *ptr  = m_bstring_view(self->_bytes, 0, size);
+    const size_t   size = m_bstring_size(self->_val.as_bytes);
+    const uint8_t *ptr  = m_bstring_view(self->_val.as_bytes, 0, size);
     *out                = (const char *)ptr;
     return BSL_SUCCESS;
 }
@@ -166,19 +213,7 @@ uint64_t BSL_SecParam_GetId(const BSL_SecParam_t *self)
 bool BSL_SecParam_IsConsistent(const BSL_SecParam_t *self)
 {
     CHK_AS_BOOL(self != NULL);
-    CHK_AS_BOOL(self->param_id > 0);
     CHK_AS_BOOL(self->_type > BSL_SECPARAM_TYPE_UNKNOWN && self->_type <= BSL_SECPARAM_TYPE_TEXTSTR);
 
-    if (self->_type == BSL_SECPARAM_TYPE_UINT64)
-    {
-        CHK_AS_BOOL(m_bstring_empty_p(self->_bytes));
-    }
     return true;
-}
-
-bool BSL_SecParam_IsParamIDOutput(uint64_t param_id)
-{
-    // If this index is less than the start index for numbering
-    // internal param ids, then it's probably a param_id from the spec.
-    return param_id < BSL_SECPARAM_TYPE_INT_STARTINDEX;
 }

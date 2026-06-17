@@ -188,25 +188,35 @@ static int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_
 
     CHK_PROPERTY(BSL_AbsSecBlock_IsConsistent(&abs_sec_block));
 
-    for (size_t i = 0; i < BSLB_SecParamList_size(abs_sec_block.params); i++)
+    for (size_t i = 0; i < BSLB_SecParamPtrList_size(abs_sec_block.params); i++)
     {
-        const BSL_SecParam_t *param = BSLB_SecParamList_cget(abs_sec_block.params, i);
-        CHK_PROPERTY(BSL_SecParam_IsConsistent(param));
-        BSLB_SecParamList_push_back(sec_oper->_param_list, *param);
+        BSLB_SecParamPtr_t *const *ptr = BSLB_SecParamPtrList_cget(abs_sec_block.params, i);
+        // index by ID
+        const BSL_SecParam_t *param = BSLB_SecParamPtr_cref(*ptr);
+        BSLB_SecParamPtrDict_set_at(sec_oper->_params_in, param->param_id, *ptr);
+    }
+
+    for (size_t i = 0; i < BSLB_SecResultList_size(abs_sec_block.results); i++)
+    {
+        const BSL_SecResult_t *result = BSLB_SecResultList_cget(abs_sec_block.results, i);
+        if (result->target_block_num != sec_oper->target_block_num)
+        {
+            continue;
+        }
+        // index by ID
+        BSLB_SecParamPtr_t **item = BSLB_SecParamPtrDict_safe_get(sec_oper->_results_in, result->result_id);
+
+        BSL_SecParam_t *param = BSLB_SecParamPtr_ref(*item);
+        // FIXME replace this logic
+        BSL_Data_t tmp;
+        BSL_SecResult_GetAsBytestr(result, &tmp);
+        BSL_SecParam_InitBytestr(param, result->result_id, tmp);
     }
 
     const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
     if (sec_context_result != BSL_SUCCESS) // || outcome->is_success == false)
     {
         BSL_LOG_ERR("BIB Sec Ctx processing for verifier/acceptor failed!");
-        BSL_AbsSecBlock_Deinit(&abs_sec_block);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_SECURITY_OPERATION_FAILED;
-    }
-
-    if (!BSL_SecOutcome_IsInAbsSecBlock(outcome, &abs_sec_block))
-    {
-        BSL_LOG_ERR("ASB Does not contain expeceted sec params and outcomes");
         BSL_AbsSecBlock_Deinit(&abs_sec_block);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
@@ -299,27 +309,29 @@ static int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_
 
     CHK_PROPERTY(BSL_AbsSecBlock_IsConsistent(&abs_sec_block));
 
-    for (size_t i = 0; i < BSLB_SecParamList_size(abs_sec_block.params); i++)
+    for (size_t i = 0; i < BSLB_SecParamPtrList_size(abs_sec_block.params); i++)
     {
-        const BSL_SecParam_t *param = BSLB_SecParamList_cget(abs_sec_block.params, i);
-        CHK_PROPERTY(BSL_SecParam_IsConsistent(param));
-        BSLB_SecParamList_push_back(sec_oper->_param_list, *param);
+        BSLB_SecParamPtr_t *const *ptr = BSLB_SecParamPtrList_cget(abs_sec_block.params, i);
+        // index by ID
+        const BSL_SecParam_t *param = BSLB_SecParamPtr_cref(*ptr);
+        BSLB_SecParamPtrDict_set_at(sec_oper->_params_in, param->param_id, *ptr);
     }
 
-    const size_t   result_count = BSLB_SecResultList_size(abs_sec_block.results);
-    BSL_SecParam_t results_as_params[result_count];
-    for (size_t i = 0; i < result_count; i++)
+    for (size_t i = 0; i < BSLB_SecResultList_size(abs_sec_block.results); i++)
     {
-        const BSL_SecResult_t *result = BSLB_SecResultList_get(abs_sec_block.results, i);
-        if (result->target_block_num == sec_oper->target_block_num)
+        const BSL_SecResult_t *result = BSLB_SecResultList_cget(abs_sec_block.results, i);
+        if (result->target_block_num != sec_oper->target_block_num)
         {
-            BSL_Data_t as_data;
-            BSL_SecResult_GetAsBytestr(result, &as_data);
-
-            BSL_SecParam_t *result_param = &results_as_params[i];
-            BSL_SecParam_InitBytestr(result_param, BSL_SECPARAM_TYPE_AUTH_TAG, as_data);
-            BSLB_SecParamList_push_move(sec_oper->_param_list, result_param);
+            continue;
         }
+        // index by ID
+        BSLB_SecParamPtr_t **item = BSLB_SecParamPtrDict_safe_get(sec_oper->_results_in, result->result_id);
+
+        BSL_SecParam_t *param = BSLB_SecParamPtr_ref(*item);
+        // FIXME replace this logic
+        BSL_Data_t tmp;
+        BSL_SecResult_GetAsBytestr(result, &tmp);
+        BSL_SecParam_InitBytestr(param, result->result_id, tmp);
     }
 
     const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);

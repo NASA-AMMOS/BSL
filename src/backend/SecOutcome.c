@@ -44,7 +44,7 @@ void BSL_SecOutcome_Init(BSL_SecOutcome_t *self, const BSL_SecOper_t *sec_oper, 
 
     memset(self, 0, sizeof(*self));
     self->is_success = 0;
-    BSLB_SecParamList_init(self->param_list);
+    BSLB_SecParamPtrList_init(self->param_list);
     BSLB_SecResultList_init(self->result_list);
     self->sec_oper = sec_oper;
     BSL_Data_InitBuffer(&self->allocation, allocation_size);
@@ -56,7 +56,7 @@ void BSL_SecOutcome_Deinit(BSL_SecOutcome_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
 
-    BSLB_SecParamList_clear(self->param_list);
+    BSLB_SecParamPtrList_clear(self->param_list);
     BSLB_SecResultList_clear(self->result_list);
     BSL_Data_Deinit(&self->allocation);
     memset(self, 0, sizeof(*self));
@@ -81,9 +81,6 @@ bool BSL_SecOutcome_IsConsistent(const BSL_SecOutcome_t *self)
         // CHK_AS_BOOL(result_len == 0);
     }
 
-    // Invariant: Parameter list contains something (i.e., calling it doesn't cause problems)
-    // NOLINTNEXTLINE
-    CHK_AS_BOOL(BSLB_SecParamList_size(self->param_list) < 1000);
     return true;
 }
 
@@ -92,10 +89,8 @@ void BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self, const BSL_SecResult_t *
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
     ASSERT_PRECONDITION(BSL_SecResult_IsConsistent(sec_result));
 
-    size_t size0 = BSLB_SecResultList_size(self->result_list);
     BSLB_SecResultList_push_back(self->result_list, *sec_result);
 
-    ASSERT_POSTCONDITION(size0 + 1 == BSLB_SecResultList_size(self->result_list));
     ASSERT_POSTCONDITION(BSL_SecOutcome_IsConsistent(self));
 }
 
@@ -117,7 +112,7 @@ size_t BSL_SecOutcome_CountParams(const BSL_SecOutcome_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
 
-    return BSLB_SecParamList_size(self->param_list);
+    return BSLB_SecParamPtrList_size(self->param_list);
 }
 
 const BSL_SecParam_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, size_t index)
@@ -125,7 +120,7 @@ const BSL_SecParam_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, si
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
     ASSERT_PRECONDITION(index < BSL_SecOutcome_CountParams(self));
 
-    return BSLB_SecParamList_cget(self->param_list, index);
+    return BSLB_SecParamPtr_cref(*BSLB_SecParamPtrList_cget(self->param_list, index));
 }
 
 void BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self, const BSL_SecParam_t *param)
@@ -133,13 +128,28 @@ void BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self, const BSL_SecParam_t *pa
     ASSERT_PRECONDITION(BSL_SecParam_IsConsistent(param));
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
 
-    size_t size0 = BSLB_SecParamList_size(self->param_list);
-    BSLB_SecParamList_push_back(self->param_list, *param);
+    BSL_SecParam_t *item = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->param_list));
+    BSL_SecParam_Set(item, param);
 
-    ASSERT_POSTCONDITION(size0 + 1 == BSLB_SecParamList_size(self->param_list));
     ASSERT_POSTCONDITION(BSL_SecOutcome_IsConsistent(self));
 }
 
+void BSL_SecOutcome_AppendOptionAsParam(BSL_SecOutcome_t *self, uint64_t param_id, const BSL_SecParam_t *param)
+{
+    ASSERT_PRECONDITION(BSL_SecParam_IsConsistent(param));
+    ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
+
+    BSL_SecParam_t *item = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->param_list));
+    // deep copy
+    BSL_SecParam_Set(item, param);
+    // update its ID
+    item->param_id = param_id;
+
+    ASSERT_POSTCONDITION(BSL_SecOutcome_IsConsistent(self));
+}
+
+#if 0
+//FIXME move into BIB CTX
 static bool BSL_AbsSecBlock_ContainsResult(const BSL_AbsSecBlock_t *abs_sec_block, const BSL_SecResult_t *actual)
 {
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(abs_sec_block));
@@ -160,33 +170,4 @@ static bool BSL_AbsSecBlock_ContainsResult(const BSL_AbsSecBlock_t *abs_sec_bloc
     }
     return false;
 }
-
-bool BSL_SecOutcome_IsInAbsSecBlock(const BSL_SecOutcome_t *self, const BSL_AbsSecBlock_t *abs_sec_block)
-{
-    ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
-    ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(abs_sec_block));
-
-    size_t found_matches    = 0;
-    size_t expected_matches = BSLB_SecResultList_size(self->result_list);
-    if (expected_matches == 0)
-    {
-        return false;
-    }
-
-    for (size_t result_index = 0; result_index < expected_matches; result_index++)
-    {
-        const BSL_SecResult_t *actual_res = BSLB_SecResultList_get(self->result_list, result_index);
-        ASSERT_PROPERTY(actual_res != NULL);
-        if (BSL_AbsSecBlock_ContainsResult(abs_sec_block, actual_res))
-        {
-            found_matches++;
-        }
-        else
-        {
-            BSL_LOG_ERR("Security operation mismatch - ASB does NOT contain block %" PRIu64,
-                        actual_res->target_block_num);
-        }
-    }
-    BSL_LOG_DEBUG("Checking results: %zu expected, %zu found", expected_matches, found_matches);
-    return (expected_matches == found_matches) && (found_matches > 0);
-}
+#endif

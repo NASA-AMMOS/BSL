@@ -440,12 +440,20 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
     return 0;
 }
 
-int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
+void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
 {
     BSL_Data_Deinit(&hmac_ctx->in_buf);
     EVP_MD_CTX_free(hmac_ctx->libhandle);
     memset(hmac_ctx, 0, sizeof(BSL_AuthCtx_t));
-    return 0;
+}
+
+bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size_t size2)
+{
+    if (!data1 || !data2 || (size1 != size2))
+    {
+        return false;
+    }
+    return CRYPTO_memcmp(data1, data2, size1) == 0;
 }
 
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
@@ -454,6 +462,8 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(init_vec);
     ASSERT_ARG_NONNULL(key_handle);
+
+    memset(cipher_ctx, 0, sizeof(*cipher_ctx));
 
     cipher_ctx->keyhandle = key_handle;
     BSL_CryptoKey_t *key  = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;

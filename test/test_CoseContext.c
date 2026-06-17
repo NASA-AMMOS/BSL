@@ -92,23 +92,39 @@ void test_AppendixA_Example1_BIB_Source(void)
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 0, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BUNDLE);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 0, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
+                         BSL_POLICYACTION_DROP_BUNDLE);
 
-//    BSL_SecOper_AppendParam(&sec_oper, &context->param_sha_variant);
-//    BSL_SecOper_AppendParam(&sec_oper, &context->param_scope_flags);
-//    BSL_SecOper_AppendParam(&sec_oper, &context->param_test_key);
-//    BSL_SecOper_AppendParam(&sec_oper, &context->use_key_wrap);
+    {
+        BSL_SecParam_t param;
+        {
+            BSL_Data_t kid;
+            BSL_Data_InitView(&kid, 4, (BSL_DataPtr_t) "1234");
+            BSL_SecParam_InitBytestr(&param, BSLX_COSESC_OPT_KEYID, kid);
+        }
+        BSL_SecOper_AppendOption(&sec_oper, &param);
+        BSL_SecParam_Deinit(&param);
+    }
+    {
+        BSL_SecParam_t param;
+        BSL_SecParam_InitInt64(&param, BSLX_COSESC_OPT_TGT_ALG, 123 /*FIXME*/);
+        BSL_SecOper_AppendOption(&sec_oper, &param);
+        BSL_SecParam_Deinit(&param);
+    }
+
+    //    BSL_SecOper_AppendParam(&sec_oper, &context->param_sha_variant);
+    //    BSL_SecOper_AppendParam(&sec_oper, &context->param_scope_flags);
+    //    BSL_SecOper_AppendParam(&sec_oper, &context->param_test_key);
+    //    BSL_SecOper_AppendParam(&sec_oper, &context->use_key_wrap);
 
     BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
     BSL_SecOutcome_Init(outcome, &sec_oper, BSL_SecOutcome_Sizeof());
 
-    bool valid_status =
-            BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
+    bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_TRUE(valid_status);
 
     /// Confirm running secop as source executes without error
-    int exec_status =
-            BSLX_CoseSc_Execute(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
+    int exec_status = BSLX_CoseSc_Execute(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     /// Confirm it produced only 1 result

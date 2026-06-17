@@ -34,6 +34,15 @@
 /// Registered BPSec context ID
 #define BSLX_COSESC_CTX_ID 3
 
+/// Internal option enumerations
+enum BSLX_CoseSC_Options_e
+{
+    /// Key ID as a byte string
+    BSLX_COSESC_OPT_KEYID,
+    /// Content-layer algorithm
+    BSLX_COSESC_OPT_TGT_ALG,
+};
+
 /// Match signature ::BSL_SecCtx_Validate_f
 bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
 

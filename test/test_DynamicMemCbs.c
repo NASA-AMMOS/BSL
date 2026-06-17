@@ -26,7 +26,7 @@
 #include <backend/SecurityActionSet.h>
 #include <backend/SecurityResultSet.h>
 #include <policy_provider/SamplePolicyProvider.h>
-#include <default_sc/rfc9173.h>
+#include <default_sc/DefaultSecContext.h>
 #include <mock_bpa/agent.h>
 #include <mock_bpa/log.h>
 
@@ -115,9 +115,9 @@ void _setUp(void)
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
 
-    BSL_SecParam_InitUint64(&param_aes_variant_128, RFC9173_BCB_SECPARAM_AESVARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-    BSL_SecParam_InitUint64(&param_use_wrap_key, BSL_SECPARAM_USE_KEY_WRAP, 1);
-    BSL_SecParam_InitTextstr(&param_test_bcb_key_correct, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
+    BSL_SecParam_InitUint64(&param_aes_variant_128, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_SecParam_InitUint64(&param_use_wrap_key, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
+    BSL_SecParam_InitTextstr(&param_test_bcb_key_correct, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
 
     // BSL_32
     BSLP_PolicyPredicate_t predicate_bsl_32a;

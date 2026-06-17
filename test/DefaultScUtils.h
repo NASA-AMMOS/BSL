@@ -59,7 +59,6 @@ typedef struct
 
     BSL_SecParam_t param_test_key;
     BSL_SecParam_t param_sha_variant;
-    BSL_SecParam_t param_hmac;
     BSL_SecParam_t param_wrapped_key;
     BSL_SecParam_t use_key_wrap;
     BSL_SecParam_t param_scope_flags;

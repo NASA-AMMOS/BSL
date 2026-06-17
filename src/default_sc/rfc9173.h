@@ -66,13 +66,13 @@ enum rfc9173_bib_integ_scope_flag_ids_e
 };
 
 /// @brief https://www.rfc-editor.org/rfc/rfc9173.html#section-4.3.2
-typedef enum
+enum rfc9173_bcb_aes_variant_e
 {
     RFC9173_BCB_AES_VARIANT_A128GCM = 1,
 
     // Default value
     RFC9173_BCB_AES_VARIANT_A256GCM = 3
-} rfc9173_bcb_aes_variant_e;
+};
 
 enum rfc9173_bcb_secparam_ids_e
 {

@@ -54,9 +54,15 @@ struct BSL_SecOper_s
     BSL_ReasonCode_t reason_code;
 
     /// @brief Private enumeration indicating the role (e.g., acceptor vs verifier)
-    BSL_SecRole_e       _role;
-    BSL_SecBlockType_e  _service_type;
-    BSLB_SecParamList_t _param_list;
+    BSL_SecRole_e      _role;
+    BSL_SecBlockType_e _service_type;
+
+    /// @brief Options set by the policy provider
+    BSLB_SecParamPtrDict_t _options;
+    /// @brief Parameters from the ASB if the role is not source
+    BSLB_SecParamPtrDict_t _params_in;
+    /// @brief Results from the ASB if the role is not source
+    BSLB_SecParamPtrDict_t _results_in;
 };
 
 #endif /* BSLB_SECOPERATIONS_H_ */

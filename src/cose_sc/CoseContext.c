@@ -36,7 +36,6 @@
 
 #include "CoseContext.h"
 
-
 bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
 {
     (void)lib;
