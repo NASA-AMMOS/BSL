@@ -254,7 +254,6 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
     CHK_ARG_NONNULL(kek_handle);
     CHK_ARG_NONNULL(cek_handle);
     CHK_ARG_NONNULL(wrapped_key);
-    CHK_ARG_NONNULL(wrapped_key_handle);
 
     BSL_CryptoKey_t *cek = (BSL_CryptoKey_t *)cek_handle;
     BSL_CryptoKey_t *kek = (BSL_CryptoKey_t *)kek_handle;

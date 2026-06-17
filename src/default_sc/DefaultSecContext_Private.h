@@ -66,16 +66,18 @@ typedef struct BSLX_BIB_s
     BSL_PrimaryBlock_t   primary_block;
     BSL_CanonicalBlock_t target_block;
     BSL_CanonicalBlock_t sec_block;
-    bool                 opt_ippt_scope;
-    uint64_t             ippt_scope;
-    bool                 opt_sha_variant;
-    uint64_t             sha_variant;
-    int64_t              crypto_sha_variant;
-    uint64_t             hash_size;
-    BSL_Data_t           wrapped_key;
-    int64_t              keywrap;
-    uint64_t             hmac_result_id;
-    BSL_Data_t           hmac_result_val;
+    /// True if #ippt_scope came from an option
+    bool opt_ippt_scope;
+    /// Required IPPT scope
+    uint64_t   ippt_scope;
+    bool       opt_sha_variant;
+    uint64_t   sha_variant;
+    int64_t    crypto_sha_variant;
+    uint64_t   hash_size;
+    BSL_Data_t wrapped_key;
+    int64_t    keywrap;
+    uint64_t   hmac_result_id;
+    BSL_Data_t hmac_result_val;
 } BSLX_BIB_t;
 
 int  BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
@@ -111,6 +113,8 @@ typedef struct BSLX_BCB_s
     BSL_CipherMode_e crypto_mode;
     /// Required AES variant
     uint64_t aes_variant;
+    /// True if #aad_scope came from an option
+    bool opt_aad_scope;
     /// Required AAD scope
     uint64_t aad_scope;
 
@@ -121,10 +125,8 @@ typedef struct BSLX_BCB_s
 
     int64_t keywrap;
     bool    success;
-    bool    skip_aad_sec_block;
-    bool    skip_aad_target_block;
-    bool    skip_aad_prim_block;
-    bool    overwrite_btsd;
+    /// True if this is a source or acceptor role and target BTSD is replaced
+    bool overwrite_btsd;
 } BSLX_BCB_t;
 
 /** Populate the BCB context with options from the operation.

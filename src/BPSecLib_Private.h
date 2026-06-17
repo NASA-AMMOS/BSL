@@ -224,7 +224,7 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
     do                                                                                \
     {                                                                                 \
         char logstr[2 * (len) + 1];                                                   \
-        BSL_LOG_DEBUG("PLAINTEXT STATE (ctx %p) " title ": %s", (void *)ctx,         \
+        BSL_LOG_DEBUG("PLAINTEXT STATE (ctx %p) " title ": %s", (void *)ctx,          \
                       BSL_Log_DumpAsHexString(logstr, sizeof(logstr), (ptr), (len))); \
     }                                                                                 \
     while (false)

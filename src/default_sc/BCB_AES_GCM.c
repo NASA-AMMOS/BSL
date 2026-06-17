@@ -53,10 +53,7 @@ int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
     CHK_PRECONDITION(bcb_context->aad.len == 0);
     CHK_PRECONDITION(bcb_context->aad.ptr == NULL);
 
-    uint64_t flags = 0;
-    flags |= ((!bcb_context->skip_aad_prim_block) & 0x01);
-    flags |= ((!bcb_context->skip_aad_target_block & 0x01) << 1);
-    flags |= ((!bcb_context->skip_aad_sec_block & 0x01) << 2);
+    BSL_LOG_DEBUG("Using AAD scope %" PRIu64, bcb_context->aad_scope);
 
     // There are 4 fields in a block header: id, type, flags, crc
     // See: https://www.rfc-editor.org/rfc/rfc9173.html#name-aad-scope-flags
@@ -70,21 +67,21 @@ int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
 
     QCBOREncodeContext aad_enc;
     QCBOREncode_Init(&aad_enc, (UsefulBuf) { .ptr = bcb_context->aad.ptr, .len = bcb_context->aad.len });
-    QCBOREncode_AddUInt64(&aad_enc, flags);
+    QCBOREncode_AddUInt64(&aad_enc, bcb_context->aad_scope);
 
-    if (flags & 0x01UL)
+    if (bcb_context->aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK)
     {
         BSL_LOG_DEBUG("Adding primary block to AAD");
         UsefulBufC prim_blk_encoded = { .ptr = bcb_context->primary_block.encoded.ptr,
                                         .len = bcb_context->primary_block.encoded.len };
         QCBOREncode_AddEncoded(&aad_enc, prim_blk_encoded);
     }
-    if (flags & 0x02UL)
+    if (bcb_context->aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_TARGET_HEADER)
     {
         BSL_LOG_DEBUG("Adding target block header to AAD");
         BSLX_EncodeHeader(&bcb_context->target_block, &aad_enc);
     }
-    if (flags & 0x04UL)
+    if (bcb_context->aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_SECURITY_HEADER)
     {
         BSL_LOG_DEBUG("Adding security block header to AAD");
         BSLX_EncodeHeader(&bcb_context->sec_block, &aad_enc);
@@ -465,22 +462,8 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
         ASSERT_PRECONDITION(BSL_SecParam_IsUint64(param));
         uint64_t aad_scope = BSL_SecParam_GetAsUint64(param);
         BSL_LOG_DEBUG("Param[%" PRIu64 "]: AAD_SCOPE value = %" PRIu64, BSL_SecParam_GetId(param), aad_scope);
-        bcb_context->aad_scope = aad_scope;
-        if ((aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK) == 0)
-        {
-            BSL_LOG_DEBUG("BCB AAD does not contain primary block flag");
-            bcb_context->skip_aad_prim_block = true;
-        }
-        if ((aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_TARGET_HEADER) == 0)
-        {
-            BSL_LOG_DEBUG("BCB AAD does not contain target block flag");
-            bcb_context->skip_aad_target_block = true;
-        }
-        if ((aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_SECURITY_HEADER) == 0)
-        {
-            BSL_LOG_DEBUG("BCB AAD does not contain security header");
-            bcb_context->skip_aad_sec_block = true;
-        }
+        bcb_context->aad_scope     = aad_scope;
+        bcb_context->opt_aad_scope = true;
     }
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BCB_OPT_KEY_ID);
     if (param)
@@ -502,19 +485,6 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
     {
         BSL_LOG_WARNING("BCB USE KEYWRAP param required.");
         return BSL_ERR_PROPERTY_CHECK_FAILED;
-    }
-
-    if (!bcb_context->skip_aad_sec_block)
-    {
-        // If we are instructed to skip AAD check of the security block
-        // then we don't have to worry about checking it.a
-        const uint64_t sec_blk_num = BSL_SecOper_GetSecurityBlockNum(sec_oper);
-        const int      sec_blk_res = BSL_BundleCtx_GetBlockMetadata(bundle, sec_blk_num, &bcb_context->sec_block);
-        if (BSL_SUCCESS != sec_blk_res)
-        {
-            BSL_LOG_ERR("Failed to get security block");
-            return BSL_ERR_HOST_CALLBACK_FAILED;
-        }
     }
 
     return BSL_SUCCESS;
@@ -654,7 +624,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
             if (BSL_SecParam_IsUint64(param))
             {
                 uint64_t got = BSL_SecParam_GetAsUint64(param);
-                if (got != bcb_context.aad_scope)
+                if (bcb_context.opt_aad_scope && (got != bcb_context.aad_scope))
                 {
                     BSL_LOG_WARNING("AAD Scope mismatch, needed %d got %d", bcb_context.aad_scope, got);
                 }
@@ -702,6 +672,19 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
     {
         BSLX_BCB_Deinit(&bcb_context);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
+    }
+
+    if (bcb_context.aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_SECURITY_HEADER)
+    {
+        // If we are instructed to skip AAD check of the security block
+        // then we don't have to worry about checking it.a
+        const uint64_t sec_blk_num = BSL_SecOper_GetSecurityBlockNum(sec_oper);
+        const int      sec_blk_res = BSL_BundleCtx_GetBlockMetadata(bundle, sec_blk_num, &bcb_context.sec_block);
+        if (BSL_SUCCESS != sec_blk_res)
+        {
+            BSL_LOG_ERR("Failed to get security block");
+            return BSL_ERR_HOST_CALLBACK_FAILED;
+        }
     }
 
     // Compute the Addition Authenticated Data for authenticated crypto
