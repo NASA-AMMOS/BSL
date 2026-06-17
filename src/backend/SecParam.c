@@ -55,10 +55,11 @@ void BSL_SecParam_Deinit(BSL_SecParam_t *self)
     {
         case BSL_SECPARAM_TYPE_UNKNOWN:
         case BSL_SECPARAM_TYPE_UINT64:
-        case BSL_SECPARAM_TYPE_INT64:
+        case BSL_SECPARAM_TYPE_NINT64:
             break;
         case BSL_SECPARAM_TYPE_BYTESTR:
         case BSL_SECPARAM_TYPE_TEXTSTR:
+        case BSL_SECPARAM_TYPE_RAW:
             m_bstring_clear(self->_val.as_bytes);
             break;
         default:
@@ -87,11 +88,12 @@ void BSL_SecParam_Set(BSL_SecParam_t *self, const BSL_SecParam_t *src)
         case BSL_SECPARAM_TYPE_UINT64:
             self->_val.as_uint = src->_val.as_uint;
             break;
-        case BSL_SECPARAM_TYPE_INT64:
-            self->_val.as_int = src->_val.as_int;
+        case BSL_SECPARAM_TYPE_NINT64:
+            self->_val.as_nint = src->_val.as_nint;
             break;
         case BSL_SECPARAM_TYPE_BYTESTR:
         case BSL_SECPARAM_TYPE_TEXTSTR:
+        case BSL_SECPARAM_TYPE_RAW:
             // workaround m_bstring issue https://github.com/P-p-H-d/mlib/issues/142
             if (m_bstring_empty_p(src->_val.as_bytes))
             {
@@ -107,19 +109,19 @@ void BSL_SecParam_Set(BSL_SecParam_t *self, const BSL_SecParam_t *src)
     }
 }
 
-void BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char *value)
+void BSL_SecParam_SetTextstr(BSL_SecParam_t *self, uint64_t param_id, const char *value)
 {
     ASSERT_ARG_NONNULL(self);
+    BSL_SecParam_Deinit(self);
 
-    size_t value_strlen = value ? strlen(value) : 0;
-
-    memset(self, 0, sizeof(*self));
     self->param_id = param_id;
     self->_type    = BSL_SECPARAM_TYPE_TEXTSTR;
-    // include terminating null
     m_bstring_init(self->_val.as_bytes);
+
+    // include terminating null
     if (value)
     {
+        const size_t value_strlen = strlen(value);
         m_bstring_push_back_bytes(self->_val.as_bytes, value_strlen + 1, value);
     }
     else
@@ -128,11 +130,11 @@ void BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const cha
     }
 }
 
-void BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t value)
+void BSL_SecParam_SetBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t value)
 {
     ASSERT_ARG_NONNULL(self);
+    BSL_SecParam_Deinit(self);
 
-    memset(self, 0, sizeof(*self));
     self->param_id = param_id;
     self->_type    = BSL_SECPARAM_TYPE_BYTESTR;
     m_bstring_init(self->_val.as_bytes);
@@ -142,11 +144,11 @@ void BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_
     }
 }
 
-void BSL_SecParam_InitUint64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value)
+void BSL_SecParam_SetUint64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value)
 {
     ASSERT_ARG_NONNULL(self);
+    BSL_SecParam_Deinit(self);
 
-    memset(self, 0, sizeof(*self));
     self->param_id     = param_id;
     self->_type        = BSL_SECPARAM_TYPE_UINT64;
     self->_val.as_uint = value;
@@ -166,20 +168,20 @@ uint64_t BSL_SecParam_GetAsUint64(const BSL_SecParam_t *self)
     return self->_val.as_uint;
 }
 
-void BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, int64_t value)
+void BSL_SecParam_SetNint64(BSL_SecParam_t *self, uint64_t param_id, int64_t value)
 {
     ASSERT_ARG_NONNULL(self);
+    BSL_SecParam_Deinit(self);
 
-    memset(self, 0, sizeof(*self));
     self->param_id    = param_id;
-    self->_type       = BSL_SECPARAM_TYPE_INT64;
-    self->_val.as_int = value;
+    self->_type       = BSL_SECPARAM_TYPE_NINT64;
+    self->_val.as_nint = value;
 }
 
-bool BSL_SecParam_IsInt64(const BSL_SecParam_t *self)
+bool BSL_SecParam_IsNint64(const BSL_SecParam_t *self)
 {
     CHK_AS_BOOL(self);
-    return (self->_type == BSL_SECPARAM_TYPE_INT64);
+    return (self->_type == BSL_SECPARAM_TYPE_NINT64);
 }
 
 bool BSL_SecParam_IsBytestr(const BSL_SecParam_t *self)

@@ -592,9 +592,8 @@ void BSL_SecResult_Deinit(BSL_SecResult_t *self);
  * @param[in] context_id ID of security context.
  * @param[in] target_block_num Target of the given security result, included here for convenience.
  * @param[in] content Read-only view to data containing the bytes of the security result, which is copied out of here.
- * @return 0 on success, negative on error
  */
-int BSL_SecResult_InitFull(BSL_SecResult_t *self, uint64_t result_id, uint64_t context_id, uint64_t target_block_num,
+void BSL_SecResult_SetFull(BSL_SecResult_t *self, uint64_t result_id, uint64_t context_id, uint64_t target_block_num,
                            const BSL_Data_t *content);
 
 /** Overwrite with a copy of another value.
@@ -620,19 +619,6 @@ int BSL_SecResult_GetAsBytestr(const BSL_SecResult_t *self, BSL_Data_t *out);
 
 /// @brief Returns size in bytes of ::BSL_SecResult_s
 size_t BSL_SecResult_Sizeof(void);
-
-/** @brief Security parameters defined in RFC9172 may be unsigned integers or bytestrings
- *
- */
-enum BSL_SecParam_Types_e
-{
-    BSL_SECPARAM_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
-    BSL_SECPARAM_TYPE_UINT64,      ///< Indicates value type is an unsigned integer.
-    BSL_SECPARAM_TYPE_INT64,       ///< Indicates value type is a signed integer.
-    BSL_SECPARAM_TYPE_BYTESTR,     ///< Indicates the value type is a byte string.
-    BSL_SECPARAM_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
-    //    BSL_SECPARAM_TYPE_RAW,         ///< Indicates the value is undecoded bytes.
-};
 
 /** Represents a security parameter in an ASB as defined in RFC9172.
  * In an encoded ASB, these are tuples of (param-id, param-val)
@@ -682,7 +668,15 @@ size_t BSL_SecParam_Sizeof(void);
  * @param[in] param_id ID of the parameter
  * @param[in] value View of bytes, which get copied into this Security Parameter.
  */
-void BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t value);
+void BSL_SecParam_SetBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t value);
+
+/** Set to an unsigned integer value.
+ *
+ * @param[in,out] self This Security Parameter
+ * @param[in] param_id ID of the parameter
+ * @param[in] value The value to use.
+ */
+void BSL_SecParam_SetUint64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value);
 
 /** Initialize as a parameter containing an integer as a value.
  *
@@ -690,15 +684,7 @@ void BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_
  * @param[in] param_id ID of the parameter
  * @param[in] value The value to use.
  */
-void BSL_SecParam_InitUint64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value);
-
-/** Initialize as a parameter containing an integer as a value.
- *
- * @param[in,out] self This Security Parameter
- * @param[in] param_id ID of the parameter
- * @param[in] value The value to use.
- */
-void BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, int64_t value);
+void BSL_SecParam_SetNint64(BSL_SecParam_t *self, uint64_t param_id, int64_t value);
 
 /** Initialize as a parameter containing a byte string with a null-terminated
  * text value.
@@ -707,7 +693,7 @@ void BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, int64_t val
  * @param[in] param_id ID of the parameter
  * @param[in] value text string of the parameter, copied into self
  */
-void BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char *value);
+void BSL_SecParam_SetTextstr(BSL_SecParam_t *self, uint64_t param_id, const char *value);
 
 /** Returns true when the value type is an unsigned integer.
  *
@@ -724,12 +710,12 @@ bool BSL_SecParam_IsUint64(const BSL_SecParam_t *self);
  */
 uint64_t BSL_SecParam_GetAsUint64(const BSL_SecParam_t *self);
 
-/** Returns true when the value type is a signed integer.
+/** Returns true when the value type is a negative integer.
  *
  * @param[in] self This Security Parameter
  * @return True when value type is integer.
  */
-bool BSL_SecParam_IsInt64(const BSL_SecParam_t *self);
+bool BSL_SecParam_IsNint64(const BSL_SecParam_t *self);
 
 /** Returns true when the value type is a byte string.
  *
@@ -1080,12 +1066,10 @@ bool BSL_SecOutcome_IsConsistent(const BSL_SecOutcome_t *self);
 
 /** Append a Security Result to this outcome.
  *
- * @todo Double-check copy semantics.
- *
  * @param[in,out] self Non-NULL pointer to this security outcome.
- * @param[in] sec_result Non-NULL pointer to security result to copy and append.
+ * @return Non-NULL pointer to security result just appended.
  */
-void BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self, const BSL_SecResult_t *sec_result);
+BSL_SecResult_t *BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self);
 
 /** Get the result at index i. Panics if i is out of range.
  *
@@ -1105,17 +1089,9 @@ size_t BSL_SecOutcome_CountResults(const BSL_SecOutcome_t *self);
 /** Append a Security Parameter to this outcome.
  *
  * @param[in,out] self Non-NULL pointer to this security outcome.
- * @param[in] param Non-NULL pointer to security parameter to copy and append.
+ * @return Non-NULL pointer to the initialized security parameter.
  */
-void BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self, const BSL_SecParam_t *param);
-
-/** Append a Security Parameter to this outcome, renumbering from internal option ID.
- *
- * @param[in,out] self Non-NULL pointer to this security outcome.
- * @param param_id The parameter type ID to use.
- * @param[in] param Non-NULL pointer to option to copy and append.
- */
-void BSL_SecOutcome_AppendOptionAsParam(BSL_SecOutcome_t *self, uint64_t param_id, const BSL_SecParam_t *param);
+BSL_SecParam_t *BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self);
 
 /** @brief Returns number of parameters in this outcome.
  * @param[in] self This outcome

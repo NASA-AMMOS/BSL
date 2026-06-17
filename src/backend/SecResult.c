@@ -45,12 +45,12 @@ void BSL_SecResult_Deinit(BSL_SecResult_t *self)
     m_bstring_clear(self->_bytes);
 }
 
-int BSL_SecResult_InitFull(BSL_SecResult_t *self, uint64_t result_id, uint64_t context_id, uint64_t target_block_num,
+void BSL_SecResult_SetFull(BSL_SecResult_t *self, uint64_t result_id, uint64_t context_id, uint64_t target_block_num,
                            const BSL_Data_t *content)
 {
     ASSERT_ARG_NONNULL(self);
+    BSL_SecResult_Deinit(self);
 
-    memset(self, 0, sizeof(*self));
     self->result_id        = result_id;
     self->context_id       = context_id;
     self->target_block_num = target_block_num;
@@ -61,14 +61,14 @@ int BSL_SecResult_InitFull(BSL_SecResult_t *self, uint64_t result_id, uint64_t c
         m_bstring_push_back_bytes(self->_bytes, content->len, content->ptr);
     }
 
-    CHK_POSTCONDITION(BSL_SecResult_IsConsistent(self));
-    return BSL_SUCCESS;
+    ASSERT_POSTCONDITION(BSL_SecResult_IsConsistent(self));
 }
 
 void BSL_SecResult_Set(BSL_SecResult_t *self, const BSL_SecResult_t *src)
 {
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(src);
+
     self->result_id        = src->result_id;
     self->context_id       = src->context_id;
     self->target_block_num = src->target_block_num;

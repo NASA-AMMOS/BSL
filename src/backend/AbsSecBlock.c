@@ -62,9 +62,9 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
         {
             BSL_LOG_DEBUG("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRIu64, index, param->param_id, param->_val.as_uint);
         }
-        if (BSL_SecParam_IsInt64(param))
+        if (BSL_SecParam_IsNint64(param))
         {
-            BSL_LOG_DEBUG("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRIu64, index, param->param_id, param->_val.as_int);
+            BSL_LOG_DEBUG("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRId64, index, param->param_id, param->_val.as_nint);
         }
         else if (BSL_SecParam_IsBytestr(param))
         {
@@ -529,7 +529,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
                     BSL_LOG_DEBUG("ASB: Parsed Param[%" PRIu64 "] = %" PRIu64, item_id, dec_value);
 
                     BSL_SecParam_t *param = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->params));
-                    BSL_SecParam_InitUint64(param, item_id, dec_value);
+                    BSL_SecParam_SetUint64(param, item_id, dec_value);
                     break;
                 }
                 case QCBOR_TYPE_BYTE_STRING:
@@ -547,7 +547,7 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
                     BSL_Data_InitView(&data_view, target_buf.len, (BSL_DataPtr_t)target_buf.ptr);
 
                     BSL_SecParam_t *param = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->params));
-                    BSL_SecParam_InitBytestr(param, item_id, data_view);
+                    BSL_SecParam_SetBytestr(param, item_id, data_view);
                     break;
                 }
                 default:
@@ -611,13 +611,11 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
                 BSL_Data_t bstr_buf;
                 BSL_Data_InitView(&bstr_buf, bstr_qcbor_buf.len, (BSL_DataPtr_t)bstr_qcbor_buf.ptr);
 
-                BSL_SecResult_t result;
-                int result_code = BSL_SecResult_InitFull(&result, item_id, self->sec_context_id, target_id, &bstr_buf);
-                ASSERT_PROPERTY(result_code == 0);
-                BSL_LOG_DEBUG("ASB: Parsed Result (target_block=%" PRIu64 ", len=%zu)", result.target_block_num,
+                BSL_SecResult_t *result = BSLB_SecResultList_push_new(self->results);
+                BSL_SecResult_SetFull(result, item_id, self->sec_context_id, target_id, &bstr_buf);
+                BSL_LOG_DEBUG("ASB: Parsed Result (target_block=%" PRIu64 ", len=%zu)", result->target_block_num,
                               bstr_buf.len);
-                BSLB_SecResultList_push_back(self->results, result);
-                BSL_SecResult_Deinit(&result);
+
             }
             else
             {

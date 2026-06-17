@@ -207,11 +207,10 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
         BSLB_SecParamPtr_t **item = BSLB_SecParamPtrDict_safe_get(sec_oper->_results_in, result->result_id);
 
         BSL_SecParam_t *param = BSLB_SecParamPtr_ref(*item);
-        BSL_SecParam_Deinit(param);
         // FIXME replace this logic
         BSL_Data_t tmp;
         BSL_SecResult_GetAsBytestr(result, &tmp);
-        BSL_SecParam_InitBytestr(param, result->result_id, tmp);
+        BSL_SecParam_SetBytestr(param, result->result_id, tmp);
     }
 
     const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
@@ -329,11 +328,10 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
         BSLB_SecParamPtr_t **item = BSLB_SecParamPtrDict_safe_get(sec_oper->_results_in, result->result_id);
 
         BSL_SecParam_t *param = BSLB_SecParamPtr_ref(*item);
-        BSL_SecParam_Deinit(param);
         // FIXME replace this logic
         BSL_Data_t tmp;
         BSL_SecResult_GetAsBytestr(result, &tmp);
-        BSL_SecParam_InitBytestr(param, result->result_id, tmp);
+        BSL_SecParam_SetBytestr(param, result->result_id, tmp);
     }
 
     const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);

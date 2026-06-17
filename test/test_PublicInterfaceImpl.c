@@ -139,38 +139,38 @@ void setUp(void)
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
 
     // FIXME these params need managed lifecycle to ensure Deinit (by some means)
-    BSL_SecParam_InitUint64(&ctx.opt_scope_flag, BSLX_BIB_OPT_SCOPE, 0);
-    BSL_SecParam_InitUint64(&ctx.opt_scope_flag_7, BSLX_BIB_OPT_SCOPE, 0x7);
-    BSL_SecParam_InitUint64(&ctx.opt_sha_variant_512, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-    BSL_SecParam_InitUint64(&ctx.opt_sha_variant_384, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
+    BSL_SecParam_SetUint64(&ctx.opt_scope_flag, BSLX_BIB_OPT_SCOPE, 0);
+    BSL_SecParam_SetUint64(&ctx.opt_scope_flag_7, BSLX_BIB_OPT_SCOPE, 0x7);
+    BSL_SecParam_SetUint64(&ctx.opt_sha_variant_512, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+    BSL_SecParam_SetUint64(&ctx.opt_sha_variant_384, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
 
-    BSL_SecParam_InitUint64(&ctx.opt_aes_variant_128, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-    BSL_SecParam_InitUint64(&ctx.opt_aes_variant_256, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
-    BSL_SecParam_InitUint64(&ctx.opt_aad_scope_flag, BSLX_BCB_OPT_SCOPE, 0);
+    BSL_SecParam_SetUint64(&ctx.opt_aes_variant_128, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_SecParam_SetUint64(&ctx.opt_aes_variant_256, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
+    BSL_SecParam_SetUint64(&ctx.opt_aad_scope_flag, BSLX_BCB_OPT_SCOPE, 0);
 
     BSL_Data_t iv_data;
     BSL_Data_Init(&iv_data);
     iv_data.ptr = (uint8_t *)ApxA2_InitVec;
     iv_data.len = sizeof(ApxA2_InitVec);
-    BSL_SecParam_InitBytestr(&ctx.param_iv, BSLX_BCB_OPT_IV, iv_data);
+    BSL_SecParam_SetBytestr(&ctx.param_iv, BSLX_BCB_OPT_IV, iv_data);
 
     BSL_Data_t wrapkey_data;
     BSL_Data_Init(&wrapkey_data);
     wrapkey_data.ptr = (uint8_t *)ApxA2_WrappedKey;
     wrapkey_data.len = sizeof(ApxA2_WrappedKey);
-    BSL_SecParam_InitBytestr(&ctx.param_wrapped_key, BSLX_BCB_OPT_WRAPPED_KEY, wrapkey_data);
+    BSL_SecParam_SetBytestr(&ctx.param_wrapped_key, BSLX_BCB_OPT_WRAPPED_KEY, wrapkey_data);
 
-    BSL_SecParam_InitUint64(&ctx.opt_bib_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 1);
-    BSL_SecParam_InitUint64(&ctx.opt_bib_dont_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
-    BSL_SecParam_InitTextstr(&ctx.opt_test_bib_key_correct, BSLX_BIB_OPT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_SecParam_InitTextstr(&ctx.opt_test_bib_key_bad, BSLX_BIB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
+    BSL_SecParam_SetUint64(&ctx.opt_bib_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 1);
+    BSL_SecParam_SetUint64(&ctx.opt_bib_dont_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
+    BSL_SecParam_SetTextstr(&ctx.opt_test_bib_key_correct, BSLX_BIB_OPT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_SetTextstr(&ctx.opt_test_bib_key_bad, BSLX_BIB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
 
-    BSL_SecParam_InitUint64(&ctx.opt_bcb_use_wrap_key, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
-    BSL_SecParam_InitUint64(&ctx.opt_bcb_dont_use_wrap_key, BSLX_BCB_OPT_USE_KEY_WRAP, 0);
-    BSL_SecParam_InitTextstr(&ctx.opt_test_bcb_key_correct, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
-    BSL_SecParam_InitTextstr(&ctx.opt_test_bcb_key_bad, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_SecParam_InitTextstr(&ctx.opt_test_bcb_2_key_correct, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
-    BSL_SecParam_InitTextstr(&ctx.opt_test_bcb_2_key_bad, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_SetUint64(&ctx.opt_bcb_use_wrap_key, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
+    BSL_SecParam_SetUint64(&ctx.opt_bcb_dont_use_wrap_key, BSLX_BCB_OPT_USE_KEY_WRAP, 0);
+    BSL_SecParam_SetTextstr(&ctx.opt_test_bcb_key_correct, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
+    BSL_SecParam_SetTextstr(&ctx.opt_test_bcb_key_bad, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
+    BSL_SecParam_SetTextstr(&ctx.opt_test_bcb_2_key_correct, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_SecParam_SetTextstr(&ctx.opt_test_bcb_2_key_bad, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
 
     // test bib accepting with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
     // CLIN, SRC=ipn:1.1, ACCEPTOR, BIB, PAYLOAD, DROP BLOCK, good key

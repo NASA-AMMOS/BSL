@@ -79,14 +79,11 @@ bool BSL_SecOutcome_IsConsistent(const BSL_SecOutcome_t *self)
     return true;
 }
 
-void BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self, const BSL_SecResult_t *sec_result)
+BSL_SecResult_t * BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
-    ASSERT_PRECONDITION(BSL_SecResult_IsConsistent(sec_result));
 
-    BSLB_SecResultList_push_back(self->result_list, *sec_result);
-
-    ASSERT_POSTCONDITION(BSL_SecOutcome_IsConsistent(self));
+    return BSLB_SecResultList_push_new(self->result_list);
 }
 
 size_t BSL_SecOutcome_CountResults(const BSL_SecOutcome_t *self)
@@ -118,27 +115,9 @@ const BSL_SecParam_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, si
     return BSLB_SecParamPtr_cref(*BSLB_SecParamPtrList_cget(self->param_list, index));
 }
 
-void BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self, const BSL_SecParam_t *param)
+BSL_SecParam_t *BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self)
 {
-    ASSERT_PRECONDITION(BSL_SecParam_IsConsistent(param));
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
 
-    BSL_SecParam_t *item = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->param_list));
-    BSL_SecParam_Set(item, param);
-
-    ASSERT_POSTCONDITION(BSL_SecOutcome_IsConsistent(self));
-}
-
-void BSL_SecOutcome_AppendOptionAsParam(BSL_SecOutcome_t *self, uint64_t param_id, const BSL_SecParam_t *param)
-{
-    ASSERT_PRECONDITION(BSL_SecParam_IsConsistent(param));
-    ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
-
-    BSL_SecParam_t *item = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->param_list));
-    // deep copy
-    BSL_SecParam_Set(item, param);
-    // update its ID
-    item->param_id = param_id;
-
-    ASSERT_POSTCONDITION(BSL_SecOutcome_IsConsistent(self));
+    return BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->param_list));
 }

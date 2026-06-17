@@ -65,20 +65,33 @@
 
 #include <BPSecLib_Private.h>
 
+/** @brief Types of values in ::BSL_SecParam_s.
+ * Security options, parameters, and results defined in RFC9173 may be unsigned integers or bytestrings.
+ */
+enum BSL_SecParam_Type_e
+{
+    BSL_SECPARAM_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
+    BSL_SECPARAM_TYPE_UINT64,      ///< Indicates value type is an unsigned integer.
+    BSL_SECPARAM_TYPE_NINT64,      ///< Indicates value type is a negative integer.
+    BSL_SECPARAM_TYPE_BYTESTR,     ///< Indicates the value is a byte string.
+    BSL_SECPARAM_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
+    BSL_SECPARAM_TYPE_RAW,         ///< Indicates the value is undecoded bytes.
+};
+
 struct BSL_SecParam_s
 {
     /// @brief Parameter ID
     uint64_t param_id;
 
-    /// @brief Private. Indicates whether this is an integer or bytestring.
-    enum BSL_SecParam_Types_e _type;
+    /// @brief Indicates how #_val needs to be used.
+    enum BSL_SecParam_Type_e _type;
 
     union
     {
         /// Valid when #_type is ::BSL_SECPARAM_TYPE_UINT64
         uint64_t as_uint;
-        /// Valid when #_type is ::BSL_SECPARAM_TYPE_INT64
-        int64_t as_int;
+        /// Valid when #_type is ::BSL_SECPARAM_TYPE_NINT64
+        int64_t as_nint;
         /// Valid when #_type is ::BSL_SECPARAM_TYPE_BYTESTR or ::BSL_SECPARAM_TYPE_TEXTSTR
         m_bstring_t as_bytes;
     } _val;
