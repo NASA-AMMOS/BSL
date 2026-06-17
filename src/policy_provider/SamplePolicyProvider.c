@@ -58,7 +58,7 @@ static bool BSLP_PolicyPredicate_IsConsistent(const BSLP_PolicyPredicate_t *self
 static bool BSLP_PolicyRule_IsConsistent(const BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    ASSERT_ARG_NONNULL(self->params);
+    ASSERT_ARG_NONNULL(self->options);
     ASSERT_ARG_EXPR(BSL_SECROLE_ISVALID(self->role));
     ASSERT_ARG_EXPR(self->sec_block_type > 0);
     ASSERT_ARG_EXPR(self->context_id != 0);
@@ -497,13 +497,13 @@ void BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self)
 {
     memset(self, 0, sizeof(BSLP_PolicyRule_t));
     string_init(self->description);
-    BSLB_SecParamPtrList_init(self->params);
+    BSLB_SecParamPtrList_init(self->options);
 }
 
 void BSLP_PolicyRule_InitSet(BSLP_PolicyRule_t *self, const BSLP_PolicyRule_t *src)
 {
     string_init_set(self->description, src->description);
-    BSLB_SecParamPtrList_init_set(self->params, src->params);
+    BSLB_SecParamPtrList_init_set(self->options, src->options);
 
     self->role                = src->role;
     self->target_block_type   = src->target_block_type;
@@ -515,10 +515,10 @@ void BSLP_PolicyRule_InitSet(BSLP_PolicyRule_t *self, const BSLP_PolicyRule_t *s
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
     BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", string_get_cstr(self->description),
-                 BSLB_SecParamPtrList_size(self->params));
+                 BSLB_SecParamPtrList_size(self->options));
 
     string_clear(self->description);
-    BSLB_SecParamPtrList_clear(self->params);
+    BSLB_SecParamPtrList_clear(self->options);
 }
 
 void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *param)
@@ -526,7 +526,7 @@ void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *pa
     ASSERT_ARG_EXPR(BSL_SecParam_IsConsistent(param));
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
 
-    BSL_SecParam_t *item = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->params));
+    BSL_SecParam_t *item = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->options));
     BSL_SecParam_Set(item, param);
 
     ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
@@ -537,7 +537,7 @@ void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param)
     ASSERT_ARG_EXPR(BSL_SecParam_IsConsistent(param));
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
 
-    BSL_SecParam_t *item = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->params));
+    BSL_SecParam_t *item = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->options));
     // FIXME not really...
     *item  = *param;
     *param = (BSL_SecParam_t) { 0 };
@@ -576,7 +576,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
 
     // Next, append all the parameters from the matched rule.
     BSLB_SecParamPtrList_it_t pit;
-    for (BSLB_SecParamPtrList_it(pit, self->params); !BSLB_SecParamPtrList_end_p(pit); BSLB_SecParamPtrList_next(pit))
+    for (BSLB_SecParamPtrList_it(pit, self->options); !BSLB_SecParamPtrList_end_p(pit); BSLB_SecParamPtrList_next(pit))
     {
         const BSL_SecParam_t *option = BSLB_SecParamPtr_cref(*BSLB_SecParamPtrList_cref(pit));
         BSL_SecOper_AppendOption(sec_oper, option);

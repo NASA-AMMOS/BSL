@@ -173,8 +173,8 @@ void BSL_SecParam_SetNint64(BSL_SecParam_t *self, uint64_t param_id, int64_t val
     ASSERT_ARG_NONNULL(self);
     BSL_SecParam_Deinit(self);
 
-    self->param_id    = param_id;
-    self->_type       = BSL_SECPARAM_TYPE_NINT64;
+    self->param_id     = param_id;
+    self->_type        = BSL_SECPARAM_TYPE_NINT64;
     self->_val.as_nint = value;
 }
 

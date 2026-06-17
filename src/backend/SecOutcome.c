@@ -79,7 +79,7 @@ bool BSL_SecOutcome_IsConsistent(const BSL_SecOutcome_t *self)
     return true;
 }
 
-BSL_SecResult_t * BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self)
+BSL_SecResult_t *BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
 

@@ -220,10 +220,10 @@ RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id)
     RFC9173_A1_Params params;
     BSL_SecParam_Init(&params.sha_variant);
     BSL_SecParam_SetUint64(&params.sha_variant, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key,
-                            RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value);
+                           RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value);
     BSL_SecParam_Init(&params.scope_flags);
     BSL_SecParam_SetUint64(&params.scope_flags, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key,
-                            RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value);
+                           RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value);
     BSL_SecParam_Init(&params.test_key_id);
     BSL_SecParam_SetTextstr(&params.test_key_id, BSLX_BIB_OPT_KEY_ID, key_id);
     BSL_SecParam_Init(&params.use_key_wrap);

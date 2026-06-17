@@ -133,13 +133,20 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
  */
 typedef struct BSLP_PolicyRule_s
 {
-    string_t               description;
-    BSL_SecRole_e          role;
-    uint64_t               target_block_type;
-    BSL_SecBlockType_e     sec_block_type;
-    int64_t                context_id;
-    BSLB_SecParamPtrList_t params;
-    BSL_PolicyAction_e     failure_action_code;
+    /// Human-friendly text
+    string_t description;
+    /// Role for this operation
+    BSL_SecRole_e role;
+    /// Block type of the security target to match
+    uint64_t target_block_type;
+    /// Needed security type (i.e. BPSec block type)
+    BSL_SecBlockType_e sec_block_type;
+    /// Needed security context
+    int64_t context_id;
+    /// Security operation options for this rule
+    BSLB_SecParamPtrList_t options;
+    /// How to handle failure in finalize stage
+    BSL_PolicyAction_e failure_action_code;
 } BSLP_PolicyRule_t;
 
 /**

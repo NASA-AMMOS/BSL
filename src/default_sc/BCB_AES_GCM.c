@@ -716,7 +716,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
             BSL_LOG_INFO("Appending BCB Auth Tag");
             BSL_SecResult_t *auth_tag = BSL_SecOutcome_AppendResult(sec_outcome);
             BSL_SecResult_SetFull(auth_tag, RFC9173_BCB_RESULTID_AUTHTAG, RFC9173_CONTEXTID_BCB_AES_GCM,
-                                          BSL_SecOper_GetTargetBlockNum(sec_oper), &bcb_context.authtag);
+                                  BSL_SecOper_GetTargetBlockNum(sec_oper), &bcb_context.authtag);
         }
 
         if (bcb_context.iv.len > 0)

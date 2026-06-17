@@ -615,7 +615,6 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
                 BSL_SecResult_SetFull(result, item_id, self->sec_context_id, target_id, &bstr_buf);
                 BSL_LOG_DEBUG("ASB: Parsed Result (target_block=%" PRIu64 ", len=%zu)", result->target_block_num,
                               bstr_buf.len);
-
             }
             else
             {

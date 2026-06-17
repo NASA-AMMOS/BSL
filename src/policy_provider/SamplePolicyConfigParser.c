@@ -417,7 +417,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             {
                                 uint64_t keywrap = !!strcmp(value_str, "0");
                                 BSL_SecParam_SetUint64(params.param_use_wrapped_key, BSLX_BIB_OPT_USE_KEY_WRAP,
-                                                        keywrap);
+                                                       keywrap);
                                 params_got |= 0x8;
                             }
                             else
@@ -450,7 +450,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             {
                                 uint64_t keywrap = !!strcmp(value_str, "0");
                                 BSL_SecParam_SetUint64(params.param_use_wrapped_key, BSLX_BCB_OPT_USE_KEY_WRAP,
-                                                        keywrap);
+                                                       keywrap);
                                 params_got |= 0x10;
                             }
                             else

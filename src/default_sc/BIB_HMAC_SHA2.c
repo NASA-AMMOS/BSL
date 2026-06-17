@@ -561,7 +561,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
             BSL_LOG_DEBUG("Appending BIB wrapped key param");
             BSL_SecResult_t *bib_result = BSL_SecOutcome_AppendResult(sec_outcome);
             BSL_SecResult_SetFull(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
-                                   BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
+                                  BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
         }
 
         if (bib_context.wrapped_key.len > 0)
