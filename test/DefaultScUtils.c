@@ -66,7 +66,6 @@ void BCBTestContext_Init(BCBTestContext *obj)
     BSL_SecParam_Init(&obj->opt_scope_flags);
     BSL_SecParam_Init(&obj->opt_test_key_id);
     BSL_SecParam_Init(&obj->opt_use_key_wrap);
-    BSL_SecParam_Init(&obj->opt_wrapped_key);
 }
 
 void BCBTestContext_Deinit(BCBTestContext *obj)
@@ -75,7 +74,6 @@ void BCBTestContext_Deinit(BCBTestContext *obj)
     BSL_SecParam_Deinit(&obj->opt_scope_flags);
     BSL_SecParam_Deinit(&obj->opt_test_key_id);
     BSL_SecParam_Deinit(&obj->opt_use_key_wrap);
-    BSL_SecParam_Deinit(&obj->opt_wrapped_key);
 
     BSL_SecOper_Deinit(&obj->sec_oper);
 }
@@ -98,15 +96,10 @@ void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e rol
 
 void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role)
 {
-    quick_data(context->init_vector, ApxA2_InitVec);
-    quick_data(context->wrapped_key, ApxA2_WrappedKey);
-    quick_data(context->key_enc_key, ApxA2_KeyEncKey);
-
     BSL_SecParam_InitUint64(&context->opt_scope_flags, BSLX_BCB_OPT_SCOPE, 0);
     BSL_SecParam_InitTextstr(&context->opt_test_key_id, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
     BSL_SecParam_InitUint64(&context->opt_aes_variant, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
     BSL_SecParam_InitUint64(&context->opt_use_key_wrap, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
-    BSL_SecParam_InitBytestr(&context->opt_wrapped_key, BSLX_BCB_OPT_WRAPPED_KEY, context->wrapped_key);
 
     BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BCB_AES_GCM, 1, 2, BSL_SECBLOCKTYPE_BCB, role,
                          BSL_POLICYACTION_NOTHING);
@@ -115,14 +108,6 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
     BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_use_key_wrap);
     BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_scope_flags);
     BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_test_key_id);
-
-    if (role == BSL_SECROLE_SOURCE)
-    {
-        BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_wrapped_key);
-    }
-    else
-    {
-    }
 }
 
 const struct RFC9173_TestVectors_AppendixA1 RFC9173_TestVectors_AppendixA1 = {

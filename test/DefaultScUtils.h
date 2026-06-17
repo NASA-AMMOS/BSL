@@ -88,11 +88,6 @@ static const uint8_t ApxA2_PayloadData[]   = { 0x52, 0x65, 0x61, 0x64, 0x79, 0x2
 
 typedef struct
 {
-    BSL_Data_t init_vector;
-    BSL_Data_t wrapped_key;
-    BSL_Data_t key_enc_key;
-    BSL_Data_t content_enc_key;
-
     BSL_SecParam_t opt_aes_variant;
     BSL_SecParam_t opt_scope_flags;
     BSL_SecParam_t opt_test_key_id;
