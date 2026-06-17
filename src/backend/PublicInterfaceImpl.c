@@ -142,6 +142,7 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
     CHK_ARG_NONNULL(bundle);
 
     BSL_LOG_INFO("Querying policy provider for security actions...");
+    // FIXME init in caller
     BSL_SecurityActionSet_Init(output_action_set);
     int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
     BSL_LOG_INFO("Completed query: status=%d", query_status);

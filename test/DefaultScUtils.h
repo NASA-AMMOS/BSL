@@ -57,12 +57,12 @@ typedef struct
 {
     BSL_Data_t hmac;
 
-    BSL_SecParam_t param_test_key;
-    BSL_SecParam_t param_sha_variant;
-    BSL_SecParam_t param_wrapped_key;
-    BSL_SecParam_t use_key_wrap;
-    BSL_SecParam_t param_scope_flags;
+    BSL_SecParam_t opt_test_key;
+    BSL_SecParam_t opt_sha_variant;
+    BSL_SecParam_t opt_use_key_wrap;
+    BSL_SecParam_t opt_scope_flags;
 
+    BSL_SecParam_t param_wrapped_key;
     BSL_SecParam_t param_wrapped_key_aes;
 
     BSL_SecOper_t sec_oper;
@@ -97,15 +97,18 @@ typedef struct
     BSL_Data_t key_enc_key;
     BSL_Data_t content_enc_key;
 
-    BSL_SecParam_t param_aes_variant;
-    BSL_SecParam_t param_scope_flags;
-    BSL_SecParam_t param_test_key_id;
+    BSL_SecParam_t opt_aes_variant;
+    BSL_SecParam_t opt_scope_flags;
+    BSL_SecParam_t opt_test_key_id;
+    BSL_SecParam_t opt_use_key_wrap;
+    BSL_SecParam_t opt_wrapped_key;
+
     BSL_SecParam_t param_init_vec;
-    BSL_SecParam_t param_auth_tag;
     BSL_SecParam_t param_wrapped_key;
-    BSL_SecParam_t use_key_wrap;
     BSL_SecParam_t param_key_enc_key;
     BSL_SecParam_t param_content_enc_key;
+
+    BSL_SecParam_t result_auth_tag;
 
     BSL_SecOper_t sec_oper;
 } BCBTestContext;

@@ -44,9 +44,6 @@ struct BSL_SecOutcome_s
     /// @brief Boolean indicating true when successful
     bool is_success;
 
-    /// @brief Pre-allocated memory pool, lifetimes of all results and parameters are tied to this.
-    BSL_Data_t allocation;
-
     /// @brief Non-NULL pointer to Security Operation that provided the input.
     const BSL_SecOper_t *sec_oper;
 

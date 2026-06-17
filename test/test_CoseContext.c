@@ -118,7 +118,7 @@ void test_AppendixA_Example1_BIB_Source(void)
     //    BSL_SecOper_AppendParam(&sec_oper, &context->use_key_wrap);
 
     BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &sec_oper, BSL_SecOutcome_Sizeof());
+    BSL_SecOutcome_Init(outcome, &sec_oper);
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_TRUE(valid_status);

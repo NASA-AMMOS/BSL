@@ -136,6 +136,17 @@ void BSL_SecOper_AppendOption(BSL_SecOper_t *self, const BSL_SecParam_t *param)
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
 
+void BSL_SecOper_AppendParam(BSL_SecOper_t *self, const BSL_SecParam_t *param)
+{
+    ASSERT_ARG_EXPR(BSL_SecParam_IsConsistent(param));
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+
+    BSL_SecParam_t *item = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrDict_safe_get(self->_params_in, param->param_id));
+    BSL_SecParam_Set(item, param);
+
+    ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
+}
+
 uint64_t BSL_SecOper_GetSecurityBlockNum(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));

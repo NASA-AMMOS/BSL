@@ -32,32 +32,6 @@
 
 #include "DefaultScUtils.h"
 
-typedef struct
-{
-    BSL_SecParam_t param_scope_flag;
-    BSL_SecParam_t param_scope_flag_7;
-    BSL_SecParam_t param_sha_variant_512;
-    BSL_SecParam_t param_sha_variant_384;
-    BSL_SecParam_t param_aes_variant_128;
-    BSL_SecParam_t param_aes_variant_256;
-    BSL_SecParam_t param_aad_scope_flag;
-    BSL_SecParam_t param_iv;
-    BSL_SecParam_t param_wrapped_key;
-    BSL_SecParam_t param_test_bib_key_correct;
-    BSL_SecParam_t param_test_bib_key_bad;
-    BSL_SecParam_t opt_bcb_use_wrap_key;
-    BSL_SecParam_t opt_bcb_dont_use_wrap_key;
-    BSL_SecParam_t param_test_bcb_key_correct;
-    BSL_SecParam_t param_test_bcb_key_bad;
-    BSL_SecParam_t param_test_bcb_2_key_correct;
-    BSL_SecParam_t param_test_bcb_2_key_bad;
-} BSL_TestPublInterfaceCtx_t;
-
-static BSL_TestContext_t          LocalTestCtx = { 0 };
-static BSL_SecurityActionSet_t    action_set   = { 0 };
-static BSL_TestPublInterfaceCtx_t ctx          = { 0 };
-static BSLP_PolicyProvider_t     *policy_provider;
-
 void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
@@ -70,6 +44,33 @@ int suiteTearDown(int failures)
     BSL_HostDescriptors_Clear();
     return failures;
 }
+
+typedef struct
+{
+    BSL_SecParam_t param_scope_flag;
+    BSL_SecParam_t param_scope_flag_7;
+    BSL_SecParam_t param_sha_variant_512;
+    BSL_SecParam_t param_sha_variant_384;
+    BSL_SecParam_t param_aes_variant_128;
+    BSL_SecParam_t param_aes_variant_256;
+    BSL_SecParam_t param_aad_scope_flag;
+    BSL_SecParam_t param_iv;
+    BSL_SecParam_t result_auth_tag;
+    BSL_SecParam_t param_wrapped_key;
+    BSL_SecParam_t param_test_bib_key_correct;
+    BSL_SecParam_t param_test_bib_key_bad;
+    BSL_SecParam_t opt_bcb_use_wrap_key;
+    BSL_SecParam_t opt_bcb_dont_use_wrap_key;
+    BSL_SecParam_t param_test_bcb_key_correct;
+    BSL_SecParam_t param_test_bcb_key_bad;
+    BSL_SecParam_t param_test_bcb_2_key_correct;
+    BSL_SecParam_t param_test_bcb_2_key_bad;
+} BSL_TestPublInterfaceCtx_t;
+
+static BSL_TestContext_t          LocalTestCtx;
+static BSL_SecurityActionSet_t    action_set;
+static BSL_TestPublInterfaceCtx_t ctx;
+static BSLP_PolicyProvider_t     *policy_provider;
 
 void PublicInterfaceTestCtx_init(BSL_TestPublInterfaceCtx_t *ctx)
 {
@@ -143,10 +144,8 @@ void setUp(void)
     BSL_SecParam_InitUint64(&ctx.param_aad_scope_flag, BSLX_BCB_OPT_SCOPE, 0);
 
     BSL_Data_t authtag_data;
-    BSL_Data_Init(&authtag_data);
-    authtag_data.ptr = (uint8_t *)ApxA2_AuthTag;
-    authtag_data.len = sizeof(ApxA2_AuthTag);
-    //    BSL_SecParam_InitBytestr(&ctx.param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, authtag_data);
+    BSL_Data_InitView(&authtag_data, sizeof(ApxA2_AuthTag), (BSL_DataPtr_t)ApxA2_AuthTag);
+    BSL_SecParam_InitBytestr(&ctx.result_auth_tag, RFC9173_BCB_RESULTID_AUTHTAG, authtag_data);
 
     BSL_Data_t iv_data;
     BSL_Data_Init(&iv_data);
@@ -257,7 +256,6 @@ void setUp(void)
     BSLP_PolicyRule_CopyParam(&rule_7, &ctx.param_test_bcb_key_bad);
     BSLP_PolicyRule_CopyParam(&rule_7, &ctx.param_iv);
     BSLP_PolicyRule_CopyParam(&rule_7, &ctx.param_wrapped_key);
-    //    BSLP_PolicyRule_CopyParam(&rule_7, &ctx.param_auth_tag);
     BSLP_PolicyRule_CopyParam(&rule_7, &ctx.param_aes_variant_128);
     BSLP_PolicyRule_CopyParam(&rule_7, &ctx.opt_bcb_use_wrap_key);
     BSLP_PolicyProvider_AddRule(policy, &rule_7, &predicate_7);
@@ -271,7 +269,6 @@ void setUp(void)
     BSLP_PolicyRule_CopyParam(&rule_8, &ctx.param_test_bcb_key_bad);
     BSLP_PolicyRule_CopyParam(&rule_8, &ctx.param_iv);
     BSLP_PolicyRule_CopyParam(&rule_8, &ctx.param_wrapped_key);
-    //    BSLP_PolicyRule_CopyParam(&rule_8, &ctx.param_auth_tag);
     BSLP_PolicyRule_CopyParam(&rule_8, &ctx.param_aes_variant_128);
     BSLP_PolicyRule_CopyParam(&rule_8, &ctx.opt_bcb_use_wrap_key);
     BSLP_PolicyProvider_AddRule(policy, &rule_8, &predicate_8);
@@ -300,7 +297,6 @@ void setUp(void)
     BSLP_PolicyRule_CopyParam(&rule_9b, &ctx.param_test_bcb_key_correct);
     BSLP_PolicyRule_CopyParam(&rule_9b, &ctx.param_iv);
     BSLP_PolicyRule_CopyParam(&rule_9b, &ctx.param_wrapped_key);
-    //    BSLP_PolicyRule_CopyParam(&rule_9b, &ctx.param_auth_tag);
     BSLP_PolicyRule_CopyParam(&rule_9b, &ctx.param_aes_variant_128);
     BSLP_PolicyRule_CopyParam(&rule_9b, &ctx.opt_bcb_use_wrap_key);
     BSLP_PolicyProvider_AddRule(policy, &rule_9b, &predicate_9b);
@@ -415,7 +411,6 @@ void setUp(void)
     BSLP_PolicyRule_CopyParam(&rule_21, &ctx.param_test_bcb_key_correct);
     BSLP_PolicyRule_CopyParam(&rule_21, &ctx.param_iv);
     BSLP_PolicyRule_CopyParam(&rule_21, &ctx.param_wrapped_key);
-    //    BSLP_PolicyRule_CopyParam(&rule_21, &ctx.param_auth_tag);
     BSLP_PolicyRule_CopyParam(&rule_21, &ctx.param_aes_variant_128);
     BSLP_PolicyRule_CopyParam(&rule_21, &ctx.opt_bcb_use_wrap_key);
     BSLP_PolicyProvider_AddRule(policy, &rule_21, &predicate_21);
@@ -429,7 +424,6 @@ void setUp(void)
     BSLP_PolicyRule_CopyParam(&rule_22, &ctx.param_test_bcb_key_bad);
     BSLP_PolicyRule_CopyParam(&rule_22, &ctx.param_iv);
     BSLP_PolicyRule_CopyParam(&rule_22, &ctx.param_wrapped_key);
-    //    BSLP_PolicyRule_CopyParam(&rule_22, &ctx.param_auth_tag);
     BSLP_PolicyRule_CopyParam(&rule_22, &ctx.param_aes_variant_128);
     BSLP_PolicyRule_CopyParam(&rule_22, &ctx.opt_bcb_use_wrap_key);
     BSLP_PolicyProvider_AddRule(policy, &rule_22, &predicate_22);
@@ -443,7 +437,6 @@ void setUp(void)
     BSLP_PolicyRule_CopyParam(&rule_23, &ctx.param_test_bcb_key_bad);
     BSLP_PolicyRule_CopyParam(&rule_23, &ctx.param_iv);
     BSLP_PolicyRule_CopyParam(&rule_23, &ctx.param_wrapped_key);
-    //    BSLP_PolicyRule_CopyParam(&rule_23, &ctx.param_auth_tag);
     BSLP_PolicyRule_CopyParam(&rule_23, &ctx.param_aes_variant_128);
     BSLP_PolicyRule_CopyParam(&rule_23, &ctx.opt_bcb_use_wrap_key);
     BSLP_PolicyProvider_AddRule(policy, &rule_23, &predicate_23);
@@ -457,7 +450,6 @@ void setUp(void)
     BSLP_PolicyRule_CopyParam(&rule_24, &ctx.param_test_bcb_key_bad);
     BSLP_PolicyRule_CopyParam(&rule_24, &ctx.param_iv);
     BSLP_PolicyRule_CopyParam(&rule_24, &ctx.param_wrapped_key);
-    //    BSLP_PolicyRule_CopyParam(&rule_24, &ctx.param_auth_tag);
     BSLP_PolicyRule_CopyParam(&rule_24, &ctx.param_aes_variant_128);
     BSLP_PolicyRule_CopyParam(&rule_24, &ctx.opt_bcb_use_wrap_key);
     BSLP_PolicyProvider_AddRule(policy, &rule_24, &predicate_24);
@@ -486,7 +478,6 @@ void setUp(void)
     BSLP_PolicyRule_CopyParam(&rule_25b, &ctx.param_test_bcb_key_correct);
     BSLP_PolicyRule_CopyParam(&rule_25b, &ctx.param_iv);
     BSLP_PolicyRule_CopyParam(&rule_25b, &ctx.param_wrapped_key);
-    //    BSLP_PolicyRule_CopyParam(&rule_25b, &ctx.param_auth_tag);
     BSLP_PolicyRule_CopyParam(&rule_25b, &ctx.param_aes_variant_128);
     BSLP_PolicyProvider_AddRule(policy, &rule_25b, &predicate_25b);
 

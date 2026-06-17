@@ -34,11 +34,10 @@ size_t BSL_SecOutcome_Sizeof(void)
     return sizeof(BSL_SecOutcome_t);
 }
 
-void BSL_SecOutcome_Init(BSL_SecOutcome_t *self, const BSL_SecOper_t *sec_oper, size_t allocation_size)
+void BSL_SecOutcome_Init(BSL_SecOutcome_t *self, const BSL_SecOper_t *sec_oper)
 {
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(sec_oper);
-    ASSERT_ARG_EXPR(allocation_size > 0);
 
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(sec_oper));
 
@@ -47,7 +46,6 @@ void BSL_SecOutcome_Init(BSL_SecOutcome_t *self, const BSL_SecOper_t *sec_oper, 
     BSLB_SecParamPtrList_init(self->param_list);
     BSLB_SecResultList_init(self->result_list);
     self->sec_oper = sec_oper;
-    BSL_Data_InitBuffer(&self->allocation, allocation_size);
 
     ASSERT_POSTCONDITION(BSL_SecOutcome_IsConsistent(self));
 }
@@ -58,7 +56,6 @@ void BSL_SecOutcome_Deinit(BSL_SecOutcome_t *self)
 
     BSLB_SecParamPtrList_clear(self->param_list);
     BSLB_SecResultList_clear(self->result_list);
-    BSL_Data_Deinit(&self->allocation);
     memset(self, 0, sizeof(*self));
 }
 
@@ -66,8 +63,6 @@ bool BSL_SecOutcome_IsConsistent(const BSL_SecOutcome_t *self)
 {
     CHK_AS_BOOL(self != NULL);
     CHK_AS_BOOL(self->sec_oper != NULL);
-    CHK_AS_BOOL(self->allocation.len > 0);
-    CHK_AS_BOOL(self->allocation.ptr != NULL);
 
     // Invariant: If it is not successful, it should not return any results
     const size_t result_len = BSLB_SecResultList_size(self->result_list);

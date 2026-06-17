@@ -76,8 +76,8 @@ static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_n
     return BSL_SUCCESS;
 }
 
-static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                             BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
+int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                      BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
 {
     CHK_ARG_NONNULL(sec_context_fn);
     CHK_ARG_NONNULL(bundle);
@@ -148,8 +148,8 @@ static int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *
     return res;
 }
 
-static int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                                       BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
+int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                                BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
 {
     CHK_ARG_NONNULL(lib);
     CHK_ARG_NONNULL(bundle);
@@ -269,8 +269,8 @@ static int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_
     return BSL_SUCCESS;
 }
 
-static int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                                       BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
+int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                                BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
 {
     CHK_ARG_NONNULL(sec_context_fn);
     CHK_ARG_NONNULL(bundle);
@@ -387,8 +387,8 @@ static int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_
     return BSL_SUCCESS;
 }
 
-static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                             BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
+int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                      BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
 {
     CHK_ARG_NONNULL(sec_context_fn);
     CHK_ARG_NONNULL(bundle);
@@ -492,14 +492,19 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             const BSL_SecCtxDesc_t *sec_ctx  = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
             ASSERT_PROPERTY(sec_ctx != NULL);
 
-            BSL_SecOutcome_Init(outcome, sec_oper, 100000);
+            BSL_SecOutcome_Init(outcome, sec_oper);
 
             int errcode = -1;
             if (BSL_SecOper_IsBIB(sec_oper))
             {
-                errcode = BSL_SecOper_IsRoleSource(sec_oper) == true
-                              ? BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome)
-                              : BSL_ExecBIBVerifierAcceptor(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                if (BSL_SecOper_IsRoleSource(sec_oper))
+                {
+                    errcode = BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                }
+                else
+                {
+                    errcode = BSL_ExecBIBVerifierAcceptor(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                }
             }
             else
             {

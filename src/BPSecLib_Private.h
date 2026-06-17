@@ -836,12 +836,20 @@ uint64_t BSL_SecOper_GetTargetBlockNum(const BSL_SecOper_t *self);
  */
 size_t BSL_SecOper_CountOptions(const BSL_SecOper_t *self);
 
-/** Add the given security parameter to this list of parameters.
- * @todo Clarify pointer/copy semantics.
+/** Add the given option to this operation.
+ *
  * @param[in,out] self This security operation
  * @param[in] param Security parameter to include.
  */
 void BSL_SecOper_AppendOption(BSL_SecOper_t *self, const BSL_SecParam_t *param);
+
+/** Add the given security parameter to this operation manually.
+ * @warning This is for internal testing only, parameters normally come from
+ * the input ASB.
+ * @param[in,out] self This security operation
+ * @param[in] param Security parameter to include.
+ */
+void BSL_SecOper_AppendParam(BSL_SecOper_t *self, const BSL_SecParam_t *param);
 
 /** Return true if this security operation's role is SOURCE
  * @param[in] self This Security Operation
@@ -1036,9 +1044,8 @@ size_t BSL_SecOutcome_Sizeof(void);
  *
  * @param[in,out] self Non-Null pointer to this security outcome.
  * @param[in] sec_oper Security operation containing the necessary info.
- * @param[in] allocation_size Size of working space to allocate.
  */
-void BSL_SecOutcome_Init(BSL_SecOutcome_t *self, const BSL_SecOper_t *sec_oper, size_t allocation_size);
+void BSL_SecOutcome_Init(BSL_SecOutcome_t *self, const BSL_SecOper_t *sec_oper);
 
 /** Release any resources owned by this security outcome.
  *
@@ -1380,6 +1387,21 @@ struct BSL_SecCtxDesc_s
     /// @brief Callback to execute a sec op within a given bundle
     BSL_SecCtx_Execute_f execute;
 };
+
+/** Internal function to execute an operation as source.
+ * @warning This is exposed for testing only.
+ */
+int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                      BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
+/// @overload execute as verifier
+int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                                BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
+/// @overload execute as source
+int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                      BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
+/// @overload execute as verifier
+int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                                BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
 
 #ifdef __cplusplus
 } // extern C

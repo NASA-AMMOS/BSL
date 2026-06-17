@@ -37,6 +37,14 @@
 #include "DefaultSecContext_Private.h"
 #include "rfc9173.h"
 
+bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+{
+    (void)lib;
+    (void)bundle;
+    (void)sec_oper;
+    return false;
+}
+
 int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
 {
     CHK_ARG_NONNULL(bcb_context);
@@ -152,7 +160,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     int retval = BSL_SUCCESS;
 
-    BSL_Cipher_t cipher      ;
+    BSL_Cipher_t cipher;
     int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, aes_mode, bcb_context->iv.ptr,
                                                (int)bcb_context->iv.len, cipher_key);
     if (BSL_SUCCESS != cipher_init)
@@ -594,15 +602,14 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
 
     if (!bcb_context.is_source)
     {
-        // find the existing IV and auth tag result
-        const BSL_SecParam_t *result;
+        // find the existing parameters and results
+        const BSL_SecParam_t *param;
 
-        result = BSL_SecOper_FindParam(sec_oper, RFC9173_BCB_SECPARAM_IV);
-        if (result)
+        param = BSL_SecOper_FindParam(sec_oper, RFC9173_BCB_SECPARAM_IV);
+        if (param)
         {
-            ASSERT_PRECONDITION(!BSL_SecParam_IsUint64(result));
             BSL_Data_t as_data;
-            if (BSL_SecParam_GetAsBytestr(result, &as_data) < 0)
+            if (BSL_SecParam_GetAsBytestr(param, &as_data) < 0)
             {
                 BSL_LOG_ERR("IV parameter is not valid");
                 bcb_context.err_count++;
@@ -613,14 +620,63 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
             }
         }
 
-        result = BSL_SecOper_FindResult(sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
-        if (result)
+        param = BSL_SecOper_FindParam(sec_oper, RFC9173_BCB_SECPARAM_AESVARIANT);
+        if (param)
         {
-            if (BSL_SecParam_IsBytestr(result))
+            if (BSL_SecParam_IsUint64(param))
             {
-                BSL_SecParam_GetAsBytestr(result, &bcb_context.authtag);
+                uint64_t got = BSL_SecParam_GetAsUint64(param);
+                if (got != bcb_context.aes_variant)
+                {
+                    BSL_LOG_ERR("AES variant mismatch, needed %d got %d", bcb_context.aes_variant, got);
+                    bcb_context.err_count++;
+                }
             }
             else
+            {
+                BSL_LOG_ERR("AES variant parameter is not valid");
+                bcb_context.err_count++;
+            }
+        }
+
+        param = BSL_SecOper_FindParam(sec_oper, RFC9173_BCB_SECPARAM_AADSCOPE);
+        if (param)
+        {
+            if (BSL_SecParam_IsUint64(param))
+            {
+                uint64_t got = BSL_SecParam_GetAsUint64(param);
+                if (got != bcb_context.aad_scope)
+                {
+                    BSL_LOG_WARNING("AAD Scope mismatch, needed %d got %d", bcb_context.aad_scope, got);
+                }
+                bcb_context.aad_scope = got;
+            }
+            else
+            {
+                BSL_LOG_ERR("AES variant parameter is not valid");
+                bcb_context.err_count++;
+            }
+        }
+
+        param = BSL_SecOper_FindParam(sec_oper, RFC9173_BCB_SECPARAM_WRAPPEDKEY);
+        if (param)
+        {
+            BSL_Data_t as_data;
+            if (BSL_SecParam_GetAsBytestr(param, &as_data) < 0)
+            {
+                BSL_LOG_ERR("Wrapped key parameter is not valid");
+                bcb_context.err_count++;
+            }
+            if (BSL_Data_InitView(&bcb_context.wrapped_key, as_data.len, as_data.ptr) < 0)
+            {
+                bcb_context.err_count++;
+            }
+        }
+
+        param = BSL_SecOper_FindResult(sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
+        if (param)
+        {
+            if (BSL_SecParam_GetAsBytestr(param, &bcb_context.authtag))
             {
                 BSL_LOG_ERR("Auth tag result is not valid");
                 bcb_context.err_count++;

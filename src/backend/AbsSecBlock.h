@@ -70,7 +70,7 @@ struct BSL_AbsSecBlock_s
     /// @brief List of pointers to security parameters
     BSLB_SecParamPtrList_t params;
 
-    //FIXME these results need stronger correlation to individual target order
+    // FIXME these results need stronger correlation to individual target order
     /// @brief List of pointers to security results.
     BSLB_SecResultList_t results;
 };

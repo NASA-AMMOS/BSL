@@ -538,9 +538,9 @@ void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param)
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
 
     BSL_SecParam_t *item = BSLB_SecParamPtr_ref(*BSLB_SecParamPtrList_push_new(self->params));
-    //FIXME not really...
-    *item = *param;
-    *param = (BSL_SecParam_t){0};
+    // FIXME not really...
+    *item  = *param;
+    *param = (BSL_SecParam_t) { 0 };
 
     ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
 }
