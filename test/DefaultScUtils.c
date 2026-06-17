@@ -40,28 +40,22 @@
 
 void BIBTestContext_Init(BIBTestContext *obj)
 {
-    BSL_Data_Init(&obj->hmac);
     BSL_SecOper_Init(&obj->sec_oper);
 
     BSL_SecParam_Init(&obj->opt_test_key);
     BSL_SecParam_Init(&obj->opt_sha_variant);
-    BSL_SecParam_Init(&obj->param_wrapped_key);
     BSL_SecParam_Init(&obj->opt_use_key_wrap);
     BSL_SecParam_Init(&obj->opt_scope_flags);
-    BSL_SecParam_Init(&obj->param_wrapped_key_aes);
 }
 
 void BIBTestContext_Deinit(BIBTestContext *obj)
 {
     BSL_SecParam_Deinit(&obj->opt_test_key);
     BSL_SecParam_Deinit(&obj->opt_sha_variant);
-    BSL_SecParam_Deinit(&obj->param_wrapped_key);
     BSL_SecParam_Deinit(&obj->opt_use_key_wrap);
     BSL_SecParam_Deinit(&obj->opt_scope_flags);
-    BSL_SecParam_Deinit(&obj->param_wrapped_key_aes);
 
     BSL_SecOper_Deinit(&obj->sec_oper);
-    BSL_Data_Deinit(&obj->hmac);
 }
 
 void BCBTestContext_Init(BCBTestContext *obj)
@@ -96,8 +90,6 @@ void BCBTestContext_Deinit(BCBTestContext *obj)
 
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id)
 {
-    BSL_TestUtils_DecodeBase16_cstr(&context->hmac, RFC9173_TestVectors_AppendixA1.hex_hmac);
-
     BSL_SecParam_InitTextstr(&context->opt_test_key, BSLX_BIB_OPT_KEY_ID, key_id);
     BSL_SecParam_InitUint64(&context->opt_scope_flags, BSLX_BIB_OPT_SCOPE, 0);
     BSL_SecParam_InitUint64(&context->opt_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);

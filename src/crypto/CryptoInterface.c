@@ -183,13 +183,13 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     BSL_CryptoKey_Init(cek);
-    BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
 
     /**
      * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
      */
     BSL_Data_Resize(&cek->raw, wrapped_key->len - 8);
 
+    BSL_LOG_PLAINTEXT_PTR("using KEK", cek_handle, kek->raw.ptr, kek->raw.len);
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     if (dec_result != 1)
     {
@@ -201,6 +201,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
 
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
 
+    BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
     int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, (int *)&cek->raw.len, wrapped_key->ptr, wrapped_key->len);
     if (decrypt_res != 1)
     {
@@ -229,9 +230,9 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     {
         BSL_Data_AppendFrom(&cek->raw, final_len, buf);
     }
-    BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek->raw.ptr, cek->raw.len);
 
     EVP_CIPHER_CTX_free(ctx);
+    BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek->raw.ptr, cek->raw.len);
 
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
     res                = EVP_PKEY_keygen_init(pctx);
@@ -296,6 +297,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
         return -1;
     }
 
+    BSL_LOG_PLAINTEXT_PTR("using KEK", cek_handle, kek->raw.ptr, kek->raw.len);
     int enc_result = EVP_EncryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     if (!enc_result)
     {
@@ -306,6 +308,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
 
     int len = (int)wrapped_key->len;
+    BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek->raw.ptr, cek->raw.len);
     if (!EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek->raw.ptr, cek->raw.len))
     {
         EVP_CIPHER_CTX_free(ctx);
@@ -329,6 +332,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
     }
 
     EVP_CIPHER_CTX_free(ctx);
+    BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
 
     if (wrapped_key_handle != NULL)
     {

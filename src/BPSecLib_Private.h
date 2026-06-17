@@ -229,7 +229,7 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
     }                                                                                 \
     while (false)
 #else
-#define BSL_LOG_PLAINTEXT_PTR(title, ptr, len)
+#define BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)
 #endif // BSL_LOG_PLAINTEXT_ENABLE
 
 /** @brief Helpful macros for expressing invariants, pre/post conditions, and arg validation.

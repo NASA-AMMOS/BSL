@@ -32,6 +32,9 @@ option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
 option(BUILD_COVERAGE "Enable runtime coverage logging and reporting" OFF)
 option(BUILD_FUZZING "Enable building fuzzing executables" OFF)
 option(BSL_LOG_PLAINTEXT_ENABLE "Enable debug logging of internal state" OFF)
+if(BSL_LOG_PLAINTEXT_ENABLE)
+    message(WARNING "Plaintext logging is enabled, be aware that this may leak secrets at the DEBUG log level!")
+endif(BSL_LOG_PLAINTEXT_ENABLE)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
