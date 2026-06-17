@@ -139,7 +139,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
 
     if (self->keywrap < 0)
     {
-        BSL_LOG_WARNING("BIB USE KEYWRAP param required.");
+        BSL_LOG_WARNING("BIB USE KEYWRAP option is required.");
         return BSL_ERR_PROPERTY_CHECK_FAILED;
     }
 
