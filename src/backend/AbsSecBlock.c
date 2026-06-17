@@ -48,10 +48,10 @@ bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self)
 
 void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
 {
-    BSL_LOG_INFO("ASB  context id: %" PRId64, self->sec_context_id);
+    BSL_LOG_DEBUG("ASB  context id: %" PRId64, self->sec_context_id);
     for (size_t index = 0; index < uint64_list_size(self->targets); index++)
     {
-        BSL_LOG_INFO("ASB  target[%zu]: %" PRIu64, index, *uint64_list_cget(self->targets, index));
+        BSL_LOG_DEBUG("ASB  target[%zu]: %" PRIu64, index, *uint64_list_cget(self->targets, index));
     }
 
     for (size_t index = 0; index < BSLB_SecParamPtrList_size(self->params); index++)
@@ -60,11 +60,11 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
 
         if (BSL_SecParam_IsUint64(param))
         {
-            BSL_LOG_INFO("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRIu64, index, param->param_id, param->_val.as_uint);
+            BSL_LOG_DEBUG("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRIu64, index, param->param_id, param->_val.as_uint);
         }
         if (BSL_SecParam_IsInt64(param))
         {
-            BSL_LOG_INFO("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRIu64, index, param->param_id, param->_val.as_int);
+            BSL_LOG_DEBUG("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRIu64, index, param->param_id, param->_val.as_int);
         }
         else if (BSL_SecParam_IsBytestr(param))
         {
@@ -72,7 +72,7 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
             const uint8_t *bptr = m_bstring_view(param->_val.as_bytes, 0, blen);
             char           hex_str[2 * blen + 1];
             BSL_Log_DumpAsHexString(hex_str, sizeof(hex_str), bptr, blen);
-            BSL_LOG_INFO("ASB  Param[%zu]: id=%" PRIu64 " val=%s", index, param->param_id, hex_str);
+            BSL_LOG_DEBUG("ASB  Param[%zu]: id=%" PRIu64 " val=%s", index, param->param_id, hex_str);
         }
     }
 
@@ -84,8 +84,8 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
         const uint8_t *bptr = m_bstring_view(sec_result->_bytes, 0, blen);
         char           hex_str[2 * blen + 1];
         BSL_Log_DumpAsHexString(hex_str, sizeof(hex_str), bptr, blen);
-        BSL_LOG_INFO("ASB  Result[%zu]: tgt=%" PRIu64 ", id=%" PRIu64 " %s", index, sec_result->target_block_num,
-                     sec_result->result_id, hex_str);
+        BSL_LOG_DEBUG("ASB  Result[%zu]: tgt=%" PRIu64 ", id=%" PRIu64 " %s", index, sec_result->target_block_num,
+                      sec_result->result_id, hex_str);
     }
 }
 

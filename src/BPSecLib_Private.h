@@ -210,6 +210,28 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 #define BSL_LOG_DEBUG(...) BSL_LogEvent(LOG_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__)
 // NOLINTEND(misc-include-cleaner)
 
+/** @def BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)
+ * Log plaintext as hex for debugging only when enabled by compile option
+ * ::BSL_LOG_PLAINTEXT_ENABLE is non-zero.
+ *
+ * @param title The static C string title.
+ * @param ctc A correlating context pointer to log.
+ * @param ptr The data start pointer.
+ * @param len The data length.
+ */
+#if BSL_LOG_PLAINTEXT_ENABLE
+#define BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)                                   \
+    do                                                                                \
+    {                                                                                 \
+        char logstr[2 * (len) + 1];                                                   \
+        BSL_LOG_DEBUG("PLAINTEXT STATE (ctx %p) " title ": %s", (void *)ctx,         \
+                      BSL_Log_DumpAsHexString(logstr, sizeof(logstr), (ptr), (len))); \
+    }                                                                                 \
+    while (false)
+#else
+#define BSL_LOG_PLAINTEXT_PTR(title, ptr, len)
+#endif // BSL_LOG_PLAINTEXT_ENABLE
+
 /** @brief Helpful macros for expressing invariants, pre/post conditions, and arg validation.
  * The expression is nominally true and only false during exceptional cases.
  */

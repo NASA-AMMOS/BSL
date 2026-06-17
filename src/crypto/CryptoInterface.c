@@ -140,6 +140,10 @@ int BSL_Crypto_ClearGeneratedKeyHandle(void *keyhandle)
 
 int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_handle)
 {
+    ASSERT_ARG_NONNULL(kek_handle);
+    ASSERT_ARG_NONNULL(wrapped_key);
+    ASSERT_ARG_NONNULL(cek_handle);
+
     BSL_CryptoKey_t *kek = (BSL_CryptoKey_t *)kek_handle;
 
     const EVP_CIPHER *cipher;
@@ -179,6 +183,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     BSL_CryptoKey_Init(cek);
+    BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
 
     /**
      * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
@@ -224,6 +229,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     {
         BSL_Data_AppendFrom(&cek->raw, final_len, buf);
     }
+    BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek->raw.ptr, cek->raw.len);
 
     EVP_CIPHER_CTX_free(ctx);
 
@@ -245,10 +251,10 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
 
 int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_key, void **wrapped_key_handle)
 {
-
     CHK_ARG_NONNULL(kek_handle);
     CHK_ARG_NONNULL(cek_handle);
     CHK_ARG_NONNULL(wrapped_key);
+    CHK_ARG_NONNULL(wrapped_key_handle);
 
     BSL_CryptoKey_t *cek = (BSL_CryptoKey_t *)cek_handle;
     BSL_CryptoKey_t *kek = (BSL_CryptoKey_t *)kek_handle;
@@ -400,7 +406,9 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, void *keyhandle, BSL_CryptoCipherS
 
 int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t data_len)
 {
+    ASSERT_ARG_NONNULL(hmac_ctx);
     ASSERT_ARG_NONNULL(data);
+
     int res = EVP_DigestSignUpdate(hmac_ctx->libhandle, data, data_len);
     CHK_PROPERTY(res == 1);
 
@@ -412,6 +420,9 @@ int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t d
 
 int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
 {
+    ASSERT_ARG_NONNULL(hmac_ctx);
+    ASSERT_ARG_NONNULL(reader);
+
     BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
 
     uint8_t buf[hmac_ctx->block_size];
@@ -429,6 +440,10 @@ int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
 
 int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
 {
+    ASSERT_ARG_NONNULL(hmac_ctx);
+    ASSERT_ARG_NONNULL(hmac);
+    ASSERT_ARG_NONNULL(hmac_len);
+
     size_t req = 0;
     int    res = EVP_DigestSignFinal(hmac_ctx->libhandle, NULL, &req);
     CHK_PROPERTY(res == 1);
@@ -442,6 +457,8 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
 
 void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
 {
+    ASSERT_ARG_NONNULL(hmac_ctx);
+
     BSL_Data_Deinit(&hmac_ctx->in_buf);
     EVP_MD_CTX_free(hmac_ctx->libhandle);
     memset(hmac_ctx, 0, sizeof(BSL_AuthCtx_t));
@@ -501,6 +518,8 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_IVLEN, iv_len, NULL);
     CHK_PROPERTY(res == 1);
 
+    BSL_LOG_PLAINTEXT_PTR("using key", cipher_ctx, key->raw.ptr, key->raw.len);
+    BSL_LOG_PLAINTEXT_PTR("using IV", cipher_ctx, init_vec, iv_len);
     res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, key->raw.ptr, init_vec, -1);
     CHK_PROPERTY(res == 1);
 
@@ -517,8 +536,11 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
 
 int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len)
 {
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(aad);
     // len needs to be passed or function call will crash program, no NULL checking on that param it seems
     int len = 0;
+    BSL_LOG_PLAINTEXT_PTR("adding AAD", cipher_ctx, aad, aad_len);
     int res = EVP_CipherUpdate(cipher_ctx->libhandle, NULL, &len, aad, aad_len);
     BSL_LOG_DEBUG("EVP_CipherUpdate took %zu bytes, return %d", aad_len, res);
     CHK_PROPERTY(res == 1);
@@ -531,7 +553,9 @@ int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len)
 
 int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer)
 {
-    BSL_LOG_DEBUG("sequential %zu bytes", cipher_ctx->block_size);
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(reader);
+    BSL_LOG_DEBUG("block size %zu bytes", cipher_ctx->block_size);
 
     BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
 
@@ -547,9 +571,11 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
 
         int block_size_int = (int)block_size;
 
+        BSL_LOG_PLAINTEXT_PTR("cipher in", cipher_ctx, cipher_ctx->in_buf.ptr, block_size_int);
         int res = EVP_CipherUpdate(cipher_ctx->libhandle, cipher_ctx->out_buf.ptr, &block_size_int,
                                    cipher_ctx->in_buf.ptr, block_size_int);
         BSL_LOG_DEBUG("EVP_CipherUpdate took %zu bytes, gave %d bytes, return %d", block_size, block_size_int, res);
+        BSL_LOG_PLAINTEXT_PTR("cipher out", cipher_ctx, cipher_ctx->out_buf.ptr, block_size_int);
         CHK_PROPERTY(res == 1);
 
         key->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += block_size_int;
@@ -566,7 +592,11 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
 
 int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, void **tag)
 {
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(tag);
+
     int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN, *tag);
+    BSL_LOG_PLAINTEXT_PTR("tag out", cipher_ctx, *tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
     CHK_PROPERTY(res == 1);
 #if defined(HAVE_VALGRIND)
     VALGRIND_MAKE_MEM_DEFINED(*tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
@@ -576,9 +606,13 @@ int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, void **tag)
 
 int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const void *tag)
 {
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(tag);
+
+    BSL_LOG_PLAINTEXT_PTR("tag in", cipher_ctx, tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
     int res =
         EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_TAG, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN, (void *)tag);
-    BSL_LOG_INFO("Completed EVP_CIPHER_CTX_ctrl return %d", res);
+    BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl return %d", res);
     CHK_PROPERTY(res == 1);
 
     return 0;
