@@ -143,6 +143,7 @@ void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role
         // FIXME better injection
         BSLB_SecParamPtr_t **item =
             BSLB_SecParamPtrDict_safe_get(context->sec_oper._results_in, context->result_auth_tag.param_id);
+        assert(item);
         BSL_SecParam_t *param = BSLB_SecParamPtr_ref(*item);
 
         BSL_SecParam_Set(param, &context->result_auth_tag);

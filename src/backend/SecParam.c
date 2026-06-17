@@ -40,6 +40,10 @@ void BSL_SecParam_Init(BSL_SecParam_t *self)
 
 void BSL_SecParam_InitSet(BSL_SecParam_t *self, const BSL_SecParam_t *src)
 {
+    if (self == src)
+    {
+        return;
+    }
     BSL_SecParam_Init(self);
     BSL_SecParam_Set(self, src);
 }
@@ -67,6 +71,11 @@ void BSL_SecParam_Set(BSL_SecParam_t *self, const BSL_SecParam_t *src)
 {
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(src);
+
+    if (self == src)
+    {
+        return;
+    }
     BSL_SecParam_Deinit(self);
 
     self->param_id = src->param_id;
