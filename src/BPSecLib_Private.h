@@ -659,27 +659,24 @@ size_t BSL_SecParam_Sizeof(void);
  * @param[in,out] self This Security Parameter
  * @param[in] param_id ID of the parameter
  * @param[in] value View of bytes, which get copied into this Security Parameter.
- * @return Negative on an error.
  */
-int BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t value);
+void BSL_SecParam_InitBytestr(BSL_SecParam_t *self, uint64_t param_id, BSL_Data_t value);
 
 /** Initialize as a parameter containing an integer as a value.
  *
  * @param[in,out] self This Security Parameter
  * @param[in] param_id ID of the parameter
  * @param[in] value The value to use.
- * @return Negative on an error.
  */
-int BSL_SecParam_InitUint64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value);
+void BSL_SecParam_InitUint64(BSL_SecParam_t *self, uint64_t param_id, uint64_t value);
 
 /** Initialize as a parameter containing an integer as a value.
  *
  * @param[in,out] self This Security Parameter
  * @param[in] param_id ID of the parameter
  * @param[in] value The value to use.
- * @return Negative on an error.
  */
-int BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, int64_t value);
+void BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, int64_t value);
 
 /** Initialize as a parameter containing a byte string with a null-terminated
  * text value.
@@ -687,9 +684,8 @@ int BSL_SecParam_InitInt64(BSL_SecParam_t *self, uint64_t param_id, int64_t valu
  * @param[in,out] self This Security Parameter
  * @param[in] param_id ID of the parameter
  * @param[in] value text string of the parameter, copied into self
- * @return Negative on an error.
  */
-int BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char *value);
+void BSL_SecParam_InitTextstr(BSL_SecParam_t *self, uint64_t param_id, const char *value);
 
 /** Returns true when the value type is an unsigned integer.
  *

@@ -50,7 +50,7 @@ void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
     mock_bpa_LogOpen();
-    mock_bpa_LogSetLeastSeverity(LOG_ERR);
+    mock_bpa_LogSetLeastSeverity(LOG_DEBUG);
 }
 
 int suiteTearDown(int failures)
@@ -465,6 +465,7 @@ void test_sec_accept_keyunwrap(bool bib)
                              "D7A6B021E0CEC4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B85010100005823526561"
                              "647920746F2067656E657261746520612033322D62797465207061796C6F6164FF";
 
+    // FIXME something is wrong with this; it contains invalid structure
     const char *bundle_bcb =
         "9F88070000820282010282028202018202820201820018281A000F4240850C02010058508101020182028202018482014C5477656C766"
         "53132313231328202018203581869C411276FECDDC4780DF42C8A2AF89296FABF34D7FAE7008204008181820150F6DC43C2EE046C7AE7"

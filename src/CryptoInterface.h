@@ -306,9 +306,6 @@ int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len);
  */
 int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer);
 
-/// @overload
-int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, const BSL_Data_t *input, BSL_Data_t *output);
-
 /**
  * Get the tag of the crypto operation
  * @param cipher_ctx pointer to context to get tag from
@@ -334,8 +331,6 @@ int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const void *tag);
  * @return 0 if successful
  */
 int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer);
-/// @overload
-int BSL_Cipher_FinalizeData(BSL_Cipher_t *cipher_ctx, BSL_Data_t *extra);
 
 /**
  * De-initialize crypto context resources

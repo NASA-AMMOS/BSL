@@ -87,13 +87,13 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
     ASSERT_ARG_NONNULL(sec_oper);
     memset(self, 0, sizeof(*self));
 
-    self->bundle                = bundle;
-    self->is_source             = BSL_SecOper_IsRoleSource(sec_oper);
-    self->err_count = 0;
-    self->opt_sha_variant           = false;
-    self->opt_ippt_scope = false;
-    self->hash_size             = 0;
-    self->keywrap               = -1;
+    self->bundle          = bundle;
+    self->is_source       = BSL_SecOper_IsRoleSource(sec_oper);
+    self->err_count       = 0;
+    self->opt_sha_variant = false;
+    self->opt_ippt_scope  = false;
+    self->hash_size       = 0;
+    self->keywrap         = -1;
 
     const BSL_SecParam_t *param;
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_KEY_ID);
@@ -108,14 +108,14 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
     if (param)
     {
         ASSERT_PRECONDITION(BSL_SecParam_IsUint64(param));
-        self->sha_variant = BSL_SecParam_GetAsUint64(param);
+        self->sha_variant     = BSL_SecParam_GetAsUint64(param);
         self->opt_sha_variant = true;
     }
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_SCOPE);
     if (param)
     {
         ASSERT_PRECONDITION(BSL_SecParam_IsUint64(param));
-        self->ippt_scope = BSL_SecParam_GetAsUint64(param);
+        self->ippt_scope     = BSL_SecParam_GetAsUint64(param);
         self->opt_ippt_scope = true;
     }
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_WRAPPED_KEY);
@@ -293,6 +293,10 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
     {
         BSL_LOG_ERR("Cannot get registry key");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
+    }
+    else
+    {
+        BSL_LOG_DEBUG("Using key ID %s", self->key_id);
     }
 
     if (!self->keywrap)
@@ -549,37 +553,31 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
         {
             BSL_SecOutcome_AppendOptionAsParam(sec_outcome, RFC9173_BIB_PARAMID_SHA_VARIANT, sec_param);
         }
-        sec_param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_SCOPE);
-        if (sec_param)
+
         {
-            BSL_SecOutcome_AppendOptionAsParam(sec_outcome, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, sec_param);
+            BSL_SecParam_t *scope_flag_param = BSL_calloc(1, BSL_SecParam_Sizeof());
+            BSL_SecParam_InitUint64(scope_flag_param, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, bib_context.ippt_scope);
+            BSL_LOG_INFO("Appending IPPT scope flag param");
+            BSL_SecOutcome_AppendParam(sec_outcome, scope_flag_param);
+            BSL_SecParam_Deinit(scope_flag_param);
+            BSL_free(scope_flag_param);
         }
 
-        BSL_SecResult_t *bib_result = BSL_calloc(1, BSL_SecResult_Sizeof());
-        BSL_SecResult_InitFull(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
-                               BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
-        BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
-        BSL_SecResult_Deinit(bib_result);
-        BSL_free(bib_result);
+        {
+            BSL_SecResult_t *bib_result = BSL_calloc(1, BSL_SecResult_Sizeof());
+            BSL_SecResult_InitFull(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
+                                   BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
+            BSL_SecOutcome_AppendResult(sec_outcome, bib_result);
+            BSL_SecResult_Deinit(bib_result);
+            BSL_free(bib_result);
+        }
 
         if (bib_context.wrapped_key.len > 0)
         {
             BSL_SecParam_t *wrapped_key_param = BSL_calloc(1, BSL_SecParam_Sizeof());
-            if (BSL_SUCCESS
-                != BSL_SecParam_InitBytestr(wrapped_key_param, RFC9173_BIB_PARAMID_WRAPPED_KEY,
-                                            bib_context.wrapped_key))
-            {
-                BSL_LOG_ERR("Failed to append BIB wrapped key param");
-                BSL_SecParam_Deinit(wrapped_key_param);
-                BSL_free(wrapped_key_param);
-                BSLX_BIB_Deinit(&bib_context);
-                return BSL_ERR_SECURITY_CONTEXT_FAILED;
-            }
-            else
-            {
-                BSL_LOG_INFO("Appending BIB wrapped key param");
-                BSL_SecOutcome_AppendParam(sec_outcome, wrapped_key_param);
-            }
+            BSL_SecParam_InitBytestr(wrapped_key_param, RFC9173_BIB_PARAMID_WRAPPED_KEY, bib_context.wrapped_key);
+            BSL_LOG_INFO("Appending BIB wrapped key param");
+            BSL_SecOutcome_AppendParam(sec_outcome, wrapped_key_param);
             BSL_SecParam_Deinit(wrapped_key_param);
             BSL_free(wrapped_key_param);
         }

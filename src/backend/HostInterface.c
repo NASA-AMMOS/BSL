@@ -257,7 +257,7 @@ static const char *log_sev_names[] = {
 
 bool BSL_LogIsEnabledFor(int severity)
 {
-    if ((severity < 0) || (severity >= 7))
+    if ((severity < LOG_CRIT) || (severity > LOG_DEBUG))
     {
         // not valid
         return false;

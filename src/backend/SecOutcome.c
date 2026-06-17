@@ -142,27 +142,3 @@ void BSL_SecOutcome_AppendOptionAsParam(BSL_SecOutcome_t *self, uint64_t param_i
 
     ASSERT_POSTCONDITION(BSL_SecOutcome_IsConsistent(self));
 }
-
-#if 0
-//FIXME move into BIB CTX
-static bool BSL_AbsSecBlock_ContainsResult(const BSL_AbsSecBlock_t *abs_sec_block, const BSL_SecResult_t *actual)
-{
-    ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(abs_sec_block));
-    ASSERT_POSTCONDITION(BSL_SecResult_IsConsistent(actual));
-
-    BSL_AbsSecBlock_Print(abs_sec_block);
-    for (size_t index = 0; index < BSLB_SecResultList_size(abs_sec_block->results); index++)
-    {
-        BSL_SecResult_t *expected = BSLB_SecResultList_get(abs_sec_block->results, index);
-        ASSERT_PROPERTY(expected != NULL);
-        bool match = (actual->context_id == expected->context_id) && (actual->result_id == expected->result_id)
-                     && (actual->target_block_num == expected->target_block_num)
-                     && (m_bstring_equal_p(actual->_bytes, expected->_bytes));
-        if (match)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-#endif

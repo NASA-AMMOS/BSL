@@ -66,11 +66,11 @@ typedef struct BSLX_BIB_s
     BSL_PrimaryBlock_t   primary_block;
     BSL_CanonicalBlock_t target_block;
     BSL_CanonicalBlock_t sec_block;
-    bool opt_ippt_scope;
-    uint64_t              ippt_scope;
-    bool opt_sha_variant;
-    uint64_t              sha_variant;
-    int64_t crypto_sha_variant;
+    bool                 opt_ippt_scope;
+    uint64_t             ippt_scope;
+    bool                 opt_sha_variant;
+    uint64_t             sha_variant;
+    int64_t              crypto_sha_variant;
     uint64_t             hash_size;
     BSL_Data_t           wrapped_key;
     int64_t              keywrap;
@@ -110,9 +110,9 @@ typedef struct BSLX_BCB_s
     /// Cipher mode variants
     BSL_CipherMode_e crypto_mode;
     /// Required AES variant
-    uint64_t         aes_variant;
+    uint64_t aes_variant;
     /// Required AAD scope
-    uint64_t         aad_scope;
+    uint64_t aad_scope;
 
     // Metadata about bundles and blocks
     BSL_PrimaryBlock_t   primary_block;

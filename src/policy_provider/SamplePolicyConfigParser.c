@@ -403,8 +403,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             else if (0 == strcmp(id_str, "scope_flags"))
                             {
                                 uint64_t flag = strtol(value_str, NULL, 10);
-                                BSL_SecParam_InitUint64(params.param_integ_scope_flag,
-                                                        RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, flag);
+                                BSL_SecParam_InitUint64(params.param_integ_scope_flag, BSLX_BIB_OPT_SCOPE, flag);
                                 params_got |= 0x4;
                             }
                             else if (0 == strcmp(id_str, "key_wrap"))

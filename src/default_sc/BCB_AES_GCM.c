@@ -135,6 +135,10 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         BSL_Data_Deinit(&bcb_context->authtag);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
+    else
+    {
+        BSL_LOG_DEBUG("Using key ID %s", bcb_context->key_id);
+    }
 
     if (bcb_context->keywrap && bcb_context->wrapped_key.len == 0)
     {
@@ -285,6 +289,10 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     {
         BSL_LOG_ERR("Cannot get registry key");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
+    }
+    else
+    {
+        BSL_LOG_DEBUG("Using key ID %s", bcb_context->key_id);
     }
 
     // Generated the CEK, using keywrap when needed
@@ -671,6 +679,10 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
             {
                 bcb_context.err_count++;
             }
+            BSL_LOG_DEBUG("Wrapped key parameter used");
+            // FIXME remove
+            char logstr[1024];
+            BSL_LOG_INFO("wrapped: %s", BSL_Log_DumpAsHexString(logstr, sizeof(logstr), as_data.ptr, as_data.len));
         }
 
         param = BSL_SecOper_FindResult(sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
@@ -745,79 +757,40 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
         if (bcb_context.iv.len > 0)
         {
             BSL_SecParam_t *iv_param = BSL_calloc(1, BSL_SecParam_Sizeof());
-            if (BSL_SUCCESS != BSL_SecParam_InitBytestr(iv_param, RFC9173_BCB_SECPARAM_IV, bcb_context.iv))
-            {
-                BSL_LOG_ERR("Failed to append BCB source IV");
-                BSL_SecParam_Deinit(iv_param);
-                BSL_free(iv_param);
-                BSLX_BCB_Deinit(&bcb_context);
-                return BSL_ERR_SECURITY_CONTEXT_FAILED;
-            }
-            else
-            {
-                BSL_LOG_INFO("Appending BCB source IV");
-                BSL_SecOutcome_AppendParam(sec_outcome, iv_param);
-            }
+            BSL_SecParam_InitBytestr(iv_param, RFC9173_BCB_SECPARAM_IV, bcb_context.iv);
+            BSL_LOG_INFO("Appending BCB source IV");
+            BSL_SecOutcome_AppendParam(sec_outcome, iv_param);
             BSL_SecParam_Deinit(iv_param);
             BSL_free(iv_param);
         }
 
-        BSL_SecParam_t *aes_param = BSL_calloc(1, BSL_SecParam_Sizeof());
-        if (BSL_SUCCESS != BSL_SecParam_InitUint64(aes_param, RFC9173_BCB_SECPARAM_AESVARIANT, bcb_context.aes_variant))
         {
-            BSL_LOG_ERR("Failed to append BCB AES param");
-            BSL_SecParam_Deinit(aes_param);
-            BSL_free(aes_param);
-            BSLX_BCB_Deinit(&bcb_context);
-            return BSL_ERR_SECURITY_CONTEXT_FAILED;
-        }
-        else
-        {
+            BSL_SecParam_t *aes_param = BSL_calloc(1, BSL_SecParam_Sizeof());
+            BSL_SecParam_InitUint64(aes_param, RFC9173_BCB_SECPARAM_AESVARIANT, bcb_context.aes_variant);
             BSL_LOG_INFO("Appending BCB AES param");
             BSL_SecOutcome_AppendParam(sec_outcome, aes_param);
+            BSL_SecParam_Deinit(aes_param);
+            BSL_free(aes_param);
         }
-        BSL_SecParam_Deinit(aes_param);
-        BSL_free(aes_param);
 
         if (bcb_context.wrapped_key.len > 0)
         {
             BSL_SecParam_t *aes_wrapped_key_param = BSL_calloc(1, BSL_SecParam_Sizeof());
-            if (BSL_SUCCESS
-                != BSL_SecParam_InitBytestr(aes_wrapped_key_param, RFC9173_BCB_SECPARAM_WRAPPEDKEY,
-                                            bcb_context.wrapped_key))
-            {
-                BSL_LOG_ERR("Failed to append BCB wrapped key param");
-                BSL_SecParam_Deinit(aes_wrapped_key_param);
-                BSL_free(aes_wrapped_key_param);
-                BSLX_BCB_Deinit(&bcb_context);
-                return BSL_ERR_SECURITY_CONTEXT_FAILED;
-            }
-            else
-            {
-                BSL_LOG_INFO("Appending BCB wrapped key param");
-                BSL_SecOutcome_AppendParam(sec_outcome, aes_wrapped_key_param);
-            }
+            BSL_SecParam_InitBytestr(aes_wrapped_key_param, RFC9173_BCB_SECPARAM_WRAPPEDKEY, bcb_context.wrapped_key);
+            BSL_LOG_INFO("Appending BCB wrapped key param");
+            BSL_SecOutcome_AppendParam(sec_outcome, aes_wrapped_key_param);
             BSL_SecParam_Deinit(aes_wrapped_key_param);
             BSL_free(aes_wrapped_key_param);
         }
 
-        BSL_SecParam_t *scope_flag_param = BSL_calloc(1, BSL_SecParam_Sizeof());
-        if (BSL_SUCCESS
-            != BSL_SecParam_InitUint64(scope_flag_param, RFC9173_BCB_SECPARAM_AADSCOPE, bcb_context.aad_scope))
         {
-            BSL_LOG_ERR("Failed to append BCB scope flag param");
-            BSL_SecParam_Deinit(scope_flag_param);
-            BSL_free(scope_flag_param);
-            BSLX_BCB_Deinit(&bcb_context);
-            return BSL_ERR_SECURITY_CONTEXT_FAILED;
-        }
-        else
-        {
+            BSL_SecParam_t *scope_flag_param = BSL_calloc(1, BSL_SecParam_Sizeof());
+            BSL_SecParam_InitUint64(scope_flag_param, RFC9173_BCB_SECPARAM_AADSCOPE, bcb_context.aad_scope);
             BSL_LOG_INFO("Appending BCB scope flag param");
             BSL_SecOutcome_AppendParam(sec_outcome, scope_flag_param);
+            BSL_SecParam_Deinit(scope_flag_param);
+            BSL_free(scope_flag_param);
         }
-        BSL_SecParam_Deinit(scope_flag_param);
-        BSL_free(scope_flag_param);
     }
     // non-source role work is already done during decryption
 
