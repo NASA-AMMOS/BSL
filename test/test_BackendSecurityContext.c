@@ -44,6 +44,31 @@
 
 static BSL_TestContext_t LocalTestCtx;
 
+static size_t   TestSecCtxValidateCallCount = 0;
+static uint64_t TestSecCtxValidatedTarget   = 0;
+static bool     TestSecCtxValidateResult    = true;
+
+static bool BSL_TestSecCtx_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+{
+    TEST_ASSERT_NOT_NULL(lib);
+    TEST_ASSERT_NOT_NULL(bundle);
+    TEST_ASSERT_NOT_NULL(sec_oper);
+
+    TestSecCtxValidateCallCount++;
+    TestSecCtxValidatedTarget = BSL_SecOper_GetTargetBlockNum(sec_oper);
+    return TestSecCtxValidateResult;
+}
+
+static int BSL_TestSecCtx_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+                                  BSL_SecOutcome_t *sec_outcome)
+{
+    (void)lib;
+    (void)bundle;
+    (void)sec_oper;
+    (void)sec_outcome;
+    return BSL_SUCCESS;
+}
+
 void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
