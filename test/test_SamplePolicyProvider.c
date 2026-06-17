@@ -114,6 +114,7 @@ void test_SamplePolicyProvider_WildcardPolicyRuleVerifiesBIB(void)
 
     // TODO - Test security parameters.
 
+    BSL_SecOper_Deinit(&sec_oper);
     BSLP_PolicyRule_Deinit(&rule);
     BSLP_PolicyPredicate_Deinit(&predicate);
 }

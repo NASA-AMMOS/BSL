@@ -86,7 +86,7 @@ void BSL_SecParam_Set(BSL_SecParam_t *self, const BSL_SecParam_t *src)
             // workaround m_bstring issue https://github.com/P-p-H-d/mlib/issues/142
             if (m_bstring_empty_p(src->_val.as_bytes))
             {
-                m_bstring_reset(self->_val.as_bytes);
+                m_bstring_init(self->_val.as_bytes);
             }
             else
             {

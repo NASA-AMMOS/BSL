@@ -68,6 +68,7 @@ void BCBTestContext_Init(BCBTestContext *obj)
     BSL_SecParam_Init(&obj->param_init_vec);
     BSL_SecParam_Init(&obj->param_wrapped_key);
     BSL_SecParam_Init(&obj->opt_use_key_wrap);
+    BSL_SecParam_Init(&obj->opt_wrapped_key);
     BSL_SecParam_Init(&obj->param_key_enc_key);
     BSL_SecParam_Init(&obj->param_content_enc_key);
     BSL_SecParam_Init(&obj->result_auth_tag);
@@ -82,6 +83,7 @@ void BCBTestContext_Deinit(BCBTestContext *obj)
     BSL_SecParam_Deinit(&obj->param_init_vec);
     BSL_SecParam_Deinit(&obj->param_wrapped_key);
     BSL_SecParam_Deinit(&obj->opt_use_key_wrap);
+    BSL_SecParam_Deinit(&obj->opt_wrapped_key);
     BSL_SecParam_Deinit(&obj->param_key_enc_key);
     BSL_SecParam_Deinit(&obj->param_content_enc_key);
 

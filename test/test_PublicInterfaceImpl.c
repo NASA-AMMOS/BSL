@@ -55,7 +55,6 @@ typedef struct
     BSL_SecParam_t opt_aes_variant_256;
     BSL_SecParam_t opt_aad_scope_flag;
     BSL_SecParam_t param_iv;
-    BSL_SecParam_t result_auth_tag;
     BSL_SecParam_t param_wrapped_key;
     BSL_SecParam_t opt_test_bib_key_correct;
     BSL_SecParam_t opt_test_bib_key_bad;
@@ -148,10 +147,6 @@ void setUp(void)
     BSL_SecParam_InitUint64(&ctx.opt_aes_variant_128, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
     BSL_SecParam_InitUint64(&ctx.opt_aes_variant_256, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
     BSL_SecParam_InitUint64(&ctx.opt_aad_scope_flag, BSLX_BCB_OPT_SCOPE, 0);
-
-    BSL_Data_t authtag_data;
-    BSL_Data_InitView(&authtag_data, sizeof(ApxA2_AuthTag), (BSL_DataPtr_t)ApxA2_AuthTag);
-    BSL_SecParam_InitBytestr(&ctx.result_auth_tag, RFC9173_BCB_RESULTID_AUTHTAG, authtag_data);
 
     BSL_Data_t iv_data;
     BSL_Data_Init(&iv_data);
