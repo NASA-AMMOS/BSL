@@ -99,6 +99,7 @@ int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
     }
 
     BSL_Data_Resize(&bcb_context->aad, cbor_encoded_buffer.len);
+
     return BSL_SUCCESS;
 }
 
@@ -680,9 +681,6 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
                 bcb_context.err_count++;
             }
             BSL_LOG_DEBUG("Wrapped key parameter used");
-            // FIXME remove
-            char logstr[1024];
-            BSL_LOG_INFO("wrapped: %s", BSL_Log_DumpAsHexString(logstr, sizeof(logstr), as_data.ptr, as_data.len));
         }
 
         param = BSL_SecOper_FindResult(sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
