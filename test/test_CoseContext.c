@@ -123,7 +123,7 @@ void test_AppendixA_Example1_BIB_Source(void)
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_TRUE(valid_status);
 
-    /// Confirm running secop as source executes without error
+    /// Confirm running operation as source executes without error
     int exec_status = BSLX_CoseSc_Execute(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 

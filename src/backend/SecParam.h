@@ -89,8 +89,14 @@ struct BSL_SecParam_s
     (INIT(API_2(BSL_SecParam_Init)), INIT_SET(API_6(BSL_SecParam_InitSet)), CLEAR(API_2(BSL_SecParam_Deinit)), \
      SET(API_6(BSL_SecParam_Set)))
 
-/** @struct BSLB_SecParamList_t
- * Defines an internal list of Security Parameter pointers (::BSLB_SecParamPtr_t).
+/** @struct BSLB_SecParamPtr_t
+ * Thread safe shared pointers to ::BSL_SecParam_t instances.
+ */
+/** @struct BSLB_SecParamPtrList_t
+ * Defines an internal list of ::BSLB_SecParamPtr_t pointers.
+ */
+/** @struct BSLB_SecParamPtrDict_t
+ * Defines an internal lookup dictionary for ::BSLB_SecParamPtr_t pointers.
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress

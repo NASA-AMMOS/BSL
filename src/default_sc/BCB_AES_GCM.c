@@ -269,8 +269,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     bool                         is_aes128 = bcb_context->aes_variant == RFC9173_BCB_AES_VARIANT_A128GCM;
     BSL_CryptoCipherAESVariant_e aes_mode  = is_aes128 ? BSL_CRYPTO_AES_128 : BSL_CRYPTO_AES_256;
 
-    // https://www.rfc-editor.org/rfc/rfc9173.html#name-initialization-vector-iv
-    // "A value of 12 bytes SHOULD be used unless local security policy requires a different length"
     BSL_Data_Resize(&bcb_context->iv, RFC9173_BCB_DEFAULT_IV_LEN);
     void        *iv_ptr = bcb_context->iv.ptr;
     const size_t iv_len = bcb_context->iv.len;
