@@ -558,8 +558,6 @@ int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, const BSL_Data_t *input, BSL_Da
 int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer)
 {
     BSL_LOG_DEBUG("sequential %zu bytes", cipher_ctx->block_size);
-    uint8_t read_buf[cipher_ctx->block_size];
-    uint8_t write_buf[cipher_ctx->block_size];
 
     BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
 
@@ -567,7 +565,7 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
     {
         // read until there is no more
         size_t block_size = cipher_ctx->block_size;
-        BSL_SeqReader_Get(reader, read_buf, &block_size);
+        BSL_SeqReader_Get(reader, cipher_ctx->in_buf.ptr, &block_size);
         if (block_size == 0)
         {
             break;
@@ -576,7 +574,7 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
         int block_size_int = (int)block_size;
 
         BSL_LOG_PLAINTEXT_PTR("cipher in", cipher_ctx, cipher_ctx->in_buf.ptr, block_size_int);
-        int res = EVP_CipherUpdate(cipher_ctx->libhandle, write_buf, &block_size_int, read_buf, block_size_int);
+        int res = EVP_CipherUpdate(cipher_ctx->libhandle, cipher_ctx->out_buf.ptr, &block_size_int, cipher_ctx->in_buf.ptr, block_size_int);
         BSL_LOG_DEBUG("EVP_CipherUpdate took %zu bytes, gave %d bytes, return %d", block_size, block_size_int, res);
         BSL_LOG_PLAINTEXT_PTR("cipher out", cipher_ctx, cipher_ctx->out_buf.ptr, block_size_int);
         CHK_PROPERTY(res == 1);
@@ -584,9 +582,9 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
         key->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += block_size_int;
         block_size = (size_t)block_size_int;
 
-        if (NULL != writer)
+        if (block_size && writer)
         {
-            BSL_SeqWriter_Put(writer, write_buf, block_size);
+            BSL_SeqWriter_Put(writer, cipher_ctx->out_buf.ptr, block_size);
         }
     }
 
@@ -654,6 +652,7 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer)
 
     int evp_len = 0;
     int res     = EVP_CipherFinal_ex(cipher_ctx->libhandle, cipher_ctx->out_buf.ptr, &evp_len);
+    BSL_LOG_DEBUG("EVP_CipherFinal_ex gave %d bytes, return %d", evp_len, res);
     if (res != 1)
     {
         BSL_LOG_ERR("EVP_CipherFinal_ex error %s", ERR_error_string(ERR_get_error(), NULL));
