@@ -79,8 +79,8 @@ void BSL_IdValPair_Set(BSL_IdValPair_t *self, const BSL_IdValPair_t *src)
     }
     BSL_IdValPair_Deinit(self);
 
-    self->id = src->id;
-    self->_type    = src->_type;
+    self->id    = src->id;
+    self->_type = src->_type;
     switch (self->_type)
     {
         case BSL_IDVALPAIR_TYPE_UNKNOWN:
@@ -114,8 +114,8 @@ void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, uint64_t param_id, const ch
     ASSERT_ARG_NONNULL(self);
     BSL_IdValPair_Deinit(self);
 
-    self->id = param_id;
-    self->_type    = BSL_IDVALPAIR_TYPE_TEXTSTR;
+    self->id    = param_id;
+    self->_type = BSL_IDVALPAIR_TYPE_TEXTSTR;
     m_bstring_init(self->_val.as_bytes);
 
     // include terminating null
@@ -135,8 +135,8 @@ void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, uint64_t param_id, BSL_Data
     ASSERT_ARG_NONNULL(self);
     BSL_IdValPair_Deinit(self);
 
-    self->id = param_id;
-    self->_type    = BSL_IDVALPAIR_TYPE_BYTESTR;
+    self->id    = param_id;
+    self->_type = BSL_IDVALPAIR_TYPE_BYTESTR;
     m_bstring_init(self->_val.as_bytes);
     if (value.len)
     {
@@ -149,7 +149,7 @@ void BSL_IdValPair_SetUint64(BSL_IdValPair_t *self, uint64_t param_id, uint64_t 
     ASSERT_ARG_NONNULL(self);
     BSL_IdValPair_Deinit(self);
 
-    self->id     = param_id;
+    self->id           = param_id;
     self->_type        = BSL_IDVALPAIR_TYPE_UINT64;
     self->_val.as_uint = value;
 }
@@ -173,7 +173,7 @@ void BSL_IdValPair_SetNint64(BSL_IdValPair_t *self, uint64_t param_id, int64_t v
     ASSERT_ARG_NONNULL(self);
     BSL_IdValPair_Deinit(self);
 
-    self->id     = param_id;
+    self->id           = param_id;
     self->_type        = BSL_IDVALPAIR_TYPE_NINT64;
     self->_val.as_nint = value;
 }
@@ -219,8 +219,8 @@ void BSL_IdValPair_SetRaw(BSL_IdValPair_t *self, uint64_t param_id, const void *
     ASSERT_ARG_NONNULL(ptr);
     BSL_IdValPair_Deinit(self);
 
-    self->id = param_id;
-    self->_type    = BSL_IDVALPAIR_TYPE_RAW;
+    self->id    = param_id;
+    self->_type = BSL_IDVALPAIR_TYPE_RAW;
     m_bstring_init(self->_val.as_bytes);
     if (len)
     {

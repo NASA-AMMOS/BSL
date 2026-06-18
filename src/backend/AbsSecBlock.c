@@ -436,7 +436,7 @@ static int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
             QCBORDecode_GetUInt64(dec, &dec_value);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {
-                BSL_LOG_ERR("Invalid integer parameter value for ID %" PRIu64, item_id);
+                BSL_LOG_ERR("Invalid integer value for ID %" PRIu64, item_id);
                 return BSL_ERR_DECODING;
             }
             BSL_LOG_DEBUG("ASB: Parsed pair[%" PRIu64 "] as uint = %" PRIu64, item_id, dec_value);
@@ -450,7 +450,7 @@ static int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
             QCBORDecode_GetByteString(dec, &target_buf);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {
-                BSL_LOG_ERR("Invalid bytestring parameter value for ID %" PRIu64, item_id);
+                BSL_LOG_ERR("Invalid bytestring value for ID %" PRIu64, item_id);
                 return BSL_ERR_DECODING;
             }
             BSL_LOG_DEBUG("ASB: Parsed pair[%" PRIu64 "] as bytestr = %zu bytes at %p", item_id, target_buf.len,
@@ -462,8 +462,15 @@ static int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
             break;
         }
         default:
-            // skip over entire item (recursively)
+        {
+            // skip over entire item (recursively) if possible
             QCBORDecode_VGetNextConsume(dec, &asbitem);
+            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+            {
+                BSL_LOG_ERR("Invalid raw for ID %" PRIu64, item_id);
+                return BSL_ERR_DECODING;
+            }
+
             const size_t value_end = QCBORDecode_Tell(dec);
             BSL_LOG_CRIT("ASB raw item with QCBOR type %u and length %zu", asbitem.uDataType, value_end - value_begin);
 
@@ -471,9 +478,8 @@ static int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
 
             BSL_IdValPair_SetRaw(pair, item_id, UsefulBuf_OffsetToPointer(raw_buf, value_begin),
                                  value_end - value_begin);
-
-            // NOLINTNEXTLINE
-            return BSL_ERR_DECODING;
+            break;
+        }
     }
     const size_t value_end = QCBORDecode_Tell(dec);
 

@@ -36,14 +36,17 @@
 char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen)
 {
     ASSERT_ARG_NONNULL(dstbuf);
-    ASSERT_ARG_NONNULL(srcbuf);
 
     memset(dstbuf, 0, dstlen);
-    const char hex_digits[] = "0123456789ABCDEF";
-    for (size_t i = 0; i < srclen && (((i * 2) + 1) < dstlen - 1); i++)
+
+    if (srcbuf)
     {
-        dstbuf[(i * 2)]     = hex_digits[(srcbuf[i] >> 4) & 0x0F];
-        dstbuf[(i * 2) + 1] = hex_digits[srcbuf[i] & 0x0F];
+        static const char hex_digits[] = "0123456789ABCDEF";
+        for (size_t i = 0; i < srclen && (((i * 2) + 1) < dstlen - 1); i++)
+        {
+            dstbuf[(i * 2)]     = hex_digits[(srcbuf[i] >> 4) & 0x0F];
+            dstbuf[(i * 2) + 1] = hex_digits[srcbuf[i] & 0x0F];
+        }
     }
     return dstbuf;
 }

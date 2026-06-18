@@ -75,7 +75,7 @@ enum BSL_IdValPair_Type_e
     BSL_IDVALPAIR_TYPE_NINT64,      ///< Indicates value type is a negative integer.
     BSL_IDVALPAIR_TYPE_BYTESTR,     ///< Indicates the value is a byte string.
     BSL_IDVALPAIR_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
-    BSL_IDVALPAIR_TYPE_RAW,         ///< Indicates the value is undecoded bytes.
+    BSL_IDVALPAIR_TYPE_RAW,         ///< Indicates the value is raw encoded bytes.
 };
 
 struct BSL_IdValPair_s

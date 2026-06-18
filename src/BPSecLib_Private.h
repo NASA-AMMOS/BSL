@@ -221,13 +221,13 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
  */
 #if BSL_LOG_PLAINTEXT_ENABLE
 #define BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)                                   \
-    if (ptr)                                                                          \
+    do                                                                                \
     {                                                                                 \
         char logstr[2 * (len) + 1];                                                   \
         BSL_LOG_DEBUG("PLAINTEXT STATE (ctx %p) " title ": %s", (void *)ctx,          \
                       BSL_Log_DumpAsHexString(logstr, sizeof(logstr), (ptr), (len))); \
     }                                                                                 \
-
+    while (false)
 #else
 #define BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)
 #endif // BSL_LOG_PLAINTEXT_ENABLE
@@ -690,7 +690,7 @@ int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out);
  */
 int BSL_IdValPair_GetAsTextstr(const BSL_IdValPair_t *self, const char **out);
 
-/** Initialize as a parameter containing raw undecoded content.
+/** Initialize as a parameter containing raw encoded content.
  *
  * @param[in,out] self This Security Parameter
  * @param[in] param_id ID of the parameter

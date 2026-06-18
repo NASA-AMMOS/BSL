@@ -185,10 +185,10 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, BSL_BundleRef_t *b
 {
     BSL_CanonicalBlock_t sec_blk;
 
-    int                  res = BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk);
+    int res = BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk);
     if (res != BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Could not get block metadata for security block number %"PRIu64, sec_oper->sec_block_num);
+        BSL_LOG_ERR("Could not get block metadata for security block number %" PRIu64, sec_oper->sec_block_num);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
