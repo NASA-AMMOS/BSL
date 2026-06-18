@@ -219,9 +219,19 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
 /**
  * Deinitialize HMAC context resources
  * @param[in,out] hmac_ctx pointer to hmac context struct to add data to
- * @return 0 if successful
  */
-int BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
+void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
+
+/** Compare two blocks of data in a time-invariant way.
+ * This avoids side channel attacks which depend on comparison time.
+ *
+ * @param[in] data1 The first pointer.
+ * @param size1 The size of @c data1 block.
+ * @param[in] data2 The second pointer.
+ * @param size2 The size of @c data2 block.
+ * @return True if they compare equal.
+ */
+bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size_t size2);
 
 /**
  * Deinit and free generated key handle
@@ -296,9 +306,6 @@ int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len);
  */
 int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer);
 
-/// @overload
-int BSL_Cipher_AddData(BSL_Cipher_t *cipher_ctx, const BSL_Data_t *input, BSL_Data_t *output);
-
 /**
  * Get the tag of the crypto operation
  * @param cipher_ctx pointer to context to get tag from
@@ -324,8 +331,6 @@ int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const void *tag);
  * @return 0 if successful
  */
 int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer);
-/// @overload
-int BSL_Cipher_FinalizeData(BSL_Cipher_t *cipher_ctx, BSL_Data_t *extra);
 
 /**
  * De-initialize crypto context resources

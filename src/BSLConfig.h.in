@@ -33,10 +33,6 @@
 extern "C" {
 #endif
 
-/** Part of POSIX.1-2008
- */
-#cmakedefine HAVE_CLOCK_GETTIME
-
 /** Compile-time library version based on SemVer-2.0.0 conventions.
  * @sa Use bsl_version() to get run-time version.
  */
@@ -53,6 +49,11 @@ extern "C" {
  * @return The text form of the library version linked at runtime.
  */
 const char * bsl_version(void);
+
+/** Control whether plaintext data debug logs are made.
+ * @warning This should not be enabled for production.
+ */
+#cmakedefine01 BSL_LOG_PLAINTEXT_ENABLE
 
 /** Force the use of M_ prefixed macros for M*LIB
  */

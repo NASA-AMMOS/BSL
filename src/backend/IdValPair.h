@@ -20,7 +20,7 @@
  * subcontract 1700763.
  */
 /**
- * @file SecParam.h
+ * @file IdValPair.h
  * @ingroup backend_dyn
  * @brief Defines the RFC 9172 Security Parameter of the Abstract Security Block
  *
@@ -50,48 +50,76 @@
  * @author Bill.Van.Besien@jhuapl.edu
  */
 /** @file
- * @brief Implementation of a RFC9172 Parameter
  * @ingroup backend_dyn
+ * @brief Declaration of an (id, value) pair container.
  */
-#ifndef BSLB_SECPARAM_H_
-#define BSLB_SECPARAM_H_
+#ifndef BSLB_IDVALPAIR_H_
+#define BSLB_IDVALPAIR_H_
 
 #include <stdint.h>
 
 #include <m-bstring.h>
+#include <m-shared-ptr.h>
 #include <m-array.h>
+#include <m-dict.h>
 
 #include <BPSecLib_Private.h>
 
-struct BSL_SecParam_s
+/** @brief Types of values in ::BSL_IdValPair_s.
+ * Security options, parameters, and results defined in RFC9173 may be unsigned integers or bytestrings.
+ */
+enum BSL_IdValPair_Type_e
 {
-    /// @brief Parameter ID
-    uint64_t param_id;
-
-    /// @brief Private. Indicates whether this is an integer or bytestring.
-    enum BSL_SecParam_Types_e _type;
-
-    /// @brief Private. When an integer, this field is populated with the correct value.
-    uint64_t _uint_value;
-
-    /// @brief Private. When a bytestring, this field is used.
-    m_bstring_t _bytes;
+    BSL_IDVALPAIR_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
+    BSL_IDVALPAIR_TYPE_INT64,       ///< Indicates value type is a signed integer.
+    BSL_IDVALPAIR_TYPE_BYTESTR,     ///< Indicates the value is a byte string.
+    BSL_IDVALPAIR_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
+    BSL_IDVALPAIR_TYPE_RAW,         ///< Indicates the value is raw encoded bytes.
 };
 
-/// OPLIST for ::BSL_SecParam_s
-#define M_OPL_BSL_SecParam_t()                                                                                 \
-    (INIT(API_2(BSL_SecParam_Init)), INIT_SET(API_6(BSL_SecParam_InitSet)), CLEAR(API_2(BSL_SecParam_Deinit)), \
-     SET(API_6(BSL_SecParam_Set)))
+struct BSL_IdValPair_s
+{
+    /// @brief Identifier for the pair
+    uint64_t id;
 
-/** @struct BSLB_SecParamList_t
- * Defines a basic list of Security Parameters (::BSL_SecParam_s).
+    /// @brief Indicates how #_val needs to be used.
+    enum BSL_IdValPair_Type_e _type;
+    /// The value storage based on #_type
+    union
+    {
+        /// Valid when #_type is ::BSL_IDVALPAIR_TYPE_INT64
+        int64_t as_int;
+        /** Valid when #_type is ::BSL_IDVALPAIR_TYPE_BYTESTR or ::BSL_IDVALPAIR_TYPE_TEXTSTR
+         * or ::BSL_IDVALPAIR_TYPE_RAW
+         */
+        m_bstring_t as_bytes;
+    } _val;
+};
+
+/// OPLIST for ::BSL_IdValPair_s
+#define M_OPL_BSL_IdValPair_t()                                                             \
+    (INIT(API_2(BSL_IdValPair_Init)), INIT_SET(API_6(BSL_IdValPair_InitSet)), INIT_MOVE(0), \
+     CLEAR(API_2(BSL_IdValPair_Deinit)), SET(API_6(BSL_IdValPair_Set)), MOVE(API_6(BSL_IdValPair_Move)))
+
+/** @struct BSLB_IdValPairPtr_t
+ * Thread safe shared pointers to ::BSL_IdValPair_s instances.
+ */
+/** @struct BSLB_IdValPairPtrList_t
+ * Defines an internal list of ::BSLB_IdValPairPtr_t pointers.
+ */
+/** @struct BSLB_IdValPairPtrDict_t
+ * Defines an internal lookup dictionary for ::BSLB_IdValPairPtr_t pointers.
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_ARRAY_DEF(BSLB_SecParamList, BSL_SecParam_t, M_OPL_BSL_SecParam_t())
+M_SHARED_PTR_DEF(BSLB_IdValPairPtr, BSL_IdValPair_t, M_OPL_BSL_IdValPair_t())
+#define M_OPL_BSLB_IdValPairPtr_t() M_SHARED_PTR_OPLIST(BSLB_IdValPairPtr, M_OPL_BSL_IdValPair_t())
+
+M_ARRAY_DEF(BSLB_IdValPairPtrList, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
+M_DICT_DEF2(BSLB_IdValPairPtrDict, uint64_t, M_BASIC_OPLIST, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
 
-#endif /* BSLB_SECPARAM_H_ */
+#endif /* BSLB_IDVALPAIR_H_ */

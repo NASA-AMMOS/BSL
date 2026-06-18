@@ -35,7 +35,7 @@
 #include <m-string.h>
 
 #include <BPSecLib_Private.h>
-#include <backend/SecParam.h>
+#include <backend/IdValPair.h>
 
 /** De-initialize policy provider user_data.
  *  Called during de-initialization of each library instance.
@@ -133,13 +133,20 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
  */
 typedef struct BSLP_PolicyRule_s
 {
-    string_t            description;
-    BSL_SecRole_e       role;
-    uint64_t            target_block_type;
-    BSL_SecBlockType_e  sec_block_type;
-    int64_t             context_id;
-    BSLB_SecParamList_t params;
-    BSL_PolicyAction_e  failure_action_code;
+    /// Human-friendly text
+    string_t description;
+    /// Role for this operation
+    BSL_SecRole_e role;
+    /// Block type of the security target to match
+    uint64_t target_block_type;
+    /// Needed security type (i.e. BPSec block type)
+    BSL_SecBlockType_e sec_block_type;
+    /// Needed security context
+    int64_t context_id;
+    /// Security operation options for this rule
+    BSLB_IdValPairPtrList_t options;
+    /// How to handle failure in finalize stage
+    BSL_PolicyAction_e failure_action_code;
 } BSLP_PolicyRule_t;
 
 /**
@@ -193,20 +200,12 @@ M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t())
 /// @endcond
 
 /**
- * @brief Include a BPSec parameter to this rule. Used immediately after Init.
+ * @brief Include a BPSec option on this rule.
  *
  * @param[in] self This rule
- * @param[in,out] param Pointer to the Parameter to move from.
+ * @return Pointer to the Parameter to copy or move into.
  */
-void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *param);
-
-/**
- * @brief Include a BPSec parameter to this rule. Used immediately after Init.
- *
- * @param[in] self This rule
- * @param[in,out] param Pointer to the Parameter to move from.
- */
-void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param);
+BSL_IdValPair_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self);
 
 /// @brief Policy provider data. References shared among individual providers in BSL context
 typedef struct BSLP_PolicyProvider_s
