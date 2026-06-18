@@ -26,8 +26,7 @@
 
 #include <backend/PublicInterfaceImpl.h>
 #include <backend/SecOperation.h>
-#include <backend/SecParam.h>
-#include <backend/SecResult.h>
+#include <backend/IdValPair.h>
 #include <backend/SecurityActionSet.h>
 #include <mock_bpa/ctr.h>
 
@@ -57,10 +56,10 @@ typedef struct
 {
     BSL_Data_t hmac;
 
-    BSL_SecParam_t opt_test_key;
-    BSL_SecParam_t opt_sha_variant;
-    BSL_SecParam_t opt_use_key_wrap;
-    BSL_SecParam_t opt_scope_flags;
+    BSL_IdValPair_t opt_test_key;
+    BSL_IdValPair_t opt_sha_variant;
+    BSL_IdValPair_t opt_use_key_wrap;
+    BSL_IdValPair_t opt_scope_flags;
 
     BSL_SecOper_t sec_oper;
 } BIBTestContext;
@@ -88,11 +87,11 @@ static const uint8_t ApxA2_PayloadData[]   = { 0x52, 0x65, 0x61, 0x64, 0x79, 0x2
 
 typedef struct
 {
-    BSL_SecParam_t opt_aes_variant;
-    BSL_SecParam_t opt_scope_flags;
-    BSL_SecParam_t opt_test_key_id;
-    BSL_SecParam_t opt_use_key_wrap;
-    BSL_SecParam_t opt_wrapped_key;
+    BSL_IdValPair_t opt_aes_variant;
+    BSL_IdValPair_t opt_scope_flags;
+    BSL_IdValPair_t opt_test_key_id;
+    BSL_IdValPair_t opt_use_key_wrap;
+    BSL_IdValPair_t opt_wrapped_key;
 
     BSL_SecOper_t sec_oper;
 } BCBTestContext;
@@ -147,25 +146,25 @@ extern const struct RFC9173_TestVectors_A4_Modified
 
 typedef struct
 {
-    BSL_SecParam_t sha_variant;
-    BSL_SecParam_t scope_flags;
-    BSL_SecParam_t test_key_id;
-    BSL_SecParam_t use_key_wrap;
+    BSL_IdValPair_t sha_variant;
+    BSL_IdValPair_t scope_flags;
+    BSL_IdValPair_t test_key_id;
+    BSL_IdValPair_t use_key_wrap;
 } RFC9173_A1_Params;
 
 RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id);
 
 typedef struct
 {
-    BSL_SecParam_t auth_code;
-    BSL_SecParam_t content_enc_key;
-    BSL_SecParam_t init_vector;
-    BSL_SecParam_t key_enc_key;
-    BSL_SecParam_t test_key_id;
-    BSL_SecParam_t wrapped_key;
-    int64_t        context_id;
-    uint64_t       context_flags;
-    uint64_t       scope_flag;
+    BSL_IdValPair_t auth_code;
+    BSL_IdValPair_t content_enc_key;
+    BSL_IdValPair_t init_vector;
+    BSL_IdValPair_t key_enc_key;
+    BSL_IdValPair_t test_key_id;
+    BSL_IdValPair_t wrapped_key;
+    int64_t         context_id;
+    uint64_t        context_flags;
+    uint64_t        scope_flag;
 } RFC9173_AppendixA2_BCB;
 
 RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A2Params(const char *key_id);

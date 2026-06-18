@@ -35,7 +35,7 @@
 #include <m-string.h>
 
 #include <BPSecLib_Private.h>
-#include <backend/SecParam.h>
+#include <backend/IdValPair.h>
 
 /** De-initialize policy provider user_data.
  *  Called during de-initialization of each library instance.
@@ -144,7 +144,7 @@ typedef struct BSLP_PolicyRule_s
     /// Needed security context
     int64_t context_id;
     /// Security operation options for this rule
-    BSLB_SecParamPtrList_t options;
+    BSLB_IdValPairPtrList_t options;
     /// How to handle failure in finalize stage
     BSL_PolicyAction_e failure_action_code;
 } BSLP_PolicyRule_t;
@@ -205,7 +205,7 @@ M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t())
  * @param[in] self This rule
  * @param[in,out] param Pointer to the Parameter to move from.
  */
-void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *param);
+void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_IdValPair_t *param);
 
 /**
  * @brief Include a BPSec parameter to this rule. Used immediately after Init.
@@ -213,7 +213,7 @@ void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_SecParam_t *pa
  * @param[in] self This rule
  * @param[in,out] param Pointer to the Parameter to move from.
  */
-void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_SecParam_t *param);
+void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_IdValPair_t *param);
 
 /// @brief Policy provider data. References shared among individual providers in BSL context
 typedef struct BSLP_PolicyProvider_s

@@ -32,7 +32,6 @@
 
 #include "PublicInterfaceImpl.h"
 #include "SecurityActionSet.h"
-#include "SecurityResultSet.h"
 
 char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen)
 {

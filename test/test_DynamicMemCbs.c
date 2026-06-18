@@ -37,9 +37,9 @@ static int realloc_cnt = 0;
 static int calloc_cnt  = 0;
 static int free_cnt    = 0;
 
-static BSL_SecParam_t param_aes_variant_128;
-static BSL_SecParam_t param_use_wrap_key;
-static BSL_SecParam_t param_test_bcb_key_correct;
+static BSL_IdValPair_t param_aes_variant_128;
+static BSL_IdValPair_t param_use_wrap_key;
+static BSL_IdValPair_t param_test_bcb_key_correct;
 
 static BSL_TestContext_t       LocalTestCtx = { 0 };
 static BSL_SecurityActionSet_t action_set   = { 0 };
@@ -99,9 +99,9 @@ void _setUp(void)
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
     BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
 
-    BSL_SecParam_Init(&param_aes_variant_128);
-    BSL_SecParam_Init(&param_use_wrap_key);
-    BSL_SecParam_Init(&param_test_bcb_key_correct);
+    BSL_IdValPair_Init(&param_aes_variant_128);
+    BSL_IdValPair_Init(&param_use_wrap_key);
+    BSL_IdValPair_Init(&param_test_bcb_key_correct);
 
     policy_provider = BSLP_PolicyProvider_Init(1);
 
@@ -115,9 +115,9 @@ void _setUp(void)
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
 
-    BSL_SecParam_SetUint64(&param_aes_variant_128, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-    BSL_SecParam_SetUint64(&param_use_wrap_key, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
-    BSL_SecParam_SetTextstr(&param_test_bcb_key_correct, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
+    BSL_IdValPair_SetUint64(&param_aes_variant_128, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_IdValPair_SetUint64(&param_use_wrap_key, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
+    BSL_IdValPair_SetTextstr(&param_test_bcb_key_correct, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
 
     // BSL_32
     BSLP_PolicyPredicate_t predicate_bsl_32a;
@@ -150,9 +150,9 @@ void _tearDown(void)
     BSL_CryptoDeinit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 
-    BSL_SecParam_Deinit(&param_aes_variant_128);
-    BSL_SecParam_Deinit(&param_use_wrap_key);
-    BSL_SecParam_Deinit(&param_test_bcb_key_correct);
+    BSL_IdValPair_Deinit(&param_aes_variant_128);
+    BSL_IdValPair_Deinit(&param_use_wrap_key);
+    BSL_IdValPair_Deinit(&param_test_bcb_key_correct);
 }
 
 // Test BSL 32 with user-defined dyn mem cbs

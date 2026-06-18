@@ -93,10 +93,9 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
 int MockBPA_GetBlockMetadata(const BSL_BundleRef_t *bundle_ref, uint64_t block_num,
                              BSL_CanonicalBlock_t *result_canonical_block)
 {
-    if (!bundle_ref || !result_canonical_block || !bundle_ref->data)
-    {
-        return -1;
-    }
+    CHK_ARG_NONNULL(bundle_ref);
+    CHK_ARG_NONNULL(bundle_ref->data);
+    CHK_ARG_NONNULL(result_canonical_block);
 
     memset(result_canonical_block, 0, sizeof(*result_canonical_block));
 
@@ -255,10 +254,10 @@ static void MockBPA_WriteBTSD_Deinit(void *user_data)
     ASSERT_PRECONDITION(obj->file);
 
     fclose(obj->file);
-    BSL_LOG_DEBUG("closed block %p with size %zu and cursor %zu", obj->block, obj->size, obj->curs);
+    BSL_LOG_DEBUG("closed block number %"PRIu64" with size %zu and cursor %zu", obj->block->blk_num, obj->size, obj->curs);
     if (obj->curs < obj->size)
     {
-        BSL_LOG_ERR("closed block %p for writing with only %zu of %zu written", obj->block, obj->curs, obj->size);
+        BSL_LOG_ERR("closed block number %"PRIu64" for writing with only %zu of %zu written", obj->block->blk_num, obj->curs, obj->size);
     }
 
     // now write-back the BTSD
@@ -278,7 +277,7 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
         return NULL;
     }
     MockBPA_CanonicalBlock_t *found_block = *found_ptr;
-    BSL_LOG_DEBUG("opened block %p for size %zu, previous size %zu", found_block, btsd_size, found_block->btsd_len);
+    BSL_LOG_DEBUG("opened block number %"PRIu64 " for size %zu, previous size %zu", found_block->blk_num, btsd_size, found_block->btsd_len);
 
     struct MockBPA_BTSD_Data_s *obj = BSL_calloc(1, sizeof(struct MockBPA_BTSD_Data_s));
     if (!obj)
@@ -349,6 +348,8 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
     MockBPA_BlockByNum_set_at(bundle->blocks_num, new_block->blk_num, new_block);
 
     *result_block_num = new_block->blk_num;
+    BSL_LOG_DEBUG("Created block %"PRIu64, new_block->blk_num);
+
     return 0;
 }
 
@@ -384,6 +385,7 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
 
     MockBPA_BlockByNum_erase(bundle->blocks_num, block_num);
     MockBPA_BlockList_remove(bundle->blocks, bit);
+    BSL_LOG_DEBUG("Removed block %"PRIu64, block_num);
 
     return 0;
 }
@@ -432,7 +434,8 @@ BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent)
         .eidpat_match     = mock_bpa_eidpat_match,
 
         .log_is_enabled_for = mock_bpa_LogIsEnabledFor,
-        .log_event          = mock_bpa_LogEvent,
+        // synchronous logging when no real agent is used
+        .log_event          = agent ? mock_bpa_LogEvent : NULL,
     };
     return bpa;
 }

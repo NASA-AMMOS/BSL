@@ -141,20 +141,22 @@ target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.h   
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.h
 )
 
 set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/HostInterface.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PolicyProvider.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/TelemetryCounters.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOutcome.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecParam.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecResult.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityAction.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityActionSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c

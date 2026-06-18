@@ -95,35 +95,35 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
     self->hash_size       = 0;
     self->keywrap         = -1;
 
-    const BSL_SecParam_t *param;
+    const BSL_IdValPair_t *param;
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_KEY_ID);
     if (param)
     {
-        ASSERT_PRECONDITION(!BSL_SecParam_IsUint64(param));
+        ASSERT_PRECONDITION(!BSL_IdValPair_IsUint64(param));
         const char *res;
-        BSL_SecParam_GetAsTextstr(param, &res);
+        BSL_IdValPair_GetAsTextstr(param, &res);
         self->key_id = res;
     }
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_SHA_VARIANT);
     if (param)
     {
-        ASSERT_PRECONDITION(BSL_SecParam_IsUint64(param));
-        self->sha_variant     = BSL_SecParam_GetAsUint64(param);
+        ASSERT_PRECONDITION(BSL_IdValPair_IsUint64(param));
+        self->sha_variant     = BSL_IdValPair_GetAsUint64(param);
         self->opt_sha_variant = true;
     }
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_SCOPE);
     if (param)
     {
-        ASSERT_PRECONDITION(BSL_SecParam_IsUint64(param));
-        self->ippt_scope     = BSL_SecParam_GetAsUint64(param);
+        ASSERT_PRECONDITION(BSL_IdValPair_IsUint64(param));
+        self->ippt_scope     = BSL_IdValPair_GetAsUint64(param);
         self->opt_ippt_scope = true;
     }
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_WRAPPED_KEY);
     if (param)
     {
-        BSL_LOG_DEBUG("BIB parsing Wrapped key parameter (optid=%" PRIu64 ")", BSL_SecParam_GetId(param));
-        ASSERT_PRECONDITION(!BSL_SecParam_IsUint64(param));
-        if (BSL_SecParam_GetAsBytestr(param, &self->wrapped_key) < 0)
+        BSL_LOG_DEBUG("BIB parsing Wrapped key parameter (optid=%" PRIu64 ")", BSL_IdValPair_GetId(param));
+        ASSERT_PRECONDITION(!BSL_IdValPair_IsUint64(param));
+        if (BSL_IdValPair_GetAsBytestr(param, &self->wrapped_key) < 0)
         {
             BSL_LOG_ERR("Could not get view of wrapped key");
             self->err_count++;
@@ -132,8 +132,8 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_USE_KEY_WRAP);
     if (param)
     {
-        const uint64_t arg_val = BSL_SecParam_GetAsUint64(param);
-        BSL_LOG_DEBUG("Param[%" PRIu64 "]: USE_WRAPPED_KEY value = %" PRIu64, BSL_SecParam_GetId(param), arg_val);
+        const uint64_t arg_val = BSL_IdValPair_GetAsUint64(param);
+        BSL_LOG_DEBUG("Param[%" PRIu64 "]: USE_WRAPPED_KEY value = %" PRIu64, BSL_IdValPair_GetId(param), arg_val);
         self->keywrap = arg_val;
     }
 
@@ -423,14 +423,14 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
     if (!bib_context.is_source)
     {
         // find the existing parameters and results
-        const BSL_SecParam_t *param;
+        const BSL_IdValPair_t *param;
 
         param = BSL_SecOper_FindParam(sec_oper, RFC9173_BIB_PARAMID_SHA_VARIANT);
         if (param)
         {
-            if (BSL_SecParam_IsUint64(param))
+            if (BSL_IdValPair_IsUint64(param))
             {
-                uint64_t got = BSL_SecParam_GetAsUint64(param);
+                uint64_t got = BSL_IdValPair_GetAsUint64(param);
                 if (bib_context.opt_sha_variant && (got != bib_context.sha_variant))
                 {
                     BSL_LOG_ERR("SHA variant mismatch, needed %d got %d", bib_context.sha_variant, got);
@@ -448,9 +448,9 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
         param = BSL_SecOper_FindParam(sec_oper, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG);
         if (param)
         {
-            if (BSL_SecParam_IsUint64(param))
+            if (BSL_IdValPair_IsUint64(param))
             {
-                uint64_t got = BSL_SecParam_GetAsUint64(param);
+                uint64_t got = BSL_IdValPair_GetAsUint64(param);
                 if (bib_context.opt_ippt_scope && (got != bib_context.ippt_scope))
                 {
                     BSL_LOG_WARNING("IPPT Scope mismatch, needed %d got %d", bib_context.ippt_scope, got);
@@ -468,7 +468,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
         if (param)
         {
             BSL_Data_t as_data;
-            if (BSL_SecParam_GetAsBytestr(param, &as_data) < 0)
+            if (BSL_IdValPair_GetAsBytestr(param, &as_data) < 0)
             {
                 BSL_LOG_ERR("Wrapped key parameter is not valid");
                 bib_context.err_count++;
@@ -549,26 +549,25 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
     {
         {
             BSL_LOG_DEBUG("Appending SHA variant param");
-            BSL_SecParam_t *scope_flag_param = BSL_SecOutcome_AppendParam(sec_outcome);
-            BSL_SecParam_SetUint64(scope_flag_param, RFC9173_BIB_PARAMID_SHA_VARIANT, bib_context.sha_variant);
+            BSL_IdValPair_t *scope_flag_param = BSL_SecOutcome_AppendParam(sec_outcome);
+            BSL_IdValPair_SetUint64(scope_flag_param, RFC9173_BIB_PARAMID_SHA_VARIANT, bib_context.sha_variant);
         }
         {
             BSL_LOG_DEBUG("Appending IPPT scope flag param");
-            BSL_SecParam_t *scope_flag_param = BSL_SecOutcome_AppendParam(sec_outcome);
-            BSL_SecParam_SetUint64(scope_flag_param, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, bib_context.ippt_scope);
+            BSL_IdValPair_t *scope_flag_param = BSL_SecOutcome_AppendParam(sec_outcome);
+            BSL_IdValPair_SetUint64(scope_flag_param, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, bib_context.ippt_scope);
         }
         {
             BSL_LOG_DEBUG("Appending BIB wrapped key param");
-            BSL_SecResult_t *bib_result = BSL_SecOutcome_AppendResult(sec_outcome);
-            BSL_SecResult_SetFull(bib_result, RFC9173_BIB_RESULTID_HMAC, RFC9173_CONTEXTID_BIB_HMAC_SHA2,
-                                  BSL_SecOper_GetTargetBlockNum(sec_oper), &bib_context.hmac_result_val);
+            BSL_IdValPair_t *bib_result = BSL_SecOutcome_AppendResult(sec_outcome);
+            BSL_IdValPair_SetBytestr(bib_result, RFC9173_BIB_RESULTID_HMAC, bib_context.hmac_result_val);
         }
 
         if (bib_context.wrapped_key.len > 0)
         {
             BSL_LOG_DEBUG("Appending BIB wrapped key param");
-            BSL_SecParam_t *wrapped_key_param = BSL_SecOutcome_AppendParam(sec_outcome);
-            BSL_SecParam_SetBytestr(wrapped_key_param, RFC9173_BIB_PARAMID_WRAPPED_KEY, bib_context.wrapped_key);
+            BSL_IdValPair_t *wrapped_key_param = BSL_SecOutcome_AppendParam(sec_outcome);
+            BSL_IdValPair_SetBytestr(wrapped_key_param, RFC9173_BIB_PARAMID_WRAPPED_KEY, bib_context.wrapped_key);
         }
     }
     else
@@ -576,13 +575,13 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
         // verify the existing tag
         BSL_Data_t got_hmac = BSL_DATA_INIT_NULL;
 
-        const BSL_SecParam_t *result;
+        const BSL_IdValPair_t *result;
         result = BSL_SecOper_FindResult(sec_oper, RFC9173_BIB_RESULTID_HMAC);
         if (result)
         {
-            if (BSL_SecParam_IsBytestr(result))
+            if (BSL_IdValPair_IsBytestr(result))
             {
-                BSL_SecParam_GetAsBytestr(result, &got_hmac);
+                BSL_IdValPair_GetAsBytestr(result, &got_hmac);
             }
             else
             {

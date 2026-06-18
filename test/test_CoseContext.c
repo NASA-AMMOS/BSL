@@ -96,22 +96,22 @@ void test_AppendixA_Example1_BIB_Source(void)
                          BSL_POLICYACTION_DROP_BUNDLE);
 
     {
-        BSL_SecParam_t param;
-        BSL_SecParam_Init(&param);
+        BSL_IdValPair_t param;
+        BSL_IdValPair_Init(&param);
         {
             BSL_Data_t kid;
             BSL_Data_InitView(&kid, 4, (BSL_DataPtr_t) "1234");
-            BSL_SecParam_SetBytestr(&param, BSLX_COSESC_OPT_KEYID, kid);
+            BSL_IdValPair_SetBytestr(&param, BSLX_COSESC_OPT_KEYID, kid);
         }
         BSL_SecOper_AppendOption(&sec_oper, &param);
-        BSL_SecParam_Deinit(&param);
+        BSL_IdValPair_Deinit(&param);
     }
     {
-        BSL_SecParam_t param;
-        BSL_SecParam_Init(&param);
-        BSL_SecParam_SetUint64(&param, BSLX_COSESC_OPT_TGT_ALG, 123 /*FIXME*/);
+        BSL_IdValPair_t param;
+        BSL_IdValPair_Init(&param);
+        BSL_IdValPair_SetUint64(&param, BSLX_COSESC_OPT_TGT_ALG, 123 /*FIXME*/);
         BSL_SecOper_AppendOption(&sec_oper, &param);
-        BSL_SecParam_Deinit(&param);
+        BSL_IdValPair_Deinit(&param);
     }
 
     //    BSL_SecOper_AppendParam(&sec_oper, &context->param_sha_variant);

@@ -20,7 +20,7 @@
  * subcontract 1700763.
  */
 /**
- * @file SecParam.h
+ * @file IdValPair.h
  * @ingroup backend_dyn
  * @brief Defines the RFC 9172 Security Parameter of the Abstract Security Block
  *
@@ -50,11 +50,11 @@
  * @author Bill.Van.Besien@jhuapl.edu
  */
 /** @file
- * @brief Implementation of a RFC9172 Parameter
  * @ingroup backend_dyn
+ * @brief Declaration of an (id, value) pair container.
  */
-#ifndef BSLB_SECPARAM_H_
-#define BSLB_SECPARAM_H_
+#ifndef BSLB_IDVALPAIR_H_
+#define BSLB_IDVALPAIR_H_
 
 #include <stdint.h>
 
@@ -65,62 +65,64 @@
 
 #include <BPSecLib_Private.h>
 
-/** @brief Types of values in ::BSL_SecParam_s.
+/** @brief Types of values in ::BSL_IdValPair_s.
  * Security options, parameters, and results defined in RFC9173 may be unsigned integers or bytestrings.
  */
-enum BSL_SecParam_Type_e
+enum BSL_IdValPair_Type_e
 {
-    BSL_SECPARAM_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
-    BSL_SECPARAM_TYPE_UINT64,      ///< Indicates value type is an unsigned integer.
-    BSL_SECPARAM_TYPE_NINT64,      ///< Indicates value type is a negative integer.
-    BSL_SECPARAM_TYPE_BYTESTR,     ///< Indicates the value is a byte string.
-    BSL_SECPARAM_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
-    BSL_SECPARAM_TYPE_RAW,         ///< Indicates the value is undecoded bytes.
+    BSL_IDVALPAIR_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
+    BSL_IDVALPAIR_TYPE_UINT64,      ///< Indicates value type is an unsigned integer.
+    BSL_IDVALPAIR_TYPE_NINT64,      ///< Indicates value type is a negative integer.
+    BSL_IDVALPAIR_TYPE_BYTESTR,     ///< Indicates the value is a byte string.
+    BSL_IDVALPAIR_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
+    BSL_IDVALPAIR_TYPE_RAW,         ///< Indicates the value is undecoded bytes.
 };
 
-struct BSL_SecParam_s
+struct BSL_IdValPair_s
 {
-    /// @brief Parameter ID
-    uint64_t param_id;
+    /// @brief Identifier for the pair
+    uint64_t id;
 
     /// @brief Indicates how #_val needs to be used.
-    enum BSL_SecParam_Type_e _type;
-
+    enum BSL_IdValPair_Type_e _type;
+    /// The value storage based on #_type
     union
     {
-        /// Valid when #_type is ::BSL_SECPARAM_TYPE_UINT64
+        /// Valid when #_type is ::BSL_IDVALPAIR_TYPE_UINT64
         uint64_t as_uint;
-        /// Valid when #_type is ::BSL_SECPARAM_TYPE_NINT64
+        /// Valid when #_type is ::BSL_IDVALPAIR_TYPE_NINT64
         int64_t as_nint;
-        /// Valid when #_type is ::BSL_SECPARAM_TYPE_BYTESTR or ::BSL_SECPARAM_TYPE_TEXTSTR
+        /** Valid when #_type is ::BSL_IDVALPAIR_TYPE_BYTESTR or ::BSL_IDVALPAIR_TYPE_TEXTSTR
+         * or ::BSL_IDVALPAIR_TYPE_RAW
+         */
         m_bstring_t as_bytes;
     } _val;
 };
 
-/// OPLIST for ::BSL_SecParam_s
-#define M_OPL_BSL_SecParam_t()                                                                                 \
-    (INIT(API_2(BSL_SecParam_Init)), INIT_SET(API_6(BSL_SecParam_InitSet)), CLEAR(API_2(BSL_SecParam_Deinit)), \
-     SET(API_6(BSL_SecParam_Set)))
+/// OPLIST for ::BSL_IdValPair_s
+#define M_OPL_BSL_IdValPair_t()                                                                                   \
+    (INIT(API_2(BSL_IdValPair_Init)), INIT_SET(API_6(BSL_IdValPair_InitSet)), CLEAR(API_2(BSL_IdValPair_Deinit)), \
+     SET(API_6(BSL_IdValPair_Set)))
 
-/** @struct BSLB_SecParamPtr_t
- * Thread safe shared pointers to ::BSL_SecParam_t instances.
+/** @struct BSLB_IdValPairPtr_t
+ * Thread safe shared pointers to ::BSL_IdValPair_t instances.
  */
-/** @struct BSLB_SecParamPtrList_t
- * Defines an internal list of ::BSLB_SecParamPtr_t pointers.
+/** @struct BSLB_IdValPairPtrList_t
+ * Defines an internal list of ::BSLB_IdValPairPtr_t pointers.
  */
-/** @struct BSLB_SecParamPtrDict_t
- * Defines an internal lookup dictionary for ::BSLB_SecParamPtr_t pointers.
+/** @struct BSLB_IdValPairPtrDict_t
+ * Defines an internal lookup dictionary for ::BSLB_IdValPairPtr_t pointers.
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_SHARED_PTR_DEF(BSLB_SecParamPtr, BSL_SecParam_t, M_OPL_BSL_SecParam_t())
-#define M_OPL_BSLB_SecParamPtr_t() M_SHARED_PTR_OPLIST(BSLB_SecParamPtr, M_OPL_BSL_SecParam_t())
+M_SHARED_PTR_DEF(BSLB_IdValPairPtr, BSL_IdValPair_t, M_OPL_BSL_IdValPair_t())
+#define M_OPL_BSLB_IdValPairPtr_t() M_SHARED_PTR_OPLIST(BSLB_IdValPairPtr, M_OPL_BSL_IdValPair_t())
 
-M_ARRAY_DEF(BSLB_SecParamPtrList, BSLB_SecParamPtr_t *, M_OPL_BSLB_SecParamPtr_t())
-M_DICT_DEF2(BSLB_SecParamPtrDict, uint64_t, M_BASIC_OPLIST, BSLB_SecParamPtr_t *, M_OPL_BSLB_SecParamPtr_t())
+M_ARRAY_DEF(BSLB_IdValPairPtrList, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
+M_DICT_DEF2(BSLB_IdValPairPtrDict, uint64_t, M_BASIC_OPLIST, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
 
-#endif /* BSLB_SECPARAM_H_ */
+#endif /* BSLB_IDVALPAIR_H_ */

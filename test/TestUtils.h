@@ -26,8 +26,7 @@
 
 #include <backend/PublicInterfaceImpl.h>
 #include <backend/SecOperation.h>
-#include <backend/SecParam.h>
-#include <backend/SecResult.h>
+#include <backend/IdValPair.h>
 #include <backend/SecurityActionSet.h>
 #include <mock_bpa/ctr.h>
 
