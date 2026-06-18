@@ -205,7 +205,7 @@ M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t())
  * @param[in] self This rule
  * @return Pointer to the Parameter to copy or move into.
  */
-BSL_IdValPair_t * BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self);
+BSL_IdValPair_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self);
 
 /// @brief Policy provider data. References shared among individual providers in BSL context
 typedef struct BSLP_PolicyProvider_s

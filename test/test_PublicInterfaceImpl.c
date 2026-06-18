@@ -581,7 +581,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
     BSL_PrimaryBlock_t        primary_block;
     BSL_SecurityResponseSet_t response_set;
     BSL_SecurityResponseSet_Init(&response_set);
-    BSL_TlmCounters_t         tlm          = BSL_TLM_COUNTERS_ZERO;
+    BSL_TlmCounters_t tlm = BSL_TLM_COUNTERS_ZERO;
 
     int query_result = -1;
     int apply_result = -1;
@@ -863,9 +863,9 @@ void n_test_BSL_6(void)
     BSL_PrimaryBlock_t        primary_block;
     BSL_SecurityResponseSet_t response_set;
     BSL_SecurityResponseSet_Init(&response_set);
-    BSL_CanonicalBlock_t      res_blk;
-    int                       query_result = -1;
-    int                       apply_result = -1;
+    BSL_CanonicalBlock_t res_blk;
+    int                  query_result = -1;
+    int                  apply_result = -1;
 
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
@@ -906,9 +906,9 @@ void test_BSL_32(void)
     BSL_PrimaryBlock_t        primary_block;
     BSL_SecurityResponseSet_t response_set;
     BSL_SecurityResponseSet_Init(&response_set);
-    BSL_CanonicalBlock_t      res_blk;
-    int                       query_result = -1;
-    int                       apply_result = -1;
+    BSL_CanonicalBlock_t res_blk;
+    int                  query_result = -1;
+    int                  apply_result = -1;
 
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));

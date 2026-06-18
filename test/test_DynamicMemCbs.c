@@ -163,9 +163,9 @@ void test_dyn_mem_cbs_BSL_32(void)
     BSL_PrimaryBlock_t        primary_block;
     BSL_SecurityResponseSet_t response_set;
     BSL_SecurityResponseSet_Init(&response_set);
-    BSL_CanonicalBlock_t      res_blk;
-    int                       query_result = -1;
-    int                       apply_result = -1;
+    BSL_CanonicalBlock_t res_blk;
+    int                  query_result = -1;
+    int                  apply_result = -1;
 
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));

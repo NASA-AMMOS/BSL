@@ -134,7 +134,7 @@ void BSL_IdValPair_Move(BSL_IdValPair_t *self, BSL_IdValPair_t *src)
             break;
     }
 
-    src->id = 0;
+    src->id    = 0;
     src->_type = BSL_IDVALPAIR_TYPE_UNKNOWN;
 }
 

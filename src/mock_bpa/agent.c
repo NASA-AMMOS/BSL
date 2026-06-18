@@ -414,31 +414,31 @@ BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent)
     BSL_HostDescriptors_t bpa = {
         .user_data = agent,
         // New-style callbacks
-        .get_sec_src_eid_fn    = MockBPA_GetEid,
-        .bundle_metadata_fn    = MockBPA_GetBundleMetadata,
-        .block_metadata_fn     = MockBPA_GetBlockMetadata,
-        .block_create_fn       = MockBPA_CreateBlock,
-        .block_remove_fn       = MockBPA_RemoveBlock,
-        .bundle_delete_fn      = MockBPA_DeleteBundle,
-        .block_realloc_btsd_fn = MockBPA_ReallocBTSD,
-        .block_read_btsd_fn    = MockBPA_ReadBTSD,
-        .block_write_btsd_fn   = MockBPA_WriteBTSD,
+        .get_sec_src_eid_fn    = &MockBPA_GetEid,
+        .bundle_metadata_fn    = &MockBPA_GetBundleMetadata,
+        .block_metadata_fn     = &MockBPA_GetBlockMetadata,
+        .block_create_fn       = &MockBPA_CreateBlock,
+        .block_remove_fn       = &MockBPA_RemoveBlock,
+        .bundle_delete_fn      = &MockBPA_DeleteBundle,
+        .block_realloc_btsd_fn = &MockBPA_ReallocBTSD,
+        .block_read_btsd_fn    = &MockBPA_ReadBTSD,
+        .block_write_btsd_fn   = &MockBPA_WriteBTSD,
 
         // Old-style callbacks
-        .eid_init      = MockBPA_EID_Init,
-        .eid_deinit    = MockBPA_EID_Deinit,
-        .eid_to_cbor   = bsl_mock_encode_eid,
-        .eid_from_cbor = bsl_mock_decode_eid,
-        .eid_from_text = mock_bpa_eid_from_text,
+        .eid_init      = &MockBPA_EID_Init,
+        .eid_deinit    = &MockBPA_EID_Deinit,
+        .eid_to_cbor   = &bsl_mock_encode_eid,
+        .eid_from_cbor = &bsl_mock_decode_eid,
+        .eid_from_text = &mock_bpa_eid_from_text,
         // .eid_to_text      = mock_bpa_eid_to_text,
-        .eidpat_init      = mock_bpa_eidpat_init,
-        .eidpat_deinit    = mock_bpa_eidpat_deinit,
-        .eidpat_from_text = mock_bpa_eidpat_from_text,
-        .eidpat_match     = mock_bpa_eidpat_match,
+        .eidpat_init      = &mock_bpa_eidpat_init,
+        .eidpat_deinit    = &mock_bpa_eidpat_deinit,
+        .eidpat_from_text = &mock_bpa_eidpat_from_text,
+        .eidpat_match     = &mock_bpa_eidpat_match,
 
-        .log_is_enabled_for = mock_bpa_LogIsEnabledFor,
+        .log_is_enabled_for = &mock_bpa_LogIsEnabledFor,
         // synchronous logging when no real agent is used
-        .log_event = agent ? mock_bpa_LogEvent : NULL,
+        .log_event = agent ? &mock_bpa_LogEvent : NULL,
     };
     return bpa;
 }
@@ -679,7 +679,7 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
         return 2;
     }
 
-    BSL_SecurityActionSet_t   *action_set   = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
+    BSL_SecurityActionSet_t *action_set = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(action_set);
     BSL_SecurityResponseSet_t *response_set = BSL_calloc(1, BSL_SecurityResponseSet_Sizeof());
     BSL_SecurityResponseSet_Init(response_set);

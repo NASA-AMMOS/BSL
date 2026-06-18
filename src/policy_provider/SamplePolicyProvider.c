@@ -521,7 +521,7 @@ void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
     BSLB_IdValPairPtrList_clear(self->options);
 }
 
-BSL_IdValPair_t * BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self)
+BSL_IdValPair_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
 
