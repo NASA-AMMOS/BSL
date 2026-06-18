@@ -69,10 +69,14 @@ typedef struct BSLX_BIB_s
     /// True if #ippt_scope came from an option
     bool opt_ippt_scope;
     /// Required IPPT scope
-    uint64_t   ippt_scope;
-    bool       opt_sha_variant;
-    uint64_t   sha_variant;
-    int64_t    crypto_sha_variant;
+    int64_t ippt_scope;
+    /// True if #sha_variant came from an option
+    bool opt_sha_variant;
+    /// Required SHA variant
+    int64_t sha_variant;
+    /// Converted #sha_variant into enum value
+    BSL_CryptoCipherSHAVariant_e crypto_sha_variant;
+
     uint64_t   hash_size;
     BSL_Data_t wrapped_key;
     int64_t    keywrap;
@@ -112,11 +116,11 @@ typedef struct BSLX_BCB_s
     /// Cipher mode variants
     BSL_CipherMode_e crypto_mode;
     /// Required AES variant
-    uint64_t aes_variant;
+    int64_t aes_variant;
     /// True if #aad_scope came from an option
     bool opt_aad_scope;
     /// Required AAD scope
-    uint64_t aad_scope;
+    int64_t aad_scope;
 
     // Metadata about bundles and blocks
     BSL_PrimaryBlock_t   primary_block;

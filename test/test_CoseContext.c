@@ -109,7 +109,7 @@ void test_AppendixA_Example1_BIB_Source(void)
     {
         BSL_IdValPair_t param;
         BSL_IdValPair_Init(&param);
-        BSL_IdValPair_SetUint64(&param, BSLX_COSESC_OPT_TGT_ALG, 123 /*FIXME*/);
+        BSL_IdValPair_SetInt64(&param, BSLX_COSESC_OPT_TGT_ALG, 123 /*FIXME*/);
         BSL_SecOper_AppendOption(&sec_oper, &param);
         BSL_IdValPair_Deinit(&param);
     }

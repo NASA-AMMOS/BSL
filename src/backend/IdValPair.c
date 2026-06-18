@@ -54,8 +54,7 @@ void BSL_IdValPair_Deinit(BSL_IdValPair_t *self)
     switch (self->_type)
     {
         case BSL_IDVALPAIR_TYPE_UNKNOWN:
-        case BSL_IDVALPAIR_TYPE_UINT64:
-        case BSL_IDVALPAIR_TYPE_NINT64:
+        case BSL_IDVALPAIR_TYPE_INT64:
             break;
         case BSL_IDVALPAIR_TYPE_BYTESTR:
         case BSL_IDVALPAIR_TYPE_TEXTSTR:
@@ -85,11 +84,8 @@ void BSL_IdValPair_Set(BSL_IdValPair_t *self, const BSL_IdValPair_t *src)
     {
         case BSL_IDVALPAIR_TYPE_UNKNOWN:
             break;
-        case BSL_IDVALPAIR_TYPE_UINT64:
-            self->_val.as_uint = src->_val.as_uint;
-            break;
-        case BSL_IDVALPAIR_TYPE_NINT64:
-            self->_val.as_nint = src->_val.as_nint;
+        case BSL_IDVALPAIR_TYPE_INT64:
+            self->_val.as_int = src->_val.as_int;
             break;
         case BSL_IDVALPAIR_TYPE_BYTESTR:
         case BSL_IDVALPAIR_TYPE_TEXTSTR:
@@ -130,6 +126,12 @@ void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, uint64_t param_id, const ch
     }
 }
 
+bool BSL_IdValPair_IsTextstr(const BSL_IdValPair_t *self)
+{
+    CHK_AS_BOOL(self);
+    return (self->_type == BSL_IDVALPAIR_TYPE_TEXTSTR);
+}
+
 void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, uint64_t param_id, BSL_Data_t value)
 {
     ASSERT_ARG_NONNULL(self);
@@ -144,44 +146,32 @@ void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, uint64_t param_id, BSL_Data
     }
 }
 
-void BSL_IdValPair_SetUint64(BSL_IdValPair_t *self, uint64_t param_id, uint64_t value)
+void BSL_IdValPair_SetInt64(BSL_IdValPair_t *self, uint64_t param_id, uint64_t value)
 {
     ASSERT_ARG_NONNULL(self);
     BSL_IdValPair_Deinit(self);
 
-    self->id           = param_id;
-    self->_type        = BSL_IDVALPAIR_TYPE_UINT64;
-    self->_val.as_uint = value;
+    self->id          = param_id;
+    self->_type       = BSL_IDVALPAIR_TYPE_INT64;
+    self->_val.as_int = value;
 }
 
-bool BSL_IdValPair_IsUint64(const BSL_IdValPair_t *self)
+bool BSL_IdValPair_IsInt64(const BSL_IdValPair_t *self)
 {
     CHK_AS_BOOL(self);
-    return (self->_type == BSL_IDVALPAIR_TYPE_UINT64);
+    return (self->_type == BSL_IDVALPAIR_TYPE_INT64);
 }
 
-uint64_t BSL_IdValPair_GetAsUint64(const BSL_IdValPair_t *self)
+int BSL_IdValPair_GetAsInt64(const BSL_IdValPair_t *self, int64_t *out)
 {
     ASSERT_ARG_NONNULL(self);
-    ASSERT_PRECONDITION(self->_type == BSL_IDVALPAIR_TYPE_UINT64);
+    ASSERT_PRECONDITION(self->_type == BSL_IDVALPAIR_TYPE_INT64);
 
-    return self->_val.as_uint;
-}
-
-void BSL_IdValPair_SetNint64(BSL_IdValPair_t *self, uint64_t param_id, int64_t value)
-{
-    ASSERT_ARG_NONNULL(self);
-    BSL_IdValPair_Deinit(self);
-
-    self->id           = param_id;
-    self->_type        = BSL_IDVALPAIR_TYPE_NINT64;
-    self->_val.as_nint = value;
-}
-
-bool BSL_IdValPair_IsNint64(const BSL_IdValPair_t *self)
-{
-    CHK_AS_BOOL(self);
-    return (self->_type == BSL_IDVALPAIR_TYPE_NINT64);
+    if (out)
+    {
+        *out = self->_val.as_int;
+    }
+    return BSL_SUCCESS;
 }
 
 bool BSL_IdValPair_IsBytestr(const BSL_IdValPair_t *self)
@@ -192,24 +182,30 @@ bool BSL_IdValPair_IsBytestr(const BSL_IdValPair_t *self)
 
 int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out)
 {
-    CHK_ARG_NONNULL(out);
     CHK_PRECONDITION(BSL_IdValPair_IsConsistent(self));
     CHK_PROPERTY(self->_type == BSL_IDVALPAIR_TYPE_BYTESTR);
 
-    const size_t   size = m_bstring_size(self->_val.as_bytes);
-    const uint8_t *ptr  = m_bstring_view(self->_val.as_bytes, 0, size);
-    return BSL_Data_InitView(out, size, (uint8_t *)ptr);
+    if (out)
+    {
+        const size_t   size = m_bstring_size(self->_val.as_bytes);
+        const uint8_t *ptr  = m_bstring_view(self->_val.as_bytes, 0, size);
+        BSL_Data_InitView(out, size, (uint8_t *)ptr);
+    }
+    return BSL_SUCCESS;
 }
 
 int BSL_IdValPair_GetAsTextstr(const BSL_IdValPair_t *self, const char **out)
 {
-    CHK_ARG_NONNULL(out);
     CHK_PRECONDITION(BSL_IdValPair_IsConsistent(self));
     CHK_PROPERTY(self->_type == BSL_IDVALPAIR_TYPE_TEXTSTR);
 
-    const size_t   size = m_bstring_size(self->_val.as_bytes);
-    const uint8_t *ptr  = m_bstring_view(self->_val.as_bytes, 0, size);
-    *out                = (const char *)ptr;
+    if (out)
+    {
+        const size_t   size = m_bstring_size(self->_val.as_bytes);
+        const uint8_t *ptr  = m_bstring_view(self->_val.as_bytes, 0, size);
+
+        *out = (const char *)ptr;
+    }
     return BSL_SUCCESS;
 }
 

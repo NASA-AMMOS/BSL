@@ -81,9 +81,9 @@ void BCBTestContext_Deinit(BCBTestContext *obj)
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id)
 {
     BSL_IdValPair_SetTextstr(&context->opt_test_key, BSLX_BIB_OPT_KEY_ID, key_id);
-    BSL_IdValPair_SetUint64(&context->opt_scope_flags, BSLX_BIB_OPT_SCOPE, 0);
-    BSL_IdValPair_SetUint64(&context->opt_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-    BSL_IdValPair_SetUint64(&context->opt_use_key_wrap, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
+    BSL_IdValPair_SetInt64(&context->opt_scope_flags, BSLX_BIB_OPT_SCOPE, 0);
+    BSL_IdValPair_SetInt64(&context->opt_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+    BSL_IdValPair_SetInt64(&context->opt_use_key_wrap, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
 
     BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BIB_HMAC_SHA2, 1, 2, BSL_SECBLOCKTYPE_BIB, role,
                          BSL_POLICYACTION_DROP_BLOCK);
@@ -96,10 +96,10 @@ void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e rol
 
 void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role)
 {
-    BSL_IdValPair_SetUint64(&context->opt_scope_flags, BSLX_BCB_OPT_SCOPE, 0);
+    BSL_IdValPair_SetInt64(&context->opt_scope_flags, BSLX_BCB_OPT_SCOPE, 0);
     BSL_IdValPair_SetTextstr(&context->opt_test_key_id, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
-    BSL_IdValPair_SetUint64(&context->opt_aes_variant, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-    BSL_IdValPair_SetUint64(&context->opt_use_key_wrap, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
+    BSL_IdValPair_SetInt64(&context->opt_aes_variant, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_IdValPair_SetInt64(&context->opt_use_key_wrap, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
 
     BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BCB_AES_GCM, 1, 2, BSL_SECBLOCKTYPE_BCB, role,
                          BSL_POLICYACTION_NOTHING);
@@ -219,15 +219,15 @@ RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id)
 {
     RFC9173_A1_Params params;
     BSL_IdValPair_Init(&params.sha_variant);
-    BSL_IdValPair_SetUint64(&params.sha_variant, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key,
+    BSL_IdValPair_SetInt64(&params.sha_variant, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key,
                             RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value);
     BSL_IdValPair_Init(&params.scope_flags);
-    BSL_IdValPair_SetUint64(&params.scope_flags, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key,
+    BSL_IdValPair_SetInt64(&params.scope_flags, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key,
                             RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value);
     BSL_IdValPair_Init(&params.test_key_id);
     BSL_IdValPair_SetTextstr(&params.test_key_id, BSLX_BIB_OPT_KEY_ID, key_id);
     BSL_IdValPair_Init(&params.use_key_wrap);
-    BSL_IdValPair_SetUint64(&params.use_key_wrap, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
+    BSL_IdValPair_SetInt64(&params.use_key_wrap, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
     return params;
 }
 

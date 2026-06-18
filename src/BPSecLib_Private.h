@@ -608,6 +608,29 @@ bool BSL_IdValPair_IsConsistent(const BSL_IdValPair_t *self);
 /// @brief Return size of ::BSL_IdValPair_s struct type
 size_t BSL_IdValPair_Sizeof(void);
 
+/** Set to an signed integer value.
+ *
+ * @param[in,out] self This Security Parameter
+ * @param[in] param_id ID of the parameter
+ * @param[in] value The value to use.
+ */
+void BSL_IdValPair_SetInt64(BSL_IdValPair_t *self, uint64_t param_id, uint64_t value);
+
+/** Returns true when the value type is an integer.
+ *
+ * @param[in] self This Security Parameter
+ * @return True when value type is integer.
+ */
+bool BSL_IdValPair_IsInt64(const BSL_IdValPair_t *self);
+
+/** Retrieve integer value of result when this result type is integer.
+ *
+ * @param[in] self This Security Parameter
+ * @param[out] out The optional value
+ * @return Zero if the value is an integer.
+ */
+int BSL_IdValPair_GetAsInt64(const BSL_IdValPair_t *self, int64_t *out);
+
 /** Initialize as a parameter containing a bytestring.
  *
  * @param[in,out] self This Security Parameter
@@ -616,43 +639,22 @@ size_t BSL_IdValPair_Sizeof(void);
  */
 void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, uint64_t param_id, BSL_Data_t value);
 
-/** Set to an unsigned integer value.
- *
- * @param[in,out] self This Security Parameter
- * @param[in] param_id ID of the parameter
- * @param[in] value The value to use.
- */
-void BSL_IdValPair_SetUint64(BSL_IdValPair_t *self, uint64_t param_id, uint64_t value);
-
-/** Returns true when the value type is an unsigned integer.
+/** Returns true when the value type is a byte string.
  *
  * @param[in] self This Security Parameter
- * @return True when value type is integer.
+ * @return True when value type is byte string.
  */
-bool BSL_IdValPair_IsUint64(const BSL_IdValPair_t *self);
+bool BSL_IdValPair_IsBytestr(const BSL_IdValPair_t *self);
 
-/** Retrieve integer value of result when this result type is integer.
- * @warning Always check using BSL_IdValPair_IsUint64() first.
+/** Retrieve byte string value of a parameter.
+ * @warning Always check BSL_IdValPair_IsBytestr() before using this.
  *
+ * @todo Clarify whether result contains copy or view of content
  * @param[in] self This Security Parameter
- * @return Integer value of parameter if present, panics/aborts otherwise.
+ * @param[out] out Pointer to optional struct which will be made a view onto this parameter value.
+ * @return Negative on error.
  */
-uint64_t BSL_IdValPair_GetAsUint64(const BSL_IdValPair_t *self);
-
-/** Initialize as a parameter containing an integer as a value.
- *
- * @param[in,out] self This Security Parameter
- * @param[in] param_id ID of the parameter
- * @param[in] value The value to use.
- */
-void BSL_IdValPair_SetNint64(BSL_IdValPair_t *self, uint64_t param_id, int64_t value);
-
-/** Returns true when the value type is a negative integer.
- *
- * @param[in] self This Security Parameter
- * @return True when value type is integer.
- */
-bool BSL_IdValPair_IsNint64(const BSL_IdValPair_t *self);
+int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out);
 
 /** Initialize as a parameter containing a byte string with a null-terminated
  * text value.
@@ -663,29 +665,19 @@ bool BSL_IdValPair_IsNint64(const BSL_IdValPair_t *self);
  */
 void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, uint64_t param_id, const char *value);
 
-/** Returns true when the value type is a byte string.
+/** Returns true when the value type is a text string.
  *
  * @param[in] self This Security Parameter
- * @return True when value type is integer.
+ * @return True when value type is text string.
  */
-bool BSL_IdValPair_IsBytestr(const BSL_IdValPair_t *self);
-
-/** Retrieve byte string value of a parameter.
- * @warning Always check BSL_IdValPair_IsBytestr() before using this.
- *
- * @todo Clarify whether result contains copy or view of content
- * @param[in] self This Security Parameter
- * @param[out] out Pointer to data struct which will be made a view onto this parameter value.
- * @return Negative on error.
- */
-int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out);
+bool BSL_IdValPair_IsTextstr(const BSL_IdValPair_t *self);
 
 /** Retrieve bytestring value of result when security parameter type is bytestring.
  * @warning Always check type before using this.
  *
  * @todo Clarify whether result contains copy or view of content
  * @param[in] self This Security Parameter
- * @param[in,out] out Pointer to data struct which will be made a view onto this parameter value.
+ * @param[in,out] out Pointer to optional string pointer for view onto this parameter value.
  * @return Negative on error.
  */
 int BSL_IdValPair_GetAsTextstr(const BSL_IdValPair_t *self, const char **out);

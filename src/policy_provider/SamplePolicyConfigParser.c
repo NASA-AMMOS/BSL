@@ -390,7 +390,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             }
                             else if (0 == strcmp(id_str, "sha_variant"))
                             {
-                                uint64_t sha_var;
+                                int64_t sha_var;
                                 if (0 == strcmp(value_str, "5"))
                                 {
                                     sha_var = RFC9173_BIB_SHA_HMAC256;
@@ -404,19 +404,19 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                                     sha_var = RFC9173_BIB_SHA_HMAC512;
                                 }
 
-                                BSL_IdValPair_SetUint64(params.param_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, sha_var);
+                                BSL_IdValPair_SetInt64(params.param_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, sha_var);
                                 params_got |= 0x2;
                             }
                             else if (0 == strcmp(id_str, "scope_flags"))
                             {
-                                uint64_t flag = strtol(value_str, NULL, 10);
-                                BSL_IdValPair_SetUint64(params.param_integ_scope_flag, BSLX_BIB_OPT_SCOPE, flag);
+                                int64_t flag = strtol(value_str, NULL, 10);
+                                BSL_IdValPair_SetInt64(params.param_integ_scope_flag, BSLX_BIB_OPT_SCOPE, flag);
                                 params_got |= 0x4;
                             }
                             else if (0 == strcmp(id_str, "key_wrap"))
                             {
-                                uint64_t keywrap = !!strcmp(value_str, "0");
-                                BSL_IdValPair_SetUint64(params.param_use_wrapped_key, BSLX_BIB_OPT_USE_KEY_WRAP,
+                                int64_t keywrap = !!strcmp(value_str, "0");
+                                BSL_IdValPair_SetInt64(params.param_use_wrapped_key, BSLX_BIB_OPT_USE_KEY_WRAP,
                                                         keywrap);
                                 params_got |= 0x8;
                             }
@@ -436,20 +436,20 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                             }
                             else if (0 == strcmp(id_str, "aes_variant"))
                             {
-                                uint64_t aes_var = strtol(value_str, NULL, 10);
-                                BSL_IdValPair_SetUint64(params.param_aes_variant, BSLX_BCB_OPT_AES_VARIANT, aes_var);
+                                int64_t aes_var = strtol(value_str, NULL, 10);
+                                BSL_IdValPair_SetInt64(params.param_aes_variant, BSLX_BCB_OPT_AES_VARIANT, aes_var);
                                 params_got |= 0x4;
                             }
                             else if (0 == strcmp(id_str, "aad_scope"))
                             {
-                                uint64_t flag = strtol(value_str, NULL, 10);
-                                BSL_IdValPair_SetUint64(params.param_aad_scope_flag, BSLX_BCB_OPT_SCOPE, flag);
+                                int64_t flag = strtol(value_str, NULL, 10);
+                                BSL_IdValPair_SetInt64(params.param_aad_scope_flag, BSLX_BCB_OPT_SCOPE, flag);
                                 params_got |= 0x8;
                             }
                             else if (0 == strcmp(id_str, "key_wrap"))
                             {
-                                uint64_t keywrap = !!strcmp(value_str, "0");
-                                BSL_IdValPair_SetUint64(params.param_use_wrapped_key, BSLX_BCB_OPT_USE_KEY_WRAP,
+                                int64_t keywrap = !!strcmp(value_str, "0");
+                                BSL_IdValPair_SetInt64(params.param_use_wrapped_key, BSLX_BCB_OPT_USE_KEY_WRAP,
                                                         keywrap);
                                 params_got |= 0x10;
                             }
@@ -576,25 +576,25 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_BitstringPolicyConfigura
 
     if (sec_block_type == 1)
     {
-        BSL_IdValPair_SetUint64(params->param_aad_scope_flag, BSLX_BCB_OPT_SCOPE, RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
-        BSL_IdValPair_SetUint64(params->param_aes_variant, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+        BSL_IdValPair_SetInt64(params->param_aad_scope_flag, BSLX_BCB_OPT_SCOPE, RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
+        BSL_IdValPair_SetInt64(params->param_aes_variant, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
         if (use_wrapped_key)
         {
             BSL_IdValPair_SetTextstr(params->param_test_key, BSLX_BCB_OPT_KEY_ID, "9103");
-            BSL_IdValPair_SetUint64(params->param_use_wrapped_key, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
+            BSL_IdValPair_SetInt64(params->param_use_wrapped_key, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
         }
         else
         {
             BSL_IdValPair_SetTextstr(params->param_test_key, BSLX_BCB_OPT_KEY_ID, "9102");
-            BSL_IdValPair_SetUint64(params->param_use_wrapped_key, BSLX_BCB_OPT_USE_KEY_WRAP, 0);
+            BSL_IdValPair_SetInt64(params->param_use_wrapped_key, BSLX_BCB_OPT_USE_KEY_WRAP, 0);
         }
     }
     else
     {
-        BSL_IdValPair_SetUint64(params->param_integ_scope_flag, BSLX_BIB_OPT_SCOPE, 0);
-        BSL_IdValPair_SetUint64(params->param_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+        BSL_IdValPair_SetInt64(params->param_integ_scope_flag, BSLX_BIB_OPT_SCOPE, 0);
+        BSL_IdValPair_SetInt64(params->param_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
         BSL_IdValPair_SetTextstr(params->param_test_key, BSLX_BIB_OPT_KEY_ID, "9100");
-        BSL_IdValPair_SetUint64(params->param_use_wrapped_key, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
+        BSL_IdValPair_SetInt64(params->param_use_wrapped_key, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
     }
 
     BSL_SecBlockType_e sec_block_enum;

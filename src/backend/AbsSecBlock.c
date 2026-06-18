@@ -60,21 +60,25 @@ bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self)
 
 static void BSL_IdValPair_Print(const BSL_IdValPair_t *pair, const char *label, size_t index)
 {
-    if (BSL_IdValPair_IsUint64(pair))
+    if (BSL_IdValPair_IsInt64(pair))
     {
-        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%" PRIu64, label, index, pair->id, pair->_val.as_uint);
-    }
-    if (BSL_IdValPair_IsNint64(pair))
-    {
-        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%" PRId64, label, index, pair->id, pair->_val.as_nint);
+        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%" PRIu64, label, index, pair->id, pair->_val.as_int);
     }
     else if (BSL_IdValPair_IsBytestr(pair))
     {
-        size_t         blen = m_bstring_size(pair->_val.as_bytes);
-        const uint8_t *bptr = m_bstring_view(pair->_val.as_bytes, 0, blen);
-        char           hex_str[2 * blen + 1];
-        BSL_Log_DumpAsHexString(hex_str, sizeof(hex_str), bptr, blen);
+        BSL_Data_t val;
+        BSL_IdValPair_GetAsBytestr(pair, &val);
+
+        char           hex_str[2 * val.len + 1];
+        BSL_Log_DumpAsHexString(hex_str, sizeof(hex_str), val.ptr, val.len);
         BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, pair->id, hex_str);
+    }
+    else if (BSL_IdValPair_IsTextstr(pair))
+    {
+        const char *val;
+        BSL_IdValPair_GetAsTextstr(pair, &val);
+
+        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, pair->id, val);
     }
 }
 
@@ -274,13 +278,11 @@ static void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t 
 
     QCBOREncode_AddUInt64(enc, pair->id);
 
-    if (BSL_IdValPair_IsUint64(pair))
+    if (BSL_IdValPair_IsInt64(pair))
     {
-        QCBOREncode_AddUInt64(enc, BSL_IdValPair_GetAsUint64(pair));
-    }
-    else if (BSL_IdValPair_IsNint64(pair))
-    {
-        //        QCBOREncode_AddInt64(enc, BSL_IdValPair_GetAsNint64(pair));
+        int64_t as_int;
+        BSL_IdValPair_GetAsInt64(pair, &as_int);
+        QCBOREncode_AddInt64(enc, as_int);
     }
     else if (BSL_IdValPair_IsBytestr(pair))
     {
@@ -432,8 +434,8 @@ static int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
         case QCBOR_TYPE_INT64:
         case QCBOR_TYPE_UINT64:
         {
-            uint64_t dec_value = 0;
-            QCBORDecode_GetUInt64(dec, &dec_value);
+            int64_t dec_value = 0;
+            QCBORDecode_GetInt64(dec, &dec_value);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {
                 BSL_LOG_ERR("Invalid integer value for ID %" PRIu64, item_id);
@@ -441,7 +443,7 @@ static int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
             }
             BSL_LOG_DEBUG("ASB: Parsed pair[%" PRIu64 "] at %zu as uint %" PRIu64, item_id, value_begin, dec_value);
 
-            BSL_IdValPair_SetUint64(pair, item_id, dec_value);
+            BSL_IdValPair_SetInt64(pair, item_id, dec_value);
             break;
         }
         case QCBOR_TYPE_BYTE_STRING:

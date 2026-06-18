@@ -71,8 +71,7 @@
 enum BSL_IdValPair_Type_e
 {
     BSL_IDVALPAIR_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
-    BSL_IDVALPAIR_TYPE_UINT64,      ///< Indicates value type is an unsigned integer.
-    BSL_IDVALPAIR_TYPE_NINT64,      ///< Indicates value type is a negative integer.
+    BSL_IDVALPAIR_TYPE_INT64,       ///< Indicates value type is a signed integer.
     BSL_IDVALPAIR_TYPE_BYTESTR,     ///< Indicates the value is a byte string.
     BSL_IDVALPAIR_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
     BSL_IDVALPAIR_TYPE_RAW,         ///< Indicates the value is raw encoded bytes.
@@ -88,10 +87,8 @@ struct BSL_IdValPair_s
     /// The value storage based on #_type
     union
     {
-        /// Valid when #_type is ::BSL_IDVALPAIR_TYPE_UINT64
-        uint64_t as_uint;
-        /// Valid when #_type is ::BSL_IDVALPAIR_TYPE_NINT64
-        int64_t as_nint;
+        /// Valid when #_type is ::BSL_IDVALPAIR_TYPE_INT64
+        int64_t as_int;
         /** Valid when #_type is ::BSL_IDVALPAIR_TYPE_BYTESTR or ::BSL_IDVALPAIR_TYPE_TEXTSTR
          * or ::BSL_IDVALPAIR_TYPE_RAW
          */
