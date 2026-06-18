@@ -69,7 +69,7 @@ static void BSL_IdValPair_Print(const BSL_IdValPair_t *pair, const char *label, 
         BSL_Data_t val;
         BSL_IdValPair_GetAsBytestr(pair, &val);
 
-        char           hex_str[2 * val.len + 1];
+        char hex_str[2 * val.len + 1];
         BSL_Log_DumpAsHexString(hex_str, sizeof(hex_str), val.ptr, val.len);
         BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, pair->id, hex_str);
     }
@@ -430,7 +430,7 @@ static int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
     QCBORDecode_PeekNext(dec, &asbitem);
     switch (asbitem.uDataType)
     {
-        // FIXME reconcile int vs uint
+        // Collapse both encoded types, with restriction to INT64_MAX
         case QCBOR_TYPE_INT64:
         case QCBOR_TYPE_UINT64:
         {

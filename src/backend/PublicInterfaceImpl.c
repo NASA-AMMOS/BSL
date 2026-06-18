@@ -142,8 +142,6 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
     CHK_ARG_NONNULL(bundle);
 
     BSL_LOG_INFO("Querying policy provider for security actions...");
-    // FIXME init in caller
-    BSL_SecurityActionSet_Init(output_action_set);
     int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
     BSL_LOG_INFO("Completed query: status=%d", query_status);
 
@@ -232,8 +230,6 @@ int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(policy_actions);
 
-    BSL_SecurityResponseSet_Init(response_output);
-
     int exec_code = BSL_SecCtx_ExecutePolicyActionSet(bsl, response_output, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)
     {
@@ -266,8 +262,5 @@ int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response
     int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);
     BSL_LOG_INFO("Completed finalize: status=%d", finalize_status);
 
-    BSL_SecurityResponseSet_Deinit(response_output);
-
-    // TODO CHK_POSTCONDITION
     return BSL_SUCCESS;
 }

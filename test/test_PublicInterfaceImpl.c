@@ -125,6 +125,7 @@ void setUp(void)
     BSL_CryptoInit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
     BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
+    BSL_SecurityActionSet_Init(&action_set);
     PublicInterfaceTestCtx_init(&ctx);
     policy_provider = BSLP_PolicyProvider_Init(1);
 
@@ -522,10 +523,10 @@ void setUp(void)
 
 void tearDown(void)
 {
-    BSL_SecurityActionSet_Deinit(&action_set);
     BSLP_PolicyProvider_Deinit(policy_provider);
     BSL_CryptoDeinit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
+    BSL_SecurityActionSet_Deinit(&action_set);
     PublicInterfaceTestCtx_deinit(&ctx);
 }
 
@@ -578,7 +579,8 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                         BSL_PolicyAction_e policy_act, bool good_key, int sec_blks_ct, int expected_act_ct)
 {
     BSL_PrimaryBlock_t        primary_block;
-    BSL_SecurityResponseSet_t response_set = { 0 };
+    BSL_SecurityResponseSet_t response_set;
+    BSL_SecurityResponseSet_Init(&response_set);
     BSL_TlmCounters_t         tlm          = BSL_TLM_COUNTERS_ZERO;
 
     int query_result = -1;
@@ -851,6 +853,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             break;
         }
     }
+    BSL_SecurityResponseSet_Deinit(&response_set);
 }
 
 // Recommended BSL_6 be removed
@@ -858,7 +861,8 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
 void n_test_BSL_6(void)
 {
     BSL_PrimaryBlock_t        primary_block;
-    BSL_SecurityResponseSet_t response_set = { 0 };
+    BSL_SecurityResponseSet_t response_set;
+    BSL_SecurityResponseSet_Init(&response_set);
     BSL_CanonicalBlock_t      res_blk;
     int                       query_result = -1;
     int                       apply_result = -1;
@@ -892,6 +896,7 @@ void n_test_BSL_6(void)
     BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(2, primary_block.block_count);
 
+    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_PrimaryBlock_deinit(&primary_block);
 }
 
@@ -899,7 +904,8 @@ void n_test_BSL_6(void)
 void test_BSL_32(void)
 {
     BSL_PrimaryBlock_t        primary_block;
-    BSL_SecurityResponseSet_t response_set = { 0 };
+    BSL_SecurityResponseSet_t response_set;
+    BSL_SecurityResponseSet_Init(&response_set);
     BSL_CanonicalBlock_t      res_blk;
     int                       query_result = -1;
     int                       apply_result = -1;
@@ -948,5 +954,6 @@ void test_BSL_32(void)
     TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 4, &res_blk));
     TEST_ASSERT_EQUAL(12, res_blk.type_code);
 
+    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_PrimaryBlock_deinit(&primary_block);
 }

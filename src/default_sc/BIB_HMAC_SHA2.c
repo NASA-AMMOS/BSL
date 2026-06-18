@@ -477,7 +477,8 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
                 BSL_LOG_ERR("IPPT Scope parameter is not valid");
                 bib_context.err_count++;
             }
-            else {
+            else
+            {
                 if (bib_context.opt_ippt_scope && (got != bib_context.ippt_scope))
                 {
                     BSL_LOG_WARNING("IPPT Scope mismatch, needed %d got %d", bib_context.ippt_scope, got);

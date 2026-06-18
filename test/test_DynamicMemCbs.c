@@ -161,7 +161,8 @@ void test_dyn_mem_cbs_BSL_32(void)
     _setUp();
 
     BSL_PrimaryBlock_t        primary_block;
-    BSL_SecurityResponseSet_t response_set = { 0 };
+    BSL_SecurityResponseSet_t response_set;
+    BSL_SecurityResponseSet_Init(&response_set);
     BSL_CanonicalBlock_t      res_blk;
     int                       query_result = -1;
     int                       apply_result = -1;
@@ -209,6 +210,7 @@ void test_dyn_mem_cbs_BSL_32(void)
     TEST_ASSERT_EQUAL(12, res_blk.type_code);
 
     BSL_PrimaryBlock_deinit(&primary_block);
+    BSL_SecurityResponseSet_Deinit(&response_set);
 
     _tearDown();
 

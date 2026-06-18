@@ -679,12 +679,14 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
         return 2;
     }
 
-    BSL_SecurityActionSet_t   *malloced_action_set   = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
-    BSL_SecurityResponseSet_t *malloced_response_set = BSL_calloc(1, BSL_SecurityResponseSet_Sizeof());
+    BSL_SecurityActionSet_t   *action_set   = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
+    BSL_SecurityActionSet_Init(action_set);
+    BSL_SecurityResponseSet_t *response_set = BSL_calloc(1, BSL_SecurityResponseSet_Sizeof());
+    BSL_SecurityResponseSet_Init(response_set);
 
     BSL_BundleRef_t bundle_ref = { .data = bundle };
     BSL_LOG_INFO("calling BSL_API_QuerySecurity");
-    returncode = BSL_API_QuerySecurity(ctx->bsl, malloced_action_set, &bundle_ref, loc);
+    returncode = BSL_API_QuerySecurity(ctx->bsl, action_set, &bundle_ref, loc);
     if (returncode != 0)
     {
         BSL_LOG_ERR("Failed to query security: code=%d", returncode);
@@ -693,7 +695,7 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
     if (!returncode)
     {
         BSL_LOG_INFO("calling BSL_API_ApplySecurity");
-        returncode = BSL_API_ApplySecurity(ctx->bsl, malloced_response_set, &bundle_ref, malloced_action_set);
+        returncode = BSL_API_ApplySecurity(ctx->bsl, response_set, &bundle_ref, action_set);
         if (returncode < 0)
         {
             BSL_LOG_ERR("Failed to apply security: code=%d", returncode);
@@ -707,9 +709,9 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
     // Example telemetry dump to log
     MockBPA_Agent_DumpTelemetry(agent);
 
-    BSL_SecurityActionSet_Deinit(malloced_action_set);
-    BSL_free(malloced_action_set);
-    BSL_free(malloced_response_set);
+    BSL_SecurityActionSet_Deinit(action_set);
+    BSL_free(action_set);
+    BSL_free(response_set);
     BSL_LOG_INFO("result code %d", returncode);
     return returncode;
 }
