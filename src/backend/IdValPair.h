@@ -105,7 +105,7 @@ struct BSL_IdValPair_s
      SET(API_6(BSL_IdValPair_Set)))
 
 /** @struct BSLB_IdValPairPtr_t
- * Thread safe shared pointers to ::BSL_IdValPair_t instances.
+ * Thread safe shared pointers to ::BSL_IdValPair_s instances.
  */
 /** @struct BSLB_IdValPairPtrList_t
  * Defines an internal list of ::BSLB_IdValPairPtr_t pointers.

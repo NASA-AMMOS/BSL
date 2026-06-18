@@ -55,7 +55,7 @@ void BSL_AbsSecBlock_Target_Init(BSL_AbsSecBlock_Target_t *self);
 /// Deinitialize a target structure
 void BSL_AbsSecBlock_Target_Deinit(BSL_AbsSecBlock_Target_t *self);
 
-/// M*LIB oplist for ::BSL_AbsSecBlock_Target_t
+/// M*LIB OPLIST for ::BSL_AbsSecBlock_Target_t
 #define M_OPL_BSL_AbsSecBlock_Target_t() \
     (INIT(API_2(BSL_AbsSecBlock_Target_Init)), INIT_SET(0), SET(0), CLEAR(API_2(BSL_AbsSecBlock_Target_Deinit)))
 
