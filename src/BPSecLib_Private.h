@@ -654,11 +654,10 @@ void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, uint64_t param_id, BSL_Data
 bool BSL_IdValPair_IsBytestr(const BSL_IdValPair_t *self);
 
 /** Retrieve byte string value of a parameter.
- * @warning Always check BSL_IdValPair_IsBytestr() before using this.
  *
- * @todo Clarify whether result contains copy or view of content
  * @param[in] self This Security Parameter
  * @param[out] out Pointer to optional struct which will be made a view onto this parameter value.
+ * That view must not outlive this pair instance.
  * @return Negative on error.
  */
 int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out);
@@ -749,14 +748,13 @@ void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t targ
 
 /** Returns true if internal consistency and sanity checks pass
  *
- * @todo Formalize invariants
  * @param[in] self This security operation
  * @return True if consistent, may assert false otherwise.
  */
 bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
- * @todo Clarify behavior if index is out of range.
+ *
  * @param[in] self This security operation
  * @param option_id The internal option ID value to search for.
  * @return Pointer to security parameter if found, otherwise NULL.
@@ -764,7 +762,7 @@ bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self);
 const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, uint64_t option_id);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
- * @todo Clarify behavior if index is out of range.
+ *
  * @param[in] self This security operation
  * @param param_id The parameter ID value to search for.
  * @return Pointer to security parameter if found, otherwise NULL.
@@ -772,7 +770,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, uint64_
 const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, uint64_t param_id);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
- * @todo Clarify behavior if index is out of range.
+ *
  * @param[in] self This security operation
  * @param[in] index Index of security parameter list to retrieve from
  * @return Pointer to security result if found, otherwise NULL.
@@ -876,7 +874,6 @@ typedef struct BSL_AbsSecBlock_s BSL_AbsSecBlock_t;
 size_t BSL_AbsSecBlock_Sizeof(void);
 
 /** Populate a pre-allocated Abstract Security Block
- * @todo - Can be backend-only.
  *
  * @param[in,out] self This ASB
  * @param[in] sec_context_id Security Context ID
@@ -894,11 +891,9 @@ bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self);
  */
 void BSL_AbsSecBlock_Deinit(BSL_AbsSecBlock_t *self);
 
-/** Prints to LOG INFO
- * @todo - Can be backend-only.
+/** Logs events exposing the ASB content at LOG DEBUG severity.
  *
  * @param[in] self This ASB
- * @todo Refactor to dump this to a pre-allocated string.
  */
 void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self);
 
@@ -963,9 +958,6 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
 int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *buf);
 
 /** Increments a telemetry counter in the ctx based on telemetry index
- *
- * @todo
- *
  */
 int BSL_TlmCounters_IncrementCounter(BSL_LibCtx_t *bsl, BSL_TlmCounterIndex_e tlm_index, uint64_t count);
 
@@ -1037,13 +1029,6 @@ size_t BSL_SecOutcome_CountParams(const BSL_SecOutcome_t *self);
  * @return Security parameter
  */
 const BSL_IdValPair_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, size_t index);
-
-/// @brief Returns true if this (the parameters and results) is contained within the given ASB
-/// @todo Can move to backend
-/// @param[in] self
-/// @param[in] outcome
-/// @return
-bool BSL_SecOutcome_IsInAbsSecBlock(const BSL_SecOutcome_t *self, const BSL_AbsSecBlock_t *abs_sec_block);
 
 /**
  * @return size of security operation

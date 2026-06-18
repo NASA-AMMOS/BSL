@@ -711,6 +711,7 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
 
     BSL_SecurityActionSet_Deinit(action_set);
     BSL_free(action_set);
+    BSL_SecurityResponseSet_Deinit(response_set);
     BSL_free(response_set);
     BSL_LOG_INFO("result code %d", returncode);
     return returncode;
