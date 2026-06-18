@@ -98,8 +98,8 @@ struct BSL_IdValPair_s
 
 /// OPLIST for ::BSL_IdValPair_s
 #define M_OPL_BSL_IdValPair_t()                                                                                   \
-    (INIT(API_2(BSL_IdValPair_Init)), INIT_SET(API_6(BSL_IdValPair_InitSet)), CLEAR(API_2(BSL_IdValPair_Deinit)), \
-     SET(API_6(BSL_IdValPair_Set)))
+    (INIT(API_2(BSL_IdValPair_Init)), INIT_SET(API_6(BSL_IdValPair_InitSet)), INIT_MOVE(0), CLEAR(API_2(BSL_IdValPair_Deinit)), \
+            SET(API_6(BSL_IdValPair_Set)), MOVE(API_6(BSL_IdValPair_Move)))
 
 /** @struct BSLB_IdValPairPtr_t
  * Thread safe shared pointers to ::BSL_IdValPair_s instances.

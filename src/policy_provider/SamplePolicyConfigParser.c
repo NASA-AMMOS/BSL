@@ -535,19 +535,19 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
 
         if (sec_ctx_id == 2) // BCB
         {
-            BSLP_PolicyRule_CopyParam(&rule, params.param_aes_variant);
+            BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_aes_variant);
             if (sec_role == BSL_SECROLE_SOURCE)
             {
-                BSLP_PolicyRule_CopyParam(&rule, params.param_aad_scope_flag);
+                BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_aad_scope_flag);
             }
         }
         else
         {
-            BSLP_PolicyRule_CopyParam(&rule, params.param_sha_variant);
-            BSLP_PolicyRule_CopyParam(&rule, params.param_integ_scope_flag);
+            BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_sha_variant);
+            BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_integ_scope_flag);
         }
-        BSLP_PolicyRule_CopyParam(&rule, params.param_test_key);
-        BSLP_PolicyRule_CopyParam(&rule, params.param_use_wrapped_key);
+        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_test_key);
+        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_use_wrapped_key);
 
         BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
 
@@ -712,19 +712,19 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_BitstringPolicyConfigura
 
     if (sec_block_enum == BSL_SECBLOCKTYPE_BCB)
     {
-        BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_aes_variant);
+        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_aes_variant);
         if (sec_role_enum == BSL_SECROLE_SOURCE)
         {
-            BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_aad_scope_flag);
+            BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_aad_scope_flag);
         }
     }
     else
     {
-        BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_sha_variant);
-        BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_integ_scope_flag);
+        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_sha_variant);
+        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_integ_scope_flag);
     }
-    BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_use_wrapped_key);
-    BSLP_PolicyRule_CopyParam(&rule_all_in, params->param_test_key);
+    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_use_wrapped_key);
+    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_test_key);
 
     BSLP_PolicyProvider_AddRule(policy, &rule_all_in, &predicate_all_in);
 }

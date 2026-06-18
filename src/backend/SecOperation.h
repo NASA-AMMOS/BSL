@@ -65,11 +65,14 @@ struct BSL_SecOper_s
      */
     /// @{
 
-    /// @brief Index of the existing target block index
+    /** @brief Index of the existing target block in the ASB if the #_role is not source.
+     * This will be distinct because the same source+function can only
+     * target each block no more than once.
+     */
     size_t _target_index;
-    /// @brief Parameters from the ASB if the role is not source
+    /// @brief Parameters from the ASB if the #_role is not source
     BSLB_IdValPairPtrDict_t _params_in;
-    /// @brief Results from the ASB if the role is not source
+    /// @brief Results from the ASB if the #_role is not source
     BSLB_IdValPairPtrDict_t _results_in;
     /// @}
 };

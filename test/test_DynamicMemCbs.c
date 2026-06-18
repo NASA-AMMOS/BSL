@@ -126,9 +126,9 @@ void _setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_bsl_32a, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:3.2)", 2,
                              BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_CopyParam(&rule_bsl_32a, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_CopyParam(&rule_bsl_32a, &param_aes_variant_128);
-    BSLP_PolicyRule_CopyParam(&rule_bsl_32a, &param_use_wrap_key);
+    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32a), &param_test_bcb_key_correct);
+    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32a), &param_aes_variant_128);
+    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32a), &param_use_wrap_key);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32a, &predicate_bsl_32a);
 
     BSLP_PolicyPredicate_t predicate_bsl_32b;
@@ -136,9 +136,9 @@ void _setUp(void)
     BSLP_PolicyRule_t rule_bsl_32b;
     BSLP_PolicyRule_InitFrom(&rule_bsl_32b, "SOURCE BCB OVER BIB AT CLOUT FILTER(DEST=ipn:3.2)", 2, BSL_SECROLE_SOURCE,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_BIB, BSL_POLICYACTION_DROP_BLOCK);
-    BSLP_PolicyRule_CopyParam(&rule_bsl_32b, &param_test_bcb_key_correct);
-    BSLP_PolicyRule_CopyParam(&rule_bsl_32b, &param_aes_variant_128);
-    BSLP_PolicyRule_CopyParam(&rule_bsl_32b, &param_use_wrap_key);
+    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32b), &param_test_bcb_key_correct);
+    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32b), &param_aes_variant_128);
+    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32b), &param_use_wrap_key);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32b, &predicate_bsl_32b);
 }
 

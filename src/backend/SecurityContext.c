@@ -232,7 +232,6 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, BSL_BundleRef_t *b
          BSL_AbsSecBlock_TargetList_next(tgt_iter))
     {
         const BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_cref(*BSL_AbsSecBlock_TargetList_ref(tgt_iter));
-        // FIXME need to be more strict about the index here
         if (tgt->target_block_num != sec_oper->target_block_num)
         {
             ++(sec_oper->_target_index);

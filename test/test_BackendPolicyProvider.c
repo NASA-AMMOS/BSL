@@ -144,9 +144,9 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
     BSLP_PolicyRule_InitFrom(&rule, "Verify BIB on APPIN from anywhere", 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
                              BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
     RFC9173_A1_Params bib_params = BSL_TestUtils_GetRFC9173_A1Params(RFC9173_EXAMPLE_A1_KEY);
-    BSLP_PolicyRule_MoveParam(&rule, &bib_params.sha_variant);
-    BSLP_PolicyRule_MoveParam(&rule, &bib_params.scope_flags);
-    BSLP_PolicyRule_MoveParam(&rule, &bib_params.test_key_id);
+    BSL_IdValPair_Move(BSLP_PolicyRule_AddOption(&rule), &bib_params.sha_variant);
+    BSL_IdValPair_Move(BSLP_PolicyRule_AddOption(&rule), &bib_params.scope_flags);
+    BSL_IdValPair_Move(BSLP_PolicyRule_AddOption(&rule), &bib_params.test_key_id);
 
     BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
 
@@ -192,9 +192,9 @@ void test_MultiplePolicyProviders(void)
     BSLP_PolicyRule_InitFrom(&rule, "Source BIB over primary on APPIN from anywhere", 1, BSL_SECROLE_SOURCE,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PRIMARY, BSL_POLICYACTION_DROP_BUNDLE);
     RFC9173_A1_Params bib_params = BSL_TestUtils_GetRFC9173_A1Params(RFC9173_EXAMPLE_A1_KEY);
-    BSLP_PolicyRule_MoveParam(&rule, &bib_params.sha_variant);
-    BSLP_PolicyRule_MoveParam(&rule, &bib_params.scope_flags);
-    BSLP_PolicyRule_MoveParam(&rule, &bib_params.test_key_id);
+    BSL_IdValPair_Move(BSLP_PolicyRule_AddOption(&rule), &bib_params.sha_variant);
+    BSL_IdValPair_Move(BSLP_PolicyRule_AddOption(&rule), &bib_params.scope_flags);
+    BSL_IdValPair_Move(BSLP_PolicyRule_AddOption(&rule), &bib_params.test_key_id);
     BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
 
     BSLP_PolicyPredicate_t predicate2;
@@ -204,9 +204,9 @@ void test_MultiplePolicyProviders(void)
     BSLP_PolicyRule_InitFrom(&rule2, "Source BIB over payload on APPIN from anywhere", 1, BSL_SECROLE_SOURCE,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
     RFC9173_A1_Params bib_params2 = BSL_TestUtils_GetRFC9173_A1Params(RFC9173_EXAMPLE_A1_KEY);
-    BSLP_PolicyRule_MoveParam(&rule2, &bib_params2.sha_variant);
-    BSLP_PolicyRule_MoveParam(&rule2, &bib_params2.scope_flags);
-    BSLP_PolicyRule_MoveParam(&rule2, &bib_params2.test_key_id);
+    BSL_IdValPair_Move(BSLP_PolicyRule_AddOption(&rule2), &bib_params2.sha_variant);
+    BSL_IdValPair_Move(BSLP_PolicyRule_AddOption(&rule2), &bib_params2.scope_flags);
+    BSL_IdValPair_Move(BSLP_PolicyRule_AddOption(&rule2), &bib_params2.test_key_id);
     BSLP_PolicyProvider_AddRule(policy2, &rule2, &predicate2);
 
     TEST_ASSERT_EQUAL(

@@ -200,20 +200,12 @@ M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t())
 /// @endcond
 
 /**
- * @brief Include a BPSec parameter to this rule. Used immediately after Init.
+ * @brief Include a BPSec option on this rule.
  *
  * @param[in] self This rule
- * @param[in,out] param Pointer to the Parameter to move from.
+ * @return Pointer to the Parameter to copy or move into.
  */
-void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_IdValPair_t *param);
-
-/**
- * @brief Include a BPSec parameter to this rule. Used immediately after Init.
- *
- * @param[in] self This rule
- * @param[in,out] param Pointer to the Parameter to move from.
- */
-void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_IdValPair_t *param);
+BSL_IdValPair_t * BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self);
 
 /// @brief Policy provider data. References shared among individual providers in BSL context
 typedef struct BSLP_PolicyProvider_s

@@ -521,28 +521,11 @@ void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
     BSLB_IdValPairPtrList_clear(self->options);
 }
 
-void BSLP_PolicyRule_CopyParam(BSLP_PolicyRule_t *self, const BSL_IdValPair_t *param)
+BSL_IdValPair_t * BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self)
 {
-    ASSERT_ARG_EXPR(BSL_IdValPair_IsConsistent(param));
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
 
-    BSL_IdValPair_t *item = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->options));
-    BSL_IdValPair_Set(item, param);
-
-    ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
-}
-
-void BSLP_PolicyRule_MoveParam(BSLP_PolicyRule_t *self, BSL_IdValPair_t *param)
-{
-    ASSERT_ARG_EXPR(BSL_IdValPair_IsConsistent(param));
-    ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
-
-    BSL_IdValPair_t *item = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->options));
-    // FIXME not really...
-    *item  = *param;
-    *param = (BSL_IdValPair_t) { 0 };
-
-    ASSERT_POSTCONDITION(BSLP_PolicyRule_IsConsistent(self));
+    return BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->options));
 }
 
 int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_PolicyPredicate_t *predicate,

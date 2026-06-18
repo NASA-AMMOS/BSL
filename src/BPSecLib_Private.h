@@ -593,6 +593,13 @@ void BSL_IdValPair_Deinit(BSL_IdValPair_t *self);
  */
 void BSL_IdValPair_Set(BSL_IdValPair_t *self, const BSL_IdValPair_t *src);
 
+/** Move from another value.
+ * The other value is left deinitialized.
+ * @param[in,out] self The object to overwrite.
+ * @param[in] src The source of the copy.
+ */
+void BSL_IdValPair_Move(BSL_IdValPair_t *self, BSL_IdValPair_t *src);
+
 /** @brief Get parameter ID of this param
  * @param[in] self This BPSec Param type
  * @return The parameter ID value

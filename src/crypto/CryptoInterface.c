@@ -629,7 +629,7 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer)
 
     int res = EVP_CipherFinal_ex(cipher_ctx->libhandle, cipher_ctx->out_buf.ptr, &block_size_int);
     BSL_LOG_DEBUG("EVP_CipherFinal_ex gave %d bytes, return %d", block_size_int, res);
-    if ((res != 1))
+    if (res != 1)
     {
         BSL_LOG_ERR("EVP_CipherFinal_ex error %s", ERR_error_string(ERR_get_error(), NULL));
         return BSL_ERR_FAILURE;
