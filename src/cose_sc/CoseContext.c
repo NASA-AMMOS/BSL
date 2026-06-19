@@ -148,6 +148,7 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                 BSL_IdValPair_t *result = BSL_SecOutcome_AppendResult(sec_outcome);
                 BSL_IdValPair_SetBytestr(result, BXLS_COSESC_RESULT_COSE_MAC0, msg_enc);
             }
+            BSL_Data_Deinit(&msg_enc);
         }
         else
         {}
