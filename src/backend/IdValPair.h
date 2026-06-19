@@ -65,6 +65,10 @@
 
 #include <BPSecLib_Private.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @brief Types of values in ::BSL_IdValPair_s.
  * Security options, parameters, and results defined in RFC9173 may be unsigned integers or bytestrings.
  */
@@ -121,5 +125,9 @@ M_DICT_DEF2(BSLB_IdValPairPtrDict, uint64_t, M_BASIC_OPLIST, BSLB_IdValPairPtr_t
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* BSLB_IDVALPAIR_H_ */

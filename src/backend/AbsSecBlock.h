@@ -43,6 +43,10 @@
 
 #include "IdValPair.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct
 {
     /// Reference to the unique target
@@ -131,5 +135,9 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *obj
  * @return Negative on error
  */
 int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* BSLB_ABSSECBLOCK_IMPL_H_ */

@@ -21,11 +21,11 @@
  */
 /** @file
  * @ingroup fuzz_test
- * @brief Fuzz the BPSec ASB decoding from CBOR.
+ * @brief Fuzz the COSE Context result decoding.
  */
 #include "TestUtils.h"
 #include <mock_bpa/MockBPA.h>
-#include <backend/AbsSecBlock.h>
+#include <cose_sc/CoseContext_Private.h>
 #include <backend/CBOR.h>
 #include <cinttypes>
 
@@ -50,13 +50,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     int retval = 0;
 
-    BSL_AbsSecBlock_t *asb = (BSL_AbsSecBlock_t *)BSL_malloc(BSL_AbsSecBlock_Sizeof());
-    BSL_AbsSecBlock_Init(asb);
+    BSLX_CoseSc_Mac0_t msg;
+    BSLX_CoseSc_Mac0_Init(&msg);
 
     {
         BSL_Data_t in_buf;
         BSL_Data_InitView(&in_buf, size, (BSL_DataPtr_t)data);
-        int res = BSL_CBOR_Decode(&in_buf, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb);
+        int res = BSL_CBOR_Decode(&in_buf, (BSL_CBOR_Decode_f)&BSLX_CoseSc_Mac0_Decode, &msg);
         BSL_Data_Deinit(&in_buf);
         if (BSL_SUCCESS != res)
         {
@@ -68,7 +68,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_Data_Init(&out_buf);
     if (!retval)
     {
-        int res = BSL_CBOR_Encode_Twopass(&out_buf, (BSL_CBOR_Encode_f)&BSL_AbsSecBlock_Encode, asb);
+        int res = BSL_CBOR_Encode_Twopass(&out_buf, (BSL_CBOR_Encode_f)&BSLX_CoseSc_Mac0_Encode, &msg);
         if (BSL_SUCCESS != res)
         {
             retval = -1;
@@ -89,8 +89,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     BSL_Data_Deinit(&out_buf);
-    BSL_AbsSecBlock_Deinit(asb);
-    BSL_free(asb);
+    BSLX_CoseSc_Mac0_Deinit(&msg);
 
     return retval;
 }

@@ -33,10 +33,70 @@
 #include <backend/CBOR.h>
 
 #include "CoseContext.h"
+#include "CoseContext_Private.h"
 
-enum BSLX_COSE_Header_e {
+enum BSLX_COSE_Header_e
+{
     BSLX_COSE_HDR_ALG = 1,
 };
+
+void BSLX_CoseSc_Mac0_Init(BSLX_CoseSc_Mac0_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    memset(obj, 0, sizeof(*obj));
+    BSL_Data_Init(&obj->tag);
+}
+
+void BSLX_CoseSc_Mac0_Deinit(BSLX_CoseSc_Mac0_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    BSL_Data_Deinit(&obj->tag);
+    memset(obj, 0, sizeof(*obj));
+}
+
+int BSLX_CoseSc_Mac0_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_Mac0_t *obj)
+{
+    QCBOREncode_OpenArray(enc);
+    {
+        // protected map
+        QCBOREncode_BstrWrap(enc);
+        QCBOREncode_OpenMap(enc);
+
+        QCBOREncode_AddInt64(enc, BSLX_COSE_HDR_ALG);
+        QCBOREncode_AddInt64(enc, obj->alg);
+
+        QCBOREncode_CloseMap(enc);
+        QCBOREncode_CloseBstrWrap(enc, NULL);
+    }
+    {
+        // unprotected map
+        QCBOREncode_OpenMap(enc);
+        QCBOREncode_CloseMap(enc);
+    }
+    // detached payload
+    QCBOREncode_AddNULL(enc);
+    // MAC tag
+    QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(obj->tag));
+
+    QCBOREncode_CloseArray(enc);
+    return BSL_SUCCESS;
+}
+
+int BSLX_CoseSc_Mac0_Decode(QCBORDecodeContext *dec, BSLX_CoseSc_Mac0_t *obj)
+{
+    QCBORDecode_EnterArray(dec, NULL);
+
+    // protected map
+    QCBORDecode_EnterBstrWrapped(dec, QCBOR_TAG_REQUIREMENT_NOT_A_TAG, NULL);
+    QCBORDecode_EnterMap(dec, NULL);
+
+    QCBORDecode_ExitMap(dec);
+    QCBORDecode_ExitBstrWrapped(dec);
+    (void)obj;
+
+    QCBORDecode_ExitArray(dec);
+    return BSL_SUCCESS;
+}
 
 typedef struct
 {
@@ -81,39 +141,6 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self)
     (void)self;
 }
 
-typedef struct {
-    int64_t alg;
-} BSLX_CoseSc_Mac0_t;
-
-/// Match ::BSL_CBOR_Encode_f signature
-static int BSLX_CoseSc_Mac0_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_Mac0_t *obj)
-{
-    QCBOREncode_OpenArray(enc);
-    {
-        // protected bytes
-        QCBOREncode_BstrWrap(enc);
-        QCBOREncode_OpenMap(enc);
-
-        QCBOREncode_AddInt64(enc, BSLX_COSE_HDR_ALG);
-        QCBOREncode_AddInt64(enc, obj->alg);
-
-        QCBOREncode_CloseMap(enc);
-        QCBOREncode_CloseBstrWrap(enc, NULL);
-    }
-    {
-        // unprotected
-        QCBOREncode_OpenMap(enc);
-        QCBOREncode_CloseMap(enc);
-    }
-    // detached payload
-    QCBOREncode_AddNULL(enc);
-    // MAC tag
-    QCBOREncode_AddBytes(enc, (UsefulBufC){"hi", 2});
-
-    QCBOREncode_CloseArray(enc);
-    return BSL_SUCCESS;
-}
-
 bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
 {
     (void)lib;
@@ -134,11 +161,13 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
         BSLX_CoseSc_GetOptions(&ctx);
     }
 
+    // add results
     if (BSL_SUCCESS == ctx.retval)
     {
         if (ctx.is_source)
         {
             BSLX_CoseSc_Mac0_t msg;
+            BSLX_CoseSc_Mac0_Init(&msg);
             //            BSLX_CoseSc_GetOptions(&ctx);
             BSL_Data_t msg_enc;
             BSL_Data_Init(&msg_enc);
@@ -149,6 +178,7 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                 BSL_IdValPair_SetBytestr(result, BXLS_COSESC_RESULT_COSE_MAC0, msg_enc);
             }
             BSL_Data_Deinit(&msg_enc);
+            BSLX_CoseSc_Mac0_Deinit(&msg);
         }
         else
         {}

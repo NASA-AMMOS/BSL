@@ -128,4 +128,7 @@ if(BUILD_FUZZING)
 
   add_fuzz_test(SOURCE fuzz_dynamic_asb_cbor.cpp RUNS_COUNT 2000000)
   target_link_libraries(fuzz_dynamic_asb_cbor PUBLIC ${LIB_ORDERED})
+
+  add_fuzz_test(SOURCE fuzz_cose_mac0_cbor.cpp RUNS_COUNT 2000000)
+  target_link_libraries(fuzz_cose_mac0_cbor PUBLIC ${LIB_ORDERED})
 endif(BUILD_FUZZING)

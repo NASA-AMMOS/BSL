@@ -43,7 +43,8 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
     bsl_mock_eid_init(obj);
 
     QCBORDecodeContext dec;
-    QCBORDecode_Init(&dec, (UsefulBufC) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len }, QCBOR_DECODE_MODE_NORMAL);
+    QCBORDecode_Init(&dec, (UsefulBufC) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len },
+                     QCBOR_DECODE_MODE_NORMAL);
 
     QCBORItem decitem;
     QCBORDecode_EnterArray(&dec, NULL);

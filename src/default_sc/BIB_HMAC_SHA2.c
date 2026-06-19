@@ -34,6 +34,7 @@
 
 #include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
+#include <backend/CBOR.h>
 
 #include "DefaultSecContext.h"
 #include "DefaultSecContext_Private.h"
@@ -244,9 +245,7 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
         // Now begin process of computing IPPT
         if (self->ippt_scope & RFC9173_BIB_INTEGSCOPEFLAG_INC_PRIM)
         {
-            UsefulBufC prim_encoded = { .ptr = self->primary_block.encoded.ptr,
-                                        .len = self->primary_block.encoded.len };
-            QCBOREncode_AddEncoded(&encoder, prim_encoded);
+            QCBOREncode_AddEncoded(&encoder, UsefulBufC_FROM_BSL_Data(self->primary_block.encoded));
         }
         if (self->ippt_scope & RFC9173_BIB_INTEGSCOPEFLAG_INC_TARGET_HDR)
         {
@@ -277,14 +276,12 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
             BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", self->target_block.btsd_len, btsd_copy.len);
         }
 
-        UsefulBufC buf = { .ptr = btsd_copy.ptr, .len = btsd_copy.len };
-        QCBOREncode_AddBytes(&encoder, buf);
+        QCBOREncode_AddBytes(&encoder, UsefulBufC_FROM_BSL_Data(btsd_copy));
         BSL_Data_Deinit(&btsd_copy);
     }
     else
     {
-        UsefulBufC buf = { .ptr = self->primary_block.encoded.ptr, .len = self->primary_block.encoded.len };
-        QCBOREncode_AddBytes(&encoder, buf);
+        QCBOREncode_AddBytes(&encoder, UsefulBufC_FROM_BSL_Data(self->primary_block.encoded));
     }
 
     UsefulBufC ippt_result;

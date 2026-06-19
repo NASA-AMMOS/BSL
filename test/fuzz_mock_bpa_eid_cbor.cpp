@@ -19,6 +19,10 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+/** @file
+ * @ingroup fuzz_test
+ * @brief Fuzz the BPv7 EID decoding from CBOR.
+ */
 #include "TestUtils.h"
 #include <mock_bpa/MockBPA.h>
 #include <cinttypes>

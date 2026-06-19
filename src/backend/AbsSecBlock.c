@@ -29,6 +29,7 @@
 #include <BPSecLib_Private.h>
 
 #include "AbsSecBlock.h"
+#include "CBOR.h"
 
 void BSL_AbsSecBlock_Target_Init(BSL_AbsSecBlock_Target_t *self)
 {
@@ -288,8 +289,7 @@ static void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t 
     {
         BSL_Data_t bytestr;
         BSL_IdValPair_GetAsBytestr(pair, &bytestr);
-        UsefulBufC bytestr_buf = { .ptr = bytestr.ptr, .len = bytestr.len };
-        QCBOREncode_AddBytes(enc, bytestr_buf);
+        QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(bytestr));
     }
     else
     {

@@ -25,11 +25,15 @@
  * Header for the implementation of the COSE context @cite draft-ietf-dtn-bpsec-cose.
  */
 
-#ifndef BSLX_SECCTXERR_H_
-#define BSLX_SECCTXERR_H_
+#ifndef BSLX_COSECONTEXT_H_
+#define BSLX_COSECONTEXT_H_
 
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /// Registered BPSec context ID
 #define BSLX_COSESC_CTX_ID 3
@@ -83,4 +87,8 @@ bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOpe
 int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
                         BSL_SecOutcome_t *sec_outcome);
 
-#endif /* BSLX_SECCTXERR_H_ */
+#ifdef __cplusplus
+} // extern C
+#endif
+
+#endif /* BSLX_COSECONTEXT_H_ */
