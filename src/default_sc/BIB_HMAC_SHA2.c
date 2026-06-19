@@ -39,7 +39,7 @@
 #include "DefaultSecContext_Private.h"
 #include "rfc9173.h"
 
-bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
 {
     // Note: Internal API distinction.
     // Called before the `_execute` function. This checks ahead of time whether it contains the necessary info in order
@@ -233,9 +233,10 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
 
     UsefulBuf result_ub =
         ippt_space->ptr ? (UsefulBuf) { .ptr = ippt_space->ptr, ippt_space->len } : SizeCalculateUsefulBuf;
-    QCBOREncodeContext encoder;
 
+    QCBOREncodeContext encoder;
     QCBOREncode_Init(&encoder, result_ub);
+
     QCBOREncode_AddInt64(&encoder, self->ippt_scope);
 
     if (self->target_block.block_num > 0)

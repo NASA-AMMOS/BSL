@@ -35,16 +35,49 @@
 #define BSLX_COSESC_CTX_ID 3
 
 /// Internal option enumerations
-enum BSLX_CoseSC_Options_e
+enum BSLX_CoseSC_Option_e
 {
-    /// Key ID as a byte string
-    BSLX_COSESC_OPT_KEYID,
-    /// Content-layer algorithm
-    BSLX_COSESC_OPT_TGT_ALG,
+    /** Key ID as a byte string.
+     * The value is a byte string.
+     * Required for source and optional filter for verifier/acceptor.
+     * If ::BSLX_COSESC_OPT_RECIP_ALG is present the key will be used for
+     * the recipient layer, otherwise it will be used for a single-layer
+     * message.
+     */
+    BSLX_COSESC_OPTION_KEYID,
+    /** Content-layer algorithm as an integer.
+     * The value is a COSE algorithm code point.
+     * Required for source and optional filter for verifier/acceptor.
+     */
+    BSLX_COSESC_OPTION_TGT_ALG,
+    /** Optional recipient algorithm as an integer.
+     * The value is a COSE algorithm code point.
+     * Optional for source and optional filter for verifier/acceptor.
+     */
+    BSLX_COSESC_OPTION_RECIP_ALG,
+};
+
+/// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.2
+enum BSLX_CoseSC_Param_e
+{
+    BSLX_COSESC_PARAM_ADDL_PHDR = 3,
+    BSLX_COSESC_PARAM_ADDL_UHDR = 4,
+    BSLX_COSESC_PARAM_AAD_SCOPE = 5,
+};
+
+/// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.3
+enum BSLX_CoseSC_Result_e
+{
+    BXLS_COSESC_RESULT_COSE_ENC0  = 16,
+    BXLS_COSESC_RESULT_COSE_MAC0  = 17,
+    BXLS_COSESC_RESULT_COSE_SIGN1 = 18,
+    BXLS_COSESC_RESULT_COSE_ENC   = 96,
+    BXLS_COSESC_RESULT_COSE_MAC   = 97,
+    BXLS_COSESC_RESULT_COSE_SIGN  = 98,
 };
 
 /// Match signature ::BSL_SecCtx_Validate_f
-bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
+bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);
 
 /// Match signature ::BSL_SecCtx_Execute_f
 int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,

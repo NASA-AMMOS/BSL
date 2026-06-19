@@ -929,34 +929,6 @@ bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t targ
  */
 const BSL_IdValPair_t *BSL_AbsSecBlock_FindResult(BSL_AbsSecBlock_t *self, uint64_t target_index, uint64_t result_id);
 
-/** Remove security parameters and results found in `outcome` from this ASB
- *
- * @todo - Can be backend-only.
- *
- * @param[in,out] self This ASB
- * @param[in] outcome Security Operation outcome containing params and results
- * @return Negative on error, otherwise count of things removed.
- */
-int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_num);
-
-/** Encodes this ASB into a CBOR string into the space pre-allocated indicated by the argument.
- *
- * @param[in] self This ASB.
- * @param[in] buf A buffer with allocated space for the encoded CBOR
- * or a zero-length buffer to calculate the needed size.
- * @return Integer contains number of bytes written to buffer, negative indicates error.
- *
- */
-ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *buf);
-
-/** Decodes and populates this ASB from a CBOR string.
- *
- * @param[in,out] self This allocated, but uninitialized ASB to populate.
- * @param[in] buf A buffer containing a CBOR string representing the ASB
- * @return Negative on error
- */
-int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *buf);
-
 /** Increments a telemetry counter in the ctx based on telemetry index
  */
 int BSL_TlmCounters_IncrementCounter(BSL_LibCtx_t *bsl, BSL_TlmCounterIndex_e tlm_index, uint64_t count);
@@ -1270,10 +1242,12 @@ bool BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t
  *
  * @param[in] lib The library context.
  * @param[in] bundle The bundle to inspect.
+ * This is mutable to allow ASB caching.
  * @param[in] sec_oper The security operation to perform.
+ * This is mutable to allow marking options as validated.
  * @return True if security operation is deemed valid.
  */
-typedef bool (*BSL_SecCtx_Validate_f)(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
+typedef bool (*BSL_SecCtx_Validate_f)(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);
 
 /** Signature for Security Context executor for a sec OP.
  *

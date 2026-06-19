@@ -37,7 +37,7 @@
 #include "DefaultSecContext_Private.h"
 #include "rfc9173.h"
 
-bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
 {
     (void)lib;
     (void)bundle;

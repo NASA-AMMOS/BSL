@@ -101,7 +101,7 @@ void test_AppendixA_Example1_BIB_Source(void)
         {
             BSL_Data_t kid;
             BSL_Data_InitView(&kid, 4, (BSL_DataPtr_t) "1234");
-            BSL_IdValPair_SetBytestr(&param, BSLX_COSESC_OPT_KEYID, kid);
+            BSL_IdValPair_SetBytestr(&param, BSLX_COSESC_OPTION_KEYID, kid);
         }
         BSL_SecOper_AppendOption(&sec_oper, &param);
         BSL_IdValPair_Deinit(&param);
@@ -109,7 +109,7 @@ void test_AppendixA_Example1_BIB_Source(void)
     {
         BSL_IdValPair_t param;
         BSL_IdValPair_Init(&param);
-        BSL_IdValPair_SetInt64(&param, BSLX_COSESC_OPT_TGT_ALG, 123 /*FIXME*/);
+        BSL_IdValPair_SetInt64(&param, BSLX_COSESC_OPTION_TGT_ALG, 123 /*FIXME*/);
         BSL_SecOper_AppendOption(&sec_oper, &param);
         BSL_IdValPair_Deinit(&param);
     }
@@ -129,15 +129,16 @@ void test_AppendixA_Example1_BIB_Source(void)
     int exec_status = BSLX_CoseSc_Execute(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
-#if 0
     /// Confirm it produced only 1 result
     TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
-    const BSL_SecResult_t *bib_result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
-    TEST_ASSERT_NOT_NULL(bib_result);
+    const BSL_IdValPair_t *result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
+    TEST_ASSERT_NOT_NULL(result);
+    TEST_ASSERT_EQUAL(BXLS_COSESC_RESULT_COSE_MAC0, BSL_IdValPair_GetId(result));
+    TEST_ASSERT_TRUE(BSL_IdValPair_IsBytestr(result));
 
+#if 0
     /// Confirm the context and result result is the right ID (Defined in RFC)
     TEST_ASSERT_EQUAL(RFC9173_CONTEXTID_BIB_HMAC_SHA2, bib_result->context_id);
-    TEST_ASSERT_EQUAL(RFC9173_BIB_RESULTID_HMAC, bib_result->result_id);
     TEST_ASSERT_EQUAL(1, bib_result->target_block_num);
 
     {

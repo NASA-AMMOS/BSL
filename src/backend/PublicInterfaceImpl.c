@@ -31,6 +31,8 @@
 #include <BPSecLib_Public.h>
 
 #include "PublicInterfaceImpl.h"
+#include "AbsSecBlock.h"
+#include "CBOR.h"
 #include "SecurityActionSet.h"
 
 char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen)
@@ -190,11 +192,11 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
                 BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
                 BSL_SeqReader_Destroy(btsd_read);
 
-                BSL_AbsSecBlock_t *abs_sec_block = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
-                BSL_AbsSecBlock_Init(abs_sec_block);
-                if (BSL_AbsSecBlock_DecodeFromCBOR(abs_sec_block, &btsd_copy) == 0)
+                BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
+                BSL_AbsSecBlock_Init(asb);
+                if (BSL_SUCCESS == BSL_CBOR_Decode(&btsd_copy, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb))
                 {
-                    if (BSL_AbsSecBlock_ContainsTarget(abs_sec_block, sec_oper->target_block_num))
+                    if (BSL_AbsSecBlock_ContainsTarget(asb, sec_oper->target_block_num))
                     {
                         sec_oper->sec_block_num = block.block_num;
                     }
@@ -204,8 +206,8 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
                     BSL_LOG_WARNING("Failed to parse ASB from BTSD");
                     BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
                 }
-                BSL_AbsSecBlock_Deinit(abs_sec_block);
-                BSL_free(abs_sec_block);
+                BSL_AbsSecBlock_Deinit(asb);
+                BSL_free(asb);
 
                 BSL_Data_Deinit(&btsd_copy);
             }

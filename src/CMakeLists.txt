@@ -24,22 +24,18 @@ configure_file(BSLConfig.h.in BSLConfig.h @ONLY)
 configure_file(BSLConfig.c.in BSLConfig.c @ONLY)
 
 # Frontend library
-set(BSL_FRONT_H
-  ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Private.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Public.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/CryptoInterface.h
-)
-
-set(BSL_FRONT_C
-  ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/Data.c
-)
-
 add_library(bsl_front)
-target_sources(bsl_front PUBLIC ${BSL_FRONT_H})
-target_sources(bsl_front PRIVATE ${BSL_FRONT_C})
+target_sources(bsl_front PUBLIC
+    ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Private.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Public.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CryptoInterface.h
+)
+target_sources(bsl_front PRIVATE 
+    ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Data.c
+)
 
 set_target_properties(bsl_front
     PROPERTIES
@@ -142,6 +138,7 @@ target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
 # Dynamic backend library
 set(BSL_DYNAMIC_H
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/CBOR.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.h   
@@ -150,6 +147,7 @@ set(BSL_DYNAMIC_H
 
 set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/CBOR.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/HostInterface.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c

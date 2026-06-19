@@ -28,31 +28,21 @@
 #include <BPSecLib_Private.h>
 
 #include "AbsSecBlock.h"
+#include "CBOR.h"
 #include "PublicInterfaceImpl.h"
 #include "SecOperation.h"
 #include "SecOutcome.h"
 #include "SecurityActionSet.h"
 
-static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_num,
-                      const BSL_AbsSecBlock_t *abs_sec_block)
+static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_num, const BSL_AbsSecBlock_t *asb)
 {
-    // Get the needed size first
     BSL_Data_t asb_data;
     BSL_Data_Init(&asb_data);
-    ssize_t encode_result = BSL_AbsSecBlock_EncodeToCBOR(abs_sec_block, &asb_data);
-    BSL_Data_Deinit(&asb_data);
-    if (encode_result <= 0)
-    {
-        BSL_LOG_ERR("Failed to calculate ASB size");
-        return BSL_ERR_ENCODING;
-    }
 
-    BSL_Data_InitBuffer(&asb_data, (size_t)encode_result);
-    encode_result = BSL_AbsSecBlock_EncodeToCBOR(abs_sec_block, &asb_data);
-    if (encode_result <= BSL_SUCCESS)
+    int res = BSL_CBOR_Encode_Twopass(&asb_data, (BSL_CBOR_Encode_f)&BSL_AbsSecBlock_Encode, asb);
+    if (BSL_SUCCESS != res)
     {
-        BSL_LOG_ERR("Failed to encode ASB");
-        return BSL_ERR_ENCODING;
+        return res;
     }
 
     BSL_SeqWriter_t *btsd_write = BSL_BundleCtx_WriteBTSD(bundle, blk_num, asb_data.len);
@@ -200,7 +190,7 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, BSL_BundleRef_t *b
     BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
     BSL_SeqReader_Destroy(btsd_read);
 
-    if (BSL_AbsSecBlock_DecodeFromCBOR(asb, &btsd_copy) != BSL_SUCCESS)
+    if (BSL_CBOR_Decode(&btsd_copy, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
         BSL_Data_Deinit(&btsd_copy);
