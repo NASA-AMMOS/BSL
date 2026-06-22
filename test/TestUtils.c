@@ -28,7 +28,7 @@
 #include <CryptoInterface.h>
 #include <mock_bpa/MockBPA.h>
 
-#include <backend/SecParam.h>
+#include <backend/IdValPair.h>
 #include <backend/SecurityActionSet.h>
 #include <backend/UtilDefs_SeqReadWrite.h>
 #include <policy_provider/SamplePolicyProvider.h>
@@ -77,14 +77,18 @@ bool BSL_TestUtils_IsB16StrEqualTo(const char *b16_string, BSL_Data_t encoded_va
     BSL_TestUtils_PrintHexToBuffer("expected str: ", in_data.ptr, in_data.len);
     if (encoded_val.len != in_data.len)
     {
-        BSL_LOG_ERR("Mismatch, got %zu bytes, expected %zu bytes", encoded_val.len, in_data.len);
+        BSL_LOG_CRIT("Mismatch in size, got %zu bytes, expected %zu bytes", encoded_val.len, in_data.len);
         BSL_Data_Deinit(&in_data);
         return false;
     }
 
-    int r = memcmp(encoded_val.ptr, in_data.ptr, in_data.len);
+    bool match = (memcmp(encoded_val.ptr, in_data.ptr, in_data.len) == 0);
+    if (!match)
+    {
+        BSL_LOG_CRIT("Mismatch in content");
+    }
     BSL_Data_Deinit(&in_data);
-    return r == 0 ? true : false;
+    return match;
 }
 
 void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t bufflen)

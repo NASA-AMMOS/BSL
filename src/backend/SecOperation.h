@@ -29,7 +29,7 @@
 
 #include <stdint.h>
 #include <BPSecLib_Private.h>
-#include "SecParam.h"
+#include "IdValPair.h"
 
 struct BSL_SecOper_s
 {
@@ -54,9 +54,27 @@ struct BSL_SecOper_s
     BSL_ReasonCode_t reason_code;
 
     /// @brief Private enumeration indicating the role (e.g., acceptor vs verifier)
-    BSL_SecRole_e       _role;
-    BSL_SecBlockType_e  _service_type;
-    BSLB_SecParamList_t _param_list;
+    BSL_SecRole_e      _role;
+    BSL_SecBlockType_e _service_type;
+
+    /// @brief Options set by the policy provider
+    BSLB_IdValPairPtrDict_t _options;
+
+    /** @name Existing security verifier/acceptor.
+     * These fields apply when this operation is on an existing operation.
+     */
+    /// @{
+
+    /** @brief Index of the existing target block in the ASB if the #_role is not source.
+     * This will be distinct because the same source+function can only
+     * target each block no more than once.
+     */
+    size_t _target_index;
+    /// @brief Parameters from the ASB if the #_role is not source
+    BSLB_IdValPairPtrDict_t _params_in;
+    /// @brief Results from the ASB if the #_role is not source
+    BSLB_IdValPairPtrDict_t _results_in;
+    /// @}
 };
 
 #endif /* BSLB_SECOPERATIONS_H_ */

@@ -66,26 +66,36 @@ enum rfc9173_bib_integ_scope_flag_ids_e
 };
 
 /// @brief https://www.rfc-editor.org/rfc/rfc9173.html#section-4.3.2
-typedef enum
+enum rfc9173_bcb_aes_variant_e
 {
     RFC9173_BCB_AES_VARIANT_A128GCM = 1,
 
     // Default value
     RFC9173_BCB_AES_VARIANT_A256GCM = 3
-} rfc9173_bcb_aes_variant_e;
+};
 
 enum rfc9173_bcb_secparam_ids_e
 {
+    /** Value is a byte string.
+     */
     RFC9173_BCB_SECPARAM_IV = 1,
-
-    // Note, default value is 3 (see above enum.)
+    /** Value is one of the ::rfc9173_bcb_aes_variant_e integers.
+     * Note, default value is 3.
+     */
     RFC9173_BCB_SECPARAM_AESVARIANT = 2,
+    /** Value is a byte string.
+     */
     RFC9173_BCB_SECPARAM_WRAPPEDKEY = 3,
-
-    // Note, default value is 7
+    /** Value is a mask of the ::rfc9173_bib_integ_scope_flag_ids_e flags.
+     * Note, default value is 7.
+     */
     RFC9173_BCB_SECPARAM_AADSCOPE = 4
 };
 
+/** Length of generated IV byte strings.
+ * https://www.rfc-editor.org/rfc/rfc9173.html#name-initialization-vector-iv
+ * "A value of 12 bytes SHOULD be used unless local security policy requires a different length"
+ */
 #define RFC9173_BCB_DEFAULT_IV_LEN (12)
 
 /// @brief https://www.rfc-editor.org/rfc/rfc9173.html#section-4.4.2

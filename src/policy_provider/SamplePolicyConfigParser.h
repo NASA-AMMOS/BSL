@@ -40,17 +40,17 @@
 typedef struct BSLP_InitParams_s
 {
     // Params related to BIB
-    BSL_SecParam_t *param_integ_scope_flag;
-    BSL_SecParam_t *param_sha_variant;
+    BSL_IdValPair_t *param_integ_scope_flag;
+    BSL_IdValPair_t *param_sha_variant;
 
     // Params related to BCB
-    BSL_SecParam_t *param_aad_scope_flag;
-    BSL_SecParam_t *param_init_vector;
-    BSL_SecParam_t *param_aes_variant;
-    BSL_SecParam_t *param_use_wrapped_key;
+    BSL_IdValPair_t *param_aad_scope_flag;
+    BSL_IdValPair_t *param_init_vector;
+    BSL_IdValPair_t *param_aes_variant;
+    BSL_IdValPair_t *param_use_wrapped_key;
 
     // Params agnostic to BIB vs BCB
-    BSL_SecParam_t *param_test_key;
+    BSL_IdValPair_t *param_test_key;
 } BSLP_InitParams_t;
 
 /**

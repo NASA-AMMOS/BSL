@@ -41,6 +41,7 @@ bool BSL_SecurityResponseSet_IsConsistent(const BSL_SecurityResponseSet_t *self)
 void BSL_SecurityResponseSet_Init(BSL_SecurityResponseSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
+    memset(self, 0, sizeof(*self));
     BSL_SecResultSet_ResultCodes_init(self->results);
     BSL_SecResultSet_ErrorActionCodes_init(self->err_action_codes);
 }
