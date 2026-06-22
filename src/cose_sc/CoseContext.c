@@ -34,69 +34,7 @@
 
 #include "CoseContext.h"
 #include "CoseContext_Private.h"
-
-enum BSLX_COSE_Header_e
-{
-    BSLX_COSE_HDR_ALG = 1,
-};
-
-void BSLX_CoseSc_Mac0_Init(BSLX_CoseSc_Mac0_t *obj)
-{
-    ASSERT_ARG_NONNULL(obj);
-    memset(obj, 0, sizeof(*obj));
-    BSL_Data_Init(&obj->tag);
-}
-
-void BSLX_CoseSc_Mac0_Deinit(BSLX_CoseSc_Mac0_t *obj)
-{
-    ASSERT_ARG_NONNULL(obj);
-    BSL_Data_Deinit(&obj->tag);
-    memset(obj, 0, sizeof(*obj));
-}
-
-int BSLX_CoseSc_Mac0_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_Mac0_t *obj)
-{
-    QCBOREncode_OpenArray(enc);
-    {
-        // protected map
-        QCBOREncode_BstrWrap(enc);
-        QCBOREncode_OpenMap(enc);
-
-        QCBOREncode_AddInt64(enc, BSLX_COSE_HDR_ALG);
-        QCBOREncode_AddInt64(enc, obj->alg);
-
-        QCBOREncode_CloseMap(enc);
-        QCBOREncode_CloseBstrWrap(enc, NULL);
-    }
-    {
-        // unprotected map
-        QCBOREncode_OpenMap(enc);
-        QCBOREncode_CloseMap(enc);
-    }
-    // detached payload
-    QCBOREncode_AddNULL(enc);
-    // MAC tag
-    QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(obj->tag));
-
-    QCBOREncode_CloseArray(enc);
-    return BSL_SUCCESS;
-}
-
-int BSLX_CoseSc_Mac0_Decode(QCBORDecodeContext *dec, BSLX_CoseSc_Mac0_t *obj)
-{
-    QCBORDecode_EnterArray(dec, NULL);
-
-    // protected map
-    QCBORDecode_EnterBstrWrapped(dec, QCBOR_TAG_REQUIREMENT_NOT_A_TAG, NULL);
-    QCBORDecode_EnterMap(dec, NULL);
-
-    QCBORDecode_ExitMap(dec);
-    QCBORDecode_ExitBstrWrapped(dec);
-    (void)obj;
-
-    QCBORDecode_ExitArray(dec);
-    return BSL_SUCCESS;
-}
+#include "CoseMsg.h"
 
 typedef struct
 {
@@ -112,6 +50,11 @@ typedef struct
     bool opt_aad_scope;
     /// Required AAD scope
     int64_t aad_scope;
+
+    /// True if #tgt_alg came from an option
+    bool opt_tgt_alg;
+    /// Required content algorithm
+    int64_t tgt_alg;
 
 } BSLX_CoseSc_t;
 
@@ -136,9 +79,23 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, co
     (void)bundle;
 }
 
-static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self)
+static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec_oper)
 {
-    (void)self;
+    const BSL_IdValPair_t *opt;
+    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_TGT_ALG);
+    if (opt)
+    {
+        BSL_LOG_DEBUG("BCB parsing AES variant (optid=%" PRIu64 ")", BSL_IdValPair_GetId(opt));
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->tgt_alg))
+        {
+            BSL_LOG_ERR("Invalid target algorithm value");
+            self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            self->opt_tgt_alg = true;
+        }
+    }
 }
 
 bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
@@ -158,7 +115,8 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
 
     if (BSL_SUCCESS == ctx.retval)
     {
-        BSLX_CoseSc_GetOptions(&ctx);
+        BSLX_CoseSc_GetOptions(&ctx, sec_oper);
+        ctx.tgt_alg = BSLX_COSEMSG_ALG_HMAC_SHA_384_384;
     }
 
     // add results
@@ -166,22 +124,32 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
     {
         if (ctx.is_source)
         {
-            BSLX_CoseSc_Mac0_t msg;
-            BSLX_CoseSc_Mac0_Init(&msg);
-            //            BSLX_CoseSc_GetOptions(&ctx);
+            BSLX_CoseMsg_Mac0_t msg;
+            BSLX_CoseMsg_Mac0_Init(&msg);
+            {
+                BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+                BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+
+                BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx.tgt_alg);
+
+                BSLB_IdValPairPtrDict_set_at(msg.phdr, param->id, param_ptr);
+            }
+
             BSL_Data_t msg_enc;
             BSL_Data_Init(&msg_enc);
-            int res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_Mac0_Encode, &msg);
+            int res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Mac0_Encode, &msg);
             if (res == BSL_SUCCESS)
             {
                 BSL_IdValPair_t *result = BSL_SecOutcome_AppendResult(sec_outcome);
                 BSL_IdValPair_SetBytestr(result, BXLS_COSESC_RESULT_COSE_MAC0, msg_enc);
             }
             BSL_Data_Deinit(&msg_enc);
-            BSLX_CoseSc_Mac0_Deinit(&msg);
+            BSLX_CoseMsg_Mac0_Deinit(&msg);
         }
         else
-        {}
+        {
+            // TODO fill out
+        }
     }
 
     int ret = ctx.retval;

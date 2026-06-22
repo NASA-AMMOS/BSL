@@ -161,7 +161,7 @@ uint64_t BSL_SecOper_GetTargetBlockNum(const BSL_SecOper_t *self)
     return self->target_block_num;
 }
 
-const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, uint64_t option_id)
+const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, int64_t option_id)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
@@ -169,7 +169,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, uint64_
     return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
 }
 
-const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, uint64_t param_id)
+const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, int64_t param_id)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
@@ -177,7 +177,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, uint64_t
     return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
 }
 
-const BSL_IdValPair_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, uint64_t result_id)
+const BSL_IdValPair_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, int64_t result_id)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 

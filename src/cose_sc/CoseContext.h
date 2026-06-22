@@ -44,7 +44,7 @@ enum BSLX_CoseSC_Option_e
     /** Key ID as a byte string.
      * The value is a byte string.
      * Required for source and optional filter for verifier/acceptor.
-     * If ::BSLX_COSESC_OPT_RECIP_ALG is present the key will be used for
+     * If ::BSLX_COSESC_OPTION_RECIP_ALG is present the key will be used for
      * the recipient layer, otherwise it will be used for a single-layer
      * message.
      */

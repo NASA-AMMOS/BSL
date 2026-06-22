@@ -29,26 +29,10 @@
 #define BSLX_COSECONTEXT_PRIVATE_H_
 
 #include <BPSecLib_Public.h>
-#include <backend/CBOR.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct
-{
-    int64_t alg;
-    BSL_Data_t tag;
-} BSLX_CoseSc_Mac0_t;
-
-void BSLX_CoseSc_Mac0_Init(BSLX_CoseSc_Mac0_t *obj);
-void BSLX_CoseSc_Mac0_Deinit(BSLX_CoseSc_Mac0_t *obj);
-
-/// Match ::BSL_CBOR_Encode_f signature
-int BSLX_CoseSc_Mac0_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_Mac0_t *obj);
-
-/// Match ::BSL_CBOR_Decode_f signature
-int BSLX_CoseSc_Mac0_Decode(QCBORDecodeContext *enc, BSLX_CoseSc_Mac0_t *obj);
 
 #ifdef __cplusplus
 } // extern C

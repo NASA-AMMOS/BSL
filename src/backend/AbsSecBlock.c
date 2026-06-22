@@ -273,33 +273,6 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
     return (int)things_removed;
 }
 
-static void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t *pair)
-{
-    QCBOREncode_OpenArray(enc);
-
-    QCBOREncode_AddUInt64(enc, pair->id);
-
-    if (BSL_IdValPair_IsInt64(pair))
-    {
-        int64_t as_int;
-        BSL_IdValPair_GetAsInt64(pair, &as_int);
-        QCBOREncode_AddInt64(enc, as_int);
-    }
-    else if (BSL_IdValPair_IsBytestr(pair))
-    {
-        BSL_Data_t bytestr;
-        BSL_IdValPair_GetAsBytestr(pair, &bytestr);
-        QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(bytestr));
-    }
-    else
-    {
-        BSL_LOG_CRIT("Unhandled parameter type for ID %" PRIu64, pair->id);
-        QCBOREncode_AddUndef(enc);
-    }
-
-    QCBOREncode_CloseArray(enc);
-}
-
 int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb)
 {
     CHK_PRECONDITION(BSL_AbsSecBlock_IsConsistent(asb));
@@ -361,7 +334,9 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
              BSLB_IdValPairPtrList_next(pit))
         {
             const BSL_IdValPair_t *param = BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cref(pit));
+            QCBOREncode_OpenArray(enc);
             BSL_IdValPair_Encode(enc, param);
+            QCBOREncode_CloseArray(enc);
         }
         QCBOREncode_CloseArray(enc);
     }
@@ -384,7 +359,9 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
                  BSLB_IdValPairPtrList_next(result_iter))
             {
                 const BSL_IdValPair_t *result = BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cref(result_iter));
+                QCBOREncode_OpenArray(enc);
                 BSL_IdValPair_Encode(enc, result);
+                QCBOREncode_CloseArray(enc);
             }
 
             QCBOREncode_CloseArray(enc);
@@ -392,94 +369,6 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
 
         QCBOREncode_CloseArray(enc);
     }
-    return BSL_SUCCESS;
-}
-
-static int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
-{
-    ASSERT_ARG_NONNULL(dec);
-    ASSERT_ARG_NONNULL(pair);
-    QCBORItem asbitem;
-
-    // each parameter is a 2-item array
-    QCBORDecode_EnterArray(dec, NULL);
-
-    uint64_t item_id = 0;
-    QCBORDecode_GetUInt64(dec, &item_id);
-    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
-    {
-        BSL_LOG_ERR("Failed getting an ID");
-        return BSL_ERR_DECODING;
-    }
-
-    const size_t value_begin = QCBORDecode_Tell(dec);
-    QCBORDecode_PeekNext(dec, &asbitem);
-    switch (asbitem.uDataType)
-    {
-        // Collapse both encoded types, with restriction to INT64_MAX
-        case QCBOR_TYPE_INT64:
-        case QCBOR_TYPE_UINT64:
-        {
-            int64_t dec_value = 0;
-            QCBORDecode_GetInt64(dec, &dec_value);
-            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
-            {
-                BSL_LOG_ERR("Invalid integer value for ID %" PRIu64, item_id);
-                return BSL_ERR_DECODING;
-            }
-            BSL_LOG_DEBUG("ASB: Parsed pair[%" PRIu64 "] at %zu as uint %" PRIu64, item_id, value_begin, dec_value);
-
-            BSL_IdValPair_SetInt64(pair, item_id, dec_value);
-            break;
-        }
-        case QCBOR_TYPE_BYTE_STRING:
-        {
-            UsefulBufC target_buf = NULLUsefulBufC;
-            QCBORDecode_GetByteString(dec, &target_buf);
-            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
-            {
-                BSL_LOG_ERR("Invalid bytestring value for ID %" PRIu64, item_id);
-                return BSL_ERR_DECODING;
-            }
-            BSL_LOG_DEBUG("ASB: Parsed pair[%" PRIu64 "] at %zu as bytestr with %zu bytes", item_id, value_begin,
-                          target_buf.len);
-            BSL_Data_t data_view;
-            BSL_Data_InitView(&data_view, target_buf.len, (BSL_DataPtr_t)target_buf.ptr);
-
-            BSL_IdValPair_SetBytestr(pair, item_id, data_view);
-            break;
-        }
-        default:
-        {
-            // skip over entire item (recursively) if possible
-            QCBORDecode_VGetNextConsume(dec, &asbitem);
-            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
-            {
-                BSL_LOG_ERR("Invalid raw for ID %" PRIu64, item_id);
-                return BSL_ERR_DECODING;
-            }
-
-            const size_t value_end = QCBORDecode_Tell(dec);
-            BSL_LOG_DEBUG("ASB: Parsed pair[%" PRIu64 "] at %zu as raw QCBOR type %u, size %zu bytes", item_id,
-                          value_begin, asbitem.uDataType, value_end - value_begin);
-
-            const UsefulBufC raw_buf = QCBORDecode_RetrieveUndecodedInput(dec);
-
-            BSL_IdValPair_SetRaw(pair, item_id, UsefulBuf_OffsetToPointer(raw_buf, value_begin),
-                                 value_end - value_begin);
-            break;
-        }
-    }
-    const size_t value_end = QCBORDecode_Tell(dec);
-
-    QCBORDecode_ExitArray(dec);
-    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
-    {
-        BSL_LOG_ERR("Failed processing a security parameter");
-        return BSL_ERR_DECODING;
-    }
-    BSL_LOG_DEBUG("pair %" PRIu64 " between %zu and %zu", item_id, value_begin, value_end);
-
     return BSL_SUCCESS;
 }
 
@@ -572,8 +461,15 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
         while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &asbitem))
         {
             BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->params));
-            if (BSL_SUCCESS != BSL_IdValPair_Decode(dec, param))
+            // each parameter is a 2-item array
+            QCBORDecode_EnterArray(dec, NULL);
+
+            BSL_IdValPair_Decode(dec, param);
+
+            QCBORDecode_ExitArray(dec);
+            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {
+                BSL_LOG_ERR("Failed processing a security parameter");
                 return BSL_ERR_DECODING;
             }
         }
@@ -599,9 +495,16 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
         QCBORDecode_EnterArray(dec, NULL);
         while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &asbitem))
         {
-            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(tgt->results));
-            if (BSL_SUCCESS != BSL_IdValPair_Decode(dec, param))
+            BSL_IdValPair_t *result = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(tgt->results));
+            // each parameter is a 2-item array
+            QCBORDecode_EnterArray(dec, NULL);
+
+            BSL_IdValPair_Decode(dec, result);
+
+            QCBORDecode_ExitArray(dec);
+            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {
+                BSL_LOG_ERR("Failed processing a security result");
                 return BSL_ERR_DECODING;
             }
         }

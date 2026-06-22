@@ -35,11 +35,9 @@
 extern "C" {
 #endif
 
-#define UsefulBuf_FROM_BSL_Data(obj) \
-   ((UsefulBuf) {(obj).ptr, (obj).len})
+#define UsefulBuf_FROM_BSL_Data(obj) ((UsefulBuf) { (obj).ptr, (obj).len })
 
-#define UsefulBufC_FROM_BSL_Data(obj) \
-   ((UsefulBufC) {(obj).ptr, (obj).len})
+#define UsefulBufC_FROM_BSL_Data(obj) ((UsefulBufC) { (obj).ptr, (obj).len })
 
 /** Callback to actually perform the encoding.
  *

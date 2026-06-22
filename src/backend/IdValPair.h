@@ -64,6 +64,7 @@
 #include <m-dict.h>
 
 #include <BPSecLib_Private.h>
+#include <backend/CBOR.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,7 +85,7 @@ enum BSL_IdValPair_Type_e
 struct BSL_IdValPair_s
 {
     /// @brief Identifier for the pair
-    uint64_t id;
+    int64_t id;
 
     /// @brief Indicates how #_val needs to be used.
     enum BSL_IdValPair_Type_e _type;
@@ -104,6 +105,17 @@ struct BSL_IdValPair_s
 #define M_OPL_BSL_IdValPair_t()                                                             \
     (INIT(API_2(BSL_IdValPair_Init)), INIT_SET(API_6(BSL_IdValPair_InitSet)), INIT_MOVE(0), \
      CLEAR(API_2(BSL_IdValPair_Deinit)), SET(API_6(BSL_IdValPair_Set)), MOVE(API_6(BSL_IdValPair_Move)))
+
+/** Decode from CBOR, as a pair of items either in an array or from
+ * a map key-value.
+ * Matches the ::BSL_CBOR_Decode_f signature.
+ */
+int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair);
+
+/** Encode to CBOR, as a pair of items either in an array or a map key-value.
+ * Matches the ::BSL_CBOR_Encode_f signature.
+ */
+void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t *pair);
 
 /** @struct BSLB_IdValPairPtr_t
  * Thread safe shared pointers to ::BSL_IdValPair_s instances.

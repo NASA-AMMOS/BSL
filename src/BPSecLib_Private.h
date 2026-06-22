@@ -621,7 +621,7 @@ size_t BSL_IdValPair_Sizeof(void);
  * @param[in] param_id ID of the parameter
  * @param[in] value The value to use.
  */
-void BSL_IdValPair_SetInt64(BSL_IdValPair_t *self, uint64_t param_id, uint64_t value);
+void BSL_IdValPair_SetInt64(BSL_IdValPair_t *self, int64_t param_id, uint64_t value);
 
 /** Returns true when the value type is an integer.
  *
@@ -644,7 +644,7 @@ int BSL_IdValPair_GetAsInt64(const BSL_IdValPair_t *self, int64_t *out);
  * @param[in] param_id ID of the parameter
  * @param[in] value View of bytes, which get copied into this Security Parameter.
  */
-void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, uint64_t param_id, BSL_Data_t value);
+void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, int64_t param_id, BSL_Data_t value);
 
 /** Returns true when the value type is a byte string.
  *
@@ -669,7 +669,7 @@ int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out);
  * @param[in] param_id ID of the parameter
  * @param[in] value text string of the parameter, copied into self
  */
-void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, uint64_t param_id, const char *value);
+void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, int64_t param_id, const char *value);
 
 /** Returns true when the value type is a text string.
  *
@@ -695,7 +695,7 @@ int BSL_IdValPair_GetAsTextstr(const BSL_IdValPair_t *self, const char **out);
  * @param[in] ptr The stat of the data.
  * @param len The length to copy.
  */
-void BSL_IdValPair_SetRaw(BSL_IdValPair_t *self, uint64_t param_id, const void *ptr, size_t len);
+void BSL_IdValPair_SetRaw(BSL_IdValPair_t *self, int64_t param_id, const void *ptr, size_t len);
 
 /** Represents a Security Operation produced by a policy provider to inform the security context.
  *
@@ -759,7 +759,7 @@ bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self);
  * @param option_id The internal option ID value to search for.
  * @return Pointer to security parameter if found, otherwise NULL.
  */
-const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, uint64_t option_id);
+const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, int64_t option_id);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
  *
@@ -767,7 +767,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, uint64_
  * @param param_id The parameter ID value to search for.
  * @return Pointer to security parameter if found, otherwise NULL.
  */
-const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, uint64_t param_id);
+const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, int64_t param_id);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
  *
@@ -775,7 +775,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, uint64_t
  * @param[in] index Index of security parameter list to retrieve from
  * @return Pointer to security result if found, otherwise NULL.
  */
-const BSL_IdValPair_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, uint64_t param_id);
+const BSL_IdValPair_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, int64_t param_id);
 
 /// @brief Get the block number of the security block containing this sec operation
 /// @param[in] self This security operation
