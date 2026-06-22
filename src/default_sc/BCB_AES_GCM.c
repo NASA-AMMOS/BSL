@@ -757,8 +757,5 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
 
 bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
 {
-    (void)lib;
-    (void)bundle;
-    (void)sec_oper;
-    return false;
+    return lib != NULL && bundle != NULL && sec_oper != NULL;
 }
