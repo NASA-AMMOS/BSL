@@ -47,14 +47,6 @@ bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const B
     return lib != NULL && bundle != NULL && sec_oper != NULL;
 }
 
-bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
-{
-    (void)lib;
-    (void)bundle;
-    (void)sec_oper;
-    return false;
-}
-
 /**
  * Provides the mapping from the security-context-specific ID defined in RFC9173
  * to the local ID of the SHA variant used by the crypto engine (OpenSSL).
