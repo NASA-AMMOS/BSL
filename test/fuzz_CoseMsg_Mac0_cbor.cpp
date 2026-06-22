@@ -25,7 +25,7 @@
  */
 #include "TestUtils.h"
 #include <mock_bpa/MockBPA.h>
-#include <cose_sc/CoseContext_Private.h>
+#include <cose_sc/CoseMsg.h>
 #include <backend/CBOR.h>
 #include <cinttypes>
 
