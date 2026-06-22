@@ -32,21 +32,21 @@
 
 #include "PublicInterfaceImpl.h"
 #include "SecurityActionSet.h"
-#include "SecurityResultSet.h"
 
 char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen)
 {
     ASSERT_ARG_NONNULL(dstbuf);
-    ASSERT_ARG_NONNULL(srcbuf);
-    ASSERT_ARG_EXPR(dstlen > 0);
-    ASSERT_ARG_EXPR(srclen > 0);
 
     memset(dstbuf, 0, dstlen);
-    const char hex_digits[] = "0123456789ABCDEF";
-    for (size_t i = 0; i < srclen && (((i * 2) + 1) < dstlen - 1); i++)
+
+    if (srcbuf)
     {
-        dstbuf[(i * 2)]     = hex_digits[(srcbuf[i] >> 4) & 0x0F];
-        dstbuf[(i * 2) + 1] = hex_digits[srcbuf[i] & 0x0F];
+        static const char hex_digits[] = "0123456789ABCDEF";
+        for (size_t i = 0; i < srclen && (((i * 2) + 1) < dstlen - 1); i++)
+        {
+            dstbuf[(i * 2)]     = hex_digits[(srcbuf[i] >> 4) & 0x0F];
+            dstbuf[(i * 2) + 1] = hex_digits[srcbuf[i] & 0x0F];
+        }
     }
     return dstbuf;
 }
@@ -142,7 +142,6 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
     CHK_ARG_NONNULL(bundle);
 
     BSL_LOG_INFO("Querying policy provider for security actions...");
-    BSL_SecurityActionSet_Init(output_action_set);
     int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
     BSL_LOG_INFO("Completed query: status=%d", query_status);
 
@@ -231,8 +230,6 @@ int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(policy_actions);
 
-    BSL_SecurityResponseSet_Init(response_output);
-
     int exec_code = BSL_SecCtx_ExecutePolicyActionSet(bsl, response_output, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)
     {
@@ -265,8 +262,5 @@ int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response
     int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);
     BSL_LOG_INFO("Completed finalize: status=%d", finalize_status);
 
-    BSL_SecurityResponseSet_Deinit(response_output);
-
-    // TODO CHK_POSTCONDITION
     return BSL_SUCCESS;
 }

@@ -56,19 +56,32 @@ typedef struct BSLX_BIB_s
     /// Bundle context associated with this operation
     const BSL_BundleRef_t *bundle;
 
+    /// True if this operation is the source role
+    bool is_source;
+    /// Error counter for procedure interruption
+    size_t err_count;
+
     /// @brief set to external pointer which will outlive the BIB context
     const char          *key_id;
     BSL_PrimaryBlock_t   primary_block;
     BSL_CanonicalBlock_t target_block;
     BSL_CanonicalBlock_t sec_block;
-    int64_t              integrity_scope_flags;
-    int64_t              sha_variant;
-    uint64_t             hash_size;
-    BSL_Data_t           wrapped_key;
-    int64_t              keywrap;
-    uint64_t             hmac_result_id;
-    BSL_Data_t           hmac_result_val;
-    bool                 is_source;
+    /// True if #ippt_scope came from an option
+    bool opt_ippt_scope;
+    /// Required IPPT scope
+    int64_t ippt_scope;
+    /// True if #sha_variant came from an option
+    bool opt_sha_variant;
+    /// Required SHA variant
+    int64_t sha_variant;
+    /// Converted #sha_variant into enum value
+    BSL_CryptoCipherSHAVariant_e crypto_sha_variant;
+
+    uint64_t   hash_size;
+    BSL_Data_t wrapped_key;
+    int64_t    keywrap;
+    uint64_t   hmac_result_id;
+    BSL_Data_t hmac_result_val;
 } BSLX_BIB_t;
 
 int  BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
@@ -84,7 +97,11 @@ typedef struct BSLX_BCB_s
     /// Bundle context associated with this operation
     BSL_BundleRef_t *bundle;
 
+    /// True if this operation is the source role
+    bool is_source;
+    /// Error counter for procedure interruption
     size_t err_count;
+
     /// Pointer to text which will outlive this context
     const char *key_id;
 
@@ -96,10 +113,14 @@ typedef struct BSLX_BCB_s
     BSL_Data_t debugstr;
     BSL_Data_t aad;
 
-    // Cipher mode variants
-    BSL_CipherMode_e          crypto_mode;
-    rfc9173_bcb_aes_variant_e aes_variant;
-    uint64_t                  aad_scope;
+    /// Cipher mode variants
+    BSL_CipherMode_e crypto_mode;
+    /// Required AES variant
+    int64_t aes_variant;
+    /// True if #aad_scope came from an option
+    bool opt_aad_scope;
+    /// Required AAD scope
+    int64_t aad_scope;
 
     // Metadata about bundles and blocks
     BSL_PrimaryBlock_t   primary_block;
@@ -108,13 +129,13 @@ typedef struct BSLX_BCB_s
 
     int64_t keywrap;
     bool    success;
-    bool    skip_aad_sec_block;
-    bool    skip_aad_target_block;
-    bool    skip_aad_prim_block;
-    bool    overwrite_btsd;
+    /// True if this is a source or acceptor role and target BTSD is replaced
+    bool overwrite_btsd;
 } BSLX_BCB_t;
 
-int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, const BSL_SecOper_t *sec_oper);
+/** Populate the BCB context with options from the operation.
+ */
+int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, const BSL_SecOper_t *sec_oper);
 
 int  BSLX_BCB_Init(BSLX_BCB_t *bcb_context, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
 void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context);

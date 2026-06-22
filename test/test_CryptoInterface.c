@@ -394,7 +394,7 @@ void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_
     TEST_ASSERT_EQUAL_INT(hmac_len, expected_data.len);
     TEST_ASSERT_EQUAL_MEMORY(hmac_buf_ptr, expected_data.ptr, expected_data.len);
 
-    TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Deinit(&hmac));
+    BSL_AuthCtx_Deinit(&hmac);
 
     BSL_Data_Deinit(&expected_data);
     BSL_Data_Deinit(&pt_in_data);

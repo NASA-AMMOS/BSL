@@ -30,6 +30,18 @@
 
 #include "AbsSecBlock.h"
 
+void BSL_AbsSecBlock_Target_Init(BSL_AbsSecBlock_Target_t *self)
+{
+    self->target_block_num = 0;
+    BSLB_IdValPairPtrList_init(self->results);
+}
+
+void BSL_AbsSecBlock_Target_Deinit(BSL_AbsSecBlock_Target_t *self)
+{
+    BSLB_IdValPairPtrList_clear(self->results);
+    self->target_block_num = 0;
+}
+
 size_t BSL_AbsSecBlock_Sizeof(void)
 {
     return sizeof(BSL_AbsSecBlock_t);
@@ -46,41 +58,67 @@ bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self)
     return true;
 }
 
+static void BSL_IdValPair_Print(const BSL_IdValPair_t *pair, const char *label, size_t index)
+{
+    if (BSL_IdValPair_IsInt64(pair))
+    {
+        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%" PRIu64, label, index, pair->id, pair->_val.as_int);
+    }
+    else if (BSL_IdValPair_IsBytestr(pair))
+    {
+        BSL_Data_t val;
+        BSL_IdValPair_GetAsBytestr(pair, &val);
+
+        char hex_str[2 * val.len + 1];
+        BSL_Log_DumpAsHexString(hex_str, sizeof(hex_str), val.ptr, val.len);
+        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, pair->id, hex_str);
+    }
+    else if (BSL_IdValPair_IsTextstr(pair))
+    {
+        const char *val;
+        BSL_IdValPair_GetAsTextstr(pair, &val);
+
+        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, pair->id, val);
+    }
+}
+
 void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
 {
-    BSL_LOG_INFO("ASB  context id: %" PRId64, self->sec_context_id);
-    for (size_t index = 0; index < uint64_list_size(self->targets); index++)
+    BSL_LOG_DEBUG("ASB  context id: %" PRId64, self->sec_context_id);
+
+    size_t                          target_ix = 0;
+    BSL_AbsSecBlock_TargetList_it_t tgt_iter;
+    for (BSL_AbsSecBlock_TargetList_it(tgt_iter, self->target_results); !BSL_AbsSecBlock_TargetList_end_p(tgt_iter);
+         BSL_AbsSecBlock_TargetList_next(tgt_iter), ++target_ix)
     {
-        BSL_LOG_INFO("ASB  target[%zu]: %" PRIu64, index, *uint64_list_cget(self->targets, index));
+        const BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_cref(*BSL_AbsSecBlock_TargetList_ref(tgt_iter));
+
+        BSL_LOG_DEBUG("ASB  target[%zu]: %" PRIu64, target_ix, tgt->target_block_num);
     }
 
-    for (size_t index = 0; index < BSLB_SecParamList_size(self->params); index++)
+    size_t                     param_ix = 0;
+    BSLB_IdValPairPtrList_it_t param_iter;
+    for (BSLB_IdValPairPtrList_it(param_iter, self->params); !BSLB_IdValPairPtrList_end_p(param_iter);
+         BSLB_IdValPairPtrList_next(param_iter), ++param_ix)
     {
-        BSL_SecParam_t *param = BSLB_SecParamList_get(self->params, index);
-        if (BSL_SecParam_IsUint64(param))
-        {
-            BSL_LOG_INFO("ASB  Param[%zu]: id=%" PRIu64 " val=%" PRIu64, index, param->param_id, param->_uint_value);
-        }
-        else if (BSL_SecParam_IsBytestr(param))
-        {
-            size_t         blen = m_bstring_size(param->_bytes);
-            const uint8_t *bptr = m_bstring_view(param->_bytes, 0, blen);
-            char           hex_str[2 * blen + 1];
-            BSL_Log_DumpAsHexString(hex_str, sizeof(hex_str), bptr, blen);
-            BSL_LOG_INFO("ASB  Param[%zu]: id=%" PRIu64 " %s", index, param->param_id, hex_str);
-        }
+        const BSL_IdValPair_t *param = BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cref(param_iter));
+        BSL_IdValPair_Print(param, "Param", param_ix);
     }
 
-    for (size_t index = 0; index < BSLB_SecResultList_size(self->results); index++)
+    for (BSL_AbsSecBlock_TargetList_it(tgt_iter, self->target_results); !BSL_AbsSecBlock_TargetList_end_p(tgt_iter);
+         BSL_AbsSecBlock_TargetList_next(tgt_iter))
     {
-        BSL_SecResult_t *sec_result = BSLB_SecResultList_get(self->results, index);
+        const BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_cref(*BSL_AbsSecBlock_TargetList_ref(tgt_iter));
+        BSL_LOG_DEBUG("ASB  Results for target block %" PRIu64 " are:", tgt->target_block_num);
 
-        size_t         blen = m_bstring_size(sec_result->_bytes);
-        const uint8_t *bptr = m_bstring_view(sec_result->_bytes, 0, blen);
-        char           hex_str[2 * blen + 1];
-        BSL_Log_DumpAsHexString(hex_str, sizeof(hex_str), bptr, blen);
-        BSL_LOG_INFO("ASB  Result[%zu]: tgt=%" PRIu64 ", id=%" PRIu64 " %s", index, sec_result->target_block_num,
-                     sec_result->result_id, hex_str);
+        size_t                     result_ix = 0;
+        BSLB_IdValPairPtrList_it_t result_iter;
+        for (BSLB_IdValPairPtrList_it(result_iter, tgt->results); !BSLB_IdValPairPtrList_end_p(result_iter);
+             BSLB_IdValPairPtrList_next(result_iter), ++result_ix)
+        {
+            const BSL_IdValPair_t *result = BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cref(result_iter));
+            BSL_IdValPair_Print(result, "Result", result_ix);
+        }
     }
 }
 
@@ -92,11 +130,10 @@ void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self)
 
     memset(self, 0, sizeof(*self));
 
-    uint64_list_init(self->targets);
     self->sec_context_id = 0;
     BSL_HostEID_Init(&self->source_eid);
-    BSLB_SecParamList_init(self->params);
-    BSLB_SecResultList_init(self->results);
+    BSLB_IdValPairPtrList_init(self->params);
+    BSL_AbsSecBlock_TargetList_init(self->target_results);
 
     // GCOV_EXCL_START
     ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
@@ -109,10 +146,9 @@ void BSL_AbsSecBlock_Deinit(BSL_AbsSecBlock_t *self)
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
     // GCOV_EXCL_STOP
 
-    BSLB_SecResultList_clear(self->results);
-    BSLB_SecParamList_clear(self->params);
+    BSL_AbsSecBlock_TargetList_clear(self->target_results);
+    BSLB_IdValPairPtrList_clear(self->params);
     BSL_HostEID_Deinit(&self->source_eid);
-    uint64_list_clear(self->targets);
 
     memset(self, 0, sizeof(*self));
 }
@@ -123,7 +159,7 @@ bool BSL_AbsSecBlock_IsEmpty(const BSL_AbsSecBlock_t *self)
     ASSERT_ARG_NONNULL(self);
     // GCOV_EXCL_STOP
 
-    bool is_empty = (uint64_list_size(self->targets) == 0) && (BSLB_SecResultList_size(self->results) == 0);
+    bool is_empty = BSL_AbsSecBlock_TargetList_empty_p(self->target_results);
     return is_empty;
 }
 
@@ -142,11 +178,13 @@ bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t targ
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
     // GCOV_EXCL_STOP
 
-    uint64_list_it_t tgt_it;
-    for (uint64_list_it(tgt_it, self->targets); !uint64_list_end_p(tgt_it); uint64_list_next(tgt_it))
+    BSL_AbsSecBlock_TargetList_it_t tgt_iter;
+    for (BSL_AbsSecBlock_TargetList_it(tgt_iter, self->target_results); !BSL_AbsSecBlock_TargetList_end_p(tgt_iter);
+         BSL_AbsSecBlock_TargetList_next(tgt_iter))
     {
-        const uint64_t *tgt_num = uint64_list_cref(tgt_it);
-        if (*tgt_num == target_block_num)
+        const BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_cref(*BSL_AbsSecBlock_TargetList_ref(tgt_iter));
+
+        if (tgt->target_block_num == target_block_num)
         {
             return true;
         }
@@ -154,64 +192,56 @@ bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t targ
     return false;
 }
 
-void BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uint64_t target_block_id)
+BSL_AbsSecBlock_Target_t *BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uint64_t target_block_num)
 {
     // GCOV_EXCL_START
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
     // GCOV_EXCL_STOP
 
-    uint64_list_push_back(self->targets, target_block_id);
+    BSL_AbsSecBlock_Target_t *tgt =
+        BSL_AbsSecBlock_TargetPtr_ref(*BSL_AbsSecBlock_TargetList_push_new(self->target_results));
+    // leave results empty
+    tgt->target_block_num = target_block_num;
 
-    // GCOV_EXCL_START
-    ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
-    // GCOV_EXCL_STOP
+    return tgt;
 }
 
-void BSL_AbsSecBlock_AddParam(BSL_AbsSecBlock_t *self, const BSL_SecParam_t *param)
+#if 0
+void BSL_AbsSecBlock_AddParam(BSL_AbsSecBlock_t *self, BSL_IdValPair_t *param)
 {
     // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(param);
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
     // GCOV_EXCL_STOP
 
-    BSLB_SecParamList_push_back(self->params, *param);
+    BSL_IdValPair_t *item = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->params));
+    BSL_IdValPair_Set(item, param);
 
     // GCOV_EXCL_START
     ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
     // GCOV_EXCL_STOP
 }
 
-void BSL_AbsSecBlock_AddResult(BSL_AbsSecBlock_t *self, const BSL_SecResult_t *result)
+void BSL_AbsSecBlock_AddResult(BSL_AbsSecBlock_t *self, uint64_t target_index, BSL_IdValPair_t *result)
 {
     // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(result);
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    ASSERT_PRECONDITION(target_index < BSL_AbsSecBlock_TargetList_size(self->target_results));
     // GCOV_EXCL_STOP
 
-    BSLB_SecResultList_push_back(self->results, *result);
+    BSL_AbsSecBlock_TargetPtr_t *tgt_ptr = BSL_AbsSecBlock_TargetList_get(self->target_results, target_index);
+
+    BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_ref(tgt_ptr);
+
+    BSL_IdValPair_t *item = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(tgt->results));
+    BSL_IdValPair_Set(item, result);
 
     // GCOV_EXCL_START
     ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
     // GCOV_EXCL_STOP
 }
-
-static size_t BSL_AbsSecBlock_GetResultCnt(const BSL_AbsSecBlock_t *self, uint64_t target_block_id)
-{
-    // GCOV_EXCL_START
-    ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
-    // GCOV_EXCL_STOP
-
-    size_t match_count = 0;
-    for (size_t index = 0; index < BSLB_SecResultList_size(self->results); index++)
-    {
-        BSL_SecResult_t *result = BSLB_SecResultList_get(self->results, index);
-        if (result->target_block_num == target_block_id)
-        {
-            match_count++;
-        }
-    }
-    return match_count;
-}
+#endif
 
 int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_num)
 {
@@ -221,54 +251,53 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
 
     size_t things_removed = 0;
 
-    // Remove target uint64 from target list
-    // TODO - The m-list is not ideal. We should just use an array.
-    uint64_list_it_t target_iter;
-    uint64_list_it(target_iter, self->targets);
-    for (size_t i = 0; i < uint64_list_size(self->targets); i++)
+    // Remove target and its results
+    BSL_AbsSecBlock_TargetList_it_t iter;
+    for (BSL_AbsSecBlock_TargetList_it(iter, self->target_results); !BSL_AbsSecBlock_TargetList_end_p(iter);)
     {
-        uint64_t *curr_target = uint64_list_ref(target_iter);
-        if (*curr_target == target_block_num)
-        {
-            break;
-        }
-        uint64_list_next(target_iter);
-    }
-    ASSERT_PROPERTY(!uint64_list_end_p(target_iter));
+        const BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_cref(*BSL_AbsSecBlock_TargetList_ref(iter));
 
-    uint64_list_remove(self->targets, target_iter);
-    things_removed++;
-
-    while (BSL_AbsSecBlock_GetResultCnt(self, target_block_num) > 0)
-    {
-        BSLB_SecResultList_it_t result_iter;
-        BSLB_SecResultList_it(result_iter, self->results);
-        size_t index = 0;
-        for (index = 0; index < BSLB_SecResultList_size(self->results); index++)
+        if (tgt->target_block_num == target_block_num)
         {
-            BSL_SecResult_t *sec_result = BSLB_SecResultList_ref(result_iter);
-            if (sec_result->target_block_num == target_block_num)
-            {
-                break;
-            }
-            BSLB_SecResultList_next(result_iter);
-        }
-
-        if (!BSLB_SecResultList_end_p(result_iter) && index < BSLB_SecResultList_size(self->results))
-        {
-            BSLB_SecResultList_remove(self->results, result_iter);
-            things_removed++;
+            things_removed += 1 + BSLB_IdValPairPtrList_size(tgt->results);
+            BSL_AbsSecBlock_TargetList_remove(self->target_results, iter);
         }
         else
         {
-            // It should have always found one.
-            BSL_LOG_ERR("Expected to have result to remove");
-            return BSL_ERR_PROPERTY_CHECK_FAILED;
+            BSL_AbsSecBlock_TargetList_next(iter);
         }
     }
 
     CHK_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
     return (int)things_removed;
+}
+
+static void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t *pair)
+{
+    QCBOREncode_OpenArray(enc);
+
+    QCBOREncode_AddUInt64(enc, pair->id);
+
+    if (BSL_IdValPair_IsInt64(pair))
+    {
+        int64_t as_int;
+        BSL_IdValPair_GetAsInt64(pair, &as_int);
+        QCBOREncode_AddInt64(enc, as_int);
+    }
+    else if (BSL_IdValPair_IsBytestr(pair))
+    {
+        BSL_Data_t bytestr;
+        BSL_IdValPair_GetAsBytestr(pair, &bytestr);
+        UsefulBufC bytestr_buf = { .ptr = bytestr.ptr, .len = bytestr.len };
+        QCBOREncode_AddBytes(enc, bytestr_buf);
+    }
+    else
+    {
+        BSL_LOG_CRIT("Unhandled parameter type for ID %" PRIu64, pair->id);
+        QCBOREncode_AddUndef(enc);
+    }
+
+    QCBOREncode_CloseArray(enc);
 }
 
 ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *buf)
@@ -282,10 +311,14 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
 
     {
         QCBOREncode_OpenArray(&encoder);
-        uint64_list_it_t it;
-        for (uint64_list_it(it, self->targets); !uint64_list_end_p(it); uint64_list_next(it))
+        BSL_AbsSecBlock_TargetList_it_t tgt_iter;
+        for (BSL_AbsSecBlock_TargetList_it(tgt_iter, self->target_results); !BSL_AbsSecBlock_TargetList_end_p(tgt_iter);
+             BSL_AbsSecBlock_TargetList_next(tgt_iter))
         {
-            QCBOREncode_AddUInt64(&encoder, *uint64_list_cref(it));
+            const BSL_AbsSecBlock_Target_t *tgt =
+                BSL_AbsSecBlock_TargetPtr_cref(*BSL_AbsSecBlock_TargetList_ref(tgt_iter));
+
+            QCBOREncode_AddUInt64(&encoder, tgt->target_block_num);
         }
         QCBOREncode_CloseArray(&encoder);
     }
@@ -294,100 +327,81 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
 
     {
         uint64_t flags = 0;
-        if (!BSLB_SecParamList_empty_p(self->params))
+        if (!BSLB_IdValPairPtrList_empty_p(self->params))
         {
             flags |= 0x1;
         }
         QCBOREncode_AddUInt64(&encoder, flags);
     }
 
-    ssize_t encode_result = BSL_HostEID_EncodeToCBOR(&self->source_eid, NULL);
-    if (encode_result <= 0)
     {
-        BSL_LOG_ERR("Failed to calculate EID size");
-        return BSL_ERR_ENCODING;
-    }
+        // get needed size first
+        ssize_t encode_result = BSL_HostEID_EncodeToCBOR(&self->source_eid, NULL);
+        if (encode_result <= 0)
+        {
+            BSL_LOG_ERR("Failed to calculate EID size");
+            return BSL_ERR_ENCODING;
+        }
 
-    BSL_Data_t eid_data;
-    BSL_Data_InitBuffer(&eid_data, (size_t)encode_result);
-    encode_result = BSL_HostEID_EncodeToCBOR(&self->source_eid, &eid_data);
-    if (encode_result <= BSL_SUCCESS)
-    {
-        BSL_LOG_ERR("Failed to encode EID");
+        BSL_Data_t eid_data;
+        BSL_Data_InitBuffer(&eid_data, (size_t)encode_result);
+        encode_result = BSL_HostEID_EncodeToCBOR(&self->source_eid, &eid_data);
+        if (encode_result <= BSL_SUCCESS)
+        {
+            BSL_LOG_ERR("Failed to encode EID");
+            BSL_Data_Deinit(&eid_data);
+            return BSL_ERR_ENCODING;
+        }
+
+        UsefulBufC eid_buf = { .ptr = eid_data.ptr, .len = eid_data.len };
+        QCBOREncode_AddEncoded(&encoder, eid_buf);
         BSL_Data_Deinit(&eid_data);
-        return BSL_ERR_ENCODING;
     }
-
-    UsefulBufC eid_buf = (UsefulBufC) { .ptr = eid_data.ptr, .len = eid_data.len };
-    QCBOREncode_AddEncoded(&encoder, eid_buf);
-    BSL_Data_Deinit(&eid_data);
 
     {
         QCBOREncode_OpenArray(&encoder);
 
-        BSLB_SecParamList_it_t pit;
-        for (BSLB_SecParamList_it(pit, self->params); !BSLB_SecParamList_end_p(pit); BSLB_SecParamList_next(pit))
+        BSLB_IdValPairPtrList_it_t pit;
+        for (BSLB_IdValPairPtrList_it(pit, self->params); !BSLB_IdValPairPtrList_end_p(pit);
+             BSLB_IdValPairPtrList_next(pit))
         {
-            const BSL_SecParam_t *param = BSLB_SecParamList_cref(pit);
-            QCBOREncode_OpenArray(&encoder);
-            QCBOREncode_AddUInt64(&encoder, param->param_id);
-            if (BSL_SecParam_IsUint64(param))
-            {
-                QCBOREncode_AddUInt64(&encoder, BSL_SecParam_GetAsUint64(param));
-            }
-            else if (BSL_SecParam_IsBytestr(param))
-            {
-                BSL_Data_t bytestr;
-                BSL_SecParam_GetAsBytestr(param, &bytestr);
-                UsefulBufC bytestr_buf = { .ptr = bytestr.ptr, .len = bytestr.len };
-                QCBOREncode_AddBytes(&encoder, bytestr_buf);
-            }
-            else
-            {
-                BSL_LOG_ERR("Unhandled parameter type for ID %" PRIu64, BSL_SecParam_GetId(param));
-                QCBOREncode_AddUndef(&encoder);
-            }
-            QCBOREncode_CloseArray(&encoder);
+            const BSL_IdValPair_t *param = BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cref(pit));
+            BSL_IdValPair_Encode(&encoder, param);
         }
         QCBOREncode_CloseArray(&encoder);
     }
 
     {
-        // Encode results for each target.
+        // Encode results for each target
         QCBOREncode_OpenArray(&encoder);
-        for (size_t target_index = 0; target_index < uint64_list_size(self->targets); target_index++)
-        {
-            QCBOREncode_OpenArray(&encoder);
-            const uint64_t *target_block_num = uint64_list_cget(self->targets, target_index);
 
-            BSLB_SecResultList_it_t rit;
-            for (BSLB_SecResultList_it(rit, self->results); !BSLB_SecResultList_end_p(rit);
-                 BSLB_SecResultList_next(rit))
+        BSL_AbsSecBlock_TargetList_it_t tgt_iter;
+        for (BSL_AbsSecBlock_TargetList_it(tgt_iter, self->target_results); !BSL_AbsSecBlock_TargetList_end_p(tgt_iter);
+             BSL_AbsSecBlock_TargetList_next(tgt_iter))
+        {
+            const BSL_AbsSecBlock_Target_t *tgt =
+                BSL_AbsSecBlock_TargetPtr_cref(*BSL_AbsSecBlock_TargetList_ref(tgt_iter));
+
+            QCBOREncode_OpenArray(&encoder);
+
+            BSLB_IdValPairPtrList_it_t result_iter;
+            for (BSLB_IdValPairPtrList_it(result_iter, tgt->results); !BSLB_IdValPairPtrList_end_p(result_iter);
+                 BSLB_IdValPairPtrList_next(result_iter))
             {
-                const BSL_SecResult_t *sec_result = BSLB_SecResultList_cref(rit);
-                // TODO better internal structure to organize results by target
-                if (sec_result->target_block_num != *target_block_num)
-                {
-                    continue;
-                }
-                QCBOREncode_OpenArray(&encoder);
-                QCBOREncode_AddUInt64(&encoder, sec_result->result_id);
-                {
-                    BSL_Data_t bytestr;
-                    BSL_SecResult_GetAsBytestr(sec_result, &bytestr);
-                    UsefulBufC result_buf = { .ptr = bytestr.ptr, .len = bytestr.len };
-                    QCBOREncode_AddBytes(&encoder, result_buf);
-                }
-                QCBOREncode_CloseArray(&encoder);
+                const BSL_IdValPair_t *result = BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cref(result_iter));
+                BSL_IdValPair_Encode(&encoder, result);
             }
+
             QCBOREncode_CloseArray(&encoder);
         }
 
         QCBOREncode_CloseArray(&encoder);
     }
 
-    size_t     encode_sz;
+    size_t encode_sz;
+    // get used size
     QCBORError qcbor_err = QCBOREncode_FinishGetSize(&encoder, &encode_sz);
+    BSL_LOG_PLAINTEXT_PTR("ASB encode", self, buf->ptr, buf->len);
     if (qcbor_err != QCBOR_SUCCESS)
     {
         BSL_LOG_ERR("Encoding ASB into BTSD failed: %s", qcbor_err_to_str(qcbor_err));
@@ -397,12 +411,99 @@ ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *
     return (ssize_t)encode_sz;
 }
 
+static int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
+{
+    QCBORItem asbitem;
+
+    // each parameter is a 2-item array
+    QCBORDecode_EnterArray(dec, NULL);
+
+    uint64_t item_id = 0;
+    QCBORDecode_GetUInt64(dec, &item_id);
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+    {
+        BSL_LOG_ERR("Failed getting an ID");
+        return BSL_ERR_DECODING;
+    }
+
+    const size_t value_begin = QCBORDecode_Tell(dec);
+    QCBORDecode_PeekNext(dec, &asbitem);
+    switch (asbitem.uDataType)
+    {
+        // Collapse both encoded types, with restriction to INT64_MAX
+        case QCBOR_TYPE_INT64:
+        case QCBOR_TYPE_UINT64:
+        {
+            int64_t dec_value = 0;
+            QCBORDecode_GetInt64(dec, &dec_value);
+            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+            {
+                BSL_LOG_ERR("Invalid integer value for ID %" PRIu64, item_id);
+                return BSL_ERR_DECODING;
+            }
+            BSL_LOG_DEBUG("ASB: Parsed pair[%" PRIu64 "] at %zu as uint %" PRIu64, item_id, value_begin, dec_value);
+
+            BSL_IdValPair_SetInt64(pair, item_id, dec_value);
+            break;
+        }
+        case QCBOR_TYPE_BYTE_STRING:
+        {
+            UsefulBufC target_buf = NULLUsefulBufC;
+            QCBORDecode_GetByteString(dec, &target_buf);
+            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+            {
+                BSL_LOG_ERR("Invalid bytestring value for ID %" PRIu64, item_id);
+                return BSL_ERR_DECODING;
+            }
+            BSL_LOG_DEBUG("ASB: Parsed pair[%" PRIu64 "] at %zu as bytestr with %zu bytes", item_id, value_begin,
+                          target_buf.len);
+            BSL_Data_t data_view;
+            BSL_Data_InitView(&data_view, target_buf.len, (BSL_DataPtr_t)target_buf.ptr);
+
+            BSL_IdValPair_SetBytestr(pair, item_id, data_view);
+            break;
+        }
+        default:
+        {
+            // skip over entire item (recursively) if possible
+            QCBORDecode_VGetNextConsume(dec, &asbitem);
+            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+            {
+                BSL_LOG_ERR("Invalid raw for ID %" PRIu64, item_id);
+                return BSL_ERR_DECODING;
+            }
+
+            const size_t value_end = QCBORDecode_Tell(dec);
+            BSL_LOG_DEBUG("ASB: Parsed pair[%" PRIu64 "] at %zu as raw QCBOR type %u, size %zu bytes", item_id,
+                          value_begin, asbitem.uDataType, value_end - value_begin);
+
+            const UsefulBufC raw_buf = QCBORDecode_RetrieveUndecodedInput(dec);
+
+            BSL_IdValPair_SetRaw(pair, item_id, UsefulBuf_OffsetToPointer(raw_buf, value_begin),
+                                 value_end - value_begin);
+            break;
+        }
+    }
+    const size_t value_end = QCBORDecode_Tell(dec);
+
+    QCBORDecode_ExitArray(dec);
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+    {
+        BSL_LOG_ERR("Failed processing a security parameter");
+        return BSL_ERR_DECODING;
+    }
+    BSL_LOG_DEBUG("pair %" PRIu64 " between %zu and %zu", item_id, value_begin, value_end);
+
+    return BSL_SUCCESS;
+}
+
 int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *buf)
 {
     CHK_ARG_NONNULL(self);
     CHK_ARG_EXPR(buf->len > 0);
     CHK_ARG_EXPR(buf->ptr != NULL);
 
+    BSL_LOG_PLAINTEXT_PTR("ASB decode", self, buf->ptr, buf->len);
     QCBORDecodeContext asbdec;
 
     UsefulBufC qcbor_buf = { .ptr = buf->ptr, .len = buf->len };
@@ -422,213 +523,108 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
 
     while (QCBOR_SUCCESS == QCBORDecode_PeekNext(&asbdec, &asbitem))
     {
-        uint64_t tgt_num = 0;
-        QCBORDecode_GetUInt64(&asbdec, &tgt_num);
+        uint64_t target_block_num = 0;
+        QCBORDecode_GetUInt64(&asbdec, &target_block_num);
         if (QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec))
         {
             BSL_LOG_ERR("Failed processing a security target");
             return BSL_ERR_DECODING;
         }
 
-        BSL_LOG_DEBUG("got tgt %" PRIu64, tgt_num);
-        uint64_list_push_back(self->targets, tgt_num);
+        BSL_LOG_DEBUG("got tgt %" PRIu64, target_block_num);
+        BSL_AbsSecBlock_AddTarget(self, target_block_num);
     }
     QCBORDecode_ExitArray(&asbdec);
-    const size_t targets_size = uint64_list_size(self->targets);
+    const size_t targets_size = BSL_AbsSecBlock_TargetList_size(self->target_results);
 
     {
         int64_t ctx_id = 0;
         QCBORDecode_GetInt64(&asbdec, &ctx_id);
+        BSL_LOG_DEBUG("got ctx_id %" PRId64, ctx_id);
         if ((ctx_id < INT16_MIN) || (ctx_id > INT16_MAX))
         {
             BSL_LOG_ERR("Invalid context id: %" PRId64, ctx_id);
         }
-        else
-        {
-            self->sec_context_id = ctx_id;
-        }
-        BSL_LOG_DEBUG("got ctx_id %" PRId64, ctx_id);
+        self->sec_context_id = ctx_id;
     }
 
     uint64_t flags = 0;
     QCBORDecode_GetUInt64(&asbdec, &flags);
     BSL_LOG_DEBUG("got flags %" PRId64, flags);
 
-    // Host-specific parsing of EID
-
-    UsefulBufC all = QCBORDecode_RetrieveUndecodedInput(&asbdec);
-    QCBORItem  eid_item;
-
-    // Get size of next CBOR item
-    uint32_t eid_item_start_index = QCBORDecode_Tell(&asbdec);
-    QCBORDecode_VGetNextConsume(&asbdec, &eid_item);
-    uint32_t eid_item_end_index = QCBORDecode_Tell(&asbdec);
-
-    // Validate indexes
-    if ((QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec)) || (eid_item_end_index <= eid_item_start_index))
     {
-        BSL_LOG_ERR("BSL DECODE FAIL");
-        return BSL_ERR_DECODING;
-    }
+        // Host-specific parsing of EID
+        const UsefulBufC raw_buf = QCBORDecode_RetrieveUndecodedInput(&asbdec);
 
-    UsefulBufC eid_raw =
-        (UsefulBufC) { ((const uint8_t *)all.ptr) + eid_item_start_index, eid_item_end_index - eid_item_start_index };
+        QCBORItem eid_item;
+        // Get size of next CBOR item
+        uint32_t eid_item_start_index = QCBORDecode_Tell(&asbdec);
+        QCBORDecode_VGetNextConsume(&asbdec, &eid_item);
+        uint32_t eid_item_end_index = QCBORDecode_Tell(&asbdec);
 
-    BSL_Data_t eid_cbor_data;
-    BSL_Data_InitView(&eid_cbor_data, eid_raw.len, (uint8_t *)eid_raw.ptr);
+        // Validate indexes
+        if ((QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec)) || (eid_item_end_index <= eid_item_start_index))
+        {
+            BSL_LOG_ERR("BSL DECODE FAIL");
+            return BSL_ERR_DECODING;
+        }
 
-    int res = BSL_HostEID_DecodeFromCBOR(&eid_cbor_data, &self->source_eid);
-    BSL_Data_Deinit(&eid_cbor_data);
-    if (res != BSL_SUCCESS)
-    {
-        BSL_LOG_ERR("BSL HOST EID DECODE FAIL");
-        return BSL_ERR_DECODING;
+        UsefulBufC eid_raw = (UsefulBufC) { ((const uint8_t *)raw_buf.ptr) + eid_item_start_index,
+                                            eid_item_end_index - eid_item_start_index };
+
+        BSL_Data_t eid_cbor_data;
+        BSL_Data_InitView(&eid_cbor_data, eid_raw.len, (uint8_t *)eid_raw.ptr);
+
+        int res = BSL_HostEID_DecodeFromCBOR(&eid_cbor_data, &self->source_eid);
+        BSL_Data_Deinit(&eid_cbor_data);
+        if (res != BSL_SUCCESS)
+        {
+            BSL_LOG_ERR("BSL HOST EID DECODE FAIL");
+            return BSL_ERR_DECODING;
+        }
     }
 
     // A zero value for flags means there are NO paramers, a value of 1 indicates there are parameters to parse.
     if (flags & 0x01)
     {
         // variable length array of parameters
+        BSL_LOG_DEBUG("Parsing parameter array");
         QCBORDecode_EnterArray(&asbdec, NULL);
         while (QCBOR_SUCCESS == QCBORDecode_PeekNext(&asbdec, &asbitem))
         {
-            // each parameter is a 2-item array
-            QCBORDecode_EnterArray(&asbdec, NULL);
-
-            uint64_t item_id = 0;
-            QCBORDecode_GetUInt64(&asbdec, &item_id);
-            if (QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec))
+            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->params));
+            if (BSL_SUCCESS != BSL_IdValPair_Decode(&asbdec, param))
             {
-                BSL_LOG_ERR("Failed getting a parameter type ID");
                 return BSL_ERR_DECODING;
             }
-
-            const size_t item_begin = QCBORDecode_Tell(&asbdec);
-            QCBORDecode_PeekNext(&asbdec, &asbitem);
-            switch (asbitem.uDataType)
-            {
-                case QCBOR_TYPE_INT64:
-                case QCBOR_TYPE_UINT64:
-                {
-                    uint64_t dec_value = 0;
-                    QCBORDecode_GetUInt64(&asbdec, &dec_value);
-                    if (QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec))
-                    {
-                        BSL_LOG_ERR("Invalid integer parameter value for ID %" PRIu64, item_id);
-                        break;
-                    }
-                    BSL_LOG_DEBUG("ASB: Parsed Param[%" PRIu64 "] = %" PRIu64, item_id, dec_value);
-                    BSL_SecParam_t param;
-                    BSL_SecParam_InitUint64(&param, item_id, dec_value);
-                    BSLB_SecParamList_push_back(self->params, param);
-                    BSL_SecParam_Deinit(&param);
-                    break;
-                }
-                case QCBOR_TYPE_BYTE_STRING:
-                {
-                    UsefulBufC target_buf = NULLUsefulBufC;
-                    QCBORDecode_GetByteString(&asbdec, &target_buf);
-                    if (QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec))
-                    {
-                        BSL_LOG_ERR("Invalid bytestring parameter value for ID %" PRIu64, item_id);
-                        break;
-                    }
-                    BSL_LOG_DEBUG("ASB: Parsed Param[%" PRIu64 "] (ByteStr) = %zu bytes at %p", item_id, target_buf.len,
-                                  target_buf.ptr);
-                    BSL_Data_t data_view;
-                    BSL_Data_InitView(&data_view, target_buf.len, (BSL_DataPtr_t)target_buf.ptr);
-                    BSL_SecParam_t param;
-                    BSL_SecParam_InitBytestr(&param, item_id, data_view);
-                    BSLB_SecParamList_push_back(self->params, param);
-                    BSL_SecParam_Deinit(&param);
-                    break;
-                }
-                default:
-                    BSL_LOG_CRIT("ASB ignoring non-bytestring item with QCBOR type %u", asbitem.uDataType);
-                    // skip over entire item (recursively)
-                    QCBORDecode_VGetNextConsume(&asbdec, &asbitem);
-                    // NOLINTNEXTLINE
-                    return BSL_ERR_DECODING;
-            }
-            const size_t item_end = QCBORDecode_Tell(&asbdec);
-
-            QCBORDecode_ExitArray(&asbdec);
-            if (QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec))
-            {
-                BSL_LOG_ERR("Failed processing a security parameter");
-                return BSL_ERR_DECODING;
-            }
-            BSL_LOG_DEBUG("param %" PRIu64 " between %zu and %zu", item_id, item_begin, item_end);
         }
         QCBORDecode_ExitArray(&asbdec);
     }
 
     QCBORDecode_EnterArray(&asbdec, NULL);
-    size_t target_index = 0;
-    while (QCBOR_SUCCESS == QCBORDecode_PeekNext(&asbdec, &asbitem))
+    size_t target_index;
+    for (target_index = 0; QCBOR_SUCCESS == QCBORDecode_PeekNext(&asbdec, &asbitem); ++target_index)
     {
         if (target_index >= targets_size)
         {
             BSL_LOG_ERR("ASB result array has too many items, expected %zu got %zu", targets_size, target_index);
             return BSL_ERR_DECODING;
         }
-        // Each set of results correlates to the same ordinal number of the target list
-        uint64_t target_id = *uint64_list_cget(self->targets, target_index);
-        BSL_LOG_DEBUG("Parsing ASB results for target[index=%zu, block#=%zu]", target_index, target_id);
-        target_index++;
+        // Each result array correlates to the same ordinal number of the target list
+        BSL_AbsSecBlock_TargetPtr_t **tgt_ptr = BSL_AbsSecBlock_TargetList_get(self->target_results, target_index);
+
+        BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_ref(*tgt_ptr);
 
         // variable length array of result pairs
+        BSL_LOG_DEBUG("Parsing result array for target %" PRIu64, tgt->target_block_num);
         QCBORDecode_EnterArray(&asbdec, NULL);
         while (QCBOR_SUCCESS == QCBORDecode_PeekNext(&asbdec, &asbitem))
         {
-            // each parameter is a 2-item array
-            QCBORDecode_EnterArray(&asbdec, NULL);
-
-            uint64_t item_id = 0;
-            QCBORDecode_GetUInt64(&asbdec, &item_id);
-            if (QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec))
+            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(tgt->results));
+            if (BSL_SUCCESS != BSL_IdValPair_Decode(&asbdec, param))
             {
-                BSL_LOG_ERR("Failed getting a result type ID");
                 return BSL_ERR_DECODING;
             }
-
-            const size_t item_begin = QCBORDecode_Tell(&asbdec);
-
-            QCBORError is_ok = QCBORDecode_PeekNext(&asbdec, &asbitem);
-            CHK_PROPERTY(is_ok == QCBOR_SUCCESS);
-
-            if (asbitem.uDataType == QCBOR_TYPE_BYTE_STRING)
-            {
-                UsefulBufC bstr_qcbor_buf;
-                QCBORDecode_GetByteString(&asbdec, &bstr_qcbor_buf);
-                BSL_Data_t bstr_buf;
-                BSL_Data_InitView(&bstr_buf, bstr_qcbor_buf.len, (BSL_DataPtr_t)bstr_qcbor_buf.ptr);
-
-                BSL_SecResult_t result;
-                int result_code = BSL_SecResult_InitFull(&result, item_id, self->sec_context_id, target_id, &bstr_buf);
-                ASSERT_PROPERTY(result_code == 0);
-                BSL_LOG_DEBUG("ASB: Parsed Result (target_block=%" PRIu64 ", len=%zu)", result.target_block_num,
-                              bstr_buf.len);
-                BSLB_SecResultList_push_back(self->results, result);
-                BSL_SecResult_Deinit(&result);
-            }
-            else
-            {
-                BSL_LOG_ERR("ASB ignoring non-bytestring item with QCBOR type %u", asbitem.uDataType);
-                // skip over entire item (recursively)
-                QCBORDecode_VGetNextConsume(&asbdec, &asbitem);
-                // NOLINTNEXTLINE
-                return BSL_ERR_DECODING;
-            }
-            const size_t item_end = QCBORDecode_Tell(&asbdec);
-
-            QCBORDecode_ExitArray(&asbdec);
-            if (QCBOR_SUCCESS != QCBORDecode_GetError(&asbdec))
-            {
-                BSL_LOG_ERR("Failed processing a security result");
-                return BSL_ERR_DECODING;
-            }
-            BSL_LOG_DEBUG("result %" PRIu64 " between %zu and %zu", item_id, item_begin, item_end);
         }
         QCBORDecode_ExitArray(&asbdec);
     }

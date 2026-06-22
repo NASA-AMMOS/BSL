@@ -33,12 +33,31 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
+#include <m-shared-ptr.h>
 #include <m-array.h>
 
 #include <BPSecLib_Public.h>
 
-#include "SecParam.h"
-#include "SecResult.h"
+#include "IdValPair.h"
+
+typedef struct
+{
+    /// Reference to the unique target
+    uint64_t target_block_num;
+
+    /// Results for just this target
+    BSLB_IdValPairPtrList_t results;
+} BSL_AbsSecBlock_Target_t;
+
+/// Initialize a new target structure
+void BSL_AbsSecBlock_Target_Init(BSL_AbsSecBlock_Target_t *self);
+/// Deinitialize a target structure
+void BSL_AbsSecBlock_Target_Deinit(BSL_AbsSecBlock_Target_t *self);
+
+/// M*LIB OPLIST for ::BSL_AbsSecBlock_Target_t
+#define M_OPL_BSL_AbsSecBlock_Target_t() \
+    (INIT(API_2(BSL_AbsSecBlock_Target_Init)), INIT_SET(0), SET(0), CLEAR(API_2(BSL_AbsSecBlock_Target_Deinit)))
 
 /**
  * @struct uint64_list_t
@@ -48,7 +67,11 @@
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_ARRAY_DEF(uint64_list, uint64_t)
+M_SHARED_WEAK_PTR_DEF(BSL_AbsSecBlock_TargetPtr, BSL_AbsSecBlock_Target_t)
+#define M_OPL_BSL_AbsSecBlock_TargetPtr_t() \
+    M_SHARED_PTR_OPLIST(BSL_AbsSecBlock_TargetPtr, M_OPL_BSL_AbsSecBlock_Target_t())
+
+M_ARRAY_DEF(BSL_AbsSecBlock_TargetList, BSL_AbsSecBlock_TargetPtr_t *, M_OPL_BSL_AbsSecBlock_TargetPtr_t())
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
@@ -58,9 +81,6 @@ M_ARRAY_DEF(uint64_list, uint64_t)
  */
 struct BSL_AbsSecBlock_s
 {
-    /// @brief List of target block ids.
-    uint64_list_t targets;
-
     /// @brief Security context id
     int64_t sec_context_id;
 
@@ -68,10 +88,21 @@ struct BSL_AbsSecBlock_s
     BSL_HostEID_t source_eid;
 
     /// @brief List of pointers to security parameters
-    BSLB_SecParamList_t params;
+    BSLB_IdValPairPtrList_t params;
 
-    /// @brief List of pointers to security results.
-    BSLB_SecResultList_t results;
+    /** @brief List of targets and their parameters.
+     * This is stored together internally for consistency.
+     * The ASB encoded form uses separate items.
+     */
+    BSL_AbsSecBlock_TargetList_t target_results;
 };
+
+/** Adds a given block ID as a security target covered by this ASB
+ *
+ * @param[in,out] self This ASB.
+ * @param[in] target_block_num ID of a block, 0 indicates primary block as usual.
+ * @return The new target and its results.
+ */
+BSL_AbsSecBlock_Target_t *BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uint64_t target_block_num);
 
 #endif /* BSLB_ABSSECBLOCK_IMPL_H_ */

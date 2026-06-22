@@ -28,12 +28,11 @@
 #include <CryptoInterface.h>
 #include <mock_bpa/MockBPA.h>
 
-#include <backend/SecParam.h>
+#include <backend/IdValPair.h>
 #include <backend/SecurityActionSet.h>
 #include <backend/UtilDefs_SeqReadWrite.h>
 #include <policy_provider/SamplePolicyProvider.h>
 #include <default_sc/DefaultSecContext.h>
-#include <default_sc/rfc9173.h>
 
 #include "DefaultScUtils.h"
 
@@ -41,108 +40,74 @@
 
 void BIBTestContext_Init(BIBTestContext *obj)
 {
-    BSL_Data_Init(&obj->hmac);
     BSL_SecOper_Init(&obj->sec_oper);
 
-    BSL_SecParam_Init(&obj->param_test_key);
-    BSL_SecParam_Init(&obj->param_sha_variant);
-    BSL_SecParam_Init(&obj->param_hmac);
-    BSL_SecParam_Init(&obj->param_wrapped_key);
-    BSL_SecParam_Init(&obj->use_key_wrap);
-    BSL_SecParam_Init(&obj->param_scope_flags);
-    BSL_SecParam_Init(&obj->param_wrapped_key_aes);
+    BSL_IdValPair_Init(&obj->opt_test_key);
+    BSL_IdValPair_Init(&obj->opt_sha_variant);
+    BSL_IdValPair_Init(&obj->opt_use_key_wrap);
+    BSL_IdValPair_Init(&obj->opt_scope_flags);
 }
 
 void BIBTestContext_Deinit(BIBTestContext *obj)
 {
-    BSL_SecParam_Deinit(&obj->param_test_key);
-    BSL_SecParam_Deinit(&obj->param_sha_variant);
-    BSL_SecParam_Deinit(&obj->param_hmac);
-    BSL_SecParam_Deinit(&obj->param_wrapped_key);
-    BSL_SecParam_Deinit(&obj->use_key_wrap);
-    BSL_SecParam_Deinit(&obj->param_scope_flags);
-    BSL_SecParam_Deinit(&obj->param_wrapped_key_aes);
+    BSL_IdValPair_Deinit(&obj->opt_test_key);
+    BSL_IdValPair_Deinit(&obj->opt_sha_variant);
+    BSL_IdValPair_Deinit(&obj->opt_use_key_wrap);
+    BSL_IdValPair_Deinit(&obj->opt_scope_flags);
 
     BSL_SecOper_Deinit(&obj->sec_oper);
-    BSL_Data_Deinit(&obj->hmac);
 }
 
 void BCBTestContext_Init(BCBTestContext *obj)
 {
     BSL_SecOper_Init(&obj->sec_oper);
 
-    BSL_SecParam_Init(&obj->param_aes_variant);
-    BSL_SecParam_Init(&obj->param_scope_flags);
-    BSL_SecParam_Init(&obj->param_test_key_id);
-    BSL_SecParam_Init(&obj->param_init_vec);
-    BSL_SecParam_Init(&obj->param_auth_tag);
-    BSL_SecParam_Init(&obj->param_wrapped_key);
-    BSL_SecParam_Init(&obj->use_key_wrap);
-    BSL_SecParam_Init(&obj->param_key_enc_key);
-    BSL_SecParam_Init(&obj->param_content_enc_key);
+    BSL_IdValPair_Init(&obj->opt_aes_variant);
+    BSL_IdValPair_Init(&obj->opt_scope_flags);
+    BSL_IdValPair_Init(&obj->opt_test_key_id);
+    BSL_IdValPair_Init(&obj->opt_use_key_wrap);
 }
 
 void BCBTestContext_Deinit(BCBTestContext *obj)
 {
-    BSL_SecParam_Deinit(&obj->param_aes_variant);
-    BSL_SecParam_Deinit(&obj->param_scope_flags);
-    BSL_SecParam_Deinit(&obj->param_test_key_id);
-    BSL_SecParam_Deinit(&obj->param_init_vec);
-    BSL_SecParam_Deinit(&obj->param_auth_tag);
-    BSL_SecParam_Deinit(&obj->param_wrapped_key);
-    BSL_SecParam_Deinit(&obj->use_key_wrap);
-    BSL_SecParam_Deinit(&obj->param_key_enc_key);
-    BSL_SecParam_Deinit(&obj->param_content_enc_key);
+    BSL_IdValPair_Deinit(&obj->opt_aes_variant);
+    BSL_IdValPair_Deinit(&obj->opt_scope_flags);
+    BSL_IdValPair_Deinit(&obj->opt_test_key_id);
+    BSL_IdValPair_Deinit(&obj->opt_use_key_wrap);
 
     BSL_SecOper_Deinit(&obj->sec_oper);
 }
 
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id)
 {
-    BSL_TestUtils_DecodeBase16_cstr(&context->hmac, RFC9173_TestVectors_AppendixA1.hex_hmac);
+    BSL_IdValPair_SetTextstr(&context->opt_test_key, BSLX_BIB_OPT_KEY_ID, key_id);
+    BSL_IdValPair_SetInt64(&context->opt_scope_flags, BSLX_BIB_OPT_SCOPE, 0);
+    BSL_IdValPair_SetInt64(&context->opt_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+    BSL_IdValPair_SetInt64(&context->opt_use_key_wrap, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
 
-    BSL_SecParam_InitTextstr(&context->param_test_key, BSL_SECPARAM_TYPE_KEY_ID, key_id);
-    BSL_SecParam_InitUint64(&context->param_scope_flags, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, 0);
-    BSL_SecParam_InitUint64(&context->param_sha_variant, RFC9173_BIB_PARAMID_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-    BSL_SecParam_InitBytestr(&context->param_hmac, BSL_SECPARAM_TYPE_AUTH_TAG, context->hmac);
-    BSL_SecParam_InitUint64(&context->use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
+    BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BIB_HMAC_SHA2, 1, 2, BSL_SECBLOCKTYPE_BIB, role,
+                         BSL_POLICYACTION_DROP_BLOCK);
 
-    BSL_SecOper_Populate(&context->sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BLOCK);
-
-    BSL_SecOper_AppendParam(&context->sec_oper, &context->param_sha_variant);
-    BSL_SecOper_AppendParam(&context->sec_oper, &context->param_scope_flags);
-    BSL_SecOper_AppendParam(&context->sec_oper, &context->param_test_key);
-    BSL_SecOper_AppendParam(&context->sec_oper, &context->use_key_wrap);
+    BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_sha_variant);
+    BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_scope_flags);
+    BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_test_key);
+    BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_use_key_wrap);
 }
 
 void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role)
 {
-    quick_data(context->init_vector, ApxA2_InitVec);
-    quick_data(context->auth_tag, ApxA2_AuthTag);
-    quick_data(context->wrapped_key, ApxA2_WrappedKey);
-    quick_data(context->key_enc_key, ApxA2_KeyEncKey);
+    BSL_IdValPair_SetInt64(&context->opt_scope_flags, BSLX_BCB_OPT_SCOPE, 0);
+    BSL_IdValPair_SetTextstr(&context->opt_test_key_id, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
+    BSL_IdValPair_SetInt64(&context->opt_aes_variant, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_IdValPair_SetInt64(&context->opt_use_key_wrap, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
 
-    BSL_SecParam_InitUint64(&context->param_scope_flags, RFC9173_BCB_SECPARAM_AADSCOPE, 0);
-    BSL_SecParam_InitTextstr(&context->param_test_key_id, BSL_SECPARAM_TYPE_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
-    BSL_SecParam_InitUint64(&context->param_aes_variant, RFC9173_BCB_SECPARAM_AESVARIANT,
-                            RFC9173_BCB_AES_VARIANT_A128GCM);
-    BSL_SecParam_InitBytestr(&context->param_init_vec, RFC9173_BCB_SECPARAM_IV, context->init_vector);
-    BSL_SecParam_InitBytestr(&context->param_auth_tag, BSL_SECPARAM_TYPE_AUTH_TAG, context->auth_tag);
-    BSL_SecParam_InitBytestr(&context->param_wrapped_key, RFC9173_BCB_SECPARAM_WRAPPEDKEY, context->wrapped_key);
-    BSL_SecParam_InitUint64(&context->use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 1);
+    BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BCB_AES_GCM, 1, 2, BSL_SECBLOCKTYPE_BCB, role,
+                         BSL_POLICYACTION_NOTHING);
 
-    BSL_SecOper_Populate(&context->sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_NOTHING);
-
-    BSL_SecOper_AppendParam(&context->sec_oper, &context->param_init_vec);
-    BSL_SecOper_AppendParam(&context->sec_oper, &context->param_aes_variant);
-    BSL_SecOper_AppendParam(&context->sec_oper, &context->param_wrapped_key);
-    BSL_SecOper_AppendParam(&context->sec_oper, &context->use_key_wrap);
-    BSL_SecOper_AppendParam(&context->sec_oper, &context->param_scope_flags);
-    if (role != BSL_SECROLE_SOURCE)
-    {
-        BSL_SecOper_AppendParam(&context->sec_oper, &context->param_auth_tag);
-    }
-    BSL_SecOper_AppendParam(&context->sec_oper, &context->param_test_key_id);
+    BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_aes_variant);
+    BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_use_key_wrap);
+    BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_scope_flags);
+    BSL_SecOper_AppendOption(&context->sec_oper, &context->opt_test_key_id);
 }
 
 const struct RFC9173_TestVectors_AppendixA1 RFC9173_TestVectors_AppendixA1 = {
@@ -253,12 +218,16 @@ const struct RFC9173_TestVectors_A4_Modified RFC9173_TestVectors_AppendixA4 = {
 RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id)
 {
     RFC9173_A1_Params params;
-    BSL_SecParam_InitUint64(&params.sha_variant, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key,
-                            RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value);
-    BSL_SecParam_InitUint64(&params.scope_flags, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key,
-                            RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value);
-    BSL_SecParam_InitTextstr(&params.test_key_id, BSL_SECPARAM_TYPE_KEY_ID, key_id);
-    BSL_SecParam_InitUint64(&params.use_key_wrap, BSL_SECPARAM_USE_KEY_WRAP, 0);
+    BSL_IdValPair_Init(&params.sha_variant);
+    BSL_IdValPair_SetInt64(&params.sha_variant, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key,
+                           RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value);
+    BSL_IdValPair_Init(&params.scope_flags);
+    BSL_IdValPair_SetInt64(&params.scope_flags, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key,
+                           RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value);
+    BSL_IdValPair_Init(&params.test_key_id);
+    BSL_IdValPair_SetTextstr(&params.test_key_id, BSLX_BIB_OPT_KEY_ID, key_id);
+    BSL_IdValPair_Init(&params.use_key_wrap);
+    BSL_IdValPair_SetInt64(&params.use_key_wrap, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
     return params;
 }
 
@@ -370,11 +339,11 @@ void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib)
 
     sec_desc.execute  = BSLX_BIB_Execute;
     sec_desc.validate = BSLX_BIB_Validate;
-    res               = BSL_API_RegisterSecurityContext(bsl_lib, 1, sec_desc);
+    res               = BSL_API_RegisterSecurityContext(bsl_lib, RFC9173_CONTEXTID_BIB_HMAC_SHA2, sec_desc);
     assert(0 == res);
 
     sec_desc.execute  = BSLX_BCB_Execute;
     sec_desc.validate = BSLX_BCB_Validate;
-    res               = BSL_API_RegisterSecurityContext(bsl_lib, 2, sec_desc);
+    res               = BSL_API_RegisterSecurityContext(bsl_lib, RFC9173_CONTEXTID_BCB_AES_GCM, sec_desc);
     assert(0 == res);
 }

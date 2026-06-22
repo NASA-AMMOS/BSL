@@ -54,7 +54,7 @@ if(BUILD_UNITTEST OR BUILD_FUZZING)
   )
 endif(BUILD_UNITTEST OR BUILD_FUZZING)
 
-set(LIB_ORDERED bsl_front bsl_dynamic bsl_mock_bpa bsl_test_utils)
+set(LIB_ORDERED bsl_mock_bpa bsl_test_utils)
 
 if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")

@@ -242,7 +242,7 @@ int mock_bpa_LogGetSeverity(int *severity, const char *name)
 
 void mock_bpa_LogSetLeastSeverity(int severity)
 {
-    if ((severity < 0) || (severity > LOG_DEBUG))
+    if ((severity < LOG_CRIT) || (severity > LOG_DEBUG))
     {
         return;
     }
