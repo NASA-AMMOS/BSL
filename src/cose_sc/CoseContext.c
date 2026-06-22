@@ -133,6 +133,7 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                 BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx.tgt_alg);
 
                 BSLB_IdValPairPtrDict_set_at(msg.phdr, param->id, param_ptr);
+                BSLB_IdValPairPtr_release(param_ptr);
             }
 
             BSL_Data_t msg_enc;

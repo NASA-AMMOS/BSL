@@ -113,6 +113,7 @@ int BSLX_CoseMsg_Mac0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Mac0_t *obj)
             else
             {
                 BSLB_IdValPairPtrDict_set_at(obj->phdr, param->id, param_ptr);
+                BSLB_IdValPairPtr_release(param_ptr);
             }
         }
 
@@ -137,6 +138,7 @@ int BSLX_CoseMsg_Mac0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Mac0_t *obj)
             else
             {
                 BSLB_IdValPairPtrDict_set_at(obj->uhdr, param->id, param_ptr);
+                BSLB_IdValPairPtr_release(param_ptr);
             }
         }
 
