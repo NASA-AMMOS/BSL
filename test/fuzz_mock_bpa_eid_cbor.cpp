@@ -65,7 +65,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_Data_Init(&out_data);
     if (!retval)
     {
-        int res = BSL_HostEID_EncodeToCBOR(&eid, &out_data);
+        int res = BSL_HostEID_EncodeToCBOR(&eid, &out_data, NULL);
         EXPECT_EQ(BSL_SUCCESS, res);
     }
 
