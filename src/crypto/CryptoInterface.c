@@ -453,7 +453,7 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *tag)
     ASSERT_ARG_NONNULL(hmac_ctx);
     ASSERT_ARG_NONNULL(tag);
 
-    // get the needed size
+    // get the needed tag size
     size_t size = EVP_MD_CTX_get_size(hmac_ctx->libhandle);
     CHK_PROPERTY(size > 0);
     CHK_PROPERTY(size <= INT_MAX);

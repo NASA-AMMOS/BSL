@@ -97,23 +97,6 @@ int BSLX_CoseMsg_Mac0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac0_t 
 /// Match ::BSL_CBOR_Decode_f signature.
 int BSLX_CoseMsg_Mac0_Decode(QCBORDecodeContext *enc, BSLX_CoseMsg_Mac0_t *obj);
 
-typedef struct
-{
-    /// Context text
-    const char *context;
-    /// Pointer to view on the protected data
-    const BSL_Data_t *phdr_bstr;
-    /// Contents the external AAD (to be bstr-wrapped)
-    const BSL_Data_t *external_aad;
-    /// Length of the detached payload data
-    size_t payload_len;
-} BSLX_CoseMsg_Mac_Structure_t;
-
-/** Internal to-be-MAC'd structure.
- * Match ::BSL_CBOR_Encode_f signature.
- */
-int BSLX_CoseMsg_Mac_Structure_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac_Structure_t *obj);
-
 #ifdef __cplusplus
 } // extern C
 #endif

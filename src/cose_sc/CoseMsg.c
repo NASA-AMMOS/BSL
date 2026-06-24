@@ -196,22 +196,3 @@ int BSLX_CoseMsg_Mac0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Mac0_t *obj)
     QCBORDecode_ExitArray(dec);
     return BSL_SUCCESS;
 }
-
-int BSLX_CoseMsg_Mac_Structure_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac_Structure_t *obj)
-{
-    ASSERT_PRECONDITION(obj->phdr_bstr);
-    ASSERT_PRECONDITION(obj->external_aad);
-
-    QCBOREncode_OpenArray(enc);
-    // context
-    QCBOREncode_AddText(enc, UsefulBuf_FromSZ("MAC0"));
-    // protected
-    QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(*(obj->phdr_bstr)));
-    // external_aad
-    QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(*(obj->external_aad)));
-    // payload (head only)
-    QCBOREncode_AddBytesLenOnly(enc, (UsefulBufC) { .ptr = NULL, .len = obj->payload_len });
-
-    QCBOREncode_CloseArray(enc);
-    return BSL_SUCCESS;
-}
