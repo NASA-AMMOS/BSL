@@ -501,12 +501,13 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
     {
         /// CBOR array head with context "MAC0"
         static const uint8_t cose_mac0_header[] = { 0x84, 0x64, 0x4D, 0x41, 0x43, 0x30 };
-        (void)BSL_AuthCtx_DigestBuffer(ctx->mac_ctx, cose_mac0_header, sizeof(cose_mac0_header));
 
-        { // protected bytes
+        { // context and protected bytes
             BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
             BSLX_CoseSc_ChunkItem_init_data(*item);
             m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+
+            m_bstring_push_back_bytes(*data, sizeof(cose_mac0_header), cose_mac0_header);
 
             BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, msg.phdr_bstr.len);
             BSLX_CoseSc_bstring_AppendRaw(*data, &msg.phdr_bstr);
