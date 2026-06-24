@@ -116,7 +116,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     /// Confirm the context and result result is the right ID (Defined in RFC)
     TEST_ASSERT_EQUAL(RFC9173_BIB_RESULTID_HMAC, bib_result->id);
 
-    /// Confirm the actual HMAC signature matches what is in the RFC
+    /// Confirm the actual HMAC tag matches what is in the RFC
     BSL_Data_t mac_view;
     TEST_ASSERT_EQUAL(0, BSL_IdValPair_GetAsBytestr(bib_result, &mac_view));
     bool is_equal = BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_hmac, mac_view);

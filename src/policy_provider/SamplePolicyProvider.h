@@ -116,7 +116,7 @@ M_ARRAY_DEF(BSLP_PolicyPredicateList, BSLP_PolicyPredicate_t, M_OPL_BSLP_PolicyP
  * @param[in] dst_eid Destination EID
  */
 bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
-                                  BSL_HostEID_t src_eid, BSL_HostEID_t dst_eid);
+                                  const BSL_HostEID_t *src_eid, const BSL_HostEID_t *dst_eid);
 
 /**
  * @brief Represents a policy rule

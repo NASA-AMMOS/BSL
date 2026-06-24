@@ -124,7 +124,8 @@ void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t *pair);
  * Defines an internal list of ::BSLB_IdValPairPtr_t pointers.
  */
 /** @struct BSLB_IdValPairPtrDict_t
- * Defines an internal lookup dictionary for ::BSLB_IdValPairPtr_t pointers.
+ * Defines an internal lookup dictionary for ::BSLB_IdValPairPtr_t pointers
+ * by integer keys.
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
@@ -133,7 +134,7 @@ M_SHARED_PTR_DEF(BSLB_IdValPairPtr, BSL_IdValPair_t, M_OPL_BSL_IdValPair_t())
 #define M_OPL_BSLB_IdValPairPtr_t() M_SHARED_PTR_OPLIST(BSLB_IdValPairPtr, M_OPL_BSL_IdValPair_t())
 
 M_ARRAY_DEF(BSLB_IdValPairPtrList, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
-M_DICT_DEF2(BSLB_IdValPairPtrDict, uint64_t, M_BASIC_OPLIST, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
+M_DICT_DEF2(BSLB_IdValPairPtrDict, int64_t, M_BASIC_OPLIST, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND

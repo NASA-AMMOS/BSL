@@ -43,15 +43,25 @@ extern "C" {
  *
  * @param enc Non-null pointer to the encoder to use.
  * @param obj Pointer to the user data to encode.
+ * @return BSL_SUCCESS if successful.
  */
 typedef int (*BSL_CBOR_Encode_f)(QCBOREncodeContext *enc, const void *obj);
+
+/** Perform one-pass encoded size inspection.
+ *
+ * @param[out] needlen Pointer to the size output.
+ * @param func The encoding function which takes the user data.
+ * @param obj Pointer to the user data to encode.
+ * @return BSL_SUCCESS if successful.
+ */
+int BSL_CBOR_Encode_GetSize(size_t *needlen, BSL_CBOR_Encode_f func, const void *obj);
 
 /** Perform two-pass size-fitted encoding.
  *
  * @param[out] buf The already-initialized buffer to resize and write into.
  * @param func The encoding function which takes the user data.
  * @param obj Pointer to the user data to encode.
- * @return BSL_SUCCESS if successful
+ * @return BSL_SUCCESS if successful.
  */
 int BSL_CBOR_Encode_Twopass(BSL_Data_t *buf, BSL_CBOR_Encode_f func, const void *obj);
 
@@ -70,6 +80,11 @@ typedef int (*BSL_CBOR_Decode_f)(QCBORDecodeContext *dec, const void *obj);
  * @return BSL_SUCCESS if successful
  */
 int BSL_CBOR_Decode(const BSL_Data_t *buf, BSL_CBOR_Decode_f func, const void *obj);
+
+/** Sort integer values in CBOR canonical order per Section 4.2.1 of RFC 8949 @cite rfc8949.
+ * Matches the libc @c sort and M*LIB @c CMP signature.
+ */
+int BSL_CBOR_Compare_Int64(const int64_t *ltv, const int64_t *rtv);
 
 #ifdef __cplusplus
 } // extern C

@@ -106,6 +106,11 @@ int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t 
     return BSL_SUCCESS;
 }
 
+void BSL_PrimaryBlock_init(BSL_PrimaryBlock_t *obj)
+{
+    memset(obj, 0, sizeof(*obj));
+}
+
 void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
 {
     ASSERT_ARG_NONNULL(obj);
@@ -113,7 +118,7 @@ void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
     BSL_free(obj->block_numbers);
     obj->block_numbers = NULL;
 
-    BSL_Data_Deinit(&obj->encoded);
+    memset(obj, 0, sizeof(*obj));
 }
 
 int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_SecCtxDesc_t desc)

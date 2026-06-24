@@ -39,6 +39,7 @@
 
 #include <backend/PublicInterfaceImpl.h>
 #include <cose_sc/CoseContext.h>
+#include <cose_sc/CoseMsg.h>
 
 #include "TestUtils.h"
 
@@ -61,7 +62,7 @@ int suiteTearDown(int failures)
 void setUp(void)
 {
     BSL_CryptoInit();
-    setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
+    setenv("BSL_TEST_LOCAL_IPN_EID", "dtn://src/", 1);
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
 }
 
@@ -85,6 +86,16 @@ void tearDown(void)
  */
 void test_AppendixA_Example1_BIB_Source(void)
 {
+    {
+        BSL_Data_t keymat;
+        BSL_Data_Init(&keymat);
+        TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat,
+                                                             "3a5c74e32ab4558a99581ec3a816576812aabe895db04494cda2"
+                                                             "5b711d7b5ed4077466e677860648412f1bf8c91d0624"));
+        BSL_Crypto_AddRegistryKey("ExampleA.1", keymat.ptr, keymat.len);
+        BSL_Data_Deinit(&keymat);
+    }
+
     const char *hex_bundle = "9f890700028201692f2f6473742f7376638201692f2f7372632f7376638201662f2f"
                              "7372632f821b000000bd51281400001a000f42404482a081c9860101000246656865"
                              "6c6c6f444ec359d2ff";
@@ -96,28 +107,30 @@ void test_AppendixA_Example1_BIB_Source(void)
                          BSL_POLICYACTION_DROP_BUNDLE);
 
     {
-        BSL_IdValPair_t param;
-        BSL_IdValPair_Init(&param);
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
         {
             BSL_Data_t kid;
-            BSL_Data_InitView(&kid, 4, (BSL_DataPtr_t) "1234");
-            BSL_IdValPair_SetBytestr(&param, BSLX_COSESC_OPTION_KEYID, kid);
+            BSL_Data_InitView(&kid, 5, (BSL_DataPtr_t) "ExampleA.1");
+            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEYID, kid);
         }
-        BSL_SecOper_AppendOption(&sec_oper, &param);
-        BSL_IdValPair_Deinit(&param);
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
     }
     {
-        BSL_IdValPair_t param;
-        BSL_IdValPair_Init(&param);
-        BSL_IdValPair_SetInt64(&param, BSLX_COSESC_OPTION_TGT_ALG, 123 /*FIXME*/);
-        BSL_SecOper_AppendOption(&sec_oper, &param);
-        BSL_IdValPair_Deinit(&param);
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_TGT_ALG, BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
     }
-
-    //    BSL_SecOper_AppendParam(&sec_oper, &context->param_sha_variant);
-    //    BSL_SecOper_AppendParam(&sec_oper, &context->param_scope_flags);
-    //    BSL_SecOper_AppendParam(&sec_oper, &context->param_test_key);
-    //    BSL_SecOper_AppendParam(&sec_oper, &context->use_key_wrap);
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_AAD_SCOPE, 0 /* FIXME option value */);
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
 
     BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
     BSL_SecOutcome_Init(outcome, &sec_oper);
@@ -133,23 +146,22 @@ void test_AppendixA_Example1_BIB_Source(void)
     TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
     const BSL_IdValPair_t *result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
     TEST_ASSERT_NOT_NULL(result);
-    TEST_ASSERT_EQUAL(BXLS_COSESC_RESULT_COSE_MAC0, BSL_IdValPair_GetId(result));
+    TEST_ASSERT_EQUAL(BSLX_COSESC_RESULT_COSE_MAC0, BSL_IdValPair_GetId(result));
     TEST_ASSERT_TRUE(BSL_IdValPair_IsBytestr(result));
 
-#if 0
-    /// Confirm the context and result result is the right ID (Defined in RFC)
-    TEST_ASSERT_EQUAL(RFC9173_CONTEXTID_BIB_HMAC_SHA2, bib_result->context_id);
-    TEST_ASSERT_EQUAL(1, bib_result->target_block_num);
-
+    BSLX_CoseMsg_Mac0_t msg;
+    BSLX_CoseMsg_Mac0_Init(&msg);
     {
-        /// Confirm the actual HMAC signature matches what is in the RFC
-        BSL_Data_t view;
-        TEST_ASSERT_EQUAL(0, BSL_SecResult_GetAsBytestr(bib_result, &view));
-        TEST_ASSERT_EQUAL(sizeof(ApxA1_HMAC), view.len);
-        TEST_ASSERT_EQUAL_MEMORY(ApxA1_HMAC, view.ptr, sizeof(ApxA1_HMAC));
+        BSL_Data_t in_buf;
+        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_IdValPair_GetAsBytestr(result, &in_buf));
+        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_CBOR_Decode(&in_buf, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Mac0_Decode, &msg));
+        BSL_Data_Deinit(&in_buf);
     }
-#endif
+    /// Confirm the actual HMAC tag matches what is in the RFC
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(
+        "ec8260a38a1a00fef2cd4aae063f50f01c5645e84c6c4893ca895eed44ef60a5f50f9adf5cc5654499b881e589637805", msg.tag));
 
+    BSLX_CoseMsg_Mac0_Deinit(&msg);
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);

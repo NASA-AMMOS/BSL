@@ -186,10 +186,11 @@ int BSL_Host_GetSecSrcEID(BSL_HostEID_t *eid)
     return HostDescriptorTable.get_sec_src_eid_fn(HostDescriptorTable.user_data, eid);
 }
 
-int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes)
+int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes, size_t *encoded_size)
 {
     CHK_ARG_NONNULL(eid);
-    return HostDescriptorTable.eid_to_cbor(eid, encoded_bytes);
+    CHK_PRECONDITION((encoded_bytes != NULL) ^ (encoded_size != NULL));
+    return HostDescriptorTable.eid_to_cbor(eid, encoded_bytes, encoded_size);
 }
 
 int BSL_HostEID_DecodeFromCBOR(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)

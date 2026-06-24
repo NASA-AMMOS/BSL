@@ -31,6 +31,7 @@
 #include <BSLMemory.h>
 #include <backend/CBOR.h>
 #include <backend/IdValPair.h>
+#include <m-bptree.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,12 +54,30 @@ enum BSLX_CoseMsg_Alg_e
     BSLX_COSEMSG_ALG_HMAC_SHA_384_384 = 6,
 };
 
+/** @struct BSLX_CoseMsg_HdrMapTree_t
+ * Defines an internal lookup dictionary for ::BSLB_IdValPairPtr_t pointers
+ * which is sorted in CBOR canonical order.
+ */
+// NOLINTBEGIN
+/// @cond Doxygen_Suppress
+// GCOV_EXCL_START
+M_BPTREE_DEF2(BSLX_CoseMsg_HdrMapTree, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(API_6(BSL_CBOR_Compare_Int64))),
+              BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
+
+M_BPTREE_DEF2(BSLX_CoseSc_AadScope, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(API_6(BSL_CBOR_Compare_Int64))), int64_t,
+              M_BASIC_OPLIST)
+// GCOV_EXCL_STOP
+/// @endcond
+// NOLINTEND
+
 typedef struct
 {
-    /// Protected header map
-    BSLB_IdValPairPtrDict_t phdr;
+    /// Protected header bytes (the stable form)
+    BSL_Data_t phdr_bstr;
+    /// Protected header map, for decoding derived from #phdr_bstr
+    BSLX_CoseMsg_HdrMapTree_t phdr;
     /// Unprotected header map
-    BSLB_IdValPairPtrDict_t uhdr;
+    BSLX_CoseMsg_HdrMapTree_t uhdr;
 
     /// The MAC tag bytes
     BSL_Data_t tag;
@@ -67,11 +86,33 @@ typedef struct
 void BSLX_CoseMsg_Mac0_Init(BSLX_CoseMsg_Mac0_t *obj);
 void BSLX_CoseMsg_Mac0_Deinit(BSLX_CoseMsg_Mac0_t *obj);
 
-/// Match ::BSL_CBOR_Encode_f signature
+/** Derive BSLX_CoseMsg_Mac0_t::phdr_bstr from protected headers.
+ * This is used before MAC calculation and encoding
+ */
+int BSLX_CoseMsg_Mac0_DerivePhdr(BSLX_CoseMsg_Mac0_t *obj);
+
+/// Match ::BSL_CBOR_Encode_f signature.
 int BSLX_CoseMsg_Mac0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac0_t *obj);
 
-/// Match ::BSL_CBOR_Decode_f signature
+/// Match ::BSL_CBOR_Decode_f signature.
 int BSLX_CoseMsg_Mac0_Decode(QCBORDecodeContext *enc, BSLX_CoseMsg_Mac0_t *obj);
+
+typedef struct
+{
+    /// Context text
+    const char *context;
+    /// Pointer to view on the protected data
+    const BSL_Data_t *phdr_bstr;
+    /// Contents the external AAD (to be bstr-wrapped)
+    const BSL_Data_t *external_aad;
+    /// Length of the detached payload data
+    size_t payload_len;
+} BSLX_CoseMsg_Mac_Structure_t;
+
+/** Internal to-be-MAC'd structure.
+ * Match ::BSL_CBOR_Encode_f signature.
+ */
+int BSLX_CoseMsg_Mac_Structure_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac_Structure_t *obj);
 
 #ifdef __cplusplus
 } // extern C

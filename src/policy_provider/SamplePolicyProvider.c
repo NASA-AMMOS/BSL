@@ -164,7 +164,8 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
     // This is an output struct. The caller only provides the allocation for it (which must be zero)
     BSLP_PolicyProvider_t *self = user_data;
 
-    BSL_PrimaryBlock_t primary_block = { 0 };
+    BSL_PrimaryBlock_t primary_block;
+    BSL_PrimaryBlock_init(&primary_block);
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
     {
         BSL_LOG_ERR("Failed to retrieve primary block");
@@ -458,13 +459,13 @@ void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self)
 }
 
 bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
-                                  BSL_HostEID_t src_eid, BSL_HostEID_t dst_eid)
+                                  const BSL_HostEID_t *src_eid, const BSL_HostEID_t *dst_eid)
 {
     ASSERT_ARG_EXPR(BSLP_PolicyPredicate_IsConsistent(self));
 
     bool is_location_match    = location == self->location;
-    bool is_src_pattern_match = BSL_HostEIDPattern_IsMatch(&self->src_eid_pattern, &src_eid);
-    bool is_dst_pattern_match = BSL_HostEIDPattern_IsMatch(&self->dst_eid_pattern, &dst_eid);
+    bool is_src_pattern_match = BSL_HostEIDPattern_IsMatch(&self->src_eid_pattern, src_eid);
+    bool is_dst_pattern_match = BSL_HostEIDPattern_IsMatch(&self->dst_eid_pattern, dst_eid);
 
     BSL_LOG_DEBUG("Match: location=%d, src_pattern=%d, dst_pattern=%d", is_location_match, is_src_pattern_match,
                   is_dst_pattern_match);
@@ -538,7 +539,8 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
 
     {
         // Confirm that the rule matches the bundle.
-        BSL_PrimaryBlock_t primary_block = { 0 };
+        BSL_PrimaryBlock_t primary_block;
+        BSL_PrimaryBlock_init(&primary_block);
         BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block);
         CHK_PRECONDITION(BSLP_PolicyPredicate_IsMatch(predicate, location, primary_block.field_src_node_id,
                                                       primary_block.field_dest_eid));

@@ -50,15 +50,19 @@ enum BSLX_CoseSC_Option_e
      */
     BSLX_COSESC_OPTION_KEYID,
     /** Content-layer algorithm as an integer.
-     * The value is a COSE algorithm code point.
+     * The value is a COSE algorithm code point (::BSLX_CoseMsg_Alg_e).
      * Required for source and optional filter for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_TGT_ALG,
     /** Optional recipient algorithm as an integer.
-     * The value is a COSE algorithm code point.
+     * The value is a COSE algorithm code point (::BSLX_CoseMsg_Alg_e).
      * Optional for source and optional filter for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_RECIP_ALG,
+    /** AAD Scope as a raw ::BSLX_CoseSc_AadScope_t
+     * The value is interpreted according to COSE context draft.
+     */
+    BSLX_COSESC_OPTION_AAD_SCOPE,
 };
 
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.2
@@ -72,12 +76,18 @@ enum BSLX_CoseSC_Param_e
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.3
 enum BSLX_CoseSC_Result_e
 {
-    BXLS_COSESC_RESULT_COSE_ENC0  = 16,
-    BXLS_COSESC_RESULT_COSE_MAC0  = 17,
-    BXLS_COSESC_RESULT_COSE_SIGN1 = 18,
-    BXLS_COSESC_RESULT_COSE_ENC   = 96,
-    BXLS_COSESC_RESULT_COSE_MAC   = 97,
-    BXLS_COSESC_RESULT_COSE_SIGN  = 98,
+    BSLX_COSESC_RESULT_COSE_ENC0  = 16,
+    BSLX_COSESC_RESULT_COSE_MAC0  = 17,
+    BSLX_COSESC_RESULT_COSE_SIGN1 = 18,
+    BSLX_COSESC_RESULT_COSE_ENC   = 96,
+    BSLX_COSESC_RESULT_COSE_MAC   = 97,
+    BSLX_COSESC_RESULT_COSE_SIGN  = 98,
+};
+
+enum BSLX_CoseSC_AAD_Flag_e
+{
+    BSLX_COSESC_AAD_FLAG_METADATA = 0x1,
+    BSLX_COSESC_AAD_FLAG_BTSD = 0x2,
 };
 
 /// Match signature ::BSL_SecCtx_Validate_f

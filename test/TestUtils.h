@@ -53,7 +53,14 @@ int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cb
 BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text);
 
 void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t bufflen);
-bool BSL_TestUtils_IsB16StrEqualTo(const char *b16_string, BSL_Data_t encoded_val);
+
+/** Compare an expected base-16 encoded byte string with an actual value.
+ *
+ * @param expected_hex The expected value in base-16 as a null-terminated string.
+ * @param encoded_val The value to check.
+ * @return True if they are byte-wise identical.
+ */
+bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_val);
 
 /** Encode to base16 text form.
  * This is defined in Section 8 of RFC 4648 @cite rfc4648.
@@ -81,7 +88,10 @@ int BSL_TestUtils_DecodeBase16(BSL_Data_t *output, const string_t input);
 int BSL_TestUtils_DecodeBase16_cstr(BSL_Data_t *output, const char *input);
 
 /**
- * Modify bundle's source eid, destination eid, and report-to eid
+ * Modify bundle's source eid, destination eid, and report-to eid.
+ * @warning This violates the BPv7 constraint of an immutable primary block,
+ * and is for testing only!
+ *
  * @param[in, out] input_bundle bundle to modify
  * @param[in] src_eid EID to set bundle source EID to. Set to NULL if bundle source EID should remain unchanged.
  * @param[in] dest_eid EID to set bundle destination EID to. Set to NULL if bundle destination EID should remain

@@ -370,12 +370,15 @@ int BSL_HostEID_DecodeFromText(BSL_HostEID_t *eid, const char *text);
 int BSL_HostEID_DecodeFromCBOR(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid);
 
 /** Encode a EID into CBOR.
+ * Either one of @c encoded_bytes or @c encoded_size must be non-NULL.
  *
  * @param[in] eid The value to encode
- * @param[in, out] encoded_bytes CBOR encoded bytes
+ * @param[out] encoded_bytes The CBOR encoded bytes output.
+ * The structure must already be initialized.
+ * @param[out] encoded_size The encoded size needed output.
  * @return Zero if successful.
  */
-int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes);
+int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes, size_t *encoded_size);
 
 /** Static initializer for an invalid ::BSL_HostEIDPattern_t.
  * Even after this, BSL_HostEIDPattern_Init() must be used to get into a valid state.

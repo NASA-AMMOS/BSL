@@ -25,6 +25,32 @@
  */
 #include "CBOR.h"
 #include <BPSecLib_Private.h>
+#include <m-core.h>
+
+int BSL_CBOR_Encode_GetSize(size_t *needlen, BSL_CBOR_Encode_f func, const void *obj)
+{
+    ASSERT_ARG_NONNULL(needlen);
+    ASSERT_ARG_NONNULL(func);
+
+    QCBOREncodeContext encoder;
+    QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
+
+    int res = func(&encoder, obj);
+    if (BSL_SUCCESS != res)
+    {
+        return res;
+    }
+
+    // get used size
+    QCBORError qcbor_err = QCBOREncode_FinishGetSize(&encoder, needlen);
+    if (qcbor_err != QCBOR_SUCCESS)
+    {
+        BSL_LOG_ERR("CBOR pre-encoding failed: %s", qcbor_err_to_str(qcbor_err));
+        return BSL_ERR_ENCODING;
+    }
+    BSL_LOG_DEBUG("CBOR pre-encoded size: %zu", *needlen);
+    return BSL_SUCCESS;
+}
 
 int BSL_CBOR_Encode_Twopass(BSL_Data_t *buf, BSL_CBOR_Encode_f func, const void *obj)
 {
@@ -111,4 +137,30 @@ int BSL_CBOR_Decode(const BSL_Data_t *buf, BSL_CBOR_Decode_f func, const void *o
     }
 
     return BSL_SUCCESS;
+}
+
+int BSL_CBOR_Compare_Int64(const int64_t *ltv, const int64_t *rtv)
+{
+    ASSERT_ARG_NONNULL(ltv);
+    ASSERT_ARG_NONNULL(rtv);
+
+    const int lt_major = (*ltv >= 0) ? 0 : 1;
+    const int rt_major = (*rtv >= 0) ? 0 : 1;
+
+    int res = M_CMP_BASIC(lt_major, rt_major);
+    if (res)
+    {
+        return res;
+    }
+    // major types are the same
+    if (lt_major == 0)
+    {
+        // more positive ascending
+        return M_CMP_BASIC(*ltv, *rtv);
+    }
+    else
+    {
+        // more negative ascending
+        return -M_CMP_BASIC(*ltv, *rtv);
+    }
 }

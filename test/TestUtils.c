@@ -57,21 +57,18 @@ int BSL_TestContext_Deinit(BSL_TestContext_t *ctx)
     return BSL_SUCCESS;
 }
 
-bool BSL_TestUtils_IsB16StrEqualTo(const char *b16_string, BSL_Data_t encoded_val)
+bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_val)
 {
-    string_t in_text;
-    string_init_set_str(in_text, b16_string);
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
     in_data.owned = 1;
-    if (BSL_TestUtils_DecodeBase16(&in_data, in_text) != 0)
+    if (BSL_TestUtils_DecodeBase16_cstr(&in_data, expected_hex) != 0)
     {
         BSL_Data_Deinit(&in_data);
-        string_clear(in_text);
-        assert(0);
-        // TEST_ASSERT_MESSAGE(0, "Could not base16-decode sequence");
+        BSL_LOG_CRIT("Could not base16-decode sequence");
+        BSL_Data_Deinit(&in_data);
+        return false;
     }
-    string_clear(in_text);
 
     BSL_TestUtils_PrintHexToBuffer("actual str  : ", encoded_val.ptr, encoded_val.len);
     BSL_TestUtils_PrintHexToBuffer("expected str: ", in_data.ptr, in_data.len);
@@ -103,10 +100,7 @@ int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cb
     assert(test_ctx != NULL);
     assert(cborhex != NULL);
 
-    string_t in_text;
-    string_init_set_str(in_text, cborhex);
-    int res = BSL_TestUtils_DecodeBase16(&test_ctx->mock_bpa_ctr.encoded, in_text);
-    string_clear(in_text);
+    int res = BSL_TestUtils_DecodeBase16_cstr(&test_ctx->mock_bpa_ctr.encoded, cborhex);
     if (res != 0)
     {
         BSL_LOG_ERR("Failed to decode base16 text from: %s", cborhex);
@@ -231,19 +225,21 @@ int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid,
                              const char *report_to_eid)
 {
     BSL_PrimaryBlock_t primary_block;
+    BSL_PrimaryBlock_init(&primary_block);
     BSL_BundleCtx_GetBundleMetadata(input_bundle, &primary_block);
     int res = 0;
     if (src_eid)
     {
-        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_src_node_id), src_eid, NULL));
+        res |= (!!mock_bpa_eid_from_text((BSL_HostEID_t *)(primary_block.field_src_node_id), src_eid, NULL));
     }
     if (dest_eid)
     {
-        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_dest_eid), dest_eid, NULL) << 1);
+        res |= (!!mock_bpa_eid_from_text((BSL_HostEID_t *)(primary_block.field_dest_eid), dest_eid, NULL) << 1);
     }
     if (report_to_eid)
     {
-        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_report_to_eid), report_to_eid, NULL) << 2);
+        res |=
+            (!!mock_bpa_eid_from_text((BSL_HostEID_t *)(primary_block.field_report_to_eid), report_to_eid, NULL) << 2);
     }
     BSL_PrimaryBlock_deinit(&primary_block);
 

@@ -330,21 +330,12 @@ TEST_MATRIX([ 0, 1 ], ["Key7"], [BSL_CRYPTO_SHA_512],
             ["e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6"
              "de0446065c97440fa8c6a58"])
 void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_e sha_var, const char *plaintext_in,
-                  char *expected)
+                  const char *expected)
 {
-    string_t exp_txt;
-    string_init_set_str(exp_txt, expected);
-    BSL_Data_t expected_data;
-    BSL_Data_Init(&expected_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&expected_data, exp_txt),
-                                  "BSL_TestUtils_DecodeBase16() failed");
-
-    string_t pt_txt;
-    string_init_set_str(pt_txt, plaintext_in);
     BSL_Data_t pt_in_data;
     BSL_Data_Init(&pt_in_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&pt_in_data, pt_txt),
-                                  "BSL_TestUtils_DecodeBase16() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&pt_in_data, plaintext_in),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     void *keyhandle;
     TEST_ASSERT_EQUAL(0, BSL_Crypto_GetRegistryKey(keyid, &keyhandle));
@@ -370,36 +361,32 @@ void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_
         default:
             TEST_ABORT();
     }
-    int hmac_sz = 0;
+    int expect_hmac_sz = 0;
     switch (hmac.SHA_variant)
     {
         case BSL_CRYPTO_SHA_256:
-            hmac_sz = 32;
+            expect_hmac_sz = 32;
             break;
         case BSL_CRYPTO_SHA_384:
-            hmac_sz = 48;
+            expect_hmac_sz = 48;
             break;
         case BSL_CRYPTO_SHA_512:
-            hmac_sz = 64;
+            expect_hmac_sz = 64;
             break;
         default:
             TEST_ABORT();
     }
-    uint8_t hmac_buf[hmac_sz];
-    void   *hmac_buf_ptr = hmac_buf;
-    size_t  hmac_len;
-    TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Finalize(&hmac, &hmac_buf_ptr, &hmac_len));
-    TEST_ASSERT_EQUAL(hmac_sz, hmac_len);
 
-    TEST_ASSERT_EQUAL_INT(hmac_len, expected_data.len);
-    TEST_ASSERT_EQUAL_MEMORY(hmac_buf_ptr, expected_data.ptr, expected_data.len);
+    BSL_Data_t tag;
+    BSL_Data_Init(&tag);
+    TEST_ASSERT_EQUAL(0, BSL_AuthCtx_Finalize(&hmac, &tag));
+    TEST_ASSERT_EQUAL(expect_hmac_sz, tag.len);
 
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(expected, tag));
+
+    BSL_Data_Deinit(&tag);
     BSL_AuthCtx_Deinit(&hmac);
-
-    BSL_Data_Deinit(&expected_data);
     BSL_Data_Deinit(&pt_in_data);
-    string_clear(exp_txt);
-    string_clear(pt_txt);
 }
 
 /**

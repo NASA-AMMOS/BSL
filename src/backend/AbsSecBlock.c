@@ -302,27 +302,31 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
         QCBOREncode_AddUInt64(enc, flags);
     }
 
+    if (QCBOREncode_IsBufferNULL(enc))
     {
-        // get needed size first
-        ssize_t encode_result = BSL_HostEID_EncodeToCBOR(&asb->source_eid, NULL);
-        if (encode_result <= 0)
+        size_t needlen;
+        int    encode_result = BSL_HostEID_EncodeToCBOR(&asb->source_eid, NULL, &needlen);
+        if (encode_result != BSL_SUCCESS)
         {
-            BSL_LOG_ERR("Failed to calculate EID size");
+            BSL_LOG_ERR("Failed to encode EID");
             return BSL_ERR_ENCODING;
         }
 
+        QCBOREncode_AddEncoded(enc, (UsefulBufC) { .ptr = NULL, .len = needlen });
+    }
+    else
+    {
         BSL_Data_t eid_data;
-        BSL_Data_InitBuffer(&eid_data, (size_t)encode_result);
-        encode_result = BSL_HostEID_EncodeToCBOR(&asb->source_eid, &eid_data);
-        if (encode_result <= BSL_SUCCESS)
+        BSL_Data_Init(&eid_data);
+        int encode_result = BSL_HostEID_EncodeToCBOR(&asb->source_eid, &eid_data, NULL);
+        if (encode_result != BSL_SUCCESS)
         {
             BSL_LOG_ERR("Failed to encode EID");
             BSL_Data_Deinit(&eid_data);
             return BSL_ERR_ENCODING;
         }
 
-        UsefulBufC eid_buf = { .ptr = eid_data.ptr, .len = eid_data.len };
-        QCBOREncode_AddEncoded(enc, eid_buf);
+        QCBOREncode_AddEncoded(enc, UsefulBufC_FROM_BSL_Data(eid_data));
         BSL_Data_Deinit(&eid_data);
     }
 

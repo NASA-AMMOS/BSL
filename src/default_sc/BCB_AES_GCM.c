@@ -32,6 +32,7 @@
 
 #include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
+#include <backend/CBOR.h>
 
 #include "DefaultSecContext.h"
 #include "DefaultSecContext_Private.h"
@@ -72,9 +73,7 @@ int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
     if (bcb_context->aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK)
     {
         BSL_LOG_DEBUG("Adding primary block to AAD");
-        UsefulBufC prim_blk_encoded = { .ptr = bcb_context->primary_block.encoded.ptr,
-                                        .len = bcb_context->primary_block.encoded.len };
-        QCBOREncode_AddEncoded(&aad_enc, prim_blk_encoded);
+        QCBOREncode_AddEncoded(&aad_enc, UsefulBufC_FROM_BSL_Data(*(bcb_context->primary_block.encoded)));
     }
     if (bcb_context->aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_TARGET_HEADER)
     {
@@ -574,7 +573,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
 
     CHK_PRECONDITION(BSL_SecOper_GetSecurityBlockNum(sec_oper) > 0);
 
-    BSL_CanonicalBlock_t target_block = { 0 };
+    BSL_CanonicalBlock_t target_block;
     if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &target_block))
     {
         BSL_LOG_ERR("Failed to get block data");

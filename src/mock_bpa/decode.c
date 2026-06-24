@@ -57,10 +57,20 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
 
     switch (obj->scheme)
     {
+        case BSL_MOCK_EID_DTN:
+        {
+            m_string_t *ssp = &(obj->ssp.as_dtn);
+
+            UsefulBufC buf;
+            QCBORDecode_GetTextString(&dec, &buf);
+            m_string_set_cstrn(*ssp, buf.ptr, buf.len);
+
+            break;
+        }
         case BSL_MOCK_EID_IPN:
         {
             bsl_eid_ipn_ssp_t *ipn = &(obj->ssp.as_ipn);
-            ASSERT_ARG_NONNULL(ipn);
+
             QCBORDecode_EnterArray(&dec, &decitem);
             if (decitem.val.uCount == 2)
             {

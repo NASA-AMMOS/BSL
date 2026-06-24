@@ -37,6 +37,7 @@ void bsl_mock_eid_init(bsl_mock_eid_t *eid)
 {
     BSL_CHKVOID(eid);
     memset(eid, 0, sizeof(bsl_mock_eid_t));
+    eid->scheme = BSL_MOCK_EID_INVALID;
 }
 
 void bsl_mock_eid_deinit(bsl_mock_eid_t *eid)
@@ -44,6 +45,11 @@ void bsl_mock_eid_deinit(bsl_mock_eid_t *eid)
     BSL_CHKVOID(eid);
     switch (eid->scheme)
     {
+        case BSL_MOCK_EID_INVALID:
+            break;
+        case BSL_MOCK_EID_DTN:
+            m_string_clear(eid->ssp.as_dtn);
+            break;
         case BSL_MOCK_EID_IPN:
             break;
         default:
@@ -160,6 +166,21 @@ int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data
         ASSERT_ARG_NONNULL(eid->handle);
         obj->scheme     = BSL_MOCK_EID_IPN;
         obj->ssp.as_ipn = ipn_ssp;
+    }
+    else if (strncasecmp(text, "dtn", 3) == 0)
+    {
+        curs = pend + 1;
+        if (*curs == '\0')
+        {
+            // empty SSP
+            return 4;
+        }
+
+        // assume full text is URI character set
+        bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
+        ASSERT_ARG_NONNULL(eid->handle);
+        obj->scheme = BSL_MOCK_EID_DTN;
+        m_string_init_set_cstr(obj->ssp.as_dtn, curs);
     }
     else
     {

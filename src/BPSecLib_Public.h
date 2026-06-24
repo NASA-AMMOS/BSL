@@ -215,36 +215,64 @@ typedef enum BSL_ReasonCode_e
 
 /** @brief Contains Bundle Primary Block fields and metadata.
  *
- *  @note This contains a *snapshot* of the fields at the time it was queried. It is not a pointer.
- *
- * Instances are initialized as part of BSL_BundleCtx_GetBundleMetadata().
- * Instances are de-initialized with BSL_PrimaryBlock_deinit().
+ * State is set by calls to BSL_BundleCtx_GetBundleMetadata().
+ * Instances are initialized with BSL_PrimaryBlock_init() and
+ * de-initialized with BSL_PrimaryBlock_deinit().
  */
 typedef struct BSL_PrimaryBlock_s
 {
-    uint64_t      field_version;              ///< CBOR-decoded field of Primary Block BP version
-    uint64_t      field_flags;                ///< CBOR-decoded field of bundle processing control flags
-    uint64_t      field_crc_type;             ///< CBOR-decoded field of Primary Block CRC type
-    BSL_HostEID_t field_dest_eid;             ///< Destination in host BPA's internal representation of an EID
-    BSL_HostEID_t field_src_node_id;          ///< Source in host BPA's internal representation of an EID
-    BSL_HostEID_t field_report_to_eid;        ///< Report-to EID in host BPA's internal representation of an EID.
-    uint64_t      field_bundle_creation_time; ///< CBOR-decoded bundle creation time
-    uint64_t      field_seq_num;              ///< CBOR-decoded sequence number
-    uint64_t      field_lifetime;             ///< CBOR-decoded lifetime
-    uint64_t      field_frag_offset;          ///< CBOR-decoded fragment offset (warning, may not be implemented yet).
-    uint64_t      field_adu_length;           ///< CBOR-decoded field of ADU length
+    /// CBOR-decoded field of Primary Block BP version
+    uint64_t field_version;
+    /// CBOR-decoded field of bundle processing control flags
+    uint64_t field_flags;
+    /// CBOR-decoded field of Primary Block CRC type
+    uint64_t field_crc_type;
+    /** Destination in host BPA's internal representation of an EID.
+     * This is a reference to an external value immutable during the lifetime
+     * of the bundle.
+     */
+    const BSL_HostEID_t *field_dest_eid;
+    /** Source in host BPA's internal representation of an EID.
+     * This is a reference to an external value immutable during the lifetime
+     * of the bundle.
+     */
+    const BSL_HostEID_t *field_src_node_id;
+    /** Report-to EID in host BPA's internal representation of an EID.
+     * This is a reference to an external value immutable during the lifetime
+     * of the bundle.
+     */
+    const BSL_HostEID_t *field_report_to_eid;
+    /// CBOR-decoded bundle creation time
+    uint64_t field_bundle_creation_time;
+    /// CBOR-decoded sequence number
+    uint64_t field_seq_num;
+    /// CBOR-decoded lifetime
+    uint64_t field_lifetime;
+    /// CBOR-decoded fragment offset (warning, may not be implemented yet).
+    uint64_t field_frag_offset;
+    /// CBOR-decoded field of ADU length
+    uint64_t field_adu_length;
 
-    /// Helpful count of total canonical blocks in bundle, not a field of the header.
+    /** Helpful count of total canonical blocks in bundle, not a field of the header.
+     * @note This count is copied at the time the struct is requested.
+     */
     size_t block_count;
     /** Array of size #block_count containing canonical block numbers in
      * the same order in which they appear in the bundle.
+     * @note This array is copied at the time the struct is requested.
      */
     uint64_t *block_numbers;
 
     /** The encoded form of the primary block as contiguous data.
+     * This is a reference to an external value immutable during the lifetime
+     * of the bundle.
      */
-    BSL_Data_t encoded;
+    const BSL_Data_t *encoded;
 } BSL_PrimaryBlock_t;
+
+/** Initialize the primary block metadata to empty values.
+ */
+void BSL_PrimaryBlock_init(BSL_PrimaryBlock_t *obj);
 
 /** Deinitialize the use of a primary block metadata.
  *
@@ -369,13 +397,16 @@ typedef struct
     int (*bundle_delete_fn)(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason);
 
     /** Host BPA function to encode an EID to CBOR.
+     * Exactly one of @c encoded_bytes or @c encoded_size will be non-NULL to output.
+     *
      * @param[in] eid EID value to encode.
-     * @param[in, out] encoded_bytes Output encoded bytes. Initialized and deinitialized by BSL. The encoded EID must
-     * contain a CBOR array head. If set to NULL, function should return needed size of encoded CBOR bytestring without
-     * actually copying data into param.
+     * @param[out] encoded_bytes Output encoded bytes.
+     * This struct is initialized empty and deinitialized by BSL.
+     * The encoded EID must contain a CBOR array head and be sized to fit.
+     * @param[out] encoded_size The needed size of CBOR encoding.
      * @returns Number of bytes CBOR encoded EID must be
      */
-    int (*eid_to_cbor)(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes);
+    int (*eid_to_cbor)(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes, size_t *encoded_size);
 
     /** Host BPA function to decode an EID from CBOR.
      * @param[in] encoded_bytes Input encoded bytes. Initialized and deinitialized by BSL. The encoded EID must contain

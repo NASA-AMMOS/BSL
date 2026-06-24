@@ -39,9 +39,16 @@
 #include "encode.h"
 #include "decode.h"
 
+static const char *sec_src_envar = "BSL_TEST_LOCAL_IPN_EID";
+
 static int MockBPA_GetEid(void *user_data, BSL_HostEID_t *result_eid)
 {
-    const char *local_ipn = getenv("BSL_TEST_LOCAL_IPN_EID");
+    const char *local_ipn = getenv(sec_src_envar);
+    if (!local_ipn)
+    {
+        BSL_LOG_CRIT("Need to set environment variable %s", sec_src_envar);
+        return -1;
+    }
 
     int x = mock_bpa_eid_from_text(result_eid, local_ipn, user_data);
 
@@ -60,17 +67,15 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
     result_primary_block->field_version              = bundle->primary_block.version;
     result_primary_block->field_flags                = bundle->primary_block.flags;
     result_primary_block->field_crc_type             = bundle->primary_block.crc_type;
-    result_primary_block->field_dest_eid             = bundle->primary_block.dest_eid;
-    result_primary_block->field_src_node_id          = bundle->primary_block.src_node_id;
-    result_primary_block->field_report_to_eid        = bundle->primary_block.report_to_eid;
+    result_primary_block->field_dest_eid             = &bundle->primary_block.dest_eid;
+    result_primary_block->field_src_node_id          = &bundle->primary_block.src_node_id;
+    result_primary_block->field_report_to_eid        = &bundle->primary_block.report_to_eid;
     result_primary_block->field_bundle_creation_time = bundle->primary_block.timestamp.bundle_creation_time;
     result_primary_block->field_seq_num              = bundle->primary_block.timestamp.seq_num;
     result_primary_block->field_lifetime             = bundle->primary_block.lifetime;
     result_primary_block->field_frag_offset          = bundle->primary_block.frag_offset;
     result_primary_block->field_adu_length           = bundle->primary_block.adu_length;
-
-    BSL_Data_InitView(&result_primary_block->encoded, bundle->primary_block.encoded.len,
-                      bundle->primary_block.encoded.ptr);
+    result_primary_block->encoded                    = &bundle->primary_block.encoded;
 
     result_primary_block->block_count = MockBPA_BlockList_size(bundle->blocks);
 
@@ -198,6 +203,7 @@ static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_re
         return NULL;
     }
     MockBPA_CanonicalBlock_t *found_block = *found_ptr;
+    BSL_LOG_DEBUG("opened block number %" PRIu64 " with size %zu", found_block->blk_num, found_block->btsd_len);
 
     struct MockBPA_BTSD_Data_s *obj = BSL_calloc(1, sizeof(struct MockBPA_BTSD_Data_s));
     if (!obj)

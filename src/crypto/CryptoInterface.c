@@ -412,6 +412,7 @@ int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t d
     ASSERT_ARG_NONNULL(hmac_ctx);
     ASSERT_ARG_NONNULL(data);
 
+    BSL_LOG_PLAINTEXT_PTR("data in", hmac_ctx, data, data_len);
     int res = EVP_DigestSignUpdate(hmac_ctx->libhandle, data, data_len);
     CHK_PROPERTY(res == 1);
 
@@ -428,12 +429,18 @@ int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
 
     BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
 
-    uint8_t buf[hmac_ctx->block_size];
-    size_t  block_size = hmac_ctx->block_size;
-    while (block_size == hmac_ctx->block_size)
+    while (true)
     {
-        BSL_SeqReader_Get(reader, buf, &block_size);
-        EVP_DigestSignUpdate(hmac_ctx->libhandle, buf, block_size);
+        // read until there is no more
+        size_t block_size = hmac_ctx->block_size;
+        BSL_SeqReader_Get(reader, hmac_ctx->in_buf.ptr, &block_size);
+        if (block_size == 0)
+        {
+            break;
+        }
+
+        BSL_LOG_PLAINTEXT_PTR("data in", hmac_ctx, hmac_ctx->in_buf.ptr, block_size);
+        EVP_DigestSignUpdate(hmac_ctx->libhandle, hmac_ctx->in_buf.ptr, block_size);
 
         key_info->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += block_size;
     }
@@ -441,18 +448,19 @@ int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
     return 0;
 }
 
-int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
+int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *tag)
 {
     ASSERT_ARG_NONNULL(hmac_ctx);
-    ASSERT_ARG_NONNULL(hmac);
-    ASSERT_ARG_NONNULL(hmac_len);
+    ASSERT_ARG_NONNULL(tag);
 
-    size_t req = 0;
-    int    res = EVP_DigestSignFinal(hmac_ctx->libhandle, NULL, &req);
-    CHK_PROPERTY(res == 1);
+    // get the needed size
+    size_t size = EVP_MD_CTX_get_size(hmac_ctx->libhandle);
+    CHK_PROPERTY(size > 0);
+    CHK_PROPERTY(size <= INT_MAX);
 
-    *hmac_len = req;
-    res       = EVP_DigestSignFinal(hmac_ctx->libhandle, *hmac, hmac_len);
+    BSL_Data_Resize(tag, (int)size);
+    int res = EVP_DigestSignFinal(hmac_ctx->libhandle, tag->ptr, &size);
+    BSL_LOG_DEBUG("EVP_DigestSignFinal gave %zu bytes, return %d", size, res);
     CHK_PROPERTY(res == 1);
 
     return 0;

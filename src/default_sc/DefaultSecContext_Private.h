@@ -77,10 +77,8 @@ typedef struct BSLX_BIB_s
     /// Converted #sha_variant into enum value
     BSL_CryptoCipherSHAVariant_e crypto_sha_variant;
 
-    uint64_t   hash_size;
     BSL_Data_t wrapped_key;
     int64_t    keywrap;
-    uint64_t   hmac_result_id;
     BSL_Data_t hmac_result_val;
 } BSLX_BIB_t;
 
