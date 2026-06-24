@@ -277,7 +277,7 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
 
 /**
  * Performs the actual HMAC over the given IPPT, placing the result in `hmac_result`.
- * @return BSL_SUCESS if successful.
+ * @return BSL_SUCCESS if successful.
  */
 int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
 {

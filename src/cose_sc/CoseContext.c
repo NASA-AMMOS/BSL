@@ -256,10 +256,10 @@ static int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseS
 /** @struct BSLX_CoseSc_ChunkItem_t
  * A variant which can be either:
  *  - @c data An instance of @c m_bstring_t
- *  - @c seq An POD instance of ::BSLX_CoseSc_ChunkItem_Seq_t
+ *  - @c seq An POD instance of ::BSL_SeqReader_s
  */
 /** @struct BSLX_CoseSc_ChunkList_t
- * A list of ::BSLX_CoseSc_ChunkItem_t for MAC and AAD procesing.
+ * A list of ::BSLX_CoseSc_ChunkItem_t for MAC and AAD processing.
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
@@ -557,8 +557,8 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
         {
             const BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_cref(chunk_it);
 
-            const m_bstring_t *data;
-            BSL_SeqReader_t  *const *seq;
+            const m_bstring_t      *data;
+            BSL_SeqReader_t *const *seq;
             if ((data = BSLX_CoseSc_ChunkItem_cget_data(*item)))
             {
                 size_t         size = m_bstring_size(*data);
@@ -591,7 +591,7 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
         {
             BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_ref(chunk_it);
 
-            BSL_SeqReader_t  **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
+            BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
             if (seq)
             {
                 BSL_SeqReader_Destroy(*seq);
