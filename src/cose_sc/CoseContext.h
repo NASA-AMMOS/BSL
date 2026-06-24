@@ -87,7 +87,7 @@ enum BSLX_CoseSC_Result_e
 enum BSLX_CoseSC_AAD_Flag_e
 {
     BSLX_COSESC_AAD_FLAG_METADATA = 0x1,
-    BSLX_COSESC_AAD_FLAG_BTSD = 0x2,
+    BSLX_COSESC_AAD_FLAG_BTSD     = 0x2,
 };
 
 /// Match signature ::BSL_SecCtx_Validate_f

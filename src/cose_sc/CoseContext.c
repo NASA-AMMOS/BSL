@@ -251,7 +251,7 @@ static int BSLX_CoseSc_ExternalAad_Encode(QCBOREncodeContext *enc, const BSLX_Co
     {
         const BSLX_CoseSc_AadScope_subtype_ct *aads_pair = BSLX_CoseSc_AadScope_cref(aads_it);
 
-        const int64_t blk_num = *(aads_pair->key_ptr);
+        const int64_t blk_num   = *(aads_pair->key_ptr);
         const int64_t aad_flags = *(aads_pair->value_ptr);
 
         // copy buffer
@@ -290,7 +290,7 @@ static int BSLX_CoseSc_ExternalAad_Encode(QCBOREncodeContext *enc, const BSLX_Co
             }
             else
             {
-                BSL_LOG_WARNING("AAD Scope flags ignored for primary block: 0x%"PRIx64, aad_flags);
+                BSL_LOG_WARNING("AAD Scope flags ignored for primary block: 0x%" PRIx64, aad_flags);
             }
         }
         else
