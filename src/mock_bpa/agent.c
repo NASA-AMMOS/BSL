@@ -348,7 +348,7 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
         // Policy has requested a number
         if (MockBPA_BlockByNum_cget(bundle->blocks_num, *block_num))
         {
-            BSL_LOG_ERR("Requested block number %"PRIu64 " already exists");
+            BSL_LOG_ERR("Requested block number %"PRIu64 " already exists", *block_num);
             return -2;
         }
     }
