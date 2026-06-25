@@ -82,8 +82,12 @@ M_ARRAY_DEF(BSL_AbsSecBlock_TargetList, BSL_AbsSecBlock_TargetPtr_t *, M_OPL_BSL
 /// @endcond
 // NOLINTEND
 
+enum BSL_AbsSecBlock_Flags_e
+{
+    BSL_ABSSECBLOCK_FLAG_HAS_PARAM = 0x1,
+};
+
 /** Represents the Abstract Security Block as defined in RFC9172
- *
  */
 struct BSL_AbsSecBlock_s
 {

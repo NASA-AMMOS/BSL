@@ -322,32 +322,40 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
     return writer;
 }
 
-int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, uint64_t *result_block_num)
+int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, uint64_t *block_num)
 {
-    if (!bundle_ref || !bundle_ref->data || !result_block_num)
+    if (!bundle_ref || !bundle_ref->data || !block_num)
     {
         return -1;
     }
 
-    *result_block_num        = 0;
     MockBPA_Bundle_t *bundle = bundle_ref->data;
 
-    uint64_t               max_id = 0;
-    MockBPA_BlockList_it_t bit;
-    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
+    if (*block_num == 0)
     {
-        const MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_cref(bit);
-        max_id                              = blk->blk_num >= max_id ? blk->blk_num : max_id;
+        // BPA chooses the next number
+         MockBPA_CanonicalBlock_t *const*blk_ptr = MockBPA_BlockByNum_max(bundle->blocks_num);
+        if (!blk_ptr)
+        {
+            // should have at least a payload already
+            return -2;
+        }
+        // one beyond the current largest
+        *block_num = (*blk_ptr)->blk_num + 1;
     }
-    if (max_id < 1)
+    else
     {
-        // should have at least a payload already
-        return -2;
+        // Policy has requested a number
+        if (MockBPA_BlockByNum_cget(bundle->blocks_num, *block_num))
+        {
+            BSL_LOG_ERR("Requested block number %"PRIu64 " already exists");
+            return -2;
+        }
     }
 
     MockBPA_CanonicalBlock_t *new_block = MockBPA_BlockList_push_back_new(bundle->blocks);
     memset(new_block, 0, sizeof(*new_block));
-    new_block->blk_num  = max_id + 1;
+    new_block->blk_num  = *block_num;
     new_block->blk_type = block_type_code;
     new_block->crc_type = 0;
     new_block->flags    = block_type_code == 12 ? 1 : 0; // BCB should have a flag of 1
@@ -356,7 +364,7 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
 
     MockBPA_BlockByNum_set_at(bundle->blocks_num, new_block->blk_num, new_block);
 
-    *result_block_num = new_block->blk_num;
+    *block_num = new_block->blk_num;
     BSL_LOG_DEBUG("Created block %" PRIu64, new_block->blk_num);
 
     return 0;

@@ -297,7 +297,7 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
         uint64_t flags = 0;
         if (!BSLB_IdValPairPtrList_empty_p(asb->params))
         {
-            flags |= 0x1;
+            flags |= BSL_ABSSECBLOCK_FLAG_HAS_PARAM;
         }
         QCBOREncode_AddUInt64(enc, flags);
     }
@@ -330,6 +330,7 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
         BSL_Data_Deinit(&eid_data);
     }
 
+    if (!BSLB_IdValPairPtrList_empty_p(asb->params))
     {
         QCBOREncode_OpenArray(enc);
 
@@ -457,7 +458,7 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
     }
 
     // A zero value for flags means there are NO paramers, a value of 1 indicates there are parameters to parse.
-    if (flags & 0x01)
+    if (flags & BSL_ABSSECBLOCK_FLAG_HAS_PARAM)
     {
         // variable length array of parameters
         BSL_LOG_DEBUG("Parsing parameter array");

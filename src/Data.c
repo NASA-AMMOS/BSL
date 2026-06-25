@@ -145,8 +145,10 @@ int BSL_Data_Resize(BSL_Data_t *data, size_t len)
         return BSL_SUCCESS;
     }
 
+    BSL_DataPtr_t need_cpy = NULL;
     if (!data->owned)
     {
+        need_cpy  = data->ptr;
         data->ptr = NULL;
     }
     BSL_DataPtr_t got = BSL_realloc(data->ptr, len);
@@ -156,6 +158,12 @@ int BSL_Data_Resize(BSL_Data_t *data, size_t len)
         BSL_LOG_ERR("Failed to realloc");
         return BSL_ERR_INSUFFICIENT_SPACE;
     }
+    if (need_cpy)
+    {
+        // copy old data only when it was a view
+        memcpy(got, need_cpy, data->len);
+    }
+
     data->owned = true;
     data->ptr   = got;
     data->len   = len;

@@ -127,18 +127,16 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_SOURCE_COUNT, 1);
 
-    uint64_t created_block_num = 0;
-    int      created_result    = BSL_BundleCtx_CreateBlock(bundle, BSL_SECBLOCKTYPE_BIB, &created_block_num);
-    if (created_result != BSL_SUCCESS)
+    // policy may request a block number
+    int      res    = BSL_BundleCtx_CreateBlock(bundle, BSL_SECBLOCKTYPE_BIB, &sec_oper->sec_block_num);
+    if (BSL_SUCCESS != res)
     {
-        BSL_LOG_ERR("Failed to create BIB block, error=%d", created_result);
+        BSL_LOG_ERR("Failed to create BIB block, error=%d", res);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_BUNDLE_OPERATION_FAILED;
     }
-
-    CHK_PROPERTY(created_block_num > 1);
-
-    sec_oper->sec_block_num = created_block_num;
+    BSL_LOG_DEBUG("Created new BIB block number = %" PRIu64, sec_oper->sec_block_num);
+    CHK_PROPERTY(sec_oper->sec_block_num > 1);
 
     const int bib_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
     if (bib_result != 0) // || outcome->is_success == false)
@@ -149,16 +147,16 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     }
 
     BSL_CanonicalBlock_t sec_blk = { 0 };
-    if (BSL_BundleCtx_GetBlockMetadata(bundle, created_block_num, &sec_blk) != BSL_SUCCESS)
+    if (BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk) != BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Could not get BIB block (num=%" PRIu64 ")", created_block_num);
+        BSL_LOG_ERR("Could not get BIB block (num=%" PRIu64 ")", sec_oper->sec_block_num);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
     BSL_AbsSecBlock_t asb;
     BSL_AbsSecBlock_Init(&asb);
-    int res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, outcome, &asb);
+    res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, outcome, &asb);
     if (BSL_SUCCESS != res)
     {
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
@@ -403,18 +401,18 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_SOURCE_COUNT, 1);
 
-    uint64_t created_block_id = 0;
-    if (BSL_SUCCESS != BSL_BundleCtx_CreateBlock(bundle, BSL_SECBLOCKTYPE_BCB, &created_block_id))
+    // policy may request a block number
+    int res = BSL_BundleCtx_CreateBlock(bundle, BSL_SECBLOCKTYPE_BCB, &sec_oper->sec_block_num);
+    if (BSL_SUCCESS != res)
     {
-        BSL_LOG_ERR("Failed to create BCB block");
+        BSL_LOG_ERR("Failed to create BCB block, error=%d", res);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
-    BSL_LOG_INFO("Created new BCB block id = %" PRIu64, created_block_id);
+    BSL_LOG_DEBUG("Created new BCB block number = %" PRIu64, sec_oper->sec_block_num);
+    CHK_PROPERTY(sec_oper->sec_block_num > 1);
 
-    sec_oper->sec_block_num = created_block_id;
-
-    int res = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
+    res = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
     if (res != 0) // || outcome->is_success == false)
     {
         BSL_LOG_ERR("BCB Source failed!");

@@ -48,7 +48,19 @@ typedef struct BSL_TestContext_s
 int BSL_TestContext_Init(BSL_TestContext_t *ctx);
 int BSL_TestContext_Deinit(BSL_TestContext_t *ctx);
 
+/** Load a full bundle state into a test context.
+ *
+ * @param[in,out] test_ctx The context to copy and decode into.
+ * @param[in] cborhex The input bundle in base16.
+ */
 int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cborhex);
+
+/** Compare a full bundle state from a test context.
+ *
+ * @param[in,out] test_ctx The context to encode into and compare with.
+ * @param[in] cborhex The expected bundle in base16.
+ */
+int BSL_TestUtils_ComapreBundleAsCBOR(BSL_TestContext_t *test_ctx, const char *cborhex);
 
 BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text);
 
@@ -61,17 +73,6 @@ void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t b
  * @return True if they are byte-wise identical.
  */
 bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_val);
-
-/** Encode to base16 text form.
- * This is defined in Section 8 of RFC 4648 @cite rfc4648.
- * @note This function uses heap allocation for its output.
- *
- * @param[out] output The output buffer, which will be appended to.
- * @param[in] input The input buffer to read.
- * @param uppercase True to use upper-case letters, false to use lower-case.
- * @return Zero upon success.
- */
-int BSL_TestUtils_EncodeBase16(string_t output, const BSL_Data_t *input, bool uppercase);
 
 /** Decode base16 text form.
  * This is defined in Section 8 of RFC 4648 @cite rfc4648.

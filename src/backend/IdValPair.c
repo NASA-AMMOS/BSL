@@ -257,6 +257,26 @@ void BSL_IdValPair_SetRaw(BSL_IdValPair_t *self, int64_t param_id, const void *p
     }
 }
 
+bool BSL_IdValPair_IsRaw(const BSL_IdValPair_t *self)
+{
+    CHK_AS_BOOL(self);
+    return (self->_type == BSL_IDVALPAIR_TYPE_RAW);
+}
+
+int BSL_IdValPair_GetAsRaw(const BSL_IdValPair_t *self, BSL_Data_t *out)
+{
+    CHK_PRECONDITION(BSL_IdValPair_IsConsistent(self));
+    CHK_PROPERTY(self->_type == BSL_IDVALPAIR_TYPE_RAW);
+
+    if (out)
+    {
+        const size_t   size = m_bstring_size(self->_val.as_bytes);
+        const uint8_t *ptr  = m_bstring_view(self->_val.as_bytes, 0, size);
+        BSL_Data_InitView(out, size, (BSL_DataPtr_t)ptr);
+    }
+    return BSL_SUCCESS;
+}
+
 uint64_t BSL_IdValPair_GetId(const BSL_IdValPair_t *self)
 {
     ASSERT_PRECONDITION(BSL_IdValPair_IsConsistent(self));
@@ -373,6 +393,12 @@ void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t *pair)
         BSL_Data_t bytestr;
         BSL_IdValPair_GetAsBytestr(pair, &bytestr);
         QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(bytestr));
+    }
+    else if (BSL_IdValPair_IsRaw(pair))
+    {
+        BSL_Data_t bytestr;
+        BSL_IdValPair_GetAsRaw(pair, &bytestr);
+        QCBOREncode_AddEncoded(enc, UsefulBufC_FROM_BSL_Data(bytestr));
     }
     else
     {

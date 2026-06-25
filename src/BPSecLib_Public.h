@@ -354,9 +354,15 @@ typedef struct
     /// @brief Host BPA function to populate a Canonical Block struct for a given block number.
     int (*block_metadata_fn)(const BSL_BundleRef_t *bundle_ref, uint64_t block_num, BSL_CanonicalBlock_t *result_block);
 
-    /// @brief Host BPA function to create a new canonical block with the given type, returning result in the output
-    /// pointer.
-    int (*block_create_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, uint64_t *result_block_num);
+    /** @brief Host BPA function to create a new canonical block with the given type.
+     *
+     * @param[in] bundle_ref The host reference to the bundle to modify.
+     * @param block_type_code The new block type to create.
+     * @param[in,out] block_num An optional input requesting a block number, or zero for the BPA to choose a number.
+     * The value to will be set to the created block number if successful.
+     * @return BSL_SUCCESS if successful.
+     */
+    int (*block_create_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, uint64_t *block_num);
 
     /// @brief Host BPA function to remove a given canonical block from the bundle
     int (*block_remove_fn)(BSL_BundleRef_t *bundle_ref, uint64_t block_num);

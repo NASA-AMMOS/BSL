@@ -164,7 +164,9 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_KEYID);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(opt, NULL))
+        BSL_Data_t kid;
+        BSL_Data_Init(&kid);
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(opt, &kid))
         {
             BSL_LOG_ERR("Invalid key ID value");
             self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -172,12 +174,16 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         else
         {
             self->kid = opt;
-            if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey("ExampleA.1", &self->keyhandle))
+
+            // FIXME treat as null-terminated text for lookup
+            BSL_Data_AppendFrom(&kid, 1, (BSL_DataConstPtr_t) "\0");
+            if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey((const char *)kid.ptr, &self->keyhandle))
             {
                 BSL_LOG_ERR("Unknown key ID");
                 self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
         }
+        BSL_Data_Deinit(&kid);
     }
 
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_TGT_ALG);
@@ -227,12 +233,20 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     }
 }
 
-bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
+bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle _U_, BSL_SecOper_t *sec_oper)
 {
-    (void)lib;
-    (void)bundle;
-    (void)sec_oper;
-    return true;
+    BSLX_CoseSc_t ctx;
+    BSLX_CoseSc_Init(&ctx);
+    BSLX_CoseSc_Prepare(&ctx, bundle, sec_oper, NULL);
+
+    if (BSL_SUCCESS == ctx.retval)
+    {
+        BSLX_CoseSc_GetOptions(&ctx, sec_oper);
+    }
+
+    bool valid = (ctx.retval == BSL_SUCCESS);
+    BSLX_CoseSc_Deinit(&ctx);
+    return valid;
 }
 
 static int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_AadScope_t *scope)
@@ -610,23 +624,41 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
         }
     }
 
+    BSL_Data_t aad_scope_enc;
+    BSL_Data_Init(&aad_scope_enc);
     if (BSL_SUCCESS == ctx->retval)
     {
-        BSL_Data_t msg_enc;
-        BSL_Data_Init(&msg_enc);
+        res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &ctx->aad_scope);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to encode AAD Scope");
+            ctx->retval = res;
+        }
+    }
+    BSL_Data_t msg_enc;
+    BSL_Data_Init(&msg_enc);
+    if (BSL_SUCCESS == ctx->retval)
+    {
         res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Mac0_Encode, &msg);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to encode Mac0");
             ctx->retval = res;
         }
-        else
+    }
+    if (BSL_SUCCESS == ctx->retval)
+    {
+        {
+            BSL_IdValPair_t *param = BSL_SecOutcome_AppendParam(ctx->sec_outcome);
+            BSL_IdValPair_SetRaw(param, BSLX_COSESC_PARAM_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
+        }
         {
             BSL_IdValPair_t *result = BSL_SecOutcome_AppendResult(ctx->sec_outcome);
             BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_MAC0, msg_enc);
         }
-        BSL_Data_Deinit(&msg_enc);
     }
+    BSL_Data_Deinit(&msg_enc);
+    BSL_Data_Deinit(&aad_scope_enc);
 
     BSLX_CoseMsg_Mac0_Deinit(&msg);
 }
