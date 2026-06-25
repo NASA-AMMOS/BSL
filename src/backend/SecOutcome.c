@@ -77,8 +77,11 @@ bool BSL_SecOutcome_IsConsistent(const BSL_SecOutcome_t *self)
 BSL_IdValPair_t *BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
+    BSLB_IdValPairPtr_t **item_ptr = BSLB_IdValPairPtrList_push_new(self->result_list);
 
-    return BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->result_list));
+    *item_ptr = BSLB_IdValPairPtr_new();
+
+    return BSLB_IdValPairPtr_ref(*item_ptr);
 }
 
 size_t BSL_SecOutcome_CountResults(const BSL_SecOutcome_t *self)
@@ -113,6 +116,9 @@ const BSL_IdValPair_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, s
 BSL_IdValPair_t *BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
+    BSLB_IdValPairPtr_t **item_ptr = BSLB_IdValPairPtrList_push_new(self->param_list);
 
-    return BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->param_list));
+    *item_ptr = BSLB_IdValPairPtr_new();
+
+    return BSLB_IdValPairPtr_ref(*item_ptr);
 }

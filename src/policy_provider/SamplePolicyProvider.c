@@ -178,13 +178,14 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
     BSLP_SecOperPtrList_init(secops);
 
     pthread_mutex_lock(&self->mutex);
-    BSLP_PolicyRuleList_it_t rule_it;
-    size_t                   rule_pred_index = 0;
-    for (BSLP_PolicyRuleList_it(rule_it, self->rules); !BSLP_PolicyRuleList_end_p(rule_it);
-         BSLP_PolicyRuleList_next(rule_it), rule_pred_index++)
+    BSLP_PolicyRuleList_it_t      rule_it;
+    BSLP_PolicyPredicateList_it_t pred_it;
+    for (BSLP_PolicyRuleList_it(rule_it, self->rules), BSLP_PolicyPredicateList_it(pred_it, self->predicates);
+         !BSLP_PolicyRuleList_end_p(rule_it) && !BSLP_PolicyPredicateList_end_p(pred_it);
+         BSLP_PolicyRuleList_next(rule_it), BSLP_PolicyPredicateList_next(pred_it))
     {
-        const BSLP_PolicyRule_t      *rule      = BSLP_PolicyRuleList_cref(rule_it);
-        const BSLP_PolicyPredicate_t *predicate = BSLP_PolicyPredicateList_cget(self->predicates, rule_pred_index);
+        const BSLP_PolicyRule_t      *rule      = BSLP_PolicyRulePtr_cref(*BSLP_PolicyRuleList_cref(rule_it));
+        const BSLP_PolicyPredicate_t *predicate = BSLP_PolicyPredicatePtr_cref(*BSLP_PolicyPredicateList_cref(pred_it));
         if (!BSLP_PolicyRule_IsConsistent(rule))
         {
             BSL_LOG_ERR("Rule `%s` is not consistent", string_get_cstr(rule->description));
@@ -383,23 +384,28 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id)
     return pp;
 }
 
-int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule,
-                                const BSLP_PolicyPredicate_t *predicate)
+int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule, BSLP_PolicyPredicate_t *predicate)
 {
     if (!BSLP_PolicyRule_IsConsistent(rule) || !BSLP_PolicyPredicate_IsConsistent(predicate))
     {
         return BSL_ERR_ARG_INVALID;
     }
 
+    BSLP_PolicyRulePtr_t *rule_ptr = BSLP_PolicyRulePtr_new();
+    BSLP_PolicyRule_Move(BSLP_PolicyRulePtr_ref(rule_ptr), rule);
+
+    BSLP_PolicyPredicatePtr_t *pred_ptr = BSLP_PolicyPredicatePtr_new();
+    BSLP_PolicyPredicate_Move(BSLP_PolicyPredicatePtr_ref(pred_ptr), predicate);
+
     pthread_mutex_lock(&self->mutex);
-    BSLP_PolicyRuleList_push_move(self->rules, rule);
-    BSLP_PolicyPredicateList_push_back(self->predicates, *predicate);
+    BSLP_PolicyRuleList_push_move(self->rules, &rule_ptr);
+    BSLP_PolicyPredicateList_push_move(self->predicates, &pred_ptr);
     pthread_mutex_unlock(&self->mutex);
 
     return BSL_SUCCESS;
 }
 
-void BSLP_PolicyProvider_Deinit(BSLP_PolicyProvider_t *self)
+void BSLP_PolicyProvider_Destroy(BSLP_PolicyProvider_t *self)
 {
     pthread_mutex_lock(&self->mutex);
     BSLP_PolicyRuleList_clear(self->rules);
@@ -416,15 +422,6 @@ void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self)
     BSL_HostEIDPattern_Init(&self->src_eid_pattern);
     BSL_HostEIDPattern_Init(&self->secsrc_eid_pattern);
     BSL_HostEIDPattern_Init(&self->dst_eid_pattern);
-}
-
-void BSLP_PolicyPredicate_ShallowCopy(BSLP_PolicyPredicate_t *self, const BSLP_PolicyPredicate_t *src)
-{
-    // todo - eid patterns should be pointers since they are non-trivial copyable.
-    self->location                  = src->location;
-    self->src_eid_pattern.handle    = src->src_eid_pattern.handle;
-    self->secsrc_eid_pattern.handle = src->secsrc_eid_pattern.handle;
-    self->dst_eid_pattern.handle    = src->dst_eid_pattern.handle;
 }
 
 int BSLP_PolicyPredicate_InitFrom(BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
@@ -455,6 +452,20 @@ void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self)
     BSL_HostEIDPattern_Deinit(&self->secsrc_eid_pattern);
     BSL_HostEIDPattern_Deinit(&self->src_eid_pattern);
     memset(self, 0, sizeof(BSLP_PolicyPredicate_t));
+}
+
+void BSLP_PolicyPredicate_Move(BSLP_PolicyPredicate_t *self, BSLP_PolicyPredicate_t *src)
+{
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(src);
+    if (self == src)
+    {
+        return;
+    }
+    BSLP_PolicyPredicate_Deinit(self);
+    // move as POD
+    *self = *src;
+    memset(src, 0, sizeof(BSLP_PolicyPredicate_t));
 }
 
 bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
@@ -495,21 +506,10 @@ int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, const char *desc, int64_t 
 
 void BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self)
 {
+    ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(BSLP_PolicyRule_t));
     string_init(self->description);
     BSLB_IdValPairPtrList_init(self->options);
-}
-
-void BSLP_PolicyRule_InitSet(BSLP_PolicyRule_t *self, const BSLP_PolicyRule_t *src)
-{
-    string_init_set(self->description, src->description);
-    BSLB_IdValPairPtrList_init_set(self->options, src->options);
-
-    self->role                = src->role;
-    self->target_block_type   = src->target_block_type;
-    self->sec_block_type      = src->sec_block_type;
-    self->context_id          = src->context_id;
-    self->failure_action_code = src->failure_action_code;
 }
 
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
@@ -521,11 +521,28 @@ void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
     BSLB_IdValPairPtrList_clear(self->options);
 }
 
+void BSLP_PolicyRule_Move(BSLP_PolicyRule_t *self, BSLP_PolicyRule_t *src)
+{
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(src);
+    if (self == src)
+    {
+        return;
+    }
+    BSLP_PolicyRule_Deinit(self);
+    // move as POD
+    *self = *src;
+    memset(src, 0, sizeof(BSLP_PolicyRule_t));
+}
+
 BSL_IdValPair_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
+    BSLB_IdValPairPtr_t **item_ptr = BSLB_IdValPairPtrList_push_new(self->options);
 
-    return BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->options));
+    *item_ptr = BSLB_IdValPairPtr_new();
+
+    return BSLB_IdValPairPtr_ref(*item_ptr);
 }
 
 int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_PolicyPredicate_t *predicate,

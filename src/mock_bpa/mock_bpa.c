@@ -245,7 +245,7 @@ int main(int argc, char **argv)
         MockBPA_Agent_Join(&agent);
     }
 
-    BSLP_PolicyProvider_Deinit(policy);
+    BSLP_PolicyProvider_Destroy(policy);
     MockBPA_Agent_Deinit(&agent);
     BSL_HostEID_Deinit(&sec_eid);
     BSL_HostEID_Deinit(&app_eid);

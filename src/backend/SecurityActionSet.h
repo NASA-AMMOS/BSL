@@ -36,8 +36,8 @@
 // NOLINTBEGIN
 // GCOV_EXCL_START
 M_ARRAY_DEF(BSL_SecActionList, BSL_SecurityAction_t,
-            (INIT(API_2(BSL_SecurityAction_Init)), INIT_SET(API_6(BSL_SecurityAction_InitSet)), SET(0),
-             CLEAR(API_2(BSL_SecurityAction_Deinit))))
+            (INIT(API_2(BSL_SecurityAction_Init)), INIT_SET(API_6(BSL_SecurityAction_InitSet)),
+             SET(API_6(BSL_SecurityAction_Set)), CLEAR(API_2(BSL_SecurityAction_Deinit))))
 // GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond

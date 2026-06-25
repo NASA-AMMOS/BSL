@@ -153,7 +153,7 @@ int BSL_Data_Resize(BSL_Data_t *data, size_t len)
     if (UNLIKELY(!got))
     {
         bsl_data_int_reset(data);
-        BSL_LOG_ERR("Failed to realloc");
+        BSL_LOG_CRIT("Failed to realloc");
         return BSL_ERR_INSUFFICIENT_SPACE;
     }
     data->owned = true;
@@ -171,7 +171,6 @@ int BSL_Data_AppendFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src)
     int ecode = 0;
     if ((ecode = BSL_Data_Resize(data, data->len + len)) < 0)
     {
-        BSL_LOG_ERR("Failed to resize");
         return ecode;
     }
     if (len)

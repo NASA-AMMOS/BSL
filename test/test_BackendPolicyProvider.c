@@ -74,7 +74,7 @@ void setUp(void)
 
 void tearDown(void)
 {
-    BSLP_PolicyProvider_Deinit(policy_provider);
+    BSLP_PolicyProvider_Destroy(policy_provider);
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 }
 
@@ -245,6 +245,7 @@ void test_MultiplePolicyProviders(void)
                                                             &LocalTestCtx.mock_bpa_ctr.bundle_ref, response_set));
 
     BSL_SecurityActionSet_Deinit(&action_set);
-    BSLP_PolicyProvider_Deinit(policy_provider2);
+    BSLP_PolicyProvider_Destroy(policy_provider2);
+    BSL_SecurityResponseSet_Deinit(response_set);
     BSL_free(response_set);
 }
