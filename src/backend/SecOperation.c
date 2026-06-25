@@ -125,13 +125,14 @@ bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self)
     return true;
 }
 
-void BSL_SecOper_AppendOption(BSL_SecOper_t *self, const BSL_IdValPair_t *param)
+void BSL_SecOper_AppendOption(BSL_SecOper_t *self, const BSL_IdValPair_t *option)
 {
-    ASSERT_ARG_EXPR(BSL_IdValPair_IsConsistent(param));
+    ASSERT_ARG_EXPR(BSL_IdValPair_IsConsistent(option));
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
-    BSL_IdValPair_t *item = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrDict_safe_get(self->_options, param->id));
-    BSL_IdValPair_Set(item, param);
+    BSLB_IdValPairPtr_t **item_ptr = BSLB_IdValPairPtrDict_safe_get(self->_options, option->id);
+
+    *item_ptr = BSLB_IdValPairPtr_new_from(*option);
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
@@ -141,8 +142,9 @@ void BSL_SecOper_AppendParam(BSL_SecOper_t *self, const BSL_IdValPair_t *param)
     ASSERT_ARG_EXPR(BSL_IdValPair_IsConsistent(param));
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
-    BSL_IdValPair_t *item = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrDict_safe_get(self->_params_in, param->id));
-    BSL_IdValPair_Set(item, param);
+    BSLB_IdValPairPtr_t **item_ptr = BSLB_IdValPairPtrDict_safe_get(self->_params_in, param->id);
+
+    *item_ptr = BSLB_IdValPairPtr_new_from(*param);
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }

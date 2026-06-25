@@ -43,8 +43,8 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
     bsl_mock_eid_init(obj);
 
     QCBORDecodeContext dec;
-    UsefulBufC         qcbor_buf = (UsefulBufC) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len };
-    QCBORDecode_Init(&dec, qcbor_buf, QCBOR_DECODE_MODE_NORMAL);
+    QCBORDecode_Init(&dec, (UsefulBufC) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len },
+                     QCBOR_DECODE_MODE_NORMAL);
 
     QCBORItem decitem;
     QCBORDecode_EnterArray(&dec, NULL);
@@ -93,6 +93,9 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
         }
         default:
         {
+            BSL_Data_t *raw = &(obj->ssp.as_raw);
+            BSL_Data_Init(raw);
+
             // skip over item and store its encoded form
             const size_t begin = QCBORDecode_Tell(&dec);
             QCBORDecode_VGetNextConsume(&dec, &decitem);
@@ -102,9 +105,6 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
             {
                 const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(&dec);
 
-                BSL_Data_t *raw = &(obj->ssp.as_raw);
-                ASSERT_ARG_NONNULL(raw);
-                BSL_Data_Init(raw);
                 BSL_Data_CopyFrom(raw, end - begin, (const uint8_t *)buf.ptr + begin);
             }
             break;
@@ -112,6 +112,11 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
     }
 
     QCBORDecode_ExitArray(&dec);
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(&dec))
+    {
+        return 2;
+    }
+
     return 0;
 }
 

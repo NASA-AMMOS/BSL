@@ -198,8 +198,10 @@ BSL_AbsSecBlock_Target_t *BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uin
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
     // GCOV_EXCL_STOP
 
-    BSL_AbsSecBlock_Target_t *tgt =
-        BSL_AbsSecBlock_TargetPtr_ref(*BSL_AbsSecBlock_TargetList_push_new(self->target_results));
+    BSL_AbsSecBlock_TargetPtr_t **tgt_ptr = BSL_AbsSecBlock_TargetList_push_new(self->target_results);
+    *tgt_ptr                              = BSL_AbsSecBlock_TargetPtr_new();
+
+    BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_ref(*tgt_ptr);
     // leave results empty
     tgt->target_block_num = target_block_num;
 
@@ -592,7 +594,10 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
         QCBORDecode_EnterArray(&asbdec, NULL);
         while (QCBOR_SUCCESS == QCBORDecode_PeekNext(&asbdec, &asbitem))
         {
-            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->params));
+            BSLB_IdValPairPtr_t **param_ptr = BSLB_IdValPairPtrList_push_new(self->params);
+            *param_ptr                      = BSLB_IdValPairPtr_new();
+
+            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(*param_ptr);
             if (BSL_SUCCESS != BSL_IdValPair_Decode(&asbdec, param))
             {
                 return BSL_ERR_DECODING;
@@ -620,8 +625,11 @@ int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *bu
         QCBORDecode_EnterArray(&asbdec, NULL);
         while (QCBOR_SUCCESS == QCBORDecode_PeekNext(&asbdec, &asbitem))
         {
-            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(tgt->results));
-            if (BSL_SUCCESS != BSL_IdValPair_Decode(&asbdec, param))
+            BSLB_IdValPairPtr_t **result_ptr = BSLB_IdValPairPtrList_push_new(tgt->results);
+            *result_ptr                      = BSLB_IdValPairPtr_new();
+
+            BSL_IdValPair_t *result = BSLB_IdValPairPtr_ref(*result_ptr);
+            if (BSL_SUCCESS != BSL_IdValPair_Decode(&asbdec, result))
             {
                 return BSL_ERR_DECODING;
             }
