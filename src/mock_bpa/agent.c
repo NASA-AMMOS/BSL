@@ -334,7 +334,7 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
     if (*block_num == 0)
     {
         // BPA chooses the next number
-         MockBPA_CanonicalBlock_t *const*blk_ptr = MockBPA_BlockByNum_max(bundle->blocks_num);
+        MockBPA_CanonicalBlock_t *const *blk_ptr = MockBPA_BlockByNum_max(bundle->blocks_num);
         if (!blk_ptr)
         {
             // should have at least a payload already
@@ -348,7 +348,7 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
         // Policy has requested a number
         if (MockBPA_BlockByNum_cget(bundle->blocks_num, *block_num))
         {
-            BSL_LOG_ERR("Requested block number %"PRIu64 " already exists", *block_num);
+            BSL_LOG_ERR("Requested block number %" PRIu64 " already exists", *block_num);
             return -2;
         }
     }

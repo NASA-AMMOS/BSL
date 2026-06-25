@@ -30,28 +30,8 @@
 
 #include "CoseMsg.h"
 
-void BSLX_CoseMsg_Mac0_Init(BSLX_CoseMsg_Mac0_t *obj)
-{
-    ASSERT_ARG_NONNULL(obj);
-    memset(obj, 0, sizeof(*obj));
-    BSL_Data_Init(&obj->phdr_bstr);
-    BSLX_CoseMsg_HdrMapTree_init(obj->phdr);
-    BSLX_CoseMsg_HdrMapTree_init(obj->uhdr);
-    BSL_Data_Init(&obj->tag);
-}
-
-void BSLX_CoseMsg_Mac0_Deinit(BSLX_CoseMsg_Mac0_t *obj)
-{
-    ASSERT_ARG_NONNULL(obj);
-    BSL_Data_Deinit(&obj->tag);
-    BSLX_CoseMsg_HdrMapTree_clear(obj->uhdr);
-    BSLX_CoseMsg_HdrMapTree_clear(obj->phdr);
-    BSL_Data_Deinit(&obj->phdr_bstr);
-    memset(obj, 0, sizeof(*obj));
-}
-
 /// Match ::BSL_CBOR_Encode_f signature.
-static int BSLX_CoseMsg_DerivePhdr(QCBOREncodeContext *enc, const BSLX_CoseMsg_HdrMapTree_t *map)
+static int BSLX_CoseMsg_Headers_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_HdrMapTree_t *map)
 {
     QCBOREncode_OpenMap(enc);
 
@@ -67,14 +47,44 @@ static int BSLX_CoseMsg_DerivePhdr(QCBOREncodeContext *enc, const BSLX_CoseMsg_H
     return BSL_SUCCESS;
 }
 
-int BSLX_CoseMsg_Mac0_DerivePhdr(BSLX_CoseMsg_Mac0_t *obj)
+int BSLX_CoseMsg_Headers_DerivePhdr(BSLX_CoseMsg_Headers_t *obj)
 {
     if (BSLX_CoseMsg_HdrMapTree_empty_p(obj->phdr))
     {
         BSL_Data_Resize(&obj->phdr_bstr, 0);
         return BSL_SUCCESS;
     }
-    return BSL_CBOR_Encode_Twopass(&obj->phdr_bstr, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_DerivePhdr, &obj->phdr);
+    return BSL_CBOR_Encode_Twopass(&obj->phdr_bstr, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Headers_Encode, &obj->phdr);
+}
+
+const BSL_IdValPair_t *BSLX_CoseMsg_Headers_Get(const BSLX_CoseMsg_Headers_t *obj, int64_t label, bool need_phdr)
+{
+    BSLB_IdValPairPtr_t *const *found = BSLX_CoseMsg_HdrMapTree_cget(obj->phdr, label);
+    if (!found && !need_phdr)
+    {
+        found = BSLX_CoseMsg_HdrMapTree_cget(obj->uhdr, label);
+    }
+    return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
+}
+
+void BSLX_CoseMsg_Mac0_Init(BSLX_CoseMsg_Mac0_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    memset(obj, 0, sizeof(*obj));
+    BSL_Data_Init(&obj->headers.phdr_bstr);
+    BSLX_CoseMsg_HdrMapTree_init(obj->headers.phdr);
+    BSLX_CoseMsg_HdrMapTree_init(obj->headers.uhdr);
+    BSL_Data_Init(&obj->tag);
+}
+
+void BSLX_CoseMsg_Mac0_Deinit(BSLX_CoseMsg_Mac0_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    BSL_Data_Deinit(&obj->tag);
+    BSLX_CoseMsg_HdrMapTree_clear(obj->headers.uhdr);
+    BSLX_CoseMsg_HdrMapTree_clear(obj->headers.phdr);
+    BSL_Data_Deinit(&obj->headers.phdr_bstr);
+    memset(obj, 0, sizeof(*obj));
 }
 
 int BSLX_CoseMsg_Mac0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac0_t *obj)
@@ -82,9 +92,9 @@ int BSLX_CoseMsg_Mac0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac0_t 
     QCBOREncode_OpenArray(enc);
 
     // protected map data
-    QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(obj->phdr_bstr));
+    QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(obj->headers.phdr_bstr));
     // unprotected map
-    BSLX_CoseMsg_DerivePhdr(enc, &obj->uhdr);
+    BSLX_CoseMsg_Headers_Encode(enc, &obj->headers.uhdr);
     // detached payload
     QCBOREncode_AddNULL(enc);
     // MAC tag
@@ -130,16 +140,16 @@ int BSLX_CoseMsg_Mac0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Mac0_t *obj)
                 }
                 else
                 {
-                    BSLX_CoseMsg_HdrMapTree_set_at(obj->phdr, param->id, param_ptr);
+                    BSLX_CoseMsg_HdrMapTree_set_at(obj->headers.phdr, param->id, param_ptr);
                     BSLB_IdValPairPtr_release(param_ptr);
                 }
             }
 
             QCBORDecode_ExitArray(dec);
         }
-        BSL_LOG_DEBUG("Decoded %zu protected items", BSLX_CoseMsg_HdrMapTree_size(obj->phdr));
+        BSL_LOG_DEBUG("Decoded %zu protected items", BSLX_CoseMsg_HdrMapTree_size(obj->headers.phdr));
         // copy only after map success
-        BSL_Data_CopyFrom(&obj->phdr_bstr, phdr_content.len, phdr_content.ptr);
+        BSL_Data_CopyFrom(&obj->headers.phdr_bstr, phdr_content.len, phdr_content.ptr);
 
         QCBORDecode_ExitBstrWrapped(dec);
     }
@@ -165,13 +175,13 @@ int BSLX_CoseMsg_Mac0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Mac0_t *obj)
             }
             else
             {
-                BSLX_CoseMsg_HdrMapTree_set_at(obj->uhdr, param->id, param_ptr);
+                BSLX_CoseMsg_HdrMapTree_set_at(obj->headers.uhdr, param->id, param_ptr);
                 BSLB_IdValPairPtr_release(param_ptr);
             }
         }
 
         QCBORDecode_ExitArray(dec);
-        BSL_LOG_DEBUG("Decoded %zu unprotected items", BSLX_CoseMsg_HdrMapTree_size(obj->phdr));
+        BSL_LOG_DEBUG("Decoded %zu unprotected items", BSLX_CoseMsg_HdrMapTree_size(obj->headers.phdr));
     }
     // detached payload
     QCBORDecode_GetNull(dec);

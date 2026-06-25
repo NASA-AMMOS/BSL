@@ -128,7 +128,7 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_SOURCE_COUNT, 1);
 
     // policy may request a block number
-    int      res    = BSL_BundleCtx_CreateBlock(bundle, BSL_SECBLOCKTYPE_BIB, &sec_oper->sec_block_num);
+    int res = BSL_BundleCtx_CreateBlock(bundle, BSL_SECBLOCKTYPE_BIB, &sec_oper->sec_block_num);
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to create BIB block, error=%d", res);

@@ -287,7 +287,7 @@ uint64_t BSL_IdValPair_GetId(const BSL_IdValPair_t *self)
 bool BSL_IdValPair_IsConsistent(const BSL_IdValPair_t *self)
 {
     CHK_AS_BOOL(self != NULL);
-    CHK_AS_BOOL(self->_type > BSL_IDVALPAIR_TYPE_UNKNOWN && self->_type <= BSL_IDVALPAIR_TYPE_TEXTSTR);
+    CHK_AS_BOOL((self->_type > BSL_IDVALPAIR_TYPE_UNKNOWN) && (self->_type <= BSL_IDVALPAIR_TYPE_RAW));
 
     return true;
 }

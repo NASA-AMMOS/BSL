@@ -467,99 +467,95 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
     return BSL_SUCCESS;
 }
 
-/** Internal processing to source a COSE_Mac0 message.
- */
-static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
+static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_bstr, int64_t tgt_alg,
+                                    const char *context, BSL_Data_t *tag)
 {
     int res;
 
-    BSLX_CoseMsg_Mac0_t msg;
-    BSLX_CoseMsg_Mac0_Init(&msg);
+    BSL_CryptoCipherSHAVariant_e bsl_sha_var;
+    switch (ctx->tgt_alg)
     {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
-
-        BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->tgt_alg);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(msg.phdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
-    if (ctx->kid)
-    {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
-
-        BSL_IdValPair_Set(param, ctx->kid);
-        param->id = BSLX_COSEMSG_HDR_KID;
-
-        BSLX_CoseMsg_HdrMapTree_set_at(msg.uhdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
-
-    BSLX_CoseMsg_Mac0_DerivePhdr(&msg);
-
-    if (BSL_SUCCESS == ctx->retval)
-    {
-        ctx->mac_ctx = BSL_malloc(sizeof(BSL_AuthCtx_t));
-        if (BSL_SUCCESS != BSL_AuthCtx_Init(ctx->mac_ctx, ctx->keyhandle, BSL_CRYPTO_SHA_384)) // FIXME from config
-        {
-            BSL_LOG_ERR("Failed to construct MAC context");
-            ctx->retval = BSL_ERR_HOST_CALLBACK_FAILED;
-        }
+        case BSLX_COSEMSG_ALG_HMAC_SHA_256_256:
+            bsl_sha_var = BSL_CRYPTO_SHA_256;
+            break;
+        case BSLX_COSEMSG_ALG_HMAC_SHA_384_384:
+            bsl_sha_var = BSL_CRYPTO_SHA_384;
+            break;
+        case BSLX_COSEMSG_ALG_HMAC_SHA_512_512:
+            bsl_sha_var = BSL_CRYPTO_SHA_512;
+            break;
+        default:
+            BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, tgt_alg);
+            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            return;
     }
 
     BSLX_CoseSc_ChunkList_t chunklist;
     BSLX_CoseSc_ChunkList_init(chunklist);
 
+    { // context and protected bytes
+        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+        BSLX_CoseSc_ChunkItem_init_data(*item);
+        m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+
+        // 4-item array
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_ARRAY, 4);
+
+        { // context text
+            size_t ctx_len = strlen(context);
+            BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_TEXT_STRING, ctx_len);
+            m_bstring_push_back_bytes(*data, ctx_len, context);
+        }
+
+        // protected bytes
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, phdr_bstr->len);
+        BSLX_CoseSc_bstring_AppendRaw(*data, phdr_bstr);
+    }
+    { // external AAD bstr wrapped
+        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+        BSLX_CoseSc_ChunkItem_init_data(*item);
+        m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+
+        size_t ext_aad_len;
+        res = BSLX_CoseSc_ExternalAad_Chunked(ctx, chunklist, &ext_aad_len);
+        if (BSL_SUCCESS != res)
+        {
+            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            // continue processing
+        }
+
+        // after external AAD size is known, inject bstr head above
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ext_aad_len);
+    }
+    { // length of payload
+        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+        BSLX_CoseSc_ChunkItem_init_data(*item);
+        m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->target_block.btsd_len);
+    }
+    { // the target BTSD as payload
+        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+        BSLX_CoseSc_ChunkItem_init_seq(*item);
+        BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
+
+        *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
+        if (!*seq)
+        {
+            BSL_LOG_ERR("Failed to construct reader");
+            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            return;
+        }
+    }
+
     if (BSL_SUCCESS == ctx->retval)
     {
-        /// CBOR array head with context "MAC0"
-        static const uint8_t cose_mac0_header[] = { 0x84, 0x64, 0x4D, 0x41, 0x43, 0x30 };
+        ctx->mac_ctx = BSL_malloc(sizeof(BSL_AuthCtx_t));
 
-        { // context and protected bytes
-            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-            BSLX_CoseSc_ChunkItem_init_data(*item);
-            m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
-
-            m_bstring_push_back_bytes(*data, sizeof(cose_mac0_header), cose_mac0_header);
-
-            BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, msg.phdr_bstr.len);
-            BSLX_CoseSc_bstring_AppendRaw(*data, &msg.phdr_bstr);
-        }
-        { // external AAD bstr wrapped
-            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-            BSLX_CoseSc_ChunkItem_init_data(*item);
-            m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
-
-            size_t ext_aad_len;
-            res = BSLX_CoseSc_ExternalAad_Chunked(ctx, chunklist, &ext_aad_len);
-            if (BSL_SUCCESS != res)
-            {
-                ctx->retval = res;
-                // continue processing
-            }
-
-            // after external AAD size is known, inject bstr head above
-            BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ext_aad_len);
-        }
-        { // length of payload
-            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-            BSLX_CoseSc_ChunkItem_init_data(*item);
-            m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
-            BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->target_block.btsd_len);
-        }
-        { // the target BTSD as payload
-            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-            BSLX_CoseSc_ChunkItem_init_seq(*item);
-            BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
-
-            *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
-            if (!*seq)
-            {
-                BSL_LOG_ERR("Failed to construct reader");
-                ctx->retval = BSL_ERR_ENCODING;
-                return;
-            }
+        res = BSL_AuthCtx_Init(ctx->mac_ctx, ctx->keyhandle, bsl_sha_var);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to construct MAC context");
+            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
     }
 
@@ -582,6 +578,7 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to process MAC");
+                    ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
                 }
             }
             else if ((seq = BSLX_CoseSc_ChunkItem_cget_seq(*item)))
@@ -590,6 +587,7 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to process MAC");
+                    ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
                 }
             }
             else
@@ -598,6 +596,7 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
             }
         }
     }
+
     { // unconditionally cleanup
         BSLX_CoseSc_ChunkList_it_t chunk_it;
         for (BSLX_CoseSc_ChunkList_it(chunk_it, chunklist); !BSLX_CoseSc_ChunkList_end_p(chunk_it);
@@ -617,11 +616,48 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
 
     if (BSL_SUCCESS == ctx->retval)
     {
-        if (BSL_SUCCESS != (res = BSL_AuthCtx_Finalize(ctx->mac_ctx, &msg.tag)))
+        res = BSL_AuthCtx_Finalize(ctx->mac_ctx, tag);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("BSL_AuthCtx_Finalize failed with code %d", res);
-            ctx->retval = res;
+            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
+    }
+}
+
+/** Internal processing to source a COSE_Mac0 message.
+ */
+static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
+{
+    int res;
+
+    BSLX_CoseMsg_Mac0_t msg;
+    BSLX_CoseMsg_Mac0_Init(&msg);
+    {
+        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+
+        BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->tgt_alg);
+
+        BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.phdr, param->id, param_ptr);
+        BSLB_IdValPairPtr_release(param_ptr);
+    }
+    if (ctx->kid)
+    {
+        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+
+        BSL_IdValPair_Set(param, ctx->kid);
+        param->id = BSLX_COSEMSG_HDR_KID;
+
+        BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.uhdr, param->id, param_ptr);
+        BSLB_IdValPairPtr_release(param_ptr);
+    }
+    BSLX_CoseMsg_Headers_DerivePhdr(&msg.headers);
+
+    if (BSL_SUCCESS == ctx->retval)
+    {
+        BSLX_CoseSc_Mac_Compute(ctx, &msg.headers.phdr_bstr, ctx->tgt_alg, "MAC0", &msg.tag);
     }
 
     BSL_Data_t aad_scope_enc;
@@ -663,6 +699,55 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
     BSLX_CoseMsg_Mac0_Deinit(&msg);
 }
 
+/** Internal processing to verify a COSE_Mac0 message.
+ */
+static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair_t *result)
+{
+    int res;
+
+    BSLX_CoseMsg_Mac0_t msg;
+    BSLX_CoseMsg_Mac0_Init(&msg);
+    {
+        BSL_Data_t msg_enc;
+        BSL_Data_Init(&msg_enc);
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(result, &msg_enc))
+        {
+            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+        }
+        else
+        {
+            res = BSL_CBOR_Decode(&msg_enc, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Mac0_Decode, &msg);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to decode Mac0");
+                ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            }
+        }
+        BSL_Data_Deinit(&msg_enc);
+    }
+
+    if (BSL_SUCCESS == ctx->retval)
+    {
+        BSL_Data_t tag;
+        BSL_Data_Init(&tag);
+        BSLX_CoseSc_Mac_Compute(ctx, &msg.headers.phdr_bstr, ctx->tgt_alg, "MAC0", &tag);
+
+        bool tag_valid = BSL_Crypto_Compare(msg.tag.ptr, msg.tag.len, tag.ptr, tag.len);
+        if (tag_valid)
+        {
+            BSL_LOG_DEBUG("MAC tag verified");
+        }
+        else
+        {
+            BSL_LOG_ERR("MAC tag failed");
+            ctx->retval = BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
+        }
+        BSL_Data_Deinit(&tag);
+    }
+
+    BSLX_CoseMsg_Mac0_Deinit(&msg);
+}
+
 int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
                         BSL_SecOutcome_t *sec_outcome)
 {
@@ -692,7 +777,17 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
         }
         else
         {
-            // TODO verify or accept
+            // verify or accept
+            const BSL_IdValPair_t *result;
+            if ((result = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC0)))
+            {
+                BSLX_CoseSc_Mac0_VerifyAccept(&ctx, result);
+            }
+            else
+            {
+                BSL_LOG_ERR("No COSE result present");
+                ctx.retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
         }
     }
 

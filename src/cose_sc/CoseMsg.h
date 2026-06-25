@@ -51,7 +51,9 @@ enum BSLX_CoseMsg_Header_e
  */
 enum BSLX_CoseMsg_Alg_e
 {
+    BSLX_COSEMSG_ALG_HMAC_SHA_256_256 = 5,
     BSLX_COSEMSG_ALG_HMAC_SHA_384_384 = 6,
+    BSLX_COSEMSG_ALG_HMAC_SHA_512_512 = 7,
 };
 
 /** @struct BSLX_CoseMsg_HdrMapTree_t
@@ -74,6 +76,7 @@ M_BPTREE_DEF2(BSLX_CoseSc_AadScope, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(A
 /// @endcond
 // NOLINTEND
 
+/// Common header storage and logic
 typedef struct
 {
     /// Protected header bytes (the stable form)
@@ -83,17 +86,31 @@ typedef struct
     /// Unprotected header map
     BSLX_CoseMsg_HdrMapTree_t uhdr;
 
+} BSLX_CoseMsg_Headers_t;
+
+/** Derive BSLX_CoseMsg_Mac0_t::phdr_bstr from protected headers.
+ * This is used before MAC calculation and encoding
+ */
+int BSLX_CoseMsg_Headers_DerivePhdr(BSLX_CoseMsg_Headers_t *obj);
+
+/** Get a desired header parameter.
+ *
+ * @param[in] obj The message to search.
+ * @param label The label to search for.
+ * @param need_phdr If true the parameter needs to be in the protected map.
+ */
+const BSL_IdValPair_t *BSLX_CoseMsg_Headers_Get(const BSLX_CoseMsg_Headers_t *obj, int64_t label, bool need_phdr);
+
+/// Decoded COSE_Mac0
+typedef struct
+{
+    BSLX_CoseMsg_Headers_t headers;
     /// The MAC tag bytes
     BSL_Data_t tag;
 } BSLX_CoseMsg_Mac0_t;
 
 void BSLX_CoseMsg_Mac0_Init(BSLX_CoseMsg_Mac0_t *obj);
 void BSLX_CoseMsg_Mac0_Deinit(BSLX_CoseMsg_Mac0_t *obj);
-
-/** Derive BSLX_CoseMsg_Mac0_t::phdr_bstr from protected headers.
- * This is used before MAC calculation and encoding
- */
-int BSLX_CoseMsg_Mac0_DerivePhdr(BSLX_CoseMsg_Mac0_t *obj);
 
 /// Match ::BSL_CBOR_Encode_f signature.
 int BSLX_CoseMsg_Mac0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac0_t *obj);

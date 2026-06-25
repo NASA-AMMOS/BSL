@@ -184,9 +184,8 @@ void test_AppendixA_Example1_BIB_Source(void)
     BSL_SecOper_Deinit(&sec_oper);
 }
 
-TEST_CASE(BSL_SECROLE_VERIFIER)
-TEST_CASE(BSL_SECROLE_ACCEPTOR)
-void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role)
+TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ -1, 0, 1 ])
+void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int alter_blk_num)
 {
     {
         BSL_Data_t keymat;
@@ -197,6 +196,24 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role)
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_1_mac0));
+
+    MockBPA_CanonicalBlock_t *alter_blk = NULL;
+    if (alter_blk_num == 0)
+    {
+        // manipulate encoded form
+        BSL_Data_t *blk_enc = &LocalTestCtx.mock_bpa_ctr.bundle->primary_block.encoded;
+        ((uint8_t *)blk_enc->ptr)[0] += 1;
+    }
+    else if (alter_blk_num > 0)
+    {
+        MockBPA_CanonicalBlock_t **found =
+            MockBPA_BlockByNum_get(LocalTestCtx.mock_bpa_ctr.bundle->blocks_num, alter_blk_num);
+        TEST_ASSERT_NOT_NULL(found);
+        alter_blk = *found;
+        TEST_ASSERT_NOT_NULL(alter_blk);
+
+        ((uint8_t *)alter_blk->btsd)[alter_blk->btsd_len - 1] += 1;
+    }
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
@@ -237,18 +254,17 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role)
     // Confirm running operation as source executes without error
     int exec_status = BSL_ExecBIBVerifierAcceptor(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl,
                                                   &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
-    TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
+    TEST_ASSERT_EQUAL(alter_blk_num >= 0 ? BSL_ERR_SECURITY_OPERATION_FAILED : BSL_SUCCESS, exec_status);
 
-    // Confirm it produced only 1 result
-    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
-    const BSL_IdValPair_t *result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
-    TEST_ASSERT_NOT_NULL(result);
-    TEST_ASSERT_EQUAL(BSLX_COSESC_RESULT_COSE_MAC0, BSL_IdValPair_GetId(result));
-    TEST_ASSERT_TRUE(BSL_IdValPair_IsBytestr(result));
-
-    // Full output content
-    if (role == BSL_SECROLE_VERIFIER)
+    if (alter_blk)
     {
+        // put back for output comparison
+        ((uint8_t *)alter_blk->btsd)[alter_blk->btsd_len - 1] -= 1;
+    }
+
+    if ((role == BSL_SECROLE_VERIFIER) || (BSL_SUCCESS != exec_status))
+    {
+        // Full output content
         TEST_ASSERT_EQUAL(0, BSL_TestUtils_ComapreBundleAsCBOR(&LocalTestCtx, exA_1_mac0));
     }
     else
