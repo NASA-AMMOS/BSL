@@ -88,8 +88,9 @@ typedef struct
 
 } BSLX_CoseMsg_Headers_t;
 
-/** Derive BSLX_CoseMsg_Mac0_t::phdr_bstr from protected headers.
- * This is used before MAC calculation and encoding
+/** Derive BSLX_CoseMsg_Headers_t::phdr_bstr from protected headers
+ * in BSLX_CoseMsg_Headers_t::phdr.
+ * This is needed before cryptographic calculation and encoding.
  */
 int BSLX_CoseMsg_Headers_DerivePhdr(BSLX_CoseMsg_Headers_t *obj);
 
