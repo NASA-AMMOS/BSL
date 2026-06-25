@@ -60,7 +60,8 @@ enum BSLX_CoseSC_Option_e
      */
     BSLX_COSESC_OPTION_RECIP_ALG,
     /** AAD Scope as a raw ::BSLX_CoseSc_AadScope_t
-     * The value is interpreted according to COSE context draft.
+     * The value is encoded CBOR interpreted according to COSE context draft.
+     * Optional for source, optional exact-match for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_AAD_SCOPE,
 };
@@ -84,11 +85,30 @@ enum BSLX_CoseSC_Result_e
     BSLX_COSESC_RESULT_COSE_SIGN  = 98,
 };
 
+/** @struct BSLX_CoseSc_AadScope_t
+ * An internal representation of AAD Scope map, with keys sorted in
+ * CBOR deterministic order and values as a bitmask of
+ * ::BSLX_CoseSC_AAD_Flag_e flags.
+ */
+// NOLINTBEGIN
+/// @cond Doxygen_Suppress
+// GCOV_EXCL_START
+M_BPTREE_DEF2(BSLX_CoseSc_AadScope, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(API_6(BSL_CBOR_Compare_Int64))),
+              uint64_t, M_BASIC_OPLIST)
+// GCOV_EXCL_STOP
+/// @endcond
+// NOLINTEND
+
+/// Flags for AAD Scope parameter
 enum BSLX_CoseSC_AAD_Flag_e
 {
     BSLX_COSESC_AAD_FLAG_METADATA = 0x1,
     BSLX_COSESC_AAD_FLAG_BTSD     = 0x2,
 };
+
+int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_AadScope_t *scope);
+
+int BSLX_CoseSc_AadScope_Decode(QCBORDecodeContext *dec, BSLX_CoseSc_AadScope_t *scope);
 
 /// Match signature ::BSL_SecCtx_Validate_f
 bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);

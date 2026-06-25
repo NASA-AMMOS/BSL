@@ -217,18 +217,24 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE);
     if (opt)
     {
-        // FIXME real value
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, NULL))
+        BSL_Data_t enc_data;
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsRaw(opt, &enc_data))
         {
-            BSL_LOG_ERR("Invalid target algorithm value");
+            BSL_LOG_ERR("Invalid AAD Scope value");
             self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
         {
-            BSLX_CoseSc_AadScope_reset(self->aad_scope);
-            BSLX_CoseSc_AadScope_set_at(self->aad_scope, 0, 0x1);
-            BSLX_CoseSc_AadScope_set_at(self->aad_scope, -1, 0x1);
-            self->opt_aad_scope = true;
+            int res = BSL_CBOR_Decode(&enc_data, (BSL_CBOR_Decode_f)&BSLX_CoseSc_AadScope_Decode, &self->aad_scope);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to decode AAD Scope");
+                self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
+            else
+            {
+                self->opt_aad_scope = true;
+            }
         }
     }
 }
@@ -249,7 +255,7 @@ bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle _U_, BS
     return valid;
 }
 
-static int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_AadScope_t *scope)
+int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_AadScope_t *scope)
 {
     // aad-scope map
     QCBOREncode_OpenMap(enc);
@@ -260,10 +266,35 @@ static int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseS
     {
         const BSLX_CoseSc_AadScope_subtype_ct *aads_pair = BSLX_CoseSc_AadScope_cref(aads_it);
         QCBOREncode_AddInt64(enc, *(aads_pair->key_ptr));
-        QCBOREncode_AddInt64(enc, *(aads_pair->value_ptr));
+        QCBOREncode_AddUInt64(enc, *(aads_pair->value_ptr));
     }
 
     QCBOREncode_CloseMap(enc);
+    return BSL_SUCCESS;
+}
+
+int BSLX_CoseSc_AadScope_Decode(QCBORDecodeContext *dec, BSLX_CoseSc_AadScope_t *scope)
+{
+    BSLX_CoseSc_AadScope_reset(*scope);
+
+    QCBORItem item;
+    QCBORDecode_EnterArray(dec, &item); // using QCBOR_DECODE_MODE_MAP_AS_ARRAY
+
+    while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
+    {
+        int64_t blk_num;
+        QCBORDecode_GetInt64(dec, &blk_num);
+        uint64_t aad_flags;
+        QCBORDecode_GetUInt64(dec, &aad_flags);
+        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+        {
+            break;
+        }
+
+        BSLX_CoseSc_AadScope_set_at(*scope, blk_num, aad_flags);
+    }
+
+    QCBORDecode_ExitArray(dec);
     return BSL_SUCCESS;
 }
 
@@ -704,6 +735,31 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
 static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair_t *result)
 {
     int res;
+
+    const BSL_IdValPair_t *param = BSL_SecOper_FindParam(ctx->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
+    if (param)
+    {
+        BSL_Data_t enc_data;
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsRaw(param, &enc_data))
+        {
+            BSL_LOG_ERR("Invalid AAD Scope parameter");
+            ctx->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            res = BSL_CBOR_Decode(&enc_data, (BSL_CBOR_Decode_f)&BSLX_CoseSc_AadScope_Decode, &ctx->aad_scope);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to decode AAD Scope parameter");
+                ctx->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
+        }
+    }
+    if (BSL_SUCCESS != ctx->retval)
+    {
+        // early exit
+        return;
+    }
 
     BSLX_CoseMsg_Mac0_t msg;
     BSLX_CoseMsg_Mac0_Init(&msg);

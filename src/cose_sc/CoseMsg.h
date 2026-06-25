@@ -60,18 +60,11 @@ enum BSLX_CoseMsg_Alg_e
  * Defines an internal lookup dictionary for ::BSLB_IdValPairPtr_t pointers
  * which is sorted in CBOR deterministic order.
  */
-/** @struct BSLX_CoseSc_AadScope_t
- * An internal representation of AAD Scope map, with keys sorted in
- * CBOR deterministic order.
- */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
 M_BPTREE_DEF2(BSLX_CoseMsg_HdrMapTree, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(API_6(BSL_CBOR_Compare_Int64))),
               BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
-
-M_BPTREE_DEF2(BSLX_CoseSc_AadScope, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(API_6(BSL_CBOR_Compare_Int64))), int64_t,
-              M_BASIC_OPLIST)
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND

@@ -137,11 +137,26 @@ void test_AppendixA_Example1_BIB_Source(void)
         BSL_IdValPair_Deinit(&option);
     }
     {
+        BSLX_CoseSc_AadScope_t scope;
+        BSLX_CoseSc_AadScope_init(scope);
+        BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
+        BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
+
+        BSL_Data_t value;
+        BSL_Data_Init(&value);
+        int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
+        if (BSL_SUCCESS != res)
+        {
+            TEST_FAIL_MESSAGE("Failed to encode AAD Scope");
+        }
+        BSLX_CoseSc_AadScope_clear(scope);
+
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_AAD_SCOPE, 0 /* FIXME option value */);
+        BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
+        BSL_Data_Deinit(&value);
     }
 
     BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
@@ -184,8 +199,19 @@ void test_AppendixA_Example1_BIB_Source(void)
     BSL_SecOper_Deinit(&sec_oper);
 }
 
-TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ -1, 0, 1 ])
-void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int alter_blk_num)
+enum OptMismatch_e
+{
+    OPT_MISMATCH_NONE,
+    OPT_MISMATCH_BAD_KEY_ID,
+    OPT_MISMATCH_ALG,
+    OPT_MISMATCH_NO_AAD_SCOPE,
+    OPT_MISMATCH_MODIFY_BLK_0,
+    OPT_MISMATCH_MODIFY_BLK_1,
+    OPT_MISMATCH_MODIFY_BLK_3,
+};
+
+TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 0, 1, 2, 3, 4, 5, 6 ])
+void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 {
     {
         BSL_Data_t keymat;
@@ -198,16 +224,16 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int alter_blk_
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_1_mac0));
 
     MockBPA_CanonicalBlock_t *alter_blk = NULL;
-    if (alter_blk_num == 0)
+    if (mismatch == OPT_MISMATCH_MODIFY_BLK_0)
     {
         // manipulate encoded form
         BSL_Data_t *blk_enc = &LocalTestCtx.mock_bpa_ctr.bundle->primary_block.encoded;
         ((uint8_t *)blk_enc->ptr)[0] += 1;
     }
-    else if (alter_blk_num > 0)
+    else if ((mismatch == OPT_MISMATCH_MODIFY_BLK_1) || (mismatch == OPT_MISMATCH_MODIFY_BLK_3))
     {
         MockBPA_CanonicalBlock_t **found =
-            MockBPA_BlockByNum_get(LocalTestCtx.mock_bpa_ctr.bundle->blocks_num, alter_blk_num);
+            MockBPA_BlockByNum_get(LocalTestCtx.mock_bpa_ctr.bundle->blocks_num, OPT_MISMATCH_MODIFY_BLK_1 ? 1 : 3);
         TEST_ASSERT_NOT_NULL(found);
         alter_blk = *found;
         TEST_ASSERT_NOT_NULL(alter_blk);
@@ -219,12 +245,13 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int alter_blk_
     BSL_SecOper_Init(&sec_oper);
     BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BUNDLE);
 
+    const char *opt_key_id = (mismatch == OPT_MISMATCH_BAD_KEY_ID) ? "other" : exA_1_kid;
     {
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
         {
             BSL_Data_t kid;
-            BSL_Data_InitView(&kid, strlen(exA_1_kid), (BSL_DataPtr_t)exA_1_kid);
+            BSL_Data_InitView(&kid, strlen(opt_key_id), (BSL_DataPtr_t)opt_key_id);
             BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEYID, kid);
         }
         BSL_SecOper_AppendOption(&sec_oper, &option);
@@ -233,28 +260,49 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int alter_blk_
     {
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_TGT_ALG, BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_TGT_ALG,
+                               (mismatch == OPT_MISMATCH_ALG) ? BSLX_COSEMSG_ALG_HMAC_SHA_256_256
+                                                              : BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
     }
+    if (mismatch != OPT_MISMATCH_NO_AAD_SCOPE)
     {
+        BSLX_CoseSc_AadScope_t scope;
+        BSLX_CoseSc_AadScope_init(scope);
+        BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
+        BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
+
+        BSL_Data_t value;
+        BSL_Data_Init(&value);
+        int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
+        if (BSL_SUCCESS != res)
+        {
+            TEST_FAIL_MESSAGE("Failed to encode AAD Scope");
+        }
+        BSLX_CoseSc_AadScope_clear(scope);
+
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_AAD_SCOPE, 0 /* FIXME option value */);
+        BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
+        BSL_Data_Deinit(&value);
     }
 
     BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
     BSL_SecOutcome_Init(outcome, &sec_oper);
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
-    TEST_ASSERT_TRUE(valid_status);
+    TEST_ASSERT_EQUAL_INT(opt_key_id == exA_1_kid ? true : false, valid_status);
 
+    const int expect_status = ((mismatch == OPT_MISMATCH_NONE) || (mismatch == OPT_MISMATCH_NO_AAD_SCOPE))
+                                  ? BSL_SUCCESS
+                                  : BSL_ERR_SECURITY_OPERATION_FAILED;
     // Confirm running operation as source executes without error
     int exec_status = BSL_ExecBIBVerifierAcceptor(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl,
                                                   &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
-    TEST_ASSERT_EQUAL(alter_blk_num >= 0 ? BSL_ERR_SECURITY_OPERATION_FAILED : BSL_SUCCESS, exec_status);
+    TEST_ASSERT_EQUAL_INT(expect_status, exec_status);
 
     if (alter_blk)
     {

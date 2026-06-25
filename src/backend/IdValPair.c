@@ -198,7 +198,7 @@ bool BSL_IdValPair_IsInt64(const BSL_IdValPair_t *self)
 int BSL_IdValPair_GetAsInt64(const BSL_IdValPair_t *self, int64_t *out)
 {
     ASSERT_ARG_NONNULL(self);
-    ASSERT_PRECONDITION(self->_type == BSL_IDVALPAIR_TYPE_INT64);
+    BSL_CHKRET(self->_type == BSL_IDVALPAIR_TYPE_INT64, BSL_ERR_NOT_FOUND);
 
     if (out)
     {
@@ -216,7 +216,7 @@ bool BSL_IdValPair_IsBytestr(const BSL_IdValPair_t *self)
 int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out)
 {
     CHK_PRECONDITION(BSL_IdValPair_IsConsistent(self));
-    CHK_PROPERTY(self->_type == BSL_IDVALPAIR_TYPE_BYTESTR);
+    BSL_CHKRET(self->_type == BSL_IDVALPAIR_TYPE_BYTESTR, BSL_ERR_NOT_FOUND);
 
     if (out)
     {
@@ -230,7 +230,7 @@ int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out)
 int BSL_IdValPair_GetAsTextstr(const BSL_IdValPair_t *self, const char **out)
 {
     CHK_PRECONDITION(BSL_IdValPair_IsConsistent(self));
-    CHK_PROPERTY(self->_type == BSL_IDVALPAIR_TYPE_TEXTSTR);
+    BSL_CHKRET(self->_type == BSL_IDVALPAIR_TYPE_TEXTSTR, BSL_ERR_NOT_FOUND);
 
     if (out)
     {
@@ -266,7 +266,7 @@ bool BSL_IdValPair_IsRaw(const BSL_IdValPair_t *self)
 int BSL_IdValPair_GetAsRaw(const BSL_IdValPair_t *self, BSL_Data_t *out)
 {
     CHK_PRECONDITION(BSL_IdValPair_IsConsistent(self));
-    CHK_PROPERTY(self->_type == BSL_IDVALPAIR_TYPE_RAW);
+    BSL_CHKRET(self->_type == BSL_IDVALPAIR_TYPE_RAW, BSL_ERR_NOT_FOUND);
 
     if (out)
     {
@@ -396,9 +396,9 @@ void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t *pair)
     }
     else if (BSL_IdValPair_IsRaw(pair))
     {
-        BSL_Data_t bytestr;
-        BSL_IdValPair_GetAsRaw(pair, &bytestr);
-        QCBOREncode_AddEncoded(enc, UsefulBufC_FROM_BSL_Data(bytestr));
+        BSL_Data_t enc_data;
+        BSL_IdValPair_GetAsRaw(pair, &enc_data);
+        QCBOREncode_AddEncoded(enc, UsefulBufC_FROM_BSL_Data(enc_data));
     }
     else
     {
