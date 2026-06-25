@@ -51,6 +51,7 @@ void bsl_mock_eid_deinit(bsl_mock_eid_t *eid)
             m_string_clear(eid->ssp.as_dtn);
             break;
         case BSL_MOCK_EID_IPN:
+            // int values in this struct
             break;
         default:
             BSL_Data_Deinit(&(eid->ssp.as_raw));

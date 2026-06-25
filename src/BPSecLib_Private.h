@@ -813,9 +813,9 @@ size_t BSL_SecOper_CountOptions(const BSL_SecOper_t *self);
 /** Add the given option to this operation.
  *
  * @param[in,out] self This security operation
- * @param[in] param Security parameter to include.
+ * @param[in] option Security option to include.
  */
-void BSL_SecOper_AppendOption(BSL_SecOper_t *self, const BSL_IdValPair_t *param);
+void BSL_SecOper_AppendOption(BSL_SecOper_t *self, const BSL_IdValPair_t *option);
 
 /** Add the given security parameter to this operation manually.
  * @warning This is for internal testing only, parameters normally come from
@@ -1042,6 +1042,10 @@ void BSL_SecurityAction_Init(BSL_SecurityAction_t *self);
  * @param[in] src The source of the copy.
  */
 void BSL_SecurityAction_InitSet(BSL_SecurityAction_t *self, const BSL_SecurityAction_t *src);
+
+/** Set from a copy.
+ */
+void BSL_SecurityAction_Set(BSL_SecurityAction_t *self, const BSL_SecurityAction_t *src);
 
 /**
  * De-initialize security action

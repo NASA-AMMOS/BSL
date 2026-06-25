@@ -199,8 +199,10 @@ BSL_AbsSecBlock_Target_t *BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uin
     ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
     // GCOV_EXCL_STOP
 
-    BSL_AbsSecBlock_Target_t *tgt =
-        BSL_AbsSecBlock_TargetPtr_ref(*BSL_AbsSecBlock_TargetList_push_new(self->target_results));
+    BSL_AbsSecBlock_TargetPtr_t **tgt_ptr = BSL_AbsSecBlock_TargetList_push_new(self->target_results);
+    *tgt_ptr                              = BSL_AbsSecBlock_TargetPtr_new();
+
+    BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_ref(*tgt_ptr);
     // leave results empty
     tgt->target_block_num = target_block_num;
 
@@ -465,12 +467,13 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
         QCBORDecode_EnterArray(dec, NULL);
         while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &asbitem))
         {
-            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->params));
+            BSLB_IdValPairPtr_t **param_ptr = BSLB_IdValPairPtrList_push_new(self->params);
+            *param_ptr                      = BSLB_IdValPairPtr_new();
+
+            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(*param_ptr);
             // each parameter is a 2-item array
             QCBORDecode_EnterArray(dec, NULL);
-
             BSL_IdValPair_Decode(dec, param);
-
             QCBORDecode_ExitArray(dec);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {
@@ -500,12 +503,13 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
         QCBORDecode_EnterArray(dec, NULL);
         while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &asbitem))
         {
-            BSL_IdValPair_t *result = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(tgt->results));
-            // each parameter is a 2-item array
+            BSLB_IdValPairPtr_t **result_ptr = BSLB_IdValPairPtrList_push_new(tgt->results);
+            *result_ptr                      = BSLB_IdValPairPtr_new();
+
+            BSL_IdValPair_t *result = BSLB_IdValPairPtr_ref(*result_ptr);
+            // each result is a 2-item array
             QCBORDecode_EnterArray(dec, NULL);
-
             BSL_IdValPair_Decode(dec, result);
-
             QCBORDecode_ExitArray(dec);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {

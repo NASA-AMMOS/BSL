@@ -308,10 +308,17 @@ int BSLX_CoseSc_AadScope_Decode(QCBORDecodeContext *dec, BSLX_CoseSc_AadScope_t 
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
+// Workaround for https://github.com/P-p-H-d/mlib/issues/162
+#undef M_PTR_OPLIST
+#define M_PTR_OPLIST                                                          \
+  (INIT(M_INIT_DEFAULT), INIT_SET(M_SET_DEFAULT), SET(M_SET_DEFAULT), CLEAR(M_NOTHING_DEFAULT), \
+   EQUAL(M_EQUAL_DEFAULT), SWAP(M_SWAP_DEFAULT),                               \
+   INIT_MOVE(M_SET_DEFAULT), MOVE(M_SET_DEFAULT) )
+
 M_VARIANT_DEF2(BSLX_CoseSc_ChunkItem, (data, m_bstring_t, M_BSTRING_OPLIST), (seq, BSL_SeqReader_t *, M_PTR_OPLIST))
 #define M_OPL_BSLX_CoseSc_ChunkItem_t() M_VARIANT_OPLIST(BSLX_CoseSc_ChunkItem, M_BSTRING_OPLIST, M_PTR_OPLIST)
 
-M_DEQUE_DEF(BSLX_CoseSc_ChunkList, BSLX_CoseSc_ChunkItem_t)
+M_DEQUE_DEF(BSLX_CoseSc_ChunkList, BSLX_CoseSc_ChunkItem_t, M_OPL_BSLX_CoseSc_ChunkItem_t())
 // GCOV_EXCL_STOP
 /// @endcond
 

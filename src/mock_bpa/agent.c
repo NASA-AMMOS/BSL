@@ -738,7 +738,7 @@ static void *MockBPA_Agent_work_over_rx(void *arg)
     while (true)
     {
         mock_bpa_ctr_ptr_t *item_ptr;
-        MockBPA_data_queue_pop(&item_ptr, agent->over_rx);
+        MockBPA_data_queue_pop_move(&item_ptr, agent->over_rx);
         mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
         if (item->encoded.len == 0)
         {
@@ -764,7 +764,7 @@ static void *MockBPA_Agent_work_over_rx(void *arg)
         }
 
         // loopback
-        MockBPA_data_queue_push(agent->deliver, item_ptr);
+        MockBPA_data_queue_push_move(agent->deliver, &item_ptr);
     }
     BSL_LOG_INFO("stopped");
 
@@ -809,7 +809,7 @@ static void *MockBPA_Agent_work_under_rx(void *arg)
         }
 
         // loopback
-        MockBPA_data_queue_push(agent->forward, item_ptr);
+        MockBPA_data_queue_push_move(agent->forward, &item_ptr);
     }
     BSL_LOG_INFO("stopped");
 
@@ -848,7 +848,7 @@ static void *MockBPA_Agent_work_deliver(void *arg)
 
         mock_bpa_ctr_sort_blocks(item);
         mock_bpa_ctr_encode(item);
-        MockBPA_data_queue_push(agent->over_tx, item_ptr);
+        MockBPA_data_queue_push_move(agent->over_tx, &item_ptr);
 
         {
             uint8_t buf    = 0;
@@ -896,7 +896,7 @@ static void *MockBPA_Agent_work_forward(void *arg)
 
         mock_bpa_ctr_sort_blocks(item);
         mock_bpa_ctr_encode(item);
-        MockBPA_data_queue_push(agent->under_tx, item_ptr);
+        MockBPA_data_queue_push_move(agent->under_tx, &item_ptr);
 
         {
             uint8_t buf    = 0;
@@ -1026,7 +1026,7 @@ int MockBPA_Agent_Exec(MockBPA_Agent_t *agent)
                     mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
                     BSL_Data_AppendFrom(&item->encoded, got, buf);
                 }
-                MockBPA_data_queue_push(agent->over_rx, item_ptr);
+                MockBPA_data_queue_push_move(agent->over_rx, &item_ptr);
             }
         }
         if (over_pfd->revents & POLLOUT)
@@ -1077,7 +1077,7 @@ int MockBPA_Agent_Exec(MockBPA_Agent_t *agent)
                     mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
                     BSL_Data_AppendFrom(&item->encoded, got, buf);
                 }
-                MockBPA_data_queue_push(agent->under_rx, item_ptr);
+                MockBPA_data_queue_push_move(agent->under_rx, &item_ptr);
             }
         }
         if (under_pfd->revents & POLLOUT)
@@ -1120,9 +1120,9 @@ int MockBPA_Agent_Join(MockBPA_Agent_t *agent)
 
     // join RX workers first
     item_ptr = mock_bpa_ctr_ptr_new();
-    MockBPA_data_queue_push(agent->under_rx, item_ptr);
+    MockBPA_data_queue_push_move(agent->under_rx, &item_ptr);
     item_ptr = mock_bpa_ctr_ptr_new();
-    MockBPA_data_queue_push(agent->over_rx, item_ptr);
+    MockBPA_data_queue_push_move(agent->over_rx, &item_ptr);
     if (pthread_join(agent->thr_under_rx, NULL))
     {
         BSL_LOG_ERR("Failed to join the work_under_rx");
@@ -1136,9 +1136,9 @@ int MockBPA_Agent_Join(MockBPA_Agent_t *agent)
 
     // then delivery/forward workers after RX are all flushed
     item_ptr = mock_bpa_ctr_ptr_new();
-    MockBPA_data_queue_push(agent->forward, item_ptr);
+    MockBPA_data_queue_push_move(agent->forward, &item_ptr);
     item_ptr = mock_bpa_ctr_ptr_new();
-    MockBPA_data_queue_push(agent->deliver, item_ptr);
+    MockBPA_data_queue_push_move(agent->deliver, &item_ptr);
     if (pthread_join(agent->thr_forward, NULL))
     {
         BSL_LOG_ERR("Failed to join the work_forward");

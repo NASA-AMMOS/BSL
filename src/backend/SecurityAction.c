@@ -50,6 +50,15 @@ void BSL_SecurityAction_InitSet(BSL_SecurityAction_t *self, const BSL_SecurityAc
     self->pp_id  = src->pp_id;
 }
 
+void BSL_SecurityAction_Set(BSL_SecurityAction_t *self, const BSL_SecurityAction_t *src)
+{
+    ASSERT_ARG_NONNULL(self);
+
+    BSL_SecOperList_set(self->sec_op_list, src->sec_op_list);
+    self->err_ct = src->err_ct;
+    self->pp_id  = src->pp_id;
+}
+
 void BSL_SecurityAction_Deinit(BSL_SecurityAction_t *self)
 {
     ASSERT_ARG_NONNULL(self);

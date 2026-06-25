@@ -73,8 +73,7 @@ int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason);
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
 M_SHARED_WEAK_PTR_DEF(mock_bpa_ctr_ptr, mock_bpa_ctr_t)
-M_BUFFER_DEF(MockBPA_data_queue, mock_bpa_ctr_ptr_t *, MOCKBPA_DATA_QUEUE_SIZE,
-             BUFFER_QUEUE | BUFFER_THREAD_SAFE | BUFFER_PUSH_INIT_POP_MOVE | BUFFER_BLOCKING)
+M_BUFFER_DEF(MockBPA_data_queue, mock_bpa_ctr_ptr_t *, MOCKBPA_DATA_QUEUE_SIZE, M_BUFFER_QUEUE)
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND

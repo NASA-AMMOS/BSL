@@ -96,8 +96,7 @@ static void mock_bpa_LogEvent_event_deinit(mock_bpa_LogEvent_event_t *obj)
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
 M_SHARED_WEAK_PTR_DEF(mock_bpa_LogEvent_event_ptr, mock_bpa_LogEvent_event_t)
-M_BUFFER_DEF(mock_bpa_LogEvent_queue, mock_bpa_LogEvent_event_ptr_t *, MOCK_BPA_LOG_QUEUE_SIZE,
-             M_BUFFER_THREAD_SAFE | M_BUFFER_BLOCKING | M_BUFFER_PUSH_INIT_POP_MOVE)
+M_BUFFER_DEF(mock_bpa_LogEvent_queue, mock_bpa_LogEvent_event_ptr_t *, MOCK_BPA_LOG_QUEUE_SIZE, M_BUFFER_QUEUE)
 // GCOV_EXCL_STOP
 /// @endcond
 
@@ -159,7 +158,7 @@ static void *work_sink(void *arg _U_)
     while (running)
     {
         mock_bpa_LogEvent_event_ptr_t *event_ptr;
-        mock_bpa_LogEvent_queue_pop(&event_ptr, event_queue);
+        mock_bpa_LogEvent_queue_pop_move(&event_ptr, event_queue);
         const mock_bpa_LogEvent_event_t *event = mock_bpa_LogEvent_event_ptr_cref(event_ptr);
         if (string_empty_p(event->message))
         {
@@ -198,7 +197,7 @@ void mock_bpa_LogClose(void)
 {
     // sentinel empty message
     mock_bpa_LogEvent_event_ptr_t *event_ptr = mock_bpa_LogEvent_event_ptr_new();
-    mock_bpa_LogEvent_queue_push(event_queue, event_ptr);
+    mock_bpa_LogEvent_queue_push_move(event_queue, &event_ptr);
 
     int res = pthread_join(thr_sink, NULL);
     if (res)
@@ -299,7 +298,7 @@ void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char
     {
         if (atomic_load(&thr_valid))
         {
-            mock_bpa_LogEvent_queue_push(event_queue, event_ptr);
+            mock_bpa_LogEvent_queue_push_move(event_queue, &event_ptr);
         }
         else
         {

@@ -66,8 +66,8 @@ void BSL_AbsSecBlock_Target_Deinit(BSL_AbsSecBlock_Target_t *self);
     (INIT(API_2(BSL_AbsSecBlock_Target_Init)), INIT_SET(0), SET(0), CLEAR(API_2(BSL_AbsSecBlock_Target_Deinit)))
 
 /**
- * @struct uint64_list_t
- * @brief Container for an MLib array of uint64_t
+ * @struct BSL_AbsSecBlock_TargetList_t
+ * @brief Container for an array of shared pointer to ::BSL_AbsSecBlock_Target_t
  * @cite lib:mlib.
  */
 // NOLINTBEGIN
