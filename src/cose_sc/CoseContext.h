@@ -87,7 +87,7 @@ enum BSLX_CoseSC_Result_e
 
 /** @struct BSLX_CoseSc_AadScope_t
  * An internal representation of AAD Scope map, with keys sorted in
- * CBOR deterministic order and values as a bitmask of
+ * CBOR deterministic order and values as a bit mask of
  * ::BSLX_CoseSC_AAD_Flag_e flags.
  */
 // NOLINTBEGIN
