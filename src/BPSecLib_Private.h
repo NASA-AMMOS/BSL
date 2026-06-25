@@ -682,9 +682,7 @@ void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, int64_t param_id, const cha
 bool BSL_IdValPair_IsTextstr(const BSL_IdValPair_t *self);
 
 /** Retrieve bytestring value of result when security parameter type is bytestring.
- * @warning Always check type before using this.
  *
- * @todo Clarify whether result contains copy or view of content
  * @param[in] self This Security Parameter
  * @param[in,out] out Pointer to optional string pointer for view onto this parameter value.
  * That view must not outlive this pair instance.
@@ -709,9 +707,7 @@ void BSL_IdValPair_SetRaw(BSL_IdValPair_t *self, int64_t param_id, const void *p
 bool BSL_IdValPair_IsRaw(const BSL_IdValPair_t *self);
 
 /** Retrieve bytestring value of result when security parameter type is bytestring.
- * @warning Always check type before using this.
  *
- * @todo Clarify whether result contains copy or view of content
  * @param[in] self This Security Parameter
  * @param[out] out Pointer to optional struct which will be made a view onto this parameter value.
  * That view must not outlive this pair instance.

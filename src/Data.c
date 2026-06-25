@@ -145,7 +145,7 @@ int BSL_Data_Resize(BSL_Data_t *data, size_t len)
         return BSL_SUCCESS;
     }
 
-    BSL_DataPtr_t need_cpy = NULL;
+    BSL_DataConstPtr_t need_cpy = NULL;
     if (!data->owned)
     {
         need_cpy  = data->ptr;
