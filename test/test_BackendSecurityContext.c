@@ -39,7 +39,6 @@
 #include <mock_bpa/MockBPA.h>
 #include <CryptoInterface.h>
 #include <default_sc/DefaultSecContext.h>
-#include <backend/SecurityResultSet.h>
 
 #include "DefaultScUtils.h"
 
