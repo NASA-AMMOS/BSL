@@ -80,20 +80,20 @@ int BSLP_PolicyPredicate_InitFrom(BSLP_PolicyPredicate_t *self, BSL_PolicyLocati
  */
 void BSLP_PolicyPredicate_Init(BSLP_PolicyPredicate_t *self);
 
-/** Shallow copy of policy predicate
- * @param self destination policy predicate
- * @param src source policy predicate
- */
-void BSLP_PolicyPredicate_ShallowCopy(BSLP_PolicyPredicate_t *self, const BSLP_PolicyPredicate_t *src);
-
 /** Deinitialize policy predicate and associated host eid pattern structures
  * @param self policy predicate
  */
 void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
 
+/** Move policy predicate data
+ * @param self The policy rule to move into.
+ * @param src The rule to move from.
+ */
+void BSLP_PolicyPredicate_Move(BSLP_PolicyPredicate_t *self, BSLP_PolicyPredicate_t *src);
+
 /// OPLIST for ::BSLP_PolicyPredicate_t
-#define M_OPL_BSLP_PolicyPredicate_t()                                                                  \
-    (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(API_6(BSLP_PolicyPredicate_ShallowCopy)), SET(0), \
+#define M_OPL_BSLP_PolicyPredicate_t()                                                                    \
+    (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(0), SET(0), MOVE(API_6(BSLP_PolicyPredicate_Move)), \
      CLEAR(API_2(BSLP_PolicyPredicate_Deinit)))
 
 /** @struct BSLP_PolicyPredicateList_t
@@ -102,7 +102,9 @@ void BSLP_PolicyPredicate_Deinit(BSLP_PolicyPredicate_t *self);
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
 // GCOV_EXCL_START
-M_ARRAY_DEF(BSLP_PolicyPredicateList, BSLP_PolicyPredicate_t, M_OPL_BSLP_PolicyPredicate_t())
+M_SHARED_WEAK_PTR_DEF(BSLP_PolicyPredicatePtr, BSLP_PolicyPredicate_t, M_OPL_BSLP_PolicyPredicate_t())
+#define M_OPL_BSLP_PolicyPredicatePtr_t() M_SHARED_PTR_OPLIST(BSLP_PolicyPredicatePtr, M_OPL_BSLP_PolicyPredicate_t())
+M_ARRAY_DEF(BSLP_PolicyPredicateList, BSLP_PolicyPredicatePtr_t *, M_OPL_BSLP_PolicyPredicatePtr_t())
 // GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond
@@ -171,11 +173,6 @@ int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, const char *desc, int64_t 
  */
 void BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self);
 
-/** Deinitialize policy rule
- * @param self policy rule
- */
-void BSLP_PolicyRule_InitSet(BSLP_PolicyRule_t *self, const BSLP_PolicyRule_t *src);
-
 /**
  * @brief De-initialize, release any resources, and zero this struct.
  *
@@ -183,9 +180,15 @@ void BSLP_PolicyRule_InitSet(BSLP_PolicyRule_t *self, const BSLP_PolicyRule_t *s
  */
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self);
 
+/** Move policy rule data
+ * @param self The policy rule to move into.
+ * @param src The rule to move from.
+ */
+void BSLP_PolicyRule_Move(BSLP_PolicyRule_t *self, BSLP_PolicyRule_t *src);
+
 /// OPLIST for ::BSLP_PolicyRule_t
-#define M_OPL_BSLP_PolicyRule_t()                                                         \
-    (INIT(API_2(BSLP_PolicyRule_Init)), INIT_SET(API_6(BSLP_PolicyRule_InitSet)), SET(0), \
+#define M_OPL_BSLP_PolicyRule_t()                                                               \
+    (INIT(API_2(BSLP_PolicyRule_Init)), INIT_SET(0), SET(0), MOVE(API_6(BSLP_PolicyRule_Move)), \
      CLEAR(API_2(BSLP_PolicyRule_Deinit)))
 
 /** @struct BSLP_PolicyRuleList_t
@@ -194,7 +197,9 @@ void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self);
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
 // GCOV_EXCL_START
-M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t())
+M_SHARED_WEAK_PTR_DEF(BSLP_PolicyRulePtr, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t())
+#define M_OPL_BSLP_PolicyRulePtr_t() M_SHARED_PTR_OPLIST(BSLP_PolicyRulePtr, M_OPL_BSLP_PolicyRule_t())
+M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRulePtr_t *, M_OPL_BSLP_PolicyRulePtr_t())
 // GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond
@@ -229,13 +234,13 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id);
  * @param predicate predicate to be associated with policy rule
  */
 int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule,
-                                const BSLP_PolicyPredicate_t *predicate);
+                                BSLP_PolicyPredicate_t *predicate);
 
 /** Deinitialize policy provider data
  * References to this data will become invalid
  * @param self policy provider data to de-initialize
  */
-void BSLP_PolicyProvider_Deinit(BSLP_PolicyProvider_t *self);
+void BSLP_PolicyProvider_Destroy(BSLP_PolicyProvider_t *self);
 
 /**  Evaluate policy rule as security operation
  * @param self policy rule

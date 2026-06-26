@@ -523,7 +523,7 @@ void setUp(void)
 
 void tearDown(void)
 {
-    BSLP_PolicyProvider_Deinit(policy_provider);
+    BSLP_PolicyProvider_Destroy(policy_provider);
     BSL_CryptoDeinit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
     BSL_SecurityActionSet_Deinit(&action_set);
