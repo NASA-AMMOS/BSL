@@ -1245,7 +1245,7 @@ struct BSL_PolicyDesc_s
     BSL_PolicyDeinit_f   deinit_fn;   ///< Function to deinit the policy provider at termination of BSL context
 };
 
-/** Call the underlying security context to perform the given action
+/** Call the underlying security context to perform the given action set
  *
  * @param[in] lib This BSL context
  * @param[out] output_response Pointer to allocated, zeroed memory into which the response is populated
@@ -1256,14 +1256,14 @@ struct BSL_PolicyDesc_s
 int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet_t *output_response,
                                       BSL_BundleRef_t *bundle, const BSL_SecurityActionSet_t *action_set);
 
-/** Validate policy action set
+/** Call the underlying security context to validate the given action set
  *
  * @param[in] lib This BSL context
- * @param[in,out] bundle Pointer to bundle, which may be modified.
+ * @param[in] bundle Pointer to bundle
  * @param[in] action_set Action containing all params and operations.
- * @return true on success, false on failure.
+ * @return 0 on success, negative on failure.
  */
-bool BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
+int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
                                         const BSL_SecurityActionSet_t *action_set);
 
 /** Signature for Security Context validator for a sec OP.

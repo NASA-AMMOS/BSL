@@ -526,13 +526,12 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
     return BSL_SUCCESS;
 }
 
-bool BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
+int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
                                         const BSL_SecurityActionSet_t *action_set)
 {
-    if BSL_CHKFALSE(NULL != lib || NULL != bundle || NULL != action_set)
-    {
-        return false;
-    }
+    CHK_ARG_NONNULL(lib);
+    CHK_ARG_NONNULL(bundle);
+    CHK_ARG_NONNULL(action_set);
 
     for (size_t action_index = 0; action_index < BSL_SecurityActionSet_CountActions(action_set); action_index++)
     {
@@ -545,15 +544,15 @@ bool BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t
             {
                 BSL_LOG_WARNING("No security context validator registered for context ID %" PRId64,
                                 sec_oper->context_id);
-                return false;
+                return BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             }
 
             if (!sec_ctx->validate(lib, bundle, sec_oper))
             {
                 BSL_LOG_WARNING("Security context validator failed for context ID %" PRId64, sec_oper->context_id);
-                return false;
+                return BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             }
         }
     }
-    return true;
+    return BSL_SUCCESS;
 }

@@ -213,13 +213,7 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
     }
     BSL_PrimaryBlock_deinit(&primary_block);
 
-    if (BSL_SecCtx_ValidatePolicyActionSet(bsl, bundle, output_action_set) == false)
-    {
-        query_status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
-        BSL_LOG_WARNING("Security Context validation failed");
-    }
-
-    return query_status;
+    return BSL_SecCtx_ValidatePolicyActionSet(bsl, bundle, output_action_set);
 }
 
 int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
