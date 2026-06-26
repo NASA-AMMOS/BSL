@@ -104,16 +104,17 @@ void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64
 {
     TestSecCtxValidateCallCount = 0;
     TestSecCtxValidatedTarget   = 0;
-    
-    const uint64_t TEST_SC_ID = 99;
+
+    const uint64_t   TEST_SC_ID = 99;
     BSL_SecCtxDesc_t sec_ctx_desc;
-    sec_ctx_desc.validate         = BSL_TestSecCtx_Validate;
-    sec_ctx_desc.execute          = BSL_TestSecCtx_Execute;
+    sec_ctx_desc.validate = BSL_TestSecCtx_Validate;
+    sec_ctx_desc.execute  = BSL_TestSecCtx_Execute;
     TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_API_RegisterSecurityContext(&LocalTestCtx.bsl, TEST_SC_ID, sec_ctx_desc));
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    BSL_SecOper_Populate(&sec_oper, TEST_SC_ID, sec_target, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_NOTHING);
+    BSL_SecOper_Populate(&sec_oper, TEST_SC_ID, sec_target, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
+                         BSL_POLICYACTION_NOTHING);
 
     BSL_SecurityAction_t action;
     BSL_SecurityAction_Init(&action);
@@ -123,7 +124,8 @@ void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64
     BSL_SecurityActionSet_Init(&action_set);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_SecurityActionSet_AppendAction(&action_set, &action));
 
-    TEST_ASSERT_EQUAL(result, BSL_SecCtx_ValidatePolicyActionSet(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set));
+    TEST_ASSERT_EQUAL(result, BSL_SecCtx_ValidatePolicyActionSet(&LocalTestCtx.bsl,
+                                                                 &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set));
     TEST_ASSERT_EQUAL_UINT(1, TestSecCtxValidateCallCount);
     TEST_ASSERT_EQUAL_UINT64(sec_target, TestSecCtxValidatedTarget);
 

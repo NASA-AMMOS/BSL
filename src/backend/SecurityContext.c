@@ -527,7 +527,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
 }
 
 int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
-                                        const BSL_SecurityActionSet_t *action_set)
+                                       const BSL_SecurityActionSet_t *action_set)
 {
     CHK_ARG_NONNULL(lib);
     CHK_ARG_NONNULL(bundle);
@@ -554,6 +554,6 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t 
             }
         }
     }
-    
+
     return BSL_SUCCESS;
 }

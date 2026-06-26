@@ -763,4 +763,3 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
     BSLX_BCB_Deinit(&bcb_context);
     return BSL_SUCCESS;
 }
-
