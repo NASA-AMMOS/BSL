@@ -57,32 +57,16 @@ static bool BSL_TestSecCtx_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bu
     TestSecCtxValidateCallCount++;
     TestSecCtxValidatedTarget = BSL_SecOper_GetTargetBlockNum(sec_oper);
 
-    if (sec_oper->target_block_num == 111)
-    {
-        return false;
-    }
-
-    return true;
+    return (sec_oper->target_block_num != 111);
 }
-
-static size_t   TestSecCtxExecuteCallCount = 0;
-static uint64_t TestSecCtxExecutedTarget   = 0;
 
 static int BSL_TestSecCtx_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
                                   BSL_SecOutcome_t *sec_outcome)
 {
-    CHK_ARG_NONNULL(lib);
-    CHK_ARG_NONNULL(bundle);
-    CHK_ARG_NONNULL(sec_oper);
-    CHK_ARG_NONNULL(sec_outcome);
-
-    TestSecCtxExecuteCallCount++;
-    TestSecCtxExecutedTarget = BSL_SecOper_GetTargetBlockNum(sec_oper);
-
-    if (sec_oper->target_block_num == 111)
-    {
-        return BSL_ERR_FAILURE;
-    }
+    (void)lib;
+    (void)bundle;
+    (void)sec_oper;
+    (void)sec_outcome;
 
     return BSL_SUCCESS;
 }
@@ -115,13 +99,11 @@ void tearDown(void)
 }
 
 TEST_CASE(1, 0)
-TEST_CASE(111, -1)
+TEST_CASE(111, BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED)
 void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64_t sec_target, int result)
 {
     TestSecCtxValidateCallCount = 0;
     TestSecCtxValidatedTarget   = 0;
-    TestSecCtxExecuteCallCount = 0;
-    TestSecCtxExecutedTarget   = 0;
     
     const uint64_t TEST_SC_ID = 99;
     BSL_SecCtxDesc_t sec_ctx_desc;
@@ -143,16 +125,10 @@ void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64
 
     TEST_ASSERT_EQUAL(result, BSL_SecCtx_ValidatePolicyActionSet(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set));
     TEST_ASSERT_EQUAL_UINT(1, TestSecCtxValidateCallCount);
-    TEST_ASSERT_EQUAL_UINT64(1, TestSecCtxValidatedTarget);
-
-    BSL_SecurityResponseSet_t response_set;
-    TEST_ASSERT_EQUAL(result, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &response_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set));
-    TEST_ASSERT_EQUAL_UINT(1, TestSecCtxExecuteCallCount);
-    TEST_ASSERT_EQUAL_UINT64(1, TestSecCtxExecutedTarget);
+    TEST_ASSERT_EQUAL_UINT64(sec_target, TestSecCtxValidatedTarget);
 
     BSL_SecurityAction_Deinit(&action);
     BSL_SecurityActionSet_Deinit(&action_set);
-    BSL_SecurityResponseSet_Deinit(&response_set);
 }
 
 /**

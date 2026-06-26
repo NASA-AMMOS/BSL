@@ -39,10 +39,10 @@
 
 bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
 {
-    (void)lib;
-    (void)bundle;
-    (void)sec_oper;
-    return false;
+    BSL_CHKFALSE(lib);
+    BSL_CHKFALSE(bundle);
+    BSL_CHKFALSE(sec_oper);
+    return true;
 }
 
 int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
