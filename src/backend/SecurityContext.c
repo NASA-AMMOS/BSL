@@ -533,26 +533,34 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t 
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(action_set);
 
-    for (size_t action_index = 0; action_index < BSL_SecurityActionSet_CountActions(action_set); action_index++)
+    BSL_SecActionList_it_t actlist_it;
+    for (BSL_SecActionList_it(actlist_it, action_set->actions); !BSL_SecActionList_end_p(actlist_it);
+         BSL_SecActionList_next(actlist_it))
     {
-        const BSL_SecurityAction_t *action = BSL_SecurityActionSet_GetActionAtIndex(action_set, action_index);
-        for (size_t oper_index = 0; oper_index < BSL_SecurityAction_CountSecOpers(action); oper_index++)
+        BSL_SecurityAction_t *action = BSL_SecActionList_ref(actlist_it);
+
+        uint64_t             secop_invalid_count = 0;
+        BSL_SecOperList_it_t secoplist_it;
+        for (BSL_SecOperList_it(secoplist_it, action->sec_op_list); !BSL_SecOperList_end_p(secoplist_it);
+             BSL_SecOperList_next(secoplist_it))
         {
-            const BSL_SecOper_t    *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(action, oper_index);
+            const BSL_SecOper_t    *sec_oper = BSL_SecOperList_cref(secoplist_it);
             const BSL_SecCtxDesc_t *sec_ctx  = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
-            if (sec_ctx == NULL || sec_ctx->validate == NULL)
+
+            if (sec_ctx == NULL)
             {
-                BSL_LOG_WARNING("No security context validator registered for context ID %" PRId64,
-                                sec_oper->context_id);
-                return BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                BSL_LOG_ERR("No security context validator registered for context ID %" PRId64, sec_oper->context_id);
+                continue;
             }
 
             if (!sec_ctx->validate(lib, bundle, sec_oper))
             {
+                secop_invalid_count++;
                 BSL_LOG_WARNING("Security context validator failed for context ID %" PRId64, sec_oper->context_id);
-                return BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             }
         }
+
+        action->validated = (0 == secop_invalid_count);
     }
 
     return BSL_SUCCESS;

@@ -97,9 +97,9 @@ void tearDown(void)
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 }
 
-TEST_CASE(1, 0)
-TEST_CASE(111, BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED)
-void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64_t sec_target, int result)
+TEST_CASE(1)
+TEST_CASE(111)
+void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64_t sec_target)
 {
     TestSecCtxValidateCallCount = 0;
     TestSecCtxValidatedTarget   = 0;
@@ -123,10 +123,12 @@ void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64
     BSL_SecurityActionSet_Init(&action_set);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_SecurityActionSet_AppendAction(&action_set, &action));
 
-    TEST_ASSERT_EQUAL(result, BSL_SecCtx_ValidatePolicyActionSet(&LocalTestCtx.bsl,
-                                                                 &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_SecCtx_ValidatePolicyActionSet(
+                                       &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set));
     TEST_ASSERT_EQUAL_UINT(1, TestSecCtxValidateCallCount);
     TEST_ASSERT_EQUAL_UINT64(sec_target, TestSecCtxValidatedTarget);
+
+    TEST_ASSERT_EQUAL(((sec_target == 111) ? 1 : 0), BSL_SecurityActionSet_CountInvalidActions(&action_set));
 
     BSL_SecurityAction_Deinit(&action);
     BSL_SecurityActionSet_Deinit(&action_set);

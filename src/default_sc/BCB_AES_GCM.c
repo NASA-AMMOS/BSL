@@ -39,9 +39,9 @@
 
 bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
 {
-    BSL_CHKFALSE(lib);
-    BSL_CHKFALSE(bundle);
-    BSL_CHKFALSE(sec_oper);
+    ASSERT_ARG_NONNULL(lib);
+    ASSERT_ARG_NONNULL(bundle);
+    ASSERT_ARG_NONNULL(sec_oper);
     return true;
 }
 

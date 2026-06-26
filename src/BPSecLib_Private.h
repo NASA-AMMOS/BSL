@@ -326,10 +326,7 @@ int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t bufsize);
 /** Static initializer for an invalid ::BSL_HostEID_t.
  * Even after this, BSL_HostEID_Init() must be used to get into a valid state.
  */
-#define BSL_HOSTEID_INIT_INVALID \
-    {                            \
-        .handle = NULL           \
-    }
+#define BSL_HOSTEID_INIT_INVALID { .handle = NULL }
 
 /** Initialize an abstract EID.
  *
@@ -380,10 +377,7 @@ int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes
 /** Static initializer for an invalid ::BSL_HostEIDPattern_t.
  * Even after this, BSL_HostEIDPattern_Init() must be used to get into a valid state.
  */
-#define BSL_HOSTEID_INIT_INVALID \
-    {                            \
-        .handle = NULL           \
-    }
+#define BSL_HOSTEID_INIT_INVALID { .handle = NULL }
 
 /** Initialize an abstract EID Pattern.
  *
@@ -1036,11 +1030,6 @@ const BSL_IdValPair_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, s
 size_t BSL_SecurityAction_Sizeof(void);
 
 /**
- * @return true if security action @param self is consistent
- */
-bool BSL_SecurityAction_IsConsistent(const BSL_SecurityAction_t *self);
-
-/**
  * Initialize security action
  * @param[out] self security action
  */
@@ -1138,6 +1127,11 @@ bool BSL_SecurityActionSet_IsConsistent(const BSL_SecurityActionSet_t *self);
  * @return the total number of operations within each of the actions of @param self action set
  */
 size_t BSL_SecurityActionSet_CountOperations(const BSL_SecurityActionSet_t *self);
+
+/**
+ * @return the total number of invalid actions within @param self action set
+ */
+size_t BSL_SecurityActionSet_CountInvalidActions(const BSL_SecurityActionSet_t *self);
 
 /** Count number of security operations present in this policy action set.
  *

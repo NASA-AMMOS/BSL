@@ -296,9 +296,12 @@ typedef struct
 } BSL_DynMemHostDescriptors_t;
 
 /// Default heap functions from libc
-#define BSL_DynMemHostDescriptors_DEFAULT                                                 \
-    {                                                                                     \
-        .malloc_cb = malloc, .realloc_cb = realloc, .calloc_cb = calloc, .free_cb = free, \
+#define BSL_DynMemHostDescriptors_DEFAULT \
+    {                                     \
+        .malloc_cb  = malloc,             \
+        .realloc_cb = realloc,            \
+        .calloc_cb  = calloc,             \
+        .free_cb    = free,               \
     }
 
 /** Dynamic BPA descriptor.
