@@ -22,76 +22,150 @@
 #include "SamplePolicyConfigParser.h"
 #include <default_sc/DefaultSecContext.h>
 
-int BSLP_InitParams_Init(BSLP_InitParams_t *params)
+static int BSLP_GetNumberInt(const json_t *value, int64_t *as_int)
 {
-    params->param_integ_scope_flag = BSL_calloc(1, BSL_IdValPair_Sizeof());
-    BSL_IdValPair_Init(params->param_integ_scope_flag);
-    if (NULL == params->param_integ_scope_flag)
+    if (json_is_integer(value))
     {
-        return BSL_ERR_INSUFFICIENT_SPACE;
+        *as_int = json_integer_value(value);
+        return BSL_SUCCESS;
     }
-
-    params->param_sha_variant = BSL_calloc(1, BSL_IdValPair_Sizeof());
-    BSL_IdValPair_Init(params->param_sha_variant);
-    if (NULL == params->param_sha_variant)
+    else if (json_is_string(value))
     {
-        return BSL_ERR_INSUFFICIENT_SPACE;
-    }
+        const char *as_str = json_string_value(value);
 
-    params->param_aad_scope_flag = BSL_calloc(1, BSL_IdValPair_Sizeof());
-    BSL_IdValPair_Init(params->param_aad_scope_flag);
-    if (NULL == params->param_aad_scope_flag)
+        char *endp;
+        *as_int = strtol(as_str, &endp, 10);
+        if (endp != as_str + json_string_length(value))
+        {
+            BSL_LOG_ERR("Invalid text-as-integer: %s", as_str);
+            return BSL_ERR_POLICY_CONFIG;
+        }
+        return BSL_SUCCESS;
+    }
+    else
     {
-        return BSL_ERR_INSUFFICIENT_SPACE;
+        BSL_LOG_ERR("Invalid option value type, expected int or text");
+        return BSL_ERR_POLICY_CONFIG;
     }
+}
 
-    params->param_init_vector = BSL_calloc(1, BSL_IdValPair_Sizeof());
-    BSL_IdValPair_Init(params->param_init_vector);
-    if (NULL == params->param_init_vector)
+static int BSLP_GetBoolean(const json_t *value, bool *as_bool)
+{
+    if (json_is_boolean(value))
     {
-        return BSL_ERR_INSUFFICIENT_SPACE;
+        *as_bool = json_is_true(value);
     }
-
-    params->param_aes_variant = BSL_calloc(1, BSL_IdValPair_Sizeof());
-    BSL_IdValPair_Init(params->param_aes_variant);
-    if (NULL == params->param_aes_variant)
+    if (json_is_integer(value))
     {
-        return BSL_ERR_INSUFFICIENT_SPACE;
+        *as_bool = (json_integer_value(value) != 0);
+        return BSL_SUCCESS;
     }
-
-    params->param_test_key = BSL_calloc(1, BSL_IdValPair_Sizeof());
-    BSL_IdValPair_Init(params->param_test_key);
-    if (NULL == params->param_test_key)
+    else if (json_is_string(value))
     {
-        return BSL_ERR_INSUFFICIENT_SPACE;
+        *as_bool = !!strcmp(json_string_value(value), "0");
+        return BSL_SUCCESS;
     }
-
-    params->param_use_wrapped_key = BSL_calloc(1, BSL_IdValPair_Sizeof());
-    BSL_IdValPair_Init(params->param_use_wrapped_key);
-    if (NULL == params->param_use_wrapped_key)
+    else
     {
-        return BSL_ERR_INSUFFICIENT_SPACE;
+        BSL_LOG_ERR("Invalid option value type, expected boolean or zero");
+        return BSL_ERR_POLICY_CONFIG;
     }
+}
 
+static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id_str, const json_t *value)
+{
+    if (0 == strcmp(id_str, "key_name"))
+    {
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_KEY_ID);
+        BSL_IdValPair_SetTextstr(opt, BSLX_BIB_OPT_KEY_ID, json_string_value(value));
+    }
+    else if (0 == strcmp(id_str, "sha_variant"))
+    {
+        int64_t as_int;
+        if (BSLP_GetNumberInt(value, &as_int))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_SHA_VARIANT);
+        BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_SHA_VARIANT, as_int);
+    }
+    else if (0 == strcmp(id_str, "scope_flags"))
+    {
+        int64_t as_int;
+        if (BSLP_GetNumberInt(value, &as_int))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_SCOPE);
+        BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_SCOPE, as_int);
+    }
+    else if (0 == strcmp(id_str, "key_wrap"))
+    {
+        bool as_bool;
+        if (BSLP_GetBoolean(value, &as_bool))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_USE_KEY_WRAP);
+        BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_USE_KEY_WRAP, (int64_t)as_bool);
+    }
+    else
+    {
+        BSL_LOG_ERR("INVALID PARAM KEY %s FOR SC ID 1", id_str);
+        return BSL_ERR_POLICY_CONFIG;
+    }
     return BSL_SUCCESS;
 }
 
-void BSLP_InitParams_Deinit(BSLP_InitParams_t *params)
+static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id_str, const json_t *value)
 {
-    BSL_IdValPair_Deinit(params->param_integ_scope_flag);
-    BSL_free(params->param_integ_scope_flag);
-    BSL_IdValPair_Deinit(params->param_sha_variant);
-    BSL_free(params->param_sha_variant);
-    BSL_IdValPair_Deinit(params->param_aad_scope_flag);
-    BSL_free(params->param_aad_scope_flag);
-    BSL_IdValPair_Deinit(params->param_init_vector);
-    BSL_free(params->param_init_vector);
-    BSL_IdValPair_Deinit(params->param_aes_variant);
-    BSL_free(params->param_aes_variant);
-    BSL_IdValPair_Deinit(params->param_test_key);
-    BSL_free(params->param_test_key);
-    BSL_IdValPair_Deinit(params->param_use_wrapped_key);
-    BSL_free(params->param_use_wrapped_key);
+    if (0 == strcmp(id_str, "key_name"))
+    {
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_KEY_ID);
+        BSL_IdValPair_SetTextstr(opt, BSLX_BCB_OPT_KEY_ID, json_string_value(value));
+    }
+    else if (0 == strcmp(id_str, "aes_variant"))
+    {
+        int64_t as_int;
+        if (BSLP_GetNumberInt(value, &as_int))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_AES_VARIANT);
+        BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_AES_VARIANT, as_int);
+    }
+    else if (0 == strcmp(id_str, "aad_scope"))
+    {
+        int64_t as_int;
+        if (BSLP_GetNumberInt(value, &as_int))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_SCOPE);
+        BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_SCOPE, as_int);
+    }
+    else if (0 == strcmp(id_str, "key_wrap"))
+    {
+        bool as_bool;
+        if (BSLP_GetBoolean(value, &as_bool))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_USE_KEY_WRAP);
+        BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_USE_KEY_WRAP, (int64_t)as_bool);
+    }
+    else
+    {
+        BSL_LOG_ERR("INVALID PARAM KEY %s FOR SC ID 2", id_str);
+        return BSL_ERR_POLICY_CONFIG;
+    }
+    return BSL_SUCCESS;
 }
 
 int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_t *policy)
@@ -150,13 +224,8 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
             continue;
         }
 
-        BSLP_InitParams_t params;
-        int               params_init_retval = BSLP_InitParams_Init(&params);
-        if (BSL_SUCCESS != params_init_retval)
-        {
-            BSL_LOG_ERR("JSON Policy Parse: Error allocating params");
-            return params_init_retval;
-        }
+        BSLB_IdValPairPtrMap_t options;
+        BSLB_IdValPairPtrMap_init(options);
 
         // filter attr
         const json_t *filter = json_object_get(policyrule, "filter");
@@ -291,10 +360,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                 continue;
             }
             const json_int_t sc_id_l = json_integer_value(sc_id);
-            BSL_LOG_DEBUG("     scid    : %" JSON_INTEGER_FORMAT, sc_id_l);
-
-            sec_ctx_id     = (int64_t)sc_id_l;
-            sec_block_type = (sec_ctx_id == 1) ? BSL_SECBLOCKTYPE_BIB : BSL_SECBLOCKTYPE_BCB;
+            BSL_LOG_DEBUG("     sc_id    : %" JSON_INTEGER_FORMAT, sc_id_l);
         }
         else
         {
@@ -336,18 +402,34 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
             continue;
         }
 
-        uint64_t params_got = 0x0;
-
         // spec attr
         const json_t *spec = json_object_get(policyrule, "spec");
         if (spec && json_is_object(spec))
         {
+            BSL_LOG_DEBUG("spec:");
+
+            const json_t *svc     = json_object_get(spec, "svc");
+            const char   *svc_str = json_string_value(svc);
+            BSL_LOG_DEBUG("     svc: %s", svc_str);
+            if ((strcmp(svc_str, "bib") == 0) || (strcmp(svc_str, "bib-integrity") == 0))
+            {
+                sec_block_type = BSL_SECBLOCKTYPE_BIB;
+            }
+            else if ((strcmp(svc_str, "bcb") == 0) || (strcmp(svc_str, "bcb-confidentiality") == 0))
+            {
+                sec_block_type = BSL_SECBLOCKTYPE_BCB;
+            }
+            else
+            {
+                BSL_LOG_ERR("Invalid svc parameter: %s", svc_str);
+                continue;
+            }
+
             // check sec ctx id
             const json_t    *sc_id   = json_object_get(spec, "sc_id");
             const json_int_t sc_id_l = json_integer_value(sc_id);
-
-            BSL_LOG_DEBUG("spec:");
             BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT, sc_id_l);
+            sec_ctx_id = (int64_t)sc_id_l;
 
             const json_t *sc_parms = json_object_get(spec, "sc_parms");
             if (sc_parms && json_is_array(sc_parms))
@@ -375,96 +457,20 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                         continue;
                     }
                     const char *value_str = json_string_value(value);
-
                     BSL_LOG_DEBUG("         - id: %s, value: %s", id_str, value_str);
 
                     // different valid param IDs for different contexts
                     switch (sc_id_l)
                     {
                         case RFC9173_CONTEXTID_BIB_HMAC_SHA2:
-                        {
-                            if (0 == strcmp(id_str, "key_name"))
-                            {
-                                BSL_IdValPair_SetTextstr(params.param_test_key, BSLX_BIB_OPT_KEY_ID, value_str);
-                                params_got |= 0x1;
-                            }
-                            else if (0 == strcmp(id_str, "sha_variant"))
-                            {
-                                int64_t sha_var;
-                                if (0 == strcmp(value_str, "5"))
-                                {
-                                    sha_var = RFC9173_BIB_SHA_HMAC256;
-                                }
-                                else if (0 == strcmp(value_str, "6"))
-                                {
-                                    sha_var = RFC9173_BIB_SHA_HMAC384;
-                                }
-                                else
-                                {
-                                    sha_var = RFC9173_BIB_SHA_HMAC512;
-                                }
-
-                                BSL_IdValPair_SetInt64(params.param_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, sha_var);
-                                params_got |= 0x2;
-                            }
-                            else if (0 == strcmp(id_str, "scope_flags"))
-                            {
-                                int64_t flag = strtol(value_str, NULL, 10);
-                                BSL_IdValPair_SetInt64(params.param_integ_scope_flag, BSLX_BIB_OPT_SCOPE, flag);
-                                params_got |= 0x4;
-                            }
-                            else if (0 == strcmp(id_str, "key_wrap"))
-                            {
-                                int64_t keywrap = !!strcmp(value_str, "0");
-                                BSL_IdValPair_SetInt64(params.param_use_wrapped_key, BSLX_BIB_OPT_USE_KEY_WRAP,
-                                                       keywrap);
-                                params_got |= 0x8;
-                            }
-                            else
-                            {
-                                BSL_LOG_ERR("INVALID PARAM KEY %s FOR SC ID %" JSON_INTEGER_FORMAT, id_str, sc_id_l);
-                                continue;
-                            }
+                            BSLP_PolicyOptions_SC1(options, id_str, value);
                             break;
-                        }
                         case RFC9173_CONTEXTID_BCB_AES_GCM:
-                        {
-                            if (0 == strcmp(id_str, "key_name"))
-                            {
-                                BSL_IdValPair_SetTextstr(params.param_test_key, BSLX_BCB_OPT_KEY_ID, value_str);
-                                params_got |= 0x1;
-                            }
-                            else if (0 == strcmp(id_str, "aes_variant"))
-                            {
-                                int64_t aes_var = strtol(value_str, NULL, 10);
-                                BSL_IdValPair_SetInt64(params.param_aes_variant, BSLX_BCB_OPT_AES_VARIANT, aes_var);
-                                params_got |= 0x4;
-                            }
-                            else if (0 == strcmp(id_str, "aad_scope"))
-                            {
-                                int64_t flag = strtol(value_str, NULL, 10);
-                                BSL_IdValPair_SetInt64(params.param_aad_scope_flag, BSLX_BCB_OPT_SCOPE, flag);
-                                params_got |= 0x8;
-                            }
-                            else if (0 == strcmp(id_str, "key_wrap"))
-                            {
-                                int64_t keywrap = !!strcmp(value_str, "0");
-                                BSL_IdValPair_SetInt64(params.param_use_wrapped_key, BSLX_BCB_OPT_USE_KEY_WRAP,
-                                                       keywrap);
-                                params_got |= 0x10;
-                            }
-                            else
-                            {
-                                BSL_LOG_ERR("INVALID PARAM KEY %s FOR SC ID %" JSON_INTEGER_FORMAT, id_str, sc_id_l);
-                                continue;
-                            }
+                            BSLP_PolicyOptions_SC2(options, id_str, value);
                             break;
-                        }
                         default:
-                        {
-                            BSL_LOG_ERR("INVALID SC ID");
-                            continue;
-                        }
+                            BSL_LOG_CRIT("Unhandled context ID %" PRId64, sec_ctx_id);
+                            break;
                     }
                 }
             }
@@ -530,28 +536,17 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
         BSLP_PolicyRule_InitFrom(&rule, rule_id_str, sec_ctx_id, sec_role, sec_block_type, target_block_type,
                                  policy_action_enum);
 
-        // validate params_got
-        (void)params_got;
-
-        if (sec_ctx_id == 2) // BCB
+        // move options into rule
+        BSLB_IdValPairPtrMap_it_t opt_it;
+        for (BSLB_IdValPairPtrMap_it(opt_it, options); !BSLB_IdValPairPtrMap_end_p(opt_it);
+             BSLB_IdValPairPtrMap_next(opt_it))
         {
-            BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_aes_variant);
-            if (sec_role == BSL_SECROLE_SOURCE)
-            {
-                BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_aad_scope_flag);
-            }
+            BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule),
+                              BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrMap_ref(opt_it)->value_ptr));
         }
-        else
-        {
-            BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_sha_variant);
-            BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_integ_scope_flag);
-        }
-        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_test_key);
-        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule), params.param_use_wrapped_key);
 
         BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
-
-        BSLP_InitParams_Deinit(&params);
+        BSLB_IdValPairPtrMap_clear(options);
     }
 
     json_decref(root);
@@ -560,7 +555,7 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
 }
 
 static void BSLP_RegisterPolicyFromBitstring(const BSLP_BitstringPolicyConfiguration_t policy_bits,
-                                             BSLP_PolicyProvider_t *policy, BSLP_InitParams_t *params)
+                                             BSLP_PolicyProvider_t *policy, BSLB_IdValPairPtrMap_t options)
 {
     BSL_LOG_DEBUG("Interpreting policy: 0x%X", policy_bits);
 
@@ -576,25 +571,55 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_BitstringPolicyConfigura
 
     if (sec_block_type == 1)
     {
-        BSL_IdValPair_SetInt64(params->param_aad_scope_flag, BSLX_BCB_OPT_SCOPE, RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
-        BSL_IdValPair_SetInt64(params->param_aes_variant, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+        {
+            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_SCOPE);
+            BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_SCOPE, RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
+        }
+        {
+            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_AES_VARIANT);
+            BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+        }
         if (use_wrapped_key)
         {
-            BSL_IdValPair_SetTextstr(params->param_test_key, BSLX_BCB_OPT_KEY_ID, "9103");
-            BSL_IdValPair_SetInt64(params->param_use_wrapped_key, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
+            {
+                BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_KEY_ID);
+                BSL_IdValPair_SetTextstr(opt, BSLX_BCB_OPT_KEY_ID, "9103");
+            }
+            {
+                BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_USE_KEY_WRAP);
+                BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
+            }
         }
         else
         {
-            BSL_IdValPair_SetTextstr(params->param_test_key, BSLX_BCB_OPT_KEY_ID, "9102");
-            BSL_IdValPair_SetInt64(params->param_use_wrapped_key, BSLX_BCB_OPT_USE_KEY_WRAP, 0);
+            {
+                BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_KEY_ID);
+                BSL_IdValPair_SetTextstr(opt, BSLX_BCB_OPT_KEY_ID, "9102");
+            }
+            {
+                BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_USE_KEY_WRAP);
+                BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_USE_KEY_WRAP, 0);
+            }
         }
     }
     else
     {
-        BSL_IdValPair_SetInt64(params->param_integ_scope_flag, BSLX_BIB_OPT_SCOPE, 0);
-        BSL_IdValPair_SetInt64(params->param_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-        BSL_IdValPair_SetTextstr(params->param_test_key, BSLX_BIB_OPT_KEY_ID, "9100");
-        BSL_IdValPair_SetInt64(params->param_use_wrapped_key, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
+        {
+            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_SCOPE);
+            BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_SCOPE, 0);
+        }
+        {
+            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_SHA_VARIANT);
+            BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+        }
+        {
+            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_KEY_ID);
+            BSL_IdValPair_SetTextstr(opt, BSLX_BIB_OPT_KEY_ID, "9100");
+        }
+        {
+            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_USE_KEY_WRAP);
+            BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
+        }
     }
 
     BSL_SecBlockType_e sec_block_enum;
@@ -710,21 +735,14 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_BitstringPolicyConfigura
     BSLP_PolicyRule_InitFrom(&rule_all_in, policybits_str, sec_context, sec_role_enum, sec_block_enum,
                              bundle_block_enum, policy_action_enum);
 
-    if (sec_block_enum == BSL_SECBLOCKTYPE_BCB)
+    // move options into rule
+    BSLB_IdValPairPtrMap_it_t opt_it;
+    for (BSLB_IdValPairPtrMap_it(opt_it, options); !BSLB_IdValPairPtrMap_end_p(opt_it);
+         BSLB_IdValPairPtrMap_next(opt_it))
     {
-        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_aes_variant);
-        if (sec_role_enum == BSL_SECROLE_SOURCE)
-        {
-            BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_aad_scope_flag);
-        }
+        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in),
+                          BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrMap_ref(opt_it)->value_ptr));
     }
-    else
-    {
-        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_sha_variant);
-        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_integ_scope_flag);
-    }
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_use_wrapped_key);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in), params->param_test_key);
 
     BSLP_PolicyProvider_AddRule(policy, &rule_all_in, &predicate_all_in);
 }
@@ -739,13 +757,8 @@ int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvid
     char       *pend;
     while (true)
     {
-        BSLP_InitParams_t params;
-        int               params_init_retval = BSLP_InitParams_Init(&params);
-        if (BSL_SUCCESS != params_init_retval)
-        {
-            BSL_LOG_ERR("JSON Policy Parse: Error allocating params");
-            return params_init_retval;
-        }
+        BSLB_IdValPairPtrMap_t options;
+        BSLB_IdValPairPtrMap_init(options);
 
         unsigned long val = strtoul(curs, &pend, 0);
         if ((pend == curs) || (val > INT_MAX))
@@ -753,8 +766,8 @@ int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvid
             BSL_LOG_ERR("Failed to decode policy integer at: %s", curs);
         }
         curs = pend;
-        BSLP_RegisterPolicyFromBitstring((int)val, policy, &params);
-        BSLP_InitParams_Deinit(&params);
+        BSLP_RegisterPolicyFromBitstring((int)val, policy, options);
+        BSLB_IdValPairPtrMap_clear(options);
 
         if (*curs == '\0')
         {

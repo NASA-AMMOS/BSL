@@ -61,7 +61,7 @@
 #include <m-bstring.h>
 #include <m-shared-ptr.h>
 #include <m-array.h>
-#include <m-dict.h>
+#include <m-bptree.h>
 
 #include <BPSecLib_Private.h>
 #include <backend/CBOR.h>
@@ -123,7 +123,7 @@ void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t *pair);
 /** @struct BSLB_IdValPairPtrList_t
  * Defines an internal list of ::BSLB_IdValPairPtr_t pointers.
  */
-/** @struct BSLB_IdValPairPtrDict_t
+/** @struct BSLB_IdValPairPtrMap_t
  * Defines an internal lookup dictionary for ::BSLB_IdValPairPtr_t pointers
  * by integer keys.
  */
@@ -134,10 +134,24 @@ M_SHARED_PTR_DEF(BSLB_IdValPairPtr, BSL_IdValPair_t, M_OPL_BSL_IdValPair_t())
 #define M_OPL_BSLB_IdValPairPtr_t() M_SHARED_PTR_OPLIST(BSLB_IdValPairPtr, M_OPL_BSL_IdValPair_t())
 
 M_ARRAY_DEF(BSLB_IdValPairPtrList, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
-M_DICT_DEF2(BSLB_IdValPairPtrDict, int64_t, M_BASIC_OPLIST, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
+M_BPTREE_DEF2(BSLB_IdValPairPtrMap, 4, int64_t, M_BASIC_OPLIST, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
+
+/** Workaround default shared-ptr INIT being a NULL pointer.
+ */
+static inline BSL_IdValPair_t *BSLB_IdValPairPtrMap_add(BSLB_IdValPairPtrMap_t map, int64_t key)
+{
+    BSLB_IdValPairPtr_t *item_ptr = BSLB_IdValPairPtr_new();
+
+    BSL_IdValPair_t *item = BSLB_IdValPairPtr_ref(item_ptr);
+
+    BSLB_IdValPairPtrMap_set_at(map, key, item_ptr);
+    BSLB_IdValPairPtr_release(item_ptr);
+
+    return item;
+}
 
 #ifdef __cplusplus
 } // extern C

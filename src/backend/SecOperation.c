@@ -37,9 +37,9 @@ void BSL_SecOper_Init(BSL_SecOper_t *self)
     ASSERT_ARG_NONNULL(self);
 
     memset(self, 0, sizeof(*self));
-    BSLB_IdValPairPtrDict_init(self->_options);
-    BSLB_IdValPairPtrDict_init(self->_params_in);
-    BSLB_IdValPairPtrDict_init(self->_results_in);
+    BSLB_IdValPairPtrMap_init(self->_options);
+    BSLB_IdValPairPtrMap_init(self->_params_in);
+    BSLB_IdValPairPtrMap_init(self->_results_in);
 }
 
 void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
@@ -56,9 +56,9 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->reason_code      = src->reason_code;
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
-    BSLB_IdValPairPtrDict_init_set(self->_options, src->_options);
-    BSLB_IdValPairPtrDict_init_set(self->_params_in, src->_params_in);
-    BSLB_IdValPairPtrDict_init_set(self->_results_in, src->_results_in);
+    BSLB_IdValPairPtrMap_init_set(self->_options, src->_options);
+    BSLB_IdValPairPtrMap_init_set(self->_params_in, src->_params_in);
+    BSLB_IdValPairPtrMap_init_set(self->_results_in, src->_results_in);
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
@@ -66,9 +66,9 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
 void BSL_SecOper_Deinit(BSL_SecOper_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    BSLB_IdValPairPtrDict_clear(self->_results_in);
-    BSLB_IdValPairPtrDict_clear(self->_params_in);
-    BSLB_IdValPairPtrDict_clear(self->_options);
+    BSLB_IdValPairPtrMap_clear(self->_results_in);
+    BSLB_IdValPairPtrMap_clear(self->_params_in);
+    BSLB_IdValPairPtrMap_clear(self->_options);
 }
 
 void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
@@ -83,9 +83,9 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->reason_code      = src->reason_code;
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
-    BSLB_IdValPairPtrDict_set(self->_options, src->_options);
-    BSLB_IdValPairPtrDict_set(self->_params_in, src->_params_in);
-    BSLB_IdValPairPtrDict_set(self->_results_in, src->_results_in);
+    BSLB_IdValPairPtrMap_set(self->_options, src->_options);
+    BSLB_IdValPairPtrMap_set(self->_params_in, src->_params_in);
+    BSLB_IdValPairPtrMap_set(self->_results_in, src->_results_in);
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
@@ -110,7 +110,7 @@ size_t BSL_SecOper_CountOptions(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
-    return BSLB_IdValPairPtrDict_size(self->_options);
+    return BSLB_IdValPairPtrMap_size(self->_options);
 }
 
 bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self)
@@ -130,9 +130,10 @@ void BSL_SecOper_AppendOption(BSL_SecOper_t *self, const BSL_IdValPair_t *option
     ASSERT_ARG_EXPR(BSL_IdValPair_IsConsistent(option));
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
-    BSLB_IdValPairPtr_t **item_ptr = BSLB_IdValPairPtrDict_safe_get(self->_options, option->id);
+    BSLB_IdValPairPtr_t *item_ptr = BSLB_IdValPairPtr_new_from(*option);
 
-    *item_ptr = BSLB_IdValPairPtr_new_from(*option);
+    BSLB_IdValPairPtrMap_set_at(self->_options, option->id, item_ptr);
+    BSLB_IdValPairPtr_release(item_ptr);
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
@@ -142,9 +143,10 @@ void BSL_SecOper_AppendParam(BSL_SecOper_t *self, const BSL_IdValPair_t *param)
     ASSERT_ARG_EXPR(BSL_IdValPair_IsConsistent(param));
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
-    BSLB_IdValPairPtr_t **item_ptr = BSLB_IdValPairPtrDict_safe_get(self->_params_in, param->id);
+    BSLB_IdValPairPtr_t *item_ptr = BSLB_IdValPairPtr_new_from(*param);
 
-    *item_ptr = BSLB_IdValPairPtr_new_from(*param);
+    BSLB_IdValPairPtrMap_set_at(self->_params_in, param->id, item_ptr);
+    BSLB_IdValPairPtr_release(item_ptr);
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
@@ -167,7 +169,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, int64_t
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
-    BSLB_IdValPairPtr_t *const *found = BSLB_IdValPairPtrDict_cget(self->_options, option_id);
+    BSLB_IdValPairPtr_t *const *found = BSLB_IdValPairPtrMap_cget(self->_options, option_id);
     return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
 }
 
@@ -175,7 +177,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, int64_t 
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
-    BSLB_IdValPairPtr_t *const *found = BSLB_IdValPairPtrDict_cget(self->_params_in, param_id);
+    BSLB_IdValPairPtr_t *const *found = BSLB_IdValPairPtrMap_cget(self->_params_in, param_id);
     return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
 }
 
@@ -183,7 +185,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, int64_t
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
-    BSLB_IdValPairPtr_t *const *found = BSLB_IdValPairPtrDict_cget(self->_results_in, result_id);
+    BSLB_IdValPairPtr_t *const *found = BSLB_IdValPairPtrMap_cget(self->_results_in, result_id);
     return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
 }
 

@@ -37,34 +37,6 @@
 
 #include "SamplePolicyProvider.h"
 
-typedef struct BSLP_InitParams_s
-{
-    // Params related to BIB
-    BSL_IdValPair_t *param_integ_scope_flag;
-    BSL_IdValPair_t *param_sha_variant;
-
-    // Params related to BCB
-    BSL_IdValPair_t *param_aad_scope_flag;
-    BSL_IdValPair_t *param_init_vector;
-    BSL_IdValPair_t *param_aes_variant;
-    BSL_IdValPair_t *param_use_wrapped_key;
-
-    // Params agnostic to BIB vs BCB
-    BSL_IdValPair_t *param_test_key;
-} BSLP_InitParams_t;
-
-/**
- * Initialize local policy provider parameters
- * @param[in,out] params structure to initialize
- */
-int BSLP_InitParams_Init(BSLP_InitParams_t *params);
-
-/**
- * Deinitialize local policy provider parameters
- * @param[in] params structure to deinitialize
- */
-void BSLP_InitParams_Deinit(BSLP_InitParams_t *params);
-
 /**
  * Initialize local policy provider from JSON file
  * @param[in] policy_cfg_path path to JSON file containing policy configuration

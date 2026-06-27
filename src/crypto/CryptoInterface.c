@@ -228,7 +228,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
 
     if (final_len > 0)
     {
-        BSL_Data_AppendFrom(&cek->raw, final_len, buf);
+        BSL_Data_AppendFrom(&cek->raw, (size_t)final_len, buf);
     }
 
     EVP_CIPHER_CTX_free(ctx);

@@ -57,20 +57,22 @@ typedef struct
     /// Execution return value for procedure interruption
     int retval;
 
-    /// True if #aad_scope came from an option
-    bool opt_aad_scope;
     /// Required AAD scope, naturally sorted
     BSLX_CoseSc_AadScope_t aad_scope;
+    /// True if #aad_scope came from an option
+    bool opt_aad_scope;
+    /// True if #aad_scope came from a parameter
+    bool msg_aad_scope;
+
+    /// True if #key_alg came from an option
+    bool opt_key_alg;
+    /// Optional key use algorithm from ::BSLX_CoseMsg_Alg_e
+    int64_t key_alg;
 
     /// True if #tgt_alg came from an option
     bool opt_tgt_alg;
-    /// Required content layer algorithm
+    /// Required content layer algorithm from ::BSLX_CoseMsg_Alg_e
     int64_t tgt_alg;
-
-    /// True if #recip_alg came from an option
-    bool opt_recip_alg;
-    /// Optional recipient layer algorithm
-    int64_t recip_alg;
 
     /// Required option for KID
     const BSL_IdValPair_t *kid;
@@ -161,7 +163,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
 {
     const BSL_IdValPair_t *opt;
 
-    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_KEYID);
+    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_KEY_ID);
     if (opt)
     {
         BSL_Data_t kid;
@@ -200,17 +202,17 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         }
     }
 
-    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_RECIP_ALG);
+    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_KEY_ALG);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->recip_alg))
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->key_alg))
         {
             BSL_LOG_ERR("Invalid target algorithm value");
             self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
         {
-            self->opt_recip_alg = true;
+            self->opt_key_alg = true;
         }
     }
 
@@ -753,11 +755,27 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
         }
         else
         {
-            res = BSL_CBOR_Decode(&enc_data, (BSL_CBOR_Decode_f)&BSLX_CoseSc_AadScope_Decode, &ctx->aad_scope);
+            BSLX_CoseSc_AadScope_t msg_scope;
+            BSLX_CoseSc_AadScope_init(msg_scope);
+            res = BSL_CBOR_Decode(&enc_data, (BSL_CBOR_Decode_f)&BSLX_CoseSc_AadScope_Decode, &msg_scope);
             if (BSL_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed to decode AAD Scope parameter");
                 ctx->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                BSLX_CoseSc_AadScope_clear(msg_scope);
+            }
+            else
+            {
+                if (ctx->opt_aad_scope && !BSLX_CoseSc_AadScope_equal_p(ctx->aad_scope, msg_scope))
+                {
+                    BSL_LOG_ERR("Mismatch of AAD Scope parameter");
+                    ctx->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                }
+                else
+                {
+                    BSLX_CoseSc_AadScope_move(ctx->aad_scope, msg_scope);
+                    ctx->msg_aad_scope = true;
+                }
             }
         }
     }
@@ -827,9 +845,10 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
     {
         if (ctx.is_source)
         {
-            if (ctx.opt_recip_alg)
+            if (ctx.opt_key_alg)
             {
-                // TODO has recipient layer
+                // has a recipient layer
+                //                BSLX_CoseSc_Mac_Source(&ctx);
             }
             else
             {

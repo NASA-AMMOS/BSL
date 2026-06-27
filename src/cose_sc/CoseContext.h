@@ -48,19 +48,19 @@ enum BSLX_CoseSC_Option_e
      * the recipient layer, otherwise it will be used for a single-layer
      * message.
      */
-    BSLX_COSESC_OPTION_KEYID,
+    BSLX_COSESC_OPTION_KEY_ID,
+    /** Optional recipient algorithm as an integer.
+     * The value is a COSE algorithm code point (::BSLX_CoseMsg_Alg_e).
+     * Optional for source and optional filter for verifier/acceptor.
+     */
+    BSLX_COSESC_OPTION_KEY_ALG,
     /** Content-layer algorithm as an integer.
      * The value is a COSE algorithm code point (::BSLX_CoseMsg_Alg_e).
      * Required for source and optional filter for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_TGT_ALG,
-    /** Optional recipient algorithm as an integer.
-     * The value is a COSE algorithm code point (::BSLX_CoseMsg_Alg_e).
-     * Optional for source and optional filter for verifier/acceptor.
-     */
-    BSLX_COSESC_OPTION_RECIP_ALG,
-    /** AAD Scope as a raw ::BSLX_CoseSc_AadScope_t
-     * The value is encoded CBOR interpreted according to COSE context draft.
+    /** AAD Scope as raw encoded data.
+     * The value is encoded CBOR interpreted as ::BSLX_CoseSc_AadScope_t.
      * Optional for source, optional exact-match for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_AAD_SCOPE,

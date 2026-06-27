@@ -210,7 +210,7 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, BSL_BundleRef_t *b
 
         // index by ID
         const BSL_IdValPair_t *param = BSLB_IdValPairPtr_cref(*ptr);
-        BSLB_IdValPairPtrDict_set_at(sec_oper->_params_in, param->id, *ptr);
+        BSLB_IdValPairPtrMap_set_at(sec_oper->_params_in, param->id, *ptr);
     }
 
     sec_oper->_target_index = 0;
@@ -234,7 +234,7 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, BSL_BundleRef_t *b
 
             // index by ID
             const BSL_IdValPair_t *result = BSLB_IdValPairPtr_cref(*ptr);
-            BSLB_IdValPairPtrDict_set_at(sec_oper->_results_in, result->id, *ptr);
+            BSLB_IdValPairPtrMap_set_at(sec_oper->_results_in, result->id, *ptr);
         }
 
         // first one wins

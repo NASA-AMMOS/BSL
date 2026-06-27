@@ -124,7 +124,7 @@ void test_AppendixA_Example1_BIB_Source(void)
         {
             BSL_Data_t kid;
             BSL_Data_InitView(&kid, strlen(exA_1_kid), (BSL_DataPtr_t)exA_1_kid);
-            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEYID, kid);
+            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEY_ID, kid);
         }
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
@@ -252,7 +252,7 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         {
             BSL_Data_t kid;
             BSL_Data_InitView(&kid, strlen(opt_key_id), (BSL_DataPtr_t)opt_key_id);
-            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEYID, kid);
+            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEY_ID, kid);
         }
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
