@@ -30,6 +30,9 @@
 
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
+#include <backend/CBOR.h>
+
+#include <m-bptree.h>
 
 #ifdef __cplusplus
 extern "C" {

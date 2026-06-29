@@ -459,16 +459,17 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
         BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
         for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i++)
         {
-            memset(outcome, 0, BSL_SecOutcome_Sizeof());
-
-            BSL_SecOper_t          *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
-            const BSL_SecCtxDesc_t *sec_ctx  = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
-            ASSERT_PROPERTY(sec_ctx != NULL);
-
+            BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
             BSL_SecOutcome_Init(outcome, sec_oper);
+            const BSL_SecCtxDesc_t *sec_ctx = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
 
-            int errcode = -1;
-            if (BSL_SecOper_IsBIB(sec_oper))
+            int errcode;
+            if (!sec_ctx)
+            {
+                BSL_LOG_CRIT("Unknown security context %" PRId64, sec_oper->context_id);
+                errcode = BSL_REASONCODE_FAILED_SECOP;
+            }
+            else if (BSL_SecOper_IsBIB(sec_oper))
             {
                 if (BSL_SecOper_IsRoleSource(sec_oper))
                 {

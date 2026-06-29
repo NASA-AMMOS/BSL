@@ -260,15 +260,15 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 
 #define CHK_POSTCONDITION(expr) CHK_TEMPL(expr, "Postcondition Failed: Did not satisfy", BSL_ERR_FAILURE)
 
-#define ASSERT_TEMPL(expr, msg)                       \
-    do                                                \
-    {                                                 \
-        if (!LIKELY(expr))                            \
-        {                                             \
-            fprintf(stderr, "%s (%s)\n", msg, #expr); \
-            abort();                                  \
-        }                                             \
-    }                                                 \
+#define ASSERT_TEMPL(expr, msg)                                                    \
+    do                                                                             \
+    {                                                                              \
+        if (!LIKELY(expr))                                                         \
+        {                                                                          \
+            fprintf(stderr, "At %s:%d %s (%s)\n", __FILE__, __LINE__, msg, #expr); \
+            abort();                                                               \
+        }                                                                          \
+    }                                                                              \
     while (0)
 
 #define ASSERT_ARG_EXPR(expr) ASSERT_TEMPL(expr, "Panic: Argument expression check failed to satisfy")

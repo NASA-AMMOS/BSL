@@ -26,16 +26,19 @@
 
 #include "key_registry.h"
 #include "text_util.h"
+#include <backend/CBOR.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
 
-int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
+static int mock_bpa_key_registry_init_json(const char *path)
 {
+    int retval = BSL_SUCCESS;
 
-    int          retval = 0;
-    json_t      *root;
     json_error_t err;
 
-    BSL_LOG_INFO("Reading keys from %s", pp_cfg_file_path);
-    root = json_load_file(pp_cfg_file_path, 0, &err);
+    json_t *root = json_load_file(path, 0, &err);
     if (!root)
     {
         BSL_LOG_ERR("JSON error: line %d: %s", err.line, err.text);
@@ -120,6 +123,161 @@ int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
     }
 
     json_decref(root);
+    return retval;
+}
+
+/// Match ::BSL_CBOR_Decode_f signature
+static int mock_bpa_key_registry_init_cbor_decode(QCBORDecodeContext *dec, const void *obj _U_)
+{
+    int retval = BSL_SUCCESS;
+
+    QCBORItem item;
+    QCBORDecode_EnterArray(dec, NULL);
+
+    // array-of-key-maps
+    while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
+    {
+        bool       has_kty = false;
+        int64_t    kty     = 0;
+        bool       has_alg = false;
+        int64_t    alg     = 0;
+        UsefulBufC kid     = NULLUsefulBufC;
+        UsefulBufC k_data  = NULLUsefulBufC;
+
+        QCBORDecode_EnterArray(dec, NULL); // using QCBOR_DECODE_MODE_MAP_AS_ARRAY
+
+        while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
+        {
+            int64_t label;
+            QCBORDecode_GetInt64(dec, &label);
+            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+            {
+                BSL_LOG_ERR("Unable to get key label");
+                break;
+            }
+            BSL_LOG_DEBUG("got label %" PRId64, label);
+
+            switch (label)
+            {
+                case 1: // kty
+                    QCBORDecode_GetInt64(dec, &kty);
+                    has_kty = true;
+                    break;
+                case 2: // kid
+                    QCBORDecode_GetByteString(dec, &kid);
+                    break;
+                case 3: // alg
+                    QCBORDecode_GetInt64(dec, &alg);
+                    has_alg = true;
+                    break;
+                case -1:
+                    if (has_kty && (kty == 4))
+                    {
+                        QCBORDecode_GetByteString(dec, &k_data);
+                    }
+                    break;
+                default:
+                    // consume but ignore
+                    QCBORDecode_VGetNextConsume(dec, &item);
+                    break;
+            }
+            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+            {
+                BSL_LOG_ERR("Unable to get key value");
+                break;
+            }
+
+            if (has_kty && (kty != 4))
+            {
+                BSL_LOG_WARNING("Ignoring non-symmetric key type %" PRId64, kty);
+                break;
+            }
+        }
+        QCBORDecode_ExitArray(dec);
+
+        // If valid enough to store
+        if (has_kty && kid.ptr && k_data.ptr)
+        {
+            BSL_Data_t kid_view;
+            BSL_Data_InitView(&kid_view, kid.len, (BSL_DataPtr_t)kid.ptr);
+
+            retval = BSL_Crypto_AddRegistryKey(&kid_view, k_data.ptr, k_data.len);
+            BSL_LOG_DEBUG("Adding key result %d", retval);
+            if (BSL_SUCCESS != retval)
+            {
+                BSL_LOG_ERR("Unable to store key");
+                break;
+            }
+            (void)has_alg;
+        }
+    }
+    QCBORDecode_ExitArray(dec);
+    return retval;
+}
+
+static int mock_bpa_key_registry_init_cbor(const char *path)
+{
+    int infd = open(path, O_RDONLY);
+    if (infd < 0)
+    {
+        BSL_LOG_ERR("Failed to open input file");
+        return BSL_ERR_DECODING;
+    }
+
+    struct stat sb;
+    if ((fstat(infd, &sb) < 0) || (sb.st_size == 0))
+    {
+        BSL_LOG_ERR("Error getting file size");
+        close(infd);
+        return BSL_ERR_DECODING;
+    }
+
+    void *data = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, infd, 0);
+    if (!data)
+    {
+        BSL_LOG_ERR("Error in mmap");
+        close(infd);
+        return BSL_ERR_DECODING;
+    }
+
+    BSL_Data_t view;
+    BSL_Data_InitView(&view, sb.st_size, (BSL_DataPtr_t)data);
+
+    int retval = BSL_CBOR_Decode(&view, &mock_bpa_key_registry_init_cbor_decode, NULL);
+
+    if (munmap(data, sb.st_size) < 0)
+    {
+        BSL_LOG_ERR("Error in munmap");
+    }
+    close(infd);
+    return retval;
+}
+
+int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
+{
+
+    int retval = BSL_SUCCESS;
+
+    BSL_LOG_INFO("Reading keys from %s", pp_cfg_file_path);
+    m_string_t path;
+    m_string_init_set_cstr(path, pp_cfg_file_path);
+    bool is_json = m_string_end_with_str_p(path, ".json");
+    bool is_cbor = m_string_end_with_str_p(path, ".cbor");
+    m_string_clear(path);
+
+    if (is_json)
+    {
+        retval = mock_bpa_key_registry_init_json(pp_cfg_file_path);
+    }
+    else if (is_cbor)
+    {
+        retval = mock_bpa_key_registry_init_cbor(pp_cfg_file_path);
+    }
+    else
+    {
+        BSL_LOG_ERR("Unhandled key file extension for %s", pp_cfg_file_path);
+        retval = BSL_ERR_ARG_INVALID;
+    }
 
     return retval;
 }

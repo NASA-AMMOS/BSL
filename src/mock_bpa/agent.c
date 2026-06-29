@@ -29,6 +29,7 @@
 #include <backend/UtilDefs_SeqReadWrite.h>
 #include <default_sc/DefaultSecContext.h>
 #include <default_sc/rfc9173.h>
+#include <cose_sc/CoseContext.h>
 #include <policy_provider/SamplePolicyProvider.h>
 #include <errno.h>
 #include <poll.h>
@@ -503,15 +504,24 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent, BSLP_PolicyProvider_t **policy)
             retval = 3;
         }
 
-        BSL_SecCtxDesc_t bib_sec_desc;
-        bib_sec_desc.execute  = BSLX_BIB_Execute;
-        bib_sec_desc.validate = BSLX_BIB_Validate;
-        ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, RFC9173_CONTEXTID_BIB_HMAC_SHA2, bib_sec_desc));
-
-        BSL_SecCtxDesc_t bcb_sec_desc;
-        bcb_sec_desc.execute  = BSLX_BCB_Execute;
-        bcb_sec_desc.validate = BSLX_BCB_Validate;
-        ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, RFC9173_CONTEXTID_BCB_AES_GCM, bcb_sec_desc));
+        {
+            BSL_SecCtxDesc_t sc_desc;
+            sc_desc.execute  = BSLX_BIB_Execute;
+            sc_desc.validate = BSLX_BIB_Validate;
+            ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, RFC9173_CONTEXTID_BIB_HMAC_SHA2, sc_desc));
+        }
+        {
+            BSL_SecCtxDesc_t sc_desc;
+            sc_desc.execute  = BSLX_BCB_Execute;
+            sc_desc.validate = BSLX_BCB_Validate;
+            ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, RFC9173_CONTEXTID_BCB_AES_GCM, sc_desc));
+        }
+        {
+            BSL_SecCtxDesc_t sc_desc;
+            sc_desc.execute  = BSLX_CoseSc_Execute;
+            sc_desc.validate = BSLX_CoseSc_Validate;
+            ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, BSLX_COSESC_CTX_ID, sc_desc));
+        }
     }
 
     *policy              = BSLP_PolicyProvider_Init(1);

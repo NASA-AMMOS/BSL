@@ -200,8 +200,15 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
 {
     if (0 == strcmp(id_str, "key_id"))
     {
+        const char *val_str = json_string_value(value);
+        if (!val_str)
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+        BSL_Data_t as_bytes = BSL_DATA_INIT_VIEW_CSTR(val_str);
+
         BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_KEY_ID);
-        BSL_IdValPair_SetTextstr(opt, BSLX_COSESC_OPTION_KEY_ID, json_string_value(value));
+        BSL_IdValPair_SetBytestr(opt, BSLX_COSESC_OPTION_KEY_ID, as_bytes);
     }
     else if (0 == strcmp(id_str, "target_alg"))
     {
@@ -302,8 +309,8 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
     const json_t *filter = json_object_get(policyrule, "filter");
     if (!filter || !json_is_object(filter))
     {
-    BSL_LOG_ERR("Invalid filter attribute");
-    return BSL_ERR_POLICY_CONFIG;
+        BSL_LOG_ERR("Invalid filter attribute");
+        return BSL_ERR_POLICY_CONFIG;
     }
     else
     {

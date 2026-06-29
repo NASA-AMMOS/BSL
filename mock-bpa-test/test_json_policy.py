@@ -22,7 +22,7 @@
 from _test_util import _TestCase, DataFormat, BundleDestLoc
 from test_bpa import TestAgent
 
-# Test Cases utilizing JSON policy definitions
+# Test Cases utilizing JSON policy definitions with the Default contexts
 
 
 class Test_ION_JSON_Policy(TestAgent):

@@ -67,10 +67,10 @@ typedef struct BSL_Data_s
 /** Static initializer for a view on a static text string.
  * @sa BSL_Data_InitView() BSL_Data_SetViewCstr()
  */
-#define BSL_DATA_INIT_VIEW_CSTR(cstr)                                   \
-    (BSL_Data_t)                                                        \
-    {                                                                   \
-        .owned = false, .ptr = (BSL_DataPtr_t)cstr, .len = strlen(cstr) \
+#define BSL_DATA_INIT_VIEW_CSTR(cstr)                                                    \
+    (BSL_Data_t)                                                                         \
+    {                                                                                    \
+        .owned = false, .ptr = (BSL_DataPtr_t)(cstr), .len = ((cstr) ? strlen(cstr) : 0) \
     }
 
 /** Initialize an empty data struct.
