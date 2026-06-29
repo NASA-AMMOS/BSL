@@ -300,7 +300,12 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
 
     // filter attr
     const json_t *filter = json_object_get(policyrule, "filter");
-    if (filter && json_is_object(filter))
+    if (!filter || !json_is_object(filter))
+    {
+    BSL_LOG_ERR("Invalid filter attribute");
+    return BSL_ERR_POLICY_CONFIG;
+    }
+    else
     {
         BSL_LOG_DEBUG("filter:");
 
@@ -433,11 +438,6 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         const json_int_t sc_id_l = json_integer_value(sc_id);
         BSL_LOG_DEBUG("     sc_id    : %" JSON_INTEGER_FORMAT, sc_id_l);
     }
-    else
-    {
-        BSL_LOG_DEBUG("NO FILTER");
-        return BSL_ERR_POLICY_CONFIG;
-    }
 
     // es_ref
     const json_t *es_ref = json_object_get(policyrule, "es_ref");
@@ -478,7 +478,13 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
 
     // spec attr
     const json_t *spec = json_object_get(policyrule, "spec");
-    if (spec && json_is_object(spec))
+    if (!spec && !json_is_object(spec))
+    {
+        BSL_LOG_ERR("Invalid spec attribute");
+        BSLB_IdValPairPtrMap_clear(options);
+        return BSL_ERR_POLICY_CONFIG;
+    }
+    else
     {
         BSL_LOG_DEBUG("spec:");
 
@@ -554,7 +560,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
                         res = BSLP_PolicyOptions_SC3(options, id_str, value);
                         break;
                     default:
-                        BSL_LOG_CRIT("Unhandled context ID %" PRId64, sec_ctx_id);
+                        BSL_LOG_CRIT("Unhandled context ID %" PRId64, sc_id_l);
                         res = BSL_ERR_POLICY_CONFIG;
                         break;
                 }
