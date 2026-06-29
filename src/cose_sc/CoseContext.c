@@ -263,7 +263,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
             else
             {
                 self->key_alg = key_alg_int;
-                BSL_LOG_DEBUG("Using key algorithm code %"PRId64, self->key_alg);
+                BSL_LOG_DEBUG("Using key algorithm code %" PRId64, self->key_alg);
             }
         }
         else if (!(self->opt_key_alg))
