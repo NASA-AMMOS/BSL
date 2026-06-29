@@ -23,8 +23,9 @@
  * Backend cryptography implementation
  * @ingroup backend_dyn
  */
-#include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
+#include <BPSecLib_Private.h>
+#include <backend/IdValPair.h>
 
 #include <m-dict.h>
 #include <m-shared-ptr.h>
@@ -45,6 +46,8 @@ typedef struct BSL_CryptoKey_s
     EVP_PKEY *pkey;
     /// Pointer to raw key information (used in cipher ctx)
     BSL_Data_t raw;
+    /// Additional parameter dictionary
+    BSLB_IdValPairPtrMap_t params;
     /// Statistics related to this key
     BSL_Crypto_KeyStats_t stats;
 } BSL_CryptoKey_t;
@@ -55,6 +58,7 @@ static void BSL_CryptoKey_Init(BSL_CryptoKey_t *key)
 
     key->pkey = NULL;
     BSL_Data_Init(&(key->raw));
+    BSLB_IdValPairPtrMap_init(key->params);
 
     for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
     {
@@ -72,6 +76,7 @@ static void BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
         key->pkey = NULL;
     }
     BSL_Data_Deinit(&(key->raw));
+    BSLB_IdValPairPtrMap_clear(key->params);
 
     for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
     {
@@ -702,7 +707,8 @@ int BSL_Crypto_GenIV(void *buf, int size)
     return 0;
 }
 
-int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len)
+int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len,
+                              BSL_Crypto_KeyHandle_t *key_out)
 {
     ASSERT_ARG_NONNULL(keyid);
     CHK_ARG_NONNULL(secret);
@@ -719,6 +725,7 @@ int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, si
     if ((ecode = BSL_Data_CopyFrom(&key->raw, secret_len, secret)) < 0)
     {
         BSL_LOG_ERR("Failed to copy key");
+        BSL_CryptoKeyPtr_release(key_ptr);
         return ecode;
     }
 
@@ -730,9 +737,54 @@ int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, si
     BSL_CryptoKeyDict_set_at(StaticKeyRegistry, keyid_str, key_ptr);
     pthread_mutex_unlock(&StaticCryptoMutex);
 
+    if (key_out)
+    {
+        *key_out = key;
+    }
     BSL_CryptoKeyPtr_release(key_ptr);
     m_bstring_clear(keyid_str);
     return 0;
+}
+
+BSL_IdValPair_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
+{
+    BSL_CryptoKey_t *key = handle;
+
+    BSL_IdValPair_t *retval = NULL;
+    if (key)
+    {
+        BSLB_IdValPairPtr_t *param_ptr;
+
+        BSLB_IdValPairPtr_t **found = BSLB_IdValPairPtrMap_get(key->params, param_id);
+        if (found)
+        {
+            param_ptr = *found;
+        }
+        else
+        {
+            param_ptr = BSLB_IdValPairPtr_new();
+            BSLB_IdValPairPtrMap_set_at(key->params, param_id, param_ptr);
+        }
+
+        retval = BSLB_IdValPairPtr_ref(param_ptr);
+    }
+    return retval;
+}
+
+const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
+{
+    const BSL_CryptoKey_t *key = handle;
+
+    const BSL_IdValPair_t *retval = NULL;
+    if (key)
+    {
+        BSLB_IdValPairPtr_t **found = BSLB_IdValPairPtrMap_get(key->params, param_id);
+        if (found)
+        {
+            retval = BSLB_IdValPairPtr_ref(*found);
+        }
+    }
+    return retval;
 }
 
 int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, void **key_handle)

@@ -27,6 +27,7 @@
 #include "key_registry.h"
 #include "text_util.h"
 #include <backend/CBOR.h>
+#include <cose_sc/CoseMsg.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -110,7 +111,7 @@ static int mock_bpa_key_registry_init_json(const char *path)
             const size_t   k_len = m_bstring_size(k_data);
             const uint8_t *k_ptr = m_bstring_view(k_data, 0, k_len);
 
-            retval = BSL_Crypto_AddRegistryKey(&kid_view, k_ptr, k_len);
+            retval = BSL_Crypto_AddRegistryKey(&kid_view, k_ptr, k_len, NULL);
         }
         m_bstring_clear(k_data);
         m_string_clear(k_text);
@@ -159,14 +160,14 @@ static int mock_bpa_key_registry_init_cbor_decode(QCBORDecodeContext *dec, const
 
             switch (label)
             {
-                case 1: // kty
+                case BSLX_COSEMSG_KEY_PARAM_KTY:
                     QCBORDecode_GetInt64(dec, &kty);
                     has_kty = true;
                     break;
-                case 2: // kid
+                case BSLX_COSEMSG_KEY_PARAM_KID:
                     QCBORDecode_GetByteString(dec, &kid);
                     break;
-                case 3: // alg
+                case BSLX_COSEMSG_KEY_PARAM_ALG:
                     QCBORDecode_GetInt64(dec, &alg);
                     has_alg = true;
                     break;
@@ -200,15 +201,25 @@ static int mock_bpa_key_registry_init_cbor_decode(QCBORDecodeContext *dec, const
         {
             BSL_Data_t kid_view;
             BSL_Data_InitView(&kid_view, kid.len, (BSL_DataPtr_t)kid.ptr);
+            BSL_Crypto_KeyHandle_t handle;
 
-            retval = BSL_Crypto_AddRegistryKey(&kid_view, k_data.ptr, k_data.len);
+            retval = BSL_Crypto_AddRegistryKey(&kid_view, k_data.ptr, k_data.len, &handle);
             BSL_LOG_DEBUG("Adding key result %d", retval);
             if (BSL_SUCCESS != retval)
             {
                 BSL_LOG_ERR("Unable to store key");
                 break;
             }
-            (void)has_alg;
+
+            if (has_alg)
+            {
+                BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
+                                       BSLX_COSEMSG_KEY_PARAM_ALG, alg);
+            }
+            else
+            {
+                BSL_LOG_WARNING("COSE Key without an alg parameter");
+            }
         }
     }
     QCBORDecode_ExitArray(dec);

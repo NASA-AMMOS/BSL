@@ -219,7 +219,7 @@ class TestAgent(unittest.TestCase):
             LOGGER.info('Expected data:\n%s\n', expected_rx.hex())
             LOGGER.info('Received data:\n%s\n', rx_data.hex())
 
-            LOGGER.info('CBOR diagnostic of received data:\n%s\n', cbor2diag(rx_data))
+            LOGGER.debug('CBOR diagnostic of received data:\n%s\n', cbor2diag(rx_data))
 
             self.assertEqual(expected_rx.hex(), rx_data.hex())
 

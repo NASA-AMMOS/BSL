@@ -56,6 +56,16 @@ enum BSLX_CoseMsg_Alg_e
     BSLX_COSEMSG_ALG_HMAC_SHA_512_512 = 7,
 };
 
+/** Key parameter code points managed by IANA.
+ * https://www.iana.org/assignments/cose/cose.xhtml#key-common-parameters
+ */
+enum BSLX_CoseMsg_KeyParam_e
+{
+    BSLX_COSEMSG_KEY_PARAM_KTY = 1,
+    BSLX_COSEMSG_KEY_PARAM_KID = 2,
+    BSLX_COSEMSG_KEY_PARAM_ALG = 3,
+};
+
 /** @struct BSLX_CoseMsg_HdrMapTree_t
  * Defines an internal lookup dictionary for ::BSLB_IdValPairPtr_t pointers
  * which is sorted in CBOR deterministic order.

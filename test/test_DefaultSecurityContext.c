@@ -313,16 +313,14 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     {
         if (wrap)
         {
-            BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR("kek_wrap");
-            BSL_Crypto_AddRegistryKey(&key_id, kek_data.ptr, kek_data.len);
+            BSL_Crypto_AddRegistryKeyName("kek_wrap", kek_data.ptr, kek_data.len);
             BSL_IdValPair_SetTextstr(&bibcontext.opt_test_key, BSLX_BIB_OPT_KEY_ID, "kek_wrap");
             BSL_IdValPair_SetInt64(&bibcontext.opt_use_key_wrap, BSLX_BIB_OPT_USE_KEY_WRAP, 1);
             BSL_Crypto_SetRngGenerator(rfc3394_cek);
         }
         else
         {
-            BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR("cek_wrap");
-            BSL_Crypto_AddRegistryKey(&key_id, cek_data.ptr, cek_data.len);
+            BSL_Crypto_AddRegistryKeyName("cek_wrap", cek_data.ptr, cek_data.len);
             BSL_IdValPair_SetTextstr(&bibcontext.opt_test_key, BSLX_BIB_OPT_KEY_ID, "cek_wrap");
             BSL_IdValPair_SetInt64(&bibcontext.opt_use_key_wrap, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
         }

@@ -107,17 +107,25 @@ typedef struct BSL_Crypto_KeyStats_s
     uint64_t stats[BSL_CRYPTO_KEYSTATS_MAX_INDEX];
 } BSL_Crypto_KeyStats_t;
 
+/** Opaque handle for backend library objects for stateful processing.
+ */
+typedef void *BSL_Crypto_LibHandle_t;
+
+/** Opaque handle for key objects in the key store.
+ */
+typedef void *BSL_Crypto_KeyHandle_t;
+
 /**
  * Struct def for HMAC operation context
  */
 typedef struct BSL_AuthCtx_s
 {
     /// pointer to library specific data
-    void *libhandle;
+    BSL_Crypto_LibHandle_t libhandle;
     /// SHA variant of context
     BSL_CryptoCipherSHAVariant_e SHA_variant;
     /// Key handle used by context
-    void *keyhandle;
+    BSL_Crypto_KeyHandle_t keyhandle;
     /**
      * Block size used by backend
      * @note Private value
@@ -135,13 +143,13 @@ typedef struct BSL_AuthCtx_s
 typedef struct BSL_Cipher_s
 {
     /// pointer to library specific data
-    void *libhandle;
+    BSL_Crypto_LibHandle_t libhandle;
     /// indicates if operation is encryption or decryption
     BSL_CipherMode_e enc;
     /// AES variant of context
     BSL_CryptoCipherAESVariant_e AES_variant;
     /// Key handle used by context
-    void *keyhandle;
+    BSL_Crypto_KeyHandle_t keyhandle;
     /// block size of cipher context
     size_t block_size;
     /** Storage for input blocks.
@@ -187,7 +195,7 @@ void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn);
  * @return 0 if successful
  */
 BSL_REQUIRE_CHECK
-int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, void *keyhandle, BSL_CryptoCipherSHAVariant_e sha_var);
+int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_CryptoCipherSHAVariant_e sha_var);
 
 /**
  * Input data to HMAC sign to context
@@ -238,7 +246,7 @@ bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size
  * Key handle assumed to be generated, not present in key registry, and allocated with ::BSL_malloc().
  * @returns 0 if successfully cleared key handle
  */
-int BSL_Crypto_ClearGeneratedKeyHandle(void *keyhandle);
+int BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
 
 /**
  * Perform key wrap
@@ -249,16 +257,18 @@ int BSL_Crypto_ClearGeneratedKeyHandle(void *keyhandle);
  * @param[in,out] wrapped_key_handle output wrapped key (ciphertext) handle, allocated with ::BSL_malloc(). Set to NULL
  * if handle not needed.
  */
-int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_key, void **wrapped_key_handle);
+int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t cek_handle, BSL_Data_t *wrapped_key,
+                       BSL_Crypto_KeyHandle_t *wrapped_key_handle);
 
 /**
  * Perform key unwrap
  * CEK size expected to match size of KEK
  * @param[in] kek_handle key encryption key handle (decryption key)
  * @param[in] wrapped_key input wrapped key (ciphertext) bytes
- * @param[in,out] cek_handle output content encryption key (plaintext) handle, allocated with ::BSL_malloc()
+ * @param[in,out] cek_handle output content encryption key (plaintext) handle.
  */
-int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_handle);
+int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Data_t *wrapped_key,
+                         BSL_Crypto_KeyHandle_t *cek_handle);
 
 /**
  * Initialize crypto context resources and set as encoding or decoding
@@ -279,7 +289,7 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
  * @param[in, out] key_handle pointer to pointer for new key handle
  * @return Zero upon success.
  */
-int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, void **key_handle);
+int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *key_handle);
 
 /** Erase key entry from crypto library registry, if present
  *  @param[in] keyid key ID of key to remove
@@ -341,9 +351,9 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
 /**
  * Generate a new cryptographic key
  * @param[in] key_length length of new key. Should be 16 or 32
- * @param[in, out] key_out pointer to pointer for new key handle, allocated with ::BSL_malloc()
+ * @param[out] key_out pointer to pointer for new key handle.
  */
-int BSL_Crypto_GenKey(size_t key_length, void **key_out);
+int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out);
 
 /**
  * Generate initialization vector (IV) for AES-GCM for BCBs
@@ -355,14 +365,27 @@ int BSL_Crypto_GenIV(void *buf, int size);
 
 /**
  * Add a new key to the crypto key registry
- * @param keyid key ID that crypto functions will use to access key
- * @param secret raw key data
+ * @param[in] keyid key ID that crypto functions will use to access key
+ * @param[in] secret raw key data
  * @param secret_len length of raw key
+ * @param[out] key_out Optional pointer to pointer for new key handle.
  * @return Zero upon success.
  */
-int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len);
+int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len,
+                              BSL_Crypto_KeyHandle_t *key_out);
 
-// int BSL_Crypto_SetKeyParameter(const BSL_Data_t *keyid)
+/** Add a context-specific parameter to a known key.
+ *
+ * @param[in] keyid The key ID to update.
+ * @param[in] param_id The parameter to access.
+ * If the parameter does not already exist it will be created.
+ * @return Non-NULL pointer if successful.
+ */
+BSL_IdValPair_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
+
+/** @overload for read-only access.
+ */
+const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
 /**
  * Retrieve statistics related to a crypto key

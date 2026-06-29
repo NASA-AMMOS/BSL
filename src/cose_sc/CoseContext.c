@@ -85,7 +85,7 @@ typedef struct
     BSL_CanonicalBlock_t target_block;
 
     /// Top-layer key to use
-    void *keyhandle;
+    BSL_Crypto_KeyHandle_t keyhandle;
 
     /// MAC processing state, may be NULL
     BSL_AuthCtx_t *mac_ctx;
@@ -235,6 +235,41 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
             {
                 self->opt_aad_scope = true;
             }
+        }
+    }
+
+    if (!self->keyhandle)
+    {
+        BSL_LOG_ERR("COSE key is not supplied or not found");
+        self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+    }
+    else
+    {
+        const BSL_IdValPair_t *param = BSL_Crypto_GetKeyParameter(self->keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG);
+        if (param)
+        {
+            int64_t key_alg_int;
+            if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(param, &key_alg_int))
+            {
+                BSL_LOG_ERR("Invalid key algorithm value");
+                self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
+            else if (self->opt_key_alg && (self->key_alg != key_alg_int))
+            {
+                BSL_LOG_ERR("Option key algorithm value %" PRId64 " differs from key store %" PRId64, self->key_alg,
+                            key_alg_int);
+                self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
+            else
+            {
+                self->key_alg = key_alg_int;
+                BSL_LOG_DEBUG("Using key algorithm code %"PRId64, self->key_alg);
+            }
+        }
+        else if (!(self->opt_key_alg))
+        {
+            BSL_LOG_ERR("Option for key algorithm not supplied and key has no alg parameter");
+            self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
 }

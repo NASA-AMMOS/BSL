@@ -108,7 +108,7 @@ void test_AppendixA_Example1_BIB_Source(void)
         BSL_Data_t keymat;
         BSL_Data_Init(&keymat);
         TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_1_sk));
-        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len);
+        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, NULL);
         BSL_Data_Deinit(&keymat);
     }
 
@@ -220,7 +220,7 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         BSL_Data_t keymat;
         BSL_Data_Init(&keymat);
         TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_1_sk));
-        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len);
+        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, NULL);
         BSL_Data_Deinit(&keymat);
     }
 

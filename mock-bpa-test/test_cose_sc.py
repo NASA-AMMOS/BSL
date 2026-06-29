@@ -27,9 +27,8 @@ from test_bpa import TestAgent
 
 class TestCoseScJsonPolicy(TestAgent):
 
-    def test_exampleA_1_source(self):
+    def test_exampleA_1_Mac0_source(self):
         self._single_test(_TestCase(
-            # A bundle with just the **payload** block
             input_data='''
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
@@ -53,10 +52,8 @@ class TestCoseScJsonPolicy(TestAgent):
             expected_output_format=DataFormat.CBORDIAG
         ))
 
-    def test_ccsds_interop_bib_source(self):
-        self.skipTest("Need to import ESA test policy")
+    def test_ccsds_interop_Mac0_source(self):
         self._single_test(_TestCase(
-            # A bundle with just the **payload** block
             input_data='''
 [_
     [7, 0, 1, [2, [4, 9]], [2, [1, 1]], [2, [1, 1]], [819280839425, 0], 8640000000, h'179D'],
@@ -68,9 +65,17 @@ class TestCoseScJsonPolicy(TestAgent):
 ''',
             # Bundle with BIB over targets 2
             expected_output='''
-[_ [7, 0, 1, [2, [4, 9]], [2, [1, 1]], [2, [1, 1]], [819280839425, 0], 8640000000, h'179D'], [11, 5, 0, 0, << [1, 2], 3, 1, [2, [1, 0]], [[5, {0: 1, -1: 1}]], [[[97, << [<< {1: 6} >>, {}, null, h'9AC51C5D72F96E44099C521298691C087ECF7DA8EC99A9CFB8A6FCB5A44A4B054FF1669289F7EAF7719EBBF95FBABB3A', [['', {1: -5, 4: 'ExampleA.5'}, h'442B1844E188743A7569623749A0FBE09C8540EEEC72EE419744EAA8E70B8FFAD13FDE7C1FADCB4EDC68A641A6191683C43D87990F579775']]] >>]], [[17, << [<< {1: 6} >>, {4: 'ExampleA.1'}, null, h'8C552E8B1FDC5021394961090323EB8A15CD0D451A843219BDB501583EF4773A632AABFC17551C081CD919FD7DEFD105'] >>]]] >>], [6, 4, 1, 0, << [2, [1, 0]] >>], [10, 3, 1, 0, << [3, 1] >>], [7, 2, 1, 0, << 63000 >>], [1, 1, 0, 0, 'hello']]
+[_
+    [7, 0, 1, [2, [4, 9]], [2, [1, 1]], [2, [1, 1]], [819280839425, 0], 8640000000, h'179D'],
+#    [11, 5, 0, 0, << [1, 2], 3, 1, [2, [1, 0]], [[5, {0: 1, -1: 1}]], [[[97, << [<< {1: 6} >>, {}, null, h'9AC51C5D72F96E44099C521298691C087ECF7DA8EC99A9CFB8A6FCB5A44A4B054FF1669289F7EAF7719EBBF95FBABB3A', [['', {1: -5, 4: 'ExampleA.5'}, h'442B1844E188743A7569623749A0FBE09C8540EEEC72EE419744EAA8E70B8FFAD13FDE7C1FADCB4EDC68A641A6191683C43D87990F579775']]] >>]], [[17, << [<< {1: 6} >>, {4: 'ExampleA.1'}, null, h'8C552E8B1FDC5021394961090323EB8A15CD0D451A843219BDB501583EF4773A632AABFC17551C081CD919FD7DEFD105'] >>]]] >>],
+    [11, 5, 0, 0, << [2], 3, 1, [2, [1, 0]], [[5, {0: 1, -1: 1}]], [[[17, << [<< {1: 6} >>, {4: 'ExampleA.1'}, null, h'8C552E8B1FDC5021394961090323EB8A15CD0D451A843219BDB501583EF4773A632AABFC17551C081CD919FD7DEFD105'] >>]]] >>],
+    [6, 4, 1, 0, << [2, [1, 0]] >>],
+    [10, 3, 1, 0, << [3, 1] >>],
+    [7, 2, 1, 0, << 63000 >>],
+    [1, 1, 0, 0, 'hello']]
 ''',
-            policy_config='data/cose-sc/policy-exA.1.json',
+            sec_src_eid='ipn:1.0',
+            policy_config='data/cose-sc/policy-interop-A.1.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
             is_working=True,

@@ -61,7 +61,7 @@ set_target_properties(bsl_crypto
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-target_link_libraries(bsl_crypto PUBLIC bsl_front)
+target_link_libraries(bsl_crypto PUBLIC bsl_front bsl_dynamic)
 target_link_libraries(bsl_crypto PUBLIC MLIB::mlib)
 target_link_libraries(bsl_crypto INTERFACE OpenSSL::Crypto)
 if(TARGET valgrind::valgrind)
