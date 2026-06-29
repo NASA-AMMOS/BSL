@@ -90,7 +90,7 @@ class TestAgent(unittest.TestCase):
 
         else:
             policy_config = "0x00"
-            key_set = "mock-bpa-test/key_set_1.json"
+            key_set = "data/key_set_1.json"
 
         arglist = [
             'bsl-mock-bpa',
@@ -102,7 +102,7 @@ class TestAgent(unittest.TestCase):
         ]
         arglist += ['-c'] if use_bcb_rng else []
         args = compose_args(arglist)
-        self._agent = CmdRunner(args, stderr=subprocess.STDOUT)
+        self._agent = CmdRunner(args, cwd=OWNPATH, stderr=subprocess.STDOUT)
 
         # Bind underlayer messaging
         self._ul_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
