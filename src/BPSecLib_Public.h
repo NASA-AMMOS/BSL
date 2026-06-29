@@ -21,8 +21,8 @@
  */
 
 /** @file
- * Single entry-point include file for all of the "Public" BPSec Lib (BSL) frontend API.
  * @ingroup frontend
+ * Single entry-point include file for all of the "Public" BPSec Lib (BSL) frontend API.
  * @details
  * This contains the interface for the BPA.
  *

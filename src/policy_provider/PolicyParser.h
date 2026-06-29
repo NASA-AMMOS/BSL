@@ -23,9 +23,11 @@
 /**
  * @file
  * @ingroup example_pp
+ * Entry point for the sample policy provider of the BSL.
+ * Configuration input is handled by @ref PolicyParser.h functions.
  */
-#ifndef BSLP_SAMPLE_POLICY_CONFIG_PARSER_H
-#define BSLP_SAMPLE_POLICY_CONFIG_PARSER_H
+#ifndef BSLP_POLICY_PARSER_H_
+#define BSLP_POLICY_PARSER_H_
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -37,16 +39,20 @@
 
 #include "SamplePolicyProvider.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialize local policy provider from JSON file
  * @param[in] policy_cfg_path path to JSON file containing policy configuration
  * @param[in,out] policy policy provider to configure. Must be initialize/allocated
  */
-int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_t *policy);
+int BSLP_PolicyParser_FromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_t *policy);
 
 /** Bitwise Diagram of the mock bpa config data structure:
  * @code{.unparsed}
- *                      uint32_t : BSLP_BitstringPolicyConfiguration_t
+ *                      uint32_t : BSLP_PolicyParser_BitstringConfig_t
  *
  *             [  x   x   x   x  |  x   x   x   x  |  x   x   x   x  |  x   x   x   x ]
  *             [ --------- unused -------]  |   |     [---]   [---]     [---]   |   |
@@ -73,13 +79,17 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
  *
  * @endcode
  */
-typedef uint32_t BSLP_BitstringPolicyConfiguration_t;
+typedef uint32_t BSLP_PolicyParser_BitstringConfig_t;
 
 /**
  * Initialize local policy provider from list of bit strings
- * @param[in] policies comma separated policy bit strings as described by @ref BSLP_BitstringPolicyConfiguration_t
+ * @param[in] policies comma separated policy bit strings as described by @ref BSLP_PolicyParser_BitstringConfig_t
  * @param[in,out] policy policy provider to configure. Must be initialize/allocated
  */
-int BSLP_RegisterPolicyFromBitstringList(const char *policies, BSLP_PolicyProvider_t *policy);
+int BSLP_PolicyParser_FromBitstringList(const char *policies, BSLP_PolicyProvider_t *policy);
 
+#ifdef __cplusplus
+} // extern C
 #endif
+
+#endif /* BSLP_POLICY_PARSER_H */

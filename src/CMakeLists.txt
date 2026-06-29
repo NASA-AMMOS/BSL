@@ -117,12 +117,12 @@ target_link_libraries(bsl_cose_sc PUBLIC qcbor::qcbor)
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyConfigParser.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/PolicyParser.h
 )
 
 set(BSL_SAMPLE_PP_C
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyConfigParser.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/PolicyParser.c
 )
 
 add_library(bsl_sample_pp)

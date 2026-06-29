@@ -71,10 +71,6 @@ enum BSLX_BCB_Options_e
      * @warning This should only be used for testing.
      */
     BSLX_BCB_OPT_WRAPPED_KEY,
-    /** Manually control the IV.
-     * @warning This should only be used for testing.
-     */
-    BSLX_BCB_OPT_IV,
 
     /// @brief A uint value from the choices ::rfc9173_bcb_aes_variant_e
     BSLX_BCB_OPT_AES_VARIANT,

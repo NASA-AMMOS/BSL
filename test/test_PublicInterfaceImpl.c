@@ -149,12 +149,6 @@ void setUp(void)
     BSL_IdValPair_SetInt64(&ctx.opt_aes_variant_256, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
     BSL_IdValPair_SetInt64(&ctx.opt_aad_scope_flag, BSLX_BCB_OPT_SCOPE, 0);
 
-    BSL_Data_t iv_data;
-    BSL_Data_Init(&iv_data);
-    iv_data.ptr = (uint8_t *)ApxA2_InitVec;
-    iv_data.len = sizeof(ApxA2_InitVec);
-    BSL_IdValPair_SetBytestr(&ctx.param_iv, BSLX_BCB_OPT_IV, iv_data);
-
     BSL_Data_t wrapkey_data;
     BSL_Data_Init(&wrapkey_data);
     wrapkey_data.ptr = (uint8_t *)ApxA2_WrappedKey;

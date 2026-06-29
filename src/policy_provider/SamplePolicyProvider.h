@@ -37,6 +37,10 @@
 #include <BPSecLib_Private.h>
 #include <backend/IdValPair.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** De-initialize policy provider user_data.
  *  Called during de-initialization of each library instance.
  *  @param user_data reference to shared data. Not owned by library context's policy provider
@@ -261,5 +265,9 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
 /// Provides ::BSL_PolicyFinalize_f
 int BSLP_FinalizePolicy(void *user_data, const BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle,
                         const BSL_SecurityResponseSet_t *response_output);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif // BSLP_SAMPLE_POLICY_PROVIDER_H

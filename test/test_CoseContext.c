@@ -137,26 +137,28 @@ void test_AppendixA_Example1_BIB_Source(void)
         BSL_IdValPair_Deinit(&option);
     }
     {
-        BSLX_CoseSc_AadScope_t scope;
-        BSLX_CoseSc_AadScope_init(scope);
-        BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
-        BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
-
-        BSL_Data_t value;
-        BSL_Data_Init(&value);
-        int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
-        if (BSL_SUCCESS != res)
-        {
-            TEST_FAIL_MESSAGE("Failed to encode AAD Scope");
-        }
-        BSLX_CoseSc_AadScope_clear(scope);
-
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
+        {
+            BSLX_CoseSc_AadScope_t scope;
+            BSLX_CoseSc_AadScope_init(scope);
+            BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
+            BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
+
+            BSL_Data_t value;
+            BSL_Data_Init(&value);
+            int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
+            if (BSL_SUCCESS != res)
+            {
+                TEST_FAIL_MESSAGE("Failed to encode AAD Scope");
+            }
+            BSLX_CoseSc_AadScope_clear(scope);
+
+            BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
+            BSL_Data_Deinit(&value);
+        }
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
-        BSL_Data_Deinit(&value);
     }
 
     BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());

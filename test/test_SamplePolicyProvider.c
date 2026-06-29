@@ -63,11 +63,10 @@ void tearDown(void)
 }
 
 /**
+ * @brief Purpose: Exercise the Rule and Predicate primitives to for BIB in a given bundle.
+ *
  * Creates a rule: At location "APPIN", Bundles FROM anywhere, Bundles TO anywhere,
  *                 must contain a BIB block covering the payload.
- */
-/**
- * @brief Purpose: Exercise the Rule and Predicate primitives to for BIB in a given bundle
  *
  * Steps:
  *  - Use an example Bundle with primary, payload, and BIB block over the payload (From RFC9173)

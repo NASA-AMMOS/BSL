@@ -95,6 +95,8 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   # Specific unit tests for ONLY the "Sample Policy Provider" module (Offered as example provider)
   add_unity_test(SOURCE test_SamplePolicyProvider.c)
   target_link_libraries(test_SamplePolicyProvider PUBLIC ${LIB_ORDERED})
+  add_unity_test(SOURCE test_PolicyParser.c)
+  target_link_libraries(test_PolicyParser PUBLIC ${LIB_ORDERED})
 
   # Specific tests for ONLY the "Default Security Context" module (Implementation of RFC9173)
   add_unity_test(SOURCE test_DefaultSecurityContext.c)

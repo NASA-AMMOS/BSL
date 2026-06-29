@@ -46,53 +46,6 @@
           }
         ]
       }
-    },
-    {
-      "policyrule": {
-        "desc": "Confidentiality source rule",
-        "filter": {
-          "rule_id": "2",
-          "role": "s",
-          "tgt": 1,
-          "loc": "appin",
-          "sc_id": 2
-        },
-        "spec": {
-          "svc": "bcb-confidentiality",
-          "sc_id": 2,
-          "sc_parms": [
-            {
-              "id": "key_name",
-              "value": "9103"
-            },
-            {
-              "id": "aes_variant",
-              "value": "1"
-            },
-            {
-              "id": "aad_scope",
-              "value": "0"
-            },
-            {
-              "id": "key_wrap",
-              "value": "1"
-            }
-          ]
-        },
-        "es_ref": "d_confidentiality",
-        "policy_action_on_fail": "delete_bundle"
-      },
-      "event_set": {
-        "es_ref": "d_confidentiality",
-        "events": [
-          {
-            "event_id": "sop_processed",
-            "actions": [
-              "remove_all_target_sops"
-            ]
-          }
-        ]
-      }
     }
   ]
 }
