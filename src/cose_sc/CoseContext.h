@@ -42,16 +42,17 @@ extern "C" {
 enum BSLX_CoseSC_Option_e
 {
     /** Key ID as a byte string.
-     * The value is a byte string.
+     * The value is a byte string (which may contain encoded UTF8 text).
      * Required for source and optional filter for verifier/acceptor.
-     * If ::BSLX_COSESC_OPTION_RECIP_ALG is present the key will be used for
-     * the recipient layer, otherwise it will be used for a single-layer
-     * message.
+     * If they key algorithm is different than ::BSLX_COSESC_OPTION_TGT_ALG option,
+     * the key will be used for the recipient layer, otherwise it will be used
+     * for a single-layer message.
      */
     BSLX_COSESC_OPTION_KEY_ID,
     /** Optional recipient algorithm as an integer.
      * The value is a COSE algorithm code point (::BSLX_CoseMsg_Alg_e).
      * Optional for source and optional filter for verifier/acceptor.
+     * When not present, the key itself must have an algorithm parameter.
      */
     BSLX_COSESC_OPTION_KEY_ALG,
     /** Content-layer algorithm as an integer.

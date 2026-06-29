@@ -108,7 +108,7 @@ static void show_usage(const char *argv0)
             "    {-r <address:port>} the neighbor UDP address\n"
             "    {-e <app-EID>} the overlayer application BPv7 EID\n"
             "    {-s <sec-src-EID>} the security source BPv7 EID\n"
-            "    [-p <hex-list>] comma delimited hex list of <BSLP_PolicyParser_BitstringConfig_t>, "
+            "    [-p <hex-list>] comma delimited list of hex integers <BSLP_PolicyParser_BitstringConfig_t>, "
             "e.g. '0x000f,0x0021' (default: none)\n"
             "    [-j <file-path>] path to JSON file containing policy configuration (default: none)\n"
             "    [-k <file-path>] path to JSON file containing JWKs to register (default: none)\n"

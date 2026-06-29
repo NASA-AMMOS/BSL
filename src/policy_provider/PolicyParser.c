@@ -42,7 +42,7 @@ static int BSLP_GetTextAsInt(int64_t *as_int, const char *ptr, size_t len)
     return BSL_SUCCESS;
 }
 
-/** Read a JSON value as long integer, either natively or from text.
+/** Read a JSON value as long integer, either directly or from text.
  * @param[in] value The value to interpret.
  * @param[out] as_int The output value.
  */
@@ -67,7 +67,7 @@ static int BSLP_GetNumberInt(const json_t *value, int64_t *as_int)
     return BSL_SUCCESS;
 }
 
-/** Read a JSON value as a boolean, either natively or from text.
+/** Read a JSON value as a boolean, either directly or from text.
  * @param[in] value The value to interpret.
  * @param[out] as_bool The output value.
  */

@@ -144,7 +144,7 @@ int BSL_Data_AppendFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src);
  */
 int BSL_Data_SetView(BSL_Data_t *data, size_t len, BSL_DataPtr_t src);
 
-/** Set a data struct to be a view onto an existing null-termianted string.
+/** Set a data struct to be a view onto an existing null-terminated string.
  *
  * @param[in,out] data The data to create a view from, which must not be NULL.
  * @param[in] cstr The C string pointer to create a view on, which must not be NULL.

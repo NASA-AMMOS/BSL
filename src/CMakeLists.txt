@@ -134,6 +134,8 @@ set_target_properties(bsl_sample_pp
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_sample_pp PUBLIC bsl_front bsl_dynamic)
+# contexts for config options
+target_link_libraries(bsl_sample_pp PUBLIC bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
 target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
 
