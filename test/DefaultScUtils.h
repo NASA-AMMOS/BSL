@@ -24,6 +24,7 @@
 
 #include <m-string.h>
 
+#include <CryptoInterface.h>
 #include <backend/PublicInterfaceImpl.h>
 #include <backend/SecOperation.h>
 #include <backend/IdValPair.h>
@@ -47,6 +48,27 @@ extern "C" {
 
 /// @brief Key ID for the Appendix A4 key in OpenSSL
 #define RFC9173_EXAMPLE_A4_BCB_KEY "9104"
+
+/// Test helper function
+static inline int BSL_Crypto_AddRegistryKeyName(const char *name, const uint8_t *ptr, size_t len)
+{
+    BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR(name);
+    return BSL_Crypto_AddRegistryKey(&key_id, ptr, len);
+}
+
+/// Test helper function
+static inline int BSL_Crypto_GetRegistryKeyName(const char *name, void **handle)
+{
+    BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR(name);
+    return BSL_Crypto_GetRegistryKey(&key_id, handle);
+}
+
+/// Test helper function
+static inline int BSL_Crypto_RemoveRegistryKeyName(const char *name)
+{
+    BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR(name);
+    return BSL_Crypto_RemoveRegistryKey(&key_id);
+}
 
 /// @brief Sample policy provider ID
 #define BSL_SAMPLE_PP_ID   1

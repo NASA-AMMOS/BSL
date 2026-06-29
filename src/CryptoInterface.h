@@ -279,12 +279,12 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
  * @param[in, out] key_handle pointer to pointer for new key handle
  * @return Zero upon success.
  */
-int BSL_Crypto_GetRegistryKey(const char *keyid, void **key_handle);
+int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, void **key_handle);
 
 /** Erase key entry from crypto library registry, if present
  *  @param[in] keyid key ID of key to remove
  */
-int BSL_Crypto_RemoveRegistryKey(const char *keyid);
+int BSL_Crypto_RemoveRegistryKey(const BSL_Data_t *keyid);
 
 /**
  * Add additional authenticated data (AAD) to cipher context
@@ -360,14 +360,16 @@ int BSL_Crypto_GenIV(void *buf, int size);
  * @param secret_len length of raw key
  * @return Zero upon success.
  */
-int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t secret_len);
+int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len);
+
+// int BSL_Crypto_SetKeyParameter(const BSL_Data_t *keyid)
 
 /**
  * Retrieve statistics related to a crypto key
  * @param[in] keyid key ID of a key in the crypto registry to retrieve the stats of
  * @param[out] stats struct containing statistics related to the key id
  */
-int BSL_Crypto_GetKeyStatistics(const char *keyid, BSL_Crypto_KeyStats_t *stats);
+int BSL_Crypto_GetKeyStatistics(const BSL_Data_t *keyid, BSL_Crypto_KeyStats_t *stats);
 
 #ifdef __cplusplus
 } // extern C

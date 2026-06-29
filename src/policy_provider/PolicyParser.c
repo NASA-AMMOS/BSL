@@ -23,10 +23,17 @@
 #include <default_sc/DefaultSecContext.h>
 #include <cose_sc/CoseContext.h>
 
+/** Read a text value as long integer.
+ * The entire text must be consumed to be valid.
+ *
+ * @param[out] as_int The output value.
+ * @param[in] ptr The text pointer.
+ * @param len The text length (excluding null terminator).
+ */
 static int BSLP_GetTextAsInt(int64_t *as_int, const char *ptr, size_t len)
 {
     char *endp;
-    *as_int = strtol(ptr, &endp, 10);
+    *as_int = strtoll(ptr, &endp, 10);
     if (endp != ptr + len)
     {
         BSL_LOG_ERR("Invalid text-as-integer: %s", ptr);
@@ -35,6 +42,10 @@ static int BSLP_GetTextAsInt(int64_t *as_int, const char *ptr, size_t len)
     return BSL_SUCCESS;
 }
 
+/** Read a JSON value as long integer, either natively or from text.
+ * @param[in] value The value to interpret.
+ * @param[out] as_int The output value.
+ */
 static int BSLP_GetNumberInt(const json_t *value, int64_t *as_int)
 {
     if (json_is_integer(value))
@@ -56,6 +67,10 @@ static int BSLP_GetNumberInt(const json_t *value, int64_t *as_int)
     return BSL_SUCCESS;
 }
 
+/** Read a JSON value as a boolean, either natively or from text.
+ * @param[in] value The value to interpret.
+ * @param[out] as_bool The output value.
+ */
 static int BSLP_GetBoolean(const json_t *value, bool *as_bool)
 {
     if (json_is_boolean(value))
@@ -79,6 +94,8 @@ static int BSLP_GetBoolean(const json_t *value, bool *as_bool)
     }
 }
 
+/** Handle options for Security context ID 1.
+ */
 static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id_str, const json_t *value)
 {
     if (0 == strcmp(id_str, "key_name"))
@@ -127,6 +144,8 @@ static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id
     return BSL_SUCCESS;
 }
 
+/** Handle options for Security context ID 2.
+ */
 static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id_str, const json_t *value)
 {
     if (0 == strcmp(id_str, "key_name"))
@@ -175,6 +194,8 @@ static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id
     return BSL_SUCCESS;
 }
 
+/** Handle options for Security context ID 3.
+ */
 static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value)
 {
     if (0 == strcmp(id_str, "key_id"))
@@ -252,10 +273,10 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
 
 static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const json_t *policy_rule_elm)
 {
-    const char *src_str;
-    const char *dest_str;
-    const char *sec_src_str;
-    const char *rule_id_str;
+    const char          *src_str;
+    const char          *dest_str;
+    const char          *sec_src_str;
+    const char          *rule_id_str;
     BSL_SecBlockType_e   sec_block_type;
     int64_t              sec_ctx_id;
     BSL_SecRole_e        sec_role;
@@ -653,7 +674,7 @@ int BSLP_PolicyParser_FromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_
     for (size_t policy_rule_idx = 0; policy_rule_idx < policy_rule_ct; ++policy_rule_idx)
     {
         const json_t *policy_rule_elm = json_array_get(policyrule_set, policy_rule_idx);
-        int res = BSLP_PolicyParser_ReadOneRule(policy, policy_rule_elm);
+        int           res             = BSLP_PolicyParser_ReadOneRule(policy, policy_rule_elm);
         if (BSL_SUCCESS != res)
         {
             ++failures;

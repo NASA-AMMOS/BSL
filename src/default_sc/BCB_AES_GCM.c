@@ -110,7 +110,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     CHK_PRECONDITION(bcb_context->aad.len > 0);
 
     // Key must have been set (this feeds the key encryption key)
-    CHK_PRECONDITION(bcb_context->key_id);
+    CHK_PRECONDITION(bcb_context->key_id.ptr != NULL);
 
     // Must have an auth tag for us to verify
     CHK_PRECONDITION(bcb_context->authtag.ptr != NULL);
@@ -126,7 +126,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     void *key_id_handle;
     void *cipher_key;
 
-    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
+    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(&bcb_context->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
         BSL_Data_Deinit(&bcb_context->authtag);
@@ -260,7 +260,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     CHK_PRECONDITION(bcb_context->aad.len > 0);
 
     // Must have a key ID from the security operation parameters
-    CHK_PRECONDITION(bcb_context->key_id);
+    CHK_PRECONDITION(bcb_context->key_id.ptr != NULL);
 
     // Auth tag must be empty
     CHK_PRECONDITION(bcb_context->authtag.len == 0);
@@ -280,14 +280,10 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     void *key_id_handle;
     void *cipher_key;
 
-    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
+    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(&bcb_context->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
-    }
-    else
-    {
-        BSL_LOG_DEBUG("Using key ID %s", bcb_context->key_id);
     }
 
     // Generated the CEK, using keywrap when needed
@@ -444,15 +440,9 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
     if (param)
     {
         BSL_LOG_DEBUG("BCB parsing Wrapped key (optid=%" PRIu64 ")", BSL_IdValPair_GetId(param));
-        BSL_Data_t as_data;
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(param, &as_data))
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(param, &bcb_context->wrapped_key))
         {
             BSL_LOG_ERR("Invalid wrapped key value");
-            bcb_context->err_count++;
-        }
-        else if (BSL_Data_InitView(&bcb_context->wrapped_key, as_data.len, as_data.ptr) < 0)
-        {
-            BSL_LOG_ERR("Could not get view of wrapped key");
             bcb_context->err_count++;
         }
     }
@@ -475,14 +465,16 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BCB_OPT_KEY_ID);
     if (param)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsTextstr(param, &bcb_context->key_id))
+        const char *name;
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsTextstr(param, &name))
         {
             BSL_LOG_ERR("Invalid Key ID value");
             bcb_context->err_count++;
         }
         else
         {
-            BSL_LOG_DEBUG("Param[%" PRIu64 "]: KEY_ID value = %s", BSL_IdValPair_GetId(param), bcb_context->key_id);
+            BSL_LOG_DEBUG("Param[%" PRIu64 "]: KEY_ID value = %s", BSL_IdValPair_GetId(param), name);
+            BSL_Data_SetViewCstr(&bcb_context->key_id, name);
         }
     }
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BCB_OPT_USE_KEY_WRAP);
@@ -606,14 +598,10 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
         param = BSL_SecOper_FindParam(sec_oper, RFC9173_BCB_SECPARAM_IV);
         if (param)
         {
-            BSL_Data_t as_data;
-            if (BSL_IdValPair_GetAsBytestr(param, &as_data) < 0)
+            BSL_Data_Deinit(&bcb_context.iv);
+            if (BSL_IdValPair_GetAsBytestr(param, &bcb_context.iv) < 0)
             {
                 BSL_LOG_ERR("IV parameter is not valid");
-                bcb_context.err_count++;
-            }
-            if (BSL_Data_InitView(&bcb_context.iv, as_data.len, as_data.ptr) < 0)
-            {
                 bcb_context.err_count++;
             }
         }
@@ -656,6 +644,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
         param = BSL_SecOper_FindParam(sec_oper, RFC9173_BCB_SECPARAM_WRAPPEDKEY);
         if (param)
         {
+            BSL_Data_Deinit(&bcb_context.wrapped_key);
             if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(param, &bcb_context.wrapped_key))
             {
                 BSL_LOG_ERR("Wrapped key parameter is not valid");
@@ -667,6 +656,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
         param = BSL_SecOper_FindResult(sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
         if (param)
         {
+            BSL_Data_Deinit(&bcb_context.authtag);
             if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(param, &bcb_context.authtag))
             {
                 BSL_LOG_ERR("Auth tag result is not valid");

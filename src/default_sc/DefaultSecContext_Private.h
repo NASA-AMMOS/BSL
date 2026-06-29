@@ -61,8 +61,9 @@ typedef struct BSLX_BIB_s
     /// Error counter for procedure interruption
     size_t err_count;
 
-    /// @brief set to external pointer which will outlive the BIB context
-    const char          *key_id;
+    /// View on external text which will outlive the BIB context
+    BSL_Data_t key_id;
+
     BSL_PrimaryBlock_t   primary_block;
     BSL_CanonicalBlock_t target_block;
     BSL_CanonicalBlock_t sec_block;
@@ -100,8 +101,8 @@ typedef struct BSLX_BCB_s
     /// Error counter for procedure interruption
     size_t err_count;
 
-    /// Pointer to text which will outlive this context
-    const char *key_id;
+    /// View into to text which will outlive this context
+    BSL_Data_t key_id;
 
     // Data wrappers and containers for borrowed and owned/allocated buffers
     // These will ALL be deinitialized at the end, so _Deinit MUST be called.

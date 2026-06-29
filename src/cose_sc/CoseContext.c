@@ -177,9 +177,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         {
             self->kid = opt;
 
-            // FIXME treat as null-terminated text for lookup
-            BSL_Data_AppendFrom(&kid, 1, (BSL_DataConstPtr_t) "\0");
-            if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey((const char *)kid.ptr, &self->keyhandle))
+            if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(&kid, &self->keyhandle))
             {
                 BSL_LOG_ERR("Unknown key ID");
                 self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;

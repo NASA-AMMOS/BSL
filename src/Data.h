@@ -59,17 +59,26 @@ typedef struct BSL_Data_s
  * @sa BSL_Data_Init()
  */
 #define BSL_DATA_INIT_NULL                    \
+    (BSL_Data_t)                              \
     {                                         \
         .owned = false, .ptr = NULL, .len = 0 \
+    }
+
+/** Static initializer for a view on a static text string.
+ * @sa BSL_Data_InitView() BSL_Data_SetViewCstr()
+ */
+#define BSL_DATA_INIT_VIEW_CSTR(cstr)                                   \
+    (BSL_Data_t)                                                        \
+    {                                                                   \
+        .owned = false, .ptr = (BSL_DataPtr_t)cstr, .len = strlen(cstr) \
     }
 
 /** Initialize an empty data struct.
  *
  * @param[in,out] data The data to initialize, which must not be NULL.
- * @return Zero upon success.
  * @sa BSL_DATA_INIT_NULL
  */
-int BSL_Data_Init(BSL_Data_t *data);
+void BSL_Data_Init(BSL_Data_t *data);
 
 /** Initialize with a dynamically-allocated owned buffer of size bytelen
  * *
@@ -84,9 +93,8 @@ int BSL_Data_InitBuffer(BSL_Data_t *data, size_t bytelen);
  * @param[in,out] data The data to initialize, which must not be NULL.
  * @param[in] len The total length to allocate, which may be zero.
  * @param[in] src An optional source buffer to point to.
- * @return Zero upon success.
  */
-int BSL_Data_InitView(BSL_Data_t *data, size_t len, BSL_DataPtr_t src);
+void BSL_Data_InitView(BSL_Data_t *data, size_t len, BSL_DataPtr_t src);
 
 /** Initialize a data struct with move semantics from an existing struct.
  */
@@ -98,7 +106,7 @@ void BSL_Data_InitMove(BSL_Data_t *data, BSL_Data_t *src);
  * @return Zero upon success.
  * @post The struct must be initialized before using again.
  */
-int BSL_Data_Deinit(BSL_Data_t *data);
+void BSL_Data_Deinit(BSL_Data_t *data);
 
 /** Resize the data, copying if necessary.
  *
@@ -127,6 +135,22 @@ int BSL_Data_CopyFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src);
  * @return Zero upon success.
  */
 int BSL_Data_AppendFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src);
+
+/** Set a data struct to be a view onto an existing external bytes.
+ *
+ * @param[in,out] data The data to create a view from, which must not be NULL.
+ * @param[in] cstr The C string pointer to create a view on, which must not be NULL.
+ * @return Zero upon success.
+ */
+int BSL_Data_SetView(BSL_Data_t *data, size_t len, BSL_DataPtr_t src);
+
+/** Set a data struct to be a view onto an existing null-termianted string.
+ *
+ * @param[in,out] data The data to create a view from, which must not be NULL.
+ * @param[in] cstr The C string pointer to create a view on, which must not be NULL.
+ * @return Zero upon success.
+ */
+int BSL_Data_SetViewCstr(BSL_Data_t *data, const char *cstr);
 
 #ifdef __cplusplus
 } // extern C

@@ -100,10 +100,15 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_KEY_ID);
     if (param)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsTextstr(param, &self->key_id))
+        const char *name;
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsTextstr(param, &name))
         {
             BSL_LOG_ERR("Invalid Key ID value");
             self->err_count++;
+        }
+        else
+        {
+            BSL_Data_SetViewCstr(&self->key_id, name);
         }
     }
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_SHA_VARIANT);
@@ -289,14 +294,10 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
 
     void *key_id_handle;
     void *cipher_key;
-    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(self->key_id, &key_id_handle))
+    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(&self->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
-    }
-    else
-    {
-        BSL_LOG_DEBUG("Using key ID %s", self->key_id);
     }
 
     if (!self->keywrap)

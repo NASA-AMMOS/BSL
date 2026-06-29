@@ -104,10 +104,11 @@ static const char *exA_1_mac0 = "9f890700028201692f2f6473742f7376638201692f2f737
 void test_AppendixA_Example1_BIB_Source(void)
 {
     {
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_1_kid);
         BSL_Data_t keymat;
         BSL_Data_Init(&keymat);
         TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_1_sk));
-        BSL_Crypto_AddRegistryKey(exA_1_kid, keymat.ptr, keymat.len);
+        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len);
         BSL_Data_Deinit(&keymat);
     }
 
@@ -122,9 +123,8 @@ void test_AppendixA_Example1_BIB_Source(void)
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
         {
-            BSL_Data_t kid;
-            BSL_Data_InitView(&kid, strlen(exA_1_kid), (BSL_DataPtr_t)exA_1_kid);
-            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEY_ID, kid);
+            BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_1_kid);
+            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEY_ID, keyid);
         }
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
@@ -216,10 +216,11 @@ TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 0, 1, 2, 3, 4, 5, 
 void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 {
     {
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_1_kid);
         BSL_Data_t keymat;
         BSL_Data_Init(&keymat);
         TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_1_sk));
-        BSL_Crypto_AddRegistryKey(exA_1_kid, keymat.ptr, keymat.len);
+        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len);
         BSL_Data_Deinit(&keymat);
     }
 
