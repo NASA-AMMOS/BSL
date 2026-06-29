@@ -54,8 +54,8 @@ typedef struct
 
     /// True if this operation is the source role
     bool is_source;
-    /// Execution return value for procedure interruption
-    int retval;
+    /// Rolling return value for procedure interruption
+    int status;
 
     /// Required AAD scope, naturally sorted
     BSLX_CoseSc_AadScope_t aad_scope;
@@ -101,7 +101,7 @@ static void BSLX_CoseSc_Init(BSLX_CoseSc_t *self)
     BSLX_CoseSc_AadScope_init(self->aad_scope);
     self->mac_ctx = NULL;
     BSL_PrimaryBlock_Init(&self->primary_block);
-    self->retval = BSL_SUCCESS;
+    self->status = BSL_SUCCESS;
 }
 
 static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
@@ -134,7 +134,7 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, const BSL_BundleRef_t *bund
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to get host EID");
-        self->retval = res;
+        self->status = res;
         return;
     }
 
@@ -142,7 +142,7 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, const BSL_BundleRef_t *bund
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to get primary block data");
-        self->retval = res;
+        self->status = res;
         return;
     }
 
@@ -152,7 +152,7 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, const BSL_BundleRef_t *bund
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to get target block data");
-        self->retval = res;
+        self->status = res;
         return;
     }
 
@@ -171,7 +171,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(opt, &kid))
         {
             BSL_LOG_ERR("Invalid key ID value");
-            self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
         {
@@ -180,7 +180,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
             if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(&kid, &self->keyhandle))
             {
                 BSL_LOG_ERR("Unknown key ID");
-                self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
         }
         BSL_Data_Deinit(&kid);
@@ -192,7 +192,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->tgt_alg))
         {
             BSL_LOG_ERR("Invalid target algorithm value");
-            self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
         {
@@ -206,7 +206,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->key_alg))
         {
             BSL_LOG_ERR("Invalid target algorithm value");
-            self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
         {
@@ -221,7 +221,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         if (BSL_SUCCESS != BSL_IdValPair_GetAsRaw(opt, &enc_data))
         {
             BSL_LOG_ERR("Invalid AAD Scope value");
-            self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
         {
@@ -229,7 +229,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
             if (BSL_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed to decode AAD Scope");
-                self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
             else
             {
@@ -241,7 +241,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     if (!self->keyhandle)
     {
         BSL_LOG_ERR("COSE key is not supplied or not found");
-        self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
     else
     {
@@ -252,13 +252,13 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
             if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(param, &key_alg_int))
             {
                 BSL_LOG_ERR("Invalid key algorithm value");
-                self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
             else if (self->opt_key_alg && (self->key_alg != key_alg_int))
             {
                 BSL_LOG_ERR("Option key algorithm value %" PRId64 " differs from key store %" PRId64, self->key_alg,
                             key_alg_int);
-                self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
             else
             {
@@ -269,7 +269,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         else if (!(self->opt_key_alg))
         {
             BSL_LOG_ERR("Option for key algorithm not supplied and key has no alg parameter");
-            self->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
 }
@@ -280,12 +280,12 @@ bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle _U_, BS
     BSLX_CoseSc_Init(&ctx);
     BSLX_CoseSc_Prepare(&ctx, bundle, sec_oper, NULL);
 
-    if (BSL_SUCCESS == ctx.retval)
+    if (BSL_SUCCESS == ctx.status)
     {
         BSLX_CoseSc_GetOptions(&ctx, sec_oper);
     }
 
-    bool valid = (ctx.retval == BSL_SUCCESS);
+    bool valid = (ctx.status == BSL_SUCCESS);
     BSLX_CoseSc_Deinit(&ctx);
     return valid;
 }
@@ -558,7 +558,7 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
             break;
         default:
             BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, tgt_alg);
-            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             return;
     }
 
@@ -592,7 +592,7 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
         res = BSLX_CoseSc_ExternalAad_Chunked(ctx, chunklist, &ext_aad_len);
         if (BSL_SUCCESS != res)
         {
-            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             // continue processing
         }
 
@@ -614,12 +614,12 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
         if (!*seq)
         {
             BSL_LOG_ERR("Failed to construct reader");
-            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             return;
         }
     }
 
-    if (BSL_SUCCESS == ctx->retval)
+    if (BSL_SUCCESS == ctx->status)
     {
         ctx->mac_ctx = BSL_malloc(sizeof(BSL_AuthCtx_t));
 
@@ -627,11 +627,11 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to construct MAC context");
-            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
     }
 
-    if (BSL_SUCCESS == ctx->retval)
+    if (BSL_SUCCESS == ctx->status)
     {
         BSLX_CoseSc_ChunkList_it_t chunk_it;
         for (BSLX_CoseSc_ChunkList_it(chunk_it, chunklist); !BSLX_CoseSc_ChunkList_end_p(chunk_it);
@@ -650,7 +650,7 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to process MAC");
-                    ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
                 }
             }
             else if ((seq = BSLX_CoseSc_ChunkItem_cget_seq(*item)))
@@ -659,7 +659,7 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to process MAC");
-                    ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
                 }
             }
             else
@@ -686,13 +686,13 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
     }
     BSLX_CoseSc_ChunkList_clear(chunklist);
 
-    if (BSL_SUCCESS == ctx->retval)
+    if (BSL_SUCCESS == ctx->status)
     {
         res = BSL_AuthCtx_Finalize(ctx->mac_ctx, tag);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("BSL_AuthCtx_Finalize failed with code %d", res);
-            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
     }
 }
@@ -727,34 +727,34 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
     }
     BSLX_CoseMsg_Headers_DerivePhdr(&msg.headers);
 
-    if (BSL_SUCCESS == ctx->retval)
+    if (BSL_SUCCESS == ctx->status)
     {
         BSLX_CoseSc_Mac_Compute(ctx, &msg.headers.phdr_bstr, ctx->tgt_alg, "MAC0", &msg.tag);
     }
 
     BSL_Data_t aad_scope_enc;
     BSL_Data_Init(&aad_scope_enc);
-    if (BSL_SUCCESS == ctx->retval)
+    if (BSL_SUCCESS == ctx->status)
     {
         res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &ctx->aad_scope);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to encode AAD Scope");
-            ctx->retval = res;
+            ctx->status = res;
         }
     }
     BSL_Data_t msg_enc;
     BSL_Data_Init(&msg_enc);
-    if (BSL_SUCCESS == ctx->retval)
+    if (BSL_SUCCESS == ctx->status)
     {
         res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Mac0_Encode, &msg);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to encode Mac0");
-            ctx->retval = res;
+            ctx->status = res;
         }
     }
-    if (BSL_SUCCESS == ctx->retval)
+    if (BSL_SUCCESS == ctx->status)
     {
         {
             BSL_IdValPair_t *param = BSL_SecOutcome_AppendParam(ctx->sec_outcome);
@@ -784,7 +784,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
         if (BSL_SUCCESS != BSL_IdValPair_GetAsRaw(param, &enc_data))
         {
             BSL_LOG_ERR("Invalid AAD Scope parameter");
-            ctx->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
         {
@@ -794,7 +794,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
             if (BSL_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed to decode AAD Scope parameter");
-                ctx->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 BSLX_CoseSc_AadScope_clear(msg_scope);
             }
             else
@@ -802,7 +802,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
                 if (ctx->opt_aad_scope && !BSLX_CoseSc_AadScope_equal_p(ctx->aad_scope, msg_scope))
                 {
                     BSL_LOG_ERR("Mismatch of AAD Scope parameter");
-                    ctx->retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
                 else
                 {
@@ -812,7 +812,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
             }
         }
     }
-    if (BSL_SUCCESS != ctx->retval)
+    if (BSL_SUCCESS != ctx->status)
     {
         // early exit
         return;
@@ -825,7 +825,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
         BSL_Data_Init(&msg_enc);
         if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(result, &msg_enc))
         {
-            ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
         else
         {
@@ -833,13 +833,13 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
             if (BSL_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed to decode Mac0");
-                ctx->retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             }
         }
         BSL_Data_Deinit(&msg_enc);
     }
 
-    if (BSL_SUCCESS == ctx->retval)
+    if (BSL_SUCCESS == ctx->status)
     {
         BSL_Data_t tag;
         BSL_Data_Init(&tag);
@@ -853,7 +853,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
         else
         {
             BSL_LOG_ERR("MAC tag failed");
-            ctx->retval = BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
         }
         BSL_Data_Deinit(&tag);
     }
@@ -868,13 +868,13 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
     BSLX_CoseSc_Init(&ctx);
     BSLX_CoseSc_Prepare(&ctx, bundle, sec_oper, sec_outcome);
 
-    if (BSL_SUCCESS == ctx.retval)
+    if (BSL_SUCCESS == ctx.status)
     {
         BSLX_CoseSc_GetOptions(&ctx, sec_oper);
     }
 
     // add results
-    if (BSL_SUCCESS == ctx.retval)
+    if (BSL_SUCCESS == ctx.status)
     {
         if (ctx.is_source)
         {
@@ -900,12 +900,12 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
             else
             {
                 BSL_LOG_ERR("No COSE result present");
-                ctx.retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
         }
     }
 
-    int ret = ctx.retval;
+    int ret = ctx.status;
     BSLX_CoseSc_Deinit(&ctx);
     return ret;
 }
