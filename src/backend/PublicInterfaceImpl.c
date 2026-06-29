@@ -106,7 +106,7 @@ int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t 
     return BSL_SUCCESS;
 }
 
-void BSL_PrimaryBlock_init(BSL_PrimaryBlock_t *obj)
+void BSL_PrimaryBlock_Init(BSL_PrimaryBlock_t *obj)
 {
     memset(obj, 0, sizeof(*obj));
 }

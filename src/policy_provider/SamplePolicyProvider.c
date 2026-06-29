@@ -165,7 +165,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
     BSLP_PolicyProvider_t *self = user_data;
 
     BSL_PrimaryBlock_t primary_block;
-    BSL_PrimaryBlock_init(&primary_block);
+    BSL_PrimaryBlock_Init(&primary_block);
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
     {
         BSL_LOG_ERR("Failed to retrieve primary block");
@@ -557,7 +557,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
     {
         // Confirm that the rule matches the bundle.
         BSL_PrimaryBlock_t primary_block;
-        BSL_PrimaryBlock_init(&primary_block);
+        BSL_PrimaryBlock_Init(&primary_block);
         BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block);
         CHK_PRECONDITION(BSLP_PolicyPredicate_IsMatch(predicate, location, primary_block.field_src_node_id,
                                                       primary_block.field_dest_eid));

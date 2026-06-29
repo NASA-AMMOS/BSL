@@ -229,7 +229,7 @@ int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid,
                              const char *report_to_eid)
 {
     BSL_PrimaryBlock_t primary_block;
-    BSL_PrimaryBlock_init(&primary_block);
+    BSL_PrimaryBlock_Init(&primary_block);
     BSL_BundleCtx_GetBundleMetadata(input_bundle, &primary_block);
     int res = 0;
     if (src_eid)

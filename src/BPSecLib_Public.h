@@ -216,7 +216,7 @@ typedef enum BSL_ReasonCode_e
 /** @brief Contains Bundle Primary Block fields and metadata.
  *
  * State is set by calls to BSL_BundleCtx_GetBundleMetadata().
- * Instances are initialized with BSL_PrimaryBlock_init() and
+ * Instances are initialized with BSL_PrimaryBlock_Init() and
  * de-initialized with BSL_PrimaryBlock_deinit().
  */
 typedef struct BSL_PrimaryBlock_s
@@ -272,7 +272,7 @@ typedef struct BSL_PrimaryBlock_s
 
 /** Initialize the primary block metadata to empty values.
  */
-void BSL_PrimaryBlock_init(BSL_PrimaryBlock_t *obj);
+void BSL_PrimaryBlock_Init(BSL_PrimaryBlock_t *obj);
 
 /** Deinitialize the use of a primary block metadata.
  *

@@ -100,7 +100,7 @@ static void BSLX_CoseSc_Init(BSLX_CoseSc_t *self)
     BSL_HostEID_Init(&self->sec_src_eid);
     BSLX_CoseSc_AadScope_init(self->aad_scope);
     self->mac_ctx = NULL;
-    BSL_PrimaryBlock_init(&self->primary_block);
+    BSL_PrimaryBlock_Init(&self->primary_block);
     self->retval = BSL_SUCCESS;
 }
 
