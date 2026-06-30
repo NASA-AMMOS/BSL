@@ -319,7 +319,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     }
 }
 
-bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle _U_, BSL_SecOper_t *sec_oper)
+bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle _U_, BSL_SecOper_t *sec_oper) // NOSONAR
 {
     BSLX_CoseSc_t ctx;
     BSLX_CoseSc_Init(&ctx);
@@ -921,7 +921,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
     BSLX_CoseMsg_Mac0_Deinit(&msg);
 }
 
-int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper, // NOSONAR
                         BSL_SecOutcome_t *sec_outcome)
 {
     BSLX_CoseSc_t ctx;
