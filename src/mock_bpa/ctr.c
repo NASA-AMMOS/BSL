@@ -66,12 +66,10 @@ int mock_bpa_ctr_decode(mock_bpa_ctr_t *ctr)
 {
     BSL_CHKERR1(ctr);
     MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
+    BSL_CHKERR1(bundle);
 
-    if (ctr->bundle_ref.data)
-    {
-        MockBPA_Bundle_Deinit(ctr->bundle_ref.data);
-        MockBPA_Bundle_Init(ctr->bundle_ref.data);
-    }
+    MockBPA_Bundle_Deinit(bundle);
+    MockBPA_Bundle_Init(bundle);
 
     return BSL_CBOR_Decode(&ctr->encoded, (BSL_CBOR_Decode_f)&bsl_mock_decode_bundle, bundle);
 }

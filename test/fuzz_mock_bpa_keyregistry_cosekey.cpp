@@ -51,7 +51,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     int retval = 0;
     BSL_CryptoInit();
 
-    FILE *tmp = tmpfile();
+    FILE  *tmp = tmpfile();
     size_t got = fwrite(data, size, 1, tmp);
     if (got != size)
     {

@@ -111,7 +111,8 @@ static void show_usage(const char *argv0)
             "    [-p <hex-list>] comma delimited list of hex integers <BSLP_PolicyParser_BitstringConfig_t>, "
             "e.g. '0x000f,0x0021' (default: none)\n"
             "    [-j <file-path>] path to JSON file containing policy configuration (default: none)\n"
-            "    [-k <file-path>] path to JSON file (.json) containing JWKs or CBOR file (.cbor) containing COSE_KeySet to register (default: none)\n"
+            "    [-k <file-path>] path to JSON file (.json) containing JWKs or CBOR file (.cbor) containing "
+            "COSE_KeySet to register (default: none)\n"
             "    [-c] enable custom RNG generator for testing purposes (default: use OpenSSL RAND)\n",
             BSL_VERSION, argv0);
 }

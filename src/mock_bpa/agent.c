@@ -63,8 +63,9 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
         return -1;
     }
 
-    MockBPA_Bundle_t *bundle = bundle_ref->data;
-    memset(result_primary_block, 0, sizeof(*result_primary_block));
+    const MockBPA_Bundle_t *bundle = bundle_ref->data;
+
+    BSL_PrimaryBlock_Init(result_primary_block);
     result_primary_block->field_version              = bundle->primary_block.version;
     result_primary_block->field_flags                = bundle->primary_block.flags;
     result_primary_block->field_crc_type             = bundle->primary_block.crc_type;

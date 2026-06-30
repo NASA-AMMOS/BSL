@@ -38,7 +38,7 @@
 #include "DefaultSecContext_Private.h"
 #include "rfc9173.h"
 
-bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
+bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper) // NOSONAR
 {
     (void)lib;
     (void)bundle;
@@ -552,7 +552,7 @@ void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context)
     memset(bcb_context, 0, sizeof(*bcb_context));
 }
 
-int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper, // NOSONAR
                      BSL_SecOutcome_t *sec_outcome)
 {
     CHK_ARG_NONNULL(bundle);
