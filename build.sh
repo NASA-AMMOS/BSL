@@ -65,7 +65,7 @@ function cmd_apply_license {
 
 function cmd_check {
     shift
-    ctest --test-dir ${BUILDDIR} "$@"
+    ctest --test-dir ${BUILDDIR} --output-on-failure "$@"
 }
 
 function cmd_clean {
