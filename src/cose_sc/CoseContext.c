@@ -839,14 +839,15 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
             if (BSL_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed to decode AAD Scope parameter");
-                ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 BSLX_CoseSc_AadScope_clear(msg_scope);
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
             else
             {
                 if (ctx->opt_aad_scope && !BSLX_CoseSc_AadScope_equal_p(ctx->aad_scope, msg_scope))
                 {
                     BSL_LOG_ERR("Mismatch of AAD Scope parameter");
+                    BSLX_CoseSc_AadScope_clear(msg_scope);
                     ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
                 else
