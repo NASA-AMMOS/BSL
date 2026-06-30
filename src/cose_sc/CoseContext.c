@@ -401,7 +401,7 @@ M_DEQUE_DEF(BSLX_CoseSc_ChunkList, BSLX_CoseSc_ChunkItem_t, M_OPL_BSLX_CoseSc_Ch
 // GCOV_EXCL_STOP
 /// @endcond
 
-/** Get the last bstring to append to, or add one if there is not already.
+/** Get the last bytes chunk to append to, or add one if needed.
  */
 static m_bstring_t *BSLX_CoseSc_ChunkList_GetBstring(BSLX_CoseSc_ChunkList_t chunklist)
 {
@@ -415,7 +415,9 @@ static m_bstring_t *BSLX_CoseSc_ChunkList_GetBstring(BSLX_CoseSc_ChunkList_t chu
     if (!data)
     {
         BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-        BSLX_CoseSc_ChunkItem_init_data(*item);
+        m_bstring_t start;
+        m_bstring_init(start);
+        BSLX_CoseSc_ChunkItem_move_data(*item, start);
         data = BSLX_CoseSc_ChunkItem_get_data(*item);
     }
     return data;
@@ -569,7 +571,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
                 }
                 {
                     BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-                    BSLX_CoseSc_ChunkItem_init_seq(*item);
+                    BSLX_CoseSc_ChunkItem_move_seq(*item, NULL);
                     BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
 
                     *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, blk_num);
@@ -642,7 +644,9 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
         {
             // force a new bstring item for external_aad content
             BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-            BSLX_CoseSc_ChunkItem_init_data(*item);
+            m_bstring_t start;
+            m_bstring_init(start);
+            BSLX_CoseSc_ChunkItem_move_data(*item, start);
         }
         size_t ext_aad_len;
         res = BSLX_CoseSc_ExternalAad_Chunked(ctx, chunklist, &ext_aad_len);
@@ -661,7 +665,7 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
     }
     { // the target BTSD as payload
         BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-        BSLX_CoseSc_ChunkItem_init_seq(*item);
+        BSLX_CoseSc_ChunkItem_move_seq(*item, NULL);
         BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
 
         *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
