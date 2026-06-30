@@ -21,7 +21,7 @@
  */
 /** @file
  * @ingroup fuzz_test
- * @brief Fuzz the simplified COSE_KeySet file decoding.
+ * @brief Fuzz the simplified @c COSE_KeySet file decoding.
  */
 #include "TestUtils.h"
 #include <mock_bpa/MockBPA.h>

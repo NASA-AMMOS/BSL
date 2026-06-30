@@ -127,7 +127,7 @@ int mock_bpa_key_registry_init_jwk(int fd)
     return retval;
 }
 
-/** Decode a COSE_KeySet array.
+/** Decode a @c COSE_KeySet array.
  *  Matches ::BSL_CBOR_Decode_f signature.
  */
 static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const void *obj _U_)

@@ -38,7 +38,7 @@ extern "C" {
 #endif
 
 /** @brief Initialize keys
- * @param[in] file_path path to JSON file with JWKs or CBOR file with COSE_KeySet
+ * @param[in] file_path path to JSON file with JWKs or CBOR file with @c COSE_KeySet
  * @return 0 if successful.
  */
 int mock_bpa_key_registry_init(const char *file_path);
