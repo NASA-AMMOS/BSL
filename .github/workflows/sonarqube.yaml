@@ -60,7 +60,7 @@ jobs:
       - name: Install
         run: ./build.sh install
       - name: Unit Test
-        run: ./build.sh check || true
+        run: ./build.sh check --output-junit testresults.xml || true
       - name: Mock BPA Test
         run: |
           pip3 install --upgrade pip
