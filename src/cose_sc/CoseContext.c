@@ -401,6 +401,26 @@ M_DEQUE_DEF(BSLX_CoseSc_ChunkList, BSLX_CoseSc_ChunkItem_t, M_OPL_BSLX_CoseSc_Ch
 // GCOV_EXCL_STOP
 /// @endcond
 
+/** Get the last bstring to append to, or add one if there is not already.
+ */
+static m_bstring_t *BSLX_CoseSc_ChunkList_GetBstring(BSLX_CoseSc_ChunkList_t chunklist)
+{
+    m_bstring_t *data = NULL;
+    if (!BSLX_CoseSc_ChunkList_empty_p(chunklist))
+    {
+        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_back(chunklist);
+        // will leave as NULL if not present
+        data = BSLX_CoseSc_ChunkItem_get_data(*item);
+    }
+    if (!data)
+    {
+        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+        BSLX_CoseSc_ChunkItem_init_data(*item);
+        data = BSLX_CoseSc_ChunkItem_get_data(*item);
+    }
+    return data;
+}
+
 /** Append a CBOR head only.
  */
 static size_t BSLX_CoseSc_bstring_AppendHead(m_bstring_t data, uint8_t major, uint64_t argument)
@@ -437,9 +457,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
 
     *total = 0;
     { // small encoded top
-        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-        BSLX_CoseSc_ChunkItem_init_data(*item);
-        m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
         BSL_Data_t chunk;
         BSL_Data_Init(&chunk);
@@ -508,9 +526,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
             // primary block
             if (aad_flags & BSLX_COSESC_AAD_FLAG_METADATA)
             {
-                BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-                BSLX_CoseSc_ChunkItem_init_data(*item);
-                m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+                m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
                 // copy of primary
                 m_bstring_push_back_bytes(*data, ctx->primary_block.encoded->len, ctx->primary_block.encoded->ptr);
@@ -536,9 +552,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
 
             if (aad_flags & BSLX_COSESC_AAD_FLAG_METADATA)
             {
-                BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-                BSLX_CoseSc_ChunkItem_init_data(*item);
-                m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+                m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
                 // three items from the canonical block header
                 *total += BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_POSITIVE_INT, aad_block.type_code);
@@ -549,9 +563,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
             {
                 // CBOR head and seq stream
                 {
-                    BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-                    BSLX_CoseSc_ChunkItem_init_data(*item);
-                    m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+                    m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
                     *total += BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, 0);
                 }
@@ -573,9 +585,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
     }
 
     { // additional_protected
-        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-        BSLX_CoseSc_ChunkItem_init_data(*item);
-        m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
         // FIXME take input
         *total += BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, 0);
@@ -611,9 +621,7 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
     BSLX_CoseSc_ChunkList_init(chunklist);
 
     { // context and protected bytes
-        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-        BSLX_CoseSc_ChunkItem_init_data(*item);
-        m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
         // 4-item array
         BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_ARRAY, 4);
@@ -629,10 +637,13 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
         BSLX_CoseSc_bstring_AppendRaw(*data, phdr_bstr);
     }
     { // external AAD bstr wrapped
-        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-        BSLX_CoseSc_ChunkItem_init_data(*item);
-        m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
+        {
+            // force a new bstring item for external_aad content
+            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+            BSLX_CoseSc_ChunkItem_init_data(*item);
+        }
         size_t ext_aad_len;
         res = BSLX_CoseSc_ExternalAad_Chunked(ctx, chunklist, &ext_aad_len);
         if (BSL_SUCCESS != res)
@@ -645,9 +656,7 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
         BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ext_aad_len);
     }
     { // length of payload
-        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-        BSLX_CoseSc_ChunkItem_init_data(*item);
-        m_bstring_t *data = BSLX_CoseSc_ChunkItem_get_data(*item);
+        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
         BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->target_block.btsd_len);
     }
     { // the target BTSD as payload
