@@ -1,0 +1,22 @@
+# JSON syntax tokens
+"{"
+"}"
+"["
+"]"
+":"
+","
+"\""
+"\\"
+
+# Common JSON values
+"true"
+"false"
+"null"
+
+# Escaped characters
+"\\b"
+"\\f"
+"\\n"
+"\\r"
+"\\t"
+"\\\""

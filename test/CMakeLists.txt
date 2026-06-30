@@ -124,7 +124,7 @@ endif(BUILD_UNITTEST AND NOT BUILD_FUZZING)
 if(BUILD_FUZZING)
   add_fuzz_test(SOURCE fuzz_mock_bpa_eid_uri.cpp)
   target_link_libraries(fuzz_mock_bpa_eid_uri PUBLIC ${LIB_ORDERED})
-  
+
   add_fuzz_test(SOURCE fuzz_mock_bpa_eid_cbor.cpp)
   target_link_libraries(fuzz_mock_bpa_eid_cbor PUBLIC ${LIB_ORDERED})
 
@@ -139,4 +139,18 @@ if(BUILD_FUZZING)
 
   add_fuzz_test(SOURCE fuzz_CoseMsg_Mac0_cbor.cpp RUNS_COUNT 2000000)
   target_link_libraries(fuzz_CoseMsg_Mac0_cbor PUBLIC ${LIB_ORDERED})
+
+  add_fuzz_test(
+    SOURCE fuzz_mock_bpa_keyregistry_jwk.cpp
+    RUNS_COUNT 300000
+    EXTRA_ARGS "-dict=libfuzzer-json.dict"
+  )
+  target_link_libraries(fuzz_mock_bpa_keyregistry_jwk PUBLIC ${LIB_ORDERED})
+
+  add_fuzz_test(
+    SOURCE fuzz_mock_bpa_keyregistry_cosekey.cpp
+    RUNS_COUNT 300000
+  )
+  target_link_libraries(fuzz_mock_bpa_keyregistry_cosekey PUBLIC ${LIB_ORDERED})
+
 endif(BUILD_FUZZING)

@@ -33,13 +33,13 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-static int mock_bpa_key_registry_init_json(const char *path)
+int mock_bpa_key_registry_init_jwk(int fd)
 {
     int retval = BSL_SUCCESS;
 
     json_error_t err;
 
-    json_t *root = json_load_file(path, 0, &err);
+    json_t *root = json_loadfd(fd, 0, &err);
     if (!root)
     {
         BSL_LOG_ERR("JSON error: line %d: %s", err.line, err.text);
@@ -127,8 +127,10 @@ static int mock_bpa_key_registry_init_json(const char *path)
     return retval;
 }
 
-/// Match ::BSL_CBOR_Decode_f signature
-static int mock_bpa_key_registry_init_cbor_decode(QCBORDecodeContext *dec, const void *obj _U_)
+/** Decode a COSE_KeySet array.
+ *  Matches ::BSL_CBOR_Decode_f signature.
+ */
+static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const void *obj _U_)
 {
     int retval = BSL_SUCCESS;
 
@@ -226,15 +228,8 @@ static int mock_bpa_key_registry_init_cbor_decode(QCBORDecodeContext *dec, const
     return retval;
 }
 
-static int mock_bpa_key_registry_init_cbor(const char *path)
+int mock_bpa_key_registry_init_cosekey(int infd)
 {
-    int infd = open(path, O_RDONLY);
-    if (infd < 0)
-    {
-        BSL_LOG_ERR("Failed to open input file");
-        return BSL_ERR_DECODING;
-    }
-
     struct stat sb;
     if ((fstat(infd, &sb) < 0) || (sb.st_size == 0))
     {
@@ -254,7 +249,7 @@ static int mock_bpa_key_registry_init_cbor(const char *path)
     BSL_Data_t view;
     BSL_Data_InitView(&view, sb.st_size, (BSL_DataPtr_t)data);
 
-    int retval = BSL_CBOR_Decode(&view, &mock_bpa_key_registry_init_cbor_decode, NULL);
+    int retval = BSL_CBOR_Decode(&view, &mock_bpa_key_registry_cosekey_decode, NULL);
 
     if (munmap(data, sb.st_size) < 0)
     {
@@ -264,29 +259,35 @@ static int mock_bpa_key_registry_init_cbor(const char *path)
     return retval;
 }
 
-int mock_bpa_key_registry_init(const char *pp_cfg_file_path)
+int mock_bpa_key_registry_init(const char *file_path)
 {
-
     int retval = BSL_SUCCESS;
 
-    BSL_LOG_INFO("Reading keys from %s", pp_cfg_file_path);
+    int infd = open(file_path, O_RDONLY);
+    if (infd < 0)
+    {
+        BSL_LOG_ERR("Failed to open input file %s", file_path);
+        return BSL_ERR_DECODING;
+    }
+
+    BSL_LOG_INFO("Reading keys from %s", file_path);
     m_string_t path;
-    m_string_init_set_cstr(path, pp_cfg_file_path);
+    m_string_init_set_cstr(path, file_path);
     bool is_json = m_string_end_with_str_p(path, ".json");
     bool is_cbor = m_string_end_with_str_p(path, ".cbor");
     m_string_clear(path);
 
     if (is_json)
     {
-        retval = mock_bpa_key_registry_init_json(pp_cfg_file_path);
+        retval = mock_bpa_key_registry_init_jwk(infd);
     }
     else if (is_cbor)
     {
-        retval = mock_bpa_key_registry_init_cbor(pp_cfg_file_path);
+        retval = mock_bpa_key_registry_init_cosekey(infd);
     }
     else
     {
-        BSL_LOG_ERR("Unhandled key file extension for %s", pp_cfg_file_path);
+        BSL_LOG_ERR("Unhandled key file extension for %s", file_path);
         retval = BSL_ERR_ARG_INVALID;
     }
 

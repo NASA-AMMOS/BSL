@@ -94,9 +94,13 @@ static int BSLP_GetBoolean(const json_t *value, bool *as_bool)
     }
 }
 
+/// Type for individual option handling according to each SC
+typedef int (*BSLP_OptionHandler_f)(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value);
+
 /** Handle options for Security context ID 1.
+ * Matches ::BSLP_OptionHandler_f signature.
  */
-static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id_str, const json_t *value)
+static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value)
 {
     if (0 == strcmp(id_str, "key_name"))
     {
@@ -145,8 +149,9 @@ static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id
 }
 
 /** Handle options for Security context ID 2.
+ * Matches ::BSLP_OptionHandler_f signature.
  */
-static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id_str, const json_t *value)
+static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value)
 {
     if (0 == strcmp(id_str, "key_name"))
     {
@@ -195,6 +200,7 @@ static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id
 }
 
 /** Handle options for Security context ID 3.
+ * Matches ::BSLP_OptionHandler_f signature.
  */
 static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value)
 {
@@ -519,9 +525,45 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         BSL_LOG_DEBUG("     sc_id: %" JSON_INTEGER_FORMAT, sc_id_l);
         sec_ctx_id = (int64_t)sc_id_l;
 
-        const json_t *sc_parms = json_object_get(spec, "sc_parms");
-        if (sc_parms && json_is_array(sc_parms))
+        // different valid param IDs for different contexts
+        BSLP_OptionHandler_f handler = NULL;
+        switch (sc_id_l)
         {
+            case RFC9173_CONTEXTID_BIB_HMAC_SHA2:
+                handler = &BSLP_PolicyOptions_SC1;
+                break;
+            case RFC9173_CONTEXTID_BCB_AES_GCM:
+                handler = &BSLP_PolicyOptions_SC2;
+                break;
+            case BSLX_COSESC_CTX_ID:
+                handler = &BSLP_PolicyOptions_SC3;
+                break;
+            default:
+                BSL_LOG_CRIT("Unhandled context ID %" PRId64, sc_id_l);
+                BSLB_IdValPairPtrMap_clear(options);
+                return BSL_ERR_POLICY_CONFIG;
+        }
+
+        json_t *sc_parms = json_object_get(spec, "sc_parms");
+        if (sc_parms && json_is_object(sc_parms))
+        {
+            for (void *val_it = json_object_iter(sc_parms); val_it; val_it = json_object_iter_next(sc_parms, val_it))
+            {
+                const char *id_str = json_object_iter_key(val_it);
+                json_t     *value  = json_object_iter_value(val_it);
+
+                int res = handler(options, id_str, value);
+                if (BSL_SUCCESS != res)
+                {
+                    BSL_LOG_ERR("Failed to handle SC option: %s", id_str);
+                    BSLB_IdValPairPtrMap_clear(options);
+                    return res;
+                }
+            }
+        }
+        else if (sc_parms && json_is_array(sc_parms))
+        {
+            // legacy array form
             const size_t n = json_array_size(sc_parms);
             BSL_LOG_DEBUG("     sc_parms (%zu):", n);
             for (size_t i = 0; i < n; ++i)
@@ -553,30 +595,20 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
                 const char *value_str = json_string_value(value);
                 BSL_LOG_DEBUG("         - id: %s, value: %s", id_str, value_str);
 
-                // different valid param IDs for different contexts
-                int res;
-                switch (sc_id_l)
-                {
-                    case RFC9173_CONTEXTID_BIB_HMAC_SHA2:
-                        res = BSLP_PolicyOptions_SC1(options, id_str, value);
-                        break;
-                    case RFC9173_CONTEXTID_BCB_AES_GCM:
-                        res = BSLP_PolicyOptions_SC2(options, id_str, value);
-                        break;
-                    case BSLX_COSESC_CTX_ID:
-                        res = BSLP_PolicyOptions_SC3(options, id_str, value);
-                        break;
-                    default:
-                        BSL_LOG_CRIT("Unhandled context ID %" PRId64, sc_id_l);
-                        res = BSL_ERR_POLICY_CONFIG;
-                        break;
-                }
+                int res = handler(options, id_str, value);
                 if (BSL_SUCCESS != res)
                 {
+                    BSL_LOG_ERR("Failed to handle SC option: %s", id_str);
                     BSLB_IdValPairPtrMap_clear(options);
                     return res;
                 }
             }
+        }
+        else
+        {
+            BSL_LOG_ERR("No valid sc_parms present");
+            BSLB_IdValPairPtrMap_clear(options);
+            return BSL_ERR_POLICY_CONFIG;
         }
     }
 
