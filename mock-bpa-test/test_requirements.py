@@ -559,10 +559,10 @@ class TestRequirements(TestAgent):
         self._single_test(_TestCase(
             # Using the Bundle from RFC 9173 Appendix A1.4, change the bytes of the BIB header to be be all zeros (thus not a valid CBOR array).
             # Header: 850b020000 -> 0000000000
-            input_data=bytes.fromhex('9f88070000820282010282028202018202820201820018281a000f42400000000000585681010101820282020182820'
-                                     '1078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb'
-                                     '1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e185010100005823526561647920746f2067656e657'
-                                     '261746520612033322d62797465207061796c6f6164ff'),
+            input_data=('9f88070000820282010282028202018202820201820018281a000f42400000000000585681010101820282020182820'
+                        '1078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb'
+                        '1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e185010100005823526561647920746f2067656e657'
+                        '261746520612033322d62797465207061796c6f6164ff'),
             # Confirm that the operations fails and returns a Reason Code 8.
             expected_output=r".*failed to decode bundle",
             # Execute as a BIB acceptor.

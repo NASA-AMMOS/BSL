@@ -52,6 +52,8 @@ typedef struct
     /// Security source cache
     BSL_HostEID_t sec_src_eid;
 
+    /// True if this operation is integrity, false for confidentiality
+    bool is_bib;
     /// True if this operation is the source role
     bool is_source;
     /// Rolling return value for procedure interruption
@@ -127,6 +129,7 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, const BSL_BundleRef_t *bund
     self->bundle      = bundle;
     self->sec_oper    = sec_oper;
     self->sec_outcome = sec_outcome;
+    self->is_bib      = BSL_SecOper_IsBIB(sec_oper);
     self->is_source   = BSL_SecOper_IsRoleSource(sec_oper);
 
     // external data
@@ -876,32 +879,92 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
     // add results
     if (BSL_SUCCESS == ctx.status)
     {
-        if (ctx.is_source)
-        {
-            if (ctx.opt_key_alg)
+        if (ctx.is_bib)
+        { // integrity operation
+            if (ctx.is_source)
             {
-                // has a recipient layer
-                //                BSLX_CoseSc_Mac_Source(&ctx);
+                if (ctx.key_alg != ctx.tgt_alg)
+                {
+                    // has a recipient layer
+
+                    // FIXME Mac handling
+                    ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                }
+                else
+                {
+                    // only one content layer
+                    BSLX_CoseSc_Mac0_Source(&ctx);
+                }
             }
             else
             {
-                // only one content layer
-                BSLX_CoseSc_Mac0_Source(&ctx);
+                // verify or accept
+                const BSL_IdValPair_t *result_mac0 = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC0);
+                //            const BSL_IdValPair_t *result_mac = BSL_SecOper_FindResult(ctx.sec_oper,
+                //            BSLX_COSESC_RESULT_COSE_MAC);
+                if (ctx.key_alg != ctx.tgt_alg)
+                {
+                    // FIXME Mac handling
+                    ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                }
+                else
+                {
+                    if (result_mac0)
+                    {
+                        BSLX_CoseSc_Mac0_VerifyAccept(&ctx, result_mac0);
+                    }
+                    else
+                    {
+                        BSL_LOG_ERR("No COSE result present");
+                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                    }
+                }
             }
         }
         else
-        {
-            // verify or accept
-            const BSL_IdValPair_t *result;
-            if ((result = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC0)))
+        { // confidentiality operation
+            ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+#if 0
+            if (ctx.is_source)
             {
-                BSLX_CoseSc_Mac0_VerifyAccept(&ctx, result);
+                if (ctx.key_alg != ctx.tgt_alg)
+                {
+                    // has a recipient layer
+
+                    // FIXME Enc handling
+                    ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                }
+                else
+                {
+                    // only one content layer
+                    BSLX_CoseSc_Enc0_Source(&ctx);
+                }
             }
             else
             {
-                BSL_LOG_ERR("No COSE result present");
-                ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                // verify or accept
+                const BSL_IdValPair_t *result_enc0 = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENC0);
+                //            const BSL_IdValPair_t *result_enc = BSL_SecOper_FindResult(ctx.sec_oper,
+                //            BSLX_COSESC_RESULT_COSE_ENC);
+                if (ctx.key_alg != ctx.tgt_alg)
+                {
+                    // FIXME Mac handling
+                    ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                }
+                else
+                {
+                    if (result_enc0)
+                    {
+                        BSLX_CoseSc_Enc0_VerifyAccept(&ctx, result_enc0);
+                    }
+                    else
+                    {
+                        BSL_LOG_ERR("No COSE result present");
+                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                    }
+                }
             }
+#endif
         }
     }
 

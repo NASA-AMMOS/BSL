@@ -759,7 +759,7 @@ BSL_IdValPair_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64
         if (found)
         {
             param_ptr = *found;
-            retval = BSLB_IdValPairPtr_ref(param_ptr);
+            retval    = BSLB_IdValPairPtr_ref(param_ptr);
         }
         else
         {
