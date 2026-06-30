@@ -41,6 +41,21 @@
 #include "CoseContext_Private.h"
 #include "CoseMsg.h"
 
+/// Acceptable target algorithms for MAC
+static const int64_t cose_bib_cnt_algs[] = {
+    5, 6, 7 // HMAC-SHA2
+};
+/// Acceptable target algorithms for Encrypt
+static const int64_t cose_bcb_cnt_algs[] = {
+    1, 2, 3, // AES-GCM
+};
+
+/// Matches signature for @c bsearch()
+static int local_cmp_int64(const void *lhs, const void *rhs)
+{
+    return M_CMP_BASIC(*(const int64_t *)lhs, *(const int64_t *)rhs);
+}
+
 typedef struct
 {
     /// Bundle context associated with this operation
@@ -241,6 +256,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         }
     }
 
+    // validation between options and key / param state
     if (!self->keyhandle)
     {
         BSL_LOG_ERR("COSE key is not supplied or not found");
@@ -272,6 +288,32 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         else if (!(self->opt_key_alg))
         {
             BSL_LOG_ERR("Option for key algorithm not supplied and key has no alg parameter");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+    }
+
+    if (!self->opt_tgt_alg)
+    {
+        BSL_LOG_ERR("COSE target alg option is required");
+        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+    }
+    else
+    {
+        // restrict use locally
+        const uint64_t *found;
+        if (self->is_bib)
+        {
+            found = bsearch(&self->tgt_alg, cose_bib_cnt_algs, sizeof(cose_bib_cnt_algs) / sizeof(int64_t),
+                            sizeof(int64_t), &local_cmp_int64);
+        }
+        else
+        {
+            found = bsearch(&self->tgt_alg, cose_bcb_cnt_algs, sizeof(cose_bcb_cnt_algs) / sizeof(int64_t),
+                            sizeof(int64_t), &local_cmp_int64);
+        }
+        if (!found)
+        {
+            BSL_LOG_ERR("COSE target alg option is unacceptable for this security service");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
