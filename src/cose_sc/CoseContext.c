@@ -928,7 +928,7 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                 if (ctx.key_alg != ctx.tgt_alg)
                 {
                     // has a recipient layer
-
+                    BSL_LOG_CRIT("Not implemented");
                     // FIXME Mac handling
                     ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
@@ -942,10 +942,10 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
             {
                 // verify or accept
                 const BSL_IdValPair_t *result_mac0 = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC0);
-                //            const BSL_IdValPair_t *result_mac = BSL_SecOper_FindResult(ctx.sec_oper,
-                //            BSLX_COSESC_RESULT_COSE_MAC);
+                const BSL_IdValPair_t *result_mac  = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC);
                 if (ctx.key_alg != ctx.tgt_alg)
                 {
+                    BSL_LOG_CRIT("Not implemented");
                     // FIXME Mac handling
                     ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
@@ -954,6 +954,12 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                     if (result_mac0)
                     {
                         BSLX_CoseSc_Mac0_VerifyAccept(&ctx, result_mac0);
+                    }
+                    else if (result_mac)
+                    {
+                        BSL_LOG_CRIT("Not implemented");
+                        // FIXME Mac handling
+                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                     }
                     else
                     {
@@ -965,6 +971,7 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
         }
         else
         { // confidentiality operation
+            BSL_LOG_CRIT("Not implemented");
             ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
 #if 0
             if (ctx.is_source)

@@ -58,13 +58,15 @@ class TestAgent(unittest.TestCase):
         self._ul_sock = None
 
     def tearDown(self):
+        self._stop()
+
+    def _stop(self):
         if self._ol_sock:
             self._ol_sock.close()
             self._ol_sock = None
         if self._ul_sock:
             self._ul_sock.close()
             self._ul_sock = None
-
         if self._agent:
             # Exit cleanly if not already gone
             ret = self._agent.stop()
