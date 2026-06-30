@@ -297,7 +297,7 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
             size_t len    = strftime(curs, remain, "%Y-%m-%dT%H:%M:%S", &nowtm);
             curs += len;
             remain -= len;
-            snprintf(curs, remain, ".%06ld", timestamp.tv_usec);
+            snprintf(curs, remain, ".%06ldZ", timestamp.tv_usec);
         }
 
         const char *severity_name = log_sev_names[severity];

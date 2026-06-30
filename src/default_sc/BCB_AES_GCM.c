@@ -132,10 +132,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         BSL_Data_Deinit(&bcb_context->authtag);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
-    else
-    {
-        BSL_LOG_DEBUG("Using key ID %s", bcb_context->key_id);
-    }
 
     if (bcb_context->keywrap && bcb_context->wrapped_key.len == 0)
     {
