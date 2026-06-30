@@ -415,6 +415,7 @@ static m_bstring_t *BSLX_CoseSc_ChunkList_GetBstring(BSLX_CoseSc_ChunkList_t chu
     if (!data)
     {
         BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+        // new data
         m_bstring_t start;
         m_bstring_init(start);
         BSLX_CoseSc_ChunkItem_move_data(*item, start);
@@ -642,8 +643,8 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
         m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
         {
-            // force a new bstring item for external_aad content
             BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+            // force a new bstring item for external_aad content
             m_bstring_t start;
             m_bstring_init(start);
             BSLX_CoseSc_ChunkItem_move_data(*item, start);
