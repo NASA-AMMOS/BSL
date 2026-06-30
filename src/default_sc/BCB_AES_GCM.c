@@ -261,9 +261,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     BSL_CryptoCipherAESVariant_e aes_mode  = is_aes128 ? BSL_CRYPTO_AES_128 : BSL_CRYPTO_AES_256;
 
     BSL_Data_Resize(&bcb_context->iv, RFC9173_BCB_DEFAULT_IV_LEN);
-    void        *iv_ptr = bcb_context->iv.ptr;
-    const size_t iv_len = bcb_context->iv.len;
-    if (BSL_SUCCESS != BSL_Crypto_GenIV(iv_ptr, iv_len))
+    if (BSL_SUCCESS != BSL_Crypto_GenIV(&bcb_context->iv))
     {
         BSL_LOG_ERR("Failed to generate IV");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -371,10 +369,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        // "Finalizing" drains any remaining bytes out of the cipher context
-        // and appends them to the ciphertext.
-        int extra_bytes = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
-        if (extra_bytes < 0)
+        int res = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Finalizing AES failed");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -386,7 +382,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, &bcb_context->authtag))
         {
             BSL_LOG_ERR("Failed to get authentication tag");
-            retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
     }
 

@@ -929,7 +929,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
 }
 /** Internal processing according to Section 5.3 of RFC 9052.
  */
-static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *headers, int64_t tgt_alg,
+static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers, int64_t tgt_alg,
                                         const char *context, BSL_CipherMode_e mode)
 {
     int res;
@@ -997,8 +997,25 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
     BSL_Data_t iv_val;
     BSL_Data_Init(&iv_val);
     if (BSL_SUCCESS == ctx->status)
-    { // collect IV bytes
+    { // create IV bytes
+        BSL_Data_Resize(&iv_val, 12);
 
+        res = BSL_Crypto_GenIV(&iv_val);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to generate IV");
+            ctx->status = res;
+        }
+
+        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+
+        BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_IV, iv_val);
+
+        BSLX_CoseMsg_HdrMapTree_set_at(headers->uhdr, BSLX_COSEMSG_HDR_IV, param_ptr);
+        BSLB_IdValPairPtr_release(param_ptr);
+
+#if 0
         const BSL_IdValPair_t *head_iv = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_IV, false);
         if (!head_iv)
         {
@@ -1010,6 +1027,7 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
             BSL_LOG_ERR("Invalid IV value");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+#endif
     }
 
     if (BSL_SUCCESS == ctx->status)
@@ -1112,6 +1130,16 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
 
     if (BSL_SUCCESS == ctx->status)
     {
+        res = BSL_Cipher_FinalizeSeq(ctx->enc_ctx, btsd_write);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Finalizing AES failed");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
         BSL_Data_t tag;
         BSL_Data_Init(&tag);
 
@@ -1121,7 +1149,16 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
             BSL_LOG_ERR("BSL_Cipher_Finalize failed with code %d", res);
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
+        else
+        {
+            BSL_SeqWriter_Put(btsd_write, tag.ptr, tag.len);
+        }
+        BSL_Data_Deinit(&tag);
     }
+
+    // close write after read
+    BSL_SeqReader_Destroy(btsd_read);
+    BSL_SeqWriter_Destroy(btsd_write);
 
     BSL_Data_Deinit(&iv_val);
 }

@@ -238,9 +238,9 @@ static int MockBPA_WriteBTSD_Write(void *user_data, const void *buf, size_t size
     CHK_ARG_NONNULL(buf);
     ASSERT_PRECONDITION(obj->file);
 
-    const size_t excess = (obj->curs + size) - obj->size;
-    if (excess > 0)
+    if (obj->curs + size > obj->size)
     {
+        const size_t excess = (obj->curs + size) - obj->size;
         BSL_LOG_ERR("write too large for buffer of %zu by %zu bytes", obj->size, excess);
         return BSL_ERR_FAILURE;
     }

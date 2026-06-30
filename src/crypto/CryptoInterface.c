@@ -626,10 +626,10 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
         CHK_PROPERTY(res == 1);
 
         key->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += block_size_int;
-        block_size = (size_t)block_size_int;
 
-        if (NULL != writer)
+        if ((block_size_int > 0) && writer)
         {
+            block_size = (size_t)block_size_int;
             BSL_SeqWriter_Put(writer, cipher_ctx->out_buf.ptr, block_size);
         }
     }
@@ -644,8 +644,8 @@ int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag)
 
     BSL_Data_Resize(tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
 
-    int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, tag->len, tag->ptr);
-    BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl return %d", res);
+    int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, (int)(tag->len), tag->ptr);
+    BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl len %zu, return %d", tag->len, res);
     BSL_LOG_PLAINTEXT_PTR("tag out", cipher_ctx, tag->ptr, tag->len);
     CHK_PROPERTY(res == 1);
 #if defined(HAVE_VALGRIND)
@@ -660,9 +660,8 @@ int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const BSL_Data_t *tag)
     ASSERT_ARG_NONNULL(tag);
 
     BSL_LOG_PLAINTEXT_PTR("tag in", cipher_ctx, tag->ptr, tag->len);
-    int res =
-        EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_TAG, tag->len, (void *)(tag->ptr));
-    BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl return %d", res);
+    int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_TAG, (int)(tag->len), (void *)(tag->ptr));
+    BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl len %zu, return %d", tag->len, res);
     CHK_PROPERTY(res == 1);
 
     return 0;
@@ -684,7 +683,7 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer)
 
     if ((block_size_int > 0) && writer)
     {
-        size_t bsl_len = block_size_int;
+        size_t bsl_len = (size_t)block_size_int;
         BSL_SeqWriter_Put(writer, cipher_ctx->out_buf.ptr, bsl_len);
     }
 
@@ -728,17 +727,13 @@ int BSL_Crypto_GenKey(size_t key_length, void **key_out)
     return BSL_SUCCESS;
 }
 
-int BSL_Crypto_GenIV(void *buf, int size)
+int BSL_Crypto_GenIV(BSL_Data_t *buf)
 {
     CHK_ARG_NONNULL(buf);
-    if (!(size >= 8 && size <= 16))
-    {
-        return -1;
-    }
 
-    memset(buf, 0, size);
-    CHK_PROPERTY(rand_bytes_generator((unsigned char *)buf, size) == 1);
-    return 0;
+    memset(buf->ptr, 0, buf->len);
+    CHK_PROPERTY(rand_bytes_generator((unsigned char *)(buf->ptr), buf->len) == 1);
+    return BSL_SUCCESS;
 }
 
 int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len,

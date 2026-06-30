@@ -358,11 +358,11 @@ int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out);
 
 /**
  * Generate initialization vector (IV) for AES-GCM for BCBs
- * @param[in,out] buf to write iv to
- * @param size size in bytes of iv (MUST be between 8-16, SHOULD be 12 @cite rfc9173)
+ * @param[in,out] buf to write data into without changing its size.
+ * The size in bytes of iv (MUST be between 8-16, SHOULD be 12 @cite rfc9173)
  * @returns 0 if successful
  */
-int BSL_Crypto_GenIV(void *buf, int size);
+int BSL_Crypto_GenIV(BSL_Data_t *buf);
 
 /**
  * Add a new key to the crypto key registry
