@@ -550,19 +550,50 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     return 0;
 }
 
-int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len)
+int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(aad);
-    // len needs to be passed or function call will crash program, no NULL checking on that param it seems
+
+    // len needs to be passed as output
     int len = 0;
-    BSL_LOG_PLAINTEXT_PTR("adding AAD", cipher_ctx, aad, aad_len);
+    BSL_LOG_PLAINTEXT_PTR("AAD in", cipher_ctx, aad, aad_len);
     int res = EVP_CipherUpdate(cipher_ctx->libhandle, NULL, &len, aad, aad_len);
     BSL_LOG_DEBUG("EVP_CipherUpdate took %zu bytes, return %d", aad_len, res);
     CHK_PROPERTY(res == 1);
 
     BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
-    key->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += aad_len;
+    key->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += len;
+
+    return 0;
+}
+
+int BSL_Cipher_AddAadSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader)
+{
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(reader);
+
+    BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
+
+    while (true)
+    {
+        // read until there is no more
+        size_t block_size = cipher_ctx->block_size;
+        BSL_SeqReader_Get(reader, cipher_ctx->in_buf.ptr, &block_size);
+        if (block_size == 0)
+        {
+            break;
+        }
+
+        int block_size_int = (int)block_size;
+
+        BSL_LOG_PLAINTEXT_PTR("AAD in", cipher_ctx, cipher_ctx->in_buf.ptr, block_size_int);
+        int res =
+            EVP_CipherUpdate(cipher_ctx->libhandle, NULL, &block_size_int, cipher_ctx->in_buf.ptr, block_size_int);
+        CHK_PROPERTY(res == 1);
+
+        key->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += block_size_int;
+    }
 
     return 0;
 }
@@ -606,28 +637,31 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
     return 0;
 }
 
-int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, void **tag)
+int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(tag);
 
-    int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN, *tag);
-    BSL_LOG_PLAINTEXT_PTR("tag out", cipher_ctx, *tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
+    BSL_Data_Resize(tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
+
+    int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, tag->len, tag->ptr);
+    BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl return %d", res);
+    BSL_LOG_PLAINTEXT_PTR("tag out", cipher_ctx, tag->ptr, tag->len);
     CHK_PROPERTY(res == 1);
 #if defined(HAVE_VALGRIND)
-    VALGRIND_MAKE_MEM_DEFINED(*tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
+    VALGRIND_MAKE_MEM_DEFINED(tag->ptr, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
 #endif /* defined(HAVE_VALGRIND) */
     return 0;
 }
 
-int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const void *tag)
+int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const BSL_Data_t *tag)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(tag);
 
-    BSL_LOG_PLAINTEXT_PTR("tag in", cipher_ctx, tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
+    BSL_LOG_PLAINTEXT_PTR("tag in", cipher_ctx, tag->ptr, tag->len);
     int res =
-        EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_TAG, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN, (void *)tag);
+        EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_TAG, tag->len, (void *)(tag->ptr));
     BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl return %d", res);
     CHK_PROPERTY(res == 1);
 

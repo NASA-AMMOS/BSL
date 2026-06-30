@@ -81,12 +81,12 @@ enum BSLX_CoseSC_Param_e
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.3
 enum BSLX_CoseSC_Result_e
 {
-    BSLX_COSESC_RESULT_COSE_ENC0  = 16,
-    BSLX_COSESC_RESULT_COSE_MAC0  = 17,
-    BSLX_COSESC_RESULT_COSE_SIGN1 = 18,
-    BSLX_COSESC_RESULT_COSE_ENC   = 96,
-    BSLX_COSESC_RESULT_COSE_MAC   = 97,
-    BSLX_COSESC_RESULT_COSE_SIGN  = 98,
+    BSLX_COSESC_RESULT_COSE_ENCRYPT0 = 16,
+    BSLX_COSESC_RESULT_COSE_MAC0     = 17,
+    BSLX_COSESC_RESULT_COSE_SIGN1    = 18,
+    BSLX_COSESC_RESULT_COSE_ENCRYPT  = 96,
+    BSLX_COSESC_RESULT_COSE_MAC      = 97,
+    BSLX_COSESC_RESULT_COSE_SIGN     = 98,
 };
 
 /** @struct BSLX_CoseSc_AadScope_t

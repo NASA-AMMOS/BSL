@@ -109,7 +109,6 @@ typedef struct BSLX_BCB_s
     BSL_Data_t authtag;
     BSL_Data_t iv;
     BSL_Data_t wrapped_key;
-    BSL_Data_t debugstr;
     BSL_Data_t aad;
 
     /// Cipher mode variants

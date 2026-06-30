@@ -129,7 +129,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(&bcb_context->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
-        BSL_Data_Deinit(&bcb_context->authtag);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
@@ -150,7 +149,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != unwrap_result)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
-            BSL_Data_Deinit(&bcb_context->authtag);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
@@ -168,7 +166,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        if (BSL_SUCCESS != BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
+        if (BSL_SUCCESS != BSL_Cipher_AddAadBuffer(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
         {
             BSL_LOG_ERR("Failed to add AAD");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -212,7 +210,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         // Last step is to compute the authentication tag, with is produced
         // as an output parameter to this cipher suite.
-        if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, bcb_context->authtag.ptr))
+        if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, &bcb_context->authtag))
         {
             BSL_LOG_ERR("Failed to set auth tag");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -236,14 +234,12 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         BSL_SeqWriter_Destroy(btsd_write);
     }
 
-    BSL_Data_Deinit(&bcb_context->authtag);
     if (bcb_context->keywrap)
     {
         BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
     }
     BSL_Cipher_Deinit(&cipher);
 
-    ASSERT_POSTCONDITION(bcb_context->authtag.len == 0);
     return retval;
 }
 
@@ -336,7 +332,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        if (BSL_SUCCESS != BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
+        if (BSL_SUCCESS != BSL_Cipher_AddAadBuffer(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
         {
             BSL_LOG_ERR("Failed to add AAD");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -363,11 +359,14 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         }
     }
 
-    int nbytes = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write);
-    if (nbytes < 0)
+    if (retval == BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Encrypting plaintext BTSD failed");
-        retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        int nbytes = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write);
+        if (nbytes < 0)
+        {
+            BSL_LOG_ERR("Encrypting plaintext BTSD failed");
+            retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
     }
 
     if (retval == BSL_SUCCESS)
@@ -384,8 +383,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        BSL_Data_InitBuffer(&bcb_context->authtag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
-        if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, (void **)&bcb_context->authtag.ptr))
+        if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, &bcb_context->authtag))
         {
             BSL_LOG_ERR("Failed to get authentication tag");
             retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -509,11 +507,8 @@ int BSLX_BCB_Init(BSLX_BCB_t *bcb_context, BSL_BundleRef_t *bundle, const BSL_Se
 
     bcb_context->bundle = bundle;
 
-    if (BSL_SUCCESS != BSL_Data_Resize(&bcb_context->debugstr, 512))
-    {
-        BSL_LOG_ERR("Failed to allocated debug str");
-        return BSL_ERR_INSUFFICIENT_SPACE;
-    }
+    BSL_Data_Init(&bcb_context->key_id);
+    BSL_Data_Init(&bcb_context->authtag);
 
     bcb_context->crypto_mode = bcb_context->is_source == true ? BSL_CRYPTO_ENCRYPT : BSL_CRYPTO_DECRYPT;
 
@@ -543,10 +538,10 @@ void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context)
     ASSERT_ARG_NONNULL(bcb_context);
 
     BSL_Data_Deinit(&bcb_context->aad);
-    BSL_Data_Deinit(&bcb_context->debugstr);
     BSL_Data_Deinit(&bcb_context->authtag);
     BSL_Data_Deinit(&bcb_context->iv);
     BSL_Data_Deinit(&bcb_context->wrapped_key);
+    BSL_Data_Deinit(&bcb_context->key_id);
     BSL_PrimaryBlock_deinit(&bcb_context->primary_block);
 
     memset(bcb_context, 0, sizeof(*bcb_context));

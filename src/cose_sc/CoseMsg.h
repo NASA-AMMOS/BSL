@@ -42,8 +42,10 @@ extern "C" {
  */
 enum BSLX_CoseMsg_Header_e
 {
-    BSLX_COSEMSG_HDR_ALG = 1,
-    BSLX_COSEMSG_HDR_KID = 4,
+    BSLX_COSEMSG_HDR_ALG  = 1,
+    BSLX_COSEMSG_HDR_CRIT = 2, // FIXME handle crit
+    BSLX_COSEMSG_HDR_KID  = 4,
+    BSLX_COSEMSG_HDR_IV   = 5,
 };
 
 /** Algorithm code points managed by IANA.
@@ -93,6 +95,14 @@ typedef struct
     BSLX_CoseMsg_HdrMapTree_t uhdr;
 
 } BSLX_CoseMsg_Headers_t;
+/// Initialize the struct
+void BSLX_CoseMsg_Headers_Init(BSLX_CoseMsg_Headers_t *obj);
+/// Deinitialize the struct
+void BSLX_CoseMsg_Headers_Deinit(BSLX_CoseMsg_Headers_t *obj);
+/// Match ::BSL_CBOR_Encode_f signature.
+int BSLX_CoseMsg_Headers_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Headers_t *obj);
+/// Match ::BSL_CBOR_Decode_f signature.
+int BSLX_CoseMsg_Headers_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Headers_t *obj);
 
 /** Derive BSLX_CoseMsg_Headers_t::phdr_bstr from protected headers
  * in BSLX_CoseMsg_Headers_t::phdr.
@@ -111,19 +121,36 @@ const BSL_IdValPair_t *BSLX_CoseMsg_Headers_Get(const BSLX_CoseMsg_Headers_t *ob
 /// Decoded COSE_Mac0
 typedef struct
 {
+    /// Common headers
     BSLX_CoseMsg_Headers_t headers;
     /// The MAC tag bytes
     BSL_Data_t tag;
 } BSLX_CoseMsg_Mac0_t;
-
+/// Initialize the struct
 void BSLX_CoseMsg_Mac0_Init(BSLX_CoseMsg_Mac0_t *obj);
+/// Deinitialize the struct
 void BSLX_CoseMsg_Mac0_Deinit(BSLX_CoseMsg_Mac0_t *obj);
-
 /// Match ::BSL_CBOR_Encode_f signature.
 int BSLX_CoseMsg_Mac0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac0_t *obj);
-
 /// Match ::BSL_CBOR_Decode_f signature.
-int BSLX_CoseMsg_Mac0_Decode(QCBORDecodeContext *enc, BSLX_CoseMsg_Mac0_t *obj);
+int BSLX_CoseMsg_Mac0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Mac0_t *obj);
+
+/** Decoded COSE_Encrypt0.
+ * The use here is always with detached payload, so no ciphertext.
+ */
+typedef struct
+{
+    /// Common headers
+    BSLX_CoseMsg_Headers_t headers;
+} BSLX_CoseMsg_Encrypt0_t;
+/// Initialize the struct
+void BSLX_CoseMsg_Encrypt0_Init(BSLX_CoseMsg_Encrypt0_t *obj);
+/// Deinitialize the struct
+void BSLX_CoseMsg_Encrypt0_Deinit(BSLX_CoseMsg_Encrypt0_t *obj);
+/// Match ::BSL_CBOR_Encode_f signature.
+int BSLX_CoseMsg_Encrypt0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Encrypt0_t *obj);
+/// Match ::BSL_CBOR_Decode_f signature.
+int BSLX_CoseMsg_Encrypt0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt0_t *obj);
 
 #ifdef __cplusplus
 } // extern C

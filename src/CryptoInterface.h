@@ -37,7 +37,7 @@
  * To encrypt plaintext,
  * 1. Initialize the cipher context, using ::BSL_CRYPTO_ENCRYPT as the enc parameter: BSL_Cipher_Init()
  * Also provide the initialization vector (IV), IV Length, and key ID
- * 2. (Optional) add additional authentication data (aad) with BSL_Cipher_AddAAD()
+ * 2. (Optional) add additional authentication data (AAD) with BSL_Cipher_AddAadBuffer() or BSL_Cipher_AddAadSeq()
  * 3. Add data to the cipher context by calling BSL_Cipher_AddSeq()
  * 4. Finalize cipher operation: calling BSL_Cipher_FinalizeSeq()
  * 5. Get tag information: BSL_Cipher_GetTag()
@@ -46,7 +46,7 @@
  * To decrypt ciphertext:
  * 1. Initialize the cipher context, using ::BSL_CRYPTO_DECRYPT as the enc parameter: BSL_Cipher_Init()
  * Also provide the initialization vector (IV), IV Length, and key ID
- * 2. (Optional) add additional authentication data (aad) with BSL_Cipher_AddAAD()
+ * 2. (Optional) add additional authentication data (AAD) with BSL_Cipher_AddAadBuffer() or BSL_Cipher_AddAadSeq()
  * 3. Add data to the cipher context by calling BSL_Cipher_AddSeq()
  * 4. Set tag information to be used to validate decryption: BSL_Cipher_SetTag()
  * 5. Finalize cipher operation: calling BSL_Cipher_FinalizeSeq()
@@ -303,7 +303,9 @@ int BSL_Crypto_RemoveRegistryKey(const BSL_Data_t *keyid);
  * @param aad_len length of AAD
  * @return 0 if successful
  */
-int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len);
+int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len);
+/// @overload for sequential reader
+int BSL_Cipher_AddAadSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader);
 
 /**
  * Add data to encrypt or decrypt to the context sequentially
@@ -318,19 +320,18 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
 /**
  * Get the tag of the crypto operation
  * @param cipher_ctx pointer to context to get tag from
- * @param[out] tag will contain tag information upon successful function completion
+ * @param[out] tag will be resized and contain data upon successful function completion
  * @return 0 if successful
  */
-int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, void **tag);
+int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag);
 
 /**
  * Set the tag of the crypto operation.
- * Tag length is always 16 bytes
  * @param cipher_ctx pointer to context to set tag of
- * @param[in] tag pointer to tag
+ * @param[in] tag pointer to tag to read from.
  * @return 0 if successful
  */
-int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const void *tag);
+int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const BSL_Data_t *tag);
 
 /**
  * Finalize crypto operation.

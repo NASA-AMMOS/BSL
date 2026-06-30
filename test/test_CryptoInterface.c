@@ -418,14 +418,14 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     TEST_ASSERT_EQUAL(0, res);
 
     uint8_t aad[2] = { 0x00, 0x01 };
-    res            = BSL_Cipher_AddAAD(&ctx, aad, 2);
+    res            = BSL_Cipher_AddAadBuffer(&ctx, aad, 2);
     TEST_ASSERT_EQUAL(0, res);
 
     res = BSL_Cipher_AddSeq(&ctx, reader, writer);
     TEST_ASSERT_EQUAL(0, res);
 
-    uint8_t tag[16];
-    void   *tag_ptr = tag;
+    BSL_Data_t tag;
+    BSL_Data_Init(&tag);
 
     res = BSL_Cipher_FinalizeSeq(&ctx, writer);
     TEST_ASSERT_EQUAL(0, res);
@@ -433,8 +433,10 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     res = BSL_SeqWriter_Destroy(writer);
     TEST_ASSERT_EQUAL(0, res);
 
-    res = BSL_Cipher_GetTag(&ctx, &tag_ptr);
+    res = BSL_Cipher_GetTag(&ctx, &tag);
     TEST_ASSERT_EQUAL(0, res);
+    TEST_ASSERT_NOT_NULL(tag.ptr);
+    TEST_ASSERT_EQUAL_size_t(16, tag.len);
 
     uint8_t plaintext[ct_size];
     int     plaintext_len;
@@ -445,9 +447,10 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
 
     bool              is_key8 = (0 == strcmp(keyid, "Key8"));
     const EVP_CIPHER *cipher  = (is_key8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
-    res                       = gcm_decrypt(cipher, ciphertext, ct_size, aad, 2, (unsigned char *)tag,
+    res                       = gcm_decrypt(cipher, ciphertext, ct_size, aad, 2, (unsigned char *)tag.ptr,
                                             (unsigned char *)((is_key8) ? test_256 : test_128), iv, iv_len, plaintext, &plaintext_len);
     TEST_ASSERT_EQUAL(0, res);
+    BSL_Data_Deinit(&tag);
 
     TEST_ASSERT_EQUAL_INT(ct_size, plaintext_len);
     if (plaintext_len > 0)
@@ -478,8 +481,10 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     uint8_t aad[2] = { 0x00, 0x01 };
 
     uint8_t ciphertext[1000];
-    uint8_t tag[16];
     int     ciphertext_len;
+
+    BSL_Data_t tag;
+    BSL_Data_InitBuffer(&tag, 16);
 
     void *key;
     TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_GetRegistryKeyName(keyid, &key));
@@ -488,7 +493,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     bool              is_key8 = (0 == strcmp(keyid, "Key8"));
     const EVP_CIPHER *cipher  = (is_key8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
     res                       = gcm_encrypt(cipher, (unsigned char *)plaintext_in, strlen(plaintext_in), aad, 2,
-                                            (unsigned char *)((is_key8) ? test_256 : test_128), iv, iv_len, ciphertext, &ciphertext_len, tag);
+                                            (unsigned char *)((is_key8) ? test_256 : test_128), iv, iv_len, ciphertext, &ciphertext_len, tag.ptr);
     TEST_ASSERT_EQUAL(0, res);
 
     BSL_SeqReader_t *reader = BSL_TestUtils_FlatReader((const void *)ciphertext, ciphertext_len);
@@ -505,14 +510,15 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_DECRYPT, aes_var, iv, iv_len, ckey);
     TEST_ASSERT_EQUAL(0, res);
 
-    res = BSL_Cipher_AddAAD(&ctx, aad, 2);
+    res = BSL_Cipher_AddAadBuffer(&ctx, aad, 2);
     TEST_ASSERT_EQUAL(0, res);
 
     res = BSL_Cipher_AddSeq(&ctx, reader, writer);
     TEST_ASSERT_EQUAL(0, res);
 
-    res = BSL_Cipher_SetTag(&ctx, tag);
+    res = BSL_Cipher_SetTag(&ctx, &tag);
     TEST_ASSERT_EQUAL(0, res);
+    BSL_Data_Deinit(&tag);
 
     res = BSL_Cipher_FinalizeSeq(&ctx, writer);
     TEST_ASSERT_EQUAL(0, res);

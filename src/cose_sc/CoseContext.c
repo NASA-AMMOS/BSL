@@ -59,7 +59,7 @@ static int local_cmp_int64(const void *lhs, const void *rhs)
 typedef struct
 {
     /// Bundle context associated with this operation
-    const BSL_BundleRef_t *bundle;
+    BSL_BundleRef_t *bundle;
     /// Operation source
     const BSL_SecOper_t *sec_oper;
     /// Operation outcome
@@ -107,6 +107,9 @@ typedef struct
     /// MAC processing state, may be NULL
     BSL_AuthCtx_t *mac_ctx;
 
+    /// Encrypt processing state, may be NULL
+    BSL_Cipher_t *enc_ctx;
+
 } BSLX_CoseSc_t;
 
 static void BSLX_CoseSc_Init(BSLX_CoseSc_t *self)
@@ -117,6 +120,7 @@ static void BSLX_CoseSc_Init(BSLX_CoseSc_t *self)
     BSL_HostEID_Init(&self->sec_src_eid);
     BSLX_CoseSc_AadScope_init(self->aad_scope);
     self->mac_ctx = NULL;
+    self->enc_ctx = NULL;
     BSL_PrimaryBlock_Init(&self->primary_block);
     self->status = BSL_SUCCESS;
 }
@@ -138,7 +142,7 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
     memset(self, 0, sizeof(*self));
 }
 
-static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
                                 BSL_SecOutcome_t *sec_outcome)
 {
     self->bundle      = bundle;
@@ -597,7 +601,9 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
     return BSL_SUCCESS;
 }
 
-static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_bstr, int64_t tgt_alg,
+/** Internal processing according to Section 6.3 of RFC 9052.
+ */
+static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *headers, int64_t tgt_alg,
                                     const char *context, BSL_Data_t *tag)
 {
     int res;
@@ -620,6 +626,7 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
             return;
     }
 
+    // Chunks of MAC_Structure
     BSLX_CoseSc_ChunkList_t chunklist;
     BSLX_CoseSc_ChunkList_init(chunklist);
 
@@ -636,8 +643,8 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSL_Data_t *phdr_b
         }
 
         // protected bytes
-        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, phdr_bstr->len);
-        BSLX_CoseSc_bstring_AppendRaw(*data, phdr_bstr);
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, headers->phdr_bstr.len);
+        BSLX_CoseSc_bstring_AppendRaw(*data, &headers->phdr_bstr);
     }
     { // external AAD bstr wrapped
         m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
@@ -788,7 +795,7 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
 
     if (BSL_SUCCESS == ctx->status)
     {
-        BSLX_CoseSc_Mac_Compute(ctx, &msg.headers.phdr_bstr, ctx->tgt_alg, "MAC0", &msg.tag);
+        BSLX_CoseSc_Mac_Compute(ctx, &msg.headers, ctx->tgt_alg, "MAC0", &msg.tag);
     }
 
     BSL_Data_t aad_scope_enc;
@@ -903,7 +910,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
     {
         BSL_Data_t tag;
         BSL_Data_Init(&tag);
-        BSLX_CoseSc_Mac_Compute(ctx, &msg.headers.phdr_bstr, ctx->tgt_alg, "MAC0", &tag);
+        BSLX_CoseSc_Mac_Compute(ctx, &msg.headers, ctx->tgt_alg, "MAC0", &tag);
 
         bool tag_valid = BSL_Crypto_Compare(msg.tag.ptr, msg.tag.len, tag.ptr, tag.len);
         if (tag_valid)
@@ -919,6 +926,278 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
     }
 
     BSLX_CoseMsg_Mac0_Deinit(&msg);
+}
+/** Internal processing according to Section 5.3 of RFC 9052.
+ */
+static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *headers, int64_t tgt_alg,
+                                        const char *context, BSL_CipherMode_e mode)
+{
+    int res;
+
+    BSL_CryptoCipherAESVariant_e bsl_aes_var;
+    switch (ctx->tgt_alg)
+    {
+        case BSLX_COSEMSG_ALG_AES_GCM_128:
+            bsl_aes_var = BSL_CRYPTO_AES_128;
+            break;
+        case BSLX_COSEMSG_ALG_AES_GCM_192:
+            bsl_aes_var = BSL_CRYPTO_AES_192;
+            break;
+        case BSLX_COSEMSG_ALG_AES_GCM_256:
+            bsl_aes_var = BSL_CRYPTO_AES_256;
+            break;
+        default:
+            BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, tgt_alg);
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            return;
+    }
+
+    // Chunks of Enc_Structure
+    BSLX_CoseSc_ChunkList_t chunklist;
+    BSLX_CoseSc_ChunkList_init(chunklist);
+
+    { // context and protected bytes
+        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
+
+        // 3-item array
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_ARRAY, 3);
+
+        { // context text
+            size_t ctx_len = strlen(context);
+            BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_TEXT_STRING, ctx_len);
+            m_bstring_push_back_bytes(*data, ctx_len, context);
+        }
+
+        // protected bytes
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, headers->phdr_bstr.len);
+        BSLX_CoseSc_bstring_AppendRaw(*data, &headers->phdr_bstr);
+    }
+    { // external AAD bstr wrapped
+        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
+
+        {
+            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+            // force a new bstring item for external_aad content
+            m_bstring_t start;
+            m_bstring_init(start);
+            BSLX_CoseSc_ChunkItem_move_data(*item, start);
+        }
+        size_t ext_aad_len;
+        res = BSLX_CoseSc_ExternalAad_Chunked(ctx, chunklist, &ext_aad_len);
+        if (BSL_SUCCESS != res)
+        {
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            // continue processing
+        }
+
+        // after external AAD size is known, inject bstr head above
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ext_aad_len);
+    }
+
+    BSL_Data_t iv_val;
+    BSL_Data_Init(&iv_val);
+    if (BSL_SUCCESS == ctx->status)
+    { // collect IV bytes
+
+        const BSL_IdValPair_t *head_iv = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_IV, false);
+        if (!head_iv)
+        {
+            BSL_LOG_ERR("Failed to get IV header");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+        else if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(head_iv, &iv_val))
+        {
+            BSL_LOG_ERR("Invalid IV value");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        ctx->enc_ctx = BSL_malloc(sizeof(BSL_Cipher_t));
+
+        res = BSL_Cipher_Init(ctx->enc_ctx, mode, bsl_aes_var, iv_val.ptr, iv_val.len, ctx->keyhandle);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to construct ENC context");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_ChunkList_it_t chunk_it;
+        for (BSLX_CoseSc_ChunkList_it(chunk_it, chunklist); !BSLX_CoseSc_ChunkList_end_p(chunk_it);
+             BSLX_CoseSc_ChunkList_next(chunk_it))
+        {
+            const BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_cref(chunk_it);
+
+            const m_bstring_t      *data;
+            BSL_SeqReader_t *const *seq;
+            if ((data = BSLX_CoseSc_ChunkItem_cget_data(*item)))
+            {
+                size_t         size = m_bstring_size(*data);
+                const uint8_t *ptr  = m_bstring_view(*data, 0, size);
+
+                res = BSL_Cipher_AddAadBuffer(ctx->enc_ctx, ptr, size);
+                if (BSL_SUCCESS != res)
+                {
+                    BSL_LOG_ERR("Failed to process AAD");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                }
+            }
+            else if ((seq = BSLX_CoseSc_ChunkItem_cget_seq(*item)))
+            {
+                res = BSL_Cipher_AddAadSeq(ctx->enc_ctx, *seq);
+                if (BSL_SUCCESS != res)
+                {
+                    BSL_LOG_ERR("Failed to process AAD");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                }
+            }
+            else
+            {
+                BSL_LOG_WARNING("Ignoring empty chunk");
+            }
+        }
+    }
+
+    { // unconditionally cleanup
+        BSLX_CoseSc_ChunkList_it_t chunk_it;
+        for (BSLX_CoseSc_ChunkList_it(chunk_it, chunklist); !BSLX_CoseSc_ChunkList_end_p(chunk_it);
+             BSLX_CoseSc_ChunkList_next(chunk_it))
+        {
+            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_ref(chunk_it);
+
+            BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
+            if (seq)
+            {
+                BSL_SeqReader_Destroy(*seq);
+                *seq = NULL;
+            }
+        }
+    }
+    BSLX_CoseSc_ChunkList_clear(chunklist);
+
+    // Process the plaintext
+    BSL_SeqReader_t *btsd_read  = NULL;
+    BSL_SeqWriter_t *btsd_write = NULL;
+    if (BSL_SUCCESS == ctx->status)
+    {
+        btsd_read = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
+        // output contains auth tag
+        btsd_write = BSL_BundleCtx_WriteBTSD(ctx->bundle, ctx->target_block.block_num,
+                                             ctx->target_block.btsd_len + BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
+        if (!btsd_read)
+        {
+            BSL_LOG_ERR("Failed to construct reader");
+            ctx->status = BSL_ERR_HOST_CALLBACK_FAILED;
+        }
+        if (!btsd_write)
+        {
+            BSL_LOG_ERR("Failed to construct writer");
+            ctx->status = BSL_ERR_HOST_CALLBACK_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        int nbytes = BSL_Cipher_AddSeq(ctx->enc_ctx, btsd_read, btsd_write);
+        if (nbytes < 0)
+        {
+            BSL_LOG_ERR("Encrypting plaintext BTSD failed");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSL_Data_t tag;
+        BSL_Data_Init(&tag);
+
+        res = BSL_Cipher_GetTag(ctx->enc_ctx, &tag);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("BSL_Cipher_Finalize failed with code %d", res);
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+        }
+    }
+
+    BSL_Data_Deinit(&iv_val);
+}
+
+/** Internal processing to source a COSE_Encrypt0 message.
+ */
+static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
+{
+    int res;
+
+    BSLX_CoseMsg_Encrypt0_t msg;
+    BSLX_CoseMsg_Encrypt0_Init(&msg);
+    {
+        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+
+        BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->tgt_alg);
+
+        BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.phdr, param->id, param_ptr);
+        BSLB_IdValPairPtr_release(param_ptr);
+    }
+    if (ctx->kid)
+    {
+        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+
+        BSL_IdValPair_Set(param, ctx->kid);
+        param->id = BSLX_COSEMSG_HDR_KID;
+
+        BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.uhdr, param->id, param_ptr);
+        BSLB_IdValPairPtr_release(param_ptr);
+    }
+    BSLX_CoseMsg_Headers_DerivePhdr(&msg.headers);
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_Encrypt_Compute(ctx, &msg.headers, ctx->tgt_alg, "Encrypt0", BSL_CRYPTO_ENCRYPT);
+    }
+
+    BSL_Data_t aad_scope_enc;
+    BSL_Data_Init(&aad_scope_enc);
+    if (BSL_SUCCESS == ctx->status)
+    {
+        res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &ctx->aad_scope);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to encode AAD Scope");
+            ctx->status = res;
+        }
+    }
+    BSL_Data_t msg_enc;
+    BSL_Data_Init(&msg_enc);
+    if (BSL_SUCCESS == ctx->status)
+    {
+        res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Encrypt0_Encode, &msg);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to encode Encrypt0");
+            ctx->status = res;
+        }
+    }
+    if (BSL_SUCCESS == ctx->status)
+    {
+        {
+            BSL_IdValPair_t *param = BSL_SecOutcome_AppendParam(ctx->sec_outcome);
+            BSL_IdValPair_SetRaw(param, BSLX_COSESC_PARAM_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
+        }
+        {
+            BSL_IdValPair_t *result = BSL_SecOutcome_AppendResult(ctx->sec_outcome);
+            BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_ENCRYPT0, msg_enc);
+        }
+    }
+    BSL_Data_Deinit(&msg_enc);
+    BSL_Data_Deinit(&aad_scope_enc);
+
+    BSLX_CoseMsg_Encrypt0_Deinit(&msg);
 }
 
 int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper, // NOSONAR
@@ -986,30 +1265,28 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
         }
         else
         { // confidentiality operation
-            BSL_LOG_CRIT("Not implemented");
-            ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-#if 0
             if (ctx.is_source)
             {
                 if (ctx.key_alg != ctx.tgt_alg)
                 {
                     // has a recipient layer
-
-                    // FIXME Enc handling
+                    BSL_LOG_CRIT("Not implemented");
+                    // FIXME Mac handling
                     ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
                 else
                 {
                     // only one content layer
-                    BSLX_CoseSc_Enc0_Source(&ctx);
+                    BSLX_CoseSc_Encrypt0_Source(&ctx);
                 }
             }
             else
             {
                 // verify or accept
-                const BSL_IdValPair_t *result_enc0 = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENC0);
-                //            const BSL_IdValPair_t *result_enc = BSL_SecOper_FindResult(ctx.sec_oper,
-                //            BSLX_COSESC_RESULT_COSE_ENC);
+                const BSL_IdValPair_t *result_enc0 =
+                    BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT0);
+                const BSL_IdValPair_t *result_enc =
+                    BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT);
                 if (ctx.key_alg != ctx.tgt_alg)
                 {
                     // FIXME Mac handling
@@ -1019,7 +1296,13 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                 {
                     if (result_enc0)
                     {
-                        BSLX_CoseSc_Enc0_VerifyAccept(&ctx, result_enc0);
+                        //                        BSLX_CoseSc_Encrypt0_VerifyAccept(&ctx, result_enc0);
+                    }
+                    else if (result_enc)
+                    {
+                        BSL_LOG_CRIT("Not implemented");
+                        // FIXME Mac handling
+                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                     }
                     else
                     {
@@ -1028,7 +1311,6 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                     }
                 }
             }
-#endif
         }
     }
 

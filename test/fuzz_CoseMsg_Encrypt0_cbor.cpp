@@ -50,13 +50,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     int retval = 0;
 
-    BSLX_CoseMsg_Encrypt0_t msg;
-    BSLX_CoseMsg_Encrypt0_Init(&msg);
+    BSLX_CoseMsg_Mac0_t msg;
+    BSLX_CoseMsg_Mac0_Init(&msg);
 
     {
         BSL_Data_t in_buf;
         BSL_Data_InitView(&in_buf, size, (BSL_DataPtr_t)data);
-        int res = BSL_CBOR_Decode(&in_buf, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Encrypt0_Decode, &msg);
+        int res = BSL_CBOR_Decode(&in_buf, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Mac0_Decode, &msg);
         BSL_Data_Deinit(&in_buf);
         if (BSL_SUCCESS != res)
         {
@@ -68,7 +68,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_Data_Init(&out_buf);
     if (!retval)
     {
-        int res = BSL_CBOR_Encode_Twopass(&out_buf, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Encrypt0_Encode, &msg);
+        int res = BSL_CBOR_Encode_Twopass(&out_buf, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Mac0_Encode, &msg);
         if (BSL_SUCCESS != res)
         {
             retval = -1;
@@ -89,7 +89,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     BSL_Data_Deinit(&out_buf);
-    BSLX_CoseMsg_Encrypt0_Deinit(&msg);
+    BSLX_CoseMsg_Mac0_Deinit(&msg);
 
     return retval;
 }

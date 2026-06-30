@@ -341,7 +341,7 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     BSL_SecOper_Deinit(&sec_oper);
 }
 
-void test_AppendixA_Example1_BCB_Source(void)
+void test_AppendixA_Example4_BCB_Source(void)
 {
     {
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_4_kid);
@@ -360,7 +360,7 @@ void test_AppendixA_Example1_BCB_Source(void)
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
                          BSL_POLICYACTION_DROP_BUNDLE);
 
     {
@@ -406,12 +406,12 @@ void test_AppendixA_Example1_BCB_Source(void)
     BSL_SecOutcome_Init(outcome, &sec_oper);
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
-    TEST_ASSERT_FALSE(valid_status);
+    TEST_ASSERT_TRUE(valid_status);
 
     // Confirm running operation as source executes without error
     int exec_status = BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                         &sec_oper, outcome);
-    TEST_ASSERT_EQUAL(BSL_ERR_SECURITY_OPERATION_FAILED, exec_status);
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
 #if 0
     // Confirm it produced only 1 result
