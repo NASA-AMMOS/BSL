@@ -58,6 +58,7 @@ EXAMPLE_A_4_WITH_BCB = '''\
 '''
 ''' Bundle with BIB over target #1, adjusted sec block to #2 with flags 0x1'''
 
+
 @contextlib.contextmanager
 def sc_config_modifier(orig: str, modify: Dict[str, Any]):
     ''' A context for modifying baseline configurations '''

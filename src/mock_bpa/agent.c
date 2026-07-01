@@ -262,8 +262,8 @@ static void MockBPA_WriteBTSD_Deinit(void *user_data, bool success)
     ASSERT_PRECONDITION(obj->file);
 
     fclose(obj->file);
-    BSL_LOG_DEBUG("closed block number %" PRIu64 " with size %zu and cursor %zu user success %d", obj->block->blk_num, obj->size,
-                  obj->curs, success);
+    BSL_LOG_DEBUG("closed block number %" PRIu64 " with size %zu and cursor %zu user success %d", obj->block->blk_num,
+                  obj->size, obj->curs, success);
     if (obj->curs < obj->size)
     {
         BSL_LOG_ERR("closed block number %" PRIu64 " for writing with only %zu of %zu written", obj->block->blk_num,
@@ -277,7 +277,8 @@ static void MockBPA_WriteBTSD_Deinit(void *user_data, bool success)
         obj->block->btsd     = obj->ptr;
         obj->block->btsd_len = obj->size;
     }
-    else{
+    else
+    {
         BSL_free(obj->ptr);
     }
     BSL_free(obj);
