@@ -29,7 +29,7 @@ The BSL proper is associated with the @ref frontend and @ref backend_dyn groups.
 The unit tests of the BSL use, where necessary, very minimal implementations of a PP to set up preconditons for test cases.
 
 The Mock BPA uses a PP implementation tailored to meet the needs of the BSL acceptance tests.
-This PP uses a set of bit fields within an integer program argument to control policy options; the fields are documented on ::BSLP_BitstringPolicyConfiguration_t.
+This PP uses a set of bit fields within an integer program argument to control policy options; the fields are documented on ::BSLP_PolicyParser_BitstringConfig_t.
 It also allows multiple integer policy values to be configured in a single running Mock BPA.
 This PP is registered and used by the @ref mock-bpa for many BSL testing cases.
 
@@ -65,7 +65,7 @@ The policies used by the Mock BPA example policy providers can be provided with 
 
 ### Policy Bit Fields
 
-This policy provider initializes its policy using a set of bit fields within an integer program argument to control policy options; the fields are documented on ::BSLP_BitstringPolicyConfiguration_t. 
+This policy provider initializes its policy using a set of bit fields within an integer program argument to control policy options; the fields are documented on ::BSLP_PolicyParser_BitstringConfig_t. 
 The bit fields should be comma-separated, and passed to the Mock BPA with the `-p` command line option (see [Command Line Options](#command-line-options)).
 
 ### ION-Like JSON-Encoded Policy

@@ -98,8 +98,9 @@ jobs:
         run: dnf install -y x86_64/bsl*.rpm
       - name: Unit tests
         run: |
+          cd /usr/libexec/bsl
           FAILURES=0
-          for TESTEXEC in /usr/libexec/bsl/test_*
+          for TESTEXEC in $(find . -maxdepth 1 -type f -a -executable)
           do
             $TESTEXEC || FAILURES=$(($FAILURES + 1))
           done

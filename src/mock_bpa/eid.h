@@ -28,6 +28,7 @@
 #define BSL_MOCK_BPA_EID_H_
 
 #include <inttypes.h>
+#include <m-string.h>
 
 #include <BPSecLib_Private.h>
 
@@ -51,6 +52,8 @@ typedef struct
 /// Handled schemes
 enum bsl_mock_eid_scheme_e
 {
+    /// Reserved invalid value
+    BSL_MOCK_EID_INVALID = 0,
     /// The "dtn" scheme
     BSL_MOCK_EID_DTN = 1,
     /// The "ipn" scheme
@@ -68,6 +71,8 @@ typedef struct
     {
         /// Used when #scheme is ::BSL_MOCK_EID_IPN
         bsl_eid_ipn_ssp_t as_ipn;
+        /// Used when #scheme is ::BSL_MOCK_EID_DTN
+        m_string_t as_dtn;
         /// Used in all other cases, copied from source
         BSL_Data_t as_raw;
     } ssp;

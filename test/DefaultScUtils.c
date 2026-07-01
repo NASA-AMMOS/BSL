@@ -329,10 +329,10 @@ void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib)
     uint8_t rfc9173A4_BCB_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69, 0x6f, 0x70, 0x61,
                                     0x73, 0x64, 0x66, 0x67, 0x68, 0x71, 0x77, 0x65, 0x72, 0x74, 0x79,
                                     0x75, 0x69, 0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
-    BSL_Crypto_AddRegistryKey(RFC9173_EXAMPLE_A1_KEY, rfc9173A1_key, 16);
-    BSL_Crypto_AddRegistryKey(RFC9173_EXAMPLE_A2_KEY, rfc9173A2_key, 16);
-    BSL_Crypto_AddRegistryKey(RFC9173_EXAMPLE_A3_KEY, rfc9173A3_key, sizeof(rfc9173A3_key));
-    BSL_Crypto_AddRegistryKey(RFC9173_EXAMPLE_A4_BCB_KEY, rfc9173A4_BCB_key, sizeof(rfc9173A4_BCB_key));
+    BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A1_KEY, rfc9173A1_key, sizeof(rfc9173A1_key));
+    BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A2_KEY, rfc9173A2_key, sizeof(rfc9173A2_key));
+    BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A3_KEY, rfc9173A3_key, sizeof(rfc9173A3_key));
+    BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A4_BCB_KEY, rfc9173A4_BCB_key, sizeof(rfc9173A4_BCB_key));
 
     BSL_SecCtxDesc_t sec_desc;
     int              res;

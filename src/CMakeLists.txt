@@ -24,22 +24,18 @@ configure_file(BSLConfig.h.in BSLConfig.h @ONLY)
 configure_file(BSLConfig.c.in BSLConfig.c @ONLY)
 
 # Frontend library
-set(BSL_FRONT_H
-  ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Private.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Public.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/CryptoInterface.h
-)
-
-set(BSL_FRONT_C
-  ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/Data.c
-)
-
 add_library(bsl_front)
-target_sources(bsl_front PUBLIC ${BSL_FRONT_H})
-target_sources(bsl_front PRIVATE ${BSL_FRONT_C})
+target_sources(bsl_front PUBLIC
+    ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Private.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Public.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CryptoInterface.h
+)
+target_sources(bsl_front PRIVATE 
+    ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Data.c
+)
 
 set_target_properties(bsl_front
     PROPERTIES
@@ -65,7 +61,7 @@ set_target_properties(bsl_crypto
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-target_link_libraries(bsl_crypto PUBLIC bsl_front)
+target_link_libraries(bsl_crypto PUBLIC bsl_front bsl_dynamic)
 target_link_libraries(bsl_crypto PUBLIC MLIB::mlib)
 target_link_libraries(bsl_crypto INTERFACE OpenSSL::Crypto)
 if(TARGET valgrind::valgrind)
@@ -96,15 +92,37 @@ target_link_libraries(bsl_default_sc PUBLIC bsl_front)
 target_link_libraries(bsl_default_sc PUBLIC bsl_crypto)
 target_link_libraries(bsl_default_sc PUBLIC qcbor::qcbor)
 
+# COSE Security Context library
+set(BSL_COSE_SC_H
+)
+
+add_library(bsl_cose_sc)
+target_sources(bsl_cose_sc PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/cose_sc/CoseContext.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/cose_sc/CoseMsg.h
+)
+target_sources(bsl_cose_sc PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/cose_sc/CoseContext.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/cose_sc/CoseMsg.c
+)
+set_target_properties(bsl_cose_sc
+    PROPERTIES
+        VERSION ${CMAKE_PROJECT_VERSION}
+        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+)
+target_link_libraries(bsl_cose_sc PUBLIC bsl_front)
+target_link_libraries(bsl_cose_sc PUBLIC bsl_crypto)
+target_link_libraries(bsl_cose_sc PUBLIC qcbor::qcbor)
+
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyConfigParser.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/PolicyParser.h
 )
 
 set(BSL_SAMPLE_PP_C
   ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyConfigParser.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/PolicyParser.c
 )
 
 add_library(bsl_sample_pp)
@@ -115,13 +133,16 @@ set_target_properties(bsl_sample_pp
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
+target_link_libraries(bsl_sample_pp PUBLIC bsl_front bsl_dynamic)
+# contexts for config options
+target_link_libraries(bsl_sample_pp PUBLIC bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
 target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/CBOR.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.h   
@@ -130,6 +151,7 @@ set(BSL_DYNAMIC_H
 
 set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/CBOR.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/HostInterface.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c
@@ -176,7 +198,7 @@ endif()
 install(
     TARGETS
         bsl_front bsl_dynamic
-        bsl_default_sc
+        bsl_default_sc bsl_cose_sc
         bsl_crypto
         bsl_sample_pp
     RUNTIME

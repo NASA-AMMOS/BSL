@@ -130,7 +130,7 @@ static void write_log(const mock_bpa_LogEvent_event_t *event)
         size_t len    = strftime(curs, remain, "%Y-%m-%dT%H:%M:%S", &nowtm);
         curs += len;
         remain -= len;
-        snprintf(curs, remain, ".%06ld", event->timestamp.tv_usec);
+        snprintf(curs, remain, ".%06ldZ", event->timestamp.tv_usec);
     }
     char thrbuf[2 * sizeof(pthread_t) + 1];
     {

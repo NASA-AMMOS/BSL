@@ -96,9 +96,21 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   add_unity_test(SOURCE test_SamplePolicyProvider.c)
   target_link_libraries(test_SamplePolicyProvider PUBLIC ${LIB_ORDERED})
 
+  add_unity_test(SOURCE test_PolicyParser.c)
+  target_link_libraries(test_PolicyParser PUBLIC ${LIB_ORDERED})
+  install(
+    DIRECTORY test_PolicyParser-data
+    DESTINATION ${TEST_INSTALL_PREFIX}
+    COMPONENT test
+  )
+
   # Specific tests for ONLY the "Default Security Context" module (Implementation of RFC9173)
   add_unity_test(SOURCE test_DefaultSecurityContext.c)
   target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
+
+  # Specific tests for ONLY the "COSE Context" module
+  add_unity_test(SOURCE test_CoseContext.c)
+  target_link_libraries(test_CoseContext PUBLIC ${LIB_ORDERED})
 
   # Exercises the MockBPA using the publicly exposed BSL front end
   add_unity_test(SOURCE test_PublicInterfaceImpl.c)
@@ -112,7 +124,7 @@ endif(BUILD_UNITTEST AND NOT BUILD_FUZZING)
 if(BUILD_FUZZING)
   add_fuzz_test(SOURCE fuzz_mock_bpa_eid_uri.cpp)
   target_link_libraries(fuzz_mock_bpa_eid_uri PUBLIC ${LIB_ORDERED})
-  
+
   add_fuzz_test(SOURCE fuzz_mock_bpa_eid_cbor.cpp)
   target_link_libraries(fuzz_mock_bpa_eid_cbor PUBLIC ${LIB_ORDERED})
 
@@ -124,4 +136,21 @@ if(BUILD_FUZZING)
 
   add_fuzz_test(SOURCE fuzz_dynamic_asb_cbor.cpp RUNS_COUNT 2000000)
   target_link_libraries(fuzz_dynamic_asb_cbor PUBLIC ${LIB_ORDERED})
+
+  add_fuzz_test(SOURCE fuzz_CoseMsg_Mac0_cbor.cpp RUNS_COUNT 2000000)
+  target_link_libraries(fuzz_CoseMsg_Mac0_cbor PUBLIC ${LIB_ORDERED})
+
+  add_fuzz_test(
+    SOURCE fuzz_mock_bpa_keyregistry_jwk.cpp
+    RUNS_COUNT 300000
+    EXTRA_ARGS "-dict=libfuzzer-json.dict"
+  )
+  target_link_libraries(fuzz_mock_bpa_keyregistry_jwk PUBLIC ${LIB_ORDERED})
+
+  add_fuzz_test(
+    SOURCE fuzz_mock_bpa_keyregistry_cosekey.cpp
+    RUNS_COUNT 300000
+  )
+  target_link_libraries(fuzz_mock_bpa_keyregistry_cosekey PUBLIC ${LIB_ORDERED})
+
 endif(BUILD_FUZZING)

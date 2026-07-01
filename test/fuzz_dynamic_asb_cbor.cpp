@@ -19,8 +19,14 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+/** @file
+ * @ingroup fuzz_test
+ * @brief Fuzz the BPSec ASB decoding from CBOR.
+ */
 #include "TestUtils.h"
 #include <mock_bpa/MockBPA.h>
+#include <backend/AbsSecBlock.h>
+#include <backend/CBOR.h>
 #include <cinttypes>
 
 #define EXPECT_EQ(expect, got)          \
@@ -48,30 +54,24 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     BSL_AbsSecBlock_Init(asb);
 
     {
-        BSL_Data_t buf;
-        BSL_Data_InitView(&buf, size, (BSL_DataPtr_t)data);
-        int res = BSL_AbsSecBlock_DecodeFromCBOR(asb, &buf);
-        BSL_Data_Deinit(&buf);
-        if (res)
+        BSL_Data_t in_buf;
+        BSL_Data_InitView(&in_buf, size, (BSL_DataPtr_t)data);
+        int res = BSL_CBOR_Decode(&in_buf, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb);
+        BSL_Data_Deinit(&in_buf);
+        if (BSL_SUCCESS != res)
         {
             retval = -1;
         }
     }
 
-    BSL_Data_t out_data;
-    BSL_Data_Init(&out_data);
+    BSL_Data_t out_buf;
+    BSL_Data_Init(&out_buf);
     if (!retval)
     {
-        ssize_t needlen = BSL_AbsSecBlock_EncodeToCBOR(asb, &out_data);
-        if (needlen <= 0)
+        int res = BSL_CBOR_Encode_Twopass(&out_buf, (BSL_CBOR_Encode_f)&BSL_AbsSecBlock_Encode, asb);
+        if (BSL_SUCCESS != res)
         {
             retval = -1;
-        }
-        else
-        {
-            EXPECT_EQ(0, BSL_Data_Resize(&out_data, (size_t)needlen));
-            ssize_t usedlen = BSL_AbsSecBlock_EncodeToCBOR(asb, &out_data);
-            EXPECT_EQ(needlen, usedlen);
         }
     }
 
@@ -79,16 +79,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     {
         // output may be a subset
         // CBOR tags on input will not be carried
-        if (size >= out_data.len)
+        if (size >= out_buf.len)
         {
-            if (0 != memcmp(data, out_data.ptr, out_data.len))
+            if (0 != memcmp(data, out_buf.ptr, out_buf.len))
             {
                 retval = -1;
             }
         }
     }
 
-    BSL_Data_Deinit(&out_data);
+    BSL_Data_Deinit(&out_buf);
     BSL_AbsSecBlock_Deinit(asb);
     BSL_free(asb);
 

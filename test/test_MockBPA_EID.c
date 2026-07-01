@@ -62,8 +62,9 @@ void test_BSL_HostEID_DecodeFromText_ipn(const char *text, uint64_t auth_num, ui
 
 TEST_CASE("")
 TEST_CASE("any")
+TEST_CASE("other:")
 TEST_CASE("other:hi")
-TEST_CASE("dtn://hi")
+TEST_CASE("dtn:")
 TEST_CASE("ipn:")
 TEST_CASE("ipn:a.b")
 TEST_CASE("ipn: 10.   10")
@@ -78,6 +79,8 @@ void test_BSL_HostEID_DecodeFromText_invalid(const char *text)
     BSL_HostEID_Deinit(&eid);
 }
 
+TEST_CASE("dtn://") // lax decoder
+TEST_CASE("dtn://hi")
 TEST_CASE("ipn:0.0")
 TEST_CASE("ipn:50.10")
 TEST_CASE("ipn:0.0.0")

@@ -57,10 +57,38 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
 
     switch (obj->scheme)
     {
+        case BSL_MOCK_EID_INVALID:
+            BSL_LOG_ERR("Invalid EID scheme 0");
+            return 3;
+        case BSL_MOCK_EID_DTN:
+        {
+            m_string_t *ssp = &(obj->ssp.as_dtn);
+            m_string_init(*ssp);
+
+            UsefulBufC buf;
+            QCBORDecode_GetTextString(&dec, &buf);
+            if (QCBOR_SUCCESS != QCBORDecode_GetError(&dec))
+            {
+                return 2;
+            }
+
+            if (buf.len > 0)
+            {
+                // workaround for https://github.com/P-p-H-d/mlib/issues/148
+                m_bstring_t tmp;
+                m_bstring_init(tmp);
+                m_bstring_push_back_bytes(tmp, buf.len, buf.ptr);
+                m_bstring_push_back(tmp, '\0');
+
+                m_string_set_cstrn(*ssp, (const char *)m_bstring_view(tmp, 0, buf.len), buf.len);
+                m_bstring_clear(tmp);
+            }
+            break;
+        }
         case BSL_MOCK_EID_IPN:
         {
             bsl_eid_ipn_ssp_t *ipn = &(obj->ssp.as_ipn);
-            ASSERT_ARG_NONNULL(ipn);
+
             QCBORDecode_EnterArray(&dec, &decitem);
             if (decitem.val.uCount == 2)
             {
@@ -93,6 +121,7 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
         }
         default:
         {
+            BSL_LOG_WARNING("Unknown EID scheme %" PRIu64, obj->scheme);
             BSL_Data_t *raw = &(obj->ssp.as_raw);
             BSL_Data_Init(raw);
 
@@ -100,8 +129,12 @@ int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
             const size_t begin = QCBORDecode_Tell(&dec);
             QCBORDecode_VGetNextConsume(&dec, &decitem);
             const size_t end = QCBORDecode_Tell(&dec);
+            if (QCBOR_SUCCESS != QCBORDecode_GetError(&dec))
+            {
+                return 2;
+            }
 
-            if ((QCBOR_SUCCESS == QCBORDecode_GetError(&dec)) && (end > begin))
+            if (end > begin)
             {
                 const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(&dec);
 

@@ -58,7 +58,7 @@ struct BSL_SecOper_s
     BSL_SecBlockType_e _service_type;
 
     /// @brief Options set by the policy provider
-    BSLB_IdValPairPtrDict_t _options;
+    BSLB_IdValPairPtrMap_t _options;
 
     /** @name Existing security verifier/acceptor.
      * These fields apply when this operation is on an existing operation.
@@ -71,9 +71,9 @@ struct BSL_SecOper_s
      */
     size_t _target_index;
     /// @brief Parameters from the ASB if the #_role is not source
-    BSLB_IdValPairPtrDict_t _params_in;
+    BSLB_IdValPairPtrMap_t _params_in;
     /// @brief Results from the ASB if the #_role is not source
-    BSLB_IdValPairPtrDict_t _results_in;
+    BSLB_IdValPairPtrMap_t _results_in;
     /// @}
 };
 

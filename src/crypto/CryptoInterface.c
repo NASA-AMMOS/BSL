@@ -23,12 +23,13 @@
  * Backend cryptography implementation
  * @ingroup backend_dyn
  */
-#include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
+#include <BPSecLib_Private.h>
+#include <backend/IdValPair.h>
 
 #include <m-dict.h>
 #include <m-shared-ptr.h>
-#include <m-string.h>
+#include <m-bstring.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
@@ -45,6 +46,8 @@ typedef struct BSL_CryptoKey_s
     EVP_PKEY *pkey;
     /// Pointer to raw key information (used in cipher ctx)
     BSL_Data_t raw;
+    /// Additional parameter dictionary
+    BSLB_IdValPairPtrMap_t params;
     /// Statistics related to this key
     BSL_Crypto_KeyStats_t stats;
 } BSL_CryptoKey_t;
@@ -55,6 +58,7 @@ static void BSL_CryptoKey_Init(BSL_CryptoKey_t *key)
 
     key->pkey = NULL;
     BSL_Data_Init(&(key->raw));
+    BSLB_IdValPairPtrMap_init(key->params);
 
     for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
     {
@@ -72,6 +76,7 @@ static void BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
         key->pkey = NULL;
     }
     BSL_Data_Deinit(&(key->raw));
+    BSLB_IdValPairPtrMap_clear(key->params);
 
     for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
     {
@@ -94,7 +99,7 @@ static void BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
 // NOLINTBEGIN
 // GCOV_EXCL_START
 M_SHARED_WEAK_PTR_DEF(BSL_CryptoKeyPtr, BSL_CryptoKey_t, M_OPL_BSL_CryptoKey_t())
-M_DICT_DEF2(BSL_CryptoKeyDict, m_string_t, M_STRING_OPLIST, BSL_CryptoKeyPtr_t *,
+M_DICT_DEF2(BSL_CryptoKeyDict, m_bstring_t, M_BSTRING_OPLIST, BSL_CryptoKeyPtr_t *,
             M_SHARED_PTR_OPLIST(BSL_CryptoKeyPtr, M_OPL_BSL_CryptoKey_t()))
 // GCOV_EXCL_STOP
 // NOLINTEND
@@ -228,7 +233,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
 
     if (final_len > 0)
     {
-        BSL_Data_AppendFrom(&cek->raw, final_len, buf);
+        BSL_Data_AppendFrom(&cek->raw, (size_t)final_len, buf);
     }
 
     EVP_CIPHER_CTX_free(ctx);
@@ -412,6 +417,7 @@ int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t d
     ASSERT_ARG_NONNULL(hmac_ctx);
     ASSERT_ARG_NONNULL(data);
 
+    BSL_LOG_PLAINTEXT_PTR("data in", hmac_ctx, data, data_len);
     int res = EVP_DigestSignUpdate(hmac_ctx->libhandle, data, data_len);
     CHK_PROPERTY(res == 1);
 
@@ -428,12 +434,18 @@ int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
 
     BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
 
-    uint8_t buf[hmac_ctx->block_size];
-    size_t  block_size = hmac_ctx->block_size;
-    while (block_size == hmac_ctx->block_size)
+    while (true)
     {
-        BSL_SeqReader_Get(reader, buf, &block_size);
-        EVP_DigestSignUpdate(hmac_ctx->libhandle, buf, block_size);
+        // read until there is no more
+        size_t block_size = hmac_ctx->block_size;
+        BSL_SeqReader_Get(reader, hmac_ctx->in_buf.ptr, &block_size);
+        if (block_size == 0)
+        {
+            break;
+        }
+
+        BSL_LOG_PLAINTEXT_PTR("data in", hmac_ctx, hmac_ctx->in_buf.ptr, block_size);
+        EVP_DigestSignUpdate(hmac_ctx->libhandle, hmac_ctx->in_buf.ptr, block_size);
 
         key_info->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += block_size;
     }
@@ -441,18 +453,19 @@ int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
     return 0;
 }
 
-int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, void **hmac, size_t *hmac_len)
+int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *tag)
 {
     ASSERT_ARG_NONNULL(hmac_ctx);
-    ASSERT_ARG_NONNULL(hmac);
-    ASSERT_ARG_NONNULL(hmac_len);
+    ASSERT_ARG_NONNULL(tag);
 
-    size_t req = 0;
-    int    res = EVP_DigestSignFinal(hmac_ctx->libhandle, NULL, &req);
-    CHK_PROPERTY(res == 1);
+    // get the needed tag size
+    size_t size = EVP_MD_CTX_get_size(hmac_ctx->libhandle);
+    CHK_PROPERTY(size > 0);
+    CHK_PROPERTY(size <= INT_MAX);
 
-    *hmac_len = req;
-    res       = EVP_DigestSignFinal(hmac_ctx->libhandle, *hmac, hmac_len);
+    BSL_Data_Resize(tag, (int)size);
+    int res = EVP_DigestSignFinal(hmac_ctx->libhandle, tag->ptr, &size);
+    BSL_LOG_DEBUG("EVP_DigestSignFinal gave %zu bytes, return %d", size, res);
     CHK_PROPERTY(res == 1);
 
     return 0;
@@ -694,8 +707,10 @@ int BSL_Crypto_GenIV(void *buf, int size)
     return 0;
 }
 
-int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t secret_len)
+int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len,
+                              BSL_Crypto_KeyHandle_t *key_out)
 {
+    ASSERT_ARG_NONNULL(keyid);
     CHK_ARG_NONNULL(secret);
     CHK_ARG_EXPR(secret_len > 0);
 
@@ -710,28 +725,78 @@ int BSL_Crypto_AddRegistryKey(const char *keyid, const uint8_t *secret, size_t s
     if ((ecode = BSL_Data_CopyFrom(&key->raw, secret_len, secret)) < 0)
     {
         BSL_LOG_ERR("Failed to copy key");
+        BSL_CryptoKeyPtr_release(key_ptr);
         return ecode;
     }
 
-    string_t keyid_str;
-    string_init_set_str(keyid_str, keyid);
+    m_bstring_t keyid_str;
+    m_bstring_init(keyid_str);
+    m_bstring_push_back_bytes(keyid_str, keyid->len, keyid->ptr);
 
     pthread_mutex_lock(&StaticCryptoMutex);
     BSL_CryptoKeyDict_set_at(StaticKeyRegistry, keyid_str, key_ptr);
     pthread_mutex_unlock(&StaticCryptoMutex);
 
+    if (key_out)
+    {
+        *key_out = key;
+    }
     BSL_CryptoKeyPtr_release(key_ptr);
-    string_clear(keyid_str);
+    m_bstring_clear(keyid_str);
     return 0;
 }
 
-int BSL_Crypto_GetRegistryKey(const char *keyid, void **key_handle)
+BSL_IdValPair_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
 {
-    CHK_ARG_NONNULL(key_handle);
-    CHK_ARG_NONNULL(keyid);
+    BSL_CryptoKey_t *key = handle;
 
-    string_t keyid_str;
-    string_init_set_str(keyid_str, keyid);
+    BSL_IdValPair_t *retval = NULL;
+    if (key)
+    {
+        BSLB_IdValPairPtr_t *param_ptr;
+
+        BSLB_IdValPairPtr_t **found = BSLB_IdValPairPtrMap_get(key->params, param_id);
+        if (found)
+        {
+            param_ptr = *found;
+            retval    = BSLB_IdValPairPtr_ref(param_ptr);
+        }
+        else
+        {
+            param_ptr = BSLB_IdValPairPtr_new();
+            BSLB_IdValPairPtrMap_set_at(key->params, param_id, param_ptr);
+            retval = BSLB_IdValPairPtr_ref(param_ptr);
+            // map keeps a reference so this is safe
+            BSLB_IdValPairPtr_release(param_ptr);
+        }
+    }
+    return retval;
+}
+
+const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
+{
+    const BSL_CryptoKey_t *key = handle;
+
+    const BSL_IdValPair_t *retval = NULL;
+    if (key)
+    {
+        BSLB_IdValPairPtr_t **found = BSLB_IdValPairPtrMap_get(key->params, param_id);
+        if (found)
+        {
+            retval = BSLB_IdValPairPtr_ref(*found);
+        }
+    }
+    return retval;
+}
+
+int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, void **key_handle)
+{
+    ASSERT_ARG_NONNULL(keyid);
+    CHK_ARG_NONNULL(key_handle);
+
+    m_bstring_t keyid_str;
+    m_bstring_init(keyid_str);
+    m_bstring_push_back_bytes(keyid_str, keyid->len, keyid->ptr);
 
     int retval = BSL_SUCCESS;
     pthread_mutex_lock(&StaticCryptoMutex);
@@ -745,30 +810,34 @@ int BSL_Crypto_GetRegistryKey(const char *keyid, void **key_handle)
         *key_handle = BSL_CryptoKeyPtr_ref(*found);
     }
     pthread_mutex_unlock(&StaticCryptoMutex);
-    string_clear(keyid_str);
+    m_bstring_clear(keyid_str);
     return retval;
 }
 
-int BSL_Crypto_RemoveRegistryKey(const char *keyid)
+int BSL_Crypto_RemoveRegistryKey(const BSL_Data_t *keyid)
 {
-    string_t keyid_str;
-    string_init_set_str(keyid_str, keyid);
+    ASSERT_ARG_NONNULL(keyid);
+
+    m_bstring_t keyid_str;
+    m_bstring_init(keyid_str);
+    m_bstring_push_back_bytes(keyid_str, keyid->len, keyid->ptr);
 
     pthread_mutex_lock(&StaticCryptoMutex);
     int res = BSL_CryptoKeyDict_erase(StaticKeyRegistry, keyid_str);
     pthread_mutex_unlock(&StaticCryptoMutex);
 
-    string_clear(keyid_str);
+    m_bstring_clear(keyid_str);
     return res ? BSL_SUCCESS : -1;
 }
 
-int BSL_Crypto_GetKeyStatistics(const char *keyid, BSL_Crypto_KeyStats_t *stats)
+int BSL_Crypto_GetKeyStatistics(const BSL_Data_t *keyid, BSL_Crypto_KeyStats_t *stats)
 {
+    ASSERT_ARG_NONNULL(keyid);
     CHK_ARG_NONNULL(stats);
-    CHK_ARG_NONNULL(keyid);
 
-    string_t keyid_str;
-    string_init_set_str(keyid_str, keyid);
+    m_bstring_t keyid_str;
+    m_bstring_init(keyid_str);
+    m_bstring_push_back_bytes(keyid_str, keyid->len, keyid->ptr);
 
     int retval = BSL_SUCCESS;
     pthread_mutex_lock(&StaticCryptoMutex);
@@ -787,6 +856,6 @@ int BSL_Crypto_GetKeyStatistics(const char *keyid, BSL_Crypto_KeyStats_t *stats)
         }
     }
     pthread_mutex_unlock(&StaticCryptoMutex);
-    string_clear(keyid_str);
+    m_bstring_clear(keyid_str);
     return retval;
 }

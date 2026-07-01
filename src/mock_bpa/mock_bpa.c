@@ -35,7 +35,7 @@
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
 #include <CryptoInterface.h>
-#include <policy_provider/SamplePolicyConfigParser.h>
+#include <policy_provider/PolicyParser.h>
 
 #include "agent.h"
 #include "log.h"
@@ -108,10 +108,11 @@ static void show_usage(const char *argv0)
             "    {-r <address:port>} the neighbor UDP address\n"
             "    {-e <app-EID>} the overlayer application BPv7 EID\n"
             "    {-s <sec-src-EID>} the security source BPv7 EID\n"
-            "    [-p <hex-list>] comma delimited hex list of <BSLP_BitstringPolicyConfiguration_t>, "
+            "    [-p <hex-list>] comma delimited list of hex integers <BSLP_PolicyParser_BitstringConfig_t>, "
             "e.g. '0x000f,0x0021' (default: none)\n"
             "    [-j <file-path>] path to JSON file containing policy configuration (default: none)\n"
-            "    [-k <file-path>] path to JSON file containing JWKs to register (default: none)\n"
+            "    [-k <file-path>] path to JSON file (.json) containing JWKs or CBOR file (.cbor) containing "
+            "COSE_KeySet to register (default: none)\n"
             "    [-c] enable custom RNG generator for testing purposes (default: use OpenSSL RAND)\n",
             BSL_VERSION, argv0);
 }
@@ -180,12 +181,12 @@ int main(int argc, char **argv)
                     break;
                 case 'p':
                 {
-                    retval = !!(BSLP_RegisterPolicyFromBitstringList(optarg, policy));
+                    retval = !!(BSLP_PolicyParser_FromBitstringList(optarg, policy));
                     break;
                 }
                 case 'j':
                 {
-                    retval = !!(BSLP_RegisterPolicyFromJSON(optarg, policy));
+                    retval = !!(BSLP_PolicyParser_FromJSON(optarg, policy));
                     break;
                 }
                 case 'k':

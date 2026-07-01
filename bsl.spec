@@ -114,6 +114,7 @@ popd
 %{_libdir}/libbsl_crypto.so.*
 %{_libdir}/libbsl_sample_pp.so.*
 %{_libdir}/libbsl_default_sc.so.*
+%{_libdir}/libbsl_cose_sc.so.*
 
 %files devel
 %license LICENSE
@@ -132,6 +133,7 @@ popd
 %{_libdir}/libbsl_crypto.so
 %{_libdir}/libbsl_sample_pp.so
 %{_libdir}/libbsl_default_sc.so
+%{_libdir}/libbsl_cose_sc.so
 
 %files test
 %license LICENSE

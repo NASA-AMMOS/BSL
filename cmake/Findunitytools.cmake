@@ -70,6 +70,7 @@ function(add_unity_test)
 
   add_test(
     NAME ${BASENAME}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND ${TEST_EXEC_PREFIX} "${CMAKE_CURRENT_BINARY_DIR}/${BASENAME}"
   )
 

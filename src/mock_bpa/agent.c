@@ -29,6 +29,7 @@
 #include <backend/UtilDefs_SeqReadWrite.h>
 #include <default_sc/DefaultSecContext.h>
 #include <default_sc/rfc9173.h>
+#include <cose_sc/CoseContext.h>
 #include <policy_provider/SamplePolicyProvider.h>
 #include <errno.h>
 #include <poll.h>
@@ -39,9 +40,16 @@
 #include "encode.h"
 #include "decode.h"
 
+static const char *sec_src_envar = "BSL_TEST_LOCAL_IPN_EID";
+
 static int MockBPA_GetEid(void *user_data, BSL_HostEID_t *result_eid)
 {
-    const char *local_ipn = getenv("BSL_TEST_LOCAL_IPN_EID");
+    const char *local_ipn = getenv(sec_src_envar);
+    if (!local_ipn)
+    {
+        BSL_LOG_CRIT("Need to set environment variable %s", sec_src_envar);
+        return -1;
+    }
 
     int x = mock_bpa_eid_from_text(result_eid, local_ipn, user_data);
 
@@ -55,22 +63,21 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
         return -1;
     }
 
-    MockBPA_Bundle_t *bundle = bundle_ref->data;
-    memset(result_primary_block, 0, sizeof(*result_primary_block));
+    const MockBPA_Bundle_t *bundle = bundle_ref->data;
+
+    BSL_PrimaryBlock_Init(result_primary_block);
     result_primary_block->field_version              = bundle->primary_block.version;
     result_primary_block->field_flags                = bundle->primary_block.flags;
     result_primary_block->field_crc_type             = bundle->primary_block.crc_type;
-    result_primary_block->field_dest_eid             = bundle->primary_block.dest_eid;
-    result_primary_block->field_src_node_id          = bundle->primary_block.src_node_id;
-    result_primary_block->field_report_to_eid        = bundle->primary_block.report_to_eid;
+    result_primary_block->field_dest_eid             = &bundle->primary_block.dest_eid;
+    result_primary_block->field_src_node_id          = &bundle->primary_block.src_node_id;
+    result_primary_block->field_report_to_eid        = &bundle->primary_block.report_to_eid;
     result_primary_block->field_bundle_creation_time = bundle->primary_block.timestamp.bundle_creation_time;
     result_primary_block->field_seq_num              = bundle->primary_block.timestamp.seq_num;
     result_primary_block->field_lifetime             = bundle->primary_block.lifetime;
     result_primary_block->field_frag_offset          = bundle->primary_block.frag_offset;
     result_primary_block->field_adu_length           = bundle->primary_block.adu_length;
-
-    BSL_Data_InitView(&result_primary_block->encoded, bundle->primary_block.encoded.len,
-                      bundle->primary_block.encoded.ptr);
+    result_primary_block->encoded                    = &bundle->primary_block.encoded;
 
     result_primary_block->block_count = MockBPA_BlockList_size(bundle->blocks);
 
@@ -198,6 +205,7 @@ static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_re
         return NULL;
     }
     MockBPA_CanonicalBlock_t *found_block = *found_ptr;
+    BSL_LOG_DEBUG("opened block number %" PRIu64 " with size %zu", found_block->blk_num, found_block->btsd_len);
 
     struct MockBPA_BTSD_Data_s *obj = BSL_calloc(1, sizeof(struct MockBPA_BTSD_Data_s));
     if (!obj)
@@ -316,32 +324,40 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
     return writer;
 }
 
-int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, uint64_t *result_block_num)
+int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, uint64_t *block_num)
 {
-    if (!bundle_ref || !bundle_ref->data || !result_block_num)
+    if (!bundle_ref || !bundle_ref->data || !block_num)
     {
         return -1;
     }
 
-    *result_block_num        = 0;
     MockBPA_Bundle_t *bundle = bundle_ref->data;
 
-    uint64_t               max_id = 0;
-    MockBPA_BlockList_it_t bit;
-    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
+    if (*block_num == 0)
     {
-        const MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_cref(bit);
-        max_id                              = blk->blk_num >= max_id ? blk->blk_num : max_id;
+        // BPA chooses the next number
+        MockBPA_CanonicalBlock_t *const *blk_ptr = MockBPA_BlockByNum_max(bundle->blocks_num);
+        if (!blk_ptr)
+        {
+            // should have at least a payload already
+            return -2;
+        }
+        // one beyond the current largest
+        *block_num = (*blk_ptr)->blk_num + 1;
     }
-    if (max_id < 1)
+    else
     {
-        // should have at least a payload already
-        return -2;
+        // Policy has requested a number
+        if (MockBPA_BlockByNum_cget(bundle->blocks_num, *block_num))
+        {
+            BSL_LOG_ERR("Requested block number %" PRIu64 " already exists", *block_num);
+            return -2;
+        }
     }
 
     MockBPA_CanonicalBlock_t *new_block = MockBPA_BlockList_push_back_new(bundle->blocks);
     memset(new_block, 0, sizeof(*new_block));
-    new_block->blk_num  = max_id + 1;
+    new_block->blk_num  = *block_num;
     new_block->blk_type = block_type_code;
     new_block->crc_type = 0;
     new_block->flags    = block_type_code == 12 ? 1 : 0; // BCB should have a flag of 1
@@ -350,7 +366,7 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
 
     MockBPA_BlockByNum_set_at(bundle->blocks_num, new_block->blk_num, new_block);
 
-    *result_block_num = new_block->blk_num;
+    *block_num = new_block->blk_num;
     BSL_LOG_DEBUG("Created block %" PRIu64, new_block->blk_num);
 
     return 0;
@@ -489,15 +505,24 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent, BSLP_PolicyProvider_t **policy)
             retval = 3;
         }
 
-        BSL_SecCtxDesc_t bib_sec_desc;
-        bib_sec_desc.execute  = BSLX_BIB_Execute;
-        bib_sec_desc.validate = BSLX_BIB_Validate;
-        ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, RFC9173_CONTEXTID_BIB_HMAC_SHA2, bib_sec_desc));
-
-        BSL_SecCtxDesc_t bcb_sec_desc;
-        bcb_sec_desc.execute  = BSLX_BCB_Execute;
-        bcb_sec_desc.validate = BSLX_BCB_Validate;
-        ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, RFC9173_CONTEXTID_BCB_AES_GCM, bcb_sec_desc));
+        {
+            BSL_SecCtxDesc_t sc_desc;
+            sc_desc.execute  = BSLX_BIB_Execute;
+            sc_desc.validate = BSLX_BIB_Validate;
+            ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, RFC9173_CONTEXTID_BIB_HMAC_SHA2, sc_desc));
+        }
+        {
+            BSL_SecCtxDesc_t sc_desc;
+            sc_desc.execute  = BSLX_BCB_Execute;
+            sc_desc.validate = BSLX_BCB_Validate;
+            ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, RFC9173_CONTEXTID_BCB_AES_GCM, sc_desc));
+        }
+        {
+            BSL_SecCtxDesc_t sc_desc;
+            sc_desc.execute  = BSLX_CoseSc_Execute;
+            sc_desc.validate = BSLX_CoseSc_Validate;
+            ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, BSLX_COSESC_CTX_ID, sc_desc));
+        }
     }
 
     *policy              = BSLP_PolicyProvider_Init(1);

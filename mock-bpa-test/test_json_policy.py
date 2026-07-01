@@ -22,7 +22,7 @@
 from _test_util import _TestCase, DataFormat, BundleDestLoc
 from test_bpa import TestAgent
 
-# Test Cases utilizing JSON policy definitions
+# Test Cases utilizing JSON policy definitions with the Default contexts
 
 
 class Test_ION_JSON_Policy(TestAgent):
@@ -45,9 +45,9 @@ class Test_ION_JSON_Policy(TestAgent):
                 [1, 1, 0, 0, bytes.fromhex(
                     '3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a')]
             ],
-            policy_config='mock-bpa-test/policy_provider_test.json',
+            policy_config='data/policy_provider_test.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
-            key_set="mock-bpa-test/key_set_1.json",
+            key_set="data/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY,

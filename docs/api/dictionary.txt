@@ -216,6 +216,7 @@ unix
 uri
 URI
 url
+UTF
 validator
 verifier
 Verifier

@@ -37,10 +37,21 @@
 extern "C" {
 #endif
 
-/// @brief Initialize JWKs
-/// @param pp_cfg_file_path path to JSON file with JWKs
-/// @return 0 if successful
-int mock_bpa_key_registry_init(const char *pp_cfg_file_path);
+/** @brief Initialize keys
+ * @param[in] file_path path to JSON file with JWKs or CBOR file with @c COSE_KeySet
+ * @return 0 if successful.
+ */
+int mock_bpa_key_registry_init(const char *file_path);
+
+/** @warning Exposed only for testing.
+ * @param infd The file descriptor to read from.
+ */
+int mock_bpa_key_registry_init_jwk(int infd);
+
+/** @warning Exposed only for testing.
+ * @param infd The file descriptor to read from.
+ */
+int mock_bpa_key_registry_init_cosekey(int infd);
 
 /**
  * Custom RNG function for BCB testing
