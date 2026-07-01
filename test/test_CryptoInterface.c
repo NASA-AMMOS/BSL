@@ -805,17 +805,13 @@ void test_key_stats(void)
     test_encrypt("hello world!", "testkeystats");
 
     BSL_Crypto_KeyStats_t stats;
-==== BASE ====
-    BSL_Crypto_GetKeyStatistics("testkeystats", &stats);
-==== BASE ====
+    BSL_Crypto_GetKeyStatistics(handle, &stats);
     TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED], 1);
     TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED], 14);
 
     test_encrypt("hello world again!", "testkeystats");
 
-==== BASE ====
-    BSL_Crypto_GetKeyStatistics("testkeystats", &stats);
-==== BASE ====
+    BSL_Crypto_GetKeyStatistics(handle, &stats);
     TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED], 2);
     TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED], 34);
 }
