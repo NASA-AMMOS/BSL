@@ -773,26 +773,25 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
 
 static void BSLX_CoseSc_GetAndValidateTarget(BSLX_CoseSc_t *self, const BSLX_CoseMsg_Headers_t *headers)
 {
-    bool       hdr_alg     = false;
-    int64_t    hdr_alg_val = 0;
+    bool    hdr_alg     = false;
+    int64_t hdr_alg_val = 0;
 
     if (headers)
     {
-        const BSL_IdValPair_t *hdr =
-                BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_ALG, true);
-                if (hdr)
-                {
-                    if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(hdr, &hdr_alg_val))
-                    {
-                        BSL_LOG_ERR("Invalid header alg value");
-                        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                        return;
-                    }
-                    else
-                    {
-                        hdr_alg = true;
-                    }
-                }
+        const BSL_IdValPair_t *hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_ALG, true);
+        if (hdr)
+        {
+            if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(hdr, &hdr_alg_val))
+            {
+                BSL_LOG_ERR("Invalid header alg value");
+                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                return;
+            }
+            else
+            {
+                hdr_alg = true;
+            }
+        }
     }
 
     if (hdr_alg && self->opt_tgt_alg)
