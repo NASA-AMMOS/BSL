@@ -93,6 +93,8 @@ typedef struct
 
     /// True if #tgt_alg came from an option
     bool opt_tgt_alg;
+    /// True if #tgt_alg came from a header
+    bool hdr_tgt_alg;
     /// Required content layer algorithm from ::BSLX_CoseMsg_Alg_e
     int64_t tgt_alg;
 
@@ -609,8 +611,8 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
 
 /** Internal processing according to Section 6.3 of RFC 9052.
  */
-static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *headers,
-                                    const char *context, BSL_Data_t *tag)
+static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *headers, const char *context,
+                                    BSL_Data_t *tag)
 {
     int res;
 
@@ -769,6 +771,52 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
     }
 }
 
+static void BSLX_CoseSc_GetAndValidateTarget(BSLX_CoseSc_t *self, const BSLX_CoseMsg_Headers_t *headers)
+{
+    bool       hdr_alg     = false;
+    int64_t    hdr_alg_val = 0;
+
+    if (headers)
+    {
+        const BSL_IdValPair_t *hdr =
+                BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_ALG, true);
+                if (hdr)
+                {
+                    if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(hdr, &hdr_alg_val))
+                    {
+                        BSL_LOG_ERR("Invalid header alg value");
+                        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                        return;
+                    }
+                    else
+                    {
+                        hdr_alg = true;
+                    }
+                }
+    }
+
+    if (hdr_alg && self->opt_tgt_alg)
+    {
+        if (hdr_alg_val != self->tgt_alg)
+        {
+            BSL_LOG_ERR("Mismatched key alg value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            return;
+        }
+    }
+    else if (hdr_alg)
+    {
+        self->tgt_alg     = hdr_alg_val;
+        self->hdr_tgt_alg = true;
+    }
+    else if (headers && !self->opt_tgt_alg)
+    {
+        BSL_LOG_ERR("No source of content alg available");
+        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        return;
+    }
+}
+
 /** Combine options and received headers to validate end key.
  */
 static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMsg_Headers_t *headers)
@@ -796,7 +844,7 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
             }
         }
 
-        hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_ALG, false);
+        hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_ALG, true);
         if (hdr)
         {
             if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(hdr, &hdr_alg_val))
@@ -851,7 +899,7 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
     }
     else if (hdr_alg)
     {
-        self->key_alg = hdr_alg_val;
+        self->key_alg     = hdr_alg_val;
         self->hdr_key_alg = true;
     }
     else if (headers && !self->opt_key_alg)
@@ -1038,7 +1086,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
     }
 
     BSLX_CoseSc_GetAndValidateKey(ctx, &msg.headers);
-    ctx->tgt_alg = ctx->key_alg;
+    BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -1064,8 +1112,8 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
 
 /** Internal processing according to Section 5.3 of RFC 9052.
  */
-static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers,
-                                        const char *context, BSL_CipherMode_e mode)
+static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers, const char *context,
+                                        BSL_CipherMode_e mode)
 {
     ASSERT_PRECONDITION(ctx->iv_val.len > 0);
     int res;
@@ -1505,7 +1553,7 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
     }
 
     BSLX_CoseSc_GetAndValidateKey(ctx, &msg.headers);
-    ctx->tgt_alg = ctx->key_alg;
+    BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
 
     if (BSL_SUCCESS == ctx->status)
     { // Get IV value
@@ -1600,6 +1648,7 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
             if (ctx.is_source)
             {
                 BSLX_CoseSc_GetAndValidateKey(&ctx, NULL);
+                BSLX_CoseSc_GetAndValidateTarget(&ctx, NULL);
 
                 if (ctx.key_alg != ctx.tgt_alg)
                 {
@@ -1641,6 +1690,7 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
             if (ctx.is_source)
             {
                 BSLX_CoseSc_GetAndValidateKey(&ctx, NULL);
+                BSLX_CoseSc_GetAndValidateTarget(&ctx, NULL);
 
                 if (ctx.key_alg != ctx.tgt_alg)
                 {

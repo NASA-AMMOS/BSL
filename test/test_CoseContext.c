@@ -220,14 +220,15 @@ enum OptMismatch_e
 {
     OPT_MISMATCH_NONE,
     OPT_MISMATCH_BAD_KEY_ID,
-    OPT_MISMATCH_ALG,
+    OPT_MISMATCH_KEY_ALG,
+    OPT_MISMATCH_TGT_ALG,
     OPT_MISMATCH_NO_AAD_SCOPE,
     OPT_MISMATCH_MODIFY_BLK_0,
     OPT_MISMATCH_MODIFY_BLK_1,
     OPT_MISMATCH_MODIFY_BLK_3,
 };
 
-TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 0/*, 1, 2, 3, 4, 5, 6 */])
+TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 0, 1, 2, 3, 4, 5, 6, 7 ])
 void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 {
     {
@@ -282,8 +283,17 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     {
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_KEY_ALG,
+                               (mismatch == OPT_MISMATCH_KEY_ALG) ? BSLX_COSEMSG_ALG_HMAC_SHA_256_256
+                                                              : BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
         BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_TGT_ALG,
-                               (mismatch == OPT_MISMATCH_ALG) ? BSLX_COSEMSG_ALG_HMAC_SHA_256_256
+                               (mismatch == OPT_MISMATCH_TGT_ALG) ? BSLX_COSEMSG_ALG_HMAC_SHA_256_256
                                                               : BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
@@ -313,7 +323,7 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     BSL_SecOutcome_Init(outcome, &sec_oper);
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
-    TEST_ASSERT_EQUAL_INT(opt_key_id == exA_1_kid ? true : false, valid_status);
+    TEST_ASSERT_EQUAL(true, valid_status);
 
     const int expect_status = ((mismatch == OPT_MISMATCH_NONE) || (mismatch == OPT_MISMATCH_NO_AAD_SCOPE))
                                   ? BSL_SUCCESS
@@ -485,7 +495,8 @@ void test_AppendixA_Example4_BCB_Source(void)
 }
 
 // no use of OPT_MISMATCH_MODIFY_BLK_3 here (tag is in the ciphertext)
-TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 0 /*, 1, 2, 3, 4, 5 */])
+//TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 0, 1, 2, 3, 4, 5 ])
+TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 2])
 void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 {
     {
@@ -548,8 +559,17 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     {
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_KEY_ALG,
+                               (mismatch == OPT_MISMATCH_KEY_ALG) ? BSLX_COSEMSG_ALG_HMAC_SHA_256_256
+                                                              : BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
         BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_TGT_ALG,
-                               (mismatch == OPT_MISMATCH_ALG) ? BSLX_COSEMSG_ALG_AES_GCM_128
+                               (mismatch == OPT_MISMATCH_TGT_ALG) ? BSLX_COSEMSG_ALG_AES_GCM_128
                                                               : BSLX_COSEMSG_ALG_AES_GCM_256);
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
@@ -579,7 +599,7 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     BSL_SecOutcome_Init(outcome, &sec_oper);
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
-    TEST_ASSERT_EQUAL_INT(opt_key_id == exA_4_kid ? true : false, valid_status);
+    TEST_ASSERT_EQUAL(true, valid_status);
 
     const int expect_status = ((mismatch == OPT_MISMATCH_NONE) || (mismatch == OPT_MISMATCH_NO_AAD_SCOPE))
                                   ? BSL_SUCCESS

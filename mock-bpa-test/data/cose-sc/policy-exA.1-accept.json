@@ -13,8 +13,7 @@
         "spec": {
           "svc": "bib-integrity",
           "sc_id": 3,
-          "sc_parms": {
-          }
+          "sc_parms": {}
         },
         "policy_action_on_fail": "delete_bundle"
       }
