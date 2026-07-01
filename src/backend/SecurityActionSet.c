@@ -41,17 +41,12 @@ void BSL_SecurityActionSet_Init(BSL_SecurityActionSet_t *self)
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(BSL_SecurityActionSet_t));
     BSL_SecActionList_init(self->actions);
-    self->action_count = 0;
-    self->err_count    = 0;
 }
 
 void BSL_SecurityActionSet_Deinit(BSL_SecurityActionSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     BSL_SecActionList_clear(self->actions);
-    self->err_count       = 0;
-    self->action_count    = 0;
-    self->operation_count = 0;
 }
 
 int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_SecurityAction_t *action)
@@ -59,23 +54,45 @@ int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(action);
     BSL_SecActionList_push_back(self->actions, *action);
-    self->err_count += action->err_ct;
-    self->action_count++;
-    self->operation_count += BSL_SecurityAction_CountSecOpers(action);
-
     return BSL_SUCCESS;
 }
 
 size_t BSL_SecurityActionSet_CountActions(const BSL_SecurityActionSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    return self->action_count;
+    return BSL_SecActionList_size(self->actions);
 }
 
 size_t BSL_SecurityActionSet_CountOperations(const BSL_SecurityActionSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    return self->operation_count;
+
+    size_t                 operation_count = 0;
+    BSL_SecActionList_it_t actlist_it;
+    for (BSL_SecActionList_it(actlist_it, self->actions); !BSL_SecActionList_end_p(actlist_it);
+         BSL_SecActionList_next(actlist_it))
+    {
+        const BSL_SecurityAction_t *action = BSL_SecActionList_cref(actlist_it);
+        operation_count += BSL_SecurityAction_CountSecOpers(action);
+    }
+
+    return operation_count;
+}
+
+size_t BSL_SecurityActionSet_CountInvalidActions(const BSL_SecurityActionSet_t *self)
+{
+    ASSERT_ARG_NONNULL(self);
+
+    size_t                 invalid_act_count = 0;
+    BSL_SecActionList_it_t actlist_it;
+    for (BSL_SecActionList_it(actlist_it, self->actions); !BSL_SecActionList_end_p(actlist_it);
+         BSL_SecActionList_next(actlist_it))
+    {
+        const BSL_SecurityAction_t *action = BSL_SecActionList_cref(actlist_it);
+        invalid_act_count += !action->validated;
+    }
+
+    return invalid_act_count;
 }
 
 const BSL_SecurityAction_t *BSL_SecurityActionSet_GetActionAtIndex(const BSL_SecurityActionSet_t *self, size_t index)

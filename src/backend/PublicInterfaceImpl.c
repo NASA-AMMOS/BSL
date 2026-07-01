@@ -141,7 +141,7 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
     return BSL_SUCCESS;
 }
 
-int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,
+int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle,
                           BSL_PolicyLocation_e location)
 {
     CHK_ARG_NONNULL(bsl);
@@ -220,13 +220,13 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
     }
     BSL_PrimaryBlock_deinit(&primary_block);
 
-    if (BSL_SecCtx_ValidatePolicyActionSet(bsl, bundle, output_action_set) == false)
+    if (BSL_SUCCESS != BSL_SecCtx_ValidatePolicyActionSet(bsl, bundle, output_action_set))
     {
-        query_status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
-        BSL_LOG_WARNING("Security Context validation failed");
+        BSL_LOG_ERR("Error while validating action set");
+        return BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
     }
 
-    return query_status;
+    return BSL_SUCCESS;
 }
 
 int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
