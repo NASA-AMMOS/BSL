@@ -47,7 +47,7 @@ static BSL_TestContext_t LocalTestCtx;
 static size_t   TestSecCtxValidateCallCount = 0;
 static uint64_t TestSecCtxValidatedTarget   = 0;
 
-static bool BSL_TestSecCtx_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+static bool BSL_TestSecCtx_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
 {
     BSL_CHKFALSE(lib);
     BSL_CHKFALSE(bundle);

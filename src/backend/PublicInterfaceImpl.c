@@ -141,7 +141,7 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
     return BSL_SUCCESS;
 }
 
-int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,
+int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle,
                           BSL_PolicyLocation_e location)
 {
     CHK_ARG_NONNULL(bsl);

@@ -515,7 +515,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
     return BSL_SUCCESS;
 }
 
-int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
+int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                                        const BSL_SecurityActionSet_t *action_set)
 {
     CHK_ARG_NONNULL(lib);
@@ -533,7 +533,7 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t 
         for (BSL_SecOperList_it(secoplist_it, action->sec_op_list); !BSL_SecOperList_end_p(secoplist_it);
              BSL_SecOperList_next(secoplist_it))
         {
-            const BSL_SecOper_t    *sec_oper = BSL_SecOperList_cref(secoplist_it);
+            BSL_SecOper_t          *sec_oper = BSL_SecOperList_ref(secoplist_it);
             const BSL_SecCtxDesc_t *sec_ctx  = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
 
             if (sec_ctx == NULL)

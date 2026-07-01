@@ -326,10 +326,7 @@ int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t bufsize);
 /** Static initializer for an invalid ::BSL_HostEID_t.
  * Even after this, BSL_HostEID_Init() must be used to get into a valid state.
  */
-#define BSL_HOSTEID_INIT_INVALID \
-    {                            \
-        .handle = NULL           \
-    }
+#define BSL_HOSTEID_INIT_INVALID { .handle = NULL }
 
 /** Initialize an abstract EID.
  *
@@ -383,10 +380,7 @@ int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes
 /** Static initializer for an invalid ::BSL_HostEIDPattern_t.
  * Even after this, BSL_HostEIDPattern_Init() must be used to get into a valid state.
  */
-#define BSL_HOSTEID_INIT_INVALID \
-    {                            \
-        .handle = NULL           \
-    }
+#define BSL_HOSTEID_INIT_INVALID { .handle = NULL }
 
 /** Initialize an abstract EID Pattern.
  *
@@ -1257,7 +1251,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
  * @param[in] action_set Action containing all params and operations.
  * @return 0 on success, negative on failure.
  */
-int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
+int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                                        const BSL_SecurityActionSet_t *action_set);
 
 /** Signature for Security Context validator for a sec OP.
