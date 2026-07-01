@@ -100,7 +100,7 @@ typedef int (*BSLP_OptionHandler_f)(BSLB_IdValPairPtrMap_t options, const char *
 /** Handle options for Security context ID 1.
  * Matches ::BSLP_OptionHandler_f signature.
  */
-static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value)
+static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value) // NOSONAR
 {
     if (0 == strcmp(id_str, "key_name"))
     {
@@ -151,7 +151,7 @@ static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id
 /** Handle options for Security context ID 2.
  * Matches ::BSLP_OptionHandler_f signature.
  */
-static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value)
+static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value) // NOSONAR
 {
     if (0 == strcmp(id_str, "key_name"))
     {
@@ -202,7 +202,7 @@ static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id
 /** Handle options for Security context ID 3.
  * Matches ::BSLP_OptionHandler_f signature.
  */
-static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value)
+static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value) // NOSONAR
 {
     if (0 == strcmp(id_str, "key_id"))
     {
