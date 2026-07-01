@@ -65,8 +65,6 @@
 extern "C" {
 #endif
 
-#define BSL_CRYPTO_AESGCM_AUTH_TAG_LEN (16)
-
 /**
  * Enum def to define cipher contexts as encryption or decryption operations
  */
@@ -277,13 +275,12 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Data_t *wrapped_
  * @param[out] cipher_ctx pointer to context to initialize
  * @param aes_var AES GCM variant to use
  * @param enc enum for BSL_CRYPTO_ENCRYPT or BSL_CRYPTO_DECRYPT
- * @param[in] init_vec pointer to initialization vector (IV) data
- * @param[in] iv_len length of IV data
+ * @param[in] iv_val The initialization vector (IV) data, which must be non-empty.
  * @param[in] key_handle key handle to use
  * @return 0 if successful
  */
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
-                    const void *init_vec, int iv_len, void *key_handle);
+                    const BSL_Data_t *iv_val, void *key_handle);
 
 /** Get pointers to an existing key, if present.
  *
@@ -315,10 +312,18 @@ int BSL_Cipher_AddAadSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader);
  * @param[in] reader pointer to sequential reader - input to crypto operation
  * @param[in] writer pointer to sequential writer (output of crypto operation), or NULL (crypto output will not be
  * written)
+ * @param limit The number of bytes of the reader to read and process.
+ * This can be shorter than the full length if the ciphertext contains an authentication tag.
  * @return 0 if successful
  */
-int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer);
+int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer, size_t limit);
 
+/** Determine the size of the authentication tag.
+ * This will be the output of BSL_Cipher_GetTag() and the input of BSL_Cipher_SetTag().
+ *
+ * @return The non-zero tag length for a valid cipher state.
+ */
+size_t BSL_Cipher_TagLen(const BSL_Cipher_t *cipher_ctx);
 /**
  * Get the tag of the crypto operation
  * @param cipher_ctx pointer to context to get tag from

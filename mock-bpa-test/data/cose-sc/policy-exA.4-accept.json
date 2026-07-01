@@ -2,7 +2,7 @@
   "policyrule_set": [
     {
       "policyrule": {
-        "desc": "Integrity source rule",
+        "desc": "Confidentiality source rule",
         "filter": {
           "rule_id": "1",
           "role": "a",
@@ -11,11 +11,11 @@
           "sc_id": 3
         },
         "spec": {
-          "svc": "bib-integrity",
+          "svc": "bcb",
           "sc_id": 3,
           "sc_parms": {
-            "key_id": "ExampleA.1",
-            "target_alg": 6
+            "key_id": "ExampleA.4",
+            "target_alg": 3
           }
         },
         "policy_action_on_fail": "delete_bundle"

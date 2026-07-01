@@ -145,6 +145,7 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
         bool       has_alg = false;
         int64_t    alg     = 0;
         UsefulBufC kid     = NULLUsefulBufC;
+        UsefulBufC baseiv  = NULLUsefulBufC;
         UsefulBufC k_data  = NULLUsefulBufC;
 
         QCBORDecode_EnterArray(dec, NULL); // using QCBOR_DECODE_MODE_MAP_AS_ARRAY
@@ -172,6 +173,9 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
                 case BSLX_COSEMSG_KEY_PARAM_ALG:
                     QCBORDecode_GetInt64(dec, &alg);
                     has_alg = true;
+                    break;
+                case BSLX_COSEMSG_KEY_PARAM_BASEIV:
+                    QCBORDecode_GetByteString(dec, &baseiv);
                     break;
                 case -1:
                     if (has_kty && (kty == 4))
@@ -221,6 +225,14 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
             else
             {
                 BSL_LOG_WARNING("COSE Key without an alg parameter");
+            }
+
+            if (baseiv.len > 0)
+            {
+                BSL_Data_t view;
+                BSL_Data_InitView(&view, baseiv.len, (BSL_DataPtr_t)baseiv.ptr);
+                BSL_IdValPair_SetBytestr(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_BASEIV),
+                                         BSLX_COSEMSG_KEY_PARAM_BASEIV, view);
             }
         }
     }

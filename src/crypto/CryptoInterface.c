@@ -490,10 +490,10 @@ bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size
 }
 
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
-                    const void *init_vec, int iv_len, void *key_handle)
+                    const BSL_Data_t *iv_val, void *key_handle)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
-    ASSERT_ARG_NONNULL(init_vec);
+    ASSERT_ARG_NONNULL(iv_val);
     ASSERT_ARG_NONNULL(key_handle);
 
     memset(cipher_ctx, 0, sizeof(*cipher_ctx));
@@ -531,12 +531,12 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
         BSL_LOG_ERR("invalid block size zero, assuming %zu", cipher_ctx->block_size);
     }
 
-    res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_IVLEN, iv_len, NULL);
+    res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_IVLEN, iv_val->len, NULL);
     CHK_PROPERTY(res == 1);
 
     BSL_LOG_PLAINTEXT_PTR("using key", cipher_ctx, key->raw.ptr, key->raw.len);
-    BSL_LOG_PLAINTEXT_PTR("using IV", cipher_ctx, init_vec, iv_len);
-    res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, key->raw.ptr, init_vec, -1);
+    BSL_LOG_PLAINTEXT_PTR("using IV", cipher_ctx, iv_val->ptr, iv_val->len);
+    res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, key->raw.ptr, iv_val->ptr, -1);
     CHK_PROPERTY(res == 1);
 
     res = BSL_Data_InitBuffer(&cipher_ctx->in_buf, cipher_ctx->block_size);
@@ -598,7 +598,7 @@ int BSL_Cipher_AddAadSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader)
     return 0;
 }
 
-int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer)
+int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer, size_t limit)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(reader);
@@ -606,16 +606,17 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
 
     BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
 
-    while (true)
+    while (limit)
     {
-        // read until there is no more
-        size_t block_size = cipher_ctx->block_size;
+        // read until the limit or there is no more
+        size_t block_size = M_MIN(limit, cipher_ctx->block_size);
         BSL_SeqReader_Get(reader, cipher_ctx->in_buf.ptr, &block_size);
         if (block_size == 0)
         {
             break;
         }
-
+        // actual used size
+        limit -= block_size;
         int block_size_int = (int)block_size;
 
         BSL_LOG_PLAINTEXT_PTR("cipher in", cipher_ctx, cipher_ctx->in_buf.ptr, block_size_int);
@@ -634,22 +635,30 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
         }
     }
 
-    return 0;
+    return BSL_SUCCESS;
+}
+
+size_t BSL_Cipher_TagLen(const BSL_Cipher_t *cipher_ctx)
+{
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(cipher_ctx->libhandle);
+    return EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle);
 }
 
 int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(cipher_ctx->libhandle);
     ASSERT_ARG_NONNULL(tag);
 
-    BSL_Data_Resize(tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
+    BSL_Data_Resize(tag, EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle));
 
     int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, (int)(tag->len), tag->ptr);
     BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl len %zu, return %d", tag->len, res);
     BSL_LOG_PLAINTEXT_PTR("tag out", cipher_ctx, tag->ptr, tag->len);
     CHK_PROPERTY(res == 1);
 #if defined(HAVE_VALGRIND)
-    VALGRIND_MAKE_MEM_DEFINED(tag->ptr, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
+    VALGRIND_MAKE_MEM_DEFINED(tag->ptr, tag->len);
 #endif /* defined(HAVE_VALGRIND) */
     return 0;
 }
@@ -687,7 +696,7 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer)
         BSL_SeqWriter_Put(writer, cipher_ctx->out_buf.ptr, bsl_len);
     }
 
-    return 0;
+    return BSL_SUCCESS;
 }
 
 int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)

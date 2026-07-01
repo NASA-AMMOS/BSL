@@ -156,8 +156,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     int retval = BSL_SUCCESS;
 
     BSL_Cipher_t cipher;
-    int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, aes_mode, bcb_context->iv.ptr,
-                                               (int)bcb_context->iv.len, cipher_key);
+    int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, aes_mode, &bcb_context->iv, cipher_key);
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
@@ -198,8 +197,9 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        int nbytes = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write);
-        if (nbytes < 0)
+        // entire block is ciphertext
+        int res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, bcb_context->target_block.btsd_len);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Decrypting BTSD ciphertext failed");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -219,8 +219,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        int finalize_bytes = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
-        if (finalize_bytes < 0)
+        int res = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to finalize");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -319,9 +319,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     int retval = BSL_SUCCESS;
 
-    BSL_Cipher_t cipher = { 0 };
-    int          cipher_init =
-        BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, aes_mode, bcb_context->iv.ptr, bcb_context->iv.len, cipher_key);
+    BSL_Cipher_t cipher      = { 0 };
+    int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, aes_mode, &bcb_context->iv, cipher_key);
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
@@ -359,8 +358,9 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        int nbytes = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write);
-        if (nbytes < 0)
+        // entire block is plaintext
+        int res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, bcb_context->target_block.btsd_len);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Encrypting plaintext BTSD failed");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;

@@ -9,6 +9,15 @@
   },
   {
     / kty / 1: 4, / symmetric /
+    / kid / 2: 'ExampleA.4',
+    / alg / 3: 3, / A256GCM /
+    / ops / 4: [3, 4], / encrypt, decrypt /
+    / base IV / 5: h'6f3093eba5d85143c3dc0000',
+    / k / -1: h'13bf9cead057c0aca2c9e52471ca4b19ddfaf4c0784e3f3e8e39
+99dbae4ce45c'
+  },
+  {
+    / kty / 1: 4, / symmetric /
     / kid / 2: 'ExampleA.5',
     / alg / 3: -5, / A256KW /
     / ops / 4: [5, 6], / wrap, unwrap /

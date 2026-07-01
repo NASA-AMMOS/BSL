@@ -92,7 +92,7 @@ void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t b
 {
     char ascii_buf[2 * bufflen + 1];
     BSL_Log_DumpAsHexString(ascii_buf, sizeof(ascii_buf), buff, bufflen);
-    BSL_LOG_INFO("%s :: %s", message, ascii_buf);
+    BSL_LOG_INFO("%s%s", message, ascii_buf);
 }
 
 int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cborhex)
@@ -126,19 +126,13 @@ int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cb
     return 0;
 }
 
-int BSL_TestUtils_ComapreBundleAsCBOR(BSL_TestContext_t *test_ctx, const char *cborhex)
+int BSL_TestUtils_EncodeBundleToCBOR(BSL_TestContext_t *test_ctx)
 {
     assert(test_ctx != NULL);
-    assert(cborhex != NULL);
 
     mock_bpa_ctr_sort_blocks(&test_ctx->mock_bpa_ctr);
     int res = mock_bpa_ctr_encode(&test_ctx->mock_bpa_ctr);
-    if (res)
-    {
-        return res;
-    }
-
-    return BSL_TestUtils_IsB16StrEqualTo(cborhex, test_ctx->mock_bpa_ctr.encoded) ? BSL_SUCCESS : BSL_ERR_FAILURE;
+    return res;
 }
 
 BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text)
