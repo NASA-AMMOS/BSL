@@ -456,7 +456,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
     const json_t *es_ref = json_object_get(policyrule, "es_ref");
     if (!es_ref || !json_is_string(es_ref))
     {
-        BSL_LOG_DEBUG("NO ES REF");
+        BSL_LOG_INFO("NO ES REF");
     }
 
     // policy_action_on_fail
@@ -612,62 +612,6 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         }
     }
 
-    // event set (currently parsed, but not utilized/initialized meaningfully)
-    const json_t *event_set = json_object_get(policy_rule_elm, "event_set");
-    if (event_set && json_is_object(event_set))
-    {
-        // es_ref
-        const json_t *es_ref_es = json_object_get(policyrule, "es_ref");
-        if (!es_ref_es || !json_is_string(es_ref_es))
-        {
-            BSL_LOG_DEBUG("NO ES REF");
-        }
-
-        const json_t *events = json_object_get(event_set, "events");
-        if (events && json_is_array(events))
-        {
-            size_t n = json_array_size(events);
-            BSL_LOG_DEBUG("num events (%zu):", n);
-            for (size_t i = 0; i < n; ++i)
-            {
-                const json_t *entry = json_array_get(events, i);
-                if (!json_is_object(entry))
-                {
-                    BSLB_IdValPairPtrMap_clear(options);
-                    return BSL_ERR_POLICY_CONFIG;
-                }
-
-                const json_t *event_id = json_object_get(entry, "event_id");
-                if (!event_id)
-                {
-                    BSLB_IdValPairPtrMap_clear(options);
-                    return BSL_ERR_POLICY_CONFIG;
-                }
-                const char *event_id_str = json_string_value(event_id);
-                BSL_LOG_DEBUG("EVENT ID FOUND: %s", event_id_str);
-
-                const json_t *actions = json_object_get(entry, "actions");
-                if (actions && json_is_array(actions))
-                {
-                    const size_t m = json_array_size(actions);
-                    BSL_LOG_DEBUG("num actions in %s (%zu):", event_id_str, m);
-                    for (size_t j = 0; j < m; ++j)
-                    {
-                        const json_t *act = json_array_get(actions, j);
-                        if (!json_is_string(act))
-                        {
-                            BSLB_IdValPairPtrMap_clear(options);
-                            return BSL_ERR_POLICY_CONFIG;
-                        }
-
-                        const char *act_str = json_string_value(act);
-                        BSL_LOG_DEBUG("Action of %s: %s", event_id_str, act_str);
-                    }
-                }
-            }
-        }
-    }
-
     BSLP_PolicyPredicate_t predicate;
     BSLP_PolicyPredicate_InitFrom(&predicate, policy_loc_enum, src_str, sec_src_str, dest_str);
 
@@ -719,10 +663,64 @@ int BSLP_PolicyParser_FromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_
     for (size_t policy_rule_idx = 0; policy_rule_idx < policy_rule_ct; ++policy_rule_idx)
     {
         const json_t *policy_rule_elm = json_array_get(policyrule_set, policy_rule_idx);
+
         int           res             = BSLP_PolicyParser_ReadOneRule(policy, policy_rule_elm);
         if (BSL_SUCCESS != res)
         {
             ++failures;
+        }
+    }
+
+    // event set (currently parsed, but not utilized/initialized meaningfully)
+    const json_t *event_set = json_object_get(root, "event_set");
+    if (event_set && json_is_object(event_set))
+    {
+        // es_ref
+        const json_t *es_ref_es = json_object_get(event_set, "es_ref");
+        if (!es_ref_es || !json_is_string(es_ref_es))
+        {
+            BSL_LOG_DEBUG("NO ES REF");
+        }
+
+        const json_t *events = json_object_get(event_set, "events");
+        if (events && json_is_array(events))
+        {
+            size_t n = json_array_size(events);
+            BSL_LOG_DEBUG("num events (%zu):", n);
+            for (size_t i = 0; i < n; ++i)
+            {
+                const json_t *entry = json_array_get(events, i);
+                if (!json_is_object(entry))
+                {
+                    return BSL_ERR_POLICY_CONFIG;
+                }
+
+                const json_t *event_id = json_object_get(entry, "event_id");
+                if (!event_id)
+                {
+                    return BSL_ERR_POLICY_CONFIG;
+                }
+                const char *event_id_str = json_string_value(event_id);
+                BSL_LOG_DEBUG("EVENT ID FOUND: %s", event_id_str);
+
+                const json_t *actions = json_object_get(entry, "actions");
+                if (actions && json_is_array(actions))
+                {
+                    const size_t m = json_array_size(actions);
+                    BSL_LOG_DEBUG("num actions in %s (%zu):", event_id_str, m);
+                    for (size_t j = 0; j < m; ++j)
+                    {
+                        const json_t *act = json_array_get(actions, j);
+                        if (!json_is_string(act))
+                        {
+                            return BSL_ERR_POLICY_CONFIG;
+                        }
+
+                        const char *act_str = json_string_value(act);
+                        BSL_LOG_DEBUG("Action of %s: %s", event_id_str, act_str);
+                    }
+                }
+            }
         }
     }
 
