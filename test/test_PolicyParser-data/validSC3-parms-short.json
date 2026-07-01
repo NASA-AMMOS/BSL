@@ -22,19 +22,7 @@
             }
           }
         },
-        "es_ref": "d_confidentiality",
         "policy_action_on_fail": "delete_bundle"
-      },
-      "event_set": {
-        "es_ref": "d_confidentiality",
-        "events": [
-          {
-            "event_id": "sop_processed",
-            "actions": [
-              "remove_all_target_sops"
-            ]
-          }
-        ]
       }
     }
   ]
