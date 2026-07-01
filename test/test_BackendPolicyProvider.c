@@ -63,11 +63,12 @@ void setUp(void)
 
     policy_provider = BSLP_PolicyProvider_Init(BSL_SAMPLE_PP_ID);
 
-    BSL_PolicyDesc_t policy_desc = { 0 };
-    policy_desc.user_data        = policy_provider;
-    policy_desc.query_fn         = BSLP_QueryPolicy;
-    policy_desc.finalize_fn      = BSLP_FinalizePolicy;
-    policy_desc.deinit_fn        = BSLP_Deinit;
+    BSL_PolicyDesc_t policy_desc = {
+        .user_data        = policy_provider,
+        .query_fn         = BSLP_QueryPolicy,
+        .finalize_fn      = BSLP_FinalizePolicy,
+        .deinit_fn        = BSLP_Deinit,
+    };
 
     TEST_ASSERT_EQUAL(0, BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, BSL_SAMPLE_PP_ID, policy_desc));
 }
@@ -178,11 +179,12 @@ void test_MultiplePolicyProviders(void)
 {
     BSLP_PolicyProvider_t *policy_provider2 = BSLP_PolicyProvider_Init(BSL_SAMPLE_PP_ID_2);
 
-    BSL_PolicyDesc_t policy_desc_2 = { 0 };
-    policy_desc_2.user_data        = policy_provider2;
-    policy_desc_2.query_fn         = BSLP_QueryPolicy;
-    policy_desc_2.finalize_fn      = BSLP_FinalizePolicy;
-    policy_desc_2.deinit_fn        = BSLP_Deinit;
+    BSL_PolicyDesc_t policy_desc_2 = {
+        .user_data        = policy_provider2,
+        .query_fn         = BSLP_QueryPolicy,
+        .finalize_fn      = BSLP_FinalizePolicy,
+        .deinit_fn        = BSLP_Deinit,
+    };
     TEST_ASSERT_EQUAL(0, BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, BSL_SAMPLE_PP_ID_2, policy_desc_2));
 
     BSLP_PolicyProvider_t *policy  = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;

@@ -161,7 +161,7 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
     // that targets (protects) a block whose ID is `target_block_num`
     //
     // I.e., "Get me the security block whose target contains `target_block_num`"
-    BSL_PrimaryBlock_t primary_block = { 0 };
+    BSL_PrimaryBlock_t primary_block;
     if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
     {
         BSL_LOG_ERR("Cannot get bundle primary block");
@@ -170,7 +170,7 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
 
     for (size_t ix = 0; ix < primary_block.block_count; ix++)
     {
-        BSL_CanonicalBlock_t block = { 0 };
+        BSL_CanonicalBlock_t block;
         if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, primary_block.block_numbers[ix], &block))
         {
             BSL_LOG_WARNING("Failed to get block number %" PRIu64, primary_block.block_numbers[ix]);

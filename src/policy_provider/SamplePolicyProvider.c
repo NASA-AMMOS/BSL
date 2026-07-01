@@ -127,7 +127,7 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
     {
         const uint64_t blk_num = res_prim_blk.block_numbers[ix];
 
-        BSL_CanonicalBlock_t test_block = { 0 };
+        BSL_CanonicalBlock_t test_block;
         if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, blk_num, &test_block))
         {
             BSL_LOG_WARNING("Failed to lookup metadata for block number %" PRIu64, blk_num);
