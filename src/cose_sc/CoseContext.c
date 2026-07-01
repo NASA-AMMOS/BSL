@@ -139,6 +139,11 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
         BSL_AuthCtx_Deinit(self->mac_ctx);
         BSL_free(self->mac_ctx);
     }
+    if (self->enc_ctx)
+    {
+        BSL_Cipher_Deinit(self->enc_ctx);
+        BSL_free(self->enc_ctx);
+    }
 
     BSL_PrimaryBlock_deinit(&self->primary_block);
     BSLX_CoseSc_AadScope_clear(self->aad_scope);
