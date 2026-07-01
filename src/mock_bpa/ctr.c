@@ -24,6 +24,7 @@
  * Container structs for BPv7 data.
  */
 #include <BPSecLib_Private.h>
+#include <backend/CBOR.h>
 
 #include "ctr.h"
 #include "decode.h"
@@ -65,25 +66,12 @@ int mock_bpa_ctr_decode(mock_bpa_ctr_t *ctr)
 {
     BSL_CHKERR1(ctr);
     MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
+    BSL_CHKERR1(bundle);
 
-    if (ctr->bundle_ref.data)
-    {
-        MockBPA_Bundle_Deinit(ctr->bundle_ref.data);
-        MockBPA_Bundle_Init(ctr->bundle_ref.data);
-    }
+    MockBPA_Bundle_Deinit(bundle);
+    MockBPA_Bundle_Init(bundle);
 
-    QCBORDecodeContext decoder;
-    QCBORDecode_Init(&decoder, (UsefulBufC) { ctr->encoded.ptr, ctr->encoded.len }, QCBOR_DECODE_MODE_NORMAL);
-    if (bsl_mock_decode_bundle(&decoder, bundle))
-    {
-        return 2;
-    }
-    if (QCBORDecode_Finish(&decoder))
-    {
-        return 3;
-    }
-
-    return 0;
+    return BSL_CBOR_Decode(&ctr->encoded, (BSL_CBOR_Decode_f)&bsl_mock_decode_bundle, bundle);
 }
 
 int mock_bpa_ctr_encode(mock_bpa_ctr_t *ctr)
@@ -92,36 +80,5 @@ int mock_bpa_ctr_encode(mock_bpa_ctr_t *ctr)
     const MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
     BSL_CHKERR1(bundle);
 
-    QCBOREncodeContext encoder;
-    // first round of encoding is to get the full size
-    QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
-    if (bsl_mock_encode_bundle(&encoder, bundle))
-    {
-        return 2;
-    }
-    size_t     need;
-    QCBORError res = QCBOREncode_FinishGetSize(&encoder, &need);
-    if (res != QCBOR_SUCCESS)
-    {
-        return 3;
-    }
-    BSL_LOG_DEBUG("Encoder needs %zd bytes", need);
-
-    if (BSL_Data_Resize(&(ctr->encoded), need))
-    {
-        return 4;
-    }
-    QCBOREncode_Init(&encoder, (UsefulBuf) { ctr->encoded.ptr, ctr->encoded.len });
-    if (bsl_mock_encode_bundle(&encoder, bundle))
-    {
-        return 2;
-    }
-    if (QCBOR_SUCCESS != QCBOREncode_FinishGetSize(&encoder, &need))
-    {
-        return 3;
-    }
-
-    BSL_LOG_INFO("Encoded bundle");
-
-    return 0;
+    return BSL_CBOR_Encode_Twopass(&ctr->encoded, (BSL_CBOR_Encode_f)&bsl_mock_encode_bundle, bundle);
 }

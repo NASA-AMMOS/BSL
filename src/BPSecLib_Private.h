@@ -260,15 +260,15 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 
 #define CHK_POSTCONDITION(expr) CHK_TEMPL(expr, "Postcondition Failed: Did not satisfy", BSL_ERR_FAILURE)
 
-#define ASSERT_TEMPL(expr, msg)                       \
-    do                                                \
-    {                                                 \
-        if (!LIKELY(expr))                            \
-        {                                             \
-            fprintf(stderr, "%s (%s)\n", msg, #expr); \
-            abort();                                  \
-        }                                             \
-    }                                                 \
+#define ASSERT_TEMPL(expr, msg)                                                    \
+    do                                                                             \
+    {                                                                              \
+        if (!LIKELY(expr))                                                         \
+        {                                                                          \
+            fprintf(stderr, "At %s:%d %s (%s)\n", __FILE__, __LINE__, msg, #expr); \
+            abort();                                                               \
+        }                                                                          \
+    }                                                                              \
     while (0)
 
 #define ASSERT_ARG_EXPR(expr) ASSERT_TEMPL(expr, "Panic: Argument expression check failed to satisfy")
@@ -370,12 +370,15 @@ int BSL_HostEID_DecodeFromText(BSL_HostEID_t *eid, const char *text);
 int BSL_HostEID_DecodeFromCBOR(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid);
 
 /** Encode a EID into CBOR.
+ * Either one of @c encoded_bytes or @c encoded_size must be non-NULL.
  *
  * @param[in] eid The value to encode
- * @param[in, out] encoded_bytes CBOR encoded bytes
+ * @param[out] encoded_bytes The CBOR encoded bytes output.
+ * The structure must already be initialized.
+ * @param[out] encoded_size The encoded size needed output.
  * @return Zero if successful.
  */
-int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes);
+int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes, size_t *encoded_size);
 
 /** Static initializer for an invalid ::BSL_HostEIDPattern_t.
  * Even after this, BSL_HostEIDPattern_Init() must be used to get into a valid state.
@@ -621,7 +624,7 @@ size_t BSL_IdValPair_Sizeof(void);
  * @param[in] param_id ID of the parameter
  * @param[in] value The value to use.
  */
-void BSL_IdValPair_SetInt64(BSL_IdValPair_t *self, uint64_t param_id, uint64_t value);
+void BSL_IdValPair_SetInt64(BSL_IdValPair_t *self, int64_t param_id, uint64_t value);
 
 /** Returns true when the value type is an integer.
  *
@@ -644,7 +647,7 @@ int BSL_IdValPair_GetAsInt64(const BSL_IdValPair_t *self, int64_t *out);
  * @param[in] param_id ID of the parameter
  * @param[in] value View of bytes, which get copied into this Security Parameter.
  */
-void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, uint64_t param_id, BSL_Data_t value);
+void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, int64_t param_id, BSL_Data_t value);
 
 /** Returns true when the value type is a byte string.
  *
@@ -669,7 +672,7 @@ int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out);
  * @param[in] param_id ID of the parameter
  * @param[in] value text string of the parameter, copied into self
  */
-void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, uint64_t param_id, const char *value);
+void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, int64_t param_id, const char *value);
 
 /** Returns true when the value type is a text string.
  *
@@ -679,11 +682,10 @@ void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, uint64_t param_id, const ch
 bool BSL_IdValPair_IsTextstr(const BSL_IdValPair_t *self);
 
 /** Retrieve bytestring value of result when security parameter type is bytestring.
- * @warning Always check type before using this.
  *
- * @todo Clarify whether result contains copy or view of content
  * @param[in] self This Security Parameter
  * @param[in,out] out Pointer to optional string pointer for view onto this parameter value.
+ * That view must not outlive this pair instance.
  * @return Negative on error.
  */
 int BSL_IdValPair_GetAsTextstr(const BSL_IdValPair_t *self, const char **out);
@@ -695,7 +697,23 @@ int BSL_IdValPair_GetAsTextstr(const BSL_IdValPair_t *self, const char **out);
  * @param[in] ptr The stat of the data.
  * @param len The length to copy.
  */
-void BSL_IdValPair_SetRaw(BSL_IdValPair_t *self, uint64_t param_id, const void *ptr, size_t len);
+void BSL_IdValPair_SetRaw(BSL_IdValPair_t *self, int64_t param_id, const void *ptr, size_t len);
+
+/** Returns true when the value type is raw encoded CBOR.
+ *
+ * @param[in] self This Security Parameter
+ * @return True when value type is raw.
+ */
+bool BSL_IdValPair_IsRaw(const BSL_IdValPair_t *self);
+
+/** Retrieve bytestring value of result when security parameter type is bytestring.
+ *
+ * @param[in] self This Security Parameter
+ * @param[out] out Pointer to optional struct which will be made a view onto this parameter value.
+ * That view must not outlive this pair instance.
+ * @return Negative on error.
+ */
+int BSL_IdValPair_GetAsRaw(const BSL_IdValPair_t *self, BSL_Data_t *out);
 
 /** Represents a Security Operation produced by a policy provider to inform the security context.
  *
@@ -759,7 +777,7 @@ bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self);
  * @param option_id The internal option ID value to search for.
  * @return Pointer to security parameter if found, otherwise NULL.
  */
-const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, uint64_t option_id);
+const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, int64_t option_id);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
  *
@@ -767,7 +785,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, uint64_
  * @param param_id The parameter ID value to search for.
  * @return Pointer to security parameter if found, otherwise NULL.
  */
-const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, uint64_t param_id);
+const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, int64_t param_id);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
  *
@@ -775,7 +793,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, uint64_t
  * @param[in] index Index of security parameter list to retrieve from
  * @return Pointer to security result if found, otherwise NULL.
  */
-const BSL_IdValPair_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, uint64_t param_id);
+const BSL_IdValPair_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, int64_t param_id);
 
 /// @brief Get the block number of the security block containing this sec operation
 /// @param[in] self This security operation
@@ -928,34 +946,6 @@ bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t targ
  * @return Non-null pointer if the result is found.
  */
 const BSL_IdValPair_t *BSL_AbsSecBlock_FindResult(BSL_AbsSecBlock_t *self, uint64_t target_index, uint64_t result_id);
-
-/** Remove security parameters and results found in `outcome` from this ASB
- *
- * @todo - Can be backend-only.
- *
- * @param[in,out] self This ASB
- * @param[in] outcome Security Operation outcome containing params and results
- * @return Negative on error, otherwise count of things removed.
- */
-int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_num);
-
-/** Encodes this ASB into a CBOR string into the space pre-allocated indicated by the argument.
- *
- * @param[in] self This ASB.
- * @param[in] buf A buffer with allocated space for the encoded CBOR
- * or a zero-length buffer to calculate the needed size.
- * @return Integer contains number of bytes written to buffer, negative indicates error.
- *
- */
-ssize_t BSL_AbsSecBlock_EncodeToCBOR(const BSL_AbsSecBlock_t *self, BSL_Data_t *buf);
-
-/** Decodes and populates this ASB from a CBOR string.
- *
- * @param[in,out] self This allocated, but uninitialized ASB to populate.
- * @param[in] buf A buffer containing a CBOR string representing the ASB
- * @return Negative on error
- */
-int BSL_AbsSecBlock_DecodeFromCBOR(BSL_AbsSecBlock_t *self, const BSL_Data_t *buf);
 
 /** Increments a telemetry counter in the ctx based on telemetry index
  */
@@ -1274,10 +1264,12 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t 
  *
  * @param[in] lib The library context.
  * @param[in] bundle The bundle to inspect.
+ * This is mutable to allow ASB caching.
  * @param[in] sec_oper The security operation to perform.
+ * This is mutable to allow marking options as validated.
  * @return True if security operation is deemed valid.
  */
-typedef bool (*BSL_SecCtx_Validate_f)(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
+typedef bool (*BSL_SecCtx_Validate_f)(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);
 
 /** Signature for Security Context executor for a sec OP.
  *

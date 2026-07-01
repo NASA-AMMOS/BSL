@@ -1,0 +1,18 @@
+[
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'ExampleA.1',
+    / alg / 3: 6, / HMAC 384 384 /
+    / ops / 4: [9, 10], / MAC create, MAC verify /
+    / k / -1: h'3a5c74e32ab4558a99581ec3a816576812aabe895db04494cda2
+5b711d7b5ed4077466e677860648412f1bf8c91d0624'
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'ExampleA.5',
+    / alg / 3: -5, / A256KW /
+    / ops / 4: [5, 6], / wrap, unwrap /
+    / k / -1: h'0e8a982b921d1086241798032fedc1f883eab72e4e43bb2d11cf
+ae38ad7a972e'
+  }
+]

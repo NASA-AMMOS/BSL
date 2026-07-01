@@ -34,12 +34,13 @@
 
 #include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
+#include <backend/CBOR.h>
 
 #include "DefaultSecContext.h"
 #include "DefaultSecContext_Private.h"
 #include "rfc9173.h"
 
-bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper) // NOSONAR
 {
     // Note: Internal API distinction.
     // Called before the `_execute` function. This checks ahead of time whether it contains the necessary info in order
@@ -92,17 +93,22 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
     self->err_count       = 0;
     self->opt_sha_variant = false;
     self->opt_ippt_scope  = false;
-    self->hash_size       = 0;
     self->keywrap         = -1;
+    BSL_Data_Init(&self->hmac_result_val);
 
     const BSL_IdValPair_t *param;
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_KEY_ID);
     if (param)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsTextstr(param, &self->key_id))
+        const char *name;
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsTextstr(param, &name))
         {
             BSL_LOG_ERR("Invalid Key ID value");
             self->err_count++;
+        }
+        else
+        {
+            BSL_Data_SetViewCstr(&self->key_id, name);
         }
     }
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_SHA_VARIANT);
@@ -179,25 +185,6 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
         return BSL_ERR_PROPERTY_CHECK_FAILED;
     }
 
-    switch (self->crypto_sha_variant)
-    {
-        case BSL_CRYPTO_SHA_512:
-        {
-            self->hash_size = 64;
-            break;
-        }
-        case BSL_CRYPTO_SHA_384:
-        {
-            self->hash_size = 48;
-            break;
-        }
-        case BSL_CRYPTO_SHA_256:
-        {
-            self->hash_size = 32;
-            break;
-        }
-    }
-
     if (!self->opt_ippt_scope)
     {
         // If none given, assume they must all be true per spec.
@@ -233,9 +220,10 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
 
     UsefulBuf result_ub =
         ippt_space->ptr ? (UsefulBuf) { .ptr = ippt_space->ptr, ippt_space->len } : SizeCalculateUsefulBuf;
-    QCBOREncodeContext encoder;
 
+    QCBOREncodeContext encoder;
     QCBOREncode_Init(&encoder, result_ub);
+
     QCBOREncode_AddInt64(&encoder, self->ippt_scope);
 
     if (self->target_block.block_num > 0)
@@ -243,9 +231,7 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
         // Now begin process of computing IPPT
         if (self->ippt_scope & RFC9173_BIB_INTEGSCOPEFLAG_INC_PRIM)
         {
-            UsefulBufC prim_encoded = { .ptr = self->primary_block.encoded.ptr,
-                                        .len = self->primary_block.encoded.len };
-            QCBOREncode_AddEncoded(&encoder, prim_encoded);
+            QCBOREncode_AddEncoded(&encoder, UsefulBufC_FROM_BSL_Data(*(self->primary_block.encoded)));
         }
         if (self->ippt_scope & RFC9173_BIB_INTEGSCOPEFLAG_INC_TARGET_HDR)
         {
@@ -276,14 +262,12 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
             BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", self->target_block.btsd_len, btsd_copy.len);
         }
 
-        UsefulBufC buf = { .ptr = btsd_copy.ptr, .len = btsd_copy.len };
-        QCBOREncode_AddBytes(&encoder, buf);
+        QCBOREncode_AddBytes(&encoder, UsefulBufC_FROM_BSL_Data(btsd_copy));
         BSL_Data_Deinit(&btsd_copy);
     }
     else
     {
-        UsefulBufC buf = { .ptr = self->primary_block.encoded.ptr, .len = self->primary_block.encoded.len };
-        QCBOREncode_AddBytes(&encoder, buf);
+        QCBOREncode_AddBytes(&encoder, UsefulBufC_FROM_BSL_Data(*(self->primary_block.encoded)));
     }
 
     UsefulBufC ippt_result;
@@ -298,9 +282,7 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
 
 /**
  * Performs the actual HMAC over the given IPPT, placing the result in `hmac_result`.
- * Returns the number of bytes written into hmac_result.
- * Negative indicates error.
- * NOTE: This does NOT resize the result, the caller must do so.
+ * @return BSL_SUCCESS if successful.
  */
 int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
 {
@@ -312,14 +294,10 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
 
     void *key_id_handle;
     void *cipher_key;
-    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(self->key_id, &key_id_handle))
+    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(&self->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
-    }
-    else
-    {
-        BSL_LOG_DEBUG("Using key ID %s", self->key_id);
     }
 
     if (!self->keywrap)
@@ -402,9 +380,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
 
-    BSL_Data_InitBuffer(&self->hmac_result_val, self->hash_size);
-    size_t hmaclen = 0;
-    if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, (void **)&self->hmac_result_val.ptr, &hmaclen)) != 0)
+    if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, &self->hmac_result_val)) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_finalize failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
@@ -414,7 +390,6 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
         }
         return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
-    self->hmac_result_val.len = hmaclen;
 
     BSL_AuthCtx_Deinit(&hmac_ctx);
 
@@ -422,10 +397,10 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
     {
         BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
     }
-    return (int)hmaclen;
+    return BSL_SUCCESS;
 }
 
-int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper, // NOSONAR
                      BSL_SecOutcome_t *sec_outcome)
 {
     CHK_ARG_NONNULL(lib);
@@ -553,8 +528,8 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    const int hmac_nbytes = BSLX_BIB_GenHMAC(&bib_context, &ippt_space);
-    if (hmac_nbytes < BSL_SUCCESS)
+    const int hmac_status = BSLX_BIB_GenHMAC(&bib_context, &ippt_space);
+    if (hmac_status != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to generate BIB HMAC");
         BSLX_BIB_Deinit(&bib_context);

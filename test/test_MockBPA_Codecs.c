@@ -32,23 +32,6 @@
 
 static BSL_LibCtx_t bsl;
 
-/// Output storage safely cleaned up
-static UsefulBuf buf;
-/// Encoder shared among tests
-static QCBOREncodeContext encoder;
-
-static void printencoded(const uint8_t *pEncoded, size_t nLen)
-{
-    BSL_Data_t in;
-    BSL_Data_InitView(&in, nLen, (BSL_DataPtr_t)pEncoded);
-    string_t out;
-    string_init(out);
-    BSL_TestUtils_EncodeBase16(out, &in, false);
-    TEST_MESSAGE(string_get_cstr(out));
-    string_clear(out);
-    BSL_Data_Deinit(&in);
-}
-
 void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
@@ -65,21 +48,10 @@ int suiteTearDown(int failures)
 void setUp(void)
 {
     TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&bsl));
-
-    buf.len = 10000;
-    buf.ptr = BSL_malloc(buf.len);
-    TEST_ASSERT_NOT_NULL(buf.ptr);
-    QCBOREncode_Init(&encoder, buf);
 }
 
 void tearDown(void)
 {
-    if (buf.ptr)
-    {
-        BSL_free(buf.ptr);
-    }
-    buf = NULLUsefulBuf;
-
     int deinit_code = BSL_API_DeinitLib(&bsl);
     TEST_ASSERT_EQUAL(0, deinit_code);
 }
@@ -133,13 +105,6 @@ TEST_CASE(BSL_BUNDLECRCTYPE_16, "89070001820282030482028201028202820000821903e81
 TEST_CASE(BSL_BUNDLECRCTYPE_32, "89070002820282030482028201028202820000821903e81903e90044D64C9E29")
 void test_bsl_mock_encode_primary(uint64_t crc_type, const char *expecthex)
 {
-    string_t expect_text;
-    string_init_set_str(expect_text, expecthex);
-    BSL_Data_t expect_data;
-    BSL_Data_Init(&expect_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&expect_data, expect_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
-
     MockBPA_PrimaryBlock_t prim_blk_info = { .version       = 7,
                                              .flags         = 0,
                                              .crc_type      = crc_type,
@@ -155,34 +120,22 @@ void test_bsl_mock_encode_primary(uint64_t crc_type, const char *expecthex)
     BSL_HostEID_Init(&(prim_blk_info.report_to_eid));
     TEST_ASSERT_EQUAL_INT(0, BSL_HostEID_DecodeFromText(&(prim_blk_info.report_to_eid), "ipn:0.0"));
 
-    TEST_ASSERT_EQUAL_INT(0, bsl_mock_encode_primary(&encoder, &prim_blk_info));
+    BSL_Data_t encoded;
+    BSL_Data_Init(&encoded);
+    TEST_ASSERT_EQUAL_INT(
+        BSL_SUCCESS, BSL_CBOR_Encode_Twopass(&encoded, (BSL_CBOR_Encode_f)&bsl_mock_encode_primary, &prim_blk_info));
 
-    UsefulBufC encoded;
-    QCBORError err = QCBOREncode_Finish(&encoder, &encoded);
-    TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, err);
-
-    printencoded(encoded.ptr, encoded.len);
-    TEST_ASSERT_EQUAL_INT(expect_data.len, encoded.len);
-    TEST_ASSERT_EQUAL_MEMORY(expect_data.ptr, encoded.ptr, expect_data.len);
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(expecthex, encoded));
+    BSL_Data_Deinit(&encoded);
 
     BSL_HostEID_Deinit(&(prim_blk_info.src_node_id));
     BSL_HostEID_Deinit(&(prim_blk_info.dest_eid));
     BSL_HostEID_Deinit(&(prim_blk_info.report_to_eid));
-
-    BSL_Data_Deinit(&expect_data);
-    string_clear(expect_text);
 }
 
 TEST_CASE(BSL_BUNDLECRCTYPE_NONE, "850a182d000043010203")
 void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
 {
-    string_t expect_text;
-    string_init_set_str(expect_text, expecthex);
-    BSL_Data_t expect_data;
-    BSL_Data_Init(&expect_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&expect_data, expect_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
-
     static const uint8_t dummy_btsd[] = { 0x01, 0x02, 0x03 };
     static const size_t  dummy_size   = sizeof(dummy_btsd) / sizeof(uint8_t);
 
@@ -195,19 +148,15 @@ void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
     blk.btsd_len                 = dummy_size;
     memcpy(blk.btsd, dummy_btsd, dummy_size);
 
-    TEST_ASSERT_EQUAL_INT(0, bsl_mock_encode_canonical(&encoder, &blk));
+    BSL_Data_t encoded;
+    BSL_Data_Init(&encoded);
+    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS,
+                          BSL_CBOR_Encode_Twopass(&encoded, (BSL_CBOR_Encode_f)&bsl_mock_encode_canonical, &blk));
 
-    UsefulBufC encoded;
-    QCBORError err = QCBOREncode_Finish(&encoder, &encoded);
-    TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, err);
-
-    printencoded(encoded.ptr, encoded.len);
-    TEST_ASSERT_EQUAL_INT(expect_data.len, encoded.len);
-    TEST_ASSERT_EQUAL_MEMORY(expect_data.ptr, encoded.ptr, expect_data.len);
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(expecthex, encoded));
+    BSL_Data_Deinit(&encoded);
 
     BSL_free(blk.btsd);
-    BSL_Data_Deinit(&expect_data);
-    string_clear(expect_text);
 }
 
 void test_bsl_mock_encode_bundle(void)
@@ -238,22 +187,14 @@ void test_bsl_mock_encode_bundle(void)
         memcpy(blk->btsd, dummy_btsd, dummy_size);
     }
 
-    TEST_ASSERT_EQUAL_INT(0, bsl_mock_encode_bundle(&encoder, &bundle));
+    BSL_Data_t encoded;
+    BSL_Data_Init(&encoded);
+    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS,
+                          BSL_CBOR_Encode_Twopass(&encoded, (BSL_CBOR_Encode_f)&bsl_mock_encode_bundle, &bundle));
 
-    UsefulBufC encoded;
-    QCBORError err = QCBOREncode_Finish(&encoder, &encoded);
-    TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, err);
-
-    static const uint8_t expected[] = {
-        0x9f, 0x88, 0x07, 0x00, 0x00, 0x82, 0x02, 0x82, 0x03, 0x04, 0x82, 0x02, 0x82,
-        0x01, 0x02, 0x82, 0x02, 0x82, 0x00, 0x00, 0x82, 0x19, 0x03, 0xe8, 0x19, 0x03,
-        0xe9, 0x00, 0x85, 0x0a, 0x18, 0x2d, 0x00, 0x00, 0x43, 0x01, 0x02, 0x03, 0xff,
-    };
-    printencoded(encoded.ptr, encoded.len);
-    printencoded(expected, sizeof(expected));
-
-    TEST_ASSERT_EQUAL(sizeof(expected), encoded.len);
-    TEST_ASSERT_EQUAL_MEMORY(expected, encoded.ptr, sizeof(expected));
+    static const char *expecthex = "9f88070000820282030482028201028202820000821903e81903e900850a182d000043010203ff";
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(expecthex, encoded));
+    BSL_Data_Deinit(&encoded);
 
     MockBPA_Bundle_Deinit(&bundle);
 }
@@ -313,13 +254,8 @@ void test_bsl_loopback_bundle(const char *hexdata)
 {
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    {
-        string_t in_text;
-        string_init_set_str(in_text, hexdata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                      "BSL_TestUtils_DecodeBase16() failed");
-        string_clear(in_text);
-    }
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, hexdata),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     MockBPA_Bundle_t bundle;
     MockBPA_Bundle_Init(&bundle);
@@ -348,7 +284,7 @@ void test_bsl_loopback_bundle(const char *hexdata)
         TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBOREncode_Finish(&encoder, &out));
     }
 
-    TEST_ASSERT_EQUAL_MEMORY(in_data.ptr, out_data.ptr, in_data.len);
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(hexdata, out_data));
 
     MockBPA_Bundle_Deinit(&bundle);
     BSL_Data_Deinit(&out_data);

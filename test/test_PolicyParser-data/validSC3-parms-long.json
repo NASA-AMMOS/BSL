@@ -1,0 +1,38 @@
+{
+  "policyrule_set": [
+    {
+      "policyrule": {
+        "desc": "Confidentiality source rule",
+        "filter": {
+          "rule_id": "2",
+          "role": "s",
+          "tgt": 1,
+          "loc": "appin",
+          "sc_id": 3
+        },
+        "spec": {
+          "svc": "bcb-confidentiality",
+          "sc_id": 3,
+          "sc_parms": [
+            {
+              "id": "key_id",
+              "value": "ExampleA.1"
+            },
+            {
+              "id": "target_alg",
+              "value": 6
+            },
+            {
+              "id": "aad_scope",
+              "value": {
+                "0": 1,
+                "-1": 1
+              }
+            }
+          ]
+        },
+        "policy_action_on_fail": "delete_bundle"
+      }
+    }
+  ]
+}

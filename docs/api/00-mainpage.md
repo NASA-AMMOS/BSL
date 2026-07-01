@@ -99,7 +99,20 @@ This group contains files used by the Example Policy Provider library included w
 
 This group contains files used by the Default Security Contexts (RFC 9173 @cite rfc9173) library included with the BSL.
 
+
 @defgroup mock_bpa Example/Mock BP Agent
 @brief Files used in the Mock BPA used for testing.
 
 The Mock BPA performs whole-bundle encoding and decoding (CODEC) functions, but no other stateful bundle processing.
+This allows end-to-end bundle testing with real policy configurations.
+
+
+@defgroup unit_test Unit Testing
+@brief Files used for unit testing of BSL behaviors.
+
+This exercises internal and external APIs for consistency, but not end-to-end bundle testing.
+Tests cover the BSL itself, its example security contexts and example policy provider.
+
+
+@defgroup fuzz_test Fuzz Testing
+@brief Files used for fuzz testing of decoders.

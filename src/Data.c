@@ -46,36 +46,37 @@ static void bsl_data_int_free(BSL_Data_t *data)
     }
 }
 
-int BSL_Data_Init(BSL_Data_t *data)
+void BSL_Data_Init(BSL_Data_t *data)
 {
-    CHK_ARG_NONNULL(data);
+    ASSERT_ARG_NONNULL(data);
     bsl_data_int_reset(data);
-    return BSL_SUCCESS;
 }
 
 int BSL_Data_InitBuffer(BSL_Data_t *data, size_t bytelen)
 {
-    CHK_ARG_NONNULL(data);
+    ASSERT_ARG_NONNULL(data);
     CHK_ARG_EXPR(bytelen > 0);
 
     bsl_data_int_reset(data);
     data->ptr   = BSL_malloc(bytelen);
     data->len   = bytelen;
     data->owned = true;
-    memset(data->ptr, 0, bytelen);
+    if (data->ptr)
+    {
+        memset(data->ptr, 0, bytelen);
+    }
 
     CHK_POSTCONDITION(data->ptr != NULL);
     return BSL_SUCCESS;
 }
 
-int BSL_Data_InitView(BSL_Data_t *data, size_t len, const BSL_DataPtr_t src)
+void BSL_Data_InitView(BSL_Data_t *data, size_t len, const BSL_DataPtr_t src)
 {
-    CHK_ARG_NONNULL(data);
+    ASSERT_ARG_NONNULL(data);
 
     data->owned = false;
     data->ptr   = src;
     data->len   = len;
-    return BSL_SUCCESS;
 }
 
 void BSL_Data_InitMove(BSL_Data_t *data, BSL_Data_t *src)
@@ -90,17 +91,16 @@ void BSL_Data_InitMove(BSL_Data_t *data, BSL_Data_t *src)
     bsl_data_int_reset(src);
 }
 
-int BSL_Data_Deinit(BSL_Data_t *data)
+void BSL_Data_Deinit(BSL_Data_t *data)
 {
-    CHK_ARG_NONNULL(data);
+    ASSERT_ARG_NONNULL(data);
     bsl_data_int_free(data);
     memset(data, 0, sizeof(*data));
-    return BSL_SUCCESS;
 }
 
 int BSL_Data_CopyFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src)
 {
-    CHK_ARG_NONNULL(data);
+    ASSERT_ARG_NONNULL(data);
 
     if (len)
     {
@@ -131,7 +131,7 @@ int BSL_Data_CopyFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src)
 
 int BSL_Data_Resize(BSL_Data_t *data, size_t len)
 {
-    CHK_ARG_NONNULL(data);
+    ASSERT_ARG_NONNULL(data);
 
     if (len == data->len)
     {
@@ -145,8 +145,10 @@ int BSL_Data_Resize(BSL_Data_t *data, size_t len)
         return BSL_SUCCESS;
     }
 
+    BSL_DataConstPtr_t need_cpy = NULL;
     if (!data->owned)
     {
+        need_cpy  = data->ptr;
         data->ptr = NULL;
     }
     BSL_DataPtr_t got = BSL_realloc(data->ptr, len);
@@ -156,6 +158,12 @@ int BSL_Data_Resize(BSL_Data_t *data, size_t len)
         BSL_LOG_CRIT("Failed to realloc");
         return BSL_ERR_INSUFFICIENT_SPACE;
     }
+    if (need_cpy)
+    {
+        // copy old data only when it was a view
+        memcpy(got, need_cpy, data->len);
+    }
+
     data->owned = true;
     data->ptr   = got;
     data->len   = len;
@@ -164,7 +172,7 @@ int BSL_Data_Resize(BSL_Data_t *data, size_t len)
 
 int BSL_Data_AppendFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src)
 {
-    CHK_ARG_NONNULL(data);
+    ASSERT_ARG_NONNULL(data);
     CHK_ARG_EXPR(len > 0);
     CHK_ARG_NONNULL(src);
 
@@ -177,5 +185,13 @@ int BSL_Data_AppendFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src)
     {
         memcpy(&data->ptr[data->len - len], src, len);
     }
+    return BSL_SUCCESS;
+}
+
+int BSL_Data_SetViewCstr(BSL_Data_t *data, const char *cstr)
+{
+    ASSERT_ARG_NONNULL(data);
+    bsl_data_int_free(data);
+    *data = BSL_DATA_INIT_VIEW_CSTR(cstr);
     return BSL_SUCCESS;
 }

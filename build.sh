@@ -64,7 +64,8 @@ function cmd_apply_license {
 }
 
 function cmd_check {
-    cmake --build ${BUILDDIR} --target test
+    shift
+    ctest --test-dir ${BUILDDIR} --output-on-failure "$@"
 }
 
 function cmd_clean {
@@ -189,7 +190,7 @@ case "$1" in
         cmd_apply_license
         ;;
     check)
-        cmd_check
+        cmd_check "$@"
         ;;
     clean)
         cmd_clean

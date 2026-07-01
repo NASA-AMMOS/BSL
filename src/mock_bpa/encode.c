@@ -30,89 +30,106 @@
 #include "agent.h"
 #include "crc.h"
 
-int bsl_mock_encode_eid(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes)
+/// Match ::BSL_CBOR_Encode_f signature.
+static int bsl_mock_encode_eid_internal(QCBOREncodeContext *enc, const bsl_mock_eid_t *obj)
 {
-    bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
+    QCBOREncode_OpenArray(enc);
 
-    // GCOV_EXCL_START
-    BSL_CHKERR1(obj);
-    // GCOV_EXCL_STOP
-
-    QCBOREncodeContext enc;
-    UsefulBuf qcbor_buf = encoded_bytes != NULL ? (UsefulBuf) { .ptr = encoded_bytes->ptr, .len = encoded_bytes->len }
-                                                : SizeCalculateUsefulBuf;
-    QCBOREncode_Init(&enc, qcbor_buf);
-
-    QCBOREncode_OpenArray(&enc);
-
-    QCBOREncode_AddUInt64(&enc, obj->scheme);
+    QCBOREncode_AddUInt64(enc, obj->scheme);
     switch (obj->scheme)
     {
+        case BSL_MOCK_EID_DTN:
+        {
+            const m_string_t *ssp = &(obj->ssp.as_dtn);
+
+            QCBOREncode_AddText(enc, (UsefulBufC) { .ptr = m_string_get_cstr(*ssp), .len = m_string_size(*ssp) });
+            break;
+        }
         case BSL_MOCK_EID_IPN:
         {
             const bsl_eid_ipn_ssp_t *ipn = &(obj->ssp.as_ipn);
-            QCBOREncode_OpenArray(&enc);
+
+            QCBOREncode_OpenArray(enc);
             switch (ipn->ncomp)
             {
                 case 2:
-                    QCBOREncode_AddUInt64(&enc, (ipn->auth_num << 32) | ipn->node_num);
-                    QCBOREncode_AddUInt64(&enc, ipn->svc_num);
+                    QCBOREncode_AddUInt64(enc, (ipn->auth_num << 32) | ipn->node_num);
+                    QCBOREncode_AddUInt64(enc, ipn->svc_num);
                     break;
                 case 3:
-                    QCBOREncode_AddUInt64(&enc, ipn->auth_num);
-                    QCBOREncode_AddUInt64(&enc, ipn->node_num);
-                    QCBOREncode_AddUInt64(&enc, ipn->svc_num);
+                    QCBOREncode_AddUInt64(enc, ipn->auth_num);
+                    QCBOREncode_AddUInt64(enc, ipn->node_num);
+                    QCBOREncode_AddUInt64(enc, ipn->svc_num);
                     break;
                 default:
                     // nothing to really do here
                     break;
             }
-            QCBOREncode_CloseArray(&enc);
+            QCBOREncode_CloseArray(enc);
             break;
         }
         default:
         {
             const BSL_Data_t *raw = &(obj->ssp.as_raw);
-            QCBOREncode_AddEncoded(&enc, (UsefulBufC) { raw->ptr, raw->len });
+            QCBOREncode_AddEncoded(enc, UsefulBufC_FROM_BSL_Data(*raw));
             break;
         }
     }
 
-    QCBOREncode_CloseArray(&enc);
+    QCBOREncode_CloseArray(enc);
+    return BSL_SUCCESS;
+}
 
-    size_t     encode_sz;
-    QCBORError qcbor_err = QCBOREncode_FinishGetSize(&enc, &encode_sz);
-    if (qcbor_err != QCBOR_SUCCESS)
+int bsl_mock_encode_eid(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes, size_t *encoded_size)
+{
+    bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
+
+    // GCOV_EXCL_START
+    ASSERT_ARG_NONNULL(eid);
+    ASSERT_ARG_NONNULL(obj);
+    // GCOV_EXCL_STOP
+
+    if (encoded_size)
     {
-        BSL_LOG_ERR("Encoding host eid FAIL: %s", qcbor_err_to_str(qcbor_err));
-        return BSL_ERR_ENCODING;
+        return BSL_CBOR_Encode_GetSize(encoded_size, (BSL_CBOR_Encode_f)&bsl_mock_encode_eid_internal, obj);
     }
-    BSL_LOG_DEBUG("QCBOR ENCODE SIZE: %zu", encode_sz);
-    return (ssize_t)encode_sz;
+    if (encoded_bytes)
+    {
+        return BSL_CBOR_Encode_Twopass(encoded_bytes, (BSL_CBOR_Encode_f)&bsl_mock_encode_eid_internal, obj);
+    }
+    return BSL_ERR_ARG_INVALID;
 }
 
 int bsl_mock_encode_eid_from_ctx(QCBOREncodeContext *enc, const BSL_HostEID_t *eid)
 {
-    ssize_t encode_result = BSL_HostEID_EncodeToCBOR(eid, NULL);
-    if (encode_result <= 0)
+    if (QCBOREncode_IsBufferNULL(enc))
     {
-        BSL_LOG_ERR("Failed to calculate EID size");
-        return BSL_ERR_ENCODING;
-    }
+        size_t needlen;
 
-    BSL_Data_t eid_data;
-    BSL_Data_InitBuffer(&eid_data, (size_t)encode_result);
-    encode_result = BSL_HostEID_EncodeToCBOR(eid, &eid_data);
-    if (encode_result <= BSL_SUCCESS)
+        int encode_result = BSL_HostEID_EncodeToCBOR(eid, NULL, &needlen);
+        if (encode_result != BSL_SUCCESS)
+        {
+            BSL_LOG_ERR("Failed to encode EID");
+            return BSL_ERR_ENCODING;
+        }
+
+        QCBOREncode_AddEncoded(enc, (UsefulBufC) { .ptr = NULL, .len = needlen });
+    }
+    else
     {
-        BSL_LOG_ERR("Failed to encode EID");
-        return BSL_ERR_ENCODING;
+        BSL_Data_t eid_data;
+        BSL_Data_Init(&eid_data);
+
+        int encode_result = BSL_HostEID_EncodeToCBOR(eid, &eid_data, NULL);
+        if (encode_result != BSL_SUCCESS)
+        {
+            BSL_LOG_ERR("Failed to encode EID");
+            return BSL_ERR_ENCODING;
+        }
+
+        QCBOREncode_AddEncoded(enc, UsefulBufC_FROM_BSL_Data(eid_data));
+        BSL_Data_Deinit(&eid_data);
     }
-
-    UsefulBufC eid_buf = (UsefulBufC) { .ptr = eid_data.ptr, .len = eid_data.len };
-    QCBOREncode_AddEncoded(enc, eid_buf);
-
-    BSL_Data_Deinit(&eid_data);
     return 0;
 }
 

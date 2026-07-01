@@ -24,10 +24,11 @@
 #include <unity.h>
 
 #include <BPSecLib_Private.h>
-#include <mock_bpa/MockBPA.h>
 #include <CryptoInterface.h>
-
+#include <backend/AbsSecBlock.h>
+#include <backend/CBOR.h>
 #include <backend/PublicInterfaceImpl.h>
+#include <mock_bpa/MockBPA.h>
 
 #include "DefaultScUtils.h"
 
@@ -35,7 +36,7 @@ void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
     mock_bpa_LogOpen();
-    mock_bpa_LogSetLeastSeverity(LOG_CRIT);
+    mock_bpa_LogSetLeastSeverity(LOG_DEBUG);
 }
 
 int suiteTearDown(int failures)
@@ -53,7 +54,7 @@ void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int6
     BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
     BSL_AbsSecBlock_Init(asb);
 
-    const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, &asb_cbor_data);
+    const int decode_result = BSL_CBOR_Decode(&asb_cbor_data, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, decode_result);
 
     // Confirm its in a valid state
@@ -70,12 +71,11 @@ void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int6
     BSL_Data_t encoded_cbor;
     BSL_Data_InitBuffer(&encoded_cbor, asb_cbor_bytelen);
 
-    const ssize_t encode_result = BSL_AbsSecBlock_EncodeToCBOR(asb, &encoded_cbor);
-    TEST_ASSERT_GREATER_THAN(BSL_SUCCESS, encode_result);
+    int res = BSL_CBOR_Encode_Twopass(&encoded_cbor, (BSL_CBOR_Encode_f)&BSL_AbsSecBlock_Encode, asb);
+    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, res);
 
     // Make sure the lengths match and then make sure the bytes match
-    const size_t nbytes = (size_t)encode_result;
-    TEST_ASSERT_EQUAL_size_t(asb_cbor_bytelen, nbytes);
+    TEST_ASSERT_EQUAL_size_t(asb_cbor_bytelen, encoded_cbor.len);
     TEST_ASSERT_EQUAL_MEMORY(asb_cbor, encoded_cbor.ptr, asb_cbor_bytelen);
 
     BSL_Data_Deinit(&encoded_cbor);
@@ -128,7 +128,7 @@ void test_AbsSecBlock_loopback(const char *hexdata, int64_t expect_ctx_id, uint6
     BSL_Data_Deinit(&in_data);
 }
 
-TEST_CASE("", BSL_ERR_ARG_INVALID)
+TEST_CASE("", BSL_ERR_DECODING)
 TEST_CASE("438ed6208eb1c1ffb94d952175167df0902902064a2983910c4fb2340790bf420a7d1921d5bf7c4721e02ab87a93ab1e0b75cf62e494"
           "8727c8b5dae46ed2af05439b88029191",
           BSL_ERR_DECODING)
@@ -150,7 +150,7 @@ void test_AbsSecBlock_Decode_failure(const char *hexdata, int expect)
     BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
     BSL_AbsSecBlock_Init(asb);
 
-    const int decode_result = BSL_AbsSecBlock_DecodeFromCBOR(asb, &in_data);
+    const int decode_result = BSL_CBOR_Decode(&in_data, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb);
     TEST_ASSERT_EQUAL_INT(expect, decode_result);
 
     BSL_AbsSecBlock_Deinit(asb);

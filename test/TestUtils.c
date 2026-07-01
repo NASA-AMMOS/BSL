@@ -57,24 +57,21 @@ int BSL_TestContext_Deinit(BSL_TestContext_t *ctx)
     return BSL_SUCCESS;
 }
 
-bool BSL_TestUtils_IsB16StrEqualTo(const char *b16_string, BSL_Data_t encoded_val)
+bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_val)
 {
-    string_t in_text;
-    string_init_set_str(in_text, b16_string);
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
     in_data.owned = 1;
-    if (BSL_TestUtils_DecodeBase16(&in_data, in_text) != 0)
+    if (BSL_TestUtils_DecodeBase16_cstr(&in_data, expected_hex) != 0)
     {
+        BSL_LOG_CRIT("Could not base16-decode sequence");
         BSL_Data_Deinit(&in_data);
-        string_clear(in_text);
-        assert(0);
-        // TEST_ASSERT_MESSAGE(0, "Could not base16-decode sequence");
+        return false;
     }
-    string_clear(in_text);
 
-    BSL_TestUtils_PrintHexToBuffer("actual str  : ", encoded_val.ptr, encoded_val.len);
     BSL_TestUtils_PrintHexToBuffer("expected str: ", in_data.ptr, in_data.len);
+    BSL_TestUtils_PrintHexToBuffer("actual str  : ", encoded_val.ptr, encoded_val.len);
+
     if (encoded_val.len != in_data.len)
     {
         BSL_LOG_CRIT("Mismatch in size, got %zu bytes, expected %zu bytes", encoded_val.len, in_data.len);
@@ -103,10 +100,7 @@ int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cb
     assert(test_ctx != NULL);
     assert(cborhex != NULL);
 
-    string_t in_text;
-    string_init_set_str(in_text, cborhex);
-    int res = BSL_TestUtils_DecodeBase16(&test_ctx->mock_bpa_ctr.encoded, in_text);
-    string_clear(in_text);
+    int res = BSL_TestUtils_DecodeBase16_cstr(&test_ctx->mock_bpa_ctr.encoded, cborhex);
     if (res != 0)
     {
         BSL_LOG_ERR("Failed to decode base16 text from: %s", cborhex);
@@ -117,17 +111,34 @@ int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cb
     assert(bundle != NULL);
 
     res = mock_bpa_ctr_decode(&(test_ctx->mock_bpa_ctr));
-    if (!res)
+    if (res)
     {
-        // additional test checks
-        assert(bundle->primary_block.version == 7);
-        assert(bundle->primary_block.lifetime > 0);
-        assert(bundle->primary_block.flags <= 64);
-        assert(bundle->primary_block.crc_type <= 4);
-        assert(MockBPA_BlockList_size(bundle->blocks) > 0);
-        assert(MockBPA_BlockByNum_size(bundle->blocks_num) > 0);
+        return res;
     }
-    return res;
+
+    // additional test checks
+    assert(bundle->primary_block.version == 7);
+    assert(bundle->primary_block.lifetime > 0);
+    assert(bundle->primary_block.flags <= 64);
+    assert(bundle->primary_block.crc_type <= 4);
+    assert(MockBPA_BlockList_size(bundle->blocks) > 0);
+    assert(MockBPA_BlockByNum_size(bundle->blocks_num) > 0);
+    return 0;
+}
+
+int BSL_TestUtils_ComapreBundleAsCBOR(BSL_TestContext_t *test_ctx, const char *cborhex)
+{
+    assert(test_ctx != NULL);
+    assert(cborhex != NULL);
+
+    mock_bpa_ctr_sort_blocks(&test_ctx->mock_bpa_ctr);
+    int res = mock_bpa_ctr_encode(&test_ctx->mock_bpa_ctr);
+    if (res)
+    {
+        return res;
+    }
+
+    return BSL_TestUtils_IsB16StrEqualTo(cborhex, test_ctx->mock_bpa_ctr.encoded) ? BSL_SUCCESS : BSL_ERR_FAILURE;
 }
 
 BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text)
@@ -136,19 +147,6 @@ BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text)
     BSL_HostEIDPattern_Init(&pat);
     assert(0 == BSL_HostEIDPattern_DecodeFromText(&pat, text));
     return pat;
-}
-
-int BSL_TestUtils_EncodeBase16(string_t out, const BSL_Data_t *in, bool uppercase)
-{
-    const char *fmt = uppercase ? "%02X" : "%02x";
-
-    const uint8_t *curs = in->ptr;
-    const uint8_t *end  = curs + in->len;
-    for (; curs < end; ++curs)
-    {
-        string_cat_printf(out, fmt, *curs);
-    }
-    return 0;
 }
 
 /// Size of the @c BSL_TestUtils_DecodeBase16_table
@@ -231,19 +229,21 @@ int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid,
                              const char *report_to_eid)
 {
     BSL_PrimaryBlock_t primary_block;
+    BSL_PrimaryBlock_Init(&primary_block);
     BSL_BundleCtx_GetBundleMetadata(input_bundle, &primary_block);
     int res = 0;
     if (src_eid)
     {
-        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_src_node_id), src_eid, NULL));
+        res |= (!!mock_bpa_eid_from_text((BSL_HostEID_t *)(primary_block.field_src_node_id), src_eid, NULL));
     }
     if (dest_eid)
     {
-        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_dest_eid), dest_eid, NULL) << 1);
+        res |= (!!mock_bpa_eid_from_text((BSL_HostEID_t *)(primary_block.field_dest_eid), dest_eid, NULL) << 1);
     }
     if (report_to_eid)
     {
-        res |= (!!mock_bpa_eid_from_text(&(primary_block.field_report_to_eid), report_to_eid, NULL) << 2);
+        res |=
+            (!!mock_bpa_eid_from_text((BSL_HostEID_t *)(primary_block.field_report_to_eid), report_to_eid, NULL) << 2);
     }
     BSL_PrimaryBlock_deinit(&primary_block);
 

@@ -443,7 +443,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
 
     BSL_SecOper_t bib_oper_ext_block;
     BSL_SecOper_Init(&bib_oper_ext_block);
-    BSL_SecOper_Populate(&bib_oper_ext_block, 1, 2, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
+    BSL_SecOper_Populate(&bib_oper_ext_block, 1, 2, 4, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
                          BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendOption(&bib_oper_ext_block, &bib_context.opt_test_key);
     BSL_SecOper_AppendOption(&bib_oper_ext_block, &bib_context.opt_sha_variant);
@@ -460,7 +460,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
 
     BSL_SecOper_t bcb_oper;
     BSL_SecOper_Init(&bcb_oper);
-    BSL_SecOper_Populate(&bcb_oper, 2, 1, 4, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_Populate(&bcb_oper, 2, 1, 5, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
     BSL_SecOper_AppendOption(&bcb_oper, &bcb_context.opt_test_key_id);
     BSL_SecOper_AppendOption(&bcb_oper, &bcb_context.opt_scope_flags);
     BSL_SecOper_AppendOption(&bcb_oper, &bcb_context.opt_aes_variant);
