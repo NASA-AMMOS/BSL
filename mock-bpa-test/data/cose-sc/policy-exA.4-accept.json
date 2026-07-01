@@ -13,10 +13,7 @@
         "spec": {
           "svc": "bcb",
           "sc_id": 3,
-          "sc_parms": {
-            "key_id": "ExampleA.4",
-            "target_alg": 3
-          }
+          "sc_parms": {}
         },
         "policy_action_on_fail": "delete_bundle"
       }

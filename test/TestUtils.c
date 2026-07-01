@@ -72,14 +72,7 @@ bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_
     BSL_TestUtils_PrintHexToBuffer("expected str: ", in_data.ptr, in_data.len);
     BSL_TestUtils_PrintHexToBuffer("actual str  : ", encoded_val.ptr, encoded_val.len);
 
-    if (encoded_val.len != in_data.len)
-    {
-        BSL_LOG_CRIT("Mismatch in size, got %zu bytes, expected %zu bytes", encoded_val.len, in_data.len);
-        BSL_Data_Deinit(&in_data);
-        return false;
-    }
-
-    bool match = (memcmp(encoded_val.ptr, in_data.ptr, in_data.len) == 0);
+    bool match = BSL_Data_Cmp(&encoded_val, &in_data) == 0;
     if (!match)
     {
         BSL_LOG_CRIT("Mismatch in content");

@@ -14,8 +14,6 @@
           "svc": "bib-integrity",
           "sc_id": 3,
           "sc_parms": {
-            "key_id": "ExampleA.1",
-            "target_alg": 6
           }
         },
         "policy_action_on_fail": "delete_bundle"

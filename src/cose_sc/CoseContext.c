@@ -74,15 +74,20 @@ typedef struct
     /// Rolling return value for procedure interruption
     int status;
 
-    /// Required AAD scope, naturally sorted
-    BSLX_CoseSc_AadScope_t aad_scope;
+    /// True if #kid came from an option
+    bool opt_kid;
+    /// Required option for KID
+    BSL_Data_t kid;
+
     /// True if #aad_scope came from an option
     bool opt_aad_scope;
-    /// True if #aad_scope came from a parameter
-    bool msg_aad_scope;
+    /// Required AAD scope, naturally sorted
+    BSLX_CoseSc_AadScope_t aad_scope;
 
     /// True if #key_alg came from an option
     bool opt_key_alg;
+    /// True if #key_alg came from a header
+    bool hdr_key_alg;
     /// Optional key use algorithm from ::BSLX_CoseMsg_Alg_e
     int64_t key_alg;
 
@@ -97,9 +102,6 @@ typedef struct
     int64_t iv_offset;
     /// Direct or derived full IV
     BSL_Data_t iv_val;
-
-    /// Required option for KID
-    const BSL_IdValPair_t *kid;
 
     /// Metadata for primary block
     BSL_PrimaryBlock_t primary_block;
@@ -127,6 +129,7 @@ static void BSLX_CoseSc_Init(BSLX_CoseSc_t *self)
     memset(self, 0, sizeof(*self));
 
     BSL_HostEID_Init(&self->sec_src_eid);
+    BSL_Data_Init(&self->kid);
     BSLX_CoseSc_AadScope_init(self->aad_scope);
     BSL_Data_Init(&self->iv_val);
     self->mac_ctx = NULL;
@@ -153,6 +156,7 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
     BSL_PrimaryBlock_deinit(&self->primary_block);
     BSL_Data_Deinit(&self->iv_val);
     BSLX_CoseSc_AadScope_clear(self->aad_scope);
+    BSL_Data_Deinit(&self->kid);
     BSL_HostEID_Deinit(&self->sec_src_eid);
 
     memset(self, 0, sizeof(*self));
@@ -204,24 +208,19 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_KEY_ID);
     if (opt)
     {
-        BSL_Data_t kid;
-        BSL_Data_Init(&kid);
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(opt, &kid))
+        BSL_Data_t kid_view;
+        BSL_Data_Init(&kid_view);
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(opt, &kid_view))
         {
             BSL_LOG_ERR("Invalid key ID value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
         {
-            self->kid = opt;
-
-            if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(&kid, &self->keyhandle))
-            {
-                BSL_LOG_ERR("Unknown key ID");
-                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-            }
+            BSL_Data_CopyFrom(&self->kid, kid_view.len, kid_view.ptr);
+            self->opt_kid = true;
         }
-        BSL_Data_Deinit(&kid);
+        BSL_Data_Deinit(&kid_view);
     }
 
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_TGT_ALG);
@@ -291,47 +290,24 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     }
 
     // validation between options and key / param state
-    if (!self->keyhandle)
+    if (self->is_source)
     {
-        BSL_LOG_ERR("COSE key is not supplied or not found");
-        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-    }
-    else
-    {
-        const BSL_IdValPair_t *param = BSL_Crypto_GetKeyParameter(self->keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG);
-        if (param)
+        if (!self->opt_kid)
         {
-            int64_t key_alg_int;
-            if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(param, &key_alg_int))
-            {
-                BSL_LOG_ERR("Invalid key algorithm value");
-                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-            }
-            else if (self->opt_key_alg && (self->key_alg != key_alg_int))
-            {
-                BSL_LOG_ERR("Option key algorithm value %" PRId64 " differs from key store %" PRId64, self->key_alg,
-                            key_alg_int);
-                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-            }
-            else
-            {
-                self->key_alg = key_alg_int;
-                BSL_LOG_DEBUG("Using key algorithm code %" PRId64, self->key_alg);
-            }
-        }
-        else if (!(self->opt_key_alg))
-        {
-            BSL_LOG_ERR("Option for key algorithm not supplied and key has no alg parameter");
+            BSL_LOG_ERR("key ID option is required");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
 
-    if (!self->opt_tgt_alg)
+    if (self->is_source)
     {
-        BSL_LOG_ERR("COSE target alg option is required");
-        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        if (!self->opt_tgt_alg)
+        {
+            BSL_LOG_ERR("COSE target alg option is required");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
     }
-    else
+    if (self->opt_tgt_alg)
     {
         // restrict use locally
         const uint64_t *found;
@@ -353,7 +329,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     }
 }
 
-bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle _U_, BSL_SecOper_t *sec_oper) // NOSONAR
+bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper) // NOSONAR
 {
     BSLX_CoseSc_t ctx;
     BSLX_CoseSc_Init(&ctx);
@@ -633,7 +609,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
 
 /** Internal processing according to Section 6.3 of RFC 9052.
  */
-static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *headers, int64_t tgt_alg,
+static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *headers,
                                     const char *context, BSL_Data_t *tag)
 {
     int res;
@@ -651,7 +627,7 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
             bsl_sha_var = BSL_CRYPTO_SHA_512;
             break;
         default:
-            BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, tgt_alg);
+            BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, ctx->tgt_alg);
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             return;
     }
@@ -793,6 +769,166 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
     }
 }
 
+/** Combine options and received headers to validate end key.
+ */
+static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMsg_Headers_t *headers)
+{
+    bool       hdr_kid = false;
+    BSL_Data_t hdr_kid_view;
+    bool       hdr_alg     = false;
+    int64_t    hdr_alg_val = 0;
+    if (headers)
+    {
+        const BSL_IdValPair_t *hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_KID, false);
+        if (hdr)
+        {
+            if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(hdr, &hdr_kid_view))
+            {
+                {
+                    BSL_LOG_ERR("Invalid header key ID value");
+                    self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                    return;
+                }
+            }
+            else
+            {
+                hdr_kid = true;
+            }
+        }
+
+        hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_ALG, false);
+        if (hdr)
+        {
+            if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(hdr, &hdr_alg_val))
+            {
+                BSL_LOG_ERR("Invalid header alg value");
+                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                return;
+            }
+            else
+            {
+                hdr_alg = true;
+            }
+        }
+    }
+
+    // Check for conflict and find key or fail
+    if (hdr_kid && self->opt_kid)
+    {
+        if (BSL_Data_Cmp(&self->kid, &hdr_kid_view) != 0)
+        {
+            BSL_LOG_ERR("Mismatched key ID value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            return;
+        }
+    }
+    else if (hdr_kid)
+    {
+        BSL_Data_CopyFrom(&self->kid, hdr_kid_view.len, hdr_kid_view.ptr);
+    }
+    else if (!self->opt_kid)
+    {
+        BSL_LOG_ERR("No source of key ID available");
+        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        return;
+    }
+
+    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(&self->kid, &self->keyhandle))
+    {
+        BSL_LOG_ERR("Unknown key from ID");
+        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        return;
+    }
+
+    if (hdr_alg && self->opt_key_alg)
+    {
+        if (hdr_alg_val != self->key_alg)
+        {
+            BSL_LOG_ERR("Mismatched key alg value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            return;
+        }
+    }
+    else if (hdr_alg)
+    {
+        self->key_alg = hdr_alg_val;
+        self->hdr_key_alg = true;
+    }
+    else if (headers && !self->opt_key_alg)
+    {
+        BSL_LOG_ERR("No source of key alg available");
+        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        return;
+    }
+
+    // Key itself must agree with chosen alg
+    const BSL_IdValPair_t *param = BSL_Crypto_GetKeyParameter(self->keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG);
+    if (param)
+    {
+        int64_t key_alg_int;
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(param, &key_alg_int))
+        {
+            BSL_LOG_ERR("Invalid key algorithm value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else if ((self->opt_key_alg || self->hdr_key_alg) && (self->key_alg != key_alg_int))
+        {
+            BSL_LOG_ERR("Option key algorithm value %" PRId64 " differs from key store %" PRId64, self->key_alg,
+                        key_alg_int);
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            self->key_alg = key_alg_int;
+        }
+    }
+    else if (!(self->opt_key_alg))
+    {
+        BSL_LOG_ERR("Option for key algorithm not supplied and key has no alg parameter");
+        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+    }
+    BSL_LOG_DEBUG("Using key algorithm code %" PRId64, self->key_alg);
+}
+
+static void BSLX_CoseSc_GetAndValidateAadScope(BSLX_CoseSc_t *self)
+{
+    const BSL_IdValPair_t *param = BSL_SecOper_FindParam(self->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
+    if (param)
+    {
+        BSL_Data_t enc_data;
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsRaw(param, &enc_data))
+        {
+            BSL_LOG_ERR("Invalid AAD Scope parameter");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            BSLX_CoseSc_AadScope_t msg_scope;
+            BSLX_CoseSc_AadScope_init(msg_scope);
+            int res = BSL_CBOR_Decode(&enc_data, (BSL_CBOR_Decode_f)&BSLX_CoseSc_AadScope_Decode, &msg_scope);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to decode AAD Scope parameter");
+                BSLX_CoseSc_AadScope_clear(msg_scope);
+                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
+            else
+            {
+                if (self->opt_aad_scope && !BSLX_CoseSc_AadScope_equal_p(self->aad_scope, msg_scope))
+                {
+                    BSL_LOG_ERR("Mismatch of AAD Scope parameter");
+                    BSLX_CoseSc_AadScope_clear(msg_scope);
+                    self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                }
+                else
+                {
+                    BSLX_CoseSc_AadScope_move(self->aad_scope, msg_scope);
+                }
+            }
+        }
+    }
+}
+
 /** Internal processing to source a COSE_Mac0 message.
  */
 static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
@@ -810,13 +946,12 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
         BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.phdr, param->id, param_ptr);
         BSLB_IdValPairPtr_release(param_ptr);
     }
-    if (ctx->kid)
+    if (ctx->kid.len)
     {
         BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
         BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
 
-        BSL_IdValPair_Set(param, ctx->kid);
-        param->id = BSLX_COSEMSG_HDR_KID;
+        BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_KID, ctx->kid);
 
         BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.uhdr, param->id, param_ptr);
         BSLB_IdValPairPtr_release(param_ptr);
@@ -825,7 +960,7 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
 
     if (BSL_SUCCESS == ctx->status)
     {
-        BSLX_CoseSc_Mac_Compute(ctx, &msg.headers, ctx->tgt_alg, "MAC0", &msg.tag);
+        BSLX_CoseSc_Mac_Compute(ctx, &msg.headers, "MAC0", &msg.tag);
     }
 
     BSL_Data_t aad_scope_enc;
@@ -839,6 +974,7 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
             ctx->status = res;
         }
     }
+
     BSL_Data_t msg_enc;
     BSL_Data_Init(&msg_enc);
     if (BSL_SUCCESS == ctx->status)
@@ -873,42 +1009,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
 {
     int res;
 
-    const BSL_IdValPair_t *param = BSL_SecOper_FindParam(ctx->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
-    if (param)
-    {
-        BSL_Data_t enc_data;
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsRaw(param, &enc_data))
-        {
-            BSL_LOG_ERR("Invalid AAD Scope parameter");
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-        }
-        else
-        {
-            BSLX_CoseSc_AadScope_t msg_scope;
-            BSLX_CoseSc_AadScope_init(msg_scope);
-            res = BSL_CBOR_Decode(&enc_data, (BSL_CBOR_Decode_f)&BSLX_CoseSc_AadScope_Decode, &msg_scope);
-            if (BSL_SUCCESS != res)
-            {
-                BSL_LOG_ERR("Failed to decode AAD Scope parameter");
-                BSLX_CoseSc_AadScope_clear(msg_scope);
-                ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-            }
-            else
-            {
-                if (ctx->opt_aad_scope && !BSLX_CoseSc_AadScope_equal_p(ctx->aad_scope, msg_scope))
-                {
-                    BSL_LOG_ERR("Mismatch of AAD Scope parameter");
-                    BSLX_CoseSc_AadScope_clear(msg_scope);
-                    ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                }
-                else
-                {
-                    BSLX_CoseSc_AadScope_move(ctx->aad_scope, msg_scope);
-                    ctx->msg_aad_scope = true;
-                }
-            }
-        }
-    }
+    BSLX_CoseSc_GetAndValidateAadScope(ctx);
     if (BSL_SUCCESS != ctx->status)
     {
         // early exit
@@ -936,11 +1037,14 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
         BSL_Data_Deinit(&msg_enc);
     }
 
+    BSLX_CoseSc_GetAndValidateKey(ctx, &msg.headers);
+    ctx->tgt_alg = ctx->key_alg;
+
     if (BSL_SUCCESS == ctx->status)
     {
         BSL_Data_t tag;
         BSL_Data_Init(&tag);
-        BSLX_CoseSc_Mac_Compute(ctx, &msg.headers, ctx->tgt_alg, "MAC0", &tag);
+        BSLX_CoseSc_Mac_Compute(ctx, &msg.headers, "MAC0", &tag);
 
         bool tag_valid = BSL_Crypto_Compare(msg.tag.ptr, msg.tag.len, tag.ptr, tag.len);
         if (tag_valid)
@@ -960,7 +1064,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
 
 /** Internal processing according to Section 5.3 of RFC 9052.
  */
-static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers, int64_t tgt_alg,
+static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers,
                                         const char *context, BSL_CipherMode_e mode)
 {
     ASSERT_PRECONDITION(ctx->iv_val.len > 0);
@@ -979,7 +1083,7 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers
             bsl_aes_var = BSL_CRYPTO_AES_256;
             break;
         default:
-            BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, tgt_alg);
+            BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, ctx->tgt_alg);
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             return;
     }
@@ -1216,13 +1320,11 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
         BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.phdr, param->id, param_ptr);
         BSLB_IdValPairPtr_release(param_ptr);
     }
-    if (ctx->kid)
     {
         BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
         BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
 
-        BSL_IdValPair_Set(param, ctx->kid);
-        param->id = BSLX_COSEMSG_HDR_KID;
+        BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_KID, ctx->kid);
 
         BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.uhdr, param->id, param_ptr);
         BSLB_IdValPairPtr_release(param_ptr);
@@ -1326,7 +1428,7 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
 
     if (BSL_SUCCESS == ctx->status)
     {
-        BSLX_CoseSc_Encrypt_Compute(ctx, &msg.headers, ctx->tgt_alg, "Encrypt0", BSL_CRYPTO_ENCRYPT);
+        BSLX_CoseSc_Encrypt_Compute(ctx, &msg.headers, "Encrypt0", BSL_CRYPTO_ENCRYPT);
     }
 
     BSL_Data_t aad_scope_enc;
@@ -1374,42 +1476,7 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
 {
     int res;
 
-    const BSL_IdValPair_t *param = BSL_SecOper_FindParam(ctx->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
-    if (param)
-    {
-        BSL_Data_t enc_data;
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsRaw(param, &enc_data))
-        {
-            BSL_LOG_ERR("Invalid AAD Scope parameter");
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-        }
-        else
-        {
-            BSLX_CoseSc_AadScope_t msg_scope;
-            BSLX_CoseSc_AadScope_init(msg_scope);
-            res = BSL_CBOR_Decode(&enc_data, (BSL_CBOR_Decode_f)&BSLX_CoseSc_AadScope_Decode, &msg_scope);
-            if (BSL_SUCCESS != res)
-            {
-                BSL_LOG_ERR("Failed to decode AAD Scope parameter");
-                BSLX_CoseSc_AadScope_clear(msg_scope);
-                ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-            }
-            else
-            {
-                if (ctx->opt_aad_scope && !BSLX_CoseSc_AadScope_equal_p(ctx->aad_scope, msg_scope))
-                {
-                    BSL_LOG_ERR("Mismatch of AAD Scope parameter");
-                    BSLX_CoseSc_AadScope_clear(msg_scope);
-                    ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                }
-                else
-                {
-                    BSLX_CoseSc_AadScope_move(ctx->aad_scope, msg_scope);
-                    ctx->msg_aad_scope = true;
-                }
-            }
-        }
-    }
+    BSLX_CoseSc_GetAndValidateAadScope(ctx);
     if (BSL_SUCCESS != ctx->status)
     {
         // early exit
@@ -1436,6 +1503,9 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
         }
         BSL_Data_Deinit(&msg_enc);
     }
+
+    BSLX_CoseSc_GetAndValidateKey(ctx, &msg.headers);
+    ctx->tgt_alg = ctx->key_alg;
 
     if (BSL_SUCCESS == ctx->status)
     { // Get IV value
@@ -1504,7 +1574,7 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
 
     if (BSL_SUCCESS == ctx->status)
     {
-        BSLX_CoseSc_Encrypt_Compute(ctx, &msg.headers, ctx->tgt_alg, "Encrypt0", BSL_CRYPTO_DECRYPT);
+        BSLX_CoseSc_Encrypt_Compute(ctx, &msg.headers, "Encrypt0", BSL_CRYPTO_DECRYPT);
     }
 
     BSLX_CoseMsg_Encrypt0_Deinit(&msg);
@@ -1529,6 +1599,8 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
         { // integrity operation
             if (ctx.is_source)
             {
+                BSLX_CoseSc_GetAndValidateKey(&ctx, NULL);
+
                 if (ctx.key_alg != ctx.tgt_alg)
                 {
                     // has a recipient layer
@@ -1547,7 +1619,11 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                 // verify or accept
                 const BSL_IdValPair_t *result_mac0 = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC0);
                 const BSL_IdValPair_t *result_mac  = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC);
-                if (ctx.key_alg != ctx.tgt_alg)
+                if (result_mac0)
+                {
+                    BSLX_CoseSc_Mac0_VerifyAccept(&ctx, result_mac0);
+                }
+                else if (result_mac)
                 {
                     BSL_LOG_CRIT("Not implemented");
                     // FIXME Mac handling
@@ -1555,21 +1631,8 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                 }
                 else
                 {
-                    if (result_mac0)
-                    {
-                        BSLX_CoseSc_Mac0_VerifyAccept(&ctx, result_mac0);
-                    }
-                    else if (result_mac)
-                    {
-                        BSL_LOG_CRIT("Not implemented");
-                        // FIXME Mac handling
-                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                    }
-                    else
-                    {
-                        BSL_LOG_ERR("No COSE result present");
-                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                    }
+                    BSL_LOG_ERR("No COSE result present");
+                    ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
             }
         }
@@ -1577,6 +1640,8 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
         { // confidentiality operation
             if (ctx.is_source)
             {
+                BSLX_CoseSc_GetAndValidateKey(&ctx, NULL);
+
                 if (ctx.key_alg != ctx.tgt_alg)
                 {
                     // has a recipient layer
@@ -1597,28 +1662,20 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                     BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT0);
                 const BSL_IdValPair_t *result_enc =
                     BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT);
-                if (ctx.key_alg != ctx.tgt_alg)
+                if (result_enc0)
                 {
+                    BSLX_CoseSc_Encrypt0_VerifyAccept(&ctx, result_enc0);
+                }
+                else if (result_enc)
+                {
+                    BSL_LOG_CRIT("Not implemented");
                     // FIXME Mac handling
                     ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
                 else
                 {
-                    if (result_enc0)
-                    {
-                        BSLX_CoseSc_Encrypt0_VerifyAccept(&ctx, result_enc0);
-                    }
-                    else if (result_enc)
-                    {
-                        BSL_LOG_CRIT("Not implemented");
-                        // FIXME Mac handling
-                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                    }
-                    else
-                    {
-                        BSL_LOG_ERR("No COSE result present");
-                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                    }
+                    BSL_LOG_ERR("No COSE result present");
+                    ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
             }
         }

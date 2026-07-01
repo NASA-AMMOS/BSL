@@ -91,7 +91,7 @@ class TestCoseScJsonPolicy(TestAgent):
             expected_output_format=DataFormat.CBORDIAG
         ))
 
-    def test_exampleA_1_Mac0_acceptor_valid(self):
+    def test_exampleA_1_Mac0_acceptor_valid_loose(self):
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_1_WITH_BIB,
             expected_output=EXAMPLE_A_NO_SEC,
@@ -103,6 +103,20 @@ class TestCoseScJsonPolicy(TestAgent):
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
+
+    def test_exampleA_1_Mac0_acceptor_valid_strict_target_alg(self):
+        with sc_config_modifier('data/cose-sc/policy-exA.1-accept.json', {"target_alg": 6}) as polfile:
+            self._single_test(_TestCase(
+                input_data=EXAMPLE_A_1_WITH_BIB,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid='dtn://src/',
+                policy_config=polfile.name,
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                is_working=True,
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG
+            ))
 
     def test_exampleA_1_Mac0_acceptor_valid_strict_aad_scope(self):
         with sc_config_modifier('data/cose-sc/policy-exA.1-accept.json', {"aad_scope": {'0': 1, '-1': 1}}) as polfile:
@@ -118,25 +132,11 @@ class TestCoseScJsonPolicy(TestAgent):
                 expected_output_format=DataFormat.CBORDIAG
             ))
 
-    def test_exampleA_1_Mac0_acceptor_failure_wrong_key(self):
+    def test_exampleA_1_Mac0_acceptor_failure_key_disallow(self):
         with sc_config_modifier('data/cose-sc/policy-exA.1-accept.json', {"key_id": "ExampleA.5"}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
-                expected_output='.* Not implemented',
-                sec_src_eid='dtn://src/',
-                policy_config=polfile.name,
-                bundle_dest_loc=BundleDestLoc.APPIN,
-                key_set="data/cose-sc/keyset-1.cbordiag",
-                is_working=True,
-                input_data_format=DataFormat.CBORDIAG,
-                expected_output_format=DataFormat.ERR
-            ))
-
-    def test_exampleA_1_Mac0_acceptor_failure_key_missing(self):
-        with sc_config_modifier('data/cose-sc/policy-exA.1-accept.json', {"key_id": "missing"}) as polfile:
-            self._single_test(_TestCase(
-                input_data=EXAMPLE_A_1_WITH_BIB,
-                expected_output='.* Unknown key ID',
+                expected_output='.*<ERROR>.* Mismatched key ID value',
                 sec_src_eid='dtn://src/',
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -150,7 +150,7 @@ class TestCoseScJsonPolicy(TestAgent):
         with sc_config_modifier('data/cose-sc/policy-exA.1-accept.json', {"aad_scope": {'0': 1, '-1': 2}}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
-                expected_output='.* Mismatch of AAD Scope parameter',
+                expected_output='.*<ERROR>.* Mismatch of AAD Scope parameter',
                 sec_src_eid='dtn://src/',
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -159,6 +159,25 @@ class TestCoseScJsonPolicy(TestAgent):
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.ERR
             ))
+
+    def test_exampleA_1_Mac0_acceptor_failure_key_missing(self):
+        self._single_test(_TestCase(
+            input_data='''\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [11, 2, 0, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[17, << [<< {1: 6} >>, {4: 'missing'}, null, h'EC8260A38A1A00FEF2CD4AAE063F50F01C5645E84C6C4893CA895EED44EF60A5F50F9ADF5CC5654499B881E589637805'] >>]]] >>],
+    [1, 1, 0, 2, << "hello" >>, h'4EC359D2']
+]
+''',
+            expected_output='.*<ERROR>.* Unknown key from ID',
+            sec_src_eid='dtn://src/',
+            policy_config='data/cose-sc/policy-exA.1-accept.json',
+            bundle_dest_loc=BundleDestLoc.APPIN,
+            key_set="data/cose-sc/keyset-1.cbordiag",
+            is_working=True,
+            input_data_format=DataFormat.CBORDIAG,
+            expected_output_format=DataFormat.ERR
+        ))
 
     def test_exampleA_4_Enc0_source(self):
         self._single_test(_TestCase(
@@ -173,7 +192,7 @@ class TestCoseScJsonPolicy(TestAgent):
             expected_output_format=DataFormat.CBORDIAG
         ))
 
-    def test_exampleA_4_Enc0_acceptor_valid(self):
+    def test_exampleA_4_Enc0_acceptor_valid_loose(self):
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_4_WITH_BCB,
             expected_output=EXAMPLE_A_NO_SEC,
@@ -185,6 +204,34 @@ class TestCoseScJsonPolicy(TestAgent):
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
+
+    def test_exampleA_4_Enc0_acceptor_valid_strict_key_id(self):
+        with sc_config_modifier('data/cose-sc/policy-exA.4-accept.json', {"key_id": "ExampleA.4"}) as polfile:
+            self._single_test(_TestCase(
+                input_data=EXAMPLE_A_4_WITH_BCB,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid='dtn://src/',
+                policy_config=polfile.name,
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                is_working=True,
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG
+            ))
+
+    def test_exampleA_4_Enc0_acceptor_valid_strict_target_alg(self):
+        with sc_config_modifier('data/cose-sc/policy-exA.4-accept.json', {"target_alg": 3}) as polfile:
+            self._single_test(_TestCase(
+                input_data=EXAMPLE_A_4_WITH_BCB,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid='dtn://src/',
+                policy_config=polfile.name,
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                is_working=True,
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG
+            ))
 
     def test_exampleA_4_Enc0_acceptor_valid_strict_aad_scope(self):
         with sc_config_modifier('data/cose-sc/policy-exA.4-accept.json', {"aad_scope": {'0': 1, '-1': 1}}) as polfile:
