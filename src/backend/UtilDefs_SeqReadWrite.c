@@ -33,34 +33,32 @@
 
 #include "backend/UtilDefs_SeqReadWrite.h"
 
-int BSL_SeqReader_Destroy(BSL_SeqReader_t *obj)
+void BSL_SeqReader_Destroy(BSL_SeqReader_t *obj)
 {
-    CHK_ARG_NONNULL(obj);
-    CHK_ARG_NONNULL(obj->deinit);
+    ASSERT_ARG_NONNULL(obj);
+    ASSERT_PRECONDITION(obj->deinit);
 
     obj->deinit(obj->user_data);
     BSL_free(obj);
-    return BSL_SUCCESS;
 }
 
 int BSL_SeqReader_Get(BSL_SeqReader_t *obj, uint8_t *buf, size_t *bufsize)
 {
-    CHK_ARG_NONNULL(obj);
+    ASSERT_ARG_NONNULL(obj);
     CHK_ARG_NONNULL(buf);
     CHK_ARG_NONNULL(bufsize);
-    CHK_ARG_NONNULL(obj->read);
+    ASSERT_PRECONDITION(obj->read);
 
     return obj->read(obj->user_data, buf, bufsize);
 }
 
-int BSL_SeqWriter_Destroy(BSL_SeqWriter_t *obj)
+void BSL_SeqWriter_Destroy(BSL_SeqWriter_t *obj, bool success)
 {
-    CHK_ARG_NONNULL(obj);
-    CHK_ARG_NONNULL(obj->deinit);
+    ASSERT_ARG_NONNULL(obj);
+    ASSERT_PRECONDITION(obj->deinit);
 
-    obj->deinit(obj->user_data);
+    obj->deinit(obj->user_data, success);
     BSL_free(obj);
-    return BSL_SUCCESS;
 }
 
 int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t bufsize)

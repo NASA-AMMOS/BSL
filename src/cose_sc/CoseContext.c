@@ -1195,7 +1195,7 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers
     BSL_SeqReader_Destroy(btsd_read);
     if (btsd_write)
     {
-        BSL_SeqWriter_Destroy(btsd_write);
+        BSL_SeqWriter_Destroy(btsd_write, ctx->status == BSL_SUCCESS);
     }
 }
 
@@ -1321,6 +1321,7 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
             BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.uhdr, BSLX_COSEMSG_HDR_IV, param_ptr);
             BSLB_IdValPairPtr_release(param_ptr);
         }
+        BSL_Data_Deinit(&partialiv_val);
     }
 
     if (BSL_SUCCESS == ctx->status)

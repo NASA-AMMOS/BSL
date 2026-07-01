@@ -321,7 +321,7 @@ static int BSL_TestUtils_WriteBTSD_Write(void *user_data, const void *buf, size_
     return BSL_SUCCESS;
 }
 
-static void BSL_TestUtils_WriteBTSD_Deinit(void *user_data)
+static void BSL_TestUtils_WriteBTSD_Deinit(void *user_data, bool success)
 {
     struct BSL_TestUtils_Flat_Data_s *obj = user_data;
     if (!obj || !obj->file)
@@ -331,14 +331,21 @@ static void BSL_TestUtils_WriteBTSD_Deinit(void *user_data)
 
     fclose(obj->file);
 
-    // now write-back the result
-    if (obj->origbuf)
+    if (success)
     {
-        *obj->origbuf = obj->ptr;
+        // now write-back the result
+        if (obj->origbuf)
+        {
+            *obj->origbuf = obj->ptr;
+        }
+        if (obj->origsize)
+        {
+            *obj->origsize = obj->size;
+        }
     }
-    if (obj->origsize)
+    else
     {
-        *obj->origsize = obj->size;
+        BSL_free(obj->ptr);
     }
 
     BSL_free(obj);

@@ -596,19 +596,15 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_EncodeBundleToCBOR(&LocalTestCtx));
-    if (role == BSL_SECROLE_VERIFIER)
+    if ((role == BSL_SECROLE_VERIFIER) || (BSL_SUCCESS != exec_status))
     {
         // Full output content
         TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(exA_4_enc0, LocalTestCtx.mock_bpa_ctr.encoded));
     }
-    else if (BSL_SUCCESS == exec_status)
+    else
     {
         // successful acceptance
         TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(exA_nosec, LocalTestCtx.mock_bpa_ctr.encoded));
-    }
-    else
-    {
-        // indeterminate failed target BTSD
     }
 
     BSL_SecOutcome_Deinit(outcome);

@@ -288,9 +288,8 @@ typedef struct BSL_SeqReader_s BSL_SeqReader_t;
  * This also frees memory of the instance itself.
  *
  * @param[in,out] obj The reader handle.
- * @return Zero if successful.
  */
-int BSL_SeqReader_Destroy(BSL_SeqReader_t *obj);
+void BSL_SeqReader_Destroy(BSL_SeqReader_t *obj);
 
 /** Iterate a sequential reader.
  *
@@ -305,13 +304,13 @@ int BSL_SeqReader_Get(BSL_SeqReader_t *obj, uint8_t *buf, size_t *bufsize);
 // Forward-declaration for file-like interface for a sequential writer.
 typedef struct BSL_SeqWriter_s BSL_SeqWriter_t;
 
-/** Release resources from a sequential writer and commit the writes.
+/** Release resources from a sequential writer and possibly commit the writes.
  * This also frees memory of the instance itself.
  *
  * @param[in,out] obj The writer handle.
- * @return Zero if successful.
+ * @param success Set true if all of the writing succeeded.
  */
-int BSL_SeqWriter_Destroy(BSL_SeqWriter_t *obj);
+void BSL_SeqWriter_Destroy(BSL_SeqWriter_t *obj, bool success);
 
 /** Iterate a sequential writer.
  *

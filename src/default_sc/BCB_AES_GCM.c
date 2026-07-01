@@ -231,7 +231,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     BSL_SeqReader_Destroy(btsd_read);
     if (NULL != btsd_write)
     {
-        BSL_SeqWriter_Destroy(btsd_write);
+        BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
     }
 
     if (bcb_context->keywrap)
@@ -388,7 +388,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     // close write after read
     BSL_SeqReader_Destroy(btsd_read);
-    BSL_SeqWriter_Destroy(btsd_write);
+    BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
 
     if (bcb_context->keywrap)
     {
