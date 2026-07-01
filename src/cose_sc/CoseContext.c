@@ -91,6 +91,11 @@ typedef struct
     /// Required content layer algorithm from ::BSLX_CoseMsg_Alg_e
     int64_t tgt_alg;
 
+    /// True if #iv_offset came from an option
+    bool opt_iv_offset;
+    /// Optional offset to use when generating IV or Partial IV bytes
+    int64_t iv_offset;
+
     /// Required option for KID
     const BSL_IdValPair_t *kid;
 
@@ -257,6 +262,20 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
             {
                 self->opt_aad_scope = true;
             }
+        }
+    }
+
+    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET);
+    if (opt)
+    {
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->iv_offset))
+        {
+            BSL_LOG_ERR("Invalid target algorithm value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            self->opt_iv_offset = true;
         }
     }
 
@@ -996,38 +1015,92 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers
 
     BSL_Data_t iv_val;
     BSL_Data_Init(&iv_val);
+    BSL_Data_t partialiv_val;
+    BSL_Data_Init(&partialiv_val);
     if (BSL_SUCCESS == ctx->status)
     { // create IV bytes
-        BSL_Data_Resize(&iv_val, 12);
+        BSL_Data_Resize(&iv_val, BSLX_COSEMSG_AESGCM_IV_LEN);
 
-        res = BSL_Crypto_GenIV(&iv_val);
-        if (BSL_SUCCESS != res)
-        {
-            BSL_LOG_ERR("Failed to generate IV");
-            ctx->status = res;
+        if (ctx->opt_iv_offset)
+        { // generate the IV from an offset
+            BSL_Crypto_KeyStats_t stats;
+            BSL_Crypto_GetKeyStatistics(ctx->keyhandle, &stats);
+            uint64_t iv_int = (uint64_t)ctx->iv_offset + stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED];
+
+            // Network byte order
+            const size_t ctr_len = 8;
+            uint8_t      iv_bytes[ctr_len];
+            for (size_t ix = 0; ix < ctr_len; ++ix)
+            {
+                iv_bytes[ctr_len - ix - 1] = iv_int & 0xFF;
+                iv_int >>= 8;
+            }
+            const size_t pad = iv_val.len - ctr_len;
+            memset(iv_val.ptr, 0, pad);
+            memcpy(iv_val.ptr + pad, iv_bytes, ctr_len);
+
+            const BSL_IdValPair_t *keyparam = BSL_Crypto_GetKeyParameter(ctx->keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV);
+            if (keyparam)
+            {
+                BSL_Data_t baseiv_val;
+                if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(keyparam, &baseiv_val))
+                {
+                    BSL_LOG_ERR("Invalid Base IV value");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+                }
+                else if (baseiv_val.len != iv_val.len)
+                {
+                    BSL_LOG_ERR("Invalid Base IV length, need %zu got %zu", iv_val.len, baseiv_val.len);
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+                }
+                else
+                {
+                    // skip leading zeros, leaving at least one byte
+                    size_t skip = 0;
+                    while ((skip < iv_val.len - 1) && (iv_val.ptr[skip] == 0))
+                    {
+                        ++skip;
+                    }
+                    BSL_Data_CopyFrom(&partialiv_val, iv_val.len - skip, iv_val.ptr + skip);
+
+                    for (size_t ix = 0; ix < iv_val.len; ++ix)
+                    {
+                        iv_val.ptr[ix] ^= baseiv_val.ptr[ix];
+                    }
+                }
+            }
+        }
+        else
+        { // no option, use random IV
+            res = BSL_Crypto_GenIV(&iv_val);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to generate IV");
+                ctx->status = res;
+            }
         }
 
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
-
-        BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_IV, iv_val);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(headers->uhdr, BSLX_COSEMSG_HDR_IV, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-
-#if 0
-        const BSL_IdValPair_t *head_iv = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_IV, false);
-        if (!head_iv)
+        // prefer partial when defined
+        if (partialiv_val.len > 0)
         {
-            BSL_LOG_ERR("Failed to get IV header");
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+            {
+                BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(param_ptr);
+                BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_PARTIALIV, partialiv_val);
+            }
+            BSLX_CoseMsg_HdrMapTree_set_at(headers->uhdr, BSLX_COSEMSG_HDR_PARTIALIV, param_ptr);
+            BSLB_IdValPairPtr_release(param_ptr);
         }
-        else if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(head_iv, &iv_val))
+        else
         {
-            BSL_LOG_ERR("Invalid IV value");
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+            {
+                BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(param_ptr);
+                BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_IV, iv_val);
+            }
+            BSLX_CoseMsg_HdrMapTree_set_at(headers->uhdr, BSLX_COSEMSG_HDR_IV, param_ptr);
+            BSLB_IdValPairPtr_release(param_ptr);
         }
-#endif
     }
 
     if (BSL_SUCCESS == ctx->status)
@@ -1160,6 +1233,7 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers
     BSL_SeqReader_Destroy(btsd_read);
     BSL_SeqWriter_Destroy(btsd_write);
 
+    BSL_Data_Deinit(&partialiv_val);
     BSL_Data_Deinit(&iv_val);
 }
 

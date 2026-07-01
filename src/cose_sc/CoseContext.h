@@ -68,6 +68,16 @@ enum BSLX_CoseSC_Option_e
      * Optional for source, optional exact-match for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_AAD_SCOPE,
+    /** An option to use the key telemetry counter
+     * (number of security operations performed) as the basis of an encryption
+     * IV or Partial IV for encryption.
+     * The value is an offset (as @c int64_t) to add to the counter which
+     * is then converted to a byte string in network byte order.
+     * When used as IV this is padded to the needed length, when used as
+     * Partial IV it is left unpadded.
+     * Optional for source and unused for verifier/acceptor.
+     */
+    BSLX_COSESC_OPTION_IV_COUNTER_OFFSET,
 };
 
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.2

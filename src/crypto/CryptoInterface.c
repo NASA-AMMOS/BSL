@@ -818,7 +818,7 @@ const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle,
     return retval;
 }
 
-int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, void **key_handle)
+int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *key_handle)
 {
     ASSERT_ARG_NONNULL(keyid);
     CHK_ARG_NONNULL(key_handle);
@@ -859,32 +859,17 @@ int BSL_Crypto_RemoveRegistryKey(const BSL_Data_t *keyid)
     return res ? BSL_SUCCESS : -1;
 }
 
-int BSL_Crypto_GetKeyStatistics(const BSL_Data_t *keyid, BSL_Crypto_KeyStats_t *stats)
+int BSL_Crypto_GetKeyStatistics(BSL_Crypto_KeyHandle_t handle, BSL_Crypto_KeyStats_t *stats)
 {
-    ASSERT_ARG_NONNULL(keyid);
+    ASSERT_ARG_NONNULL(handle);
     CHK_ARG_NONNULL(stats);
 
-    m_bstring_t keyid_str;
-    m_bstring_init(keyid_str);
-    m_bstring_push_back_bytes(keyid_str, keyid->len, keyid->ptr);
+    const BSL_CryptoKey_t *key = handle;
 
-    int retval = BSL_SUCCESS;
     pthread_mutex_lock(&StaticCryptoMutex);
-    BSL_CryptoKeyPtr_t **found = BSL_CryptoKeyDict_get(StaticKeyRegistry, keyid_str);
-    if (!found)
-    {
-        retval = BSL_ERR_NOT_FOUND;
-    }
-    else
-    {
-        const BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_cref(*found);
-
-        for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
-        {
-            stats->stats[i] = key->stats.stats[i];
-        }
-    }
+    // copy as POD
+    *stats = key->stats;
     pthread_mutex_unlock(&StaticCryptoMutex);
-    m_bstring_clear(keyid_str);
-    return retval;
+
+    return BSL_SUCCESS;
 }

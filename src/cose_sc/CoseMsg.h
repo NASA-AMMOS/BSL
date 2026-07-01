@@ -45,7 +45,10 @@ enum BSLX_CoseMsg_Header_e
     BSLX_COSEMSG_HDR_ALG  = 1,
     BSLX_COSEMSG_HDR_CRIT = 2, // FIXME handle crit
     BSLX_COSEMSG_HDR_KID  = 4,
-    BSLX_COSEMSG_HDR_IV   = 5,
+    /// IV as value type bytes
+    BSLX_COSEMSG_HDR_IV = 5,
+    /// Partial IV as value type bytes
+    BSLX_COSEMSG_HDR_PARTIALIV = 6,
 };
 
 /** Algorithm code points managed by IANA.
@@ -61,14 +64,25 @@ enum BSLX_CoseMsg_Alg_e
     BSLX_COSEMSG_ALG_HMAC_SHA_512_512 = 7,
 };
 
+/** Length of generated IV byte strings.
+ * From https://www.rfc-editor.org/rfc/rfc9053.html#section-4.1
+ * "This document fixes the size of the nonce at 96 bits."
+ */
+#define BSLX_COSEMSG_AESGCM_IV_LEN (12)
+
 /** Key parameter code points managed by IANA.
  * https://www.iana.org/assignments/cose/cose.xhtml#key-common-parameters
  */
 enum BSLX_CoseMsg_KeyParam_e
 {
+    /// Key type value as @c int64_t
     BSLX_COSEMSG_KEY_PARAM_KTY = 1,
+    /// Key ID value as bytes
     BSLX_COSEMSG_KEY_PARAM_KID = 2,
+    /// Algorithm value as @c int64_t
     BSLX_COSEMSG_KEY_PARAM_ALG = 3,
+    /// Base IV value as bytes
+    BSLX_COSEMSG_KEY_PARAM_BASEIV = 5,
 };
 
 /** @struct BSLX_CoseMsg_HdrMapTree_t

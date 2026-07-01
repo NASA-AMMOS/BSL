@@ -93,11 +93,12 @@ static const char *exA_4_kid = "ExampleA.4";
 /// Symmetric key for Example A.4
 static const char *exA_4_sk = "13bf9cead057c0aca2c9e52471ca4b19ddfaf4c0784e3f3e8e39"
                               "99dbae4ce45c";
-/// Result bundle for Example A.4 augmented for entire IV
-static const char *exA_4_enc0_iv =
-    "9F890700028201692F2F6473742F7376638201692F2F7372632F7376638201662F2F7372632F821B000000BD51281400001A000F42404482A0"
-    "81C9850C030100583C810103018201662F2F7372632F818205A2000120018181821058218343A10103A2044A4578616D706C65412E34054C6F"
-    "3093EBA5D85143C3DC484AF68601010002561FD25F64A2EEE2FF1A1AB29812BA221874380974C13B442086C017FF";
+/// Result bundle for Example A.4 with different BCB block flags
+static const char *exA_4_enc0 = "9f890700028201692f2f6473742f7376638201692f2f7372632f7376638201662f2f"
+                                "7372632f821b000000bd51281400001a000f42404482a081c9850c03010058318101"
+                                "03018201662f2f7372632f818205a20001200181818210578343a10103a2044a4578"
+                                "616d706c65412e340642484af68601010002561fd25f64a2eee2ff1a1ab29812ba22"
+                                "1874380974c13b442086c017ff";
 
 /**
  * @brief Purpose: Exercise BIB applying security to a target payload block.
@@ -357,16 +358,25 @@ void test_AppendixA_Example4_BCB_Source(void)
     BSL_Crypto_SetRngGenerator(cose_exA_4_rng);
 
     {
-        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_4_kid);
-        BSL_Data_t keymat;
-        BSL_Data_Init(&keymat);
-        TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_4_sk));
         BSL_Crypto_KeyHandle_t handle;
-        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
-        BSL_Data_Deinit(&keymat);
-
+        {
+            BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_4_kid);
+            BSL_Data_t keymat;
+            BSL_Data_Init(&keymat);
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_4_sk));
+            BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
+            BSL_Data_Deinit(&keymat);
+        }
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_AES_GCM_256);
+        {
+            BSL_Data_t buf;
+            BSL_Data_Init(&buf);
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&buf, "6f3093eba5d85143c3dc0000"));
+            BSL_IdValPair_SetBytestr(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_BASEIV),
+                                     BSLX_COSEMSG_KEY_PARAM_BASEIV, buf);
+            BSL_Data_Deinit(&buf);
+        }
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
@@ -383,6 +393,14 @@ void test_AppendixA_Example4_BCB_Source(void)
             BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_4_kid);
             BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEY_ID, keyid);
         }
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        // offset to match Partial IV of example A.4
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET, 0x484a);
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
     }
@@ -444,17 +462,17 @@ void test_AppendixA_Example4_BCB_Source(void)
         BSL_Data_Deinit(&in_buf);
     }
     { // Confirm the IV is as expected
-        const BSL_IdValPair_t *head_iv = BSLX_CoseMsg_Headers_Get(&msg.headers, BSLX_COSEMSG_HDR_IV, false);
+        const BSL_IdValPair_t *head_iv = BSLX_CoseMsg_Headers_Get(&msg.headers, BSLX_COSEMSG_HDR_PARTIALIV, false);
         TEST_ASSERT_NOT_NULL(head_iv);
         BSL_Data_t iv_val;
         TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_IdValPair_GetAsBytestr(head_iv, &iv_val));
-        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo("6f3093eba5d85143c3dc484a", iv_val));
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo("484A", iv_val));
         BSL_Data_Deinit(&iv_val);
     }
     BSLX_CoseMsg_Encrypt0_Deinit(&msg);
 
     // Full output content
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_ComapreBundleAsCBOR(&LocalTestCtx, exA_4_enc0_iv));
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_ComapreBundleAsCBOR(&LocalTestCtx, exA_4_enc0));
 
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);

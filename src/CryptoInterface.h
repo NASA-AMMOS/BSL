@@ -96,14 +96,16 @@ typedef enum
 {
     BSL_CRYPTO_KEYSTATS_TIMES_USED = 0,
     BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED,
+    /// Not a real index, used to size arrays
     BSL_CRYPTO_KEYSTATS_MAX_INDEX
-} BSL_Crypto_KeyStatCounterIndex_e;
+} BSL_Crypto_KeyStatCounterIndex_t;
 
 /**
  * Structure containing statistics for individual keys
  */
 typedef struct BSL_Crypto_KeyStats_s
 {
+    /// Counters for each ::BSL_Crypto_KeyStatCounterIndex_t value
     uint64_t stats[BSL_CRYPTO_KEYSTATS_MAX_INDEX];
 } BSL_Crypto_KeyStats_t;
 
@@ -390,10 +392,10 @@ const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle,
 
 /**
  * Retrieve statistics related to a crypto key
- * @param[in] keyid key ID of a key in the crypto registry to retrieve the stats of
+ * @param[in] handle The handle of a key in the crypto registry to retrieve the stats of.
  * @param[out] stats struct containing statistics related to the key id
  */
-int BSL_Crypto_GetKeyStatistics(const BSL_Data_t *keyid, BSL_Crypto_KeyStats_t *stats);
+int BSL_Crypto_GetKeyStatistics(BSL_Crypto_KeyHandle_t handle, BSL_Crypto_KeyStats_t *stats);
 
 #ifdef __cplusplus
 } // extern C
