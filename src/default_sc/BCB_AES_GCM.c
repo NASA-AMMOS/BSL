@@ -325,7 +325,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     int retval = BSL_SUCCESS;
 
-    BSL_Cipher_t cipher = { 0 };
+    BSL_Cipher_t cipher;
     int          cipher_init =
         BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, aes_mode, bcb_context->iv.ptr, bcb_context->iv.len, cipher_key);
     if (BSL_SUCCESS != cipher_init)

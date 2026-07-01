@@ -41,8 +41,8 @@ static BSL_IdValPair_t param_aes_variant_128;
 static BSL_IdValPair_t param_use_wrap_key;
 static BSL_IdValPair_t param_test_bcb_key_correct;
 
-static BSL_TestContext_t       LocalTestCtx = { 0 };
-static BSL_SecurityActionSet_t action_set   = { 0 };
+static BSL_TestContext_t       LocalTestCtx;
+static BSL_SecurityActionSet_t action_set;
 static BSLP_PolicyProvider_t  *policy_provider;
 
 static void *malloc_test(size_t size)
