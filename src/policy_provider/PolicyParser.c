@@ -664,7 +664,7 @@ int BSLP_PolicyParser_FromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_
     {
         const json_t *policy_rule_elm = json_array_get(policyrule_set, policy_rule_idx);
 
-        int           res             = BSLP_PolicyParser_ReadOneRule(policy, policy_rule_elm);
+        int res = BSLP_PolicyParser_ReadOneRule(policy, policy_rule_elm);
         if (BSL_SUCCESS != res)
         {
             ++failures;
