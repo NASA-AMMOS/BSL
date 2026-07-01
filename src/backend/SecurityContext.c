@@ -515,11 +515,42 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
     return BSL_SUCCESS;
 }
 
-bool BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle,
-                                        const BSL_SecurityActionSet_t *action_set)
+int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                                       const BSL_SecurityActionSet_t *action_set)
 {
-    (void)lib;
-    (void)bundle;
-    (void)action_set;
-    return true;
+    CHK_ARG_NONNULL(lib);
+    CHK_ARG_NONNULL(bundle);
+    CHK_ARG_NONNULL(action_set);
+
+    BSL_SecActionList_it_t actlist_it;
+    for (BSL_SecActionList_it(actlist_it, action_set->actions); !BSL_SecActionList_end_p(actlist_it);
+         BSL_SecActionList_next(actlist_it))
+    {
+        BSL_SecurityAction_t *action = BSL_SecActionList_ref(actlist_it);
+
+        uint64_t             secop_invalid_count = 0;
+        BSL_SecOperList_it_t secoplist_it;
+        for (BSL_SecOperList_it(secoplist_it, action->sec_op_list); !BSL_SecOperList_end_p(secoplist_it);
+             BSL_SecOperList_next(secoplist_it))
+        {
+            BSL_SecOper_t          *sec_oper = BSL_SecOperList_ref(secoplist_it);
+            const BSL_SecCtxDesc_t *sec_ctx  = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
+
+            if (sec_ctx == NULL)
+            {
+                BSL_LOG_ERR("No security context validator registered for context ID %" PRId64, sec_oper->context_id);
+                continue;
+            }
+
+            if (!sec_ctx->validate(lib, bundle, sec_oper))
+            {
+                secop_invalid_count++;
+                BSL_LOG_WARNING("Security context validator failed for context ID %" PRId64, sec_oper->context_id);
+            }
+        }
+
+        action->validated = (0 == secop_invalid_count);
+    }
+
+    return BSL_SUCCESS;
 }

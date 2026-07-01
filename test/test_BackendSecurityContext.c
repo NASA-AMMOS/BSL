@@ -44,6 +44,32 @@
 
 static BSL_TestContext_t LocalTestCtx;
 
+static size_t   TestSecCtxValidateCallCount = 0;
+static uint64_t TestSecCtxValidatedTarget   = 0;
+
+static bool BSL_TestSecCtx_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
+{
+    BSL_CHKFALSE(lib);
+    BSL_CHKFALSE(bundle);
+    BSL_CHKFALSE(sec_oper);
+
+    TestSecCtxValidateCallCount++;
+    TestSecCtxValidatedTarget = BSL_SecOper_GetTargetBlockNum(sec_oper);
+
+    return (sec_oper->target_block_num != 111);
+}
+
+static int BSL_TestSecCtx_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
+                                  BSL_SecOutcome_t *sec_outcome)
+{
+    (void)lib;
+    (void)bundle;
+    (void)sec_oper;
+    (void)sec_outcome;
+
+    return BSL_SUCCESS;
+}
+
 void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
@@ -69,6 +95,43 @@ void tearDown(void)
 {
     BSL_CryptoDeinit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
+}
+
+TEST_CASE(1)
+TEST_CASE(111)
+void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64_t sec_target)
+{
+    TestSecCtxValidateCallCount = 0;
+    TestSecCtxValidatedTarget   = 0;
+
+    const uint64_t   TEST_SC_ID = 99;
+    BSL_SecCtxDesc_t sec_ctx_desc;
+    sec_ctx_desc.validate = BSL_TestSecCtx_Validate;
+    sec_ctx_desc.execute  = BSL_TestSecCtx_Execute;
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_API_RegisterSecurityContext(&LocalTestCtx.bsl, TEST_SC_ID, sec_ctx_desc));
+
+    BSL_SecOper_t sec_oper;
+    BSL_SecOper_Init(&sec_oper);
+    BSL_SecOper_Populate(&sec_oper, TEST_SC_ID, sec_target, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
+                         BSL_POLICYACTION_NOTHING);
+
+    BSL_SecurityAction_t action;
+    BSL_SecurityAction_Init(&action);
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_SecurityAction_AppendSecOper(&action, &sec_oper));
+
+    BSL_SecurityActionSet_t action_set;
+    BSL_SecurityActionSet_Init(&action_set);
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_SecurityActionSet_AppendAction(&action_set, &action));
+
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_SecCtx_ValidatePolicyActionSet(
+                                       &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set));
+    TEST_ASSERT_EQUAL_UINT(1, TestSecCtxValidateCallCount);
+    TEST_ASSERT_EQUAL_UINT64(sec_target, TestSecCtxValidatedTarget);
+
+    TEST_ASSERT_EQUAL(((sec_target == 111) ? 1 : 0), BSL_SecurityActionSet_CountInvalidActions(&action_set));
+
+    BSL_SecurityAction_Deinit(&action);
+    BSL_SecurityActionSet_Deinit(&action_set);
 }
 
 /**

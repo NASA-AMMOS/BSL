@@ -40,10 +40,10 @@
 
 bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper) // NOSONAR
 {
-    (void)lib;
-    (void)bundle;
-    (void)sec_oper;
-    return false;
+    ASSERT_ARG_NONNULL(lib);
+    ASSERT_ARG_NONNULL(bundle);
+    ASSERT_ARG_NONNULL(sec_oper);
+    return true;
 }
 
 int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
