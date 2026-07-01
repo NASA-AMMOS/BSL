@@ -69,12 +69,12 @@ enum BSLX_CoseSC_Option_e
      */
     BSLX_COSESC_OPTION_AAD_SCOPE,
     /** An option to use the key telemetry counter
-     * (number of security operations performed) as the basis of an encryption
+     * (number of security operations performed) as the basis of a unique
      * IV or Partial IV for encryption.
      * The value is an offset (as @c int64_t) to add to the counter which
      * is then converted to a byte string in network byte order.
      * When used as IV this is padded to the needed length, when used as
-     * Partial IV it is left unpadded.
+     * Partial IV it is not padded.
      * Optional for source and unused for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_IV_COUNTER_OFFSET,
