@@ -103,6 +103,8 @@ void _setUp(void)
     BSL_IdValPair_Init(&param_use_wrap_key);
     BSL_IdValPair_Init(&param_test_bcb_key_correct);
 
+    BSL_SecurityActionSet_Init(&action_set);
+
     policy_provider = BSLP_PolicyProvider_Init(1);
 
     /// Register the policy provider with some rules

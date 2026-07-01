@@ -86,7 +86,8 @@ void test_PolicyProvider_InspectEmptyRuleset(void)
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
-    BSL_SecurityActionSet_t action_set = { 0 };
+    BSL_SecurityActionSet_t action_set;
+    BSL_SecurityActionSet_Init(&action_set);
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,
                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
@@ -120,7 +121,8 @@ void test_PolicyProvider_InspectSingleBIBRuleset(void)
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
-    BSL_SecurityActionSet_t action_set = { 0 };
+    BSL_SecurityActionSet_t action_set;
+    BSL_SecurityActionSet_Init(&action_set);
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,
                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
@@ -153,7 +155,8 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
 
-    BSL_SecurityActionSet_t action_set = { 0 };
+    BSL_SecurityActionSet_t action_set;
+    BSL_SecurityActionSet_Init(&action_set);
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,
                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
@@ -212,7 +215,8 @@ void test_MultiplePolicyProviders(void)
     TEST_ASSERT_EQUAL(
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
 
-    BSL_SecurityActionSet_t action_set = { 0 };
+    BSL_SecurityActionSet_t action_set;
+    BSL_SecurityActionSet_Init(&action_set);
     TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_InspectActions(&LocalTestCtx.bsl, &action_set,
                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                            BSL_POLICYLOCATION_APPIN));
