@@ -473,7 +473,8 @@ typedef enum
 /** @brief Calls the host interface to get a bundle primary block information.abort
  *
  * @param[in]       bundle Bundle context
- * @param[out]   result_primary_block Non-null pointer to result which gets initialized and populated on a zero return code.
+ * @param[out]   result_primary_block Non-null pointer to result which gets initialized and populated on a zero return
+ * code.
  * @return 0 on success, negative on error
  */
 int BSL_BundleCtx_GetBundleMetadata(const BSL_BundleRef_t *bundle, BSL_PrimaryBlock_t *result_primary_block);
@@ -482,7 +483,8 @@ int BSL_BundleCtx_GetBundleMetadata(const BSL_BundleRef_t *bundle, BSL_PrimaryBl
  *
  * @param[in] bundle Context bundle
  * @param[in] block_num The number of the bundle canonical block we seek information on
- * @param[out] result_block Pointer to result which gets initialized and populated on a zero return code. Contains results of the query.
+ * @param[out] result_block Pointer to result which gets initialized and populated on a zero return code. Contains
+ * results of the query.
  * @return 0 on success, negative on error
  */
 int BSL_BundleCtx_GetBlockMetadata(const BSL_BundleRef_t *bundle, uint64_t block_num,
