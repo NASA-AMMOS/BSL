@@ -103,7 +103,7 @@ M_BPTREE_DEF2(BSLX_CoseMsg_HdrMapTree, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CM
  */
 void BSLX_CoseMsg_HdrMapTree_update(BSLX_CoseMsg_HdrMapTree_t base, const BSLX_CoseMsg_HdrMapTree_t addl);
 
-/** ncode a header parameter map.
+/** Encode a header parameter map.
  * Matches ::BSL_CBOR_Encode_f signature.
  */
 int BSLX_CoseMsg_Headers_Encode_Map(QCBOREncodeContext *enc, const BSLX_CoseMsg_HdrMapTree_t *map);

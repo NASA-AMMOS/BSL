@@ -106,7 +106,7 @@ if(XMLSTARLET_EXECUTABLE AND ASPELL_EXECUTABLE)
         DEPENDS
             "spellcheck-combined.xml" "misspelling.txt"
         COMMAND
-            grep --file "misspelling.txt" "spellcheck-combined.xml" >"misspelling-ctx.txt" || true
+            grep --file "misspelling.txt" --word-regexp "spellcheck-combined.xml" >"misspelling-ctx.txt" || true
     )
     add_custom_target(
         docs-api-misspelling
