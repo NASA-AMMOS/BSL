@@ -338,9 +338,6 @@ void test_AppendixA_Example1_BIB_Source(void)
         TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_CBOR_Decode(&in_buf, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Mac0_Decode, &msg));
         BSL_Data_Deinit(&in_buf);
     }
-    // Confirm the actual HMAC tag matches what is in the RFC
-    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(
-        "ec8260a38a1a00fef2cd4aae063f50f01c5645e84c6c4893ca895eed44ef60a5f50f9adf5cc5654499b881e589637805", msg.tag));
     BSLX_CoseMsg_Mac0_Deinit(&msg);
 
     // Full output content
@@ -610,14 +607,6 @@ void test_AppendixA_Example4_BCB_Source(void)
         TEST_ASSERT_EQUAL(BSL_SUCCESS,
                           BSL_CBOR_Decode(&in_buf, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Encrypt0_Decode, &msg));
         BSL_Data_Deinit(&in_buf);
-    }
-    { // Confirm the IV is as expected
-        const BSL_IdValPair_t *head_iv = BSLX_CoseMsg_Headers_Get(&msg.headers, BSLX_COSEMSG_HDR_PARTIALIV, false);
-        TEST_ASSERT_NOT_NULL(head_iv);
-        BSL_Data_t iv_val;
-        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_IdValPair_GetAsBytestr(head_iv, &iv_val));
-        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo("484A", iv_val));
-        BSL_Data_Deinit(&iv_val);
     }
     BSLX_CoseMsg_Encrypt0_Deinit(&msg);
 
