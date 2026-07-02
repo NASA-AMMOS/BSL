@@ -86,7 +86,7 @@ int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
         BSLX_EncodeHeader(&bcb_context->sec_block, &aad_enc);
     }
 
-    UsefulBufC cbor_encoded_buffer = { 0 };
+    UsefulBufC cbor_encoded_buffer;
     if (QCBOR_SUCCESS != QCBOREncode_Finish(&aad_enc, &cbor_encoded_buffer))
     {
         BSL_LOG_ERR("Failed to encode AAD in BCB");
@@ -313,7 +313,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     int retval = BSL_SUCCESS;
     int res;
 
-    BSL_Cipher_t cipher = { 0 };
+    BSL_Cipher_t cipher;
     res = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
     if (BSL_SUCCESS != res)
     {

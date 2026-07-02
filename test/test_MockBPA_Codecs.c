@@ -139,13 +139,14 @@ void test_bsl_mock_encode_canonical(uint64_t crc_type, const char *expecthex)
     static const uint8_t dummy_btsd[] = { 0x01, 0x02, 0x03 };
     static const size_t  dummy_size   = sizeof(dummy_btsd) / sizeof(uint8_t);
 
-    MockBPA_CanonicalBlock_t blk = { 0 };
-    blk.blk_type                 = 10;
-    blk.blk_num                  = 45;
-    blk.flags                    = 0;
-    blk.crc_type                 = crc_type;
-    blk.btsd                     = BSL_malloc(dummy_size);
-    blk.btsd_len                 = dummy_size;
+    MockBPA_CanonicalBlock_t blk = {
+        .blk_type = 10,
+        .blk_num  = 45,
+        .flags    = 0,
+        .crc_type = crc_type,
+        .btsd     = BSL_malloc(dummy_size),
+        .btsd_len = dummy_size,
+    };
     memcpy(blk.btsd, dummy_btsd, dummy_size);
 
     BSL_Data_t encoded;

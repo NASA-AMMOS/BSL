@@ -150,7 +150,7 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
-    BSL_CanonicalBlock_t sec_blk = { 0 };
+    BSL_CanonicalBlock_t sec_blk;
     if (BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk) != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get BIB block (num=%" PRIu64 ")", sec_oper->sec_block_num);
