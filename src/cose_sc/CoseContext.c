@@ -189,36 +189,36 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, co
 
     // external data
     int res = BSL_Host_GetSecSrcEID(&self->sec_src_eid);
-    // GCOV_EXCL_BR_START
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to get host EID");
         self->status = res;
         return;
     }
-    // GCOV_EXCL_BR_STOP
+    // GCOV_EXCL_STOP
 
     res = BSL_BundleCtx_GetBundleMetadata(bundle, &self->primary_block);
-    // GCOV_EXCL_BR_START
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to get primary block data");
         self->status = res;
         return;
     }
-    // GCOV_EXCL_BR_STOP
+    // GCOV_EXCL_STOP
 
     self->sec_blk_num = BSL_SecOper_GetSecurityBlockNum(sec_oper);
 
     res = BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &self->target_block);
-    // GCOV_EXCL_BR_START
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to get target block data");
         self->status = res;
         return;
     }
-    // GCOV_EXCL_BR_STOP
+    // GCOV_EXCL_STOP
     BSL_LOG_DEBUG("operating on target block %" PRIu64, self->target_block.block_num);
 }
 
@@ -493,26 +493,26 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
 
         // source-eid
         res = BSL_HostEID_EncodeToCBOR(&ctx->sec_src_eid, &chunk, NULL);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (res != BSL_SUCCESS)
         {
             BSL_LOG_ERR("Failed to encode Security Source");
             BSL_Data_Deinit(&chunk);
             return BSL_ERR_ENCODING;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
         *total += BSLX_CoseSc_bstring_AppendRaw(*data, &chunk);
 
         // aad-scope canonicalized
         res = BSL_CBOR_Encode_Twopass(&chunk, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &ctx->aad_scope);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to encode AAD Scope");
             BSL_Data_Deinit(&chunk);
             return BSL_ERR_ENCODING;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
         *total += BSLX_CoseSc_bstring_AppendRaw(*data, &chunk);
 
         BSL_Data_Deinit(&chunk);
@@ -606,13 +606,13 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
                     BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
 
                     *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, blk_num);
-                    // GCOV_EXCL_BR_START
+                    // GCOV_EXCL_START
                     if (!*seq)
                     {
                         BSL_LOG_ERR("Failed to construct reader");
                         return BSL_ERR_ENCODING;
                     }
-                    // GCOV_EXCL_BR_STOP
+                    // GCOV_EXCL_STOP
                     *total += aad_block.btsd_len;
                 }
             }
@@ -712,14 +712,14 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
         BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
 
         *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (!*seq)
         {
             BSL_LOG_ERR("Failed to construct reader");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             return;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
     }
 
     if (BSL_SUCCESS == ctx->status)
@@ -727,13 +727,13 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
         ctx->mac_ctx = BSL_malloc(sizeof(BSL_AuthCtx_t));
 
         res = BSL_AuthCtx_Init(ctx->mac_ctx, ctx->keyhandle, bsl_sha_var);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to construct MAC context");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
     }
 
     if (BSL_SUCCESS == ctx->status)
@@ -752,31 +752,31 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
                 const uint8_t *ptr  = m_bstring_view(*data, 0, size);
 
                 res = BSL_AuthCtx_DigestBuffer(ctx->mac_ctx, ptr, size);
-                // GCOV_EXCL_BR_START
+                // GCOV_EXCL_START
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to process MAC");
                     ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
                 }
-                // GCOV_EXCL_BR_STOP
+                // GCOV_EXCL_STOP
             }
             else if ((seq = BSLX_CoseSc_ChunkItem_cget_seq(*item)))
             {
                 res = BSL_AuthCtx_DigestSeq(ctx->mac_ctx, *seq);
-                // GCOV_EXCL_BR_START
+                // GCOV_EXCL_START
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to process MAC");
                     ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
                 }
-                // GCOV_EXCL_BR_STOP
+                // GCOV_EXCL_STOP
             }
-            // GCOV_EXCL_BR_START
+            // GCOV_EXCL_START
             else
             {
                 BSL_LOG_WARNING("Ignoring empty chunk");
             }
-            // GCOV_EXCL_BR_STOP
+            // GCOV_EXCL_STOP
         }
     }
 
@@ -800,13 +800,13 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
     if (BSL_SUCCESS == ctx->status)
     {
         res = BSL_AuthCtx_Finalize(ctx->mac_ctx, tag);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("BSL_AuthCtx_Finalize failed with code %d", res);
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
     }
 }
 
@@ -1100,13 +1100,13 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
     if (BSL_SUCCESS == ctx->status)
     {
         res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &ctx->aad_scope);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to encode AAD Scope");
             ctx->status = res;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
     }
 
     BSL_Data_t msg_enc;
@@ -1114,13 +1114,13 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
     if (BSL_SUCCESS == ctx->status)
     {
         res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Mac0_Encode, &msg);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to encode Mac0");
             ctx->status = res;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
     }
     if (BSL_SUCCESS == ctx->status)
     {
@@ -1255,13 +1255,13 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
         ctx->enc_ctx = BSL_malloc(sizeof(BSL_Cipher_t));
 
         res = BSL_Cipher_Init(ctx->enc_ctx, mode, bsl_aes_var, &ctx->iv_val, ctx->keyhandle);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to construct ENC context");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
     }
 
     if (BSL_SUCCESS == ctx->status)
@@ -1289,20 +1289,20 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
             else if ((seq = BSLX_CoseSc_ChunkItem_cget_seq(*item)))
             {
                 res = BSL_Cipher_AddAadSeq(ctx->enc_ctx, *seq);
-                // GCOV_EXCL_BR_START
+                // GCOV_EXCL_START
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to process AAD");
                     ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
                 }
-                // GCOV_EXCL_BR_STOP
+                // GCOV_EXCL_STOP
             }
-            // GCOV_EXCL_BR_START
+            // GCOV_EXCL_START
             else
             {
                 BSL_LOG_WARNING("Ignoring empty chunk");
             }
-            // GCOV_EXCL_BR_STOP
+            // GCOV_EXCL_STOP
         }
     }
 
@@ -1344,24 +1344,24 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
     if (BSL_SUCCESS == ctx->status)
     {
         btsd_read = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (!btsd_read)
         {
             BSL_LOG_ERR("Failed to construct reader");
             ctx->status = BSL_ERR_HOST_CALLBACK_FAILED;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
 
         if (ctx->overwrite_btsd)
         {
             btsd_write = BSL_BundleCtx_WriteBTSD(ctx->bundle, ctx->target_block.block_num, write_len);
-            // GCOV_EXCL_BR_START
+            // GCOV_EXCL_START
             if (!btsd_write)
             {
                 BSL_LOG_ERR("Failed to construct writer");
                 ctx->status = BSL_ERR_HOST_CALLBACK_FAILED;
             }
-            // GCOV_EXCL_BR_STOP
+            // GCOV_EXCL_STOP
         }
     }
 
@@ -1388,25 +1388,25 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
         ctx->enc_ctx->in_buf.len = block_size;
 
         res = BSL_Cipher_SetTag(ctx->enc_ctx, &ctx->enc_ctx->in_buf);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to set auth tag");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
     }
 
     if (BSL_SUCCESS == ctx->status)
     {
         res = BSL_Cipher_FinalizeSeq(ctx->enc_ctx, btsd_write);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Finalizing AES failed");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
     }
 
     if ((BSL_SUCCESS == ctx->status) && (mode == BSL_CRYPTO_ENCRYPT))
@@ -1415,13 +1415,13 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
         BSL_Data_Init(&tag);
 
         res = BSL_Cipher_GetTag(ctx->enc_ctx, &tag);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("BSL_Cipher_Finalize failed with code %d", res);
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
         else
         {
             if (btsd_write)
@@ -1573,26 +1573,26 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
     if (BSL_SUCCESS == ctx->status)
     {
         res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &ctx->aad_scope);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to encode AAD Scope");
             ctx->status = res;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
     }
     BSL_Data_t msg_enc;
     BSL_Data_Init(&msg_enc);
     if (BSL_SUCCESS == ctx->status)
     {
         res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Encrypt0_Encode, &msg);
-        // GCOV_EXCL_BR_START
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to encode Encrypt0");
             ctx->status = res;
         }
-        // GCOV_EXCL_BR_STOP
+        // GCOV_EXCL_STOP
     }
     if (BSL_SUCCESS == ctx->status)
     {
