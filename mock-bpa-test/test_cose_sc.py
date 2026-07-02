@@ -238,6 +238,7 @@ class TestCoseScMac0(TestAgent):
             expected_output_format=DataFormat.CBORDIAG
         ))
 
+
 class TestCoseScMac(TestAgent):
 
     @unittest.expectedFailure
@@ -270,6 +271,7 @@ class TestCoseScMac(TestAgent):
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
+
 
 class TestCoseScEncrypt0(TestAgent):
 

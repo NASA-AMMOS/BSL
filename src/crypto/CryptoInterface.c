@@ -253,7 +253,8 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Data_t *wrapped_
     return 0;
 }
 
-int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t cek_handle, BSL_Data_t *wrapped_key, BSL_Crypto_KeyHandle_t *wrapped_key_handle)
+int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t cek_handle, BSL_Data_t *wrapped_key,
+                       BSL_Crypto_KeyHandle_t *wrapped_key_handle)
 {
     CHK_ARG_NONNULL(kek_handle);
     CHK_ARG_NONNULL(cek_handle);

@@ -118,8 +118,7 @@ typedef struct BSLX_BCB_s
     /// Internal enumeration for #aes_variant
     BSL_CryptoCipherAESVariant_e bsl_aes;
     /// Required key size for #aes_variant
-    size_t                       keysize;
-
+    size_t keysize;
 
     /// True if #aad_scope came from an option
     bool opt_aad_scope;

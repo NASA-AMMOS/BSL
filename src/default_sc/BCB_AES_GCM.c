@@ -153,7 +153,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     int retval = BSL_SUCCESS;
 
     BSL_Cipher_t cipher;
-    int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
+    int cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
@@ -313,7 +313,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     int retval = BSL_SUCCESS;
     int res;
 
-    BSL_Cipher_t cipher      = { 0 };
+    BSL_Cipher_t cipher = { 0 };
     res = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
     if (BSL_SUCCESS != res)
     {
