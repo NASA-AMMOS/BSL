@@ -29,7 +29,7 @@
 void test_qcbor_decode_without_head(void)
 {
     const char *in_hex = "58"; // not a full head
-    BSL_Data_t in_data;
+    BSL_Data_t  in_data;
     BSL_Data_Init(&in_data);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, in_hex),
                                   "BSL_TestUtils_DecodeBase16_cstr() failed");
@@ -49,7 +49,7 @@ void test_qcbor_decode_without_head(void)
 void test_qcbor_decode_only_head(void)
 {
     const char *in_hex = "586C"; // just a full head
-    BSL_Data_t in_data;
+    BSL_Data_t  in_data;
     BSL_Data_Init(&in_data);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, in_hex),
                                   "BSL_TestUtils_DecodeBase16_cstr() failed");
@@ -69,7 +69,7 @@ void test_qcbor_decode_only_head(void)
 void test_qcbor_decode_with_head(void)
 {
     const char *in_hex = "586C616263646566"; // front of a bstr value
-    BSL_Data_t in_data;
+    BSL_Data_t  in_data;
     BSL_Data_Init(&in_data);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, in_hex),
                                   "BSL_TestUtils_DecodeBase16_cstr() failed");
@@ -89,7 +89,7 @@ void test_qcbor_decode_with_head(void)
 void test_qcbor_decode_map_sequential(void)
 {
     const char *in_hex = "a201020304";
-    BSL_Data_t in_data;
+    BSL_Data_t  in_data;
     BSL_Data_Init(&in_data);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, in_hex),
                                   "BSL_TestUtils_DecodeBase16_cstr() failed");
@@ -130,7 +130,7 @@ void test_qcbor_decode_map_sequential(void)
 void test_qcbor_decode_array_nested(void)
 {
     const char *in_hex = "9F820102FF"; // [_ [1,2]]
-    BSL_Data_t in_data;
+    BSL_Data_t  in_data;
     BSL_Data_Init(&in_data);
     TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, in_hex),
                                   "BSL_TestUtils_DecodeBase16_cstr() failed");
