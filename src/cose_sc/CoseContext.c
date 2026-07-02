@@ -189,30 +189,36 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, co
 
     // external data
     int res = BSL_Host_GetSecSrcEID(&self->sec_src_eid);
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to get host EID");
         self->status = res;
         return;
     }
+    // GCOV_EXCL_STOP
 
     res = BSL_BundleCtx_GetBundleMetadata(bundle, &self->primary_block);
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to get primary block data");
         self->status = res;
         return;
     }
+    // GCOV_EXCL_STOP
 
     self->sec_blk_num = BSL_SecOper_GetSecurityBlockNum(sec_oper);
 
     res = BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &self->target_block);
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to get target block data");
         self->status = res;
         return;
     }
+    // GCOV_EXCL_STOP
     BSL_LOG_DEBUG("operating on target block %" PRIu64, self->target_block.block_num);
 }
 
@@ -1319,11 +1325,13 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
         if (ctx->overwrite_btsd)
         {
             btsd_write = BSL_BundleCtx_WriteBTSD(ctx->bundle, ctx->target_block.block_num, write_len);
+            // GCOV_EXCL_START
             if (!btsd_write)
             {
                 BSL_LOG_ERR("Failed to construct writer");
                 ctx->status = BSL_ERR_HOST_CALLBACK_FAILED;
             }
+            // GCOV_EXCL_STOP
         }
     }
 
@@ -1349,21 +1357,26 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
         }
         ctx->enc_ctx->in_buf.len = block_size;
 
-        if (BSL_SUCCESS != BSL_Cipher_SetTag(ctx->enc_ctx, &ctx->enc_ctx->in_buf))
+        res = BSL_Cipher_SetTag(ctx->enc_ctx, &ctx->enc_ctx->in_buf);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to set auth tag");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
     }
 
     if (BSL_SUCCESS == ctx->status)
     {
         res = BSL_Cipher_FinalizeSeq(ctx->enc_ctx, btsd_write);
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Finalizing AES failed");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
     }
 
     if ((BSL_SUCCESS == ctx->status) && (mode == BSL_CRYPTO_ENCRYPT))

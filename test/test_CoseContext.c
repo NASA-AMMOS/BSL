@@ -102,6 +102,80 @@ static const char *exA_4_enc0 = "9f890700028201692f2f6473742f7376638201692f2f737
                                 "616d706c65412e340642484af68601010002561fd25f64a2eee2ff1a1ab29812ba22"
                                 "1874380974c13b442086c017ff";
 
+void test_CoseSc_InvalidOptions(void)
+{
+    BSL_SecOper_t sec_oper;
+    BSL_SecOper_Init(&sec_oper);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
+                         BSL_POLICYACTION_DROP_BUNDLE);
+
+    // check different variety of bad values or combinations
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_KEY_ID, 123);
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+    BSLB_IdValPairPtrMap_reset(sec_oper._options);
+
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetTextstr(&option, BSLX_COSESC_OPTION_TGT_ALG, "bad");
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+    BSLB_IdValPairPtrMap_reset(sec_oper._options);
+
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetTextstr(&option, BSLX_COSESC_OPTION_KEY_ALG, "bad");
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+    BSLB_IdValPairPtrMap_reset(sec_oper._options);
+
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_AAD_SCOPE, 123);
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+    BSLB_IdValPairPtrMap_reset(sec_oper._options);
+
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        {
+            BSL_Data_t data = BSL_DATA_INIT_VIEW_CSTR("badcbor");
+            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_AAD_SCOPE, data);
+        }
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+    BSLB_IdValPairPtrMap_reset(sec_oper._options);
+
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetTextstr(&option, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET, "bad");
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+    BSLB_IdValPairPtrMap_reset(sec_oper._options);
+
+    BSL_SecOper_Deinit(&sec_oper);
+}
+
 /**
  * @brief Purpose: Exercise BIB applying security to a target payload block.
  *
