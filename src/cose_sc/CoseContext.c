@@ -305,23 +305,18 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     }
 
     // validation between options and key / param state
-    if (self->is_source)
+    if (self->is_source && !self->opt_kid)
     {
-        if (!self->opt_kid)
-        {
-            BSL_LOG_ERR("key ID option is required");
-            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-        }
+        BSL_LOG_ERR("key ID option is required");
+        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    if (self->is_source)
+    if (self->is_source && !self->opt_tgt_alg)
     {
-        if (!self->opt_tgt_alg)
-        {
-            BSL_LOG_ERR("COSE target alg option is required");
-            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-        }
+        BSL_LOG_ERR("COSE target alg option is required");
+        self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
+
     if (self->opt_tgt_alg)
     {
         // restrict use locally
