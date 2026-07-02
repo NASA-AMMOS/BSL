@@ -543,10 +543,10 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, key->raw.ptr, iv_val->ptr, -1);
     CHK_PROPERTY(res == 1);
 
-    res = BSL_Data_InitBuffer(&cipher_ctx->in_buf, (size_t)cipher_ctx->block_size);
+    res = BSL_Data_InitBuffer(&cipher_ctx->in_buf, cipher_ctx->block_size);
     CHK_PROPERTY(!res);
 
-    res = BSL_Data_InitBuffer(&cipher_ctx->out_buf, (size_t)cipher_ctx->block_size);
+    res = BSL_Data_InitBuffer(&cipher_ctx->out_buf, cipher_ctx->block_size);
     CHK_PROPERTY(!res);
 
     key->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;

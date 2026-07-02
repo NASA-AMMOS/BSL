@@ -1188,7 +1188,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
 
 /** Internal processing according to Section 5.3 of RFC 9052.
  */
-static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers, const char *context,
+static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *headers, const char *context,
                                         BSL_CipherMode_e mode)
 {
     ASSERT_PRECONDITION(ctx->iv_val.len > 0);
