@@ -45,10 +45,10 @@ bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t
     // Note: Internal API distinction.
     // Called before the `_execute` function. This checks ahead of time whether it contains the necessary info in order
     // to perform the execution.
-    (void)lib;
-    (void)bundle;
-    (void)sec_oper;
-    return false;
+    ASSERT_ARG_NONNULL(lib);
+    ASSERT_ARG_NONNULL(bundle);
+    ASSERT_ARG_NONNULL(sec_oper);
+    return true;
 }
 
 /**
