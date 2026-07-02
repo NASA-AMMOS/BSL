@@ -659,10 +659,6 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
             bcb_context.bsl_aes = BSL_CRYPTO_AES_128;
             bcb_context.keysize = 16;
             break;
-        case RFC9173_BCB_AES_VARIANT_A192GCM:
-            bcb_context.bsl_aes = BSL_CRYPTO_AES_192;
-            bcb_context.keysize = 24;
-            break;
         case RFC9173_BCB_AES_VARIANT_A256GCM:
             bcb_context.bsl_aes = BSL_CRYPTO_AES_256;
             bcb_context.keysize = 32;
