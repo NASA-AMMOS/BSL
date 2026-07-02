@@ -30,20 +30,64 @@
 
 #include "CoseMsg.h"
 
-/// Match ::BSL_CBOR_Encode_f signature.
-static int BSLX_CoseMsg_Headers_Encode_Map(QCBOREncodeContext *enc, const BSLX_CoseMsg_HdrMapTree_t *map)
+void BSLX_CoseMsg_HdrMapTree_update(BSLX_CoseMsg_HdrMapTree_t base, const BSLX_CoseMsg_HdrMapTree_t addl)
+{
+    BSLX_CoseMsg_HdrMapTree_it_t map_it;
+    for (BSLX_CoseMsg_HdrMapTree_it(map_it, addl); !BSLX_CoseMsg_HdrMapTree_end_p(map_it);
+         BSLX_CoseMsg_HdrMapTree_next(map_it))
+    {
+        const BSLX_CoseMsg_HdrMapTree_subtype_ct *item = BSLX_CoseMsg_HdrMapTree_cref(map_it);
+
+        if (!BSLX_CoseMsg_HdrMapTree_cget(base, *(item->key_ptr)))
+        {
+            BSLX_CoseMsg_HdrMapTree_set_at(base, *(item->key_ptr), *(item->value_ptr));
+        }
+    }
+}
+
+int BSLX_CoseMsg_Headers_Encode_Map(QCBOREncodeContext *enc, const BSLX_CoseMsg_HdrMapTree_t *map)
 {
     QCBOREncode_OpenMap(enc);
 
-    BSLX_CoseMsg_HdrMapTree_it_t param_it;
-    for (BSLX_CoseMsg_HdrMapTree_it(param_it, *map); !BSLX_CoseMsg_HdrMapTree_end_p(param_it);
-         BSLX_CoseMsg_HdrMapTree_next(param_it))
+    BSLX_CoseMsg_HdrMapTree_it_t map_it;
+    for (BSLX_CoseMsg_HdrMapTree_it(map_it, *map); !BSLX_CoseMsg_HdrMapTree_end_p(map_it);
+         BSLX_CoseMsg_HdrMapTree_next(map_it))
     {
-        const BSL_IdValPair_t *param = BSLB_IdValPairPtr_cref(*(BSLX_CoseMsg_HdrMapTree_ref(param_it)->value_ptr));
-        BSL_IdValPair_Encode(enc, param);
+        const BSL_IdValPair_t *value = BSLB_IdValPairPtr_cref(*(BSLX_CoseMsg_HdrMapTree_ref(map_it)->value_ptr));
+        BSL_IdValPair_Encode(enc, value);
     }
 
     QCBOREncode_CloseMap(enc);
+    return BSL_SUCCESS;
+}
+
+int BSLX_CoseMsg_Headers_Decode_Map(QCBORDecodeContext *dec, BSLX_CoseMsg_HdrMapTree_t *map)
+{
+    QCBORDecode_EnterArray(dec, NULL); // Using QCBOR_DECODE_MODE_MAP_AS_ARRAY
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+    {
+        return BSL_ERR_DECODING;
+    }
+
+    QCBORItem item;
+    while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
+    {
+        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+
+        BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(param_ptr);
+        if (BSL_SUCCESS != BSL_IdValPair_Decode(dec, param))
+        {
+            BSLB_IdValPairPtr_release(param_ptr);
+            return BSL_ERR_DECODING;
+        }
+        else
+        {
+            BSLX_CoseMsg_HdrMapTree_set_at(*map, param->id, param_ptr);
+            BSLB_IdValPairPtr_release(param_ptr);
+        }
+    }
+
+    QCBORDecode_ExitArray(dec);
     return BSL_SUCCESS;
 }
 
@@ -87,32 +131,11 @@ int BSLX_CoseMsg_Headers_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Headers_t 
 
         if (phdr_content.len > 0)
         {
-            QCBORDecode_EnterArray(dec, NULL); // Using QCBOR_DECODE_MODE_MAP_AS_ARRAY
-            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+            if (BSL_SUCCESS != BSLX_CoseMsg_Headers_Decode_Map(dec, &obj->phdr))
             {
                 BSL_LOG_ERR("Protected header map error");
                 return BSL_ERR_DECODING;
             }
-
-            QCBORItem item;
-            while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
-            {
-                BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-
-                BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(param_ptr);
-                if (BSL_SUCCESS != BSL_IdValPair_Decode(dec, param))
-                {
-                    BSLB_IdValPairPtr_release(param_ptr);
-                    return BSL_ERR_DECODING;
-                }
-                else
-                {
-                    BSLX_CoseMsg_HdrMapTree_set_at(obj->phdr, param->id, param_ptr);
-                    BSLB_IdValPairPtr_release(param_ptr);
-                }
-            }
-
-            QCBORDecode_ExitArray(dec);
         }
         BSL_LOG_DEBUG("Decoded %zu protected items", BSLX_CoseMsg_HdrMapTree_size(obj->phdr));
         // copy only after map success
@@ -122,32 +145,11 @@ int BSLX_CoseMsg_Headers_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Headers_t 
     }
     {
         // unprotected map
-        QCBORDecode_EnterArray(dec, NULL); // Using QCBOR_DECODE_MODE_MAP_AS_ARRAY
-        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+        if (BSL_SUCCESS != BSLX_CoseMsg_Headers_Decode_Map(dec, &obj->uhdr))
         {
             BSL_LOG_ERR("Unprotected header map error");
             return BSL_ERR_DECODING;
         }
-
-        QCBORItem item;
-        while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
-        {
-            BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-
-            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(param_ptr);
-            if (BSL_SUCCESS != BSL_IdValPair_Decode(dec, param))
-            {
-                BSLB_IdValPairPtr_release(param_ptr);
-                return BSL_ERR_DECODING;
-            }
-            else
-            {
-                BSLX_CoseMsg_HdrMapTree_set_at(obj->uhdr, param->id, param_ptr);
-                BSLB_IdValPairPtr_release(param_ptr);
-            }
-        }
-
-        QCBORDecode_ExitArray(dec);
         BSL_LOG_DEBUG("Decoded %zu unprotected items", BSLX_CoseMsg_HdrMapTree_size(obj->phdr));
     }
 

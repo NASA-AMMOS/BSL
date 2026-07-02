@@ -79,6 +79,13 @@ typedef struct
     /// Required option for KID
     BSL_Data_t kid;
 
+    /// Optional additional header parameter bytes
+    BSL_Data_t addl_phdr_bstr;
+    /// Optional additional header map, represented by #addl_phdr_bstr
+    BSLX_CoseMsg_HdrMapTree_t addl_phdr;
+    /// Optional additional header map
+    BSLX_CoseMsg_HdrMapTree_t addl_uhdr;
+
     /// True if #aad_scope came from an option
     bool opt_aad_scope;
     /// Required AAD scope, naturally sorted
@@ -133,6 +140,9 @@ static void BSLX_CoseSc_Init(BSLX_CoseSc_t *self)
     BSL_HostEID_Init(&self->sec_src_eid);
     BSL_Data_Init(&self->kid);
     BSLX_CoseSc_AadScope_init(self->aad_scope);
+    BSL_Data_Init(&self->addl_phdr_bstr);
+    BSLX_CoseMsg_HdrMapTree_init(self->addl_phdr);
+    BSLX_CoseMsg_HdrMapTree_init(self->addl_uhdr);
     BSL_Data_Init(&self->iv_val);
     self->mac_ctx = NULL;
     self->enc_ctx = NULL;
@@ -157,6 +167,9 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
 
     BSL_PrimaryBlock_deinit(&self->primary_block);
     BSL_Data_Deinit(&self->iv_val);
+    BSLX_CoseMsg_HdrMapTree_clear(self->addl_uhdr);
+    BSLX_CoseMsg_HdrMapTree_clear(self->addl_phdr);
+    BSL_Data_Deinit(&self->addl_phdr_bstr);
     BSLX_CoseSc_AadScope_clear(self->aad_scope);
     BSL_Data_Deinit(&self->kid);
     BSL_HostEID_Deinit(&self->sec_src_eid);
@@ -599,11 +612,11 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
         }
     }
 
-    { // additional_protected
+    { // additional_protected, even if empty
         m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
-        // FIXME take input
-        *total += BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, 0);
+        *total += BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->addl_phdr_bstr.len);
+        *total += BSLX_CoseSc_bstring_AppendRaw(*data, &ctx->addl_phdr_bstr);
     }
 
     return BSL_SUCCESS;
@@ -937,6 +950,52 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
     BSL_LOG_DEBUG("Using key algorithm code %" PRId64, self->key_alg);
 }
 
+static void BSLX_CoseSc_GetAndValidateAddlHeaders(BSLX_CoseSc_t *self)
+{
+    const BSL_IdValPair_t *param = BSL_SecOper_FindParam(self->sec_oper, BSLX_COSESC_PARAM_ADDL_PHDR);
+    if (param)
+    {
+        BSL_Data_t view;
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(param, &view))
+        {
+            BSL_LOG_ERR("Invalid Additional Protected parameter");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            // keep copy and decode
+            BSL_Data_CopyFrom(&self->addl_phdr_bstr, view.len, view.ptr);
+
+            int res = BSL_CBOR_Decode(&view, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Headers_Decode_Map, &self->addl_phdr);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to decode Additional Protected parameter");
+                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
+        }
+    }
+
+    param = BSL_SecOper_FindParam(self->sec_oper, BSLX_COSESC_PARAM_ADDL_UHDR);
+    if (param)
+    {
+        BSL_Data_t view;
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(param, &view))
+        {
+            BSL_LOG_ERR("Invalid Additional Protected parameter");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            int res = BSL_CBOR_Decode(&view, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Headers_Decode_Map, &self->addl_uhdr);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to decode Additional Protected parameter");
+                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
+        }
+    }
+}
+
 static void BSLX_CoseSc_GetAndValidateAadScope(BSLX_CoseSc_t *self)
 {
     const BSL_IdValPair_t *param = BSL_SecOper_FindParam(self->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
@@ -1056,6 +1115,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
 {
     int res;
 
+    BSLX_CoseSc_GetAndValidateAddlHeaders(ctx);
     BSLX_CoseSc_GetAndValidateAadScope(ctx);
     if (BSL_SUCCESS != ctx->status)
     {
@@ -1083,6 +1143,9 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
         }
         BSL_Data_Deinit(&msg_enc);
     }
+    // synthesize additional headers
+    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_phdr);
+    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_uhdr);
 
     BSLX_CoseSc_GetAndValidateKey(ctx, &msg.headers);
     BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
@@ -1523,6 +1586,7 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
 {
     int res;
 
+    BSLX_CoseSc_GetAndValidateAddlHeaders(ctx);
     BSLX_CoseSc_GetAndValidateAadScope(ctx);
     if (BSL_SUCCESS != ctx->status)
     {
@@ -1550,6 +1614,9 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
         }
         BSL_Data_Deinit(&msg_enc);
     }
+    // synthesize additional headers
+    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_phdr);
+    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_uhdr);
 
     BSLX_CoseSc_GetAndValidateKey(ctx, &msg.headers);
     BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
@@ -1653,7 +1720,6 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                 {
                     // has a recipient layer
                     BSL_LOG_CRIT("Not implemented");
-                    // FIXME Mac handling
                     ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
                 else
@@ -1674,7 +1740,6 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                 else if (result_mac)
                 {
                     BSL_LOG_CRIT("Not implemented");
-                    // FIXME Mac handling
                     ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
                 else
@@ -1695,7 +1760,6 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                 {
                     // has a recipient layer
                     BSL_LOG_CRIT("Not implemented");
-                    // FIXME Mac handling
                     ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
                 else
@@ -1718,7 +1782,6 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                 else if (result_enc)
                 {
                     BSL_LOG_CRIT("Not implemented");
-                    // FIXME Mac handling
                     ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
                 else

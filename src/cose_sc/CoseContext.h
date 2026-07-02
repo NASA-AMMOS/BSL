@@ -83,8 +83,11 @@ enum BSLX_CoseSC_Option_e
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.2
 enum BSLX_CoseSC_Param_e
 {
+    /// Additional Protected headers
     BSLX_COSESC_PARAM_ADDL_PHDR = 3,
+    /// Additional Unprotected headers
     BSLX_COSESC_PARAM_ADDL_UHDR = 4,
+    /// AAD Scope map
     BSLX_COSESC_PARAM_AAD_SCOPE = 5,
 };
 
