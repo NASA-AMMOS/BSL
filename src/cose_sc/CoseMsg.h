@@ -145,20 +145,26 @@ int BSLX_CoseMsg_Headers_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Headers_t 
 /** Derive BSLX_CoseMsg_Headers_t::phdr_bstr from protected headers
  * in BSLX_CoseMsg_Headers_t::phdr.
  * This is needed before cryptographic calculation and encoding.
+ *
+ * @param[in,out] obj The headers to encode and store into.
  * @return BSL_SUCCESS if successful.
  */
 int BSLX_CoseMsg_Headers_DerivePhdr(BSLX_CoseMsg_Headers_t *obj);
 
-/** Check for the presence of crit header referencing unsupported parameters.
+/** Check for the presence of @c crit header referencing unsupported parameters.
+ *
+ * @param[in] obj The headers to search.
  * @return BSL_SUCCESS if successful.
  */
 int BSLX_CoseMsg_Headers_CheckCrit(const BSLX_CoseMsg_Headers_t *obj);
 
 /** Get a desired header parameter.
  *
- * @param[in] obj The message to search.
+ * @param[in] obj The headers to search.
  * @param label The label to search for.
- * @param need_phdr If true the parameter needs to be in the protected map.
+ * @param need_phdr If true the parameter needs to be in the protected map
+ * when it is present. This does not imply that it needs to be present.
+ * @return Non-null pointer when found, or NULL if not found.
  */
 const BSL_IdValPair_t *BSLX_CoseMsg_Headers_Get(const BSLX_CoseMsg_Headers_t *obj, int64_t label, bool need_phdr);
 

@@ -617,6 +617,45 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
     return BSL_SUCCESS;
 }
 
+/** Common COSE AAD composition for MAC, Encrypt, and Sign.
+ * This relies on the outer array head to already be present in the list.
+ */
+static void BSLX_CoseSc_BuildAad(BSLX_CoseSc_t *ctx, BSLX_CoseSc_ChunkList_t chunklist,
+                                 const BSLX_CoseMsg_Headers_t *headers, const char *context)
+{
+    m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
+
+    { // context text
+        size_t ctx_len = strlen(context);
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_TEXT_STRING, ctx_len);
+        m_bstring_push_back_bytes(*data, ctx_len, context);
+    }
+
+    // protected bytes
+    BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, headers->phdr_bstr.len);
+    BSLX_CoseSc_bstring_AppendRaw(*data, &headers->phdr_bstr);
+
+    // external AAD bstr wrapped
+    {
+        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+        // force a new bstring item for external_aad content
+        m_bstring_t start;
+        m_bstring_init(start);
+        BSLX_CoseSc_ChunkItem_move_data(*item, start);
+    }
+    size_t ext_aad_len;
+    // compute total size of what would be produced by chunks
+    int res = BSLX_CoseSc_ExternalAad_Chunked(ctx, chunklist, &ext_aad_len);
+    if (BSL_SUCCESS != res)
+    {
+        ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+        // continue processing
+    }
+
+    // after external AAD size is known, inject bstr head above
+    BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ext_aad_len);
+}
+
 /** Internal processing according to Section 6.3 of RFC 9052.
  */
 static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *headers, const char *context,
@@ -646,43 +685,11 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
     BSLX_CoseSc_ChunkList_t chunklist;
     BSLX_CoseSc_ChunkList_init(chunklist);
 
-    { // context and protected bytes
+    { // 4-item array
         m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
-
-        // 4-item array
         BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_ARRAY, 4);
-
-        { // context text
-            size_t ctx_len = strlen(context);
-            BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_TEXT_STRING, ctx_len);
-            m_bstring_push_back_bytes(*data, ctx_len, context);
-        }
-
-        // protected bytes
-        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, headers->phdr_bstr.len);
-        BSLX_CoseSc_bstring_AppendRaw(*data, &headers->phdr_bstr);
     }
-    { // external AAD bstr wrapped
-        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
-
-        {
-            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-            // force a new bstring item for external_aad content
-            m_bstring_t start;
-            m_bstring_init(start);
-            BSLX_CoseSc_ChunkItem_move_data(*item, start);
-        }
-        size_t ext_aad_len;
-        res = BSLX_CoseSc_ExternalAad_Chunked(ctx, chunklist, &ext_aad_len);
-        if (BSL_SUCCESS != res)
-        {
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
-            // continue processing
-        }
-
-        // after external AAD size is known, inject bstr head above
-        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ext_aad_len);
-    }
+    BSLX_CoseSc_BuildAad(ctx, chunklist, headers, context);
     { // length of payload
         m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
         BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->target_block.btsd_len);
@@ -1209,43 +1216,11 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers
     BSLX_CoseSc_ChunkList_t chunklist;
     BSLX_CoseSc_ChunkList_init(chunklist);
 
-    { // context and protected bytes
+    { // 3-item array
         m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
-
-        // 3-item array
         BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_ARRAY, 3);
-
-        { // context text
-            size_t ctx_len = strlen(context);
-            BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_TEXT_STRING, ctx_len);
-            m_bstring_push_back_bytes(*data, ctx_len, context);
-        }
-
-        // protected bytes
-        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, headers->phdr_bstr.len);
-        BSLX_CoseSc_bstring_AppendRaw(*data, &headers->phdr_bstr);
     }
-    { // external AAD bstr wrapped
-        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
-
-        {
-            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-            // force a new bstring item for external_aad content
-            m_bstring_t start;
-            m_bstring_init(start);
-            BSLX_CoseSc_ChunkItem_move_data(*item, start);
-        }
-        size_t ext_aad_len;
-        res = BSLX_CoseSc_ExternalAad_Chunked(ctx, chunklist, &ext_aad_len);
-        if (BSL_SUCCESS != res)
-        {
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
-            // continue processing
-        }
-
-        // after external AAD size is known, inject bstr head above
-        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ext_aad_len);
-    }
+    BSLX_CoseSc_BuildAad(ctx, chunklist, headers, context);
 
     if (BSL_SUCCESS == ctx->status)
     {

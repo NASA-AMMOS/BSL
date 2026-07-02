@@ -230,9 +230,14 @@ int BSLX_CoseMsg_Headers_CheckCrit(const BSLX_CoseMsg_Headers_t *obj)
 const BSL_IdValPair_t *BSLX_CoseMsg_Headers_Get(const BSLX_CoseMsg_Headers_t *obj, int64_t label, bool need_phdr)
 {
     BSLB_IdValPairPtr_t *const *found = BSLX_CoseMsg_HdrMapTree_cget(obj->phdr, label);
-    if (!found && !need_phdr)
+    if (!found)
     {
         found = BSLX_CoseMsg_HdrMapTree_cget(obj->uhdr, label);
+        if (found && need_phdr)
+        {
+            BSL_LOG_ERR("Header parameter %" PRId64 " needs to be protected but is not, ignoring it");
+            found = NULL;
+        }
     }
     return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
 }
