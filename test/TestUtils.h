@@ -55,12 +55,11 @@ int BSL_TestContext_Deinit(BSL_TestContext_t *ctx);
  */
 int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cborhex);
 
-/** Compare a full bundle state from a test context.
+/** Encode a bundle state to CBOR.
  *
- * @param[in,out] test_ctx The context to encode into and compare with.
- * @param[in] cborhex The expected bundle in base16.
+ * @param[in,out] test_ctx The context to encode.
  */
-int BSL_TestUtils_ComapreBundleAsCBOR(BSL_TestContext_t *test_ctx, const char *cborhex);
+int BSL_TestUtils_EncodeBundleToCBOR(BSL_TestContext_t *test_ctx);
 
 BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text);
 

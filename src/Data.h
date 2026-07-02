@@ -152,6 +152,17 @@ int BSL_Data_SetView(BSL_Data_t *data, size_t len, BSL_DataPtr_t src);
  */
 int BSL_Data_SetViewCstr(BSL_Data_t *data, const char *cstr);
 
+/** Compare two data values returning 0 if equal, or -1 or 1 if not equal.
+ * @warning This comparison is not constant time, see BSL_Crypto_compare()
+ * for that need.
+ *
+ * @param[in] lhs The left side to compare.
+ * @param[in] rhs The right side to compare.
+ * @return Zero if equal, -1 if @c lhs is shorter or 1 if longer, and the
+ * output of @c memcmp() if same length.
+ */
+int BSL_Data_Cmp(const BSL_Data_t *lhs, const BSL_Data_t *rhs);
+
 #ifdef __cplusplus
 } // extern C
 #endif

@@ -37,7 +37,7 @@
  * To encrypt plaintext,
  * 1. Initialize the cipher context, using ::BSL_CRYPTO_ENCRYPT as the enc parameter: BSL_Cipher_Init()
  * Also provide the initialization vector (IV), IV Length, and key ID
- * 2. (Optional) add additional authentication data (aad) with BSL_Cipher_AddAAD()
+ * 2. (Optional) add additional authentication data (AAD) with BSL_Cipher_AddAadBuffer() or BSL_Cipher_AddAadSeq()
  * 3. Add data to the cipher context by calling BSL_Cipher_AddSeq()
  * 4. Finalize cipher operation: calling BSL_Cipher_FinalizeSeq()
  * 5. Get tag information: BSL_Cipher_GetTag()
@@ -46,7 +46,7 @@
  * To decrypt ciphertext:
  * 1. Initialize the cipher context, using ::BSL_CRYPTO_DECRYPT as the enc parameter: BSL_Cipher_Init()
  * Also provide the initialization vector (IV), IV Length, and key ID
- * 2. (Optional) add additional authentication data (aad) with BSL_Cipher_AddAAD()
+ * 2. (Optional) add additional authentication data (AAD) with BSL_Cipher_AddAadBuffer() or BSL_Cipher_AddAadSeq()
  * 3. Add data to the cipher context by calling BSL_Cipher_AddSeq()
  * 4. Set tag information to be used to validate decryption: BSL_Cipher_SetTag()
  * 5. Finalize cipher operation: calling BSL_Cipher_FinalizeSeq()
@@ -64,8 +64,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define BSL_CRYPTO_AESGCM_AUTH_TAG_LEN (16)
 
 /**
  * Enum def to define cipher contexts as encryption or decryption operations
@@ -96,14 +94,16 @@ typedef enum
 {
     BSL_CRYPTO_KEYSTATS_TIMES_USED = 0,
     BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED,
+    /// Not a real index, used to size arrays
     BSL_CRYPTO_KEYSTATS_MAX_INDEX
-} BSL_Crypto_KeyStatCounterIndex_e;
+} BSL_Crypto_KeyStatCounterIndex_t;
 
 /**
  * Structure containing statistics for individual keys
  */
 typedef struct BSL_Crypto_KeyStats_s
 {
+    /// Counters for each ::BSL_Crypto_KeyStatCounterIndex_t value
     uint64_t stats[BSL_CRYPTO_KEYSTATS_MAX_INDEX];
 } BSL_Crypto_KeyStats_t;
 
@@ -201,7 +201,7 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
  * Input data to HMAC sign to context
  * @param[in,out] hmac_ctx pointer to hmac context struct to add data to
  * @param[in] data buffer containing data to sign
- * @param data_len length of incoming data buffer
+ * @param data_len length of incoming data buffer, which is internally limited to INT_MAX
  * @return 0 if successful
  */
 BSL_REQUIRE_CHECK
@@ -244,9 +244,8 @@ bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size
  * Deinit and free generated key handle
  * @param[in] keyhandle key handle to clear.
  * Key handle assumed to be generated, not present in key registry, and allocated with ::BSL_malloc().
- * @returns 0 if successfully cleared key handle
  */
-int BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
+void BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
 
 /**
  * Perform key wrap
@@ -267,7 +266,7 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
  * @param[in] wrapped_key input wrapped key (ciphertext) bytes
  * @param[in,out] cek_handle output content encryption key (plaintext) handle.
  */
-int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Data_t *wrapped_key,
+int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wrapped_key,
                          BSL_Crypto_KeyHandle_t *cek_handle);
 
 /**
@@ -275,13 +274,13 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Data_t *wrapped_
  * @param[out] cipher_ctx pointer to context to initialize
  * @param aes_var AES GCM variant to use
  * @param enc enum for BSL_CRYPTO_ENCRYPT or BSL_CRYPTO_DECRYPT
- * @param[in] init_vec pointer to initialization vector (IV) data
- * @param[in] iv_len length of IV data
+ * @param[in] iv_val The initialization vector (IV) data, which must be non-empty.
+ * The length is internally limited to INT_MAX
  * @param[in] key_handle key handle to use
  * @return 0 if successful
  */
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
-                    const void *init_vec, int iv_len, void *key_handle);
+                    const BSL_Data_t *iv_val, void *key_handle);
 
 /** Get pointers to an existing key, if present.
  *
@@ -300,10 +299,12 @@ int BSL_Crypto_RemoveRegistryKey(const BSL_Data_t *keyid);
  * Add additional authenticated data (AAD) to cipher context
  * @param cipher_ctx pointer to context to add AAD  to
  * @param aad pointer to AAD
- * @param aad_len length of AAD
+ * @param aad_len length of AAD, which is internally limited to INT_MAX.
  * @return 0 if successful
  */
-int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len);
+int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, size_t aad_len);
+/// @overload for sequential reader
+int BSL_Cipher_AddAadSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader);
 
 /**
  * Add data to encrypt or decrypt to the context sequentially
@@ -311,26 +312,33 @@ int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len);
  * @param[in] reader pointer to sequential reader - input to crypto operation
  * @param[in] writer pointer to sequential writer (output of crypto operation), or NULL (crypto output will not be
  * written)
+ * @param limit The number of bytes of the reader to read and process.
+ * This can be shorter than the full length if the ciphertext contains an authentication tag.
  * @return 0 if successful
  */
-int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer);
+int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer, size_t limit);
 
+/** Determine the size of the authentication tag.
+ * This will be the output of BSL_Cipher_GetTag() and the input of BSL_Cipher_SetTag().
+ *
+ * @return The non-zero tag length for a valid cipher state.
+ */
+size_t BSL_Cipher_TagLen(const BSL_Cipher_t *cipher_ctx);
 /**
  * Get the tag of the crypto operation
  * @param cipher_ctx pointer to context to get tag from
- * @param[out] tag will contain tag information upon successful function completion
+ * @param[out] tag will be resized and contain data upon successful function completion
  * @return 0 if successful
  */
-int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, void **tag);
+int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag);
 
 /**
  * Set the tag of the crypto operation.
- * Tag length is always 16 bytes
  * @param cipher_ctx pointer to context to set tag of
- * @param[in] tag pointer to tag
+ * @param[in] tag pointer to tag to read from.
  * @return 0 if successful
  */
-int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const void *tag);
+int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const BSL_Data_t *tag);
 
 /**
  * Finalize crypto operation.
@@ -357,11 +365,11 @@ int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out);
 
 /**
  * Generate initialization vector (IV) for AES-GCM for BCBs
- * @param[in,out] buf to write iv to
- * @param size size in bytes of iv (MUST be between 8-16, SHOULD be 12 @cite rfc9173)
+ * @param[in,out] buf to write data into without changing its size.
+ * The size in bytes of iv (MUST be between 8-16, SHOULD be 12 @cite rfc9173)
  * @returns 0 if successful
  */
-int BSL_Crypto_GenIV(void *buf, int size);
+int BSL_Crypto_GenIV(BSL_Data_t *buf);
 
 /**
  * Add a new key to the crypto key registry
@@ -389,10 +397,10 @@ const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle,
 
 /**
  * Retrieve statistics related to a crypto key
- * @param[in] keyid key ID of a key in the crypto registry to retrieve the stats of
+ * @param[in] handle The handle of a key in the crypto registry to retrieve the stats of.
  * @param[out] stats struct containing statistics related to the key id
  */
-int BSL_Crypto_GetKeyStatistics(const BSL_Data_t *keyid, BSL_Crypto_KeyStats_t *stats);
+int BSL_Crypto_GetKeyStatistics(BSL_Crypto_KeyHandle_t handle, BSL_Crypto_KeyStats_t *stats);
 
 #ifdef __cplusplus
 } // extern C

@@ -42,6 +42,7 @@ static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_n
     int res = BSL_CBOR_Encode_Twopass(&asb_data, (BSL_CBOR_Encode_f)&BSL_AbsSecBlock_Encode, asb);
     if (BSL_SUCCESS != res)
     {
+        BSL_Data_Deinit(&asb_data);
         return res;
     }
 
@@ -49,21 +50,24 @@ static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_n
     if (!btsd_write)
     {
         BSL_LOG_ERR("Failed to get BTSD writer");
+        BSL_Data_Deinit(&asb_data);
         return BSL_ERR_ENCODING;
     }
+
+    int retval = BSL_SUCCESS;
     if (BSL_SeqWriter_Put(btsd_write, asb_data.ptr, asb_data.len))
     {
         BSL_LOG_ERR("Failed to write BTSD");
-        return BSL_ERR_ENCODING;
+        retval = BSL_ERR_ENCODING;
     }
     // finalize the write
-    BSL_SeqWriter_Destroy(btsd_write);
+    BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
 
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_ENCODE_BYTES, (uint64_t)asb_data.len);
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_ENCODE_COUNT, 1);
 
     BSL_Data_Deinit(&asb_data);
-    return BSL_SUCCESS;
+    return retval;
 }
 
 /** Common handling of informing new ASB content after an operation.

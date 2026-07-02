@@ -68,9 +68,12 @@ enum rfc9173_bib_integ_scope_flag_ids_e
 /// @brief https://www.rfc-editor.org/rfc/rfc9173.html#section-4.3.2
 enum rfc9173_bcb_aes_variant_e
 {
+    /** A128GCM algorithm.
+     */
     RFC9173_BCB_AES_VARIANT_A128GCM = 1,
-
-    // Default value
+    /** A256GCM algorithm.
+     * Also the default value.
+     */
     RFC9173_BCB_AES_VARIANT_A256GCM = 3
 };
 

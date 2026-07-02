@@ -262,7 +262,7 @@ void test_SeqReader_flat(void)
     TEST_ASSERT_EQUAL_INT(2, bufsize);
     TEST_ASSERT_EQUAL_MEMORY(source + 3, buf, 2);
 
-    TEST_ASSERT_EQUAL_INT(0, BSL_SeqReader_Destroy(reader));
+    BSL_SeqReader_Destroy(reader);
 }
 
 void test_SeqWriter_flat(void)
@@ -283,7 +283,7 @@ void test_SeqWriter_flat(void)
 
     TEST_ASSERT_NULL(dest);
     TEST_ASSERT_EQUAL_size_t(0, dest_size);
-    TEST_ASSERT_EQUAL_INT(0, BSL_SeqWriter_Destroy(writer));
+    BSL_SeqWriter_Destroy(writer, true);
 
     TEST_ASSERT_NOT_NULL(dest);
     TEST_ASSERT_EQUAL_size_t(5, dest_size);
@@ -352,7 +352,7 @@ void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_
 
             TEST_ASSERT_EQUAL(0, BSL_AuthCtx_DigestSeq(&hmac, reader));
 
-            TEST_ASSERT_EQUAL_INT(0, BSL_SeqReader_Destroy(reader));
+            BSL_SeqReader_Destroy(reader);
             break;
         }
         case 1:
@@ -397,11 +397,13 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
 {
     int res;
 
-    int     iv_len = 16;
-    uint8_t iv[iv_len];
-    res = BSL_Crypto_GenIV(&iv, iv_len);
+    BSL_Data_t iv;
+    BSL_Data_InitBuffer(&iv, 16);
+    res = BSL_Crypto_GenIV(&iv);
     TEST_ASSERT_EQUAL(0, res);
-    BSL_SeqReader_t *reader = BSL_TestUtils_FlatReader((const void *)plaintext_in, strlen(plaintext_in));
+
+    size_t           pt_size = strlen(plaintext_in);
+    BSL_SeqReader_t *reader  = BSL_TestUtils_FlatReader((const void *)plaintext_in, pt_size);
     TEST_ASSERT_NOT_NULL(reader);
 
     uint8_t         *ciphertext;
@@ -414,27 +416,28 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     BSL_Cipher_t ctx;
     void        *ekey;
     TEST_ASSERT_EQUAL(0, BSL_Crypto_GetRegistryKeyName(keyid, &ekey));
-    res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_ENCRYPT, aes_var, iv, iv_len, ekey);
+    res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_ENCRYPT, aes_var, &iv, ekey);
     TEST_ASSERT_EQUAL(0, res);
 
     uint8_t aad[2] = { 0x00, 0x01 };
-    res            = BSL_Cipher_AddAAD(&ctx, aad, 2);
+    res            = BSL_Cipher_AddAadBuffer(&ctx, aad, 2);
     TEST_ASSERT_EQUAL(0, res);
 
-    res = BSL_Cipher_AddSeq(&ctx, reader, writer);
+    res = BSL_Cipher_AddSeq(&ctx, reader, writer, pt_size);
     TEST_ASSERT_EQUAL(0, res);
 
-    uint8_t tag[16];
-    void   *tag_ptr = tag;
+    BSL_Data_t tag;
+    BSL_Data_Init(&tag);
 
     res = BSL_Cipher_FinalizeSeq(&ctx, writer);
     TEST_ASSERT_EQUAL(0, res);
 
-    res = BSL_SeqWriter_Destroy(writer);
-    TEST_ASSERT_EQUAL(0, res);
+    BSL_SeqWriter_Destroy(writer, true);
 
-    res = BSL_Cipher_GetTag(&ctx, &tag_ptr);
+    res = BSL_Cipher_GetTag(&ctx, &tag);
     TEST_ASSERT_EQUAL(0, res);
+    TEST_ASSERT_NOT_NULL(tag.ptr);
+    TEST_ASSERT_EQUAL_size_t(16, tag.len);
 
     uint8_t plaintext[ct_size];
     int     plaintext_len;
@@ -445,9 +448,10 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
 
     bool              is_key8 = (0 == strcmp(keyid, "Key8"));
     const EVP_CIPHER *cipher  = (is_key8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
-    res                       = gcm_decrypt(cipher, ciphertext, ct_size, aad, 2, (unsigned char *)tag,
-                                            (unsigned char *)((is_key8) ? test_256 : test_128), iv, iv_len, plaintext, &plaintext_len);
+    res                       = gcm_decrypt(cipher, ciphertext, ct_size, aad, 2, (unsigned char *)tag.ptr,
+                                            (unsigned char *)((is_key8) ? test_256 : test_128), iv.ptr, iv.len, plaintext, &plaintext_len);
     TEST_ASSERT_EQUAL(0, res);
+    BSL_Data_Deinit(&tag);
 
     TEST_ASSERT_EQUAL_INT(ct_size, plaintext_len);
     if (plaintext_len > 0)
@@ -455,9 +459,11 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
         TEST_ASSERT_EQUAL_MEMORY(plaintext_in, plaintext, plaintext_len);
     }
 
-    TEST_ASSERT_EQUAL_INT(0, BSL_SeqReader_Destroy(reader));
+    BSL_SeqReader_Destroy(reader);
+
     res = BSL_Cipher_Deinit(&ctx);
     TEST_ASSERT_EQUAL(0, res);
+    BSL_Data_Deinit(&iv);
 
     BSL_free(ciphertext);
 }
@@ -470,16 +476,19 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
 {
     int res;
 
-    int     iv_len = 16;
-    uint8_t iv[iv_len];
-    res = BSL_Crypto_GenIV(&iv, iv_len);
+    BSL_Data_t iv;
+    BSL_Data_InitBuffer(&iv, 16);
+
+    res = BSL_Crypto_GenIV(&iv);
     TEST_ASSERT_EQUAL(0, res);
 
     uint8_t aad[2] = { 0x00, 0x01 };
 
     uint8_t ciphertext[1000];
-    uint8_t tag[16];
     int     ciphertext_len;
+
+    BSL_Data_t tag;
+    BSL_Data_InitBuffer(&tag, 16);
 
     void *key;
     TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_GetRegistryKeyName(keyid, &key));
@@ -488,7 +497,8 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     bool              is_key8 = (0 == strcmp(keyid, "Key8"));
     const EVP_CIPHER *cipher  = (is_key8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
     res                       = gcm_encrypt(cipher, (unsigned char *)plaintext_in, strlen(plaintext_in), aad, 2,
-                                            (unsigned char *)((is_key8) ? test_256 : test_128), iv, iv_len, ciphertext, &ciphertext_len, tag);
+                                            (unsigned char *)((is_key8) ? test_256 : test_128), iv.ptr, iv.len, ciphertext, &ciphertext_len,
+                                            tag.ptr);
     TEST_ASSERT_EQUAL(0, res);
 
     BSL_SeqReader_t *reader = BSL_TestUtils_FlatReader((const void *)ciphertext, ciphertext_len);
@@ -502,23 +512,23 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     void *ckey;
     TEST_ASSERT_EQUAL(0, BSL_Crypto_GetRegistryKeyName(keyid, &ckey));
     BSL_Cipher_t ctx;
-    res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_DECRYPT, aes_var, iv, iv_len, ckey);
+    res = BSL_Cipher_Init(&ctx, BSL_CRYPTO_DECRYPT, aes_var, &iv, ckey);
     TEST_ASSERT_EQUAL(0, res);
 
-    res = BSL_Cipher_AddAAD(&ctx, aad, 2);
+    res = BSL_Cipher_AddAadBuffer(&ctx, aad, 2);
     TEST_ASSERT_EQUAL(0, res);
 
-    res = BSL_Cipher_AddSeq(&ctx, reader, writer);
+    res = BSL_Cipher_AddSeq(&ctx, reader, writer, ciphertext_len);
     TEST_ASSERT_EQUAL(0, res);
 
-    res = BSL_Cipher_SetTag(&ctx, tag);
+    res = BSL_Cipher_SetTag(&ctx, &tag);
     TEST_ASSERT_EQUAL(0, res);
+    BSL_Data_Deinit(&tag);
 
     res = BSL_Cipher_FinalizeSeq(&ctx, writer);
     TEST_ASSERT_EQUAL(0, res);
 
-    res = BSL_SeqWriter_Destroy(writer);
-    TEST_ASSERT_EQUAL(0, res);
+    BSL_SeqWriter_Destroy(writer, true);
 
     if (pt_size > 0)
     {
@@ -528,26 +538,22 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
 
     res = BSL_Cipher_Deinit(&ctx);
     TEST_ASSERT_EQUAL(0, res);
+    BSL_Data_Deinit(&iv);
 
-    TEST_ASSERT_EQUAL(0, BSL_SeqReader_Destroy(reader));
+    BSL_SeqReader_Destroy(reader);
     BSL_free(plaintext);
 }
 
 TEST_RANGE(<6, 18, 1>)
 void test_crypto_generate_iv(int iv_len)
 {
-    uint8_t iv[iv_len];
+    BSL_Data_t buf;
+    BSL_Data_InitBuffer(&buf, iv_len);
 
-    int res = BSL_Crypto_GenIV(&iv, iv_len);
+    int res = BSL_Crypto_GenIV(&buf);
+    TEST_ASSERT_EQUAL(0, res);
 
-    if (iv_len >= 8 && iv_len <= 16)
-    {
-        TEST_ASSERT_EQUAL(0, res);
-    }
-    else
-    {
-        TEST_ASSERT_LESS_THAN(0, res);
-    }
+    BSL_Data_Deinit(&buf);
 }
 
 // rfc3394 test vectors
@@ -799,13 +805,13 @@ void test_key_stats(void)
     test_encrypt("hello world!", "testkeystats");
 
     BSL_Crypto_KeyStats_t stats;
-    BSL_Crypto_GetKeyStatistics(&key_id, &stats);
+    BSL_Crypto_GetKeyStatistics(handle, &stats);
     TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED], 1);
     TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED], 14);
 
     test_encrypt("hello world again!", "testkeystats");
 
-    BSL_Crypto_GetKeyStatistics(&key_id, &stats);
+    BSL_Crypto_GetKeyStatistics(handle, &stats);
     TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED], 2);
     TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED], 34);
 }

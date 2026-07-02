@@ -132,18 +132,17 @@ void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn)
     rand_bytes_generator = rand_gen_fn;
 }
 
-int BSL_Crypto_ClearGeneratedKeyHandle(void *keyhandle)
+void BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle)
 {
-    CHK_ARG_NONNULL(keyhandle);
+    ASSERT_ARG_NONNULL(keyhandle);
 
     BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)keyhandle;
     BSL_CryptoKey_Deinit(key);
     BSL_free(key);
-
-    return BSL_SUCCESS;
 }
 
-int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_handle)
+int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wrapped_key,
+                         BSL_Crypto_KeyHandle_t *cek_handle)
 {
     ASSERT_ARG_NONNULL(kek_handle);
     ASSERT_ARG_NONNULL(wrapped_key);
@@ -237,7 +236,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     }
 
     EVP_CIPHER_CTX_free(ctx);
-    BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek->raw.ptr, cek->raw.len);
+    BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek, cek->raw.ptr, cek->raw.len);
 
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
     res                = EVP_PKEY_keygen_init(pctx);
@@ -255,7 +254,8 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     return 0;
 }
 
-int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_key, void **wrapped_key_handle)
+int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t cek_handle, BSL_Data_t *wrapped_key,
+                       BSL_Crypto_KeyHandle_t *wrapped_key_handle)
 {
     CHK_ARG_NONNULL(kek_handle);
     CHK_ARG_NONNULL(cek_handle);
@@ -364,7 +364,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
     return 0;
 }
 
-int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, void *keyhandle, BSL_CryptoCipherSHAVariant_e sha_var)
+int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_CryptoCipherSHAVariant_e sha_var)
 {
     CHK_ARG_NONNULL(hmac_ctx);
     CHK_ARG_NONNULL(keyhandle);
@@ -416,9 +416,11 @@ int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t d
 {
     ASSERT_ARG_NONNULL(hmac_ctx);
     ASSERT_ARG_NONNULL(data);
+    CHK_PRECONDITION(data_len > 0);
+    CHK_PRECONDITION(data_len <= INT_MAX);
 
     BSL_LOG_PLAINTEXT_PTR("data in", hmac_ctx, data, data_len);
-    int res = EVP_DigestSignUpdate(hmac_ctx->libhandle, data, data_len);
+    int res = EVP_DigestSignUpdate(hmac_ctx->libhandle, data, (int)data_len);
     CHK_PROPERTY(res == 1);
 
     BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
@@ -462,8 +464,8 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *tag)
     size_t size = EVP_MD_CTX_get_size(hmac_ctx->libhandle);
     CHK_PROPERTY(size > 0);
     CHK_PROPERTY(size <= INT_MAX);
+    BSL_Data_Resize(tag, size);
 
-    BSL_Data_Resize(tag, (int)size);
     int res = EVP_DigestSignFinal(hmac_ctx->libhandle, tag->ptr, &size);
     BSL_LOG_DEBUG("EVP_DigestSignFinal gave %zu bytes, return %d", size, res);
     CHK_PROPERTY(res == 1);
@@ -490,11 +492,13 @@ bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size
 }
 
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
-                    const void *init_vec, int iv_len, void *key_handle)
+                    const BSL_Data_t *iv_val, BSL_Crypto_KeyHandle_t key_handle)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
-    ASSERT_ARG_NONNULL(init_vec);
+    ASSERT_ARG_NONNULL(iv_val);
     ASSERT_ARG_NONNULL(key_handle);
+    CHK_PRECONDITION(iv_val->len > 0);
+    CHK_PRECONDITION(iv_val->len <= INT_MAX);
 
     memset(cipher_ctx, 0, sizeof(*cipher_ctx));
 
@@ -531,12 +535,12 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
         BSL_LOG_ERR("invalid block size zero, assuming %zu", cipher_ctx->block_size);
     }
 
-    res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_IVLEN, iv_len, NULL);
+    res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_IVLEN, (int)iv_val->len, NULL);
     CHK_PROPERTY(res == 1);
 
     BSL_LOG_PLAINTEXT_PTR("using key", cipher_ctx, key->raw.ptr, key->raw.len);
-    BSL_LOG_PLAINTEXT_PTR("using IV", cipher_ctx, init_vec, iv_len);
-    res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, key->raw.ptr, init_vec, -1);
+    BSL_LOG_PLAINTEXT_PTR("using IV", cipher_ctx, iv_val->ptr, iv_val->len);
+    res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, key->raw.ptr, iv_val->ptr, -1);
     CHK_PROPERTY(res == 1);
 
     res = BSL_Data_InitBuffer(&cipher_ctx->in_buf, cipher_ctx->block_size);
@@ -550,14 +554,17 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     return 0;
 }
 
-int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len)
+int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, size_t aad_len)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(aad);
-    // len needs to be passed or function call will crash program, no NULL checking on that param it seems
+    CHK_PRECONDITION(aad_len > 0);
+    CHK_PRECONDITION(aad_len <= INT_MAX);
+
+    // len needs to be passed as output
     int len = 0;
-    BSL_LOG_PLAINTEXT_PTR("adding AAD", cipher_ctx, aad, aad_len);
-    int res = EVP_CipherUpdate(cipher_ctx->libhandle, NULL, &len, aad, aad_len);
+    BSL_LOG_PLAINTEXT_PTR("AAD in", cipher_ctx, aad, aad_len);
+    int res = EVP_CipherUpdate(cipher_ctx->libhandle, NULL, &len, aad, (int)aad_len);
     BSL_LOG_DEBUG("EVP_CipherUpdate took %zu bytes, return %d", aad_len, res);
     CHK_PROPERTY(res == 1);
 
@@ -567,11 +574,10 @@ int BSL_Cipher_AddAAD(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len)
     return 0;
 }
 
-int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer)
+int BSL_Cipher_AddAadSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(reader);
-    BSL_LOG_DEBUG("block size %zu bytes", cipher_ctx->block_size);
 
     BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
 
@@ -587,6 +593,38 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
 
         int block_size_int = (int)block_size;
 
+        BSL_LOG_PLAINTEXT_PTR("AAD in", cipher_ctx, cipher_ctx->in_buf.ptr, block_size_int);
+        int res =
+            EVP_CipherUpdate(cipher_ctx->libhandle, NULL, &block_size_int, cipher_ctx->in_buf.ptr, block_size_int);
+        CHK_PROPERTY(res == 1);
+
+        key->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += block_size_int;
+    }
+
+    return 0;
+}
+
+int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer, size_t limit)
+{
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(reader);
+    BSL_LOG_DEBUG("block size %zu bytes", cipher_ctx->block_size);
+
+    BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
+
+    while (limit)
+    {
+        // read until the limit or there is no more
+        size_t block_size = M_MIN(limit, cipher_ctx->block_size);
+        BSL_SeqReader_Get(reader, cipher_ctx->in_buf.ptr, &block_size);
+        if (block_size == 0)
+        {
+            break;
+        }
+        // actual used size
+        limit -= block_size;
+        int block_size_int = (int)block_size;
+
         BSL_LOG_PLAINTEXT_PTR("cipher in", cipher_ctx, cipher_ctx->in_buf.ptr, block_size_int);
         int res = EVP_CipherUpdate(cipher_ctx->libhandle, cipher_ctx->out_buf.ptr, &block_size_int,
                                    cipher_ctx->in_buf.ptr, block_size_int);
@@ -595,40 +633,50 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
         CHK_PROPERTY(res == 1);
 
         key->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += block_size_int;
-        block_size = (size_t)block_size_int;
 
-        if (NULL != writer)
+        if ((block_size_int > 0) && writer)
         {
+            block_size = (size_t)block_size_int;
             BSL_SeqWriter_Put(writer, cipher_ctx->out_buf.ptr, block_size);
         }
     }
 
-    return 0;
+    return BSL_SUCCESS;
 }
 
-int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, void **tag)
+size_t BSL_Cipher_TagLen(const BSL_Cipher_t *cipher_ctx)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(cipher_ctx->libhandle);
+    return EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle);
+}
+
+int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag)
+{
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(cipher_ctx->libhandle);
     ASSERT_ARG_NONNULL(tag);
 
-    int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN, *tag);
-    BSL_LOG_PLAINTEXT_PTR("tag out", cipher_ctx, *tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
+    BSL_Data_Resize(tag, EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle));
+
+    int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, (int)(tag->len), tag->ptr);
+    BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl len %zu, return %d", tag->len, res);
+    BSL_LOG_PLAINTEXT_PTR("tag out", cipher_ctx, tag->ptr, tag->len);
     CHK_PROPERTY(res == 1);
 #if defined(HAVE_VALGRIND)
-    VALGRIND_MAKE_MEM_DEFINED(*tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
+    VALGRIND_MAKE_MEM_DEFINED(tag->ptr, tag->len);
 #endif /* defined(HAVE_VALGRIND) */
     return 0;
 }
 
-int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const void *tag)
+int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const BSL_Data_t *tag)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(tag);
 
-    BSL_LOG_PLAINTEXT_PTR("tag in", cipher_ctx, tag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
-    int res =
-        EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_TAG, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN, (void *)tag);
-    BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl return %d", res);
+    BSL_LOG_PLAINTEXT_PTR("tag in", cipher_ctx, tag->ptr, tag->len);
+    int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_TAG, (int)(tag->len), (void *)(tag->ptr));
+    BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl len %zu, return %d", tag->len, res);
     CHK_PROPERTY(res == 1);
 
     return 0;
@@ -650,11 +698,11 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer)
 
     if ((block_size_int > 0) && writer)
     {
-        size_t bsl_len = block_size_int;
+        size_t bsl_len = (size_t)block_size_int;
         BSL_SeqWriter_Put(writer, cipher_ctx->out_buf.ptr, bsl_len);
     }
 
-    return 0;
+    return BSL_SUCCESS;
 }
 
 int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
@@ -667,7 +715,7 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
     return BSL_SUCCESS;
 }
 
-int BSL_Crypto_GenKey(size_t key_length, void **key_out)
+int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out)
 {
     CHK_ARG_NONNULL(key_out);
     CHK_ARG_EXPR(key_length == 16 || key_length == 32);
@@ -694,17 +742,13 @@ int BSL_Crypto_GenKey(size_t key_length, void **key_out)
     return BSL_SUCCESS;
 }
 
-int BSL_Crypto_GenIV(void *buf, int size)
+int BSL_Crypto_GenIV(BSL_Data_t *buf)
 {
     CHK_ARG_NONNULL(buf);
-    if (!(size >= 8 && size <= 16))
-    {
-        return -1;
-    }
 
-    memset(buf, 0, size);
-    CHK_PROPERTY(rand_bytes_generator((unsigned char *)buf, size) == 1);
-    return 0;
+    memset(buf->ptr, 0, buf->len);
+    CHK_PROPERTY(rand_bytes_generator((unsigned char *)(buf->ptr), buf->len) == 1);
+    return BSL_SUCCESS;
 }
 
 int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len,
@@ -789,7 +833,7 @@ const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle,
     return retval;
 }
 
-int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, void **key_handle)
+int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *key_handle)
 {
     ASSERT_ARG_NONNULL(keyid);
     CHK_ARG_NONNULL(key_handle);
@@ -830,32 +874,17 @@ int BSL_Crypto_RemoveRegistryKey(const BSL_Data_t *keyid)
     return res ? BSL_SUCCESS : -1;
 }
 
-int BSL_Crypto_GetKeyStatistics(const BSL_Data_t *keyid, BSL_Crypto_KeyStats_t *stats)
+int BSL_Crypto_GetKeyStatistics(BSL_Crypto_KeyHandle_t handle, BSL_Crypto_KeyStats_t *stats)
 {
-    ASSERT_ARG_NONNULL(keyid);
+    ASSERT_ARG_NONNULL(handle);
     CHK_ARG_NONNULL(stats);
 
-    m_bstring_t keyid_str;
-    m_bstring_init(keyid_str);
-    m_bstring_push_back_bytes(keyid_str, keyid->len, keyid->ptr);
+    const BSL_CryptoKey_t *key = handle;
 
-    int retval = BSL_SUCCESS;
     pthread_mutex_lock(&StaticCryptoMutex);
-    BSL_CryptoKeyPtr_t **found = BSL_CryptoKeyDict_get(StaticKeyRegistry, keyid_str);
-    if (!found)
-    {
-        retval = BSL_ERR_NOT_FOUND;
-    }
-    else
-    {
-        const BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_cref(*found);
-
-        for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
-        {
-            stats->stats[i] = key->stats.stats[i];
-        }
-    }
+    // copy as POD
+    *stats = key->stats;
     pthread_mutex_unlock(&StaticCryptoMutex);
-    m_bstring_clear(keyid_str);
-    return retval;
+
+    return BSL_SUCCESS;
 }

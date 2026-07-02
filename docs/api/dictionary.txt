@@ -127,6 +127,7 @@ JPL
 JSON
 JWK
 JWKs
+KDF
 KEK
 len
 libc

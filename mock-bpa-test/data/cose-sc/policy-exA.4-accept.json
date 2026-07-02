@@ -2,7 +2,7 @@
   "policyrule_set": [
     {
       "policyrule": {
-        "desc": "Integrity source rule",
+        "desc": "Confidentiality source rule",
         "filter": {
           "rule_id": "1",
           "role": "a",
@@ -11,7 +11,7 @@
           "sc_id": 3
         },
         "spec": {
-          "svc": "bib-integrity",
+          "svc": "bcb",
           "sc_id": 3,
           "sc_parms": {}
         },
