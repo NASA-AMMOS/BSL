@@ -102,12 +102,63 @@ static const char *exA_4_enc0 = "9f890700028201692f2f6473742f7376638201692f2f737
                                 "616d706c65412e340642484af68601010002561fd25f64a2eee2ff1a1ab29812ba22"
                                 "1874380974c13b442086c017ff";
 
-void test_CoseSc_InvalidOptions(void)
+/// valid starting point
+static void test_CoseSc_InvalidOptions_Source_baseline(BSL_SecOper_t *sec_oper)
 {
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        {
+            BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_1_kid);
+            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEY_ID, keyid);
+        }
+        BSL_SecOper_AppendOption(sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_TGT_ALG, BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
+        BSL_SecOper_AppendOption(sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+}
+
+void test_CoseSc_InvalidOptions_Source(void)
+{
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
     BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
                          BSL_POLICYACTION_DROP_BUNDLE);
+
+    // valid starting point
+    test_CoseSc_InvalidOptions_Source_baseline(&sec_oper);
+    TEST_ASSERT_TRUE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+
+    test_CoseSc_InvalidOptions_Source_baseline(&sec_oper);
+    BSLB_IdValPairPtrMap_erase(sec_oper._options, BSLX_COSESC_OPTION_KEY_ID);
+    TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+
+    test_CoseSc_InvalidOptions_Source_baseline(&sec_oper);
+    BSLB_IdValPairPtrMap_erase(sec_oper._options, BSLX_COSESC_OPTION_TGT_ALG);
+    TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+
+    BSL_SecOper_Deinit(&sec_oper);
+}
+
+void test_CoseSc_InvalidOptions_Verifier(void)
+{
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+
+    BSL_SecOper_t sec_oper;
+    BSL_SecOper_Init(&sec_oper);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_VERIFIER,
+                         BSL_POLICYACTION_DROP_BUNDLE);
+
+    // no options is a valid start
+    TEST_ASSERT_TRUE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
 
     // check different variety of bad values or combinations
     {
@@ -124,6 +175,17 @@ void test_CoseSc_InvalidOptions(void)
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
         BSL_IdValPair_SetTextstr(&option, BSLX_COSESC_OPTION_TGT_ALG, "bad");
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+    BSLB_IdValPairPtrMap_reset(sec_oper._options);
+
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        // not valid alg for BIB
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_TGT_ALG, BSLX_COSEMSG_ALG_AES_GCM_256);
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
     }
