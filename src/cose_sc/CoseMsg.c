@@ -166,7 +166,7 @@ int BSLX_CoseMsg_Headers_DerivePhdr(BSLX_CoseMsg_Headers_t *obj)
     return BSL_CBOR_Encode_Twopass(&obj->phdr_bstr, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Headers_Encode_Map, &obj->phdr);
 }
 
-/** Decode a crit array and fail directly.
+/** Decode a @c crit array and fail directly.
  * Matches ::BSL_CBOR_Decode_f signature.
  */
 static int BSLX_CoseMsg_Headers_CheckCrit_Decode(QCBORDecodeContext *dec, const void *obj _U_)
