@@ -113,8 +113,14 @@ typedef struct BSLX_BCB_s
 
     /// Cipher mode variants
     BSL_CipherMode_e crypto_mode;
-    /// Required AES variant
+    /// Required AES variant (external code point)
     int64_t aes_variant;
+    /// Internal enumeration for #aes_variant
+    BSL_CryptoCipherAESVariant_e bsl_aes;
+    /// Required key size for #aes_variant
+    size_t                       keysize;
+
+
     /// True if #aad_scope came from an option
     bool opt_aad_scope;
     /// Required AAD scope

@@ -70,6 +70,7 @@ enum rfc9173_bcb_aes_variant_e
 {
     RFC9173_BCB_AES_VARIANT_A128GCM = 1,
 
+    RFC9173_BCB_AES_VARIANT_A192GCM = 2,
     // Default value
     RFC9173_BCB_AES_VARIANT_A256GCM = 3
 };

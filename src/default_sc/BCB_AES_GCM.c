@@ -120,9 +120,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     CHK_PRECONDITION(bcb_context->iv.ptr != NULL);
     CHK_PRECONDITION(bcb_context->iv.len > 0);
 
-    bool                         is_aes128 = bcb_context->aes_variant == RFC9173_BCB_AES_VARIANT_A128GCM;
-    BSL_CryptoCipherAESVariant_e aes_mode  = is_aes128 ? BSL_CRYPTO_AES_128 : BSL_CRYPTO_AES_256;
-
     void *key_id_handle;
     void *cipher_key;
 
@@ -156,7 +153,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     int retval = BSL_SUCCESS;
 
     BSL_Cipher_t cipher;
-    int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, aes_mode, &bcb_context->iv, cipher_key);
+    int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
@@ -257,9 +254,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     // Auth tag must be empty
     CHK_PRECONDITION(bcb_context->authtag.len == 0);
 
-    bool                         is_aes128 = bcb_context->aes_variant == RFC9173_BCB_AES_VARIANT_A128GCM;
-    BSL_CryptoCipherAESVariant_e aes_mode  = is_aes128 ? BSL_CRYPTO_AES_128 : BSL_CRYPTO_AES_256;
-
     BSL_Data_Resize(&bcb_context->iv, RFC9173_BCB_DEFAULT_IV_LEN);
     if (BSL_SUCCESS != BSL_Crypto_GenIV(&bcb_context->iv))
     {
@@ -287,10 +281,9 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     }
     else
     {
-        const size_t keysize = is_aes128 ? 16 : 32;
-        BSL_LOG_DEBUG("Generating %zu bit AES key", keysize * 8);
+        BSL_LOG_DEBUG("Generating %zu bit AES key", bcb_context->keysize * 8);
 
-        if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &cipher_key))
+        if (BSL_SUCCESS != BSL_Crypto_GenKey(bcb_context->keysize, &cipher_key))
         {
             BSL_LOG_ERR("Failed to generate AES key");
             BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
@@ -300,7 +293,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         /**
          * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
          */
-        if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, keysize + 8))
+        if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, bcb_context->keysize + 8))
         {
             BSL_LOG_ERR("Failed to allocate wrapped key");
             BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
@@ -320,7 +313,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     int retval = BSL_SUCCESS;
 
     BSL_Cipher_t cipher      = { 0 };
-    int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, aes_mode, &bcb_context->iv, cipher_key);
+    int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
@@ -419,12 +412,7 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
             BSL_LOG_ERR("Invalid AES variant value");
             bcb_context->err_count++;
         }
-        else if (bcb_context->aes_variant < RFC9173_BCB_AES_VARIANT_A128GCM
-                 || bcb_context->aes_variant > RFC9173_BCB_AES_VARIANT_A256GCM)
-        {
-            BSL_LOG_ERR("Unknown AES variant %" PRIu64, bcb_context->aes_variant);
-            bcb_context->err_count++;
-        }
+        // later validation checks the actual int values
     }
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BCB_OPT_WRAPPED_KEY);
     if (param)
@@ -660,6 +648,26 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
     {
         BSLX_BCB_Deinit(&bcb_context);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
+    }
+
+    switch (bcb_context.aes_variant)
+    {
+        case RFC9173_BCB_AES_VARIANT_A128GCM:
+            bcb_context.bsl_aes = BSL_CRYPTO_AES_128;
+            bcb_context.keysize = 16;
+            break;
+        case RFC9173_BCB_AES_VARIANT_A192GCM:
+            bcb_context.bsl_aes = BSL_CRYPTO_AES_192;
+            bcb_context.keysize = 24;
+            break;
+        case RFC9173_BCB_AES_VARIANT_A256GCM:
+            bcb_context.bsl_aes = BSL_CRYPTO_AES_256;
+            bcb_context.keysize = 32;
+            break;
+        default:
+            BSL_LOG_ERR("Invalid AES algorithm %" PRId64, bcb_context.aes_variant);
+            BSLX_BCB_Deinit(&bcb_context);
+            return BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
     }
 
     if (bcb_context.aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_SECURITY_HEADER)
