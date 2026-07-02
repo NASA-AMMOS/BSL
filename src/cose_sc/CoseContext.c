@@ -844,7 +844,7 @@ static void BSLX_CoseSc_GetAndValidateTarget(BSLX_CoseSc_t *self, const BSLX_Cos
     {
         if (hdr_alg_val != self->tgt_alg)
         {
-            BSL_LOG_ERR("Mismatched key alg value");
+            BSL_LOG_ERR("Mismatched key alg value, op has %"PRId64" key has %"PRId64, self->tgt_alg, hdr_alg_val);
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             return;
         }
@@ -937,7 +937,7 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
     {
         if (hdr_alg_val != self->key_alg)
         {
-            BSL_LOG_ERR("Mismatched key alg value");
+            BSL_LOG_ERR("Mismatched key alg value, op has %"PRId64" key has %"PRId64, self->key_alg, hdr_alg_val);
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             return;
         }

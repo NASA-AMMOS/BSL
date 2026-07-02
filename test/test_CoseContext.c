@@ -523,22 +523,8 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     BSL_SecOper_Deinit(&sec_oper);
 }
 
-int cose_exA_4_rng(unsigned char *buf, int len)
-{
-    if (len == 12) // IV
-    {
-        static const uint8_t iv[] = { 0x6f, 0x30, 0x93, 0xeb, 0xa5, 0xd8, 0x51, 0x43, 0xc3, 0xdc, 0x48, 0x4a };
-        memcpy(buf, iv, sizeof(iv));
-        return 1;
-    }
-    return 0;
-}
-
-/// Augmented Example 4 with whole IV in-message
 void test_AppendixA_Example4_BCB_Source(void)
 {
-    BSL_Crypto_SetRngGenerator(cose_exA_4_rng);
-
     {
         BSL_Crypto_KeyHandle_t handle;
         {
@@ -655,8 +641,7 @@ void test_AppendixA_Example4_BCB_Source(void)
 }
 
 // no use of OPT_MISMATCH_MODIFY_BLK_3 here (tag is in the ciphertext)
-// TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 0, 1, 2, 3, 4, 5 ])
-TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [2])
+TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 0, 1, 2, 3, 4, 5 ])
 void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 {
     {
@@ -720,8 +705,8 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
         BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_KEY_ALG,
-                               (mismatch == OPT_MISMATCH_KEY_ALG) ? BSLX_COSEMSG_ALG_HMAC_SHA_256_256
-                                                                  : BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
+                               (mismatch == OPT_MISMATCH_KEY_ALG) ? BSLX_COSEMSG_ALG_AES_GCM_128
+                                                                  : BSLX_COSEMSG_ALG_AES_GCM_256);
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
     }
