@@ -201,7 +201,7 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
  * Input data to HMAC sign to context
  * @param[in,out] hmac_ctx pointer to hmac context struct to add data to
  * @param[in] data buffer containing data to sign
- * @param data_len length of incoming data buffer
+ * @param data_len length of incoming data buffer, which internally is limited to INT_MAX
  * @return 0 if successful
  */
 BSL_REQUIRE_CHECK
@@ -298,10 +298,10 @@ int BSL_Crypto_RemoveRegistryKey(const BSL_Data_t *keyid);
  * Add additional authenticated data (AAD) to cipher context
  * @param cipher_ctx pointer to context to add AAD  to
  * @param aad pointer to AAD
- * @param aad_len length of AAD
+ * @param aad_len length of AAD, which internally is limited to INT_MAX.
  * @return 0 if successful
  */
-int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len);
+int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, size_t aad_len);
 /// @overload for sequential reader
 int BSL_Cipher_AddAadSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader);
 

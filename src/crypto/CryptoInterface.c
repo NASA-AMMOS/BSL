@@ -414,9 +414,10 @@ int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t d
 {
     ASSERT_ARG_NONNULL(hmac_ctx);
     ASSERT_ARG_NONNULL(data);
+    CHK_PRECONDITION(data_len <= INT_MAX);
 
     BSL_LOG_PLAINTEXT_PTR("data in", hmac_ctx, data, data_len);
-    int res = EVP_DigestSignUpdate(hmac_ctx->libhandle, data, data_len);
+    int res = EVP_DigestSignUpdate(hmac_ctx->libhandle, data, (int)data_len);
     CHK_PROPERTY(res == 1);
 
     BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
@@ -537,10 +538,10 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, key->raw.ptr, iv_val->ptr, -1);
     CHK_PROPERTY(res == 1);
 
-    res = BSL_Data_InitBuffer(&cipher_ctx->in_buf, cipher_ctx->block_size);
+    res = BSL_Data_InitBuffer(&cipher_ctx->in_buf, (size_t)cipher_ctx->block_size);
     CHK_PROPERTY(!res);
 
-    res = BSL_Data_InitBuffer(&cipher_ctx->out_buf, cipher_ctx->block_size);
+    res = BSL_Data_InitBuffer(&cipher_ctx->out_buf, (size_t)cipher_ctx->block_size);
     CHK_PROPERTY(!res);
 
     key->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
@@ -548,20 +549,21 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     return 0;
 }
 
-int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, int aad_len)
+int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, size_t aad_len)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(aad);
+    CHK_PRECONDITION(aad_len <= INT_MAX);
 
     // len needs to be passed as output
     int len = 0;
     BSL_LOG_PLAINTEXT_PTR("AAD in", cipher_ctx, aad, aad_len);
-    int res = EVP_CipherUpdate(cipher_ctx->libhandle, NULL, &len, aad, aad_len);
+    int res = EVP_CipherUpdate(cipher_ctx->libhandle, NULL, &len, aad, (int)aad_len);
     BSL_LOG_DEBUG("EVP_CipherUpdate took %zu bytes, return %d", aad_len, res);
     CHK_PROPERTY(res == 1);
 
     BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)cipher_ctx->keyhandle;
-    key->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += len;
+    key->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += aad_len;
 
     return 0;
 }
