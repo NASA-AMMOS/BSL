@@ -414,6 +414,7 @@ int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t d
 {
     ASSERT_ARG_NONNULL(hmac_ctx);
     ASSERT_ARG_NONNULL(data);
+    CHK_PRECONDITION(data_len > 0);
     CHK_PRECONDITION(data_len <= INT_MAX);
 
     BSL_LOG_PLAINTEXT_PTR("data in", hmac_ctx, data, data_len);
@@ -461,8 +462,8 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *tag)
     size_t size = EVP_MD_CTX_get_size(hmac_ctx->libhandle);
     CHK_PROPERTY(size > 0);
     CHK_PROPERTY(size <= INT_MAX);
+    BSL_Data_Resize(tag, size);
 
-    BSL_Data_Resize(tag, (int)size);
     int res = EVP_DigestSignFinal(hmac_ctx->libhandle, tag->ptr, &size);
     BSL_LOG_DEBUG("EVP_DigestSignFinal gave %zu bytes, return %d", size, res);
     CHK_PROPERTY(res == 1);
@@ -494,6 +495,8 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(iv_val);
     ASSERT_ARG_NONNULL(key_handle);
+    CHK_PRECONDITION(iv_val->len > 0);
+    CHK_PRECONDITION(iv_val->len <= INT_MAX);
 
     memset(cipher_ctx, 0, sizeof(*cipher_ctx));
 
@@ -530,7 +533,7 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
         BSL_LOG_ERR("invalid block size zero, assuming %zu", cipher_ctx->block_size);
     }
 
-    res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_IVLEN, iv_val->len, NULL);
+    res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_IVLEN, (int)iv_val->len, NULL);
     CHK_PROPERTY(res == 1);
 
     BSL_LOG_PLAINTEXT_PTR("using key", cipher_ctx, key->raw.ptr, key->raw.len);
@@ -553,6 +556,7 @@ int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, size_t aa
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(aad);
+    CHK_PRECONDITION(aad_len > 0);
     CHK_PRECONDITION(aad_len <= INT_MAX);
 
     // len needs to be passed as output

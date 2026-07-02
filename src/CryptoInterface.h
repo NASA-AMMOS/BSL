@@ -201,7 +201,7 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
  * Input data to HMAC sign to context
  * @param[in,out] hmac_ctx pointer to hmac context struct to add data to
  * @param[in] data buffer containing data to sign
- * @param data_len length of incoming data buffer, which internally is limited to INT_MAX
+ * @param data_len length of incoming data buffer, which is internally limited to INT_MAX
  * @return 0 if successful
  */
 BSL_REQUIRE_CHECK
@@ -275,6 +275,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Data_t *wrapped_
  * @param aes_var AES GCM variant to use
  * @param enc enum for BSL_CRYPTO_ENCRYPT or BSL_CRYPTO_DECRYPT
  * @param[in] iv_val The initialization vector (IV) data, which must be non-empty.
+ * The length is internally limited to INT_MAX
  * @param[in] key_handle key handle to use
  * @return 0 if successful
  */
@@ -298,7 +299,7 @@ int BSL_Crypto_RemoveRegistryKey(const BSL_Data_t *keyid);
  * Add additional authenticated data (AAD) to cipher context
  * @param cipher_ctx pointer to context to add AAD  to
  * @param aad pointer to AAD
- * @param aad_len length of AAD, which internally is limited to INT_MAX.
+ * @param aad_len length of AAD, which is internally limited to INT_MAX.
  * @return 0 if successful
  */
 int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, size_t aad_len);
