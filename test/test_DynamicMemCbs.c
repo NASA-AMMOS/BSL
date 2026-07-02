@@ -41,8 +41,8 @@ static BSL_IdValPair_t param_aes_variant_128;
 static BSL_IdValPair_t param_use_wrap_key;
 static BSL_IdValPair_t param_test_bcb_key_correct;
 
-static BSL_TestContext_t       LocalTestCtx = { 0 };
-static BSL_SecurityActionSet_t action_set   = { 0 };
+static BSL_TestContext_t       LocalTestCtx;
+static BSL_SecurityActionSet_t action_set;
 static BSLP_PolicyProvider_t  *policy_provider;
 
 static void *malloc_test(size_t size)
@@ -103,14 +103,17 @@ void _setUp(void)
     BSL_IdValPair_Init(&param_use_wrap_key);
     BSL_IdValPair_Init(&param_test_bcb_key_correct);
 
+    BSL_SecurityActionSet_Init(&action_set);
+
     policy_provider = BSLP_PolicyProvider_Init(1);
 
     /// Register the policy provider with some rules
-    BSL_PolicyDesc_t policy_desc = { 0 };
-    policy_desc.user_data        = policy_provider;
-    policy_desc.query_fn         = BSLP_QueryPolicy;
-    policy_desc.deinit_fn        = BSLP_Deinit;
-    policy_desc.finalize_fn      = BSLP_FinalizePolicy;
+    BSL_PolicyDesc_t policy_desc = {
+        .user_data   = policy_provider,
+        .query_fn    = BSLP_QueryPolicy,
+        .deinit_fn   = BSLP_Deinit,
+        .finalize_fn = BSLP_FinalizePolicy,
+    };
     TEST_ASSERT_EQUAL(0, BSL_API_RegisterPolicyProvider(&LocalTestCtx.bsl, BSL_SAMPLE_PP_ID, policy_desc));
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
