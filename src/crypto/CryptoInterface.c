@@ -132,18 +132,16 @@ void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn)
     rand_bytes_generator = rand_gen_fn;
 }
 
-int BSL_Crypto_ClearGeneratedKeyHandle(void *keyhandle)
+void BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle)
 {
-    CHK_ARG_NONNULL(keyhandle);
+    ASSERT_ARG_NONNULL(keyhandle);
 
     BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)keyhandle;
     BSL_CryptoKey_Deinit(key);
     BSL_free(key);
-
-    return BSL_SUCCESS;
 }
 
-int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_handle)
+int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Data_t *wrapped_key, BSL_Crypto_KeyHandle_t *cek_handle)
 {
     ASSERT_ARG_NONNULL(kek_handle);
     ASSERT_ARG_NONNULL(wrapped_key);
@@ -237,7 +235,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     }
 
     EVP_CIPHER_CTX_free(ctx);
-    BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek->raw.ptr, cek->raw.len);
+    BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek, cek->raw.ptr, cek->raw.len);
 
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
     res                = EVP_PKEY_keygen_init(pctx);
@@ -255,7 +253,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     return 0;
 }
 
-int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_key, void **wrapped_key_handle)
+int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t cek_handle, BSL_Data_t *wrapped_key, BSL_Crypto_KeyHandle_t *wrapped_key_handle)
 {
     CHK_ARG_NONNULL(kek_handle);
     CHK_ARG_NONNULL(cek_handle);
@@ -364,7 +362,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
     return 0;
 }
 
-int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, void *keyhandle, BSL_CryptoCipherSHAVariant_e sha_var)
+int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_CryptoCipherSHAVariant_e sha_var)
 {
     CHK_ARG_NONNULL(hmac_ctx);
     CHK_ARG_NONNULL(keyhandle);
@@ -490,7 +488,7 @@ bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size
 }
 
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
-                    const BSL_Data_t *iv_val, void *key_handle)
+                    const BSL_Data_t *iv_val, BSL_Crypto_KeyHandle_t key_handle)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(iv_val);
@@ -709,7 +707,7 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
     return BSL_SUCCESS;
 }
 
-int BSL_Crypto_GenKey(size_t key_length, void **key_out)
+int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out)
 {
     CHK_ARG_NONNULL(key_out);
     CHK_ARG_EXPR(key_length == 16 || key_length == 32);

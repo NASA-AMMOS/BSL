@@ -311,10 +311,11 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     }
 
     int retval = BSL_SUCCESS;
+    int res;
 
     BSL_Cipher_t cipher      = { 0 };
-    int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
-    if (BSL_SUCCESS != cipher_init)
+    res = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
         retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -322,7 +323,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        if (BSL_SUCCESS != BSL_Cipher_AddAadBuffer(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
+        res = BSL_Cipher_AddAadBuffer(&cipher, bcb_context->aad.ptr, bcb_context->aad.len);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to add AAD");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -334,14 +336,14 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (retval == BSL_SUCCESS)
     {
         btsd_read = BSL_BundleCtx_ReadBTSD(bcb_context->bundle, bcb_context->target_block.block_num);
-        // output is same size
-        btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
-                                             bcb_context->target_block.btsd_len);
         if (!btsd_read)
         {
             BSL_LOG_ERR("Failed to construct reader");
             retval = BSL_ERR_HOST_CALLBACK_FAILED;
         }
+        // output is same size
+        btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
+                                             bcb_context->target_block.btsd_len);
         if (!btsd_write)
         {
             BSL_LOG_ERR("Failed to construct writer");
@@ -352,7 +354,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (retval == BSL_SUCCESS)
     {
         // entire block is plaintext
-        int res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, bcb_context->target_block.btsd_len);
+        res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, bcb_context->target_block.btsd_len);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Encrypting plaintext BTSD failed");
@@ -362,7 +364,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        int res = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
+        res = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Finalizing AES failed");
@@ -372,7 +374,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, &bcb_context->authtag))
+        res = BSL_Cipher_GetTag(&cipher, &bcb_context->authtag);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to get authentication tag");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;

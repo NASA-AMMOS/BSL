@@ -244,9 +244,8 @@ bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size
  * Deinit and free generated key handle
  * @param[in] keyhandle key handle to clear.
  * Key handle assumed to be generated, not present in key registry, and allocated with ::BSL_malloc().
- * @returns 0 if successfully cleared key handle
  */
-int BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
+void BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
 
 /**
  * Perform key wrap
