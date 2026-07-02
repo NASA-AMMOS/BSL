@@ -42,13 +42,22 @@ extern "C" {
  */
 enum BSLX_CoseMsg_Header_e
 {
-    BSLX_COSEMSG_HDR_ALG  = 1,
-    BSLX_COSEMSG_HDR_CRIT = 2, // FIXME handle crit
-    BSLX_COSEMSG_HDR_KID  = 4,
-    /// IV as value type bytes
+    /// Algorithm code point with value type int64
+    BSLX_COSEMSG_HDR_ALG = 1,
+    /// Critical parameters with value type raw (array of int)
+    BSLX_COSEMSG_HDR_CRIT = 2,
+    /// Content Type not used by BPSec
+    BSLX_COSEMSG_HDR_CONTENTTYPE = 3,
+    /// Key ID with value type bytes
+    BSLX_COSEMSG_HDR_KID = 4,
+    /// IV with value type bytes
     BSLX_COSEMSG_HDR_IV = 5,
-    /// Partial IV as value type bytes
+    /// Partial IV with value type bytes
     BSLX_COSEMSG_HDR_PARTIALIV = 6,
+    /// Key ID context with value type bytes
+    BSLX_COSEMSG_HDR_KIDCONTEXT = 10,
+    /// Salt for KDF with value type bytes
+    BSLX_COSEMSG_HDR_SALT = -20,
 };
 
 /** Algorithm code points managed by IANA.
@@ -136,8 +145,14 @@ int BSLX_CoseMsg_Headers_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Headers_t 
 /** Derive BSLX_CoseMsg_Headers_t::phdr_bstr from protected headers
  * in BSLX_CoseMsg_Headers_t::phdr.
  * This is needed before cryptographic calculation and encoding.
+ * @return BSL_SUCCESS if successful.
  */
 int BSLX_CoseMsg_Headers_DerivePhdr(BSLX_CoseMsg_Headers_t *obj);
+
+/** Check for the presence of crit header referencing unsupported parameters.
+ * @return BSL_SUCCESS if successful.
+ */
+int BSLX_CoseMsg_Headers_CheckCrit(const BSLX_CoseMsg_Headers_t *obj);
 
 /** Get a desired header parameter.
  *

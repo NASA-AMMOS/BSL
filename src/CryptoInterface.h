@@ -266,7 +266,7 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
  * @param[in] wrapped_key input wrapped key (ciphertext) bytes
  * @param[in,out] cek_handle output content encryption key (plaintext) handle.
  */
-int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Data_t *wrapped_key,
+int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wrapped_key,
                          BSL_Crypto_KeyHandle_t *cek_handle);
 
 /**

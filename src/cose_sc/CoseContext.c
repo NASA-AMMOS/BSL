@@ -1135,8 +1135,20 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
                 BSL_LOG_ERR("Failed to decode Mac0");
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             }
+            else
+            {
+                if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(&msg.headers))
+                {
+                    BSL_LOG_ERR("Failed crit header check");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+                }
+            }
         }
         BSL_Data_Deinit(&msg_enc);
+    }
+    if (BSL_SUCCESS != ctx->status)
+    {
+        return;
     }
     // synthesize additional headers
     BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_phdr);
@@ -1606,8 +1618,20 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
                 BSL_LOG_ERR("Failed to decode Encrypt0");
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
+            else
+            {
+                if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(&msg.headers))
+                {
+                    BSL_LOG_ERR("Failed crit header check");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+                }
+            }
         }
         BSL_Data_Deinit(&msg_enc);
+    }
+    if (BSL_SUCCESS != ctx->status)
+    {
+        return;
     }
     // synthesize additional headers
     BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_phdr);

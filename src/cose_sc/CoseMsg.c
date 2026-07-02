@@ -166,6 +166,67 @@ int BSLX_CoseMsg_Headers_DerivePhdr(BSLX_CoseMsg_Headers_t *obj)
     return BSL_CBOR_Encode_Twopass(&obj->phdr_bstr, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Headers_Encode_Map, &obj->phdr);
 }
 
+/** Decode a crit array and fail directly.
+ * Matches ::BSL_CBOR_Decode_f signature.
+ */
+static int BSLX_CoseMsg_Headers_CheckCrit_Decode(QCBORDecodeContext *dec, const void *obj _U_)
+{
+    QCBORDecode_EnterArray(dec, NULL);
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+    {
+        return BSL_ERR_DECODING;
+    }
+
+    QCBORItem item;
+    while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
+    {
+        int64_t key;
+        QCBORDecode_GetInt64(dec, &key);
+        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+        {
+            BSL_LOG_ERR("BPSec profile requires header parameter labels to be int type");
+            return BSL_ERR_DECODING;
+        }
+        // check for unhandled labels
+        switch (key)
+        {
+            case BSLX_COSEMSG_HDR_ALG:
+            case BSLX_COSEMSG_HDR_CRIT:
+            case BSLX_COSEMSG_HDR_CONTENTTYPE:
+            case BSLX_COSEMSG_HDR_KID:
+            case BSLX_COSEMSG_HDR_IV:
+            case BSLX_COSEMSG_HDR_PARTIALIV:
+                // above should not be present but still handle as valid
+            case BSLX_COSEMSG_HDR_KIDCONTEXT:
+            case BSLX_COSEMSG_HDR_SALT:
+                break;
+            default:
+                BSL_LOG_ERR("BPSec profile does not use header parameter label %" PRId64, key);
+                return BSL_ERR_DECODING;
+        }
+    }
+
+    QCBORDecode_ExitArray(dec);
+    return BSL_SUCCESS;
+}
+
+int BSLX_CoseMsg_Headers_CheckCrit(const BSLX_CoseMsg_Headers_t *obj)
+{
+    const BSL_IdValPair_t *hdr = BSLX_CoseMsg_Headers_Get(obj, BSLX_COSEMSG_HDR_CRIT, true);
+    if (hdr)
+    {
+        BSL_Data_t view;
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsRaw(hdr, &view))
+        {
+            BSL_LOG_ERR("Header crit is present but invalid");
+            return BSL_ERR_DECODING;
+        }
+        int res = BSL_CBOR_Decode(&view, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Headers_CheckCrit_Decode, NULL);
+        return res;
+    }
+    return BSL_SUCCESS;
+}
+
 const BSL_IdValPair_t *BSLX_CoseMsg_Headers_Get(const BSLX_CoseMsg_Headers_t *obj, int64_t label, bool need_phdr)
 {
     BSLB_IdValPairPtr_t *const *found = BSLX_CoseMsg_HdrMapTree_cget(obj->phdr, label);

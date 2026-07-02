@@ -141,7 +141,8 @@ void BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle)
     BSL_free(key);
 }
 
-int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Data_t *wrapped_key, BSL_Crypto_KeyHandle_t *cek_handle)
+int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wrapped_key,
+                         BSL_Crypto_KeyHandle_t *cek_handle)
 {
     ASSERT_ARG_NONNULL(kek_handle);
     ASSERT_ARG_NONNULL(wrapped_key);
