@@ -390,10 +390,17 @@ int BSLX_CoseSc_AadScope_Decode(QCBORDecodeContext *dec, BSLX_CoseSc_AadScope_t 
     {
         int64_t blk_num;
         QCBORDecode_GetInt64(dec, &blk_num);
+        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+        {
+            BSL_LOG_ERR("Invalid AAD Scope map key");
+            break;
+        }
+
         uint64_t aad_flags;
         QCBORDecode_GetUInt64(dec, &aad_flags);
         if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
         {
+            BSL_LOG_ERR("Invalid AAD Scope map value");
             break;
         }
 

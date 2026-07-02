@@ -212,12 +212,47 @@ void test_CoseSc_InvalidOptions_Verifier(void)
     TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
     BSLB_IdValPairPtrMap_reset(sec_oper._options);
 
-    {
+    { // completely wrong type
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
         {
-            BSL_Data_t data = BSL_DATA_INIT_VIEW_CSTR("badcbor");
-            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_AAD_SCOPE, data);
+            BSL_Data_t val;
+            BSL_Data_Init(&val);
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&val, "626869"));
+            BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, val.ptr, val.len);
+            BSL_Data_Deinit(&val);
+        }
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+    BSLB_IdValPairPtrMap_reset(sec_oper._options);
+
+    { // bad key type
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        {
+            BSL_Data_t val;
+            BSL_Data_Init(&val);
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&val, "a14002"));
+            BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, val.ptr, val.len);
+            BSL_Data_Deinit(&val);
+        }
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    TEST_ASSERT_FALSE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
+    BSLB_IdValPairPtrMap_reset(sec_oper._options);
+
+    { // bad value type
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        {
+            BSL_Data_t val;
+            BSL_Data_Init(&val);
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&val, "a10140"));
+            BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, val.ptr, val.len);
+            BSL_Data_Deinit(&val);
         }
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);

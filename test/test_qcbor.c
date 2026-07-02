@@ -28,12 +28,11 @@
 
 void test_qcbor_decode_without_head(void)
 {
-    string_t in_text;
-    string_init_set_str(in_text, "58"); // not a full head
+    const char *in_hex = "58"; // not a full head
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, in_hex),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     QCBORDecodeContext decoder;
     QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);
@@ -45,17 +44,15 @@ void test_qcbor_decode_without_head(void)
     TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_Finish(&decoder));
 
     BSL_Data_Deinit(&in_data);
-    string_clear(in_text);
 }
 
 void test_qcbor_decode_only_head(void)
 {
-    string_t in_text;
-    string_init_set_str(in_text, "586C"); // just a full head
+    const char *in_hex = "586C"; // just a full head
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, in_hex),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     QCBORDecodeContext decoder;
     QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);
@@ -67,17 +64,15 @@ void test_qcbor_decode_only_head(void)
     TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_Finish(&decoder));
 
     BSL_Data_Deinit(&in_data);
-    string_clear(in_text);
 }
 
 void test_qcbor_decode_with_head(void)
 {
-    string_t in_text;
-    string_init_set_str(in_text, "586C616263646566"); // front of a bstr value
+    const char *in_hex = "586C616263646566"; // front of a bstr value
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, in_hex),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     QCBORDecodeContext decoder;
     QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);
@@ -89,17 +84,56 @@ void test_qcbor_decode_with_head(void)
     TEST_ASSERT_EQUAL_INT(QCBOR_ERR_EXTRA_BYTES, QCBORDecode_Finish(&decoder));
 
     BSL_Data_Deinit(&in_data);
-    string_clear(in_text);
+}
+
+void test_qcbor_decode_map_sequential(void)
+{
+    const char *in_hex = "a201020304";
+    BSL_Data_t in_data;
+    BSL_Data_Init(&in_data);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, in_hex),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
+
+    QCBORDecodeContext decoder;
+    QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);
+    QCBORItem item;
+    QCBORDecode_EnterMap(&decoder, &item);
+    TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_GetError(&decoder));
+    TEST_ASSERT_EQUAL_INT(QCBOR_TYPE_MAP, item.uDataType);
+    TEST_ASSERT_EQUAL_INT(1, QCBORDecode_Tell(&decoder));
+
+    TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_PeekNext(&decoder, &item));
+
+    TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_GetNext(&decoder, &item));
+    TEST_ASSERT_EQUAL_INT(QCBOR_TYPE_INT64, item.uLabelType);
+    TEST_ASSERT_EQUAL_INT(1, item.label.int64);
+    TEST_ASSERT_EQUAL_INT(QCBOR_TYPE_INT64, item.uDataType);
+    TEST_ASSERT_EQUAL_INT(2, item.val.int64);
+    TEST_ASSERT_EQUAL_INT(3, QCBORDecode_Tell(&decoder));
+
+    TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_PeekNext(&decoder, &item));
+    TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_GetNext(&decoder, &item));
+    TEST_ASSERT_EQUAL_INT(QCBOR_TYPE_INT64, item.uLabelType);
+    TEST_ASSERT_EQUAL_INT(3, item.label.int64);
+    TEST_ASSERT_EQUAL_INT(QCBOR_TYPE_INT64, item.uDataType);
+    TEST_ASSERT_EQUAL_INT(4, item.val.int64);
+    TEST_ASSERT_EQUAL_INT(5, QCBORDecode_Tell(&decoder));
+
+    TEST_ASSERT_EQUAL_INT(QCBOR_ERR_NO_MORE_ITEMS, QCBORDecode_PeekNext(&decoder, &item));
+
+    QCBORDecode_ExitMap(&decoder);
+    TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_Finish(&decoder));
+
+    BSL_Data_Deinit(&in_data);
 }
 
 void test_qcbor_decode_array_nested(void)
 {
-    string_t in_text;
-    string_init_set_str(in_text, "9F820102FF"); // [_ [1,2]]
+    const char *in_hex = "9F820102FF"; // [_ [1,2]]
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, in_hex),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     QCBORDecodeContext decoder;
     QCBORDecode_Init(&decoder, (UsefulBufC) { in_data.ptr, in_data.len }, QCBOR_DECODE_MODE_NORMAL);
@@ -140,5 +174,4 @@ void test_qcbor_decode_array_nested(void)
     TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBORDecode_Finish(&decoder));
 
     BSL_Data_Deinit(&in_data);
-    string_clear(in_text);
 }
