@@ -65,8 +65,13 @@ enum BSLX_CoseMsg_Header_e
  */
 enum BSLX_CoseMsg_Alg_e
 {
-    BSLX_COSEMSG_ALG_AES_GCM_128      = 1,
-    BSLX_COSEMSG_ALG_AES_GCM_192      = 2,
+    /// A256KW
+    BSLX_COSEMSG_ALG_AES_KW_256 = -5,
+    /// A128GCM
+    BSLX_COSEMSG_ALG_AES_GCM_128 = 1,
+    /// A192GCM
+    BSLX_COSEMSG_ALG_AES_GCM_192 = 2,
+    /// A256GCM
     BSLX_COSEMSG_ALG_AES_GCM_256      = 3,
     BSLX_COSEMSG_ALG_HMAC_SHA_256_256 = 5,
     BSLX_COSEMSG_ALG_HMAC_SHA_384_384 = 6,
@@ -201,6 +206,72 @@ void BSLX_CoseMsg_Encrypt0_Deinit(BSLX_CoseMsg_Encrypt0_t *obj);
 int BSLX_CoseMsg_Encrypt0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Encrypt0_t *obj);
 /// Match ::BSL_CBOR_Decode_f signature.
 int BSLX_CoseMsg_Encrypt0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt0_t *obj);
+
+/** Each recipient of a COSE_Mac or COSE_Encrypt.
+ * This implementation does not support recursive recipients.
+ */
+typedef struct
+{
+    /// Recipient headers
+    BSLX_CoseMsg_Headers_t headers;
+    /** Ciphertext in this struct means encrypted content layer key.
+     * When this is empty it means absent, encoded as null.
+     */
+    BSL_Data_t ciphertext;
+} BSLX_CoseMsg_Recipient_t;
+
+/// Initialize the struct
+void BSLX_CoseMsg_Recipient_Init(BSLX_CoseMsg_Recipient_t *obj);
+/// Deinitialize the struct
+void BSLX_CoseMsg_Recipient_Deinit(BSLX_CoseMsg_Recipient_t *obj);
+/// Match ::BSL_CBOR_Encode_f signature.
+int BSLX_CoseMsg_Recipient_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Recipient_t *obj);
+/// Match ::BSL_CBOR_Decode_f signature.
+int BSLX_CoseMsg_Recipient_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Recipient_t *obj);
+
+#if 0
+/** @struct BSLX_CoseMsg_RecipientList_t
+ * Defines an ordered list of ::BSLX_CoseMsg_Recipient_t shared pointers
+ */
+// NOLINTBEGIN
+/// @cond Doxygen_Suppress
+// GCOV_EXCL_START
+#define M_OPL_BSLX_CoseMsg_Recipient_t() \
+    M_OPLIST(INIT(API_2(BSLX_CoseMsg_Recipient_Init)), CLEAR(API_2(BSLX_CoseMsg_Recipient_Deinit)))
+M_SHARED_WEAK_PTR_DEF(BSLX_CoseMsg_RecipientPtr, BSLX_CoseMsg_Recipient_t)
+#define M_OPL_BSLX_CoseMsg_RecipientPtr_t() \
+    M_SHARED_PTR_OPLIST(BSLX_CoseMsg_RecipientPtr, M_OPL_BSLX_CoseMsg_Recipient_t())
+M_ARRAY_DEF(BSLX_CoseMsg_RecipientList, BSLX_CoseMsg_RecipientPtr_t *, M_OPL_BSLX_CoseMsg_RecipientPtr_t())
+// GCOV_EXCL_STOP
+/// @endcond
+// NOLINTEND
+#endif
+
+/** Decoded COSE_Encrypt.
+ * The use here is always with detached payload, so no ciphertext.
+ */
+typedef struct
+{
+    /// Content headers
+    BSLX_CoseMsg_Headers_t headers;
+
+    /** Basic array of ::BSLX_CoseMsg_Recipient_t instances.
+     * This is allocated by simple memory access.
+     */
+    BSLX_CoseMsg_Recipient_t *recipients;
+    /// Number of items in #recipients
+    size_t recipients_count;
+} BSLX_CoseMsg_Encrypt_t;
+/// Initialize the struct
+void BSLX_CoseMsg_Encrypt_Init(BSLX_CoseMsg_Encrypt_t *obj);
+/// Deinitialize the struct
+void BSLX_CoseMsg_Encrypt_Deinit(BSLX_CoseMsg_Encrypt_t *obj);
+/// Resize recipients array, preserving no data
+void BSLX_CoseMsg_Encrypt_Resize(BSLX_CoseMsg_Encrypt_t *obj, size_t size);
+/// Match ::BSL_CBOR_Encode_f signature.
+int BSLX_CoseMsg_Encrypt_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Encrypt_t *obj);
+/// Match ::BSL_CBOR_Decode_f signature.
+int BSLX_CoseMsg_Encrypt_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt_t *obj);
 
 #ifdef __cplusplus
 } // extern C

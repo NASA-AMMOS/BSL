@@ -312,6 +312,9 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
 
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
 
+    // wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
+    BSL_Data_Resize(wrapped_key, cek->raw.len + 8);
+
     int len = (int)wrapped_key->len;
     BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek->raw.ptr, cek->raw.len);
     if (!EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek->raw.ptr, cek->raw.len))
@@ -718,7 +721,8 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
 int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out)
 {
     CHK_ARG_NONNULL(key_out);
-    CHK_ARG_EXPR(key_length == 16 || key_length == 32);
+    *key_out = NULL;
+    CHK_ARG_EXPR(key_length > 0);
 
     BSL_CryptoKey_t *new_key = BSL_malloc(sizeof(BSL_CryptoKey_t));
     CHK_PROPERTY(new_key);

@@ -321,6 +321,9 @@ void BSLX_CoseMsg_Encrypt0_Deinit(BSLX_CoseMsg_Encrypt0_t *obj)
 
 int BSLX_CoseMsg_Encrypt0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Encrypt0_t *obj)
 {
+    ASSERT_ARG_NONNULL(enc);
+    ASSERT_ARG_NONNULL(obj);
+
     QCBOREncode_OpenArray(enc);
 
     BSLX_CoseMsg_Headers_Encode(enc, &obj->headers);
@@ -333,6 +336,8 @@ int BSLX_CoseMsg_Encrypt0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Enc
 
 int BSLX_CoseMsg_Encrypt0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt0_t *obj)
 {
+    ASSERT_ARG_NONNULL(dec);
+    ASSERT_ARG_NONNULL(obj);
 
     QCBORDecode_EnterArray(dec, NULL);
 
@@ -347,6 +352,180 @@ int BSLX_CoseMsg_Encrypt0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt0_
     {
         BSL_LOG_ERR("COSE payload is not detached");
         return BSL_ERR_DECODING;
+    }
+
+    QCBORDecode_ExitArray(dec);
+    return BSL_SUCCESS;
+}
+
+void BSLX_CoseMsg_Recipient_Init(BSLX_CoseMsg_Recipient_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    memset(obj, 0, sizeof(*obj));
+    BSLX_CoseMsg_Headers_Init(&obj->headers);
+    BSL_Data_Init(&obj->ciphertext);
+}
+
+void BSLX_CoseMsg_Recipient_Deinit(BSLX_CoseMsg_Recipient_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    BSL_Data_Deinit(&obj->ciphertext);
+    BSLX_CoseMsg_Headers_Deinit(&obj->headers);
+    memset(obj, 0, sizeof(*obj));
+}
+
+int BSLX_CoseMsg_Recipient_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Recipient_t *obj)
+{
+    ASSERT_ARG_NONNULL(enc);
+    ASSERT_ARG_NONNULL(obj);
+
+    QCBOREncode_OpenArray(enc);
+
+    BSLX_CoseMsg_Headers_Encode(enc, &obj->headers);
+    // ciphertext
+    if (obj->ciphertext.len)
+    {
+        QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(obj->ciphertext));
+    }
+    else
+    {
+        QCBOREncode_AddNULL(enc);
+    }
+
+    QCBOREncode_CloseArray(enc);
+    return BSL_SUCCESS;
+}
+
+int BSLX_CoseMsg_Recipient_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Recipient_t *obj)
+{
+    ASSERT_ARG_NONNULL(dec);
+    ASSERT_ARG_NONNULL(obj);
+
+    QCBORDecode_EnterArray(dec, NULL);
+
+    int res = BSLX_CoseMsg_Headers_Decode(dec, &obj->headers);
+    if (BSL_SUCCESS != res)
+    {
+        return res;
+    }
+    // ciphertext
+    QCBORItem item;
+    if (QCBOR_SUCCESS != QCBORDecode_GetNext(dec, &item))
+    {
+        BSL_LOG_ERR("Missing recipient ciphertext");
+        return BSL_ERR_DECODING;
+    }
+    switch (item.uDataType)
+    {
+        case QCBOR_TYPE_NULL:
+            // already read
+            break;
+        case QCBOR_TYPE_BYTE_STRING:
+            if (item.val.string.len > 0)
+            {
+                BSL_Data_CopyFrom(&obj->ciphertext, item.val.string.len, item.val.string.ptr);
+            }
+            break;
+        default:
+            BSL_LOG_ERR("Invalid recipient ciphertext");
+            return BSL_ERR_DECODING;
+    }
+
+    QCBORDecode_ExitArray(dec);
+    return BSL_SUCCESS;
+}
+
+void BSLX_CoseMsg_Encrypt_Init(BSLX_CoseMsg_Encrypt_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    memset(obj, 0, sizeof(*obj));
+    BSLX_CoseMsg_Headers_Init(&obj->headers);
+    obj->recipients = NULL;
+}
+
+void BSLX_CoseMsg_Encrypt_Deinit(BSLX_CoseMsg_Encrypt_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    if (obj->recipients)
+    {
+        for (size_t ix = 0; ix < obj->recipients_count; ++ix)
+        {
+            BSLX_CoseMsg_Recipient_t *recip = &(obj->recipients[ix]);
+            BSLX_CoseMsg_Recipient_Deinit(recip);
+        }
+        BSL_free(obj->recipients);
+    }
+    BSLX_CoseMsg_Headers_Deinit(&obj->headers);
+    memset(obj, 0, sizeof(*obj));
+}
+
+void BSLX_CoseMsg_Encrypt_Resize(BSLX_CoseMsg_Encrypt_t *obj, size_t size)
+{
+    ASSERT_ARG_NONNULL(obj);
+
+    obj->recipients_count = size;
+    obj->recipients       = BSL_calloc(obj->recipients_count, sizeof(BSLX_CoseMsg_Recipient_t));
+    for (size_t ix = 0; ix < obj->recipients_count; ++ix)
+    {
+        BSLX_CoseMsg_Recipient_t *recip = &(obj->recipients[ix]);
+        BSLX_CoseMsg_Recipient_Init(recip);
+    }
+}
+
+int BSLX_CoseMsg_Encrypt_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Encrypt_t *obj)
+{
+    ASSERT_ARG_NONNULL(enc);
+    ASSERT_ARG_NONNULL(obj);
+
+    QCBOREncode_OpenArray(enc);
+
+    BSLX_CoseMsg_Headers_Encode(enc, &obj->headers);
+    // detached payload
+    QCBOREncode_AddNULL(enc);
+    // list of recipients
+    QCBOREncode_OpenArray(enc);
+    for (size_t ix = 0; ix < obj->recipients_count; ++ix)
+    {
+        const BSLX_CoseMsg_Recipient_t *recip = &(obj->recipients[ix]);
+        BSLX_CoseMsg_Recipient_Encode(enc, recip);
+    }
+    QCBOREncode_CloseArray(enc);
+
+    QCBOREncode_CloseArray(enc);
+    return BSL_SUCCESS;
+}
+
+int BSLX_CoseMsg_Encrypt_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt_t *obj)
+{
+    ASSERT_ARG_NONNULL(dec);
+    ASSERT_ARG_NONNULL(obj);
+
+    QCBORDecode_EnterArray(dec, NULL);
+
+    int res = BSLX_CoseMsg_Headers_Decode(dec, &obj->headers);
+    if (BSL_SUCCESS != res)
+    {
+        return res;
+    }
+    // ciphertex
+    QCBORDecode_GetNull(dec);
+    if (QCBOR_SUCCESS != QCBORDecode_GetAndResetError(dec))
+    {
+        BSL_LOG_ERR("COSE ciphertext is not detached");
+        return BSL_ERR_DECODING;
+    }
+    { // recipients
+        QCBORItem item;
+        QCBORDecode_EnterArray(dec, &item);
+
+        BSLX_CoseMsg_Encrypt_Resize(obj, item.val.uCount);
+        for (size_t ix = 0; ix < obj->recipients_count; ++ix)
+        {
+            BSLX_CoseMsg_Recipient_t *recip = &(obj->recipients[ix]);
+            BSLX_CoseMsg_Recipient_Decode(dec, recip);
+        }
+
+        QCBORDecode_ExitArray(dec);
     }
 
     QCBORDecode_ExitArray(dec);
