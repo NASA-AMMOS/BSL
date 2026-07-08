@@ -41,6 +41,7 @@ EXAMPLE_A_NO_SEC = '''\
 ]
 '''
 ''' Example A input bundle with no security blocks '''
+
 EXAMPLE_A_1_WITH_BIB = '''\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
@@ -49,6 +50,7 @@ EXAMPLE_A_1_WITH_BIB = '''\
 ]
 '''
 ''' Bundle with BIB over target #1, adjusted sec block to #2 '''
+
 EXAMPLE_A_1_WITH_BIB_ADDL_UHDR = '''\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
@@ -84,6 +86,29 @@ EXAMPLE_A_5_WITH_BCB = '''\
 ]
 '''
 ''' Bundle with BCB over target #1 using AESKW, adjusted sec block to #2 with flags 0x1'''
+
+CCSDS_MAC_NO_SEC = '''\
+[_
+    [7, 0, 1, [2, [4, 9]], [2, [1, 1]], [2, [1, 1]], [819280839425, 0], 8640000000, h'179D'],
+    [6, 4, 1, 0, << [2, [1, 0]] >>],
+    [10, 3, 1, 0, << [3, 1] >>],
+    [7, 2, 1, 0, << 63000 >>],
+    [1, 1, 0, 0, 'hello']
+]
+'''
+''' Test input bundle with no security blocks '''
+
+CCSDS_MAC_WITH_BIB = '''\
+[_
+    [7, 0, 1, [2, [4, 9]], [2, [1, 1]], [2, [1, 1]], [819280839425, 0], 8640000000, h'179D'],
+    [11, 5, 0, 0, << [1], 3, 1, [2, [1, 0]], [[5, {0: 1, -1: 1}]], [[[97, << [<< {1: 6} >>, {}, null, h'9AC51C5D72F96E44099C521298691C087ECF7DA8EC99A9CFB8A6FCB5A44A4B054FF1669289F7EAF7719EBBF95FBABB3A', [['', {1: -5, 4: 'ExampleA.5'}, h'442B1844E188743A7569623749A0FBE09C8540EEEC72EE419744EAA8E70B8FFAD13FDE7C1FADCB4EDC68A641A6191683C43D87990F579775']]] >>]]] >>],
+    [6, 4, 1, 0, << [2, [1, 0]] >>],
+    [10, 3, 1, 0, << [3, 1] >>],
+    [7, 2, 1, 0, << 63000 >>],
+    [1, 1, 0, 0, 'hello']
+]
+'''
+''' Bundle with BIB over target #1 '''
 
 
 @contextlib.contextmanager
@@ -123,7 +148,7 @@ class TestCoseScMac0(TestAgent):
             input_data=EXAMPLE_A_1_WITH_BIB,
             expected_output=EXAMPLE_A_NO_SEC,
             sec_src_eid='dtn://src/',
-            policy_config='data/cose-sc/policy-exA.1-accept.json',
+            policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
             is_working=True,
@@ -136,7 +161,7 @@ class TestCoseScMac0(TestAgent):
             input_data=EXAMPLE_A_1_WITH_BIB_ADDL_UHDR,
             expected_output=EXAMPLE_A_NO_SEC,
             sec_src_eid='dtn://src/',
-            policy_config='data/cose-sc/policy-exA.1-accept.json',
+            policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
             is_working=True,
@@ -145,7 +170,7 @@ class TestCoseScMac0(TestAgent):
         ))
 
     def test_exampleA_1_acceptor_valid_strict_target_alg(self):
-        with sc_config_modifier('data/cose-sc/policy-exA.1-accept.json', {"target_alg": 6}) as polfile:
+        with sc_config_modifier('data/cose-sc/policy-any-bib-accept.json', {"target_alg": 6}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
                 expected_output=EXAMPLE_A_NO_SEC,
@@ -159,7 +184,7 @@ class TestCoseScMac0(TestAgent):
             ))
 
     def test_exampleA_1_acceptor_valid_strict_aad_scope(self):
-        with sc_config_modifier('data/cose-sc/policy-exA.1-accept.json', {"aad_scope": {'0': 1, '-1': 1}}) as polfile:
+        with sc_config_modifier('data/cose-sc/policy-any-bib-accept.json', {"aad_scope": {'0': 1, '-1': 1}}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
                 expected_output=EXAMPLE_A_NO_SEC,
@@ -173,7 +198,7 @@ class TestCoseScMac0(TestAgent):
             ))
 
     def test_exampleA_1_acceptor_failure_key_disallow(self):
-        with sc_config_modifier('data/cose-sc/policy-exA.1-accept.json', {"key_id": "ExampleA.5"}) as polfile:
+        with sc_config_modifier('data/cose-sc/policy-any-bib-accept.json', {"key_id": "ExampleA.5"}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
                 expected_output='.*<ERROR>.* Mismatched key ID value',
@@ -187,7 +212,7 @@ class TestCoseScMac0(TestAgent):
             ))
 
     def test_exampleA_1_acceptor_failure_aad_mismatch(self):
-        with sc_config_modifier('data/cose-sc/policy-exA.1-accept.json', {"aad_scope": {'0': 1, '-1': 2}}) as polfile:
+        with sc_config_modifier('data/cose-sc/policy-any-bib-accept.json', {"aad_scope": {'0': 1, '-1': 2}}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
                 expected_output='.*<ERROR>.* Mismatch of AAD Scope parameter',
@@ -211,7 +236,7 @@ class TestCoseScMac0(TestAgent):
 ''',
             expected_output='.*<ERROR>.* Unknown key from ID',
             sec_src_eid='dtn://src/',
-            policy_config='data/cose-sc/policy-exA.1-accept.json',
+            policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
             is_working=True,
@@ -241,7 +266,7 @@ class TestCoseScMac0(TestAgent):
     [1, 1, 0, 0, 'hello']]
 ''',
             sec_src_eid='ipn:1.0',
-            policy_config='data/cose-sc/policy-interop-A.1.json',
+            policy_config='data/cose-sc/policy-interop-A.1-source.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
             is_working=True,
@@ -252,30 +277,27 @@ class TestCoseScMac0(TestAgent):
 
 class TestCoseScMac(TestAgent):
 
-    @unittest.expectedFailure
-    def test_ccsds_interop_KEK_source(self):
+    def test_ccsds_interop_keywrap_source(self):
         self._single_test(_TestCase(
-            input_data='''\
-[_
-    [7, 0, 1, [2, [4, 9]], [2, [1, 1]], [2, [1, 1]], [819280839425, 0], 8640000000, h'179D'],
-    [6, 4, 1, 0, << [2, [1, 0]] >>],
-    [10, 3, 1, 0, << [3, 1] >>],
-    [7, 2, 1, 0, << 63000 >>],
-    [1, 1, 0, 0, 'hello']
-]
-''',
+            input_data=CCSDS_MAC_NO_SEC,
             # Bundle with BIB over target #1
-            expected_output='''\
-[_
-    [7, 0, 1, [2, [4, 9]], [2, [1, 1]], [2, [1, 1]], [819280839425, 0], 8640000000, h'179D'],
-    [11, 5, 0, 0, << [1], 3, 1, [2, [1, 0]], [[5, {0: 1, -1: 1}]], [[[97, << [<< {1: 6} >>, {}, null, h'9AC51C5D72F96E44099C521298691C087ECF7DA8EC99A9CFB8A6FCB5A44A4B054FF1669289F7EAF7719EBBF95FBABB3A', [['', {1: -5, 4: 'ExampleA.5'}, h'442B1844E188743A7569623749A0FBE09C8540EEEC72EE419744EAA8E70B8FFAD13FDE7C1FADCB4EDC68A641A6191683C43D87990F579775']]] >>]]] >>],
-    [6, 4, 1, 0, << [2, [1, 0]] >>],
-    [10, 3, 1, 0, << [3, 1] >>],
-    [7, 2, 1, 0, << 63000 >>],
-    [1, 1, 0, 0, 'hello']]
-''',
+            expected_output=CCSDS_MAC_WITH_BIB,
             sec_src_eid='ipn:1.0',
-            policy_config='data/cose-sc/policy-interop-A.5.json',
+            policy_config='data/cose-sc/policy-interop-A.5-source.json',
+            bundle_dest_loc=BundleDestLoc.APPIN,
+            key_set="data/cose-sc/keyset-1.cbordiag",
+            is_working=True,
+            input_data_format=DataFormat.CBORDIAG,
+            expected_output_format=DataFormat.ANYCBOR
+        ))
+
+    def test_ccsds_interop_keywrap_acceptor_valid_loose(self):
+        self._single_test(_TestCase(
+            input_data=CCSDS_MAC_WITH_BIB,
+            # Bundle with BIB over target #1
+            expected_output=CCSDS_MAC_NO_SEC,
+            sec_src_eid='ipn:2.0',
+            policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
             is_working=True,
@@ -304,7 +326,7 @@ class TestCoseScEncrypt0(TestAgent):
             input_data=EXAMPLE_A_4_WITH_BCB,
             expected_output=EXAMPLE_A_NO_SEC,
             sec_src_eid='dtn://src/',
-            policy_config='data/cose-sc/policy-exA.4-accept.json',
+            policy_config='data/cose-sc/policy-any-bcb-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
             is_working=True,
@@ -317,7 +339,7 @@ class TestCoseScEncrypt0(TestAgent):
             input_data=EXAMPLE_A_4_WITH_BCB_ADDL_UHDR,
             expected_output=EXAMPLE_A_NO_SEC,
             sec_src_eid='dtn://src/',
-            policy_config='data/cose-sc/policy-exA.4-accept.json',
+            policy_config='data/cose-sc/policy-any-bcb-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
             is_working=True,
@@ -326,7 +348,7 @@ class TestCoseScEncrypt0(TestAgent):
         ))
 
     def test_exampleA_4_acceptor_valid_strict_key_id(self):
-        with sc_config_modifier('data/cose-sc/policy-exA.4-accept.json', {"key_id": "ExampleA.4"}) as polfile:
+        with sc_config_modifier('data/cose-sc/policy-any-bcb-accept.json', {"key_id": "ExampleA.4"}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_4_WITH_BCB,
                 expected_output=EXAMPLE_A_NO_SEC,
@@ -340,7 +362,7 @@ class TestCoseScEncrypt0(TestAgent):
             ))
 
     def test_exampleA_4_acceptor_valid_strict_target_alg(self):
-        with sc_config_modifier('data/cose-sc/policy-exA.4-accept.json', {"target_alg": 3}) as polfile:
+        with sc_config_modifier('data/cose-sc/policy-any-bcb-accept.json', {"target_alg": 3}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_4_WITH_BCB,
                 expected_output=EXAMPLE_A_NO_SEC,
@@ -354,7 +376,7 @@ class TestCoseScEncrypt0(TestAgent):
             ))
 
     def test_exampleA_4_acceptor_valid_strict_aad_scope(self):
-        with sc_config_modifier('data/cose-sc/policy-exA.4-accept.json', {"aad_scope": {'0': 1, '-1': 1}}) as polfile:
+        with sc_config_modifier('data/cose-sc/policy-any-bcb-accept.json', {"aad_scope": {'0': 1, '-1': 1}}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_4_WITH_BCB,
                 expected_output=EXAMPLE_A_NO_SEC,
@@ -388,7 +410,7 @@ class TestCoseScEncrypt(TestAgent):
             input_data=EXAMPLE_A_5_WITH_BCB,
             expected_output=EXAMPLE_A_NO_SEC,
             sec_src_eid='dtn://src/',
-            policy_config='data/cose-sc/policy-exA.5-accept.json',
+            policy_config='data/cose-sc/policy-any-bcb-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
             is_working=True,
