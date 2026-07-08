@@ -188,9 +188,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     }
     BSL_CryptoKey_Init(cek);
 
-    /**
-     * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
-     */
+    // wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
     BSL_Data_Resize(&cek->raw, wrapped_key->len - 8);
 
     BSL_LOG_PLAINTEXT_PTR("using KEK", cek_handle, kek->raw.ptr, kek->raw.len);

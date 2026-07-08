@@ -111,6 +111,8 @@ typedef struct
     bool hdr_tgt_alg;
     /// Required content layer algorithm from ::BSLX_CoseMsg_Alg_e
     int64_t tgt_alg;
+    /// Key length for #tgt_alg
+    size_t tgt_keylen;
 
     /// True if #iv_offset came from an option
     bool opt_iv_offset;
@@ -132,7 +134,7 @@ typedef struct
 
     /// Top-layer key to use
     BSL_Crypto_KeyHandle_t keyhandle;
-    
+
     /// Optional content key
     BSL_Crypto_KeyHandle_t cekhandle;
     /// Optional wrapped content key
@@ -186,7 +188,7 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
     BSL_Data_Deinit(&self->wrapped_cek);
     if (self->cekhandle)
     {
-      BSL_Crypto_ClearGeneratedKeyHandle(self->cekhandle);
+        BSL_Crypto_ClearGeneratedKeyHandle(self->cekhandle);
     }
     BSL_Data_Deinit(&self->partial_iv);
     BSL_Data_Deinit(&self->full_iv);
@@ -874,7 +876,8 @@ static void BSLX_CoseSc_GetAndValidateTarget(BSLX_CoseSc_t *self, const BSLX_Cos
     }
     else if (hdr_alg)
     {
-        self->tgt_alg     = hdr_alg_val;
+        self->tgt_alg = hdr_alg_val;
+        // came from unconstrained header
         self->hdr_tgt_alg = true;
     }
     else if (headers && !self->opt_tgt_alg)
@@ -882,6 +885,23 @@ static void BSLX_CoseSc_GetAndValidateTarget(BSLX_CoseSc_t *self, const BSLX_Cos
         BSL_LOG_ERR("No source of content alg available");
         self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         return;
+    }
+
+    switch (self->tgt_alg)
+    {
+        case BSLX_COSEMSG_ALG_AES_GCM_128:
+            self->tgt_keylen = 16;
+            break;
+        case BSLX_COSEMSG_ALG_AES_GCM_192:
+            self->tgt_keylen = 24;
+            break;
+        case BSLX_COSEMSG_ALG_AES_GCM_256:
+            self->tgt_keylen = 32;
+            break;
+        default:
+            BSL_LOG_CRIT("Unhandled content alg %" PRId64, self->tgt_alg);
+            self->tgt_keylen = 0;
+            break;
     }
 }
 
@@ -900,11 +920,9 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
         {
             if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(hdr, &hdr_kid_view))
             {
-                {
-                    BSL_LOG_ERR("Invalid header key ID value");
-                    self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                    return;
-                }
+                BSL_LOG_ERR("Invalid header key ID value");
+                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                return;
             }
             else
             {
@@ -960,7 +978,7 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
     {
         if (hdr_alg_val != self->key_alg)
         {
-            BSL_LOG_ERR("Mismatched key alg value, op has %" PRId64 " key has %" PRId64, self->key_alg, hdr_alg_val);
+            BSL_LOG_ERR("Mismatched key alg value, op has %" PRId64 " header has %" PRId64, self->key_alg, hdr_alg_val);
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             return;
         }
@@ -1191,6 +1209,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
         BSL_Data_Init(&msg_enc);
         if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(result, &msg_enc))
         {
+            BSL_LOG_ERR("Failed to get encoded message");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
         else
@@ -1198,7 +1217,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
             res = BSL_CBOR_Decode(&msg_enc, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Mac0_Decode, &msg);
             if (BSL_SUCCESS != res)
             {
-                BSL_LOG_ERR("Failed to decode Mac0");
+                BSL_LOG_ERR("Failed to decode COSE_Mac0");
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             }
             else
@@ -1667,6 +1686,7 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
         BSL_Data_Init(&msg_enc);
         if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(result, &msg_enc))
         {
+            BSL_LOG_ERR("Failed to get encoded message");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
         else
@@ -1674,7 +1694,7 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
             res = BSL_CBOR_Decode(&msg_enc, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Encrypt0_Decode, &msg);
             if (BSL_SUCCESS != res)
             {
-                BSL_LOG_ERR("Failed to decode Encrypt0");
+                BSL_LOG_ERR("Failed to decode COSE_Encrypt0");
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
             else
@@ -1772,7 +1792,7 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
     BSLX_CoseMsg_Encrypt0_Deinit(&msg);
 }
 
-/** Internal processing to source a COSE_Encrypt0 message.
+/** Internal processing to source a COSE_Encrypt message.
  */
 static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
 {
@@ -1839,12 +1859,13 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
 
     switch (ctx->key_alg)
     {
+        case BSLX_COSEMSG_ALG_AES_KW_128:
+        case BSLX_COSEMSG_ALG_AES_KW_192:
         case BSLX_COSEMSG_ALG_AES_KW_256:
         {
-            size_t keysize = 256 / 8;
-            BSL_LOG_DEBUG("Generating %zu bit content key", keysize * 8);
+            BSL_LOG_DEBUG("Generating %zu bit content key", ctx->tgt_keylen * 8);
 
-            if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &ctx->cekhandle))
+            if (BSL_SUCCESS != BSL_Crypto_GenKey(ctx->tgt_keylen, &ctx->cekhandle))
             {
                 BSL_LOG_ERR("Failed to generate content key");
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -1856,12 +1877,18 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
                 BSL_LOG_ERR("Failed to wrap content key");
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
-            
+
             break;
         }
+        case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_256:
+        case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512:
+            BSL_LOG_CRIT("Not implemented");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            break;
         default:
             BSL_LOG_ERR("Unsupported recipient algorithm %" PRId64, ctx->key_alg);
             ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            break;
     }
 
     BSLX_CoseMsg_Headers_DerivePhdr(&msg.headers);
@@ -1919,6 +1946,172 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
     BSLX_CoseMsg_Encrypt_Deinit(&msg);
 }
 
+/** Internal processing to verify a COSE_Encrypt message.
+ */
+static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair_t *result)
+{
+    int res;
+
+    BSLX_CoseSc_GetAndValidateAddlHeaders(ctx);
+    BSLX_CoseSc_GetAndValidateAadScope(ctx);
+    if (BSL_SUCCESS != ctx->status)
+    {
+        // early exit
+        return;
+    }
+
+    BSLX_CoseMsg_Encrypt_t msg;
+    BSLX_CoseMsg_Encrypt_Init(&msg);
+    {
+        BSL_Data_t msg_enc;
+        BSL_Data_Init(&msg_enc);
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(result, &msg_enc))
+        {
+            BSL_LOG_ERR("Failed to get encoded message");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+        else
+        {
+            res = BSL_CBOR_Decode(&msg_enc, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Encrypt_Decode, &msg);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to decode COSE_Encrypt");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+            else
+            {
+                if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(&msg.headers))
+                {
+                    BSL_LOG_ERR("Failed crit header check");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+                }
+            }
+        }
+        BSL_Data_Deinit(&msg_enc);
+    }
+    if (BSL_SUCCESS != ctx->status)
+    {
+        return;
+    }
+    // synthesize additional headers
+    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_phdr);
+    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_uhdr);
+
+    // key is from a recpient
+    if (msg.recipients_count != 1)
+    {
+      BSL_LOG_CRIT("Can only handle one recipient for now");
+      ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    else
+    {
+    BSLX_CoseSc_GetAndValidateKey(ctx, &msg.recipients[0].headers);
+    }
+    BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
+
+    // get content key from recipient
+    if (BSL_SUCCESS == ctx->status)
+    {
+    switch (ctx->key_alg)
+    {
+        case BSLX_COSEMSG_ALG_AES_KW_128:
+        case BSLX_COSEMSG_ALG_AES_KW_192:
+        case BSLX_COSEMSG_ALG_AES_KW_256:
+        {
+            res = BSL_Crypto_UnwrapKey(ctx->keyhandle, &msg.recipients[0].ciphertext, &ctx->cekhandle);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to wrap content key");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+
+            break;
+        }
+        case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_256:
+        case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512:
+            BSL_LOG_CRIT("Not implemented");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            break;
+        default:
+            BSL_LOG_ERR("Unsupported recipient algorithm %" PRId64, ctx->key_alg);
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            break;
+    }
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    { // Get IV value
+        const BSL_IdValPair_t *head_iv = BSLX_CoseMsg_Headers_Get(&msg.headers, BSLX_COSEMSG_HDR_IV, false);
+        if (head_iv)
+        {
+            if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(head_iv, &ctx->full_iv))
+            {
+                BSL_LOG_ERR("Invalid IV header");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+            else if (BSLX_COSEMSG_AESGCM_IV_LEN != ctx->full_iv.len)
+            {
+                BSL_LOG_ERR("Invalid IV length, need %zu got %zu", BSLX_COSEMSG_AESGCM_IV_LEN, ctx->full_iv.len);
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+        }
+        else if ((head_iv = BSLX_CoseMsg_Headers_Get(&msg.headers, BSLX_COSEMSG_HDR_PARTIALIV, false)))
+        {
+            BSL_Data_Resize(&ctx->full_iv, BSLX_COSEMSG_AESGCM_IV_LEN);
+
+            BSL_Data_t partialiv_val;
+            if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(head_iv, &partialiv_val))
+            {
+                BSL_LOG_ERR("Invalid IV header");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+            else if (partialiv_val.len > ctx->full_iv.len)
+            {
+                BSL_LOG_ERR("Invalid Partial IV length, no more than %zu got %zu", ctx->full_iv.len, partialiv_val.len);
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+
+            BSL_Data_t baseiv_val;
+            // need to combine with key Base IV
+            const BSL_IdValPair_t *keyparam = BSL_Crypto_GetKeyParameter(ctx->keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV);
+            if (!keyparam)
+            {
+                BSL_LOG_ERR("Key is missing Base IV");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+            else if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(keyparam, &baseiv_val))
+            {
+                BSL_LOG_ERR("Invalid Base IV value");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+            else if (ctx->full_iv.len != baseiv_val.len)
+            {
+                BSL_LOG_ERR("Invalid Base IV length, need %zu got %zu", ctx->full_iv.len, baseiv_val.len);
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+            else
+            {
+                // right-align the partial IV first
+                const size_t pad = ctx->full_iv.len - partialiv_val.len;
+                memset(ctx->full_iv.ptr, 0, pad);
+                memcpy(ctx->full_iv.ptr + pad, partialiv_val.ptr, partialiv_val.len);
+
+                for (size_t ix = 0; ix < ctx->full_iv.len; ++ix)
+                {
+                    ctx->full_iv.ptr[ix] ^= baseiv_val.ptr[ix];
+                }
+            }
+        }
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_Encrypt_Compute(ctx, &msg.headers, "Encrypt", BSL_CRYPTO_DECRYPT);
+    }
+
+    BSLX_CoseMsg_Encrypt_Deinit(&msg);
+}
+
 int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper, // NOSONAR
                         BSL_SecOutcome_t *sec_outcome)
 {
@@ -1934,84 +2127,87 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
     // add results
     if (BSL_SUCCESS == ctx.status)
     {
-        if (ctx.is_bib)
-        { // integrity operation
-            if (ctx.is_source)
-            {
-                BSLX_CoseSc_GetAndValidateKey(&ctx, NULL);
-                BSLX_CoseSc_GetAndValidateTarget(&ctx, NULL);
+        if (ctx.is_source)
+        {
+            BSLX_CoseSc_GetAndValidateKey(&ctx, NULL);
+            BSLX_CoseSc_GetAndValidateTarget(&ctx, NULL);
 
-                if (ctx.key_alg != ctx.tgt_alg)
+            if (ctx.key_alg != ctx.tgt_alg)
+            {
+                // has a recipient layer
+                if (ctx.is_bib)
                 {
-                    // has a recipient layer
                     BSL_LOG_CRIT("Not implemented");
                     ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                 }
                 else
                 {
-                    // only one content layer
-                    BSLX_CoseSc_Mac0_Source(&ctx);
+                    BSLX_CoseSc_Encrypt_Source(&ctx);
                 }
             }
             else
             {
-                // verify or accept
-                const BSL_IdValPair_t *result_mac0 = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC0);
-                const BSL_IdValPair_t *result_mac  = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC);
-                if (result_mac0)
+                // only one content layer
+                if (ctx.is_bib)
                 {
-                    BSLX_CoseSc_Mac0_VerifyAccept(&ctx, result_mac0);
-                }
-                else if (result_mac)
-                {
-                    BSL_LOG_CRIT("Not implemented");
-                    ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                    BSLX_CoseSc_Mac0_Source(&ctx);
                 }
                 else
                 {
-                    BSL_LOG_ERR("No COSE result present");
-                    ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                    BSLX_CoseSc_Encrypt0_Source(&ctx);
                 }
             }
         }
         else
-        { // confidentiality operation
-            if (ctx.is_source)
+        { // verify or accept
+            size_t nresult = BSL_SecOper_ResultCount(ctx.sec_oper);
+            if (1 != nresult)
             {
-                BSLX_CoseSc_GetAndValidateKey(&ctx, NULL);
-                BSLX_CoseSc_GetAndValidateTarget(&ctx, NULL);
-
-                if (ctx.key_alg != ctx.tgt_alg)
-                {
-                    // has a recipient layer
-                    BSLX_CoseSc_Encrypt_Source(&ctx);
-                }
-                else
-                {
-                    // only one content layer
-                    BSLX_CoseSc_Encrypt0_Source(&ctx);
-                }
+                BSL_LOG_ERR("Exactly one result must be present for this target, have %zu", nresult);
+                ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
             else
             {
-                // verify or accept
-                const BSL_IdValPair_t *result_enc0 =
-                    BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT0);
-                const BSL_IdValPair_t *result_enc =
-                    BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT);
-                if (result_enc0)
+                if (ctx.is_bib)
                 {
-                    BSLX_CoseSc_Encrypt0_VerifyAccept(&ctx, result_enc0);
-                }
-                else if (result_enc)
-                {
-                    BSL_LOG_CRIT("Not implemented");
-                    ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                    const BSL_IdValPair_t *result_mac0 =
+                        BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC0);
+                    const BSL_IdValPair_t *result_mac =
+                        BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC);
+                    if (result_mac0)
+                    {
+                        BSLX_CoseSc_Mac0_VerifyAccept(&ctx, result_mac0);
+                    }
+                    else if (result_mac)
+                    {
+                        BSL_LOG_CRIT("Not implemented");
+                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                    }
+                    else
+                    {
+                        BSL_LOG_ERR("Need either a COSE_Mac0 or COSE_Mac result");
+                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                    }
                 }
                 else
                 {
-                    BSL_LOG_ERR("No COSE result present");
-                    ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                    const BSL_IdValPair_t *result_enc0 =
+                        BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT0);
+                    const BSL_IdValPair_t *result_enc =
+                        BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT);
+                    if (result_enc0)
+                    {
+                        BSLX_CoseSc_Encrypt0_VerifyAccept(&ctx, result_enc0);
+                    }
+                    else if (result_enc)
+                    {
+                        BSLX_CoseSc_Encrypt_VerifyAccept(&ctx, result_enc);
+                    }
+                    else
+                    {
+                        BSL_LOG_ERR("Need either a COSE_Encrypt0 or COSE_Encrypt result");
+                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                    }
                 }
             }
         }

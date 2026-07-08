@@ -181,6 +181,12 @@ const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, int64_t 
     return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
 }
 
+size_t BSL_SecOper_ResultCount(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+
+    return BSLB_IdValPairPtrMap_size(self->_results_in);
+}
 const BSL_IdValPair_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, int64_t result_id)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));

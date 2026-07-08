@@ -197,7 +197,7 @@ bool BSL_IdValPair_IsInt64(const BSL_IdValPair_t *self)
 
 int BSL_IdValPair_GetAsInt64(const BSL_IdValPair_t *self, int64_t *out)
 {
-    ASSERT_ARG_NONNULL(self);
+    CHK_PRECONDITION(BSL_IdValPair_IsConsistent(self));
     BSL_CHKRET(self->_type == BSL_IDVALPAIR_TYPE_INT64, BSL_ERR_NOT_FOUND);
 
     if (out)
