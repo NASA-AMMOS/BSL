@@ -1817,14 +1817,17 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
         BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.phdr, param->id, param_ptr);
         BSLB_IdValPairPtr_release(param_ptr);
     }
-    BSLX_CoseMsg_Encrypt_Resize(&msg, 1);
+    // exactly one recipient
+    BSLX_CoseMsg_RecipientList_ResizeNew(msg.recipients, 1);
+    BSLX_CoseMsg_Recipient_t *recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_front(msg.recipients));
+
     {
         BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
         BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
 
         BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->key_alg);
 
-        BSLX_CoseMsg_HdrMapTree_set_at(msg.recipients[0].headers.uhdr, param->id, param_ptr);
+        BSLX_CoseMsg_HdrMapTree_set_at(recip->headers.uhdr, param->id, param_ptr);
         BSLB_IdValPairPtr_release(param_ptr);
     }
     {
@@ -1833,7 +1836,7 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
 
         BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_KID, ctx->kid);
 
-        BSLX_CoseMsg_HdrMapTree_set_at(msg.recipients[0].headers.uhdr, param->id, param_ptr);
+        BSLX_CoseMsg_HdrMapTree_set_at(recip->headers.uhdr, param->id, param_ptr);
         BSLB_IdValPairPtr_release(param_ptr);
     }
 
@@ -1857,7 +1860,7 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
 
-            res = BSL_Crypto_WrapKey(ctx->keyhandle, ctx->cekhandle, &msg.recipients[0].ciphertext, NULL);
+            res = BSL_Crypto_WrapKey(ctx->keyhandle, ctx->cekhandle, &recip->ciphertext, NULL);
             if (BSL_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed to wrap content key");
@@ -1878,11 +1881,7 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
     }
 
     BSLX_CoseMsg_Headers_DerivePhdr(&msg.headers);
-    for (size_t ix = 0; ix < msg.recipients_count; ++ix)
-    {
-        BSLX_CoseMsg_Recipient_t *recip = &(msg.recipients[ix]);
-        BSLX_CoseMsg_Headers_DerivePhdr(&recip->headers);
-    }
+    BSLX_CoseMsg_Headers_DerivePhdr(&recip->headers);
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -1984,14 +1983,16 @@ static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVal
     BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_uhdr);
 
     // key is from a recpient
-    if (msg.recipients_count != 1)
+    BSLX_CoseMsg_Recipient_t *recip = NULL;
+    if (BSLX_CoseMsg_RecipientList_size(msg.recipients) != 1)
     {
         BSL_LOG_CRIT("Can only handle one recipient for now");
         ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     else
     {
-        BSLX_CoseSc_GetAndValidateKey(ctx, &msg.recipients[0].headers);
+        recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_front(msg.recipients));
+        BSLX_CoseSc_GetAndValidateKey(ctx, &recip->headers);
     }
     BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
 
@@ -2004,7 +2005,7 @@ static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVal
             case BSLX_COSEMSG_ALG_AES_KW_192:
             case BSLX_COSEMSG_ALG_AES_KW_256:
             {
-                res = BSL_Crypto_UnwrapKey(ctx->keyhandle, &msg.recipients[0].ciphertext, &ctx->cekhandle);
+                res = BSL_Crypto_UnwrapKey(ctx->keyhandle, &recip->ciphertext, &ctx->cekhandle);
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to wrap content key");

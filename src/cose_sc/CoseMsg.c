@@ -440,35 +440,29 @@ void BSLX_CoseMsg_Encrypt_Init(BSLX_CoseMsg_Encrypt_t *obj)
     ASSERT_ARG_NONNULL(obj);
     memset(obj, 0, sizeof(*obj));
     BSLX_CoseMsg_Headers_Init(&obj->headers);
-    obj->recipients = NULL;
+    BSLX_CoseMsg_RecipientList_init(obj->recipients);
 }
 
 void BSLX_CoseMsg_Encrypt_Deinit(BSLX_CoseMsg_Encrypt_t *obj)
 {
     ASSERT_ARG_NONNULL(obj);
-    if (obj->recipients)
-    {
-        for (size_t ix = 0; ix < obj->recipients_count; ++ix)
-        {
-            BSLX_CoseMsg_Recipient_t *recip = &(obj->recipients[ix]);
-            BSLX_CoseMsg_Recipient_Deinit(recip);
-        }
-        BSL_free(obj->recipients);
-    }
+    BSLX_CoseMsg_RecipientList_clear(obj->recipients);
     BSLX_CoseMsg_Headers_Deinit(&obj->headers);
     memset(obj, 0, sizeof(*obj));
 }
 
-void BSLX_CoseMsg_Encrypt_Resize(BSLX_CoseMsg_Encrypt_t *obj, size_t size)
+void BSLX_CoseMsg_RecipientList_ResizeNew(BSLX_CoseMsg_RecipientList_t obj, size_t size)
 {
     ASSERT_ARG_NONNULL(obj);
 
-    obj->recipients_count = size;
-    obj->recipients       = BSL_calloc(obj->recipients_count, sizeof(BSLX_CoseMsg_Recipient_t));
-    for (size_t ix = 0; ix < obj->recipients_count; ++ix)
+    BSLX_CoseMsg_RecipientList_resize(obj, size);
+    BSLX_CoseMsg_RecipientList_it_t rit;
+    for (BSLX_CoseMsg_RecipientList_it(rit, obj); !BSLX_CoseMsg_RecipientList_end_p(rit);
+         BSLX_CoseMsg_RecipientList_next(rit))
     {
-        BSLX_CoseMsg_Recipient_t *recip = &(obj->recipients[ix]);
-        BSLX_CoseMsg_Recipient_Init(recip);
+        BSLX_CoseMsg_RecipientPtr_t **ptr = BSLX_CoseMsg_RecipientList_ref(rit);
+        // default initialized
+        *ptr = BSLX_CoseMsg_RecipientPtr_new();
     }
 }
 
@@ -484,10 +478,15 @@ int BSLX_CoseMsg_Encrypt_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Encr
     QCBOREncode_AddNULL(enc);
     // list of recipients
     QCBOREncode_OpenArray(enc);
-    for (size_t ix = 0; ix < obj->recipients_count; ++ix)
     {
-        const BSLX_CoseMsg_Recipient_t *recip = &(obj->recipients[ix]);
-        BSLX_CoseMsg_Recipient_Encode(enc, recip);
+        BSLX_CoseMsg_RecipientList_it_t rit;
+        for (BSLX_CoseMsg_RecipientList_it(rit, obj->recipients); !BSLX_CoseMsg_RecipientList_end_p(rit);
+             BSLX_CoseMsg_RecipientList_next(rit))
+        {
+            const BSLX_CoseMsg_Recipient_t *recip =
+                BSLX_CoseMsg_RecipientPtr_cref(*BSLX_CoseMsg_RecipientList_cref(rit));
+            BSLX_CoseMsg_Recipient_Encode(enc, recip);
+        }
     }
     QCBOREncode_CloseArray(enc);
 
@@ -518,10 +517,18 @@ int BSLX_CoseMsg_Encrypt_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt_t 
         QCBORItem item;
         QCBORDecode_EnterArray(dec, &item);
 
-        BSLX_CoseMsg_Encrypt_Resize(obj, item.val.uCount);
-        for (size_t ix = 0; ix < obj->recipients_count; ++ix)
+        if (item.val.uCount > BSLX_COSEMSG_RECIPIENTS_LIMIT)
         {
-            BSLX_CoseMsg_Recipient_t *recip = &(obj->recipients[ix]);
+          BSL_LOG_CRIT("Number of recipients %zu larger than built-in limit %zu", item.val.uCount, BSLX_COSEMSG_RECIPIENTS_LIMIT);
+          return BSL_ERR_DECODING;
+        }
+        BSLX_CoseMsg_RecipientList_ResizeNew(obj->recipients, item.val.uCount);
+
+        BSLX_CoseMsg_RecipientList_it_t rit;
+        for (BSLX_CoseMsg_RecipientList_it(rit, obj->recipients); !BSLX_CoseMsg_RecipientList_end_p(rit);
+             BSLX_CoseMsg_RecipientList_next(rit))
+        {
+            BSLX_CoseMsg_Recipient_t *recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_ref(rit));
             BSLX_CoseMsg_Recipient_Decode(dec, recip);
         }
 

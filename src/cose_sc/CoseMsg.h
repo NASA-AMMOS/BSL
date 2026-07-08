@@ -32,10 +32,15 @@
 #include <backend/CBOR.h>
 #include <backend/IdValPair.h>
 #include <m-bptree.h>
+#include <m-shared-ptr.h>
+#include <m-array.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/// Artificial limit on number of recipients supported
+#define BSLX_COSEMSG_RECIPIENTS_LIMIT 10
 
 /** Header parameters managed by IANA.
  * https://www.iana.org/assignments/cose/cose.xhtml#header-parameters
@@ -240,7 +245,6 @@ int BSLX_CoseMsg_Recipient_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Re
 /// Match ::BSL_CBOR_Decode_f signature.
 int BSLX_CoseMsg_Recipient_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Recipient_t *obj);
 
-#if 0
 /** @struct BSLX_CoseMsg_RecipientList_t
  * Defines an ordered list of ::BSLX_CoseMsg_Recipient_t shared pointers
  */
@@ -248,15 +252,17 @@ int BSLX_CoseMsg_Recipient_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Recipien
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
 #define M_OPL_BSLX_CoseMsg_Recipient_t() \
-    M_OPLIST(INIT(API_2(BSLX_CoseMsg_Recipient_Init)), CLEAR(API_2(BSLX_CoseMsg_Recipient_Deinit)))
-M_SHARED_WEAK_PTR_DEF(BSLX_CoseMsg_RecipientPtr, BSLX_CoseMsg_Recipient_t)
+    (INIT(API_2(BSLX_CoseMsg_Recipient_Init)), CLEAR(API_2(BSLX_CoseMsg_Recipient_Deinit)), INIT_SET(0), SET(0))
+M_SHARED_WEAK_PTR_DEF(BSLX_CoseMsg_RecipientPtr, BSLX_CoseMsg_Recipient_t, M_OPL_BSLX_CoseMsg_Recipient_t())
 #define M_OPL_BSLX_CoseMsg_RecipientPtr_t() \
     M_SHARED_PTR_OPLIST(BSLX_CoseMsg_RecipientPtr, M_OPL_BSLX_CoseMsg_Recipient_t())
 M_ARRAY_DEF(BSLX_CoseMsg_RecipientList, BSLX_CoseMsg_RecipientPtr_t *, M_OPL_BSLX_CoseMsg_RecipientPtr_t())
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
-#endif
+
+/// Resize recipients array, preserving existing if possible
+void BSLX_CoseMsg_RecipientList_ResizeNew(BSLX_CoseMsg_RecipientList_t obj, size_t size);
 
 /** Decoded COSE_Encrypt.
  * The use here is always with detached payload, so no ciphertext.
@@ -266,19 +272,14 @@ typedef struct
     /// Content headers
     BSLX_CoseMsg_Headers_t headers;
 
-    /** Basic array of ::BSLX_CoseMsg_Recipient_t instances.
-     * This is allocated by simple memory access.
+    /** Array of ::BSLX_CoseMsg_Recipient_t instances.
      */
-    BSLX_CoseMsg_Recipient_t *recipients;
-    /// Number of items in #recipients
-    size_t recipients_count;
+    BSLX_CoseMsg_RecipientList_t recipients;
 } BSLX_CoseMsg_Encrypt_t;
 /// Initialize the struct
 void BSLX_CoseMsg_Encrypt_Init(BSLX_CoseMsg_Encrypt_t *obj);
 /// Deinitialize the struct
 void BSLX_CoseMsg_Encrypt_Deinit(BSLX_CoseMsg_Encrypt_t *obj);
-/// Resize recipients array, preserving no data
-void BSLX_CoseMsg_Encrypt_Resize(BSLX_CoseMsg_Encrypt_t *obj, size_t size);
 /// Match ::BSL_CBOR_Encode_f signature.
 int BSLX_CoseMsg_Encrypt_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Encrypt_t *obj);
 /// Match ::BSL_CBOR_Decode_f signature.

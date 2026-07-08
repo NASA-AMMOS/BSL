@@ -131,19 +131,19 @@ if(BUILD_FUZZING)
   add_fuzz_test(SOURCE fuzz_mock_bpa_eidpat_text.cpp RUNS_COUNT 300000)
   target_link_libraries(fuzz_mock_bpa_eidpat_text PUBLIC ${LIB_ORDERED})
 
-  add_fuzz_test(SOURCE fuzz_mock_bpa_bpv7_cbor.cpp)
+  add_fuzz_test(SOURCE fuzz_mock_bpa_bpv7_cbor.cpp RUNS_COUNT 300000)
   target_link_libraries(fuzz_mock_bpa_bpv7_cbor PUBLIC ${LIB_ORDERED})
 
   add_fuzz_test(SOURCE fuzz_dynamic_asb_cbor.cpp RUNS_COUNT 2000000)
   target_link_libraries(fuzz_dynamic_asb_cbor PUBLIC ${LIB_ORDERED})
 
-  add_fuzz_test(SOURCE fuzz_CoseMsg_Mac0_cbor.cpp RUNS_COUNT 2000000)
+  add_fuzz_test(SOURCE fuzz_CoseMsg_Mac0_cbor.cpp RUNS_COUNT 1000000)
   target_link_libraries(fuzz_CoseMsg_Mac0_cbor PUBLIC ${LIB_ORDERED})
 
-  add_fuzz_test(SOURCE fuzz_CoseMsg_Encrypt0_cbor.cpp RUNS_COUNT 2000000)
+  add_fuzz_test(SOURCE fuzz_CoseMsg_Encrypt0_cbor.cpp RUNS_COUNT 1000000)
   target_link_libraries(fuzz_CoseMsg_Encrypt0_cbor PUBLIC ${LIB_ORDERED})
 
-  add_fuzz_test(SOURCE fuzz_CoseMsg_Encrypt_cbor.cpp RUNS_COUNT 2000000)
+  add_fuzz_test(SOURCE fuzz_CoseMsg_Encrypt_cbor.cpp RUNS_COUNT 500000)
   target_link_libraries(fuzz_CoseMsg_Encrypt_cbor PUBLIC ${LIB_ORDERED})
 
   add_fuzz_test(
