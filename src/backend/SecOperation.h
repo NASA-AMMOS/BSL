@@ -42,6 +42,11 @@ struct BSL_SecOper_s
     /// @brief Bundle's block ID which contains the security parameters and results for this operation.
     uint64_t sec_block_num;
 
+    /** @brief Either the local EID, for source, or the one from the ASB.
+     * This is set just before execution of this operation.
+     */
+    const BSL_HostEID_t *sec_src_eid;
+
     /// @brief Policy for handing what to do to the block or bundle if security processing fails.
     /// @note Currently the implementation is for the Policy Provider to use the policy action on failure to determine
     /// and execute course of action (e.g., remove block, etc.)

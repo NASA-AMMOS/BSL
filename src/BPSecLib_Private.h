@@ -775,6 +775,14 @@ void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t targ
  */
 bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self);
 
+/** Get the security source for an operation.
+ * If the operation role is source, this is the local security EID, otherwise
+ * it is the EID from the ASB from which this operation originated.
+ *
+ * @return A non-null pointer to the EID struct.
+ */
+const BSL_HostEID_t *BSL_SecOper_GetSecuritySource(const BSL_SecOper_t *self);
+
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
  *
  * @param[in] self This security operation

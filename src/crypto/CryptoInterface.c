@@ -389,6 +389,7 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
             return BSL_ERR_FAILURE;
     }
 
+    BSL_LOG_PLAINTEXT_PTR("using key", hmac_ctx, key_info->raw.ptr, key_info->raw.len);
     int res = EVP_DigestSignInit(hmac_ctx->libhandle, NULL, sha, NULL, key_info->pkey);
     CHK_PROPERTY(res == 1);
 
@@ -463,6 +464,7 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *tag)
 
     int res = EVP_DigestSignFinal(hmac_ctx->libhandle, tag->ptr, &size);
     BSL_LOG_DEBUG("EVP_DigestSignFinal gave %zu bytes, return %d", size, res);
+    BSL_LOG_PLAINTEXT_PTR("tag out", hmac_ctx, tag->ptr, size);
     CHK_PROPERTY(res == 1);
 
     return 0;

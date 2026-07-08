@@ -71,8 +71,6 @@ typedef struct
     const BSL_SecOper_t *sec_oper;
     /// Operation outcome
     BSL_SecOutcome_t *sec_outcome;
-    /// Security source cache
-    BSL_HostEID_t sec_src_eid;
 
     /// True if this operation is integrity, false for confidentiality
     bool is_bib;
@@ -153,7 +151,6 @@ static void BSLX_CoseSc_Init(BSLX_CoseSc_t *self)
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
 
-    BSL_HostEID_Init(&self->sec_src_eid);
     BSL_Data_Init(&self->kid);
     BSLX_CoseSc_AadScope_init(self->aad_scope);
     BSL_Data_Init(&self->addl_phdr_bstr);
@@ -197,7 +194,6 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
     BSL_Data_Deinit(&self->addl_phdr_bstr);
     BSLX_CoseSc_AadScope_clear(self->aad_scope);
     BSL_Data_Deinit(&self->kid);
-    BSL_HostEID_Deinit(&self->sec_src_eid);
 
     memset(self, 0, sizeof(*self));
 }
@@ -205,23 +201,14 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
 static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
                                 BSL_SecOutcome_t *sec_outcome)
 {
+    int res;
+
     self->bundle         = bundle;
     self->sec_oper       = sec_oper;
     self->sec_outcome    = sec_outcome;
     self->is_bib         = BSL_SecOper_IsBIB(sec_oper);
     self->is_source      = BSL_SecOper_IsRoleSource(sec_oper);
     self->overwrite_btsd = !BSL_SecOper_IsRoleVerifier(sec_oper);
-
-    // external data
-    int res = BSL_Host_GetSecSrcEID(&self->sec_src_eid);
-    // GCOV_EXCL_START
-    if (BSL_SUCCESS != res)
-    {
-        BSL_LOG_ERR("Failed to get host EID");
-        self->status = res;
-        return;
-    }
-    // GCOV_EXCL_STOP
 
     res = BSL_BundleCtx_GetBundleMetadata(bundle, &self->primary_block);
     // GCOV_EXCL_START
@@ -364,7 +351,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         }
         if (!found)
         {
-            BSL_LOG_ERR("COSE target alg option is unacceptable for this security service");
+            BSL_LOG_ERR("COSE target alg option %" PRId64 " is unacceptable for this security service", self->tgt_alg);
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
@@ -524,7 +511,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
         BSL_Data_Init(&chunk);
 
         // source-eid
-        res = BSL_HostEID_EncodeToCBOR(&ctx->sec_src_eid, &chunk, NULL);
+        res = BSL_HostEID_EncodeToCBOR(BSL_SecOper_GetSecuritySource(ctx->sec_oper), &chunk, NULL);
         // GCOV_EXCL_START
         if (res != BSL_SUCCESS)
         {
@@ -1276,10 +1263,12 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
     BSLX_CoseMsg_Mac0_Deinit(&msg);
 }
 
+/** Common processing to source contet key from recipient layer.
+ */
 static void BSLX_CoseSc_GenerateContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipient_t *recip)
 {
-  int res;
-  
+    int res;
+
     switch (ctx->key_alg)
     {
         case BSLX_COSEMSG_ALG_AES_KW_128:
@@ -1295,6 +1284,39 @@ static void BSLX_CoseSc_GenerateContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Reci
             }
 
             res = BSL_Crypto_WrapKey(ctx->keyhandle, ctx->cekhandle, &recip->ciphertext, NULL);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to wrap content key");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+
+            break;
+        }
+        case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_256:
+        case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512:
+            BSL_LOG_CRIT("Not implemented");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            break;
+        default:
+            BSL_LOG_ERR("Unsupported recipient algorithm %" PRId64, ctx->key_alg);
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            break;
+    }
+}
+
+/** Common processing to extract contet key from recipient layer.
+ */
+static void BSLX_CoseSc_ExtractContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipient_t *recip)
+{
+    int res;
+
+    switch (ctx->key_alg)
+    {
+        case BSLX_COSEMSG_ALG_AES_KW_128:
+        case BSLX_COSEMSG_ALG_AES_KW_192:
+        case BSLX_COSEMSG_ALG_AES_KW_256:
+        {
+            res = BSL_Crypto_UnwrapKey(ctx->keyhandle, &recip->ciphertext, &ctx->cekhandle);
             if (BSL_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed to wrap content key");
@@ -1408,6 +1430,98 @@ static void BSLX_CoseSc_Mac_Source(BSLX_CoseSc_t *ctx)
     }
     BSL_Data_Deinit(&msg_enc);
     BSL_Data_Deinit(&aad_scope_enc);
+
+    BSLX_CoseMsg_Mac_Deinit(&msg);
+}
+
+/** Internal processing to verify a COSE_Mac message.
+ */
+static void BSLX_CoseSc_Mac_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair_t *result)
+{
+    int res;
+
+    BSLX_CoseSc_GetAndValidateAddlHeaders(ctx);
+    BSLX_CoseSc_GetAndValidateAadScope(ctx);
+    if (BSL_SUCCESS != ctx->status)
+    {
+        // early exit
+        return;
+    }
+
+    BSLX_CoseMsg_Mac_t msg;
+    BSLX_CoseMsg_Mac_Init(&msg);
+    {
+        BSL_Data_t msg_enc;
+        BSL_Data_Init(&msg_enc);
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(result, &msg_enc))
+        {
+            BSL_LOG_ERR("Failed to get encoded message");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+        }
+        else
+        {
+            res = BSL_CBOR_Decode(&msg_enc, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Mac_Decode, &msg);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to decode COSE_Mac");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            }
+            else
+            {
+                if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(&msg.headers))
+                {
+                    BSL_LOG_ERR("Failed crit header check");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+                }
+            }
+        }
+        BSL_Data_Deinit(&msg_enc);
+    }
+    if (BSL_SUCCESS != ctx->status)
+    {
+        return;
+    }
+    // synthesize additional headers
+    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_phdr);
+    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_uhdr);
+
+    // key is from a recpient
+    BSLX_CoseMsg_Recipient_t *recip = NULL;
+    if (BSLX_CoseMsg_RecipientList_size(msg.recipients) != 1)
+    {
+        BSL_LOG_CRIT("Can only handle one recipient for now");
+        ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    else
+    {
+        recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_front(msg.recipients));
+        BSLX_CoseSc_GetAndValidateKey(ctx, &recip->headers);
+    }
+    BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_ExtractContentKey(ctx, recip);
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSL_Data_t tag;
+        BSL_Data_Init(&tag);
+        BSLX_CoseSc_Mac_Compute(ctx, &msg.headers, "MAC", &tag);
+
+        bool tag_valid = BSL_Crypto_Compare(msg.tag.ptr, msg.tag.len, tag.ptr, tag.len);
+        if (tag_valid)
+        {
+            BSL_LOG_DEBUG("MAC tag verified");
+        }
+        else
+        {
+            BSL_LOG_ERR("MAC tag failed");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
+        }
+        BSL_Data_Deinit(&tag);
+    }
 
     BSLX_CoseMsg_Mac_Deinit(&msg);
 }
@@ -2113,34 +2227,9 @@ static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVal
     }
     BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
 
-    // get content key from recipient
     if (BSL_SUCCESS == ctx->status)
     {
-        switch (ctx->key_alg)
-        {
-            case BSLX_COSEMSG_ALG_AES_KW_128:
-            case BSLX_COSEMSG_ALG_AES_KW_192:
-            case BSLX_COSEMSG_ALG_AES_KW_256:
-            {
-                res = BSL_Crypto_UnwrapKey(ctx->keyhandle, &recip->ciphertext, &ctx->cekhandle);
-                if (BSL_SUCCESS != res)
-                {
-                    BSL_LOG_ERR("Failed to wrap content key");
-                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-                }
-
-                break;
-            }
-            case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_256:
-            case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512:
-                BSL_LOG_CRIT("Not implemented");
-                ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                break;
-            default:
-                BSL_LOG_ERR("Unsupported recipient algorithm %" PRId64, ctx->key_alg);
-                ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                break;
-        }
+        BSLX_CoseSc_ExtractContentKey(ctx, recip);
     }
 
     if (BSL_SUCCESS == ctx->status)
@@ -2223,8 +2312,7 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BS
                     }
                     else if (result_mac)
                     {
-                        BSL_LOG_CRIT("Not implemented");
-                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                        BSLX_CoseSc_Mac_VerifyAccept(&ctx, result_mac);
                     }
                     else
                     {
