@@ -519,8 +519,9 @@ int BSLX_CoseMsg_Encrypt_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt_t 
 
         if (item.val.uCount > BSLX_COSEMSG_RECIPIENTS_LIMIT)
         {
-          BSL_LOG_CRIT("Number of recipients %zu larger than built-in limit %zu", item.val.uCount, BSLX_COSEMSG_RECIPIENTS_LIMIT);
-          return BSL_ERR_DECODING;
+            BSL_LOG_CRIT("Number of recipients %zu larger than built-in limit %zu", item.val.uCount,
+                         BSLX_COSEMSG_RECIPIENTS_LIMIT);
+            return BSL_ERR_DECODING;
         }
         BSLX_CoseMsg_RecipientList_ResizeNew(obj->recipients, item.val.uCount);
 
