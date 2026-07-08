@@ -72,14 +72,7 @@ bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_
     BSL_TestUtils_PrintHexToBuffer("expected str: ", in_data.ptr, in_data.len);
     BSL_TestUtils_PrintHexToBuffer("actual str  : ", encoded_val.ptr, encoded_val.len);
 
-    if (encoded_val.len != in_data.len)
-    {
-        BSL_LOG_CRIT("Mismatch in size, got %zu bytes, expected %zu bytes", encoded_val.len, in_data.len);
-        BSL_Data_Deinit(&in_data);
-        return false;
-    }
-
-    bool match = (memcmp(encoded_val.ptr, in_data.ptr, in_data.len) == 0);
+    bool match = BSL_Data_Cmp(&encoded_val, &in_data) == 0;
     if (!match)
     {
         BSL_LOG_CRIT("Mismatch in content");
@@ -92,7 +85,7 @@ void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t b
 {
     char ascii_buf[2 * bufflen + 1];
     BSL_Log_DumpAsHexString(ascii_buf, sizeof(ascii_buf), buff, bufflen);
-    BSL_LOG_INFO("%s :: %s", message, ascii_buf);
+    BSL_LOG_INFO("%s%s", message, ascii_buf);
 }
 
 int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cborhex)
@@ -126,19 +119,13 @@ int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cb
     return 0;
 }
 
-int BSL_TestUtils_ComapreBundleAsCBOR(BSL_TestContext_t *test_ctx, const char *cborhex)
+int BSL_TestUtils_EncodeBundleToCBOR(BSL_TestContext_t *test_ctx)
 {
     assert(test_ctx != NULL);
-    assert(cborhex != NULL);
 
     mock_bpa_ctr_sort_blocks(&test_ctx->mock_bpa_ctr);
     int res = mock_bpa_ctr_encode(&test_ctx->mock_bpa_ctr);
-    if (res)
-    {
-        return res;
-    }
-
-    return BSL_TestUtils_IsB16StrEqualTo(cborhex, test_ctx->mock_bpa_ctr.encoded) ? BSL_SUCCESS : BSL_ERR_FAILURE;
+    return res;
 }
 
 BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text)
@@ -327,7 +314,7 @@ static int BSL_TestUtils_WriteBTSD_Write(void *user_data, const void *buf, size_
     return BSL_SUCCESS;
 }
 
-static void BSL_TestUtils_WriteBTSD_Deinit(void *user_data)
+static void BSL_TestUtils_WriteBTSD_Deinit(void *user_data, bool success)
 {
     struct BSL_TestUtils_Flat_Data_s *obj = user_data;
     if (!obj || !obj->file)
@@ -337,14 +324,21 @@ static void BSL_TestUtils_WriteBTSD_Deinit(void *user_data)
 
     fclose(obj->file);
 
-    // now write-back the result
-    if (obj->origbuf)
+    if (success)
     {
-        *obj->origbuf = obj->ptr;
+        // now write-back the result
+        if (obj->origbuf)
+        {
+            *obj->origbuf = obj->ptr;
+        }
+        if (obj->origsize)
+        {
+            *obj->origsize = obj->size;
+        }
     }
-    if (obj->origsize)
+    else
     {
-        *obj->origsize = obj->size;
+        BSL_free(obj->ptr);
     }
 
     BSL_free(obj);

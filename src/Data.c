@@ -195,3 +195,16 @@ int BSL_Data_SetViewCstr(BSL_Data_t *data, const char *cstr)
     *data = BSL_DATA_INIT_VIEW_CSTR(cstr);
     return BSL_SUCCESS;
 }
+
+int BSL_Data_Cmp(const BSL_Data_t *lhs, const BSL_Data_t *rhs)
+{
+    if (lhs->len < rhs->len)
+    {
+        return -1;
+    }
+    if (lhs->len > rhs->len)
+    {
+        return 1;
+    }
+    return memcmp(lhs->ptr, rhs->ptr, lhs->len);
+}

@@ -22,6 +22,7 @@
 #include "PolicyParser.h"
 #include <default_sc/DefaultSecContext.h>
 #include <cose_sc/CoseContext.h>
+#include <strings.h>
 
 /** Read a text value as long integer.
  * The entire text must be consumed to be valid.
@@ -33,7 +34,7 @@
 static int BSLP_GetTextAsInt(int64_t *as_int, const char *ptr, size_t len)
 {
     char *endp;
-    *as_int = strtoll(ptr, &endp, 10);
+    *as_int = strtoll(ptr, &endp, 0);
     if (endp != ptr + len)
     {
         BSL_LOG_ERR("Invalid text-as-integer: %s", ptr);
@@ -216,7 +217,7 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
         BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_KEY_ID);
         BSL_IdValPair_SetBytestr(opt, BSLX_COSESC_OPTION_KEY_ID, as_bytes);
     }
-    else if (0 == strcmp(id_str, "target_alg"))
+    else if (0 == strcasecmp(id_str, "target_alg"))
     {
         int64_t as_int;
         if (BSLP_GetNumberInt(value, &as_int))
@@ -227,7 +228,7 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
         BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_TGT_ALG);
         BSL_IdValPair_SetInt64(opt, BSLX_COSESC_OPTION_TGT_ALG, as_int);
     }
-    else if (0 == strcmp(id_str, "aad_scope"))
+    else if (0 == strcasecmp(id_str, "aad_scope"))
     {
         void *val_it = json_object_iter(value);
         if (!val_it)
@@ -275,6 +276,17 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
         BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_AAD_SCOPE);
         BSL_IdValPair_SetRaw(opt, BSLX_COSESC_OPTION_AAD_SCOPE, enc_scope.ptr, enc_scope.len);
         BSL_Data_Deinit(&enc_scope);
+    }
+    else if (0 == strcasecmp(id_str, "iv_counter_offset"))
+    {
+        int64_t as_int;
+        if (BSLP_GetNumberInt(value, &as_int))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET);
+        BSL_IdValPair_SetInt64(opt, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET, as_int);
     }
     else
     {

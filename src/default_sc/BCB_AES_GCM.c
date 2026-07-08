@@ -120,16 +120,12 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     CHK_PRECONDITION(bcb_context->iv.ptr != NULL);
     CHK_PRECONDITION(bcb_context->iv.len > 0);
 
-    bool                         is_aes128 = bcb_context->aes_variant == RFC9173_BCB_AES_VARIANT_A128GCM;
-    BSL_CryptoCipherAESVariant_e aes_mode  = is_aes128 ? BSL_CRYPTO_AES_128 : BSL_CRYPTO_AES_256;
-
     void *key_id_handle;
     void *cipher_key;
 
     if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(&bcb_context->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
-        BSL_Data_Deinit(&bcb_context->authtag);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
@@ -150,7 +146,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != unwrap_result)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
-            BSL_Data_Deinit(&bcb_context->authtag);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
     }
@@ -158,8 +153,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     int retval = BSL_SUCCESS;
 
     BSL_Cipher_t cipher;
-    int          cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, aes_mode, bcb_context->iv.ptr,
-                                               (int)bcb_context->iv.len, cipher_key);
+    int cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
     if (BSL_SUCCESS != cipher_init)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
@@ -168,7 +162,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        if (BSL_SUCCESS != BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
+        if (BSL_SUCCESS != BSL_Cipher_AddAadBuffer(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
         {
             BSL_LOG_ERR("Failed to add AAD");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -200,8 +194,9 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        int nbytes = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write);
-        if (nbytes < 0)
+        // entire block is ciphertext
+        int res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, bcb_context->target_block.btsd_len);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Decrypting BTSD ciphertext failed");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -212,7 +207,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         // Last step is to compute the authentication tag, with is produced
         // as an output parameter to this cipher suite.
-        if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, bcb_context->authtag.ptr))
+        if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, &bcb_context->authtag))
         {
             BSL_LOG_ERR("Failed to set auth tag");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -221,8 +216,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        int finalize_bytes = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
-        if (finalize_bytes < 0)
+        int res = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to finalize");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -233,17 +228,15 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     BSL_SeqReader_Destroy(btsd_read);
     if (NULL != btsd_write)
     {
-        BSL_SeqWriter_Destroy(btsd_write);
+        BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
     }
 
-    BSL_Data_Deinit(&bcb_context->authtag);
     if (bcb_context->keywrap)
     {
         BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
     }
     BSL_Cipher_Deinit(&cipher);
 
-    ASSERT_POSTCONDITION(bcb_context->authtag.len == 0);
     return retval;
 }
 
@@ -261,13 +254,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     // Auth tag must be empty
     CHK_PRECONDITION(bcb_context->authtag.len == 0);
 
-    bool                         is_aes128 = bcb_context->aes_variant == RFC9173_BCB_AES_VARIANT_A128GCM;
-    BSL_CryptoCipherAESVariant_e aes_mode  = is_aes128 ? BSL_CRYPTO_AES_128 : BSL_CRYPTO_AES_256;
-
     BSL_Data_Resize(&bcb_context->iv, RFC9173_BCB_DEFAULT_IV_LEN);
-    void        *iv_ptr = bcb_context->iv.ptr;
-    const size_t iv_len = bcb_context->iv.len;
-    if (BSL_SUCCESS != BSL_Crypto_GenIV(iv_ptr, iv_len))
+    if (BSL_SUCCESS != BSL_Crypto_GenIV(&bcb_context->iv))
     {
         BSL_LOG_ERR("Failed to generate IV");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -293,10 +281,9 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     }
     else
     {
-        const size_t keysize = is_aes128 ? 16 : 32;
-        BSL_LOG_DEBUG("Generating %zu bit AES key", keysize * 8);
+        BSL_LOG_DEBUG("Generating %zu bit AES key", bcb_context->keysize * 8);
 
-        if (BSL_SUCCESS != BSL_Crypto_GenKey(keysize, &cipher_key))
+        if (BSL_SUCCESS != BSL_Crypto_GenKey(bcb_context->keysize, &cipher_key))
         {
             BSL_LOG_ERR("Failed to generate AES key");
             BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
@@ -306,7 +293,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         /**
          * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
          */
-        if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, keysize + 8))
+        if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, bcb_context->keysize + 8))
         {
             BSL_LOG_ERR("Failed to allocate wrapped key");
             BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
@@ -324,11 +311,11 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     }
 
     int retval = BSL_SUCCESS;
+    int res;
 
     BSL_Cipher_t cipher;
-    int          cipher_init =
-        BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, aes_mode, bcb_context->iv.ptr, bcb_context->iv.len, cipher_key);
-    if (BSL_SUCCESS != cipher_init)
+    res = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
         retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -336,7 +323,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        if (BSL_SUCCESS != BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
+        res = BSL_Cipher_AddAadBuffer(&cipher, bcb_context->aad.ptr, bcb_context->aad.len);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to add AAD");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -348,14 +336,14 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (retval == BSL_SUCCESS)
     {
         btsd_read = BSL_BundleCtx_ReadBTSD(bcb_context->bundle, bcb_context->target_block.block_num);
-        // output is same size
-        btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
-                                             bcb_context->target_block.btsd_len);
         if (!btsd_read)
         {
             BSL_LOG_ERR("Failed to construct reader");
             retval = BSL_ERR_HOST_CALLBACK_FAILED;
         }
+        // output is same size
+        btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
+                                             bcb_context->target_block.btsd_len);
         if (!btsd_write)
         {
             BSL_LOG_ERR("Failed to construct writer");
@@ -363,19 +351,21 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         }
     }
 
-    int nbytes = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write);
-    if (nbytes < 0)
+    if (retval == BSL_SUCCESS)
     {
-        BSL_LOG_ERR("Encrypting plaintext BTSD failed");
-        retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        // entire block is plaintext
+        res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, bcb_context->target_block.btsd_len);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Encrypting plaintext BTSD failed");
+            retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
     }
 
     if (retval == BSL_SUCCESS)
     {
-        // "Finalizing" drains any remaining bytes out of the cipher context
-        // and appends them to the ciphertext.
-        int extra_bytes = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
-        if (extra_bytes < 0)
+        res = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Finalizing AES failed");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -384,17 +374,17 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        BSL_Data_InitBuffer(&bcb_context->authtag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
-        if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, (void **)&bcb_context->authtag.ptr))
+        res = BSL_Cipher_GetTag(&cipher, &bcb_context->authtag);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to get authentication tag");
-            retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
     }
 
     // close write after read
     BSL_SeqReader_Destroy(btsd_read);
-    BSL_SeqWriter_Destroy(btsd_write);
+    BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
 
     if (bcb_context->keywrap)
     {
@@ -425,12 +415,7 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
             BSL_LOG_ERR("Invalid AES variant value");
             bcb_context->err_count++;
         }
-        else if (bcb_context->aes_variant < RFC9173_BCB_AES_VARIANT_A128GCM
-                 || bcb_context->aes_variant > RFC9173_BCB_AES_VARIANT_A256GCM)
-        {
-            BSL_LOG_ERR("Unknown AES variant %" PRIu64, bcb_context->aes_variant);
-            bcb_context->err_count++;
-        }
+        // later validation checks the actual int values
     }
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BCB_OPT_WRAPPED_KEY);
     if (param)
@@ -509,11 +494,8 @@ int BSLX_BCB_Init(BSLX_BCB_t *bcb_context, BSL_BundleRef_t *bundle, const BSL_Se
 
     bcb_context->bundle = bundle;
 
-    if (BSL_SUCCESS != BSL_Data_Resize(&bcb_context->debugstr, 512))
-    {
-        BSL_LOG_ERR("Failed to allocated debug str");
-        return BSL_ERR_INSUFFICIENT_SPACE;
-    }
+    BSL_Data_Init(&bcb_context->key_id);
+    BSL_Data_Init(&bcb_context->authtag);
 
     bcb_context->crypto_mode = bcb_context->is_source == true ? BSL_CRYPTO_ENCRYPT : BSL_CRYPTO_DECRYPT;
 
@@ -543,10 +525,10 @@ void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context)
     ASSERT_ARG_NONNULL(bcb_context);
 
     BSL_Data_Deinit(&bcb_context->aad);
-    BSL_Data_Deinit(&bcb_context->debugstr);
     BSL_Data_Deinit(&bcb_context->authtag);
     BSL_Data_Deinit(&bcb_context->iv);
     BSL_Data_Deinit(&bcb_context->wrapped_key);
+    BSL_Data_Deinit(&bcb_context->key_id);
     BSL_PrimaryBlock_deinit(&bcb_context->primary_block);
 
     memset(bcb_context, 0, sizeof(*bcb_context));
@@ -669,6 +651,22 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
     {
         BSLX_BCB_Deinit(&bcb_context);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
+    }
+
+    switch (bcb_context.aes_variant)
+    {
+        case RFC9173_BCB_AES_VARIANT_A128GCM:
+            bcb_context.bsl_aes = BSL_CRYPTO_AES_128;
+            bcb_context.keysize = 16;
+            break;
+        case RFC9173_BCB_AES_VARIANT_A256GCM:
+            bcb_context.bsl_aes = BSL_CRYPTO_AES_256;
+            bcb_context.keysize = 32;
+            break;
+        default:
+            BSL_LOG_ERR("Invalid AES algorithm %" PRId64, bcb_context.aes_variant);
+            BSLX_BCB_Deinit(&bcb_context);
+            return BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
     }
 
     if (bcb_context.aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_SECURITY_HEADER)

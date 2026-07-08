@@ -238,9 +238,9 @@ static int MockBPA_WriteBTSD_Write(void *user_data, const void *buf, size_t size
     CHK_ARG_NONNULL(buf);
     ASSERT_PRECONDITION(obj->file);
 
-    const size_t excess = (obj->curs + size) - obj->size;
-    if (excess > 0)
+    if (obj->curs + size > obj->size)
     {
+        const size_t excess = (obj->curs + size) - obj->size;
         BSL_LOG_ERR("write too large for buffer of %zu by %zu bytes", obj->size, excess);
         return BSL_ERR_FAILURE;
     }
@@ -255,26 +255,32 @@ static int MockBPA_WriteBTSD_Write(void *user_data, const void *buf, size_t size
     return BSL_SUCCESS;
 }
 
-static void MockBPA_WriteBTSD_Deinit(void *user_data)
+static void MockBPA_WriteBTSD_Deinit(void *user_data, bool success)
 {
     struct MockBPA_BTSD_Data_s *obj = user_data;
     ASSERT_ARG_NONNULL(obj);
     ASSERT_PRECONDITION(obj->file);
 
     fclose(obj->file);
-    BSL_LOG_DEBUG("closed block number %" PRIu64 " with size %zu and cursor %zu", obj->block->blk_num, obj->size,
-                  obj->curs);
+    BSL_LOG_DEBUG("closed block number %" PRIu64 " with size %zu and cursor %zu user success %d", obj->block->blk_num,
+                  obj->size, obj->curs, success);
     if (obj->curs < obj->size)
     {
         BSL_LOG_ERR("closed block number %" PRIu64 " for writing with only %zu of %zu written", obj->block->blk_num,
                     obj->curs, obj->size);
     }
 
-    // now write-back the BTSD
-    BSL_free(obj->block->btsd);
-    obj->block->btsd     = obj->ptr;
-    obj->block->btsd_len = obj->size;
-
+    if (success)
+    {
+        // now write-back the BTSD
+        BSL_free(obj->block->btsd);
+        obj->block->btsd     = obj->ptr;
+        obj->block->btsd_len = obj->size;
+    }
+    else
+    {
+        BSL_free(obj->ptr);
+    }
     BSL_free(obj);
 }
 

@@ -84,10 +84,12 @@ struct BSL_SeqWriter_s
      * This pointer must not be NULL.
      *
      * @param[in] user_data The context pointer.
+     * @param success Set true if all of the writing succeeded and and
+     * any backing buffer can be committed by the BPA.
      * @post The data written to the block is reflected in later reads and/or
      * block metadata.
      */
-    void (*deinit)(void *user_data);
+    void (*deinit)(void *user_data, bool success);
 };
 
 #ifdef __cplusplus
