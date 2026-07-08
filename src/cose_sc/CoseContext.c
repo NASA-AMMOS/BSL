@@ -1585,7 +1585,7 @@ static void BSLX_CoseSc_GenerateIV(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *h
 
 /** Extract IV header parameters and augment with key data.
  */
-static void BSLX_CoseSc_ExtractIV(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers)
+static void BSLX_CoseSc_ExtractIV(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *headers)
 {
     const BSL_IdValPair_t *head_iv = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_IV, false);
     if (head_iv)
