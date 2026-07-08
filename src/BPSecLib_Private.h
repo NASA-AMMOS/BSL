@@ -246,7 +246,8 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
     }                                                                     \
     while (0) /* GCOV_EXCL_LINE */
 
-/** Check a conditon and return false if the conditon is false.
+/** Check a condition and return false if the conditon is false.
+ * @param expr The condition which normally evaluates to true.
  */
 #define CHK_AS_BOOL(expr) CHK_TEMPL(expr, "Failed Property Check: Failed to satisfy", false)
 
