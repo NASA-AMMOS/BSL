@@ -264,6 +264,26 @@ M_ARRAY_DEF(BSLX_CoseMsg_RecipientList, BSLX_CoseMsg_RecipientPtr_t *, M_OPL_BSL
 /// Resize recipients array, preserving existing if possible
 void BSLX_CoseMsg_RecipientList_ResizeNew(BSLX_CoseMsg_RecipientList_t obj, size_t size);
 
+/// Decoded COSE_Mac
+typedef struct
+{
+    /// Common headers
+    BSLX_CoseMsg_Headers_t headers;
+    /// The MAC tag bytes
+    BSL_Data_t tag;
+    /** Array of ::BSLX_CoseMsg_Recipient_t instances.
+     */
+    BSLX_CoseMsg_RecipientList_t recipients;
+} BSLX_CoseMsg_Mac_t;
+/// Initialize the struct
+void BSLX_CoseMsg_Mac_Init(BSLX_CoseMsg_Mac_t *obj);
+/// Deinitialize the struct
+void BSLX_CoseMsg_Mac_Deinit(BSLX_CoseMsg_Mac_t *obj);
+/// Match ::BSL_CBOR_Encode_f signature.
+int BSLX_CoseMsg_Mac_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac_t *obj);
+/// Match ::BSL_CBOR_Decode_f signature.
+int BSLX_CoseMsg_Mac_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Mac_t *obj);
+
 /** Decoded COSE_Encrypt.
  * The use here is always with detached payload, so no ciphertext.
  */
@@ -271,7 +291,6 @@ typedef struct
 {
     /// Content headers
     BSLX_CoseMsg_Headers_t headers;
-
     /** Array of ::BSLX_CoseMsg_Recipient_t instances.
      */
     BSLX_CoseMsg_RecipientList_t recipients;

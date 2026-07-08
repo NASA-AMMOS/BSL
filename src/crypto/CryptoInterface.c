@@ -262,12 +262,6 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     BSL_CryptoKey_t *cek = (BSL_CryptoKey_t *)cek_handle;
     BSL_CryptoKey_t *kek = (BSL_CryptoKey_t *)kek_handle;
 
-    if (cek->raw.len > kek->raw.len)
-    {
-        BSL_LOG_ERR("KEK size %zu too small to encrypt CEK size %zu", kek->raw.len, cek->raw.len);
-        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-    }
-
     const EVP_CIPHER *cipher;
     switch (kek->raw.len)
     {
