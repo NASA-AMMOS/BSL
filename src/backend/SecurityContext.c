@@ -437,12 +437,11 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     return res;
 }
 
-int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet_t *output_response,
-                                      BSL_BundleRef_t *bundle, const BSL_SecurityActionSet_t *action_set)
+int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                                      const BSL_SecurityActionSet_t *action_set)
 {
     // NOLINTBEGIN
     CHK_ARG_NONNULL(lib);
-    CHK_ARG_NONNULL(output_response);
     CHK_ARG_NONNULL(bundle);
     CHK_PRECONDITION(BSL_SecurityActionSet_IsConsistent(action_set));
     // NOLINTEND
@@ -507,11 +506,9 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
                     BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_FAILED_SECOP);
                 }
                 BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_FAILURE);
-                BSL_SecurityResponseSet_AppendResult(output_response, errcode, sec_oper->policy_action);
                 break; // stop processing secops if there is a failure
             }
             BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_SUCCESS);
-            BSL_SecurityResponseSet_AppendResult(output_response, errcode, sec_oper->policy_action);
         }
     }
     BSL_free(outcome);

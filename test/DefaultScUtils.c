@@ -246,11 +246,6 @@ BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bi
     return action_set;
 }
 
-BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void)
-{
-    return BSL_calloc(1, BSL_SecurityResponseSet_Sizeof());
-}
-
 int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len)
 {
     if (len == 12) // IV

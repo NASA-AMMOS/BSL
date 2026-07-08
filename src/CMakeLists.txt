@@ -145,7 +145,6 @@ set(BSL_DYNAMIC_H
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/CBOR.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.h   
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.h
 )
 
@@ -162,7 +161,6 @@ set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityAction.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityActionSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.c
 )
 

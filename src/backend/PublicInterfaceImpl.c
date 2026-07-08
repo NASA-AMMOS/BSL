@@ -229,15 +229,13 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
     return BSL_SUCCESS;
 }
 
-int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
-                          const BSL_SecurityActionSet_t *policy_actions)
+int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_BundleRef_t *bundle, const BSL_SecurityActionSet_t *policy_actions)
 {
     CHK_ARG_NONNULL(bsl);
-    CHK_ARG_NONNULL(response_output);
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(policy_actions);
 
-    int exec_code = BSL_SecCtx_ExecutePolicyActionSet(bsl, response_output, bundle, policy_actions);
+    int exec_code = BSL_SecCtx_ExecutePolicyActionSet(bsl, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)
     {
         BSL_LOG_ERR("Failed to execute policy action set");
@@ -266,7 +264,7 @@ int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response
         }
     }
 
-    int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle, response_output);
+    int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle);
     BSL_LOG_INFO("Completed finalize: status=%d", finalize_status);
 
     return BSL_SUCCESS;

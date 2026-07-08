@@ -1152,40 +1152,6 @@ const BSL_SecurityAction_t *BSL_SecurityActionSet_GetActionAtIndex(const BSL_Sec
  */
 size_t BSL_SecurityActionSet_CountErrors(const BSL_SecurityActionSet_t *self);
 
-/// @brief Returns size of this struct type
-size_t BSL_SecurityResponseSet_Sizeof(void);
-
-/** Initialize with the given count of operations and failures
- *
- */
-void BSL_SecurityResponseSet_Init(BSL_SecurityResponseSet_t *self);
-
-/** Zeroize itself and release any owned resources
- *
- * @param[in,out] self This response set.
- */
-void BSL_SecurityResponseSet_Deinit(BSL_SecurityResponseSet_t *self);
-
-/** Return true if internal consistency checks pass.
- *
- * @param[in] self This response set.
- */
-bool BSL_SecurityResponseSet_IsConsistent(const BSL_SecurityResponseSet_t *self);
-
-/** Return number of responses (operations acted upon)
- *
- * @param[in] self This response set.
- */
-size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *self);
-
-/** Append a result code to the security response set
- * @param[in,out] self the response set to append result to
- * @param[in] result the result code to append
- * @param[in] policy_action the on-failure policy action associated with the response
- */
-void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result,
-                                          BSL_PolicyAction_e policy_action);
-
 /** Queries the policy provider for any security operations to take on the bundle.
  *
  * @note The caller is obligated to allocate space for the policy_action_set output.
@@ -1212,12 +1178,11 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
  * @param[in] policy_actions A policy action set, which may contain error codes and other info. @preallocated
  * Caller-allocated, zeroed space for action set
  * @param[in,out] bundle Bundle seeking security operations
- * @param[in] response_output results from security context
  * @param[in] location Where in the BPA lifecycle this query arises from
  * @return 0 if success
  */
 int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions,
-                                       BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
+                                       BSL_BundleRef_t *bundle);
 
 /// @brief Callback interface to query policy provider to populate the action set
 typedef int (*BSL_PolicyInspect_f)(void *user_data, BSL_SecurityActionSet_t *output_action_set,
@@ -1226,7 +1191,7 @@ typedef int (*BSL_PolicyInspect_f)(void *user_data, BSL_SecurityActionSet_t *out
 /// @brief Callback interface to finalize policy provider over the action set. Finalize should ignore actions from
 /// different policy providers
 typedef int (*BSL_PolicyFinalize_f)(void *user_data, const BSL_SecurityActionSet_t *output_action_set,
-                                    BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
+                                    BSL_BundleRef_t *bundle);
 
 /// @brief Callback interface for policy provider to shut down and release any resources
 typedef void (*BSL_PolicyDeinit_f)(void *user_data);
@@ -1243,13 +1208,12 @@ struct BSL_PolicyDesc_s
 /** Call the underlying security context to perform the given action set
  *
  * @param[in] lib This BSL context
- * @param[out] output_response Pointer to allocated, zeroed memory into which the response is populated
  * @param[in,out] bundle Pointer to bundle, which may be modified.
  * @param[in] action_set Action containing all params and operations.
  * @return 0 on success, negative on failure.
  */
-int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet_t *output_response,
-                                      BSL_BundleRef_t *bundle, const BSL_SecurityActionSet_t *action_set);
+int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                                      const BSL_SecurityActionSet_t *action_set);
 
 /** Call the underlying security context to validate the given action set
  *

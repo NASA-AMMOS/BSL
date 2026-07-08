@@ -60,10 +60,6 @@ typedef struct BSL_LibCtx_s BSL_LibCtx_t;
 size_t BSL_LibCtx_Sizeof(void);
 
 // Forward declaration of this struct.
-// This contains information for BSL and the host BPA to process the Bundle.
-typedef struct BSL_SecurityResponseSet_s BSL_SecurityResponseSet_t;
-
-// Forward declaration of this struct.
 // This contains actions for BSL to process the Bundle.
 typedef struct BSL_SecurityActionSet_s BSL_SecurityActionSet_t;
 
@@ -555,13 +551,11 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
 /** @brief Performs the given security operations on a Bundle, modifying or even dropping it entirely.
  *
  * @param[in]     bsl             Pointer to BSL context structure.
- * @param[out]    response_output Pointer to host-allocated output structure.
  * @param[in,out] bundle          Reference to host-owned Bundle, which may be modified or dropped by the BSL.
  * @param[in]     policy_actions  Pointer to policy actions, which was populated using the `QuerySecurity` function.
  */
 BSL_REQUIRE_CHECK
-int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_SecurityResponseSet_t *response_output, BSL_BundleRef_t *bundle,
-                          const BSL_SecurityActionSet_t *policy_actions);
+int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_BundleRef_t *bundle, const BSL_SecurityActionSet_t *policy_actions);
 
 #ifdef __cplusplus
 } // extern C
