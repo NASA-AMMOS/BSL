@@ -150,7 +150,7 @@ int BSLX_CoseMsg_Headers_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Headers_t 
             BSL_LOG_ERR("Unprotected header map error");
             return BSL_ERR_DECODING;
         }
-        BSL_LOG_DEBUG("Decoded %zu unprotected items", BSLX_CoseMsg_HdrMapTree_size(obj->phdr));
+        BSL_LOG_DEBUG("Decoded %zu unprotected items", BSLX_CoseMsg_HdrMapTree_size(obj->uhdr));
     }
 
     return BSL_SUCCESS;

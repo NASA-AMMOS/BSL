@@ -849,13 +849,15 @@ int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *k
     BSL_CryptoKeyPtr_t **found = BSL_CryptoKeyDict_get(StaticKeyRegistry, keyid_str);
     if (!found)
     {
-        retval = BSL_ERR_NOT_FOUND;
+        *key_handle = NULL;
+        retval      = BSL_ERR_NOT_FOUND;
     }
     else
     {
         *key_handle = BSL_CryptoKeyPtr_ref(*found);
     }
     pthread_mutex_unlock(&StaticCryptoMutex);
+
     m_bstring_clear(keyid_str);
     return retval;
 }

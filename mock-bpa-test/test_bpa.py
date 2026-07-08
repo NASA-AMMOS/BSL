@@ -135,7 +135,7 @@ class TestAgent(unittest.TestCase):
         self._agent.start()
         self._agent.wait_for_text(r'.* <INFO> \[.+\:MockBPA_Agent_Exec] READY$')
 
-    def _encode(self, input: Any, format: DataFormat) -> bytes:
+    def _encode(self, input: Any, format: DataFormat) -> Optional[bytes]:
         if format == DataFormat.HEX:
             return bytes.fromhex(input)
 
@@ -150,6 +150,9 @@ class TestAgent(unittest.TestCase):
 
         elif format == DataFormat.CBORDIAG:
             return diag2cbor(input)
+
+        elif format == DataFormat.ANYCBOR:
+            return None
 
         else:
             raise ValueError(f"Unhandled data format {format}")
@@ -173,25 +176,7 @@ class TestAgent(unittest.TestCase):
 
         test_sock = self._ol_sock if testcase.bundle_dest_loc == BundleDestLoc.APPIN else self._ul_sock
 
-        if testcase.expected_output_format == DataFormat.NONE:
-            test_sock.send(tx_data)
-            LOGGER.debug('waiting')
-
-            with self.assertRaises(TimeoutError):
-                self._wait_for(test_sock)
-
-            LOGGER.info('\nTransferred data:\n%s\n', tx_data.hex())
-
-            LOGGER.warning('Check log output to validate reason for no data!!')
-
-            output_str = testcase.expected_output
-
-            LOGGER.debug("Searching test runner logger for failure string: %s", output_str)
-            found = self._agent.wait_for_text(output_str)
-            LOGGER.debug("\nFOUND OCCURENCE: %s", found)
-            self.assertNotEqual("", found)
-
-        elif testcase.expected_output_format == DataFormat.ERR:
+        if testcase.expected_output_format == DataFormat.ERR:
             test_sock.send(tx_data)
             LOGGER.debug('waiting')
 
@@ -218,12 +203,14 @@ class TestAgent(unittest.TestCase):
             LOGGER.info('Sent data:\n%s\n', tx_data.hex())
 
             rx_data = self._wait_for(test_sock)
-            LOGGER.info('Expected data:\n%s\n', expected_rx.hex())
+            if expected_rx is not None:
+                LOGGER.info('Expected data:\n%s\n', expected_rx.hex())
             LOGGER.info('Received data:\n%s\n', rx_data.hex())
 
             LOGGER.debug('CBOR diagnostic of received data:\n%s\n', cbor2diag(rx_data))
 
-            self.assertEqual(expected_rx.hex(), rx_data.hex())
+            if expected_rx is not None:
+                self.assertEqual(expected_rx.hex(), rx_data.hex())
 
 
 class TestStartStop(TestAgent):

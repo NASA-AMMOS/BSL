@@ -930,7 +930,8 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
             }
         }
 
-        hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_ALG, true);
+        // being loose here about unprotected key alg for cases like AESKW
+        hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_ALG, false);
         if (hdr)
         {
             if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(hdr, &hdr_alg_val))
@@ -2000,43 +2001,43 @@ static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVal
     // key is from a recpient
     if (msg.recipients_count != 1)
     {
-      BSL_LOG_CRIT("Can only handle one recipient for now");
-      ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        BSL_LOG_CRIT("Can only handle one recipient for now");
+        ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     else
     {
-    BSLX_CoseSc_GetAndValidateKey(ctx, &msg.recipients[0].headers);
+        BSLX_CoseSc_GetAndValidateKey(ctx, &msg.recipients[0].headers);
     }
     BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
 
     // get content key from recipient
     if (BSL_SUCCESS == ctx->status)
     {
-    switch (ctx->key_alg)
-    {
-        case BSLX_COSEMSG_ALG_AES_KW_128:
-        case BSLX_COSEMSG_ALG_AES_KW_192:
-        case BSLX_COSEMSG_ALG_AES_KW_256:
+        switch (ctx->key_alg)
         {
-            res = BSL_Crypto_UnwrapKey(ctx->keyhandle, &msg.recipients[0].ciphertext, &ctx->cekhandle);
-            if (BSL_SUCCESS != res)
+            case BSLX_COSEMSG_ALG_AES_KW_128:
+            case BSLX_COSEMSG_ALG_AES_KW_192:
+            case BSLX_COSEMSG_ALG_AES_KW_256:
             {
-                BSL_LOG_ERR("Failed to wrap content key");
-                ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-            }
+                res = BSL_Crypto_UnwrapKey(ctx->keyhandle, &msg.recipients[0].ciphertext, &ctx->cekhandle);
+                if (BSL_SUCCESS != res)
+                {
+                    BSL_LOG_ERR("Failed to wrap content key");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+                }
 
-            break;
+                break;
+            }
+            case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_256:
+            case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512:
+                BSL_LOG_CRIT("Not implemented");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                break;
+            default:
+                BSL_LOG_ERR("Unsupported recipient algorithm %" PRId64, ctx->key_alg);
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                break;
         }
-        case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_256:
-        case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512:
-            BSL_LOG_CRIT("Not implemented");
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-            break;
-        default:
-            BSL_LOG_ERR("Unsupported recipient algorithm %" PRId64, ctx->key_alg);
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-            break;
-    }
     }
 
     if (BSL_SUCCESS == ctx->status)
