@@ -1193,6 +1193,36 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
     BSLX_CoseMsg_Mac0_Deinit(&msg);
 }
 
+/** Common logic for headers at verifier or acceptor.
+ */
+static void BSLX_CoseSc_VerifyHeaders(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers0,
+                                      BSLX_CoseMsg_Headers_t *headers1)
+{
+    if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(headers0))
+    {
+        BSL_LOG_ERR("Failed crit header check on layer 0");
+        ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+
+    if (headers1)
+    {
+        if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(headers1))
+        {
+            BSL_LOG_ERR("Failed crit header check on layer 1");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+    }
+
+    BSLX_CoseMsg_Headers_t *top_hdrs = headers1 ? headers1 : headers0;
+
+    // synthesize additional headers
+    BSLX_CoseMsg_HdrMapTree_update(top_hdrs->uhdr, ctx->addl_phdr);
+    BSLX_CoseMsg_HdrMapTree_update(top_hdrs->uhdr, ctx->addl_uhdr);
+
+    BSLX_CoseSc_GetAndValidateKey(ctx, top_hdrs);
+    BSLX_CoseSc_GetAndValidateTarget(ctx, headers0);
+}
+
 /** Internal processing to verify a COSE_Mac0 message.
  */
 static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair_t *result)
@@ -1225,27 +1255,14 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
                 BSL_LOG_ERR("Failed to decode COSE_Mac0");
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             }
-            else
-            {
-                if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(&msg.headers))
-                {
-                    BSL_LOG_ERR("Failed crit header check");
-                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-                }
-            }
         }
         BSL_Data_Deinit(&msg_enc);
     }
-    if (BSL_SUCCESS != ctx->status)
-    {
-        return;
-    }
-    // synthesize additional headers
-    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_phdr);
-    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_uhdr);
 
-    BSLX_CoseSc_GetAndValidateKey(ctx, &msg.headers);
-    BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_VerifyHeaders(ctx, &msg.headers, NULL);
+    }
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -1478,24 +1495,9 @@ static void BSLX_CoseSc_Mac_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair
                 BSL_LOG_ERR("Failed to decode COSE_Mac");
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             }
-            else
-            {
-                if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(&msg.headers))
-                {
-                    BSL_LOG_ERR("Failed crit header check");
-                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-                }
-            }
         }
         BSL_Data_Deinit(&msg_enc);
     }
-    if (BSL_SUCCESS != ctx->status)
-    {
-        return;
-    }
-    // synthesize additional headers
-    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_phdr);
-    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_uhdr);
 
     // key is from a recpient
     BSLX_CoseMsg_Recipient_t *recip = NULL;
@@ -1507,9 +1509,12 @@ static void BSLX_CoseSc_Mac_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair
     else
     {
         recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_front(msg.recipients));
-        BSLX_CoseSc_GetAndValidateKey(ctx, &recip->headers);
     }
-    BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_VerifyHeaders(ctx, &msg.headers, &recip->headers);
+    }
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -2038,27 +2043,14 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
                 BSL_LOG_ERR("Failed to decode COSE_Encrypt0");
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
-            else
-            {
-                if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(&msg.headers))
-                {
-                    BSL_LOG_ERR("Failed crit header check");
-                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-                }
-            }
         }
         BSL_Data_Deinit(&msg_enc);
     }
-    if (BSL_SUCCESS != ctx->status)
-    {
-        return;
-    }
-    // synthesize additional headers
-    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_phdr);
-    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_uhdr);
 
-    BSLX_CoseSc_GetAndValidateKey(ctx, &msg.headers);
-    BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_VerifyHeaders(ctx, &msg.headers, NULL);
+    }
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -2206,24 +2198,9 @@ static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVal
                 BSL_LOG_ERR("Failed to decode COSE_Encrypt");
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
-            else
-            {
-                if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(&msg.headers))
-                {
-                    BSL_LOG_ERR("Failed crit header check");
-                    ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-                }
-            }
         }
         BSL_Data_Deinit(&msg_enc);
     }
-    if (BSL_SUCCESS != ctx->status)
-    {
-        return;
-    }
-    // synthesize additional headers
-    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_phdr);
-    BSLX_CoseMsg_HdrMapTree_update(msg.headers.uhdr, ctx->addl_uhdr);
 
     // key is from a recpient
     BSLX_CoseMsg_Recipient_t *recip = NULL;
@@ -2235,9 +2212,12 @@ static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVal
     else
     {
         recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_front(msg.recipients));
-        BSLX_CoseSc_GetAndValidateKey(ctx, &recip->headers);
     }
-    BSLX_CoseSc_GetAndValidateTarget(ctx, &msg.headers);
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_VerifyHeaders(ctx, &msg.headers, &recip->headers);
+    }
 
     if (BSL_SUCCESS == ctx->status)
     {
