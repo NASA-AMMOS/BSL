@@ -984,6 +984,7 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
     }
     else if (hdr_alg)
     {
+        BSL_LOG_DEBUG("Using key algorithm %" PRId64 " from message header", hdr_alg_val);
         self->key_alg     = hdr_alg_val;
         self->hdr_key_alg = true;
     }
@@ -1004,15 +1005,20 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
             BSL_LOG_ERR("Invalid key algorithm value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
-        else if ((self->opt_key_alg || self->hdr_key_alg) && (self->key_alg != key_alg_int))
+        else if (self->key_alg != BSLX_COSEMSG_ALG_DIRECT)
         {
-            BSL_LOG_ERR("Option key algorithm value %" PRId64 " differs from key store %" PRId64, self->key_alg,
-                        key_alg_int);
-            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-        }
-        else
-        {
-            self->key_alg = key_alg_int;
+            // direct recipient is handled specially and treated as using the key alg
+            if ((self->opt_key_alg || self->hdr_key_alg) && (self->key_alg != key_alg_int))
+            {
+                BSL_LOG_ERR("Message key algorithm value %" PRId64 " differs from key store %" PRId64, self->key_alg,
+                            key_alg_int);
+                self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
+            else
+            {
+                BSL_LOG_DEBUG("Using key algorithm %" PRId64 " from key store", hdr_alg_val);
+                self->key_alg = key_alg_int;
+            }
         }
     }
     else if (!(self->opt_key_alg))
@@ -1271,6 +1277,9 @@ static void BSLX_CoseSc_GenerateContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Reci
 
     switch (ctx->key_alg)
     {
+        case BSLX_COSEMSG_ALG_DIRECT:
+            // leave cekhandle null
+            break;
         case BSLX_COSEMSG_ALG_AES_KW_128:
         case BSLX_COSEMSG_ALG_AES_KW_192:
         case BSLX_COSEMSG_ALG_AES_KW_256:
@@ -1312,6 +1321,9 @@ static void BSLX_CoseSc_ExtractContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recip
 
     switch (ctx->key_alg)
     {
+        case BSLX_COSEMSG_ALG_DIRECT:
+            // leave cekhandle null
+            break;
         case BSLX_COSEMSG_ALG_AES_KW_128:
         case BSLX_COSEMSG_ALG_AES_KW_192:
         case BSLX_COSEMSG_ALG_AES_KW_256:

@@ -305,6 +305,27 @@ class TestCoseScMac(TestAgent):
             expected_output_format=DataFormat.CBORDIAG
         ))
 
+    def test_exampleA_1_acceptor_valid_direct(self):
+        """ Augmented example A.1 using recipient with direct alg.
+        Different MAC context text results in different tag. """
+        self._single_test(_TestCase(
+            input_data='''\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [11, 2, 0, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[97, << [<< {1: 6} >>, {}, null, h'252BC95D2B2A87EB7FF6CEF7EE8C015F95AE7C3B490B5277151CB4E29D7DBE848AD27208269E621BA5EF828FC9DA53BA', [['', {1: -6, 4: 'ExampleA.1'}, null]]] >>]]] >>],
+    [1, 1, 0, 2, << "hello" >>, h'4EC359D2']
+]
+''',
+            expected_output=EXAMPLE_A_NO_SEC,
+            sec_src_eid='dtn://dst/',
+            policy_config='data/cose-sc/policy-any-bib-accept.json',
+            bundle_dest_loc=BundleDestLoc.APPIN,
+            key_set="data/cose-sc/keyset-1.cbordiag",
+            is_working=True,
+            input_data_format=DataFormat.CBORDIAG,
+            expected_output_format=DataFormat.CBORDIAG
+        ))
+
 
 class TestCoseScEncrypt0(TestAgent):
 

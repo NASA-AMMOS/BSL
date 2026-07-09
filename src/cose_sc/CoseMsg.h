@@ -74,6 +74,8 @@ enum BSLX_CoseMsg_Alg_e
     BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512 = -11,
     /// direct+HKDF-SHA-256
     BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_256 = -10,
+    /// direct
+    BSLX_COSEMSG_ALG_DIRECT = -6,
     /// A256KW
     BSLX_COSEMSG_ALG_AES_KW_256 = -5,
     /// A256KW
