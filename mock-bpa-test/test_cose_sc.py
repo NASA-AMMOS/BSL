@@ -57,6 +57,7 @@ EXAMPLE_A_1_WITH_BIB_ADDL_UHDR = '''\
 ]
 '''
 ''' Adapted to use additional unprotected headers parameter'''
+
 EXAMPLE_A_4_WITH_BCB = '''\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
@@ -64,7 +65,8 @@ EXAMPLE_A_4_WITH_BCB = '''\
     [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
 ]
 '''
-''' Bundle with BIB over target #1, adjusted sec block to #2 with flags 0x1'''
+''' Bundle with BCB over target #1, adjusted sec block to #2 with flags 0x1'''
+
 EXAMPLE_A_4_WITH_BCB_ADDL_UHDR = '''\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
@@ -73,6 +75,15 @@ EXAMPLE_A_4_WITH_BCB_ADDL_UHDR = '''\
 ]
 '''
 ''' Adapted to use additional unprotected headers parameter'''
+
+EXAMPLE_A_5_WITH_BCB = '''\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [12, 2, 1, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[96, << [<< {1: 3} >>, {5: h'6F3093EBA5D85143C3DC484A'}, null, [['', {1: -5, 4: 'ExampleA.5'}, h'917F2045E1169502756252BF119A94CDAC6A9D8944245B5A9A26D403A6331159E3D691A708E9984D']]] >>]]] >>],
+    [1, 1, 0, 2, h'1FD25F64A2EE33E774ABE16700BCFD9CF12EA5F7D841', h'47ABDEF0']
+]
+'''
+''' Bundle with BCB over target #1 using AESKW, adjusted sec block to #2 with flags 0x1'''
 
 
 @contextlib.contextmanager
@@ -355,3 +366,32 @@ class TestCoseScEncrypt0(TestAgent):
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.CBORDIAG
             ))
+
+
+class TestCoseScEncrypt(TestAgent):
+
+    def test_exampleA_5_source(self):
+        self._single_test(_TestCase(
+            input_data=EXAMPLE_A_NO_SEC,
+            expected_output=None,
+            sec_src_eid='dtn://src/',
+            policy_config='data/cose-sc/policy-exA.5-source.json',
+            bundle_dest_loc=BundleDestLoc.APPIN,
+            key_set="data/cose-sc/keyset-1.cbordiag",
+            is_working=True,
+            input_data_format=DataFormat.CBORDIAG,
+            expected_output_format=DataFormat.ANYCBOR
+        ))
+
+    def test_exampleA_5_acceptor_valid_loose(self):
+        self._single_test(_TestCase(
+            input_data=EXAMPLE_A_5_WITH_BCB,
+            expected_output=EXAMPLE_A_NO_SEC,
+            sec_src_eid='dtn://src/',
+            policy_config='data/cose-sc/policy-exA.5-accept.json',
+            bundle_dest_loc=BundleDestLoc.APPIN,
+            key_set="data/cose-sc/keyset-1.cbordiag",
+            is_working=True,
+            input_data_format=DataFormat.CBORDIAG,
+            expected_output_format=DataFormat.CBORDIAG
+        ))

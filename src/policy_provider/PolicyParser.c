@@ -23,6 +23,7 @@
 #include <default_sc/DefaultSecContext.h>
 #include <cose_sc/CoseContext.h>
 #include <strings.h>
+#include <errno.h>
 
 /** Read a text value as long integer.
  * The entire text must be consumed to be valid.
@@ -38,6 +39,11 @@ static int BSLP_GetTextAsInt(int64_t *as_int, const char *ptr, size_t len)
     if (endp != ptr + len)
     {
         BSL_LOG_ERR("Invalid text-as-integer: %s", ptr);
+        return BSL_ERR_POLICY_CONFIG;
+    }
+    if (((*as_int == LLONG_MIN) || (*as_int == LLONG_MAX)) && (errno == ERANGE))
+    {
+        BSL_LOG_ERR("Overflow in text-as-integer: %s", ptr);
         return BSL_ERR_POLICY_CONFIG;
     }
     return BSL_SUCCESS;

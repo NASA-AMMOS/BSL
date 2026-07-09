@@ -89,19 +89,6 @@ static const char *exA_1_mac0 = "9f890700028201692f2f6473742f7376638201692f2f737
                                 "4893ca895eed44ef60a5f50f9adf5cc5654499b881e5896378058601010002466568"
                                 "656c6c6f444ec359d2ff";
 
-static const char *exA_4_kid = "ExampleA.4";
-/// Symmetric key for Example A.4
-static const char *exA_4_sk = "13bf9cead057c0aca2c9e52471ca4b19ddfaf4c0784e3f3e8e39"
-                              "99dbae4ce45c";
-/// Base IV for Example A.4
-static const char *exA_4_biv = "6f3093eba5d85143c3dc0000";
-/// Result bundle for Example A.4 with different BCB block flags
-static const char *exA_4_enc0 = "9f890700028201692f2f6473742f7376638201692f2f7372632f7376638201662f2f"
-                                "7372632f821b000000bd51281400001a000f42404482a081c9850c03010058318101"
-                                "03018201662f2f7372632f818205a20001200181818210578343a10103a2044a4578"
-                                "616d706c65412e340642484af68601010002561fd25f64a2eee2ff1a1ab29812ba22"
-                                "1874380974c13b442086c017ff";
-
 /// valid starting point
 static void test_CoseSc_InvalidOptions_Source_baseline(BSL_SecOper_t *sec_oper)
 {
@@ -523,6 +510,19 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     BSL_SecOper_Deinit(&sec_oper);
 }
 
+static const char *exA_4_kid = "ExampleA.4";
+/// Symmetric key for Example A.4
+static const char *exA_4_sk = "13bf9cead057c0aca2c9e52471ca4b19ddfaf4c0784e3f3e8e39"
+                              "99dbae4ce45c";
+/// Base IV for Example A.4
+static const char *exA_4_biv = "6f3093eba5d85143c3dc0000";
+/// Result bundle for Example A.4 with different BCB block flags
+static const char *exA_4_enc0 = "9f890700028201692f2f6473742f7376638201692f2f7372632f7376638201662f2f"
+                                "7372632f821b000000bd51281400001a000f42404482a081c9850c03010058318101"
+                                "03018201662f2f7372632f818205a20001200181818210578343a10103a2044a4578"
+                                "616d706c65412e340642484af68601010002561fd25f64a2eee2ff1a1ab29812ba22"
+                                "1874380974c13b442086c017ff";
+
 void test_AppendixA_Example4_BCB_Source(void)
 {
     {
@@ -765,6 +765,272 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     {
         // Full output content
         TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(exA_4_enc0, LocalTestCtx.mock_bpa_ctr.encoded));
+    }
+    else
+    {
+        // successful acceptance
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(exA_nosec, LocalTestCtx.mock_bpa_ctr.encoded));
+    }
+
+    BSL_SecOutcome_Deinit(outcome);
+    BSL_free(outcome);
+    BSL_SecOper_Deinit(&sec_oper);
+}
+
+static const char *exA_5_kid = "ExampleA.5";
+/// Symmetric key for Example A.5
+static const char *exA_5_sk = "0e8a982b921d1086241798032fedc1f883eab72e4e43bb2d11cfae38ad7a972e";
+/// Result bundle for Example A.5 with different BCB block flags
+static const char *exA_5_enc = "9f890700028201692f2f6473742f7376638201692f2f7372632f7376638201662f2f"
+                               "7372632f821b000000bd51281400001a000f42404482a081c9850c030100586d8101"
+                               "03018201662f2f7372632f818205a200012001818182186058518443a10103a1054c"
+                               "6f3093eba5d85143c3dc484af6818340a20124044a4578616d706c65412e35582891"
+                               "7f2045e1169502756252bf119a94cdac6a9d8944245b5a9a26d403a6331159e3d691"
+                               "a708e9984d8601010002561fd25f64a2ee33e774abe16700bcfd9cf12ea5f7d84144"
+                               "47abdef0ff";
+
+int cose_exA_5_rng(unsigned char *buf, int len)
+{
+    if (len == 12) // IV
+    {
+        BSL_Data_t data;
+        BSL_Data_Init(&data);
+        TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&data, "6f3093eba5d85143c3dc484a"));
+        memcpy(buf, data.ptr, data.len);
+        BSL_Data_Deinit(&data);
+        return 1;
+    }
+    else if (len == 32) // CEK
+    {
+        BSL_Data_t data;
+        BSL_Data_Init(&data);
+        TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(
+                                 &data, "13bf9cead057c0aca2c9e52471ca4b19ddfaf4c0784e3f3e8e3999dbae4ce45c"));
+        memcpy(buf, data.ptr, data.len);
+        BSL_Data_Deinit(&data);
+        return 1;
+    }
+    return 0;
+}
+
+void test_AppendixA_Example5_BCB_Source(void)
+{
+    BSL_Crypto_SetRngGenerator(cose_exA_5_rng);
+    {
+        BSL_Crypto_KeyHandle_t handle;
+        {
+            BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_5_kid);
+            BSL_Data_t keymat;
+            BSL_Data_Init(&keymat);
+            TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_5_sk));
+            BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
+            BSL_Data_Deinit(&keymat);
+        }
+        BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
+                               BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_AES_KW_256);
+    }
+
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+
+    BSL_SecOper_t sec_oper;
+    BSL_SecOper_Init(&sec_oper);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
+                         BSL_POLICYACTION_DROP_BUNDLE);
+
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        {
+            BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_5_kid);
+            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEY_ID, keyid);
+        }
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_TGT_ALG, BSLX_COSEMSG_ALG_AES_GCM_256);
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        {
+            BSLX_CoseSc_AadScope_t scope;
+            BSLX_CoseSc_AadScope_init(scope);
+            BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
+            BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
+
+            BSL_Data_t value;
+            BSL_Data_Init(&value);
+            int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
+            TEST_ASSERT_EQUAL_INT_MESSAGE(BSL_SUCCESS, res, "Failed BSL_CBOR_Encode_Twopass()");
+            BSLX_CoseSc_AadScope_clear(scope);
+
+            BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
+            BSL_Data_Deinit(&value);
+        }
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+
+    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
+    BSL_SecOutcome_Init(outcome, &sec_oper);
+
+    bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
+    TEST_ASSERT_TRUE(valid_status);
+
+    // Confirm running operation as source executes without error
+    int exec_status = BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
+                                        &sec_oper, outcome);
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
+
+    // Confirm it produced only 1 result
+    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
+    const BSL_IdValPair_t *result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
+    TEST_ASSERT_NOT_NULL(result);
+    TEST_ASSERT_EQUAL(BSLX_COSESC_RESULT_COSE_ENCRYPT, BSL_IdValPair_GetId(result));
+    TEST_ASSERT_TRUE(BSL_IdValPair_IsBytestr(result));
+
+    // Inspect in the result
+    BSLX_CoseMsg_Encrypt_t msg;
+    BSLX_CoseMsg_Encrypt_Init(&msg);
+    {
+        BSL_Data_t in_buf;
+        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_IdValPair_GetAsBytestr(result, &in_buf));
+        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_CBOR_Decode(&in_buf, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Encrypt_Decode, &msg));
+        BSL_Data_Deinit(&in_buf);
+    }
+    BSLX_CoseMsg_Encrypt_Deinit(&msg);
+
+    // Full output content
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_EncodeBundleToCBOR(&LocalTestCtx));
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(exA_5_enc, LocalTestCtx.mock_bpa_ctr.encoded));
+
+    BSL_SecOutcome_Deinit(outcome);
+    BSL_free(outcome);
+    BSL_SecOper_Deinit(&sec_oper);
+}
+
+// no use of OPT_MISMATCH_MODIFY_BLK_3 here (tag is in the ciphertext)
+TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 0, 1, 2, 3, 4, 5 ])
+void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
+{
+    {
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_5_kid);
+        BSL_Data_t keymat;
+        BSL_Data_Init(&keymat);
+        TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_5_sk));
+        BSL_Crypto_KeyHandle_t handle;
+        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
+        BSL_Data_Deinit(&keymat);
+
+        BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
+                               BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_AES_KW_256);
+    }
+
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_5_enc));
+
+    MockBPA_CanonicalBlock_t *alter_blk = NULL;
+    if (mismatch == OPT_MISMATCH_MODIFY_BLK_0)
+    {
+        // manipulate encoded form
+        BSL_Data_t *blk_enc = &LocalTestCtx.mock_bpa_ctr.bundle->primary_block.encoded;
+        ((uint8_t *)blk_enc->ptr)[0] += 1;
+    }
+    else if ((mismatch == OPT_MISMATCH_MODIFY_BLK_1) || (mismatch == OPT_MISMATCH_MODIFY_BLK_3))
+    {
+        MockBPA_CanonicalBlock_t **found =
+            MockBPA_BlockByNum_get(LocalTestCtx.mock_bpa_ctr.bundle->blocks_num, OPT_MISMATCH_MODIFY_BLK_1 ? 1 : 3);
+        TEST_ASSERT_NOT_NULL(found);
+        alter_blk = *found;
+        TEST_ASSERT_NOT_NULL(alter_blk);
+
+        ((uint8_t *)alter_blk->btsd)[alter_blk->btsd_len - 1] += 1;
+    }
+
+    BSL_SecOper_t sec_oper;
+    BSL_SecOper_Init(&sec_oper);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_DROP_BUNDLE);
+
+    const char *opt_key_id = (mismatch == OPT_MISMATCH_BAD_KEY_ID) ? "other" : exA_5_kid;
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        {
+            BSL_Data_t kid;
+            BSL_Data_InitView(&kid, strlen(opt_key_id), (BSL_DataPtr_t)opt_key_id);
+            BSL_IdValPair_SetBytestr(&option, BSLX_COSESC_OPTION_KEY_ID, kid);
+        }
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_KEY_ALG,
+                               (mismatch == OPT_MISMATCH_KEY_ALG) ? BSLX_COSEMSG_ALG_AES_KW_128
+                                                                  : BSLX_COSEMSG_ALG_AES_KW_256);
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    {
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetInt64(&option, BSLX_COSESC_OPTION_TGT_ALG,
+                               (mismatch == OPT_MISMATCH_TGT_ALG) ? BSLX_COSEMSG_ALG_AES_GCM_128
+                                                                  : BSLX_COSEMSG_ALG_AES_GCM_256);
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+    }
+    if (mismatch != OPT_MISMATCH_NO_AAD_SCOPE)
+    {
+        BSLX_CoseSc_AadScope_t scope;
+        BSLX_CoseSc_AadScope_init(scope);
+        BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
+        BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
+
+        BSL_Data_t value;
+        BSL_Data_Init(&value);
+        int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(BSL_SUCCESS, res, "Failed BSL_CBOR_Encode_Twopass()");
+        BSLX_CoseSc_AadScope_clear(scope);
+
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
+        BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
+        BSL_SecOper_AppendOption(&sec_oper, &option);
+        BSL_IdValPair_Deinit(&option);
+        BSL_Data_Deinit(&value);
+    }
+
+    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
+    BSL_SecOutcome_Init(outcome, &sec_oper);
+
+    bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
+    TEST_ASSERT_EQUAL(true, valid_status);
+
+    const int expect_status = ((mismatch == OPT_MISMATCH_NONE) || (mismatch == OPT_MISMATCH_NO_AAD_SCOPE))
+                                  ? BSL_SUCCESS
+                                  : BSL_ERR_SECURITY_OPERATION_FAILED;
+    // Confirm running operation as source executes without error
+    int exec_status = BSL_ExecBCBVerifierAcceptor(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl,
+                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
+    TEST_ASSERT_EQUAL_INT(expect_status, exec_status);
+
+    if (alter_blk)
+    {
+        // put back for output comparison
+        ((uint8_t *)alter_blk->btsd)[alter_blk->btsd_len - 1] -= 1;
+    }
+
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_EncodeBundleToCBOR(&LocalTestCtx));
+    if ((role == BSL_SECROLE_VERIFIER) || (BSL_SUCCESS != exec_status))
+    {
+        // Full output content
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(exA_5_enc, LocalTestCtx.mock_bpa_ctr.encoded));
     }
     else
     {

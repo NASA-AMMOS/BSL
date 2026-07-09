@@ -576,7 +576,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
     BSL_SecOper_Populate(sec_oper, self->context_id, target_block_num, 0, self->sec_block_type, self->role,
                          self->failure_action_code);
 
-    // Next, append all the parameters from the matched rule.
+    // Next, append all the options from the matched rule.
     BSLB_IdValPairPtrList_it_t pit;
     for (BSLB_IdValPairPtrList_it(pit, self->options); !BSLB_IdValPairPtrList_end_p(pit);
          BSLB_IdValPairPtrList_next(pit))

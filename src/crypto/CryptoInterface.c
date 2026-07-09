@@ -188,9 +188,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     }
     BSL_CryptoKey_Init(cek);
 
-    /**
-     * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
-     */
+    // wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
     BSL_Data_Resize(&cek->raw, wrapped_key->len - 8);
 
     BSL_LOG_PLAINTEXT_PTR("using KEK", cek_handle, kek->raw.ptr, kek->raw.len);
@@ -311,6 +309,9 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     }
 
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
+
+    // wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
+    BSL_Data_Resize(wrapped_key, cek->raw.len + 8);
 
     int len = (int)wrapped_key->len;
     BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek->raw.ptr, cek->raw.len);
@@ -718,7 +719,8 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
 int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out)
 {
     CHK_ARG_NONNULL(key_out);
-    CHK_ARG_EXPR(key_length == 16 || key_length == 32);
+    *key_out = NULL;
+    CHK_ARG_EXPR(key_length > 0);
 
     BSL_CryptoKey_t *new_key = BSL_malloc(sizeof(BSL_CryptoKey_t));
     CHK_PROPERTY(new_key);
@@ -847,13 +849,15 @@ int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *k
     BSL_CryptoKeyPtr_t **found = BSL_CryptoKeyDict_get(StaticKeyRegistry, keyid_str);
     if (!found)
     {
-        retval = BSL_ERR_NOT_FOUND;
+        *key_handle = NULL;
+        retval      = BSL_ERR_NOT_FOUND;
     }
     else
     {
         *key_handle = BSL_CryptoKeyPtr_ref(*found);
     }
     pthread_mutex_unlock(&StaticCryptoMutex);
+
     m_bstring_clear(keyid_str);
     return retval;
 }

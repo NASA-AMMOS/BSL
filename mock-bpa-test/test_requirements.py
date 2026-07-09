@@ -347,7 +347,7 @@ class TestRequirements(TestAgent):
             key_set="data/key_set_1.json",
             is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
-            expected_output_format=DataFormat.NONE
+            expected_output_format=DataFormat.ERR
         ))
 
     # BSL_23

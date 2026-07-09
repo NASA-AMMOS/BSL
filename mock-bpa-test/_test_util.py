@@ -29,10 +29,13 @@ class DataFormat(IntEnum):
     BUNDLEARRAY = 0
     ''' Python structures used with cbor2 library. '''
     HEX = 1
+    ''' Data is hex-encoded bytes '''
     ERR = 2
-    NONE = 3
+    ''' No expected output, the error log is scanned '''
     CBORDIAG = 4
     ''' Full CBOR diagnostic notation with cbor-diag library. '''
+    ANYCBOR = 5
+    ''' Output is not deterministic, any well-formed CBOR is acceptable '''
 
 
 @unique

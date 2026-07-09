@@ -246,7 +246,10 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
     }                                                                     \
     while (0) /* GCOV_EXCL_LINE */
 
-#define CHK_AS_BOOL(expr) CHK_TEMPL(expr, "Failed Property Check: Failed to satisfy", BSL_ERR_ARG_INVALID)
+/** Check a condition and return false if the condition is false.
+ * @param expr The condition which normally evaluates to true.
+ */
+#define CHK_AS_BOOL(expr) CHK_TEMPL(expr, "Failed Property Check: Failed to satisfy", false)
 
 #define CHK_ARG_EXPR(expr) \
     CHK_TEMPL(expr, "Illegal Argument: Argument expression check failed to satisfy", BSL_ERR_ARG_INVALID)
@@ -787,6 +790,12 @@ const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, int64_t
  * @return Pointer to security parameter if found, otherwise NULL.
  */
 const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, int64_t param_id);
+
+/** Count the number of results present.
+ * @param[in] self The security operation
+ * @return The number of results.
+ */
+size_t BSL_SecOper_ResultCount(const BSL_SecOper_t *self);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
  *

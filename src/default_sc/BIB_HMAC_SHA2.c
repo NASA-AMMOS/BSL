@@ -94,6 +94,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
     self->opt_sha_variant = false;
     self->opt_ippt_scope  = false;
     self->keywrap         = -1;
+    BSL_Data_Init(&self->wrapped_key);
     BSL_Data_Init(&self->hmac_result_val);
 
     const BSL_IdValPair_t *param;
@@ -145,6 +146,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
     if (param)
     {
         BSL_LOG_DEBUG("BIB parsing Wrapped key parameter (optid=%" PRIu64 ")", BSL_IdValPair_GetId(param));
+        BSL_Data_Deinit(&self->wrapped_key);
         if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(param, &self->wrapped_key))
         {
             BSL_LOG_ERR("Invalid wrapped key value");
@@ -292,8 +294,8 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
     BSL_AuthCtx_t hmac_ctx;
     int           res = 0;
 
-    void *key_id_handle;
-    void *cipher_key;
+    BSL_Crypto_KeyHandle_t key_id_handle;
+    BSL_Crypto_KeyHandle_t cipher_key;
     if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(&self->key_id, &key_id_handle))
     {
         BSL_LOG_ERR("Cannot get registry key");
@@ -320,16 +322,6 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
                 BSL_LOG_ERR("Failed to generate AES key");
                 BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
                 return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-            }
-
-            /**
-             * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
-             */
-            if (BSL_SUCCESS != BSL_Data_InitBuffer(&self->wrapped_key, keysize + 8))
-            {
-                BSL_LOG_ERR("Failed to allocate wrapped key");
-                BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
-                return BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
 
             int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &self->wrapped_key, NULL);
