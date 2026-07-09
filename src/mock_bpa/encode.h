@@ -40,13 +40,6 @@ extern "C" {
  */
 int bsl_mock_encode_eid(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes, size_t *encoded_size);
 
-/** Encode a single EID from a QCBOR Encode Context
- *
- * @param[in,out] enc QCBOR Encode Context.
- * @param[in] eid The EID Value.
- */
-int bsl_mock_encode_eid_from_ctx(QCBOREncodeContext *enc, const BSL_HostEID_t *eid);
-
 /**
  * Encode primary block to a CBOR data.
  *

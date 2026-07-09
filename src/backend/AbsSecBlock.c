@@ -304,32 +304,10 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
         QCBOREncode_AddUInt64(enc, flags);
     }
 
-    if (QCBOREncode_IsBufferNULL(enc))
+    int res = BSL_CBOR_EncodeEID(enc, &asb->source_eid);
+    if (res != BSL_SUCCESS)
     {
-        size_t needlen;
-        int    encode_result = BSL_HostEID_EncodeToCBOR(&asb->source_eid, NULL, &needlen);
-        if (encode_result != BSL_SUCCESS)
-        {
-            BSL_LOG_ERR("Failed to encode EID");
-            return BSL_ERR_ENCODING;
-        }
-
-        QCBOREncode_AddEncoded(enc, (UsefulBufC) { .ptr = NULL, .len = needlen });
-    }
-    else
-    {
-        BSL_Data_t eid_data;
-        BSL_Data_Init(&eid_data);
-        int encode_result = BSL_HostEID_EncodeToCBOR(&asb->source_eid, &eid_data, NULL);
-        if (encode_result != BSL_SUCCESS)
-        {
-            BSL_LOG_ERR("Failed to encode EID");
-            BSL_Data_Deinit(&eid_data);
-            return BSL_ERR_ENCODING;
-        }
-
-        QCBOREncode_AddEncoded(enc, UsefulBufC_FROM_BSL_Data(eid_data));
-        BSL_Data_Deinit(&eid_data);
+        return res;
     }
 
     if (!BSLB_IdValPairPtrList_empty_p(asb->params))

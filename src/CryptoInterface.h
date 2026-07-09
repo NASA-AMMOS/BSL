@@ -91,7 +91,7 @@ typedef void *BSL_Crypto_LibHandle_t;
  *    These keys have byte string names (which can contain UTF8 text) and can
  *    have additional parameters to restrict their use.
  * 2. Anonymous ephemeral keys used for individual operations and then discarded.
- *    These keys do not have names and are typically key-wrapped or the result of a 
+ *    These keys do not have names and are typically key-wrapped or the result of a
  *    key derivation function (KDF).
  */
 ///@{
@@ -130,6 +130,15 @@ int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out);
  * Key handle assumed to be generated, not present in key registry, and allocated with ::BSL_malloc().
  */
 void BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
+
+/** Compare two keys in a time-invariant way.
+ * This avoids side channel attacks which depend on comparison time.
+ *
+ * @param[in] hdl1 The first key handle.
+ * @param[in] hdl2 The second key handle.
+ * @return True if they compare equal.
+ */
+bool BSL_Crypto_CompareKeys(BSL_Crypto_KeyHandle_t hdl1, BSL_Crypto_KeyHandle_t hdl2);
 
 /** Get pointers to an existing key, if present.
  *
@@ -204,6 +213,29 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
                          BSL_Crypto_KeyHandle_t *cek_handle);
 
 ///@} aeskw
+
+/** @name Key Derivation Function (KDF) interface */
+///@{
+
+typedef enum
+{
+    BSL_CRYPTO_KDF_HKDF_SHA_256,
+    BSL_CRYPTO_KDF_HKDF_SHA_512,
+} BSL_Crypto_KDFVariant_t;
+
+/** Perform key derivation.
+ *
+ * @param[in] kdk_handle The derviation key handle.
+ * @param func The derivation function variation.
+ * @param[in] salt The extract step salt.
+ * @param[in] info The expand step context data.
+ * @param keylen The expand step length.
+ * @param[in,out] cek_handle output content encryption key handle.
+ */
+int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t func, const BSL_Data_t *salt,
+                   const BSL_Data_t *info, size_t keylen, BSL_Crypto_KeyHandle_t *cek_handle);
+
+///@} kdf
 
 /** @name Confidentiality cipher interface
  *
