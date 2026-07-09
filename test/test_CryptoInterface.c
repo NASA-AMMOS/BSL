@@ -201,7 +201,7 @@ void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
     mock_bpa_LogOpen();
-    mock_bpa_LogSetLeastSeverity(LOG_CRIT);
+    mock_bpa_LogSetLeastSeverity(LOG_ERR);
 }
 
 int suiteTearDown(int failures)
