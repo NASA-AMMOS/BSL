@@ -147,7 +147,7 @@ class TestCoseScMac0(TestAgent):
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_1_WITH_BIB,
             expected_output=EXAMPLE_A_NO_SEC,
-            sec_src_eid='dtn://src/',
+            sec_src_eid='dtn://dst/',
             policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
@@ -160,7 +160,7 @@ class TestCoseScMac0(TestAgent):
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_1_WITH_BIB_ADDL_UHDR,
             expected_output=EXAMPLE_A_NO_SEC,
-            sec_src_eid='dtn://src/',
+            sec_src_eid='dtn://dst/',
             policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
@@ -174,7 +174,7 @@ class TestCoseScMac0(TestAgent):
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
                 expected_output=EXAMPLE_A_NO_SEC,
-                sec_src_eid='dtn://src/',
+                sec_src_eid='dtn://dst/',
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
@@ -188,7 +188,7 @@ class TestCoseScMac0(TestAgent):
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
                 expected_output=EXAMPLE_A_NO_SEC,
-                sec_src_eid='dtn://src/',
+                sec_src_eid='dtn://dst/',
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
@@ -202,7 +202,7 @@ class TestCoseScMac0(TestAgent):
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
                 expected_output='.*<ERROR>.* Mismatched key ID value',
-                sec_src_eid='dtn://src/',
+                sec_src_eid='dtn://dst/',
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
@@ -216,7 +216,7 @@ class TestCoseScMac0(TestAgent):
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
                 expected_output='.*<ERROR>.* Mismatch of AAD Scope parameter',
-                sec_src_eid='dtn://src/',
+                sec_src_eid='dtn://dst/',
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
@@ -235,7 +235,7 @@ class TestCoseScMac0(TestAgent):
 ]
 ''',
             expected_output='.*<ERROR>.* Unknown key from ID',
-            sec_src_eid='dtn://src/',
+            sec_src_eid='dtn://dst/',
             policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
@@ -325,7 +325,7 @@ class TestCoseScEncrypt0(TestAgent):
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_4_WITH_BCB,
             expected_output=EXAMPLE_A_NO_SEC,
-            sec_src_eid='dtn://src/',
+            sec_src_eid='dtn://dst/',
             policy_config='data/cose-sc/policy-any-bcb-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
@@ -338,7 +338,7 @@ class TestCoseScEncrypt0(TestAgent):
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_4_WITH_BCB_ADDL_UHDR,
             expected_output=EXAMPLE_A_NO_SEC,
-            sec_src_eid='dtn://src/',
+            sec_src_eid='dtn://dst/',
             policy_config='data/cose-sc/policy-any-bcb-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
@@ -352,7 +352,7 @@ class TestCoseScEncrypt0(TestAgent):
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_4_WITH_BCB,
                 expected_output=EXAMPLE_A_NO_SEC,
-                sec_src_eid='dtn://src/',
+                sec_src_eid='dtn://dst/',
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
@@ -366,7 +366,7 @@ class TestCoseScEncrypt0(TestAgent):
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_4_WITH_BCB,
                 expected_output=EXAMPLE_A_NO_SEC,
-                sec_src_eid='dtn://src/',
+                sec_src_eid='dtn://dst/',
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
@@ -380,7 +380,7 @@ class TestCoseScEncrypt0(TestAgent):
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_4_WITH_BCB,
                 expected_output=EXAMPLE_A_NO_SEC,
-                sec_src_eid='dtn://src/',
+                sec_src_eid='dtn://dst/',
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
@@ -409,7 +409,7 @@ class TestCoseScEncrypt(TestAgent):
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_5_WITH_BCB,
             expected_output=EXAMPLE_A_NO_SEC,
-            sec_src_eid='dtn://src/',
+            sec_src_eid='dtn://dst/',
             policy_config='data/cose-sc/policy-any-bcb-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
