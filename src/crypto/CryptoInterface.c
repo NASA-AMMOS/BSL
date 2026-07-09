@@ -149,8 +149,8 @@ bool BSL_Crypto_CompareKeys(BSL_Crypto_KeyHandle_t hdl1, BSL_Crypto_KeyHandle_t 
     {
         return false;
     }
-    BSL_CryptoKey_t *key1 = (BSL_CryptoKey_t *)hdl1;
-    BSL_CryptoKey_t *key2 = (BSL_CryptoKey_t *)hdl2;
+    const BSL_CryptoKey_t *key1 = (BSL_CryptoKey_t *)hdl1;
+    const BSL_CryptoKey_t *key2 = (BSL_CryptoKey_t *)hdl2;
 
     return BSL_Crypto_Compare(key1->raw.ptr, key1->raw.len, key2->raw.ptr, key2->raw.len);
 }
@@ -217,6 +217,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     EVP_CIPHER_CTX_set_padding(ctx, 0);
 
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
+    kek->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += cek->raw.len;
 
     BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
     int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, (int *)&cek->raw.len, wrapped_key->ptr, wrapped_key->len);
@@ -228,8 +229,6 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
         BSL_free(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
-
-    kek->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += wrapped_key->len;
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int     final_len = 0;
@@ -318,6 +317,7 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     }
 
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
+    kek->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += cek->raw.len;
 
     // wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
     BSL_Data_Resize(wrapped_key, cek->raw.len + 8);
@@ -330,8 +330,6 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
         return -2;
     }
     wrapped_key->len = (size_t)len;
-
-    kek->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += cek->raw.len;
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int     final_len = 0;
@@ -444,8 +442,11 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
         BSL_LOG_PLAINTEXT_PTR("using salt", kctx, salt->ptr, salt->len);
         *par++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, BSL_Crypto_PtrOrZero(salt->ptr), salt->len);
         BSL_LOG_PLAINTEXT_PTR("using info", kctx, info->ptr, info->len);
-        *par++  = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO, BSL_Crypto_PtrOrZero(info->ptr), info->len);
-        *par    = OSSL_PARAM_construct_end();
+        *par++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO, BSL_Crypto_PtrOrZero(info->ptr), info->len);
+        *par   = OSSL_PARAM_construct_end();
+
+        kdk->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
+
         int res = EVP_KDF_derive(kctx, cek->raw.ptr, cek->raw.len, params);
         BSL_LOG_DEBUG("EVP_KDF_derive gave %zu bytes, return %d", cek->raw.len, res);
         BSL_LOG_PLAINTEXT_PTR("KDF out", kctx, cek->raw.ptr, cek->raw.len);

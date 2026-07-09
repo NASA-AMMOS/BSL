@@ -599,6 +599,11 @@ void test_key_wrap(const char *kek, const char *cek, const char *expected)
 
     TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(expected, wrapped_key));
 
+    BSL_Crypto_KeyStats_t stats;
+    BSL_Crypto_GetKeyStatistics(kek_handle, &stats);
+    TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+    TEST_ASSERT_EQUAL_size_t(cek_data.len, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&wrapped_key);
@@ -651,6 +656,11 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
 
     TEST_ASSERT_TRUE(BSL_Crypto_CompareKeys(expect_handle, cek_handle));
 
+    BSL_Crypto_KeyStats_t stats;
+    BSL_Crypto_GetKeyStatistics(kek_handle, &stats);
+    TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+    TEST_ASSERT_EQUAL_size_t(cek_data.len, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&wrapped_key_data);
@@ -697,6 +707,11 @@ void test_kdf(const char *kdk_hex, int func, const char *salt_hex, const char *i
     TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_KDF(kdk_handle, func, &salt_data, &info_data, keylen, &cek_handle));
 
     TEST_ASSERT_TRUE(BSL_Crypto_CompareKeys(expect_handle, cek_handle));
+
+    BSL_Crypto_KeyStats_t stats;
+    BSL_Crypto_GetKeyStatistics(kdk_handle, &stats);
+    TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+    TEST_ASSERT_EQUAL_size_t(0, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
 
     BSL_Crypto_ClearGeneratedKeyHandle(cek_handle);
     BSL_Data_Deinit(&expect_data);
@@ -822,12 +837,12 @@ void test_key_stats(void)
 
     BSL_Crypto_KeyStats_t stats;
     BSL_Crypto_GetKeyStatistics(handle, &stats);
-    TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED], 1);
-    TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED], 14);
+    TEST_ASSERT_EQUAL(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+    TEST_ASSERT_EQUAL(12, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
 
     test_encrypt("hello world again!", "testkeystats");
 
     BSL_Crypto_GetKeyStatistics(handle, &stats);
-    TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED], 2);
-    TEST_ASSERT_EQUAL(stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED], 34);
+    TEST_ASSERT_EQUAL(2, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+    TEST_ASSERT_EQUAL(30, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
 }
