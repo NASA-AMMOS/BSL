@@ -359,7 +359,7 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     return 0;
 }
 
-int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_CryptoCipherSHAVariant_e sha_var)
+int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SHAVariant_e sha_var)
 {
     CHK_ARG_NONNULL(hmac_ctx);
     CHK_ARG_NONNULL(keyhandle);
@@ -488,7 +488,7 @@ bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size
     return CRYPTO_memcmp(data1, data2, size1) == 0;
 }
 
-int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
+int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_AESVariant_e aes_var,
                     const BSL_Data_t *iv_val, BSL_Crypto_KeyHandle_t key_handle)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);

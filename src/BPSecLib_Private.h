@@ -1316,13 +1316,19 @@ struct BSL_SecCtxDesc_s
  */
 int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                       BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
-/// @overload execute as verifier
+/** Internal function to execute an operation as verifier or acceptor.
+ * @overload
+ */
 int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                                 BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
-/// @overload execute as source
+/** Internal function to execute an operation as source.
+ * @overload
+ */
 int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                       BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
-/// @overload execute as verifier
+/** Internal function to execute an operation as verifier or acceptor.
+ * @overload
+ */
 int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                                 BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
 

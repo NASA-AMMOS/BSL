@@ -694,7 +694,7 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
 {
     int res;
 
-    BSL_CryptoCipherSHAVariant_e bsl_sha_var;
+    BSL_Crypto_SHAVariant_e bsl_sha_var;
     switch (ctx->tgt_alg)
     {
         case BSLX_COSEMSG_ALG_HMAC_SHA_256_256:
@@ -1546,7 +1546,7 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
     ASSERT_PRECONDITION(ctx->full_iv.len > 0);
     int res;
 
-    BSL_CryptoCipherAESVariant_e bsl_aes_var;
+    BSL_Crypto_AESVariant_e bsl_aes_var;
     switch (ctx->tgt_alg)
     {
         case BSLX_COSEMSG_ALG_AES_GCM_128:
