@@ -225,7 +225,7 @@ typedef enum
 
 /** Perform key derivation.
  *
- * @param[in] kdk_handle The derviation key handle.
+ * @param[in] kdk_handle The derivation key handle.
  * @param func The derivation function variation.
  * @param[in] salt The extract step salt.
  * @param[in] info The expand step context data.
