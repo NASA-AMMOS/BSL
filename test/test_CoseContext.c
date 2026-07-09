@@ -515,12 +515,12 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     {
         TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(exA_nosec, LocalTestCtx.mock_bpa_ctr.encoded));
 
-      {
-          BSL_Crypto_KeyStats_t stats;
-          BSL_Crypto_GetKeyStatistics(keyhandle, &stats);
-          TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
-          TEST_ASSERT_EQUAL_size_t(95, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
-      }
+        {
+            BSL_Crypto_KeyStats_t stats;
+            BSL_Crypto_GetKeyStatistics(keyhandle, &stats);
+            TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+            TEST_ASSERT_EQUAL_size_t(95, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+        }
     }
 
     BSL_SecOutcome_Deinit(outcome);
@@ -793,12 +793,12 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
         // successful acceptance
         TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(ccsds_mac_nosec, LocalTestCtx.mock_bpa_ctr.encoded));
 
-      {
-          BSL_Crypto_KeyStats_t stats;
-          BSL_Crypto_GetKeyStatistics(keyhandle, &stats);
-          TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
-          TEST_ASSERT_EQUAL_size_t(48, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
-      }
+        {
+            BSL_Crypto_KeyStats_t stats;
+            BSL_Crypto_GetKeyStatistics(keyhandle, &stats);
+            TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+            TEST_ASSERT_EQUAL_size_t(48, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+        }
     }
 
     BSL_SecOutcome_Deinit(outcome);
@@ -1076,12 +1076,12 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         // successful acceptance
         TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(exA_nosec, LocalTestCtx.mock_bpa_ctr.encoded));
 
-      {
-          BSL_Crypto_KeyStats_t stats;
-          BSL_Crypto_GetKeyStatistics(keyhandle, &stats);
-          TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
-          TEST_ASSERT_EQUAL_size_t(98, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
-      }
+        {
+            BSL_Crypto_KeyStats_t stats;
+            BSL_Crypto_GetKeyStatistics(keyhandle, &stats);
+            TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+            TEST_ASSERT_EQUAL_size_t(98, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+        }
     }
 
     BSL_SecOutcome_Deinit(outcome);
@@ -1358,12 +1358,12 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         // successful acceptance
         TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(exA_nosec, LocalTestCtx.mock_bpa_ctr.encoded));
 
-      {
-          BSL_Crypto_KeyStats_t stats;
-          BSL_Crypto_GetKeyStatistics(keyhandle, &stats);
-          TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
-          TEST_ASSERT_EQUAL_size_t(32, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
-      }
+        {
+            BSL_Crypto_KeyStats_t stats;
+            BSL_Crypto_GetKeyStatistics(keyhandle, &stats);
+            TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+            TEST_ASSERT_EQUAL_size_t(32, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+        }
     }
 
     BSL_SecOutcome_Deinit(outcome);
