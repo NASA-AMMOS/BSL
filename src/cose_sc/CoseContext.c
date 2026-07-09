@@ -1114,6 +1114,89 @@ static void BSLX_CoseSc_GetAndValidateAadScope(BSLX_CoseSc_t *self)
     }
 }
 
+/** Common logic for headers at the source.
+ */
+static void BSLX_CoseSc_SourceHeaders(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers0,
+                                      BSLX_CoseMsg_Headers_t *headers1)
+{
+    // Content layer always starts the same
+    {
+        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+
+        BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->tgt_alg);
+
+        BSLX_CoseMsg_HdrMapTree_set_at(headers0->phdr, param->id, param_ptr);
+        BSLB_IdValPairPtr_release(param_ptr);
+    }
+
+    BSLX_CoseMsg_HdrMapTree_t *kid_hdr = headers1 ? &(headers1->uhdr) : &(headers0->uhdr);
+    {
+        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+
+        BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_KID, ctx->kid);
+
+        BSLX_CoseMsg_HdrMapTree_set_at(*kid_hdr, param->id, param_ptr);
+        BSLB_IdValPairPtr_release(param_ptr);
+    }
+
+    if (headers1)
+    {
+        // can the recipient alg be protected?
+        BSLX_CoseMsg_HdrMapTree_t *alg_hdr;
+        {
+            int64_t *found =
+                bsearch(&ctx->key_alg, cose_recip_alg_unprot, sizeof(cose_recip_alg_unprot) / sizeof(int64_t),
+                        sizeof(int64_t), &local_cmp_int64);
+
+            alg_hdr = found ? &(headers1->uhdr) : &(headers1->phdr);
+        }
+        {
+            BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+            BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+
+            BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->key_alg);
+
+            BSLX_CoseMsg_HdrMapTree_set_at(*alg_hdr, param->id, param_ptr);
+            BSLB_IdValPairPtr_release(param_ptr);
+        }
+
+        BSLX_CoseMsg_Headers_DerivePhdr(headers1);
+    }
+    BSLX_CoseMsg_Headers_DerivePhdr(headers0);
+}
+
+/** Common logic for headers at verifier or acceptor.
+ */
+static void BSLX_CoseSc_VerifyHeaders(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers0,
+                                      BSLX_CoseMsg_Headers_t *headers1)
+{
+    if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(headers0))
+    {
+        BSL_LOG_ERR("Failed crit header check on layer 0");
+        ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+
+    if (headers1)
+    {
+        if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(headers1))
+        {
+            BSL_LOG_ERR("Failed crit header check on layer 1");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+    }
+
+    BSLX_CoseMsg_Headers_t *top_hdrs = headers1 ? headers1 : headers0;
+
+    // synthesize additional headers
+    BSLX_CoseMsg_HdrMapTree_update(top_hdrs->uhdr, ctx->addl_phdr);
+    BSLX_CoseMsg_HdrMapTree_update(top_hdrs->uhdr, ctx->addl_uhdr);
+
+    BSLX_CoseSc_GetAndValidateKey(ctx, top_hdrs);
+    BSLX_CoseSc_GetAndValidateTarget(ctx, headers0);
+}
+
 /** Internal processing to source a COSE_Mac0 message.
  */
 static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
@@ -1122,27 +1205,8 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
 
     BSLX_CoseMsg_Mac0_t msg;
     BSLX_CoseMsg_Mac0_Init(&msg);
-    {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
-
-        BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->tgt_alg);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.phdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
-    if (ctx->kid.len)
-    {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
-
-        BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_KID, ctx->kid);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.uhdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
-
-    BSLX_CoseMsg_Headers_DerivePhdr(&msg.headers);
+    
+    BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, NULL);
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -1191,36 +1255,6 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
     BSL_Data_Deinit(&aad_scope_enc);
 
     BSLX_CoseMsg_Mac0_Deinit(&msg);
-}
-
-/** Common logic for headers at verifier or acceptor.
- */
-static void BSLX_CoseSc_VerifyHeaders(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers0,
-                                      BSLX_CoseMsg_Headers_t *headers1)
-{
-    if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(headers0))
-    {
-        BSL_LOG_ERR("Failed crit header check on layer 0");
-        ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-    }
-
-    if (headers1)
-    {
-        if (BSL_SUCCESS != BSLX_CoseMsg_Headers_CheckCrit(headers1))
-        {
-            BSL_LOG_ERR("Failed crit header check on layer 1");
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-        }
-    }
-
-    BSLX_CoseMsg_Headers_t *top_hdrs = headers1 ? headers1 : headers0;
-
-    // synthesize additional headers
-    BSLX_CoseMsg_HdrMapTree_update(top_hdrs->uhdr, ctx->addl_phdr);
-    BSLX_CoseMsg_HdrMapTree_update(top_hdrs->uhdr, ctx->addl_uhdr);
-
-    BSLX_CoseSc_GetAndValidateKey(ctx, top_hdrs);
-    BSLX_CoseSc_GetAndValidateTarget(ctx, headers0);
 }
 
 /** Internal processing to verify a COSE_Mac0 message.
@@ -1374,45 +1408,16 @@ static void BSLX_CoseSc_Mac_Source(BSLX_CoseSc_t *ctx)
 
     BSLX_CoseMsg_Mac_t msg;
     BSLX_CoseMsg_Mac_Init(&msg);
-    {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
-
-        BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->tgt_alg);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.phdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
     // exactly one recipient
     BSLX_CoseMsg_RecipientList_ResizeNew(msg.recipients, 1);
     BSLX_CoseMsg_Recipient_t *recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_front(msg.recipients));
 
-    {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
-
-        BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->key_alg);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(recip->headers.uhdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
-    {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
-
-        BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_KID, ctx->kid);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(recip->headers.uhdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
+    BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, &recip->headers);
 
     if (BSL_SUCCESS == ctx->status)
     {
         BSLX_CoseSc_GenerateContentKey(ctx, recip);
     }
-
-    BSLX_CoseMsg_Headers_DerivePhdr(&msg.headers);
-    BSLX_CoseMsg_Headers_DerivePhdr(&recip->headers);
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -1936,32 +1941,14 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
 
     BSLX_CoseMsg_Encrypt0_t msg;
     BSLX_CoseMsg_Encrypt0_Init(&msg);
-    {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
 
-        BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->tgt_alg);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.phdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
-    {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
-
-        BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_KID, ctx->kid);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.uhdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
+    BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, NULL);
 
     if (BSL_SUCCESS == ctx->status)
     {
         // optional partial IV depending on key Base IV
         BSLX_CoseSc_GenerateIV(ctx, &msg.headers);
     }
-
-    BSLX_CoseMsg_Headers_DerivePhdr(&msg.headers);
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -2073,37 +2060,12 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
 
     BSLX_CoseMsg_Encrypt_t msg;
     BSLX_CoseMsg_Encrypt_Init(&msg);
-    {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
-
-        BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->tgt_alg);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(msg.headers.phdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
     // exactly one recipient
     BSLX_CoseMsg_RecipientList_ResizeNew(msg.recipients, 1);
     BSLX_CoseMsg_Recipient_t *recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_front(msg.recipients));
 
-    {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+    BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, &recip->headers);
 
-        BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->key_alg);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(recip->headers.uhdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
-    {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
-
-        BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_KID, ctx->kid);
-
-        BSLX_CoseMsg_HdrMapTree_set_at(recip->headers.uhdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
-    }
     if (BSL_SUCCESS == ctx->status)
     {
         // optional partial IV depending on key Base IV
@@ -2114,9 +2076,6 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
     {
         BSLX_CoseSc_GenerateContentKey(ctx, recip);
     }
-
-    BSLX_CoseMsg_Headers_DerivePhdr(&msg.headers);
-    BSLX_CoseMsg_Headers_DerivePhdr(&recip->headers);
 
     if (BSL_SUCCESS == ctx->status)
     {
