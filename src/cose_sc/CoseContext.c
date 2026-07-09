@@ -56,6 +56,12 @@ static const int64_t cose_recip_algs[] = {
     -5, -4, -3, // AES-KW
 };
 #endif
+/** Recipient algorithms which cannot protect the header.
+ * @note These must be sorted for @c bsearch() to work.
+ */
+static const int64_t cose_recip_alg_unprot[] = { BSLX_COSEMSG_ALG_AES_KW_256, BSLX_COSEMSG_ALG_AES_KW_192,
+                                                 BSLX_COSEMSG_ALG_AES_KW_128 };
+
 
 /// Matches signature for @c bsearch()
 static int local_cmp_int64(const void *lhs, const void *rhs)
@@ -1197,6 +1203,28 @@ static void BSLX_CoseSc_VerifyHeaders(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t
     BSLX_CoseSc_GetAndValidateTarget(ctx, headers0);
 }
 
+static void BSLX_CoseSc_AddAadScope(BSLX_CoseSc_t *ctx)
+{
+    BSL_Data_t aad_scope_enc;
+    BSL_Data_Init(&aad_scope_enc);
+
+    int res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &ctx->aad_scope);
+    // GCOV_EXCL_START
+    if (BSL_SUCCESS != res)
+    {
+        BSL_LOG_ERR("Failed to encode AAD Scope");
+        ctx->status = res;
+    }
+    // GCOV_EXCL_STOP
+    else
+    {
+        BSL_IdValPair_t *param = BSL_SecOutcome_AppendParam(ctx->sec_outcome);
+        BSL_IdValPair_SetRaw(param, BSLX_COSESC_PARAM_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
+    }
+
+    BSL_Data_Deinit(&aad_scope_enc);
+}
+
 /** Internal processing to source a COSE_Mac0 message.
  */
 static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
@@ -1205,7 +1233,7 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
 
     BSLX_CoseMsg_Mac0_t msg;
     BSLX_CoseMsg_Mac0_Init(&msg);
-    
+
     BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, NULL);
 
     if (BSL_SUCCESS == ctx->status)
@@ -1213,24 +1241,15 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
         BSLX_CoseSc_Mac_Compute(ctx, &msg.headers, "MAC0", &msg.tag);
     }
 
-    BSL_Data_t aad_scope_enc;
-    BSL_Data_Init(&aad_scope_enc);
     if (BSL_SUCCESS == ctx->status)
     {
-        res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &ctx->aad_scope);
-        // GCOV_EXCL_START
-        if (BSL_SUCCESS != res)
-        {
-            BSL_LOG_ERR("Failed to encode AAD Scope");
-            ctx->status = res;
-        }
-        // GCOV_EXCL_STOP
+        BSLX_CoseSc_AddAadScope(ctx);
     }
 
-    BSL_Data_t msg_enc;
-    BSL_Data_Init(&msg_enc);
     if (BSL_SUCCESS == ctx->status)
     {
+        BSL_Data_t msg_enc;
+        BSL_Data_Init(&msg_enc);
         res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Mac0_Encode, &msg);
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
@@ -1239,20 +1258,13 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
             ctx->status = res;
         }
         // GCOV_EXCL_STOP
-    }
-    if (BSL_SUCCESS == ctx->status)
-    {
-        {
-            BSL_IdValPair_t *param = BSL_SecOutcome_AppendParam(ctx->sec_outcome);
-            BSL_IdValPair_SetRaw(param, BSLX_COSESC_PARAM_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
-        }
+        else
         {
             BSL_IdValPair_t *result = BSL_SecOutcome_AppendResult(ctx->sec_outcome);
             BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_MAC0, msg_enc);
         }
+        BSL_Data_Deinit(&msg_enc);
     }
-    BSL_Data_Deinit(&msg_enc);
-    BSL_Data_Deinit(&aad_scope_enc);
 
     BSLX_CoseMsg_Mac0_Deinit(&msg);
 }
@@ -1424,24 +1436,15 @@ static void BSLX_CoseSc_Mac_Source(BSLX_CoseSc_t *ctx)
         BSLX_CoseSc_Mac_Compute(ctx, &msg.headers, "MAC", &msg.tag);
     }
 
-    BSL_Data_t aad_scope_enc;
-    BSL_Data_Init(&aad_scope_enc);
     if (BSL_SUCCESS == ctx->status)
     {
-        res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &ctx->aad_scope);
-        // GCOV_EXCL_START
-        if (BSL_SUCCESS != res)
-        {
-            BSL_LOG_ERR("Failed to encode AAD Scope");
-            ctx->status = res;
-        }
-        // GCOV_EXCL_STOP
+        BSLX_CoseSc_AddAadScope(ctx);
     }
 
-    BSL_Data_t msg_enc;
-    BSL_Data_Init(&msg_enc);
     if (BSL_SUCCESS == ctx->status)
     {
+        BSL_Data_t msg_enc;
+        BSL_Data_Init(&msg_enc);
         res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Mac_Encode, &msg);
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
@@ -1450,20 +1453,13 @@ static void BSLX_CoseSc_Mac_Source(BSLX_CoseSc_t *ctx)
             ctx->status = res;
         }
         // GCOV_EXCL_STOP
-    }
-    if (BSL_SUCCESS == ctx->status)
-    {
-        {
-            BSL_IdValPair_t *param = BSL_SecOutcome_AppendParam(ctx->sec_outcome);
-            BSL_IdValPair_SetRaw(param, BSLX_COSESC_PARAM_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
-        }
+        else
         {
             BSL_IdValPair_t *result = BSL_SecOutcome_AppendResult(ctx->sec_outcome);
             BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_MAC, msg_enc);
         }
+        BSL_Data_Deinit(&msg_enc);
     }
-    BSL_Data_Deinit(&msg_enc);
-    BSL_Data_Deinit(&aad_scope_enc);
 
     BSLX_CoseMsg_Mac_Deinit(&msg);
 }
@@ -1955,23 +1951,15 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
         BSLX_CoseSc_Encrypt_Compute(ctx, &msg.headers, "Encrypt0", BSL_CRYPTO_ENCRYPT);
     }
 
-    BSL_Data_t aad_scope_enc;
-    BSL_Data_Init(&aad_scope_enc);
     if (BSL_SUCCESS == ctx->status)
     {
-        res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &ctx->aad_scope);
-        // GCOV_EXCL_START
-        if (BSL_SUCCESS != res)
-        {
-            BSL_LOG_ERR("Failed to encode AAD Scope");
-            ctx->status = res;
-        }
-        // GCOV_EXCL_STOP
+        BSLX_CoseSc_AddAadScope(ctx);
     }
-    BSL_Data_t msg_enc;
-    BSL_Data_Init(&msg_enc);
+
     if (BSL_SUCCESS == ctx->status)
     {
+        BSL_Data_t msg_enc;
+        BSL_Data_Init(&msg_enc);
         res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Encrypt0_Encode, &msg);
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
@@ -1980,20 +1968,13 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
             ctx->status = res;
         }
         // GCOV_EXCL_STOP
-    }
-    if (BSL_SUCCESS == ctx->status)
-    {
-        {
-            BSL_IdValPair_t *param = BSL_SecOutcome_AppendParam(ctx->sec_outcome);
-            BSL_IdValPair_SetRaw(param, BSLX_COSESC_PARAM_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
-        }
+        else
         {
             BSL_IdValPair_t *result = BSL_SecOutcome_AppendResult(ctx->sec_outcome);
             BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_ENCRYPT0, msg_enc);
         }
+        BSL_Data_Deinit(&msg_enc);
     }
-    BSL_Data_Deinit(&msg_enc);
-    BSL_Data_Deinit(&aad_scope_enc);
 
     BSLX_CoseMsg_Encrypt0_Deinit(&msg);
 }
@@ -2082,23 +2063,15 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
         BSLX_CoseSc_Encrypt_Compute(ctx, &msg.headers, "Encrypt", BSL_CRYPTO_ENCRYPT);
     }
 
-    BSL_Data_t aad_scope_enc;
-    BSL_Data_Init(&aad_scope_enc);
     if (BSL_SUCCESS == ctx->status)
     {
-        res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &ctx->aad_scope);
-        // GCOV_EXCL_START
-        if (BSL_SUCCESS != res)
-        {
-            BSL_LOG_ERR("Failed to encode AAD Scope");
-            ctx->status = res;
-        }
-        // GCOV_EXCL_STOP
+        BSLX_CoseSc_AddAadScope(ctx);
     }
-    BSL_Data_t msg_enc;
-    BSL_Data_Init(&msg_enc);
+
     if (BSL_SUCCESS == ctx->status)
     {
+        BSL_Data_t msg_enc;
+        BSL_Data_Init(&msg_enc);
         res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Encrypt_Encode, &msg);
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
@@ -2107,20 +2080,13 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
             ctx->status = res;
         }
         // GCOV_EXCL_STOP
-    }
-    if (BSL_SUCCESS == ctx->status)
-    {
-        {
-            BSL_IdValPair_t *param = BSL_SecOutcome_AppendParam(ctx->sec_outcome);
-            BSL_IdValPair_SetRaw(param, BSLX_COSESC_PARAM_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
-        }
+        else
         {
             BSL_IdValPair_t *result = BSL_SecOutcome_AppendResult(ctx->sec_outcome);
             BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_ENCRYPT, msg_enc);
         }
+        BSL_Data_Deinit(&msg_enc);
     }
-    BSL_Data_Deinit(&msg_enc);
-    BSL_Data_Deinit(&aad_scope_enc);
 
     BSLX_CoseMsg_Encrypt_Deinit(&msg);
 }
