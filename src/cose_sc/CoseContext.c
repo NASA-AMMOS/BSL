@@ -1315,7 +1315,7 @@ static void BSLX_CoseSc_GenerateContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Reci
 
 /** Common processing to extract content key from recipient layer.
  */
-static void BSLX_CoseSc_ExtractContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipient_t *recip)
+static void BSLX_CoseSc_ExtractContentKey(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Recipient_t *recip)
 {
     int res;
 
