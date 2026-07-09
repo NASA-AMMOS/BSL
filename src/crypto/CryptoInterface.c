@@ -374,15 +374,19 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     return 0;
 }
 
+// work-around allowance for empty salt and info
+static const uint8_t BSL_Crypto_zero = 0;
+
+#define BSL_Crypto_PtrOrZero(ptr) (ptr) ? (ptr) : (void *)&BSL_Crypto_zero
+
 int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t func, const BSL_Data_t *salt,
                    const BSL_Data_t *info, size_t keylen, BSL_Crypto_KeyHandle_t *cek_handle)
 {
     CHK_ARG_NONNULL(kdk_handle);
     CHK_ARG_NONNULL(salt);
-    CHK_PRECONDITION(keylen > 0);
     CHK_ARG_NONNULL(info);
     CHK_ARG_NONNULL(cek_handle);
-    int retval = BSL_SUCCESS;
+    CHK_PRECONDITION(keylen > 0);
 
     char *digest_name;
     switch (func)
@@ -399,6 +403,7 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
     }
 
     BSL_CryptoKey_t *kdk = (BSL_CryptoKey_t *)kdk_handle;
+    CHK_PRECONDITION(kdk->raw.len > 0);
 
     BSL_CryptoKey_t *cek = BSL_malloc(sizeof(BSL_CryptoKey_t));
     if (cek == NULL)
@@ -411,6 +416,8 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
     {
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+
+    int retval = BSL_SUCCESS;
 
     EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
     if (!kdf)
@@ -435,9 +442,9 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
         BSL_LOG_PLAINTEXT_PTR("using key", kctx, kdk->raw.ptr, kdk->raw.len);
         *par++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY, kdk->raw.ptr, kdk->raw.len);
         BSL_LOG_PLAINTEXT_PTR("using salt", kctx, salt->ptr, salt->len);
-        *par++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, salt->ptr, salt->len);
+        *par++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, BSL_Crypto_PtrOrZero(salt->ptr), salt->len);
         BSL_LOG_PLAINTEXT_PTR("using info", kctx, info->ptr, info->len);
-        *par++  = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO, info->ptr, info->len);
+        *par++  = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO, BSL_Crypto_PtrOrZero(info->ptr), info->len);
         *par    = OSSL_PARAM_construct_end();
         int res = EVP_KDF_derive(kctx, cek->raw.ptr, cek->raw.len, params);
         BSL_LOG_DEBUG("EVP_KDF_derive gave %zu bytes, return %d", cek->raw.len, res);
