@@ -209,6 +209,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     if (dec_result != 1)
     {
+        BSL_LOG_ERR("EVP_DecryptInit_ex: %s", ERR_error_string(ERR_get_error(), NULL));
         BSL_CryptoKey_Deinit(cek);
         BSL_free(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -414,11 +415,13 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
     EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
     if (!kdf)
     {
+        BSL_LOG_ERR("EVP_KDF_fetch: %s", ERR_error_string(ERR_get_error(), NULL));
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     EVP_KDF_CTX *kctx = EVP_KDF_CTX_new(kdf);
     if (!kctx)
     {
+        BSL_LOG_ERR("EVP_KDF_CTX_new: %s", ERR_error_string(ERR_get_error(), NULL));
         retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     EVP_KDF_free(kdf);
@@ -441,6 +444,7 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
         BSL_LOG_PLAINTEXT_PTR("KDF out", kctx, cek->raw.ptr, cek->raw.len);
         if (res <= 0)
         {
+            BSL_LOG_ERR("EVP_KDF_derive: %s", ERR_error_string(ERR_get_error(), NULL));
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
     }
