@@ -157,10 +157,10 @@ class TestAgent(unittest.TestCase):
         else:
             raise ValueError(f"Unhandled data format {format}")
 
-    def _wait_for(self, sock: socket.socket) -> bytes:
+    def _wait_for(self, sock: socket.socket, timeout: float = 1.0) -> bytes:
 
         LOGGER.debug('Waiting for socket data...')
-        rrd, rwr, rxp = select.select([sock], [], [], 1.0)
+        rrd, rwr, rxp = select.select([sock], [], [], timeout)
         if not rrd:
             raise TimeoutError('Did not receive bundle in time')
         data = sock.recv(65535)
@@ -181,7 +181,7 @@ class TestAgent(unittest.TestCase):
             LOGGER.debug('waiting')
 
             with self.assertRaises(TimeoutError):
-                self._wait_for(test_sock)
+                self._wait_for(test_sock, timeout=0.1)
 
             LOGGER.info('\nTransferred data:\n%s\n', tx_data.hex())
 

@@ -13,23 +13,14 @@
         "spec": {
           "svc": "bib-integrity",
           "sc_id": 3,
-          "sc_parms": [
-            {
-              "id": "key_id",
-              "value": "ExampleA.5"
-            },
-            {
-              "id": "target_alg",
-              "value": 6
-            },
-            {
-              "id": "aad_scope",
-              "value": {
-                "0": 1,
-                "-1": 1
-              }
+          "sc_parms": {
+            "key_id": "ExampleA.5",
+            "target_alg": 6,
+            "aad_scope": {
+              "0": 1,
+              "-1": 1
             }
-          ]
+          }
         },
         "policy_action_on_fail": "delete_bundle"
       }
