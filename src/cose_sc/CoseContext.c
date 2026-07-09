@@ -62,7 +62,6 @@ static const int64_t cose_recip_algs[] = {
 static const int64_t cose_recip_alg_unprot[] = { BSLX_COSEMSG_ALG_AES_KW_256, BSLX_COSEMSG_ALG_AES_KW_192,
                                                  BSLX_COSEMSG_ALG_AES_KW_128 };
 
-
 /// Matches signature for @c bsearch()
 static int local_cmp_int64(const void *lhs, const void *rhs)
 {
