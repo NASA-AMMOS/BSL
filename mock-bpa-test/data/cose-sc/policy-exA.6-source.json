@@ -5,15 +5,22 @@
         "desc": "Confidentiality source rule",
         "filter": {
           "rule_id": "1",
-          "role": "a",
+          "role": "s",
           "tgt": 1,
-          "loc": "appout",
+          "loc": "appin",
           "sc_id": 3
         },
         "spec": {
           "svc": "bcb",
           "sc_id": 3,
-          "sc_parms": {}
+          "sc_parms": {
+            "key_id": "ExampleA.6",
+            "target_alg": 3,
+            "aad_scope": {
+              "0": 1,
+              "-1": 1
+            }
+          }
         },
         "policy_action_on_fail": "delete_bundle"
       }
