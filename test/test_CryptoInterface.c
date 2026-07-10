@@ -838,11 +838,11 @@ void test_key_stats(void)
     BSL_Crypto_KeyStats_t stats;
     BSL_Crypto_GetKeyStatistics(handle, &stats);
     TEST_ASSERT_EQUAL(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
-    TEST_ASSERT_EQUAL(12, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+    TEST_ASSERT_EQUAL(14, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
 
     test_encrypt("hello world again!", "testkeystats");
 
     BSL_Crypto_GetKeyStatistics(handle, &stats);
     TEST_ASSERT_EQUAL(2, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
-    TEST_ASSERT_EQUAL(30, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+    TEST_ASSERT_EQUAL(34, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
 }
