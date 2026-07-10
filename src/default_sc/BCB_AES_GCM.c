@@ -290,7 +290,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
 
-        int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &bcb_context->wrapped_key, NULL);
+        int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &bcb_context->wrapped_key);
 
         if (BSL_SUCCESS != wrap_result)
         {

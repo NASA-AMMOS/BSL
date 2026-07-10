@@ -362,7 +362,7 @@ void test_hmac_in(int input_case, const char *keyid, BSL_CryptoCipherSHAVariant_
             TEST_ABORT();
     }
     int expect_hmac_sz = 0;
-    switch (hmac.SHA_variant)
+    switch (sha_var)
     {
         case BSL_CRYPTO_SHA_256:
             expect_hmac_sz = 32;
@@ -600,10 +600,9 @@ void test_key_wrap(const char *kek, const char *cek, const char *expected)
     void *cek_handle;
     BSL_Crypto_GetRegistryKeyName("cek", &cek_handle);
 
-    void      *wrapped_key_handle;
     BSL_Data_t wrapped_key;
     BSL_Data_InitBuffer(&wrapped_key, cek_data.len + 8);
-    BSL_Crypto_WrapKey(kek_handle, cek_handle, &wrapped_key, &wrapped_key_handle);
+    TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_WrapKey(kek_handle, cek_handle, &wrapped_key));
 
     TEST_ASSERT_EQUAL_MEMORY(wrapped_key.ptr, expected_data.ptr, wrapped_key.len);
 
@@ -611,7 +610,6 @@ void test_key_wrap(const char *kek, const char *cek, const char *expected)
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&expected_data);
     BSL_Data_Deinit(&wrapped_key);
-    BSL_Crypto_ClearGeneratedKeyHandle((void *)wrapped_key_handle);
     BSL_Crypto_RemoveRegistryKeyName("kek");
     BSL_Crypto_RemoveRegistryKeyName("cek");
 }
@@ -664,15 +662,13 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
     BSL_Crypto_UnwrapKey(kek_handle, &wrapped_key_data, &cek_handle);
 
     // test our unwrapped key
-    void      *wrapped_key_handle1;
     BSL_Data_t wrapped_key1;
     BSL_Data_InitBuffer(&wrapped_key1, cek_data.len + 8);
-    BSL_Crypto_WrapKey(kek_handle, cek_handle, &wrapped_key1, &wrapped_key_handle1);
+    BSL_Crypto_WrapKey(kek_handle, cek_handle, &wrapped_key1);
 
-    void      *wrapped_key_handle2;
     BSL_Data_t wrapped_key2;
     BSL_Data_InitBuffer(&wrapped_key2, cek_data.len + 8);
-    BSL_Crypto_WrapKey(kek_handle, expected_cek_handle, &wrapped_key2, &wrapped_key_handle2);
+    BSL_Crypto_WrapKey(kek_handle, expected_cek_handle, &wrapped_key2);
 
     TEST_ASSERT_EQUAL_MEMORY(wrapped_key1.ptr, wrapped_key_data.ptr, wrapped_key_data.len);
     TEST_ASSERT_EQUAL_MEMORY(wrapped_key1.ptr, wrapped_key2.ptr, wrapped_key2.len);
@@ -683,8 +679,6 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
     BSL_Data_Deinit(&wrapped_key1);
     BSL_Data_Deinit(&wrapped_key2);
     BSL_Crypto_ClearGeneratedKeyHandle((void *)cek_handle);
-    BSL_Crypto_ClearGeneratedKeyHandle((void *)wrapped_key_handle1);
-    BSL_Crypto_ClearGeneratedKeyHandle((void *)wrapped_key_handle2);
     BSL_Crypto_RemoveRegistryKeyName("kek");
     BSL_Crypto_RemoveRegistryKeyName("cek");
 }
