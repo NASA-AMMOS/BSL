@@ -130,6 +130,14 @@ typedef struct
     bool opt_salt_length;
     /// Optional offset to use when generating IV or Partial IV bytes
     int64_t salt_length;
+    /// True if #salt_base came from an option
+    bool opt_salt_base;
+    /// Optional base bytes for generating salt bytes
+    BSL_Data_t salt_base;
+    /// True if #salt_offset came from an option
+    bool opt_salt_offset;
+    /// Optional offset to use when generating salt bytes
+    int64_t salt_offset;
 
     /// True if #iv_offset came from an option
     bool opt_iv_offset;
@@ -175,6 +183,7 @@ static void BSLX_CoseSc_Init(BSLX_CoseSc_t *self)
     BSL_Data_Init(&self->addl_phdr_bstr);
     BSLX_CoseMsg_HdrMapTree_init(self->addl_phdr);
     BSLX_CoseMsg_HdrMapTree_init(self->addl_uhdr);
+    BSL_Data_Init(&self->salt_base);
     BSL_Data_Init(&self->full_iv);
     BSL_Data_Init(&self->partial_iv);
     self->cekhandle = NULL;
@@ -208,6 +217,7 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
     }
     BSL_Data_Deinit(&self->partial_iv);
     BSL_Data_Deinit(&self->full_iv);
+    BSL_Data_Deinit(&self->salt_base);
     BSLX_CoseMsg_HdrMapTree_clear(self->addl_uhdr);
     BSLX_CoseMsg_HdrMapTree_clear(self->addl_phdr);
     BSL_Data_Deinit(&self->addl_phdr_bstr);
@@ -352,6 +362,34 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         else
         {
             self->opt_salt_length = true;
+        }
+    }
+
+    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_SALT_BASE);
+    if (opt)
+    {
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(opt, &self->salt_base))
+        {
+            BSL_LOG_ERR("Invalid salt length value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            self->opt_salt_base = true;
+        }
+    }
+
+    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_SALT_COUNTER_OFFSET);
+    if (opt)
+    {
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->salt_offset))
+        {
+            BSL_LOG_ERR("Invalid salt length value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            self->opt_salt_offset = true;
         }
     }
 

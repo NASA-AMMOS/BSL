@@ -67,13 +67,8 @@ void test_mock_bpa_ctr_loopback_decode_encode(const char *hexdata)
 {
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    {
-        string_t in_text;
-        string_init_set_str(in_text, hexdata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                      "BSL_TestUtils_DecodeBase16() failed");
-        string_clear(in_text);
-    }
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, hexdata),
+                                      "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     mock_bpa_ctr_t ctr;
     mock_bpa_ctr_init(&ctr);
@@ -113,13 +108,8 @@ void test_mock_bpa_ctr_decode_invalid(const char *hexdata)
 {
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    {
-        string_t in_text;
-        string_init_set_str(in_text, hexdata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                      "BSL_TestUtils_DecodeBase16() failed");
-        string_clear(in_text);
-    }
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, hexdata),
+                                      "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     mock_bpa_ctr_t ctr;
     mock_bpa_ctr_init(&ctr);

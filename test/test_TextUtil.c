@@ -20,9 +20,9 @@
  * subcontract 1700763.
  */
 /** @file
- * Test the text_util.h interfaces.
+ * Test the TextUtil.h interfaces.
  */
-#include <mock_bpa/text_util.h>
+#include <backend/TextUtil.h>
 #include <unity.h>
 #include <string.h>
 
@@ -177,36 +177,27 @@ TEST_CASE("00", "\x00", 1)
 TEST_CASE("6869", "hi", 2)
 void test_mock_bpa_base16_decode_valid(const char *text, const char *expect, size_t expect_len)
 {
-    m_string_t in_text;
-    m_string_init_set_cstr(in_text, text);
+  BSL_Data_t out_data;
+  BSL_Data_Init(&out_data);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, mock_bpa_base16_decode(&out_data, text, strlen(text)), "mock_bpa_base16_decode() failed");
 
-    m_bstring_t out_data;
-    m_bstring_init(out_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, mock_bpa_base16_decode(out_data, in_text), "mock_bpa_base16_decode() failed");
-
-    TEST_ASSERT_EQUAL_INT(expect_len, m_bstring_size(out_data));
+    TEST_ASSERT_EQUAL_INT(expect_len, out_data.len);
     if (expect)
     {
-        TEST_ASSERT_EQUAL_MEMORY(expect, m_bstring_view(out_data, 0, expect_len), expect_len);
+        TEST_ASSERT_EQUAL_MEMORY(expect, out_data.ptr, expect_len);
     }
 
-    m_bstring_clear(out_data);
-    m_string_clear(in_text);
+    BSL_Data_Deinit(&out_data);
 }
 
 TEST_CASE("1")
 TEST_CASE("asd")
 void test_mock_bpa_base16_decode_invalid(const char *text)
 {
-    m_string_t in_text;
-    m_string_init_set_cstr(in_text, text);
-
-    m_bstring_t out_data;
-    m_bstring_init(out_data);
-    TEST_ASSERT_NOT_EQUAL_INT(0, mock_bpa_base16_decode(out_data, in_text));
-
-    m_bstring_clear(out_data);
-    m_string_clear(in_text);
+    BSL_Data_t out_data;
+    BSL_Data_Init(&out_data);
+    TEST_ASSERT_NOT_EQUAL_INT(0, mock_bpa_base16_decode(&out_data, text, strlen(text)));
+    BSL_Data_Deinit(&out_data);
 }
 
 // vectors from Section 10 of RFC 4648

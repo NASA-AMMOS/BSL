@@ -19,7 +19,7 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include "text_util.h"
+#include "TextUtil.h"
 #include <BPSecLib_Private.h>
 #include <string.h>
 #include <strings.h>
@@ -367,26 +367,6 @@ void mock_bpa_strip_space(m_string_t out, const char *in, size_t in_len)
     strip_chars(out, in, in_len, " \b\f\n\r\t");
 }
 
-void mock_bpa_string_tolower(m_string_t out)
-{
-    BSL_CHKVOID(out);
-    size_t len = m_string_size(out);
-    for (size_t i = 0; i < len; i++)
-    {
-        m_string_set_char(out, i, tolower(m_string_get_char(out, i)));
-    }
-}
-
-void mock_bpa_string_toupper(m_string_t out)
-{
-    BSL_CHKVOID(out);
-    size_t len = m_string_size(out);
-    for (size_t i = 0; i < len; i++)
-    {
-        m_string_set_char(out, i, toupper(m_string_get_char(out, i)));
-    }
-}
-
 int mock_bpa_base16_encode(m_string_t out, const m_bstring_t in, bool uppercase)
 {
     const char *fmt = uppercase ? "%02X" : "%02x";
@@ -434,23 +414,21 @@ static int base16_decode_char(uint8_t chr)
     return base16_decode_table[chr];
 }
 
-int mock_bpa_base16_decode(m_bstring_t out, const m_string_t in)
+int mock_bpa_base16_decode(BSL_Data_t *out, const char *ptr, size_t len)
 {
     BSL_CHKERR1(out);
-    BSL_CHKERR1(in);
+    BSL_CHKERR1(ptr);
 
-    const size_t in_len = m_string_size(in);
-    if (in_len % 2 != 0)
+    if (len % 2 != 0)
     {
         return 1;
     }
-    const char *curs = m_string_get_cstr(in);
-    const char *end  = curs + in_len;
+    const char *curs = ptr;
+    const char *end  = curs + len;
 
-    const size_t out_len = in_len / 2;
-    m_bstring_resize(out, out_len);
-    uint8_t *out_curs = m_bstring_acquire_access(out, 0, out_len);
-    ;
+    const size_t out_len = len / 2;
+    BSL_Data_Resize(out, out_len);
+    uint8_t *out_curs = out->ptr;
 
     int retval = 0;
     while (curs < end)
@@ -467,7 +445,6 @@ int mock_bpa_base16_decode(m_bstring_t out, const m_string_t in)
         *(out_curs++)      = byte;
     }
 
-    m_bstring_release_access(out);
     return retval;
 }
 

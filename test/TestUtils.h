@@ -74,18 +74,11 @@ void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t b
 bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_val);
 
 /** Decode base16 text form.
- * This is defined in Section 8 of RFC 4648 @cite rfc4648.
- * @note This function uses heap allocation for its output.
  *
  * @param[out] output The output buffer, which will be sized to its data.
  * @param[in] input The input buffer to read, which must be null terminated.
  * Whitespace in the input must have already been removed with strip_space().
  * @return Zero upon success.
- */
-int BSL_TestUtils_DecodeBase16(BSL_Data_t *output, const string_t input);
-
-/** Decode base16 from C-string input.
- * @overload
  */
 int BSL_TestUtils_DecodeBase16_cstr(BSL_Data_t *output, const char *input);
 

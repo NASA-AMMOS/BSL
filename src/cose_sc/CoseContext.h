@@ -51,7 +51,7 @@ enum BSLX_CoseSC_Option_e
      * the key will be used for the recipient layer, otherwise it will be used
      * for a single-layer message.
      */
-    BSLX_COSESC_OPTION_KEY_ID,
+    BSLX_COSESC_OPTION_KEY_ID = 3000,
     /** Optional recipient algorithm as an integer.
      * The value is a COSE algorithm code point (::BSLX_CoseMsg_Alg_e).
      * Optional for source and optional filter for verifier/acceptor.
@@ -83,6 +83,8 @@ enum BSLX_CoseSC_Option_e
      * Optional for source and unused for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_SALT_LENGTH,
+  BSLX_COSESC_OPTION_SALT_BASE,
+BSLX_COSESC_OPTION_SALT_COUNTER_OFFSET,
 };
 
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.2

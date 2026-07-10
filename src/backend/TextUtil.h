@@ -23,9 +23,10 @@
  * This file contains definitions for text CODEC functions.
  * @ingroup mock_bpa
  */
-#ifndef MOCK_BPA_TEXT_UTIL_H_
-#define MOCK_BPA_TEXT_UTIL_H_
+#ifndef BSLB_TEXTUTIL_H_
+#define BSLB_TEXTUTIL_H_
 
+#include <Data.h>
 #include <m-string.h>
 #include <m-bstring.h>
 #include <stdint.h>
@@ -85,20 +86,6 @@ int mock_bpa_slash_unescape(m_string_t out, const m_string_t in);
  */
 void mock_bpa_strip_space(m_string_t out, const char *in, size_t in_len);
 
-/** Convert a text string to lowercase.
- * This is written to work on byte strings, not unicode.
- *
- * @param[out] out The output buffer, which will be replaced.
- */
-void mock_bpa_string_tolower(m_string_t out);
-
-/** Convert a text string to uppercase.
- * This is written to work on byte strings, not unicode.
- *
- * @param[out] out The output buffer, which will be replaced.
- */
-void mock_bpa_string_toupper(m_string_t out);
-
 /** Encode to base16 text form.
  * This is defined in Section 8 of RFC 4648 @cite rfc4648.
  *
@@ -117,7 +104,7 @@ int mock_bpa_base16_encode(m_string_t out, const m_bstring_t in, bool uppercase)
  * Whitespace in the input must have already been removed with strip_space().
  * @return Zero upon success.
  */
-int mock_bpa_base16_decode(m_bstring_t out, const m_string_t in);
+ int mock_bpa_base16_decode(BSL_Data_t *out, const char *ptr, size_t len);
 
 /** Encode base64 and base64url text forms.
  * These is defined in Section 4 and 5 of RFC 4648 @cite rfc4648.
@@ -146,4 +133,4 @@ int mock_bpa_base64_decode(m_bstring_t out, const m_string_t in);
 }
 #endif
 
-#endif /* MOCK_BPA_TEXT_UTIL_H_ */
+#endif /* BSLB_TEXTUTIL_H_ */

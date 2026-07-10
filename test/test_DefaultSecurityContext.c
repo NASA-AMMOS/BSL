@@ -261,43 +261,33 @@ int rfc3394_cek(unsigned char *buf, int len)
 TEST_MATRIX([ true, false ], [ true, false ])
 void test_sec_source_keywrap(bool wrap, bool bib)
 {
-    string_t cek_str;
-    string_init_set_str(cek_str, "00112233445566778899AABBCCDDEEFF");
     BSL_Data_t cek_data;
     BSL_Data_Init(&cek_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&cek_data, cek_str), 0);
-    string_clear(cek_str);
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&cek_data, "00112233445566778899AABBCCDDEEFF"));
 
-    string_t kek_str;
-    string_init_set_str(kek_str, "000102030405060708090A0B0C0D0E0F");
     BSL_Data_t kek_data;
     BSL_Data_Init(&kek_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&kek_data, kek_str), 0);
-    string_clear(kek_str);
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&kek_data, "000102030405060708090A0B0C0D0E0F"));
 
-    string_t wrapped_key_str;
-    string_init_set_str(wrapped_key_str, "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5");
     BSL_Data_t wrapped_key_data;
     BSL_Data_Init(&wrapped_key_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&wrapped_key_data, wrapped_key_str), 0);
-    string_clear(wrapped_key_str);
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&wrapped_key_data, "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5"));
 
-    string_t result_data_str;
+    const char * result_data_str;
     if (bib)
     {
         // sign
-        string_init_set_str(result_data_str, "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
-                                             "4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B");
+        result_data_str = "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
+                                             "4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B";
     }
     else
     {
         // authtag
-        string_init_set_str(result_data_str, "F6DC43C2EE046C7AE713F0531B2BCB48");
+        result_data_str= "F6DC43C2EE046C7AE713F0531B2BCB48";
     }
     BSL_Data_t result_data;
     BSL_Data_Init(&result_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&result_data, result_data_str), 0);
-    string_clear(result_data_str);
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&result_data, result_data_str));
 
     TEST_ASSERT_EQUAL(
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
@@ -421,12 +411,9 @@ void test_sec_source_keywrap(bool wrap, bool bib)
 
     if (!bib)
     {
-        string_t pt_str;
-        string_init_set_str(pt_str, "15585e19f60c0978ede4105e529f9b0006c13c9804a9c75ab46d4ed46f1097cfa03967");
         BSL_Data_t pt_data;
         BSL_Data_Init(&pt_data);
-        TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&pt_data, pt_str), 0);
-        string_clear(pt_str);
+        TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16_cstr(&pt_data, "15585e19f60c0978ede4105e529f9b0006c13c9804a9c75ab46d4ed46f1097cfa03967"), 0);
 
         MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
         TEST_ASSERT_NOT_NULL(target_ptr);
@@ -470,29 +457,25 @@ void test_sec_accept_keyunwrap(bool bib)
                              "a4b5ac0108e3816c5606479801bc04850101000058233a09c1e63fe23a7f66a59c73"
                              "03837241e070b02619fc59c5214a22f08cd70795e73e9aff";
 
-    string_t kek_str;
-    string_init_set_str(kek_str, "6162636465666768696a6b6c6d6e6f70");
     BSL_Data_t kek_data;
     BSL_Data_Init(&kek_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&kek_data, kek_str), 0);
-    string_clear(kek_str);
+    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16_cstr(&kek_data, "6162636465666768696a6b6c6d6e6f70"), 0);
 
-    string_t result_data_str;
+    const char * result_data_str;
     if (bib)
     {
         // sign
-        string_init_set_str(result_data_str, "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
-                                             "4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B");
+        result_data_str= "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
+                                             "4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B";
     }
     else
     {
         // authtag
-        string_init_set_str(result_data_str, "F6DC43C2EE046C7AE713F0531B2BCB48");
+        result_data_str= "F6DC43C2EE046C7AE713F0531B2BCB48";
     }
     BSL_Data_t result_data;
     BSL_Data_Init(&result_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&result_data, result_data_str), 0);
-    string_clear(result_data_str);
+    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16_cstr(&result_data, result_data_str), 0);
 
     if (bib)
     {
@@ -556,12 +539,9 @@ void test_sec_accept_keyunwrap(bool bib)
 
     if (!bib)
     {
-        string_t pt_str;
-        string_init_set_str(pt_str, "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164");
         BSL_Data_t pt_data;
         BSL_Data_Init(&pt_data);
-        TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&pt_data, pt_str), 0);
-        string_clear(pt_str);
+        TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16_cstr(&pt_data, "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164"), 0);
 
         MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
         TEST_ASSERT_NOT_NULL(target_ptr);
