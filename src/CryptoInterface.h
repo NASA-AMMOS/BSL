@@ -113,7 +113,7 @@ typedef void *BSL_Crypto_LibHandle_t;
 
 /** Opaque handle for key objects in the key store.
  */
-typedef void *BSL_Crypto_KeyHandle_t;
+typedef struct BSL_CryptoKeyPtr_s *BSL_Crypto_KeyHandle_t;
 
 /**
  * Struct def for HMAC operation context
@@ -238,12 +238,12 @@ void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
  */
 bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size_t size2);
 
-/**
- * Deinit and free generated key handle
- * @param[in] keyhandle key handle to clear.
- * Key handle assumed to be generated, not present in key registry, and allocated with ::BSL_malloc().
+/** Dereference a key handle.
+ * @param[in] keyhandle key handle to dereference.
+ * If the handle is null this does nothing.
+ * @post If this is the last use of the handle the key will be destroyed.
  */
-void BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
+void BSL_Crypto_ReleaseKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
 
 /**
  * Perform key wrap.
@@ -275,18 +275,20 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
  * @return 0 if successful
  */
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
-                    const BSL_Data_t *iv_val, void *key_handle);
+                    const BSL_Data_t *iv_val, BSL_Crypto_KeyHandle_t key_handle);
 
 /** Get pointers to an existing key, if present.
  *
  * @param keyid The key to search for.
- * @param[in, out] key_handle pointer to pointer for new key handle
- * @return Zero upon success.
+ * @param[in, out] key_handle pointer to pointer for new key handle.
+ * The key must be dereferenced when its handle is done being used.
+ * @return Zero if the key was present.
  */
 int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *key_handle);
 
-/** Erase key entry from crypto library registry, if present
- *  @param[in] keyid key ID of key to remove
+/** Erase key entry from crypto library registry, if present.
+ *  @param[in] keyid key ID of key to remove.
+ * @return Zero if the key was present.
  */
 int BSL_Crypto_RemoveRegistryKey(const BSL_Data_t *keyid);
 
@@ -355,6 +357,7 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
  * Generate a new cryptographic key
  * @param[in] key_length length of new key. Should be 16 or 32
  * @param[out] key_out pointer to pointer for new key handle.
+ * The key must be dereferenced when its handle is done being used.
  */
 int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out);
 
@@ -372,6 +375,7 @@ int BSL_Crypto_GenIV(BSL_Data_t *buf);
  * @param[in] secret raw key data
  * @param secret_len length of raw key
  * @param[out] key_out Optional pointer to pointer for new key handle.
+ * When provided, the key must be dereferenced when its handle is done being used.
  * @return Zero upon success.
  */
 int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len,

@@ -84,7 +84,7 @@ static void BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
     M_OPEXTEND(M_POD_OPLIST, INIT(API_2(BSL_CryptoKey_Init)), INIT_SET(0), SET(0), CLEAR(API_2(BSL_CryptoKey_Deinit)))
 
 /** @struct BSL_CryptoKeyPtr_t
- * Non-thread-safe shared pointer to memory-stable ::BSL_CryptoKey_t struct.
+ * Thread-safe shared pointer to memory-stable ::BSL_CryptoKey_t struct.
  */
 /** @struct BSL_CryptoKeyDict_t
  * Stable dict of crypto keys (key: key ID | value: BSL_CryptoKeyPtr_t)
@@ -92,9 +92,9 @@ static void BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
 // GCOV_EXCL_START
-M_SHARED_WEAK_PTR_DEF(BSL_CryptoKeyPtr, BSL_CryptoKey_t, M_OPL_BSL_CryptoKey_t())
-M_DICT_DEF2(BSL_CryptoKeyDict, m_bstring_t, M_BSTRING_OPLIST, BSL_CryptoKeyPtr_t *,
-            M_SHARED_PTR_OPLIST(BSL_CryptoKeyPtr, M_OPL_BSL_CryptoKey_t()))
+M_SHARED_PTR_DEF(BSL_CryptoKeyPtr, BSL_CryptoKey_t, M_OPL_BSL_CryptoKey_t())
+#define M_OPL_BSL_CryptoKeyPtr() M_SHARED_PTR_OPLIST(BSL_CryptoKeyPtr, M_OPL_BSL_CryptoKey_t())
+M_DICT_DEF2(BSL_CryptoKeyDict, m_bstring_t, M_BSTRING_OPLIST, BSL_CryptoKeyPtr_t *, M_OPL_BSL_CryptoKeyPtr())
 // GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond
@@ -126,13 +126,15 @@ void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn)
     rand_bytes_generator = rand_gen_fn;
 }
 
-void BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle)
+void BSL_Crypto_ReleaseKeyHandle(BSL_Crypto_KeyHandle_t keyhandle)
 {
-    ASSERT_ARG_NONNULL(keyhandle);
+    if (!keyhandle)
+    {
+        return;
+    }
 
-    BSL_CryptoKey_t *key = (BSL_CryptoKey_t *)keyhandle;
-    BSL_CryptoKey_Deinit(key);
-    BSL_free(key);
+    BSL_CryptoKeyPtr_t *ptr = (BSL_CryptoKeyPtr_t *)keyhandle;
+    BSL_CryptoKeyPtr_release(ptr);
 }
 
 int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wrapped_key,
@@ -170,17 +172,12 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     }
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    if (ctx == NULL)
-    {
-        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-    }
+    CHK_PROPERTY(ctx != NULL);
 
-    BSL_CryptoKey_t *cek = BSL_malloc(sizeof(BSL_CryptoKey_t));
-    if (cek == NULL)
-    {
-        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-    }
-    BSL_CryptoKey_Init(cek);
+    BSL_CryptoKeyPtr_t *cek_ptr = BSL_CryptoKeyPtr_new();
+    // managed struct
+    BSL_CryptoKey_t *cek = BSL_CryptoKeyPtr_ref(cek_ptr);
+    CHK_PROPERTY(cek != NULL);
 
     // wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
     BSL_Data_Resize(&cek->raw, wrapped_key->len - 8);
@@ -189,8 +186,8 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     if (dec_result != 1)
     {
-        BSL_CryptoKey_Deinit(cek);
-        BSL_free(cek);
+        BSL_LOG_ERR("EVP_DecryptInit_ex: %s", ERR_error_string(ERR_get_error(), NULL));
+        BSL_CryptoKeyPtr_release(cek_ptr);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     EVP_CIPHER_CTX_set_padding(ctx, 0);
@@ -203,8 +200,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     {
         BSL_LOG_ERR("EVP_DecryptUpdate: %s", ERR_error_string(ERR_get_error(), NULL));
         EVP_CIPHER_CTX_free(ctx);
-        BSL_CryptoKey_Deinit(cek);
-        BSL_free(cek);
+        BSL_CryptoKeyPtr_release(cek_ptr);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
@@ -217,8 +213,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     {
         BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
         EVP_CIPHER_CTX_free(ctx);
-        BSL_CryptoKey_Deinit(cek);
-        BSL_free(cek);
+        BSL_CryptoKeyPtr_release(cek_ptr);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
@@ -230,7 +225,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     EVP_CIPHER_CTX_free(ctx);
     BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek, cek->raw.ptr, cek->raw.len);
 
-    *cek_handle = cek;
+    *cek_handle = cek_ptr;
     return 0;
 }
 
@@ -690,17 +685,19 @@ int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out)
     *key_out = NULL;
     CHK_ARG_EXPR(key_length > 0);
 
-    BSL_CryptoKey_t *new_key = BSL_malloc(sizeof(BSL_CryptoKey_t));
-    CHK_PROPERTY(new_key);
-    BSL_CryptoKey_Init(new_key);
+    BSL_CryptoKeyPtr_t *key_ptr = BSL_CryptoKeyPtr_new();
+    // managed struct
+    BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref(key_ptr);
+    CHK_PROPERTY(key != NULL);
 
-    BSL_Data_Resize(&new_key->raw, key_length);
-    if (rand_bytes_generator(new_key->raw.ptr, (int)new_key->raw.len) != 1)
+    BSL_Data_Resize(&key->raw, key_length);
+    if (rand_bytes_generator(key->raw.ptr, (int)key->raw.len) != 1)
     {
+        BSL_CryptoKeyPtr_release(key_ptr);
         return BSL_ERR_FAILURE;
     }
 
-    *key_out = new_key;
+    *key_out = key_ptr;
     return BSL_SUCCESS;
 }
 
@@ -743,16 +740,22 @@ int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, si
 
     if (key_out)
     {
-        *key_out = key;
+        // pass reference to caller
+        *key_out = key_ptr;
     }
-    BSL_CryptoKeyPtr_release(key_ptr);
+    else
+    {
+        BSL_CryptoKeyPtr_release(key_ptr);
+    }
+
     m_bstring_clear(keyid_str);
     return 0;
 }
 
 BSL_IdValPair_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
 {
-    BSL_CryptoKey_t *key = handle;
+    ASSERT_ARG_NONNULL(handle);
+    BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref((BSL_CryptoKeyPtr_t *)handle);
 
     BSL_IdValPair_t *retval = NULL;
     if (key)
@@ -779,7 +782,8 @@ BSL_IdValPair_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64
 
 const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
 {
-    const BSL_CryptoKey_t *key = handle;
+    ASSERT_ARG_NONNULL(handle);
+    BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref((BSL_CryptoKeyPtr_t *)handle);
 
     const BSL_IdValPair_t *retval = NULL;
     if (key)
@@ -812,7 +816,7 @@ int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *k
     }
     else
     {
-        *key_handle = BSL_CryptoKeyPtr_ref(*found);
+        *key_handle = BSL_CryptoKeyPtr_acquire(*found);
     }
     pthread_mutex_unlock(&StaticCryptoMutex);
 
@@ -841,7 +845,8 @@ int BSL_Crypto_GetKeyStatistics(BSL_Crypto_KeyHandle_t handle, BSL_Crypto_KeySta
     ASSERT_ARG_NONNULL(handle);
     CHK_ARG_NONNULL(stats);
 
-    const BSL_CryptoKey_t *key = handle;
+    const BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_cref((BSL_CryptoKeyPtr_t *)handle);
+    ;
 
     pthread_mutex_lock(&StaticCryptoMutex);
     // copy as POD

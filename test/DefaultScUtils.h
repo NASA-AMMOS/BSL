@@ -57,7 +57,7 @@ static inline int BSL_Crypto_AddRegistryKeyName(const char *name, const uint8_t 
 }
 
 /// Test helper function
-static inline int BSL_Crypto_GetRegistryKeyName(const char *name, void **handle)
+static inline int BSL_Crypto_GetRegistryKeyName(const char *name, BSL_Crypto_KeyHandle_t *handle)
 {
     BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR(name);
     return BSL_Crypto_GetRegistryKey(&key_id, handle);

@@ -143,6 +143,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     else
     {
         int unwrap_result = BSL_Crypto_UnwrapKey(key_id_handle, &bcb_context->wrapped_key, &cipher_key);
+        BSL_Crypto_ReleaseKeyHandle(key_id_handle);
         if (BSL_SUCCESS != unwrap_result)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
@@ -231,11 +232,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
     }
 
-    if (bcb_context->keywrap)
-    {
-        BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
-    }
     BSL_Cipher_Deinit(&cipher);
+    BSL_Crypto_ReleaseKeyHandle(cipher_key);
 
     return retval;
 }
@@ -286,16 +284,18 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != BSL_Crypto_GenKey(bcb_context->keysize, &cipher_key))
         {
             BSL_LOG_ERR("Failed to generate AES key");
-            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
+            BSL_Crypto_ReleaseKeyHandle(key_id_handle);
+            BSL_Crypto_ReleaseKeyHandle(cipher_key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
 
         int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &bcb_context->wrapped_key);
+        BSL_Crypto_ReleaseKeyHandle(key_id_handle);
 
         if (BSL_SUCCESS != wrap_result)
         {
             BSL_LOG_ERR("Failed to wrap AES key");
-            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
+            BSL_Crypto_ReleaseKeyHandle(cipher_key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
     }
@@ -376,11 +376,9 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     BSL_SeqReader_Destroy(btsd_read);
     BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
 
-    if (bcb_context->keywrap)
-    {
-        BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
-    }
     BSL_Cipher_Deinit(&cipher);
+    BSL_Crypto_ReleaseKeyHandle(cipher_key);
+
     return retval;
 }
 

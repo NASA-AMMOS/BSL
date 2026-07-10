@@ -288,6 +288,7 @@ void test_AppendixA_Example1_BIB_Source(void)
 
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
+        BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
@@ -401,6 +402,7 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
+        BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_1_mac0));
@@ -563,6 +565,7 @@ void test_CCSDS_Example_Mac_Source(void)
 
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_AES_KW_256);
+        BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, ccsds_mac_nosec));
@@ -665,6 +668,7 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
 
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_AES_KW_256);
+        BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, ccsds_mac_bib));
@@ -815,6 +819,7 @@ void test_AppendixA_Example4_BCB_Source(void)
                                      BSLX_COSEMSG_KEY_PARAM_BASEIV, buf);
             BSL_Data_Deinit(&buf);
         }
+        BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
@@ -934,6 +939,7 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
                                      BSLX_COSEMSG_KEY_PARAM_BASEIV, buf);
             BSL_Data_Deinit(&buf);
         }
+        BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_4_enc0));
@@ -1100,6 +1106,7 @@ void test_AppendixA_Example5_BCB_Source(void)
         }
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_AES_KW_256);
+        BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
@@ -1202,6 +1209,7 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_AES_KW_256);
+        BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_5_enc));
