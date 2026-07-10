@@ -147,7 +147,6 @@ class TestCoseScMac0(TestAgent):
             policy_config='data/cose-sc/policy-exA.1-source.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
@@ -160,7 +159,6 @@ class TestCoseScMac0(TestAgent):
             policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
@@ -173,7 +171,6 @@ class TestCoseScMac0(TestAgent):
             policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
@@ -187,7 +184,6 @@ class TestCoseScMac0(TestAgent):
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
-                is_working=True,
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.CBORDIAG
             ))
@@ -201,7 +197,6 @@ class TestCoseScMac0(TestAgent):
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
-                is_working=True,
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.CBORDIAG
             ))
@@ -215,7 +210,6 @@ class TestCoseScMac0(TestAgent):
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
-                is_working=True,
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.ERR
             ))
@@ -229,7 +223,6 @@ class TestCoseScMac0(TestAgent):
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
-                is_working=True,
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.ERR
             ))
@@ -248,7 +241,6 @@ class TestCoseScMac0(TestAgent):
             policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.ERR
         ))
@@ -278,7 +270,6 @@ class TestCoseScMac0(TestAgent):
             policy_config='data/cose-sc/policy-interop-A.1-source.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
@@ -295,7 +286,6 @@ class TestCoseScMac(TestAgent):
             policy_config='data/cose-sc/policy-interop-A.5-source.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.ANYCBOR
         ))
@@ -309,7 +299,6 @@ class TestCoseScMac(TestAgent):
             policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
@@ -330,7 +319,6 @@ class TestCoseScMac(TestAgent):
             policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
@@ -346,7 +334,6 @@ class TestCoseScEncrypt0(TestAgent):
             policy_config='data/cose-sc/policy-exA.4-source.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
@@ -359,7 +346,6 @@ class TestCoseScEncrypt0(TestAgent):
             policy_config='data/cose-sc/policy-any-bcb-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
@@ -372,7 +358,6 @@ class TestCoseScEncrypt0(TestAgent):
             policy_config='data/cose-sc/policy-any-bcb-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
@@ -386,7 +371,6 @@ class TestCoseScEncrypt0(TestAgent):
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
-                is_working=True,
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.CBORDIAG
             ))
@@ -400,7 +384,6 @@ class TestCoseScEncrypt0(TestAgent):
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
-                is_working=True,
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.CBORDIAG
             ))
@@ -414,7 +397,6 @@ class TestCoseScEncrypt0(TestAgent):
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
-                is_working=True,
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.CBORDIAG
             ))
@@ -431,7 +413,6 @@ class TestCoseScEncrypt(TestAgent):
             policy_config='data/cose-sc/policy-exA.5-source.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.ANYCBOR
         ))
@@ -444,7 +425,6 @@ class TestCoseScEncrypt(TestAgent):
             policy_config='data/cose-sc/policy-any-bcb-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
@@ -458,7 +438,6 @@ class TestCoseScEncrypt(TestAgent):
             policy_config='data/cose-sc/policy-exA.6-source.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.ANYCBOR
         ))
@@ -471,7 +450,6 @@ class TestCoseScEncrypt(TestAgent):
             policy_config='data/cose-sc/policy-any-bcb-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))

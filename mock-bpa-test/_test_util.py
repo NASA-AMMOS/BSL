@@ -66,9 +66,6 @@ class _TestCase:
     sec_src_eid: Optional[str] = None
     ''' Security source for all operations '''
 
-    is_working: bool = True
-    ''' True if test working (can be removed once all tests are working) '''
-
     bundle_dest_loc: BundleDestLoc = BundleDestLoc.CLIN
     ''' local outgoing interaction point of the output bundle '''
 

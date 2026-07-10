@@ -48,7 +48,6 @@ class Test_ION_JSON_Policy(TestAgent):
             policy_config='data/policy_provider_test.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY,
             use_bcb_rng=True
