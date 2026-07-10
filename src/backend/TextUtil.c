@@ -110,7 +110,7 @@ int BSL_TextUtil_Base16_Decode(BSL_Data_t *out, const char *ptr, size_t len)
             break;
         }
 
-        const uint8_t byte = (high << 4) | low;
+        const uint8_t byte = (uint8_t)((high << 4) | low);
         // append
         *(out_curs++) = byte;
     }
@@ -275,7 +275,8 @@ int BSL_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len)
 
         if (out_rem)
         {
-            const uint8_t byte = (seg0 << 2) | (seg1 >> 4);
+            const uint8_t byte = (uint8_t)((seg0 << 2) | (seg1 >> 4));
+            // append
             *(out_curs++)      = byte;
             --out_rem;
         }
@@ -308,7 +309,8 @@ int BSL_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len)
 
             if (out_rem)
             {
-                const uint8_t byte = ((seg1 << 4) & 0xF0) | (seg2 >> 2);
+                const uint8_t byte = (uint8_t)(((seg1 << 4) & 0xF0) | (seg2 >> 2));
+                // append
                 *(out_curs++)      = byte;
                 --out_rem;
             }
@@ -337,7 +339,8 @@ int BSL_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len)
 
                 if (out_rem)
                 {
-                    const uint8_t byte = ((seg2 << 6) & 0xC0) | seg3;
+                    const uint8_t byte = (uint8_t)(((seg2 << 6) & 0xC0) | seg3);
+                    // append
                     *(out_curs++)      = byte;
                     --out_rem;
                 }
