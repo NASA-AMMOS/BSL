@@ -362,7 +362,7 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
     int res = EVP_MAC_init(hmac_ctx->libhandle, key_info->raw.ptr, key_info->raw.len, params);
     CHK_PROPERTY(res == 1);
 
-    hmac_ctx->block_size = (size_t)EVP_MAC_CTX_get_block_size(hmac_ctx->libhandle);
+    hmac_ctx->block_size = EVP_MAC_CTX_get_block_size(hmac_ctx->libhandle);
     if (hmac_ctx->block_size == 0)
     {
         hmac_ctx->block_size = 1024;
