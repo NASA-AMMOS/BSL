@@ -22,7 +22,7 @@
 /** @file
  * Test the TextUtil.h interfaces.
  */
- #include <TextUtil.h>
+#include <TextUtil.h>
 #include <unity.h>
 #include <string.h>
 
