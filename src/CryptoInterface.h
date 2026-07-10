@@ -238,10 +238,11 @@ void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
  */
 bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size_t size2);
 
-/** Dereference a key handle.
- * @param[in] keyhandle key handle to dereference.
+/** Release a key handle after it is done being used.
+ *
+ * @param[in] keyhandle key handle to release.
  * If the handle is null this does nothing.
- * @post If this is the last use of the handle the key will be destroyed.
+ * @post If this is the last use of the handle (including the key registry) the key will be destroyed.
  */
 void BSL_Crypto_ReleaseKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
 
@@ -281,7 +282,7 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
  *
  * @param keyid The key to search for.
  * @param[in, out] key_handle pointer to pointer for new key handle.
- * The key must be dereferenced when its handle is done being used.
+ * The handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
  * @return Zero if the key was present.
  */
 int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *key_handle);
@@ -357,7 +358,7 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
  * Generate a new cryptographic key
  * @param[in] key_length length of new key. Should be 16 or 32
  * @param[out] key_out pointer to pointer for new key handle.
- * The key must be dereferenced when its handle is done being used.
+ * The handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
  */
 int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out);
 
@@ -375,7 +376,7 @@ int BSL_Crypto_GenIV(BSL_Data_t *buf);
  * @param[in] secret raw key data
  * @param secret_len length of raw key
  * @param[out] key_out Optional pointer to pointer for new key handle.
- * When provided, the key must be dereferenced when its handle is done being used.
+ * When handle is output, the handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
  * @return Zero upon success.
  */
 int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len,
