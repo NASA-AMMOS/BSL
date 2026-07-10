@@ -44,9 +44,9 @@
 
 #include "DefaultScUtils.h"
 
-static const char* ApxA2_AuthTag     = "efa4b5ac0108e3816c5606479801bc04";
+static const char *ApxA2_AuthTag     = "efa4b5ac0108e3816c5606479801bc04";
 static const char *ApxA2_Ciphertext  = "3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a";
-static const  char* ApxA2_PayloadData = "526561647920746f2067656e657261746520612033322d62797465207061796c6f6164";
+static const char *ApxA2_PayloadData = "526561647920746f2067656e657261746520612033322d62797465207061796c6f6164";
 
 static BSL_TestContext_t LocalTestCtx;
 
@@ -264,7 +264,7 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     BSL_Data_Init(&kek_data);
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&kek_data, "000102030405060708090A0B0C0D0E0F"));
 
-    const char * wrapped_key_hex = "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5";
+    const char *wrapped_key_hex = "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5";
 
     const char *result_data_hex;
     if (bib)
@@ -371,7 +371,7 @@ void test_sec_source_keywrap(bool wrap, bool bib)
             if (sec_param->id == ((bib) ? RFC9173_BIB_PARAMID_WRAPPED_KEY : RFC9173_BCB_SECPARAM_WRAPPEDKEY))
             {
                 got++;
-                
+
                 BSL_Data_t view;
                 TEST_ASSERT_EQUAL_INT(0, BSL_IdValPair_GetAsBytestr(sec_param, &view));
                 TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(wrapped_key_hex, view));
@@ -390,7 +390,7 @@ void test_sec_source_keywrap(bool wrap, bool bib)
 
     if (!bib)
     {
-                              const char *pt_data_hex = "15585e19f60c0978ede4105e529f9b0006c13c9804a9c75ab46d4ed46f1097cfa03967";
+        const char *pt_data_hex = "15585e19f60c0978ede4105e529f9b0006c13c9804a9c75ab46d4ed46f1097cfa03967";
 
         MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
         TEST_ASSERT_NOT_NULL(target_ptr);
@@ -511,7 +511,7 @@ void test_sec_accept_keyunwrap(bool bib)
 
     if (!bib)
     {
-const char *pt_data_hex = "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164";
+        const char *pt_data_hex = "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164";
 
         MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
         TEST_ASSERT_NOT_NULL(target_ptr);

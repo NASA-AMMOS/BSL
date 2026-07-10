@@ -90,15 +90,15 @@ int BSLB_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len);
  * @param in_len The data length.
  */
 #if BSL_LOG_PLAINTEXT_ENABLE
-#define BSL_LOG_PLAINTEXT_PTR(title, ctx, in_ptr, in_len)                                   \
-    do                                                                                \
-    {                                                                                 \
-        BSL_Data_t val = BSL_DATA_INIT_VIEW((in_ptr), (in_len)); \
-        BSL_Data_t hex_str = BSL_DATA_INIT_NULL; \
-        BSLB_TextUtil_Base16_Encode(&hex_str, &val, false); \
-        BSL_LOG_DEBUG("PLAINTEXT STATE (ctx %p) " title ": %s", (void *)ctx, hex_str.ptr);         \
-        BSL_Data_Deinit(&hex_str); \
-    }                                                                                 \
+#define BSL_LOG_PLAINTEXT_PTR(title, ctx, in_ptr, in_len)                                  \
+    do                                                                                     \
+    {                                                                                      \
+        BSL_Data_t val     = BSL_DATA_INIT_VIEW((in_ptr), (in_len));                       \
+        BSL_Data_t hex_str = BSL_DATA_INIT_NULL;                                           \
+        BSLB_TextUtil_Base16_Encode(&hex_str, &val, false);                                \
+        BSL_LOG_DEBUG("PLAINTEXT STATE (ctx %p) " title ": %s", (void *)ctx, hex_str.ptr); \
+        BSL_Data_Deinit(&hex_str);                                                         \
+    }                                                                                      \
     while (false)
 #else
 #define BSL_LOG_PLAINTEXT_PTR(title, ctx, in_ptr, in_len)

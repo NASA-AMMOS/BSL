@@ -84,11 +84,11 @@ bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_
 
 void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t bufflen)
 {
-    BSL_Data_t val = BSL_DATA_INIT_VIEW(buff, bufflen);
-    BSL_Data_t hex_str = BSL_DATA_INIT_NULL; 
-    BSLB_TextUtil_Base16_Encode(&hex_str, &val, false); 
+    BSL_Data_t val     = BSL_DATA_INIT_VIEW(buff, bufflen);
+    BSL_Data_t hex_str = BSL_DATA_INIT_NULL;
+    BSLB_TextUtil_Base16_Encode(&hex_str, &val, false);
     BSL_LOG_INFO("%s%s", message, hex_str.ptr);
-    BSL_Data_Deinit(&hex_str); 
+    BSL_Data_Deinit(&hex_str);
 }
 
 int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cborhex)

@@ -33,7 +33,7 @@ TEST_CASE("hi", 2, false, "6869")
 void test_BSLB_TextUtil_Base16_Encode(const char *data, size_t data_len, bool uppercase, const char *expect)
 {
     BSL_Data_t in_data = BSL_DATA_INIT_VIEW(data, data_len);
-    
+
     BSL_Data_t out_text;
     BSL_Data_Init(&out_text);
     TEST_ASSERT_EQUAL_INT(0, BSLB_TextUtil_Base16_Encode(&out_text, &in_data, uppercase));

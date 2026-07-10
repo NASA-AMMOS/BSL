@@ -31,13 +31,13 @@ int BSLB_TextUtil_Base16_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool uppe
 {
     ASSERT_ARG_NONNULL(out);
     ASSERT_ARG_NONNULL(in);
-    
-    const uint8_t *in_curs   = in->ptr;
-    const uint8_t *in_end    = in_curs + in->len;
-    
+
+    const uint8_t *in_curs = in->ptr;
+    const uint8_t *in_end  = in_curs + in->len;
+
     BSL_Data_Resize(out, 2 * in->len + 1);
-    char *out_curs = (char *)(out->ptr);
-    size_t out_rem = out->len;
+    char  *out_curs = (char *)(out->ptr);
+    size_t out_rem  = out->len;
 
     for (; in_curs < in_end; ++in_curs)
     {
@@ -46,7 +46,7 @@ int BSLB_TextUtil_Base16_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool uppe
         out_rem -= 2;
     }
     *out_curs = '\0';
-    
+
     return 0;
 }
 
@@ -112,7 +112,7 @@ int BSLB_TextUtil_Base16_Decode(BSL_Data_t *out, const char *ptr, size_t len)
 
         const uint8_t byte = (high << 4) | low;
         // append
-        *(out_curs++)      = byte;
+        *(out_curs++) = byte;
     }
 
     return retval;
@@ -133,7 +133,7 @@ int BSLB_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useu
 {
     ASSERT_ARG_NONNULL(out);
     ASSERT_ARG_NONNULL(in);
-    
+
     size_t         in_len = in->len;
     const uint8_t *curs   = in->ptr;
     const uint8_t *end    = curs + in_len;
@@ -207,7 +207,7 @@ int BSLB_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useu
         }
     }
     *out_curs = '\0';
-    
+
     return 0;
 }
 
@@ -348,7 +348,7 @@ int BSLB_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len)
     // trim if necessary
     if (out_rem > 0)
     {
-    BSL_Data_Resize(out, out->len - out_rem);
+        BSL_Data_Resize(out, out->len - out_rem);
     }
 
     if (retval)

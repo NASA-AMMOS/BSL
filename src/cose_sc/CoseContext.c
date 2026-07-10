@@ -1573,7 +1573,7 @@ static void BSLX_CoseSc_HkdfContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipien
 
         BSL_Data_Init(&salt);
         res = BSLX_CoseSc_GenerateNonce(ctx->keyhandle, &salt, NULL, &ctx->salt_base, ctx->opt_salt_offset,
-                                            ctx->salt_offset, salt_len);
+                                        ctx->salt_offset, salt_len);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to generate salt");
@@ -2105,8 +2105,9 @@ static void BSLX_CoseSc_GenerateIV(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *h
 
     if (BSL_SUCCESS == ctx->status)
     {
-        int res = BSLX_CoseSc_GenerateNonce(ctx->keyhandle, &ctx->full_iv, keyparam ? &ctx->partial_iv : NULL, &baseiv_view,
-                                            ctx->opt_iv_offset, ctx->iv_offset, BSLX_COSEMSG_AESGCM_IV_LEN);
+        int res =
+            BSLX_CoseSc_GenerateNonce(ctx->keyhandle, &ctx->full_iv, keyparam ? &ctx->partial_iv : NULL, &baseiv_view,
+                                      ctx->opt_iv_offset, ctx->iv_offset, BSLX_COSEMSG_AESGCM_IV_LEN);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to generate IV");

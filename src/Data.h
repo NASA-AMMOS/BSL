@@ -67,9 +67,9 @@ typedef struct BSL_Data_s
 /** Static initializer for a view on a static byte string.
  * @sa BSL_Data_InitView()
  */
-#define BSL_DATA_INIT_VIEW(in_ptr, in_len)                                                    \
-    (BSL_Data_t)                                                                         \
-    {                                                                                    \
+#define BSL_DATA_INIT_VIEW(in_ptr, in_len)                              \
+    (BSL_Data_t)                                                        \
+    {                                                                   \
         .owned = false, .ptr = (BSL_DataPtr_t)(in_ptr), .len = (in_len) \
     }
 

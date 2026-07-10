@@ -149,7 +149,8 @@ void setUp(void)
 
     BSL_Data_t wrapkey_data;
     BSL_Data_Init(&wrapkey_data);
-    TEST_ASSERT_EQUAL_INT(0, BSL_TestUtils_DecodeBase16_cstr(&wrapkey_data, "69c411276fecddc4780df42c8a2af89296fabf34d7fae700"));
+    TEST_ASSERT_EQUAL_INT(
+        0, BSL_TestUtils_DecodeBase16_cstr(&wrapkey_data, "69c411276fecddc4780df42c8a2af89296fabf34d7fae700"));
     BSL_IdValPair_SetBytestr(&ctx.param_wrapped_key, BSLX_BCB_OPT_WRAPPED_KEY, wrapkey_data);
     BSL_Data_Deinit(&wrapkey_data);
 
