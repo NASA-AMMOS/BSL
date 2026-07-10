@@ -104,7 +104,7 @@ int mock_bpa_base16_encode(m_string_t out, const m_bstring_t in, bool uppercase)
  * Whitespace in the input must have already been removed with strip_space().
  * @return Zero upon success.
  */
- int mock_bpa_base16_decode(BSL_Data_t *out, const char *ptr, size_t len);
+int mock_bpa_base16_decode(BSL_Data_t *out, const char *ptr, size_t len);
 
 /** Encode base64 and base64url text forms.
  * These is defined in Section 4 and 5 of RFC 4648 @cite rfc4648.

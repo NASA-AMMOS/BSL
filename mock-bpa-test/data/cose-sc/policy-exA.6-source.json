@@ -21,7 +21,9 @@
               "-1": 1
             },
             "salt_base": "0x2FA8C8352AEA17FAF7407271A5E90EB8",
-            "salt_counter_offset": "0x0"
+            "salt_counter_offset": "0x0",
+            "iv_base": "0x6F3093EBA5D85143C3DC484A",
+            "iv_counter_offset": "0x0"
           }
         },
         "policy_action_on_fail": "delete_bundle"

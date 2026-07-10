@@ -81,14 +81,14 @@ static int BSLP_GetNumberInt(const json_t *value, int64_t *as_int)
  */
 static int BSLP_GetBytesHex(const json_t *value, BSL_Data_t *as_bytes)
 {
-  const char *val_ptr = json_string_value(value);
-  size_t val_len = json_string_length(value);
-  if (strncasecmp(val_ptr, "0x", 2) == 0)
-  {
-    val_ptr += 2;
-    val_len -= 2;
-  }
-  return mock_bpa_base16_decode(as_bytes, val_ptr, val_len);
+    const char *val_ptr = json_string_value(value);
+    size_t      val_len = json_string_length(value);
+    if (strncasecmp(val_ptr, "0x", 2) == 0)
+    {
+        val_ptr += 2;
+        val_len -= 2;
+    }
+    return mock_bpa_base16_decode(as_bytes, val_ptr, val_len);
 }
 
 /** Read a JSON value as a boolean, either directly or from text.
@@ -300,6 +300,19 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
         BSL_IdValPair_SetRaw(opt, BSLX_COSESC_OPTION_AAD_SCOPE, enc_scope.ptr, enc_scope.len);
         BSL_Data_Deinit(&enc_scope);
     }
+    else if (0 == strcasecmp(id_str, "iv_base"))
+    {
+        BSL_Data_t as_bytes;
+        BSL_Data_Init(&as_bytes);
+        if (BSLP_GetBytesHex(value, &as_bytes))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_IV_BASE);
+        BSL_IdValPair_SetBytestr(opt, BSLX_COSESC_OPTION_IV_BASE, as_bytes);
+        BSL_Data_Deinit(&as_bytes);
+    }
     else if (0 == strcasecmp(id_str, "iv_counter_offset"))
     {
         int64_t as_int;
@@ -322,19 +335,19 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
         BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_SALT_LENGTH);
         BSL_IdValPair_SetInt64(opt, BSLX_COSESC_OPTION_SALT_LENGTH, as_int);
     }
-      else if (0 == strcasecmp(id_str, "salt_base"))
-      {
-          BSL_Data_t as_bytes;
-          BSL_Data_Init(&as_bytes);
-          if (BSLP_GetBytesHex(value, &as_bytes))
-          {
-              return BSL_ERR_POLICY_CONFIG;
-          }
+    else if (0 == strcasecmp(id_str, "salt_base"))
+    {
+        BSL_Data_t as_bytes;
+        BSL_Data_Init(&as_bytes);
+        if (BSLP_GetBytesHex(value, &as_bytes))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
 
-          BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_SALT_BASE);
-          BSL_IdValPair_SetBytestr(opt, BSLX_COSESC_OPTION_SALT_BASE, as_bytes);
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_SALT_BASE);
+        BSL_IdValPair_SetBytestr(opt, BSLX_COSESC_OPTION_SALT_BASE, as_bytes);
         BSL_Data_Deinit(&as_bytes);
-      }
+    }
     else if (0 == strcasecmp(id_str, "salt_counter_offset"))
     {
         int64_t as_int;

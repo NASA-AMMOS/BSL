@@ -78,13 +78,14 @@ enum BSLX_CoseSC_Option_e
      * Optional for source and unused for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_IV_COUNTER_OFFSET,
+    BSLX_COSESC_OPTION_IV_BASE,
     /** An option to select a salt length for KDF sources.
      * The value is a length in bytes (as @c int64_t) to generate a salt.
      * Optional for source and unused for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_SALT_LENGTH,
-  BSLX_COSESC_OPTION_SALT_BASE,
-BSLX_COSESC_OPTION_SALT_COUNTER_OFFSET,
+    BSLX_COSESC_OPTION_SALT_COUNTER_OFFSET,
+    BSLX_COSESC_OPTION_SALT_BASE,
 };
 
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.2

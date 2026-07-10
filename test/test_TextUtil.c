@@ -177,9 +177,10 @@ TEST_CASE("00", "\x00", 1)
 TEST_CASE("6869", "hi", 2)
 void test_mock_bpa_base16_decode_valid(const char *text, const char *expect, size_t expect_len)
 {
-  BSL_Data_t out_data;
-  BSL_Data_Init(&out_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, mock_bpa_base16_decode(&out_data, text, strlen(text)), "mock_bpa_base16_decode() failed");
+    BSL_Data_t out_data;
+    BSL_Data_Init(&out_data);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, mock_bpa_base16_decode(&out_data, text, strlen(text)),
+                                  "mock_bpa_base16_decode() failed");
 
     TEST_ASSERT_EQUAL_INT(expect_len, out_data.len);
     if (expect)
