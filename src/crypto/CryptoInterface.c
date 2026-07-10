@@ -25,8 +25,8 @@
  */
 #include <CryptoInterface.h>
 #include <BPSecLib_Private.h>
+#include <TextUtil.h>
 #include <backend/IdValPair.h>
-#include <backend/TextUtil.h>
 
 #include <m-dict.h>
 #include <m-shared-ptr.h>

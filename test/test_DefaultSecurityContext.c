@@ -182,8 +182,8 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
         // Confirm expected vs actual auth tag byte length's match and they are equal
         BSL_Data_t view;
         TEST_ASSERT_EQUAL(0, BSL_IdValPair_GetAsBytestr(auth_tag_result, &view));
-        TEST_ASSERT_EQUAL_size_t(sizeof(ApxA2_AuthTag), view.len);
-        TEST_ASSERT_EQUAL_MEMORY(ApxA2_AuthTag, view.ptr, sizeof(ApxA2_AuthTag));
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(ApxA2_AuthTag, view));
+        BSL_Data_Deinit(&view);
     }
 
     MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);

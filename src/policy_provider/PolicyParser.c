@@ -20,7 +20,7 @@
  * subcontract 1700763.
  */
 #include "PolicyParser.h"
-#include <backend/TextUtil.h>
+#include <TextUtil.h>
 #include <default_sc/DefaultSecContext.h>
 #include <cose_sc/CoseContext.h>
 #include <strings.h>
@@ -88,7 +88,7 @@ static int BSLP_GetBytesHex(const json_t *value, BSL_Data_t *as_bytes)
         val_ptr += 2;
         val_len -= 2;
     }
-    return BSLB_TextUtil_Base16_Decode(as_bytes, val_ptr, val_len);
+    return BSL_TextUtil_Base16_Decode(as_bytes, val_ptr, val_len);
 }
 
 /** Read a JSON value as a boolean, either directly or from text.

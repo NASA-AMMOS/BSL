@@ -72,7 +72,7 @@ static void BSL_IdValPair_Print(const BSL_IdValPair_t *pair, const char *label, 
         BSL_IdValPair_GetAsBytestr(pair, &val);
 
         BSL_Data_t hex_str = BSL_DATA_INIT_NULL;
-        BSLB_TextUtil_Base16_Encode(&hex_str, &val, false);
+        BSL_TextUtil_Base16_Encode(&hex_str, &val, false);
         BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, pair->id, hex_str.ptr);
         BSL_Data_Deinit(&hex_str);
     }

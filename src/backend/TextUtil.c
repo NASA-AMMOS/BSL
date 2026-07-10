@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-int BSLB_TextUtil_Base16_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool uppercase)
+int BSL_TextUtil_Base16_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool uppercase)
 {
     ASSERT_ARG_NONNULL(out);
     ASSERT_ARG_NONNULL(in);
@@ -83,7 +83,7 @@ static int base16_decode_char(uint8_t chr)
     return base16_decode_table[chr];
 }
 
-int BSLB_TextUtil_Base16_Decode(BSL_Data_t *out, const char *ptr, size_t len)
+int BSL_TextUtil_Base16_Decode(BSL_Data_t *out, const char *ptr, size_t len)
 {
     ASSERT_ARG_NONNULL(out);
     ASSERT_ARG_NONNULL(ptr);
@@ -129,7 +129,7 @@ static const char *base64url_alphabet =
         "0123456789-_";
 // clang-format on
 
-int BSLB_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useurl, bool usepad)
+int BSL_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useurl, bool usepad)
 {
     ASSERT_ARG_NONNULL(out);
     ASSERT_ARG_NONNULL(in);
@@ -243,7 +243,7 @@ static int base64_decode_char(uint8_t chr)
     return base64_decode_table[chr];
 }
 
-int BSLB_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len)
+int BSL_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len)
 {
     ASSERT_ARG_NONNULL(out);
     ASSERT_ARG_NONNULL(ptr);

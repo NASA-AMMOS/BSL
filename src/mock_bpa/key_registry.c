@@ -25,7 +25,7 @@
  */
 
 #include "key_registry.h"
-#include <backend/TextUtil.h>
+#include <TextUtil.h>
 #include <backend/CBOR.h>
 #include <cose_sc/CoseMsg.h>
 #include <m-string.h>
@@ -98,7 +98,7 @@ int mock_bpa_key_registry_init_jwk(int fd)
 
         BSL_Data_t k_data;
         BSL_Data_Init(&k_data);
-        retval = BSLB_TextUtil_Base64_Decode(&k_data, json_string_value(k), json_string_length(k));
+        retval = BSL_TextUtil_Base64_Decode(&k_data, json_string_value(k), json_string_length(k));
 
         if (!retval)
         {

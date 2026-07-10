@@ -27,9 +27,10 @@ configure_file(BSLConfig.c.in BSLConfig.c @ONLY)
 add_library(bsl_front)
 target_sources(bsl_front PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
     ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Private.h
     ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Public.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextUtil.h
     ${CMAKE_CURRENT_SOURCE_DIR}/CryptoInterface.h
 )
 target_sources(bsl_front PRIVATE 
@@ -147,7 +148,6 @@ set(BSL_DYNAMIC_H
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.h   
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/TextUtil.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.h
 )
 

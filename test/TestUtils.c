@@ -26,12 +26,12 @@
 
 #include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
+#include <TextUtil.h>
 #include <mock_bpa/MockBPA.h>
 
 #include <backend/IdValPair.h>
 #include <backend/SecurityActionSet.h>
 #include <backend/UtilDefs_SeqReadWrite.h>
-#include <backend/TextUtil.h>
 #include <policy_provider/SamplePolicyProvider.h>
 
 #include "TestUtils.h"
@@ -86,7 +86,7 @@ void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t b
 {
     BSL_Data_t val     = BSL_DATA_INIT_VIEW(buff, bufflen);
     BSL_Data_t hex_str = BSL_DATA_INIT_NULL;
-    BSLB_TextUtil_Base16_Encode(&hex_str, &val, false);
+    BSL_TextUtil_Base16_Encode(&hex_str, &val, false);
     BSL_LOG_INFO("%s%s", message, hex_str.ptr);
     BSL_Data_Deinit(&hex_str);
 }
@@ -141,7 +141,7 @@ BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text)
 
 int BSL_TestUtils_DecodeBase16_cstr(BSL_Data_t *output, const char *input)
 {
-    return BSLB_TextUtil_Base16_Decode(output, input, strlen(input));
+    return BSL_TextUtil_Base16_Decode(output, input, strlen(input));
 }
 
 int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid,

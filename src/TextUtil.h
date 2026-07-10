@@ -42,7 +42,7 @@ extern "C" {
  * @param uppercase True to use upper-case letters, false to use lower-case.
  * @return Zero upon success.
  */
-int BSLB_TextUtil_Base16_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool uppercase);
+int BSL_TextUtil_Base16_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool uppercase);
 
 /** Decode base16 text form.
  * This is defined in Section 8 of RFC 4648 @cite rfc4648.
@@ -53,7 +53,7 @@ int BSLB_TextUtil_Base16_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool uppe
  * @param len The length from @c ptr to read, not including null terminator.
  * @return Zero upon success.
  */
-int BSLB_TextUtil_Base16_Decode(BSL_Data_t *out, const char *ptr, size_t len);
+int BSL_TextUtil_Base16_Decode(BSL_Data_t *out, const char *ptr, size_t len);
 
 /** Encode base64 and base64url text forms.
  * These is defined in Section 4 and 5 of RFC 4648 @cite rfc4648.
@@ -67,7 +67,7 @@ int BSLB_TextUtil_Base16_Decode(BSL_Data_t *out, const char *ptr, size_t len);
  * use padding.
  * @return Zero upon success.
  */
-int BSLB_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useurl, bool usepad);
+int BSL_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useurl, bool usepad);
 
 /** Decode base64 and base64url text forms.
  * These is defined in Section 4 and 5 of RFC 4648 @cite rfc4648.
@@ -78,7 +78,7 @@ int BSLB_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useu
  * @param len The length from @c ptr to read, not including null terminator.
  * @return Zero upon success.
  */
-int BSLB_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len);
+int BSL_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len);
 
 /** @def BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)
  * Log plaintext as hex for debugging only when enabled by compile option
@@ -95,7 +95,7 @@ int BSLB_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len);
     {                                                                                      \
         BSL_Data_t val     = BSL_DATA_INIT_VIEW((in_ptr), (in_len));                       \
         BSL_Data_t hex_str = BSL_DATA_INIT_NULL;                                           \
-        BSLB_TextUtil_Base16_Encode(&hex_str, &val, false);                                \
+        BSL_TextUtil_Base16_Encode(&hex_str, &val, false);                                \
         BSL_LOG_DEBUG("PLAINTEXT STATE (ctx %p) " title ": %s", (void *)ctx, hex_str.ptr); \
         BSL_Data_Deinit(&hex_str);                                                         \
     }                                                                                      \
