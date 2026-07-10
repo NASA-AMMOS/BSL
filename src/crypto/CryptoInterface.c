@@ -44,9 +44,7 @@
  */
 typedef struct BSL_CryptoKey_s
 {
-    /// Pointer to OpenSSL PKEY struct (used in hmac ctx)
-    EVP_PKEY *pkey;
-    /// Pointer to raw key information (used in cipher ctx)
+    /// Pointer to raw key information
     BSL_Data_t raw;
     /// Additional parameter dictionary
     BSLB_IdValPairPtrMap_t params;
@@ -58,7 +56,6 @@ static void BSL_CryptoKey_Init(BSL_CryptoKey_t *key)
 {
     ASSERT_ARG_NONNULL(key);
 
-    key->pkey = NULL;
     BSL_Data_Init(&(key->raw));
     BSLB_IdValPairPtrMap_init(key->params);
 
@@ -72,11 +69,6 @@ static void BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
 {
     ASSERT_ARG_NONNULL(key);
 
-    if (key->pkey)
-    {
-        EVP_PKEY_free(key->pkey);
-        key->pkey = NULL;
-    }
     BSL_Data_Deinit(&(key->raw));
     BSLB_IdValPairPtrMap_clear(key->params);
 
@@ -237,18 +229,6 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
 
     EVP_CIPHER_CTX_free(ctx);
     BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek, cek->raw.ptr, cek->raw.len);
-
-    EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
-    res                = EVP_PKEY_keygen_init(pctx);
-    if (res != 1)
-    {
-        BSL_CryptoKey_Deinit(cek);
-        BSL_free(cek);
-        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-    }
-
-    cek->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, cek->raw.ptr, cek->raw.len);
-    EVP_PKEY_CTX_free(pctx);
 
     *cek_handle = cek;
     return 0;
@@ -717,16 +697,8 @@ int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out)
     BSL_Data_Resize(&new_key->raw, key_length);
     if (rand_bytes_generator(new_key->raw.ptr, (int)new_key->raw.len) != 1)
     {
-        return -2;
+        return BSL_ERR_FAILURE;
     }
-
-    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
-    CHK_PROPERTY(ctx);
-    int res = EVP_PKEY_keygen_init(ctx);
-    CHK_PROPERTY(res == 1);
-
-    new_key->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, new_key->raw.ptr, (int)new_key->raw.len);
-    EVP_PKEY_CTX_free(ctx);
 
     *key_out = new_key;
     return BSL_SUCCESS;
@@ -752,8 +724,6 @@ int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, si
     CHK_PROPERTY(key_ptr != NULL);
     // actual key struct
     BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref(key_ptr);
-
-    key->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, secret, (int)secret_len);
 
     int ecode = 0;
     if ((ecode = BSL_Data_CopyFrom(&key->raw, secret_len, secret)) < 0)
