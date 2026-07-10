@@ -28,6 +28,7 @@
 #include <backend/TextUtil.h>
 #include <backend/CBOR.h>
 #include <cose_sc/CoseMsg.h>
+#include <m-string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -94,27 +95,18 @@ int mock_bpa_key_registry_init_jwk(int fd)
             BSL_LOG_ERR("Missing \"k\" ");
             continue;
         }
-        const char *k_str = json_string_value(k);
-        BSL_LOG_DEBUG("k: %s", k_str);
 
-        m_string_t k_text;
-        m_string_init_set_cstr(k_text, k_str);
-        m_bstring_t k_data;
-        m_bstring_init(k_data);
-
-        retval = mock_bpa_base64_decode(k_data, k_text);
+        BSL_Data_t k_data;
+        BSL_Data_Init(&k_data);
+        retval = BSLB_TextUtil_Base64_Decode(&k_data, json_string_value(k), json_string_length(k));
 
         if (!retval)
         {
             BSL_Data_t kid_view = BSL_DATA_INIT_VIEW_CSTR(kid_str);
 
-            const size_t   k_len = m_bstring_size(k_data);
-            const uint8_t *k_ptr = m_bstring_view(k_data, 0, k_len);
-
-            retval = BSL_Crypto_AddRegistryKey(&kid_view, k_ptr, k_len, NULL);
+            retval = BSL_Crypto_AddRegistryKey(&kid_view, k_data.ptr, k_data.len, NULL);
         }
-        m_bstring_clear(k_data);
-        m_string_clear(k_text);
+        BSL_Data_Deinit(&k_data);
 
         if (retval)
         {

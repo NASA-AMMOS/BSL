@@ -27,89 +27,39 @@
 #define BSLB_TEXTUTIL_H_
 
 #include <Data.h>
-#include <m-string.h>
-#include <m-bstring.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** Encode to URI percent-encoding text form.
- * This is defined in Section 2.1 of RFC 3986 @cite rfc3986.
- * The set of unreserved characters are alpha, digits, and _.-~ characters.
- * in accordance with Section 2.3 of RFC 3986 @cite rfc3986.
- *
- * @param[out] out The output buffer, which will be appended to.
- * @param in The input encoded text which is null-terminated.
- * @param safe A set of additional safe characters to not be encoded,
- * which is null-terminated.
- * @return Zero upon success.
- */
-int mock_bpa_uri_percent_encode(m_string_t out, const m_string_t in, const char *safe);
-
-/** Decode from URI percent-encoding text form.
- * This is defined in Section 2.1 of RFC 3986 @cite rfc3986.
- *
- * @param[out] out The output buffer, which will be appended to.
- * @param[in] in The input encoded text which may be null-terminated.
- * @return Zero upon success.
- */
-int mock_bpa_uri_percent_decode(m_string_t out, const m_string_t in);
-
-/** Escape backslashes in tstr or bstr text form.
- * This is defined in Section G.2 of RFC 8610 @cite rfc8610
- * and Section 7 of RFC 8259 @cite rfc8259.
- *
- * @param[out] out The output buffer, which will be appended to.
- * @param in The input buffer to read, which must be null terminated.
- * @param quote The character used to quote the string.
- * @return Zero upon success.
- */
-int mock_bpa_slash_escape(m_string_t out, const m_string_t in, const char quote);
-
-/** Unescape backslashes in tstr/bstr text form.
- * This is defined in Section G.2 of RFC8610 @cite rfc8610.
- *
- * @param[out] out The output buffer, which will be appended to.
- * @param in The input buffer to read, which may be null terminated.
- * @return Zero upon success.
- */
-int mock_bpa_slash_unescape(m_string_t out, const m_string_t in);
-
-/** Remove whitespace characters from a text string.
- * This is based on isspace() inspection.
- *
- * @param[out] out The output buffer, which will be replaced.
- * @param[in] in The input text to read.
- * @param in_len The length of text not including null terminator.
- */
-void mock_bpa_strip_space(m_string_t out, const char *in, size_t in_len);
-
 /** Encode to base16 text form.
  * This is defined in Section 8 of RFC 4648 @cite rfc4648.
  *
- * @param[out] out The output buffer, which will be appended to.
+ * @param[out] out The output buffer, which will be resized appropriately
+ * and null-terminated.
  * @param[in] in The input buffer to read.
  * @param uppercase True to use upper-case letters, false to use lower-case.
  * @return Zero upon success.
  */
-int mock_bpa_base16_encode(m_string_t out, const m_bstring_t in, bool uppercase);
+int BSLB_TextUtil_Base16_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool uppercase);
 
 /** Decode base16 text form.
  * This is defined in Section 8 of RFC 4648 @cite rfc4648.
  *
  * @param[out] out The output buffer, which will be sized to its data.
- * @param[in] in The input buffer to read, which must be null terminated.
- * Whitespace in the input must have already been removed with strip_space().
+ * @param[in] ptr The input buffer to read, which may be null terminated.
+ * Whitespace in the input must have already been removed.
+ * @param len The length from @c ptr to read, not including null terminator.
  * @return Zero upon success.
  */
-int mock_bpa_base16_decode(BSL_Data_t *out, const char *ptr, size_t len);
+int BSLB_TextUtil_Base16_Decode(BSL_Data_t *out, const char *ptr, size_t len);
 
 /** Encode base64 and base64url text forms.
  * These is defined in Section 4 and 5 of RFC 4648 @cite rfc4648.
  *
- * @param[out] out The output buffer, which will be appended to.
+ * @param[out] out The output buffer, which will be resized appropriately
+ * and null-terminated.
  * @param[in] in The input buffer to read.
  * @param useurl True to use the base64url alphabet, false to use the base64
  * alphabet.
@@ -117,17 +67,42 @@ int mock_bpa_base16_decode(BSL_Data_t *out, const char *ptr, size_t len);
  * use padding.
  * @return Zero upon success.
  */
-int mock_bpa_base64_encode(m_string_t out, const m_bstring_t in, bool useurl, bool usepad);
+int BSLB_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useurl, bool usepad);
 
 /** Decode base64 and base64url text forms.
  * These is defined in Section 4 and 5 of RFC 4648 @cite rfc4648.
  *
  * @param[out] out The output buffer, which will be sized to its data.
- * @param[in] in The input buffer to read, which must be null terminated.
- * Whitespace in the input must have already been removed with strip_space().
+ * @param[in] ptr The input buffer to read, which may be null terminated.
+ * Whitespace in the input must have already been removed.
+ * @param len The length from @c ptr to read, not including null terminator.
  * @return Zero upon success.
  */
-int mock_bpa_base64_decode(m_bstring_t out, const m_string_t in);
+int BSLB_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len);
+
+/** @def BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)
+ * Log plaintext as hex for debugging only when enabled by compile option
+ * ::BSL_LOG_PLAINTEXT_ENABLE is non-zero.
+ *
+ * @param title The static C string title.
+ * @param ctc A correlating context pointer to log.
+ * @param in_ptr The data start pointer.
+ * @param in_len The data length.
+ */
+#if BSL_LOG_PLAINTEXT_ENABLE
+#define BSL_LOG_PLAINTEXT_PTR(title, ctx, in_ptr, in_len)                                   \
+    do                                                                                \
+    {                                                                                 \
+        BSL_Data_t val = BSL_DATA_INIT_VIEW((in_ptr), (in_len)); \
+        BSL_Data_t hex_str = BSL_DATA_INIT_NULL; \
+        BSLB_TextUtil_Base16_Encode(&hex_str, &val, false); \
+        BSL_LOG_DEBUG("PLAINTEXT STATE (ctx %p) " title ": %s", (void *)ctx, hex_str.ptr);         \
+        BSL_Data_Deinit(&hex_str); \
+    }                                                                                 \
+    while (false)
+#else
+#define BSL_LOG_PLAINTEXT_PTR(title, ctx, in_ptr, in_len)
+#endif // BSL_LOG_PLAINTEXT_ENABLE
 
 #ifdef __cplusplus
 }

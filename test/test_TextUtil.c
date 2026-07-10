@@ -28,159 +28,29 @@
 
 #define TEST_CASE(...)
 
-TEST_CASE("", "", "")
-TEST_CASE("hi", "", "hi")
-TEST_CASE("h i", "", "h%20i")
-TEST_CASE("h$i", "", "h%24i")
-TEST_CASE("h$i", "$", "h$i")
-void test_mock_bpa_uri_percent_encode_valid(const char *text, const char *safe, const char *expect)
-{
-    m_string_t in_text;
-    m_string_init_set_cstr(in_text, text);
-
-    m_string_t out_text;
-    m_string_init(out_text);
-    TEST_ASSERT_EQUAL_INT(0, mock_bpa_uri_percent_encode(out_text, in_text, safe));
-
-    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
-
-    m_string_clear(out_text);
-    m_string_clear(in_text);
-}
-
-TEST_CASE("", "")
-TEST_CASE("hi", "hi")
-TEST_CASE("h%20i", "h i")
-TEST_CASE("h%7ei", "h~i")
-void test_mock_bpa_uri_percent_decode_valid(const char *text, const char *expect)
-{
-    m_string_t in_text;
-    m_string_init_set_cstr(in_text, text);
-
-    m_string_t out_text;
-    m_string_init(out_text);
-    TEST_ASSERT_EQUAL_INT(0, mock_bpa_uri_percent_decode(out_text, in_text));
-
-    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
-
-    m_string_clear(out_text);
-    m_string_clear(in_text);
-}
-
-TEST_CASE("%")
-TEST_CASE("%1")
-void test_mock_bpa_uri_percent_decode_invalid(const char *text)
-{
-    m_string_t in_text;
-    m_string_init_set_cstr(in_text, text);
-
-    m_string_t out_text;
-    m_string_init(out_text);
-    TEST_ASSERT_NOT_EQUAL_INT(0, mock_bpa_uri_percent_decode(out_text, in_text));
-    m_string_clear(out_text);
-    m_string_clear(in_text);
-}
-
-TEST_CASE("", '"', "")
-TEST_CASE("hi", '"', "hi")
-TEST_CASE("h\"i", '"', "h\\\"i")
-TEST_CASE("h'i", '"', "h'i")
-TEST_CASE("h \b\f\n\r\ti", '\"', "h \\b\\f\\n\\r\\ti")
-TEST_CASE("hi\u1234", '"', "hi\\u1234")
-TEST_CASE("hi\U0001D11E", '"', "hi\\uD834\\uDD1E")
-TEST_CASE("h'i", '\'', "h\\'i")
-TEST_CASE("hi\u1234", '\'', "hi\\u1234")
-void test_mock_bpa_slash_escape_valid(const char *text, const char quote, const char *expect)
-{
-    m_string_t in_text;
-    m_string_init_set_cstr(in_text, text);
-
-    m_string_t out_text;
-    m_string_init(out_text);
-    TEST_ASSERT_EQUAL_INT(0, mock_bpa_slash_escape(out_text, in_text, quote));
-
-    if (expect)
-    {
-        TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
-    }
-    else
-    {
-        TEST_ASSERT_EQUAL_INT(0, m_string_size(out_text));
-    }
-    m_string_clear(out_text);
-    m_string_clear(in_text);
-}
-
-TEST_CASE("", NULL)
-TEST_CASE("hi", "hi")
-TEST_CASE("h\\'i", "h'i")
-TEST_CASE("h\\\"i", "h\"i")
-TEST_CASE("h \\b\\f\\n\\r\\ti", "h \b\f\n\r\ti")
-TEST_CASE("hi\\u1234", "hi\u1234")
-TEST_CASE("hi\\uD834\\uDD1E", "hi\U0001D11E")
-void test_mock_bpa_slash_unescape_valid(const char *text, const char *expect)
-{
-    m_string_t in_text;
-    m_string_init_set_cstr(in_text, text);
-
-    m_string_t out_text;
-    m_string_init(out_text);
-    TEST_ASSERT_EQUAL_INT(0, mock_bpa_slash_unescape(out_text, in_text));
-
-    if (expect)
-    {
-        TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out_text));
-    }
-    else
-    {
-        TEST_ASSERT_EQUAL_INT(0, m_string_size(out_text));
-    }
-    m_string_clear(out_text);
-    m_string_clear(in_text);
-}
-
-TEST_CASE("\\")
-void test_mock_bpa_slash_unescape_invalid(const char *text)
-{
-    m_string_t in_text;
-    m_string_init_set_cstr(in_text, text);
-
-    m_string_t out_text;
-    m_string_init(out_text);
-    TEST_ASSERT_NOT_EQUAL_INT(0, mock_bpa_slash_unescape(out_text, in_text));
-    m_string_clear(out_text);
-    m_string_clear(in_text);
-}
-
 TEST_CASE("", 0, false, "")
 TEST_CASE("hi", 2, false, "6869")
-void test_mock_bpa_base16_encode(const char *data, size_t data_len, bool uppercase, const char *expect)
+void test_BSLB_TextUtil_Base16_Encode(const char *data, size_t data_len, bool uppercase, const char *expect)
 {
-    m_bstring_t in_data;
-    m_bstring_init(in_data);
-    if (data_len)
-    {
-        m_bstring_push_back_bytes(in_data, data_len, data);
-    }
+    BSL_Data_t in_data = BSL_DATA_INIT_VIEW(data, data_len);
+    
+    BSL_Data_t out_text;
+    BSL_Data_Init(&out_text);
+    TEST_ASSERT_EQUAL_INT(0, BSLB_TextUtil_Base16_Encode(&out_text, &in_data, uppercase));
 
-    m_string_t out;
-    m_string_init(out);
-    TEST_ASSERT_EQUAL_INT(0, mock_bpa_base16_encode(out, in_data, uppercase));
-
-    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out));
-    m_string_clear(out);
-    m_bstring_clear(in_data);
+    TEST_ASSERT_EQUAL_STRING(expect, out_text.ptr);
+    BSL_Data_Deinit(&out_text);
 }
 
 TEST_CASE("", NULL, 0)
 TEST_CASE("00", "\x00", 1)
 TEST_CASE("6869", "hi", 2)
-void test_mock_bpa_base16_decode_valid(const char *text, const char *expect, size_t expect_len)
+void test_BSLB_TextUtil_Base16_Decode_valid(const char *text, const char *expect, size_t expect_len)
 {
     BSL_Data_t out_data;
     BSL_Data_Init(&out_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, mock_bpa_base16_decode(&out_data, text, strlen(text)),
-                                  "mock_bpa_base16_decode() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSLB_TextUtil_Base16_Decode(&out_data, text, strlen(text)),
+                                  "BSLB_TextUtil_Base16_Decode() failed");
 
     TEST_ASSERT_EQUAL_INT(expect_len, out_data.len);
     if (expect)
@@ -193,11 +63,11 @@ void test_mock_bpa_base16_decode_valid(const char *text, const char *expect, siz
 
 TEST_CASE("1")
 TEST_CASE("asd")
-void test_mock_bpa_base16_decode_invalid(const char *text)
+void test_BSLB_TextUtil_Base16_Decode_invalid(const char *text)
 {
     BSL_Data_t out_data;
     BSL_Data_Init(&out_data);
-    TEST_ASSERT_NOT_EQUAL_INT(0, mock_bpa_base16_decode(&out_data, text, strlen(text)));
+    TEST_ASSERT_NOT_EQUAL_INT(0, BSLB_TextUtil_Base16_Decode(&out_data, text, strlen(text)));
     BSL_Data_Deinit(&out_data);
 }
 
@@ -219,22 +89,16 @@ TEST_CASE("\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16
 TEST_CASE("\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16, true, true,
           "wQTEz7d3D_C-uqLpX7wsGA==")
 TEST_CASE("\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16, true, false, "wQTEz7d3D_C-uqLpX7wsGA")
-void test_mock_bpa_base64_encode(const char *data, size_t data_len, bool useurl, bool usepad, const char *expect)
+void test_BSLB_TextUtil_Base64_Encode(const char *data, size_t data_len, bool useurl, bool usepad, const char *expect)
 {
-    m_bstring_t in_data;
-    m_bstring_init(in_data);
-    if (data_len)
-    {
-        m_bstring_push_back_bytes(in_data, data_len, data);
-    }
+    BSL_Data_t in_data = BSL_DATA_INIT_VIEW(data, data_len);
 
-    m_string_t out;
-    m_string_init(out);
-    TEST_ASSERT_EQUAL_INT(0, mock_bpa_base64_encode(out, in_data, useurl, usepad));
+    BSL_Data_t out_text;
+    BSL_Data_Init(&out_text);
+    TEST_ASSERT_EQUAL_INT(0, BSLB_TextUtil_Base64_Encode(&out_text, &in_data, useurl, usepad));
 
-    TEST_ASSERT_EQUAL_STRING(expect, m_string_get_cstr(out));
-    m_string_clear(out);
-    m_bstring_clear(in_data);
+    TEST_ASSERT_EQUAL_STRING(expect, out_text.ptr);
+    BSL_Data_Deinit(&out_text);
 }
 
 // vectors from Section 10 of RFC 4648
@@ -256,35 +120,28 @@ TEST_CASE("wQTEz7d3D/C+uqLpX7wsGA==", "\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\
 TEST_CASE("wQTEz7d3D/C+uqLpX7wsGA", "\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16)
 TEST_CASE("wQTEz7d3D_C-uqLpX7wsGA==", "\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16)
 TEST_CASE("wQTEz7d3D_C-uqLpX7wsGA", "\xc1\x04\xc4\xcf\xb7\x77\x0f\xf0\xbe\xba\xa2\xe9\x5f\xbc\x2c\x18", 16)
-void test_mock_bpa_base64_decode_valid(const char *text, const char *expect, size_t expect_len)
+void test_BSLB_TextUtil_Base64_Decode_valid(const char *text, const char *expect, size_t expect_len)
 {
-    m_string_t in_text;
-    m_string_init_set_cstr(in_text, text);
+    BSL_Data_t out_data;
+    BSL_Data_Init(&out_data);
+    TEST_ASSERT_EQUAL_INT(0, BSLB_TextUtil_Base64_Decode(&out_data, text, strlen(text)));
 
-    m_bstring_t out_data;
-    m_bstring_init(out_data);
-    TEST_ASSERT_EQUAL_INT(0, mock_bpa_base64_decode(out_data, in_text));
-
-    TEST_ASSERT_EQUAL_INT(expect_len, m_bstring_size(out_data));
+    TEST_ASSERT_EQUAL_INT(expect_len, out_data.len);
     if (expect)
     {
-        TEST_ASSERT_EQUAL_MEMORY(expect, m_bstring_view(out_data, 0, expect_len), expect_len);
+        TEST_ASSERT_EQUAL_MEMORY(expect, out_data.ptr, expect_len);
     }
-    m_bstring_clear(out_data);
-    m_string_clear(in_text);
+    BSL_Data_Deinit(&out_data);
 }
 
 TEST_CASE(".")
 TEST_CASE("A.")
 TEST_CASE("AB.")
 TEST_CASE("ABC.")
-void test_mock_bpa_base64_decode_invalid(const char *text)
+void test_BSLB_TextUtil_Base64_Decode_invalid(const char *text)
 {
-    m_string_t in_text;
-    m_string_init_set_cstr(in_text, text);
-    m_bstring_t out_data;
-    m_bstring_init(out_data);
-    TEST_ASSERT_NOT_EQUAL_INT(0, mock_bpa_base64_decode(out_data, in_text));
-    m_bstring_clear(out_data);
-    m_string_clear(in_text);
+    BSL_Data_t out_data;
+    BSL_Data_Init(&out_data);
+    TEST_ASSERT_NOT_EQUAL_INT(0, BSLB_TextUtil_Base64_Decode(&out_data, text, strlen(text)));
+    BSL_Data_Deinit(&out_data);
 }

@@ -88,7 +88,7 @@ static int BSLP_GetBytesHex(const json_t *value, BSL_Data_t *as_bytes)
         val_ptr += 2;
         val_len -= 2;
     }
-    return mock_bpa_base16_decode(as_bytes, val_ptr, val_len);
+    return BSLB_TextUtil_Base16_Decode(as_bytes, val_ptr, val_len);
 }
 
 /** Read a JSON value as a boolean, either directly or from text.

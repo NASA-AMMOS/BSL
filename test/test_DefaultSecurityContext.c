@@ -44,6 +44,10 @@
 
 #include "DefaultScUtils.h"
 
+static const char* ApxA2_AuthTag     = "efa4b5ac0108e3816c5606479801bc04";
+static const char *ApxA2_Ciphertext  = "3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a";
+static const  char* ApxA2_PayloadData = "526561647920746f2067656e657261746520612033322d62797465207061796c6f6164";
+
 static BSL_TestContext_t LocalTestCtx;
 
 void suiteSetUp(void)
@@ -119,8 +123,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     /// Confirm the actual HMAC tag matches what is in the RFC
     BSL_Data_t mac_view;
     TEST_ASSERT_EQUAL(0, BSL_IdValPair_GetAsBytestr(bib_result, &mac_view));
-    bool is_equal = BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_hmac, mac_view);
-    TEST_ASSERT_TRUE(is_equal);
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_hmac, mac_view));
     BSL_Data_Deinit(&mac_view);
 
     BSL_SecOutcome_Deinit(sec_outcome);
@@ -188,13 +191,9 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     MockBPA_CanonicalBlock_t *target_block = *target_ptr;
     TEST_ASSERT_NOT_NULL(target_block);
 
-    TEST_ASSERT_EQUAL_size_t(sizeof(ApxA2_Ciphertext), target_block->btsd_len);
-    char logstr[500];
-    BSL_LOG_INFO("EXPECTED payload: %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), ApxA2_Ciphertext, sizeof(ApxA2_Ciphertext)));
-    BSL_LOG_INFO("ACTUAL payload:   %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
-    TEST_ASSERT_EQUAL_MEMORY(ApxA2_Ciphertext, target_block->btsd, sizeof(ApxA2_Ciphertext));
+    BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(ApxA2_Ciphertext, btsd_view));
+    BSL_Data_Deinit(&btsd_view);
 
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
@@ -229,13 +228,9 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     MockBPA_CanonicalBlock_t *target_block = *target_ptr;
     TEST_ASSERT_NOT_NULL(target_block);
 
-    TEST_ASSERT_EQUAL_size_t(sizeof(ApxA2_PayloadData), target_block->btsd_len);
-    char logstr[500];
-    BSL_LOG_INFO("EXPECTED payload: %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), ApxA2_PayloadData, sizeof(ApxA2_PayloadData)));
-    BSL_LOG_INFO("ACTUAL payload:   %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
-    TEST_ASSERT_EQUAL_MEMORY(ApxA2_PayloadData, target_block->btsd, sizeof(ApxA2_PayloadData));
+    BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(ApxA2_PayloadData, btsd_view));
+    BSL_Data_Deinit(&btsd_view);
 
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
@@ -269,26 +264,20 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     BSL_Data_Init(&kek_data);
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&kek_data, "000102030405060708090A0B0C0D0E0F"));
 
-    BSL_Data_t wrapped_key_data;
-    BSL_Data_Init(&wrapped_key_data);
-    TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_DecodeBase16_cstr(&wrapped_key_data, "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5"));
+    const char * wrapped_key_hex = "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5";
 
-    const char *result_data_str;
+    const char *result_data_hex;
     if (bib)
     {
         // sign
-        result_data_str = "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
+        result_data_hex = "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
                           "4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B";
     }
     else
     {
         // authtag
-        result_data_str = "F6DC43C2EE046C7AE713F0531B2BCB48";
+        result_data_hex = "F6DC43C2EE046C7AE713F0531B2BCB48";
     }
-    BSL_Data_t result_data;
-    BSL_Data_Init(&result_data);
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&result_data, result_data_str));
 
     TEST_ASSERT_EQUAL(
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
@@ -373,7 +362,6 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         TEST_ASSERT_EQUAL(RFC9173_BCB_RESULTID_AUTHTAG, result->id);
     }
 
-    char logstr[500];
     if (wrap)
     {
         int got = 0;
@@ -383,16 +371,10 @@ void test_sec_source_keywrap(bool wrap, bool bib)
             if (sec_param->id == ((bib) ? RFC9173_BIB_PARAMID_WRAPPED_KEY : RFC9173_BCB_SECPARAM_WRAPPEDKEY))
             {
                 got++;
-                BSL_LOG_INFO("GOT WRAPPED KEY PARAM:");
-                BSL_LOG_INFO(
-                    "EXPECTED wrapped key: %s",
-                    BSL_Log_DumpAsHexString(logstr, sizeof(logstr), wrapped_key_data.ptr, wrapped_key_data.len));
+                
                 BSL_Data_t view;
                 TEST_ASSERT_EQUAL_INT(0, BSL_IdValPair_GetAsBytestr(sec_param, &view));
-                BSL_LOG_INFO("ACTUAL wrapped key:   %s",
-                             BSL_Log_DumpAsHexString(logstr, sizeof(logstr), view.ptr, view.len));
-                TEST_ASSERT_EQUAL(wrapped_key_data.len, view.len);
-                TEST_ASSERT_EQUAL_MEMORY(wrapped_key_data.ptr, view.ptr, wrapped_key_data.len);
+                TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(wrapped_key_hex, view));
                 BSL_Data_Deinit(&view);
             }
         }
@@ -400,43 +382,30 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     }
 
     {
-        BSL_LOG_INFO("EXPECTED result: %s",
-                     BSL_Log_DumpAsHexString(logstr, sizeof(logstr), result_data.ptr, result_data.len));
-
         BSL_Data_t view;
         TEST_ASSERT_EQUAL(0, BSL_IdValPair_GetAsBytestr(result, &view));
-        BSL_LOG_INFO("ACTUAL result:   %s", BSL_Log_DumpAsHexString(logstr, sizeof(logstr), view.ptr, view.len));
-        TEST_ASSERT_EQUAL_size_t(result_data.len, view.len);
-        TEST_ASSERT_EQUAL_MEMORY(result_data.ptr, view.ptr, result_data.len);
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(result_data_hex, view));
+        BSL_Data_Deinit(&view);
     }
 
     if (!bib)
     {
-        BSL_Data_t pt_data;
-        BSL_Data_Init(&pt_data);
-        TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16_cstr(
-                              &pt_data, "15585e19f60c0978ede4105e529f9b0006c13c9804a9c75ab46d4ed46f1097cfa03967"),
-                          0);
+                              const char *pt_data_hex = "15585e19f60c0978ede4105e529f9b0006c13c9804a9c75ab46d4ed46f1097cfa03967";
 
         MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
         TEST_ASSERT_NOT_NULL(target_ptr);
         MockBPA_CanonicalBlock_t *target_block = *target_ptr;
         TEST_ASSERT_NOT_NULL(target_block);
 
-        BSL_LOG_INFO("EXPECTED payload: %s", BSL_Log_DumpAsHexString(logstr, sizeof(logstr), pt_data.ptr, pt_data.len));
-        BSL_LOG_INFO("ACTUAL payload:   %s",
-                     BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
-        TEST_ASSERT_EQUAL_MEMORY(pt_data.ptr, target_block->btsd, pt_data.len);
-
-        BSL_Data_Deinit(&pt_data);
+        BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(pt_data_hex, btsd_view));
+        BSL_Data_Deinit(&btsd_view);
     }
 
     BSL_SecOutcome_Deinit(sec_outcome);
 
-    BSL_Data_Deinit(&result_data);
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&kek_data);
-    BSL_Data_Deinit(&wrapped_key_data);
     BSL_free(sec_outcome);
     BIBTestContext_Deinit(&bibcontext);
     BCBTestContext_Deinit(&bcbcontext);
@@ -542,30 +511,16 @@ void test_sec_accept_keyunwrap(bool bib)
 
     if (!bib)
     {
-        BSL_Data_t pt_data;
-        BSL_Data_Init(&pt_data);
-        TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16_cstr(
-                              &pt_data, "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164"),
-                          0);
+const char *pt_data_hex = "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164";
 
         MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
         TEST_ASSERT_NOT_NULL(target_ptr);
         MockBPA_CanonicalBlock_t *target_block = *target_ptr;
         TEST_ASSERT_NOT_NULL(target_block);
 
-        {
-            char logstr[2 * pt_data.len + 1];
-            BSL_LOG_INFO("EXPECTED payload: %s",
-                         BSL_Log_DumpAsHexString(logstr, sizeof(logstr), pt_data.ptr, pt_data.len));
-        }
-        {
-            char logstr[2 * target_block->btsd_len + 1];
-            BSL_LOG_INFO("ACTUAL payload:   %s",
-                         BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
-        }
-        TEST_ASSERT_EQUAL_MEMORY(pt_data.ptr, target_block->btsd, pt_data.len);
-
-        BSL_Data_Deinit(&pt_data);
+        BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(pt_data_hex, btsd_view));
+        BSL_Data_Deinit(&btsd_view);
     }
 
     BSL_SecOutcome_Deinit(sec_outcome);

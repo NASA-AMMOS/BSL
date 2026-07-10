@@ -84,9 +84,11 @@ bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_
 
 void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t bufflen)
 {
-    char ascii_buf[2 * bufflen + 1];
-    BSL_Log_DumpAsHexString(ascii_buf, sizeof(ascii_buf), buff, bufflen);
-    BSL_LOG_INFO("%s%s", message, ascii_buf);
+    BSL_Data_t val = BSL_DATA_INIT_VIEW(buff, bufflen);
+    BSL_Data_t hex_str = BSL_DATA_INIT_NULL; 
+    BSLB_TextUtil_Base16_Encode(&hex_str, &val, false); 
+    BSL_LOG_INFO("%s%s", message, hex_str.ptr);
+    BSL_Data_Deinit(&hex_str); 
 }
 
 int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cborhex)
@@ -139,7 +141,7 @@ BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text)
 
 int BSL_TestUtils_DecodeBase16_cstr(BSL_Data_t *output, const char *input)
 {
-    return mock_bpa_base16_decode(output, input, strlen(input));
+    return BSLB_TextUtil_Base16_Decode(output, input, strlen(input));
 }
 
 int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid,

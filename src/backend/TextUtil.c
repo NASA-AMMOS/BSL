@@ -27,357 +27,26 @@
 #include <stdlib.h>
 #include <math.h>
 
-static int take_hex_1byte(uint8_t *out, const char **curs, const char *end)
+int BSLB_TextUtil_Base16_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool uppercase)
 {
-    if (*curs + 2 > end)
+    ASSERT_ARG_NONNULL(out);
+    ASSERT_ARG_NONNULL(in);
+    
+    const uint8_t *in_curs   = in->ptr;
+    const uint8_t *in_end    = in_curs + in->len;
+    
+    BSL_Data_Resize(out, 2 * in->len + 1);
+    char *out_curs = (char *)(out->ptr);
+    size_t out_rem = out->len;
+
+    for (; in_curs < in_end; ++in_curs)
     {
-        return 1;
+        snprintf(out_curs, out_rem, uppercase ? "%02X" : "%02x", *in_curs);
+        out_curs += 2;
+        out_rem -= 2;
     }
-
-    char  buf[] = { *((*curs)++), *((*curs)++), 0 };
-    char *numend;
-    *out = strtoul(buf, &numend, 16);
-    if (numend < buf + 2)
-    {
-        return 2;
-    }
-    return 0;
-}
-
-static int take_hex_2byte(uint16_t *out, const char **curs, const char *end)
-{
-    if (*curs + 4 > end)
-    {
-        return 1;
-    }
-
-    char  buf[] = { *((*curs)++), *((*curs)++), *((*curs)++), *((*curs)++), 0 };
-    char *numend;
-    *out = strtoul(buf, &numend, 16);
-    if (numend < buf + 4)
-    {
-        return 2;
-    }
-    return 0;
-}
-
-/** Set of unreserved characters from Section 2.3 of RFC 3986 @cite rfc3986.
- */
-static const char *unreserved = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-~";
-
-int mock_bpa_uri_percent_encode(m_string_t out, const m_string_t in, const char *safe)
-{
-    BSL_CHKERR1(out);
-    BSL_CHKERR1(in);
-
-    const size_t in_len = m_string_size(in);
-    const char  *curs   = m_string_get_cstr(in);
-    const char  *end    = curs + in_len;
-
-    m_string_t allsafe;
-    m_string_init(allsafe);
-    m_string_cat_cstr(allsafe, unreserved);
-    if (safe)
-    {
-        m_string_cat_cstr(allsafe, safe);
-    }
-
-    // assume no more than half of the input chars are escaped,
-    // which gives total output size of: 0.5 + 0.5 * 3 => 2
-    m_string_reserve(out, m_string_size(out) + 2 * in_len);
-
-    int retval = 0;
-    while (curs < end)
-    {
-        const size_t partlen = strspn(curs, m_string_get_cstr(allsafe));
-
-        if (partlen)
-        {
-            m_string_cat_printf(out, "%.*s", (int)partlen, curs);
-        }
-        curs += partlen;
-
-        if (curs >= end)
-        {
-            // no unsafe char and no more text
-            break;
-        }
-
-        const uint8_t chr = *(curs++);
-        m_string_cat_printf(out, "%%%02X", chr);
-    }
-
-    m_string_clear(allsafe);
-    return retval;
-}
-
-int mock_bpa_uri_percent_decode(m_string_t out, const m_string_t in)
-{
-    BSL_CHKERR1(out);
-    BSL_CHKERR1(in);
-
-    const size_t in_len = m_string_size(in);
-    const char  *curs   = m_string_get_cstr(in);
-    const char  *end    = curs + in_len;
-
-    // potentially no escaping used
-    m_string_reserve(out, m_string_size(out) + in_len);
-
-    while (curs < end)
-    {
-        const char *partend = strchr(curs, '%');
-        if (partend == NULL)
-        {
-            partend = end;
-        }
-        const size_t partlen = partend - curs;
-
-        if (partlen)
-        {
-            m_string_cat_printf(out, "%.*s", (int)partlen, curs);
-        }
-        curs += partlen + 1;
-
-        if (curs > end)
-        {
-            // no percent and no more text
-            break;
-        }
-
-        // cursor is on the percent char
-        uint8_t val;
-        if (take_hex_1byte(&val, &curs, end))
-        {
-            return 2;
-        }
-        m_string_push_back(out, val);
-    }
-
-    return 0;
-}
-
-int mock_bpa_slash_escape(m_string_t out, const m_string_t in, const char quote)
-{
-    BSL_CHKERR1(out);
-    BSL_CHKERR1(in);
-
-    // unicode iterator
-    m_string_it_t it;
-    for (m_string_it(it, in); !m_string_end_p(it); m_string_next(it))
-    {
-        const m_string_unicode_t *chr = m_string_cref(it);
-        if (*chr == (m_string_unicode_t)quote)
-        {
-            m_string_push_back(out, '\\');
-            m_string_push_back(out, quote);
-        }
-        else if (*chr == 0x08)
-        {
-            m_string_cat_cstr(out, "\\b");
-        }
-        else if (*chr == 0x0C)
-        {
-            m_string_cat_cstr(out, "\\f");
-        }
-        else if (*chr == 0x0A)
-        {
-            m_string_cat_cstr(out, "\\n");
-        }
-        else if (*chr == 0x0D)
-        {
-            m_string_cat_cstr(out, "\\r");
-        }
-        else if (*chr == 0x09)
-        {
-            m_string_cat_cstr(out, "\\t");
-        }
-        else if ((*chr <= 0xFF) && isprint(*chr))
-        {
-            m_string_push_u(out, *chr);
-        }
-        else if ((*chr <= 0xD7FF) || ((*chr >= 0xE000) && (*chr <= 0xFFFF)))
-        {
-            const uint16_t uprime = *chr;
-            m_string_cat_printf(out, "\\u%04" PRIX16, uprime);
-        }
-        else
-        {
-            // surrogate pair creation
-            const uint32_t uprime = *chr - 0x10000;
-            const uint16_t high   = 0xD800 + (uprime >> 10);
-            const uint16_t low    = 0xDC00 + (uprime & 0x03FF);
-            m_string_cat_printf(out, "\\u%04" PRIX16 "\\u%04" PRIX16, high, low);
-        }
-    }
-    return 0;
-}
-
-int mock_bpa_slash_unescape(m_string_t out, const m_string_t in)
-{
-    BSL_CHKERR1(out);
-    BSL_CHKERR1(in);
-
-    const size_t in_len = m_string_size(in);
-    if (in_len == 0)
-    {
-        return 0;
-    }
-
-    // potentially no escaping used
-    m_string_reserve(out, m_string_size(out) + in_len);
-
-    const char *curs   = m_string_get_cstr(in);
-    const char *end    = curs + in_len;
-    int         retval = 0;
-    while (curs < end)
-    {
-        const char *partend = strchr(curs, '\\');
-        if (partend == NULL)
-        {
-            partend = end;
-        }
-        const size_t partlen = partend - curs;
-
-        if (partlen)
-        {
-            m_string_cat_printf(out, "%.*s", (int)partlen, curs);
-        }
-        curs += partlen + 1;
-
-        if (curs > end)
-        {
-            // no backslash and no more text
-            break;
-        }
-        else if (curs == end)
-        {
-            // backslash with no trailing character
-            retval = 3;
-            break;
-        }
-
-        if (*curs == 'b')
-        {
-            m_string_push_back(out, 0x08);
-            curs += 1;
-        }
-        else if (*curs == 'f')
-        {
-            m_string_push_back(out, 0x0C);
-            curs += 1;
-        }
-        else if (*curs == 'n')
-        {
-            m_string_push_back(out, 0x0A);
-            curs += 1;
-        }
-        else if (*curs == 'r')
-        {
-            m_string_push_back(out, 0x0D);
-            curs += 1;
-        }
-        else if (*curs == 't')
-        {
-            m_string_push_back(out, 0x09);
-            curs += 1;
-        }
-        else if (*curs == 'u')
-        {
-            ++curs;
-
-            uint16_t val;
-            if (take_hex_2byte(&val, &curs, end))
-            {
-                retval = 5;
-                break;
-            }
-
-            m_string_unicode_t unival;
-            if ((val >= 0xD800) && (val <= 0xDFFF))
-            {
-                // surrogate pair removal
-                unival = (val - 0xD800) << 10;
-
-                if (curs + 2 >= end)
-                {
-                    retval = 5;
-                    break;
-                }
-                if (*curs != '\\')
-                {
-                    retval = 5;
-                    break;
-                }
-                ++curs;
-                if (*curs != 'u')
-                {
-                    retval = 5;
-                    break;
-                }
-                ++curs;
-
-                if (take_hex_2byte(&val, &curs, end))
-                {
-                    retval = 5;
-                    break;
-                }
-                unival |= val - 0xDC00;
-
-                unival += 0x10000;
-            }
-            else
-            {
-                unival = val;
-            }
-
-            m_string_push_u(out, unival);
-        }
-        else
-        {
-            m_string_push_back(out, *curs);
-            curs += 1;
-        }
-    }
-
-    return retval;
-}
-
-static void strip_chars(m_string_t out, const char *in, size_t in_len, const char *chars)
-{
-    const char *curs = in;
-    const char *end  = curs + in_len;
-    size_t      plen;
-
-    // likely no removal
-    m_string_reserve(out, in_len);
-
-    while (curs < end)
-    {
-        plen = strcspn(curs, chars);
-        m_string_cat_printf(out, "%.*s", (int)plen, curs);
-        curs += plen;
-
-        plen = strspn(curs, chars);
-        curs += plen;
-    }
-}
-
-void mock_bpa_strip_space(m_string_t out, const char *in, size_t in_len)
-{
-    strip_chars(out, in, in_len, " \b\f\n\r\t");
-}
-
-int mock_bpa_base16_encode(m_string_t out, const m_bstring_t in, bool uppercase)
-{
-    const char *fmt = uppercase ? "%02X" : "%02x";
-
-    const size_t   in_len = m_bstring_size(in);
-    const uint8_t *curs   = m_bstring_view(in, 0, in_len);
-    const uint8_t *end    = curs + in_len;
-    for (; curs < end; ++curs)
-    {
-        m_string_cat_printf(out, fmt, *curs);
-    }
+    *out_curs = '\0';
+    
     return 0;
 }
 
@@ -414,10 +83,10 @@ static int base16_decode_char(uint8_t chr)
     return base16_decode_table[chr];
 }
 
-int mock_bpa_base16_decode(BSL_Data_t *out, const char *ptr, size_t len)
+int BSLB_TextUtil_Base16_Decode(BSL_Data_t *out, const char *ptr, size_t len)
 {
-    BSL_CHKERR1(out);
-    BSL_CHKERR1(ptr);
+    ASSERT_ARG_NONNULL(out);
+    ASSERT_ARG_NONNULL(ptr);
 
     if (len % 2 != 0)
     {
@@ -442,6 +111,7 @@ int mock_bpa_base16_decode(BSL_Data_t *out, const char *ptr, size_t len)
         }
 
         const uint8_t byte = (high << 4) | low;
+        // append
         *(out_curs++)      = byte;
     }
 
@@ -459,33 +129,39 @@ static const char *base64url_alphabet =
         "0123456789-_";
 // clang-format on
 
-int mock_bpa_base64_encode(m_string_t out, const m_bstring_t in, bool useurl, bool usepad)
+int BSLB_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useurl, bool usepad)
 {
-    size_t         in_len = m_bstring_size(in);
-    const uint8_t *curs   = m_bstring_view(in, 0, in_len);
+    ASSERT_ARG_NONNULL(out);
+    ASSERT_ARG_NONNULL(in);
+    
+    size_t         in_len = in->len;
+    const uint8_t *curs   = in->ptr;
     const uint8_t *end    = curs + in_len;
 
     const char *const abet = useurl ? base64url_alphabet : base64_alphabet;
 
-    // output length is the ceiling of ratio 8/6
-    size_t out_len = ((in_len + 2) / 3) * 4;
-    m_string_reserve(out, m_string_size(out) + out_len);
+    // output length is the ceiling of ratio 8/6 plus null terminator
+    size_t out_len = ((in_len + 2) / 3) * 4 + 1;
+    BSL_Data_Resize(out, out_len);
+    uint8_t *out_curs = out->ptr;
 
     for (; curs < end; curs += 3)
     {
         uint8_t byte = (curs[0] >> 2) & 0x3F;
         char    chr  = abet[byte];
-        m_string_push_back(out, chr);
+        // append
+        *(out_curs++) = chr;
         --in_len;
-        if (--out_len == 0)
+        if (--out_len == 1)
         {
             break;
         }
 
         byte = ((curs[0] << 4) | (in_len ? curs[1] >> 4 : 0)) & 0x3F;
         chr  = abet[byte];
-        m_string_push_back(out, chr);
-        if (--out_len == 0)
+        // append
+        *(out_curs++) = chr;
+        if (--out_len == 1)
         {
             break;
         }
@@ -502,9 +178,10 @@ int mock_bpa_base64_encode(m_string_t out, const m_bstring_t in, bool useurl, bo
         }
         if (usepad || (chr != '='))
         {
-            m_string_push_back(out, chr);
+            // append
+            *(out_curs++) = chr;
         }
-        if (--out_len == 0)
+        if (--out_len == 1)
         {
             break;
         }
@@ -521,13 +198,16 @@ int mock_bpa_base64_encode(m_string_t out, const m_bstring_t in, bool useurl, bo
         }
         if (usepad || (chr != '='))
         {
-            m_string_push_back(out, chr);
+            // append
+            *(out_curs++) = chr;
         }
-        if (--out_len == 0)
+        if (--out_len == 1)
         {
             break;
         }
     }
+    *out_curs = '\0';
+    
     return 0;
 }
 
@@ -563,17 +243,18 @@ static int base64_decode_char(uint8_t chr)
     return base64_decode_table[chr];
 }
 
-int mock_bpa_base64_decode(m_bstring_t out, const m_string_t in)
+int BSLB_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len)
 {
-    BSL_CHKERR1(out);
-    BSL_CHKERR1(in);
+    ASSERT_ARG_NONNULL(out);
+    ASSERT_ARG_NONNULL(ptr);
 
-    size_t      in_len = m_string_size(in);
-    const char *curs   = m_string_get_cstr(in);
+    size_t      in_len = len;
+    const char *curs   = ptr;
 
-    size_t out_len = (in_len / 4) * 3 + 2;
-    m_bstring_resize(out, out_len);
-    uint8_t *out_curs = m_bstring_acquire_access(out, 0, out_len);
+    // upper bound on storage
+    size_t out_rem = (in_len / 4) * 3 + 2;
+    BSL_Data_Resize(out, out_rem);
+    uint8_t *out_curs = out->ptr;
 
     int retval = 0;
     for (; in_len >= 2; curs += 4, in_len -= 4)
@@ -592,11 +273,11 @@ int mock_bpa_base64_decode(m_bstring_t out, const m_string_t in)
             break;
         }
 
-        if (out_len)
+        if (out_rem)
         {
             const uint8_t byte = (seg0 << 2) | (seg1 >> 4);
             *(out_curs++)      = byte;
-            --out_len;
+            --out_rem;
         }
 
         if (in_len == 2)
@@ -625,11 +306,11 @@ int mock_bpa_base64_decode(m_bstring_t out, const m_string_t in)
                 break;
             }
 
-            if (out_len)
+            if (out_rem)
             {
                 const uint8_t byte = ((seg1 << 4) & 0xF0) | (seg2 >> 2);
                 *(out_curs++)      = byte;
-                --out_len;
+                --out_rem;
             }
 
             if (in_len == 3)
@@ -654,19 +335,21 @@ int mock_bpa_base64_decode(m_bstring_t out, const m_string_t in)
                     break;
                 }
 
-                if (out_len)
+                if (out_rem)
                 {
                     const uint8_t byte = ((seg2 << 6) & 0xC0) | seg3;
                     *(out_curs++)      = byte;
-                    --out_len;
+                    --out_rem;
                 }
             }
         }
     }
 
     // trim if necessary
-    m_bstring_release_access(out);
-    m_bstring_resize(out, m_bstring_size(out) - out_len);
+    if (out_rem > 0)
+    {
+    BSL_Data_Resize(out, out->len - out_rem);
+    }
 
     if (retval)
     {
