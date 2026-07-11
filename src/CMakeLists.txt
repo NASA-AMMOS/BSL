@@ -65,7 +65,11 @@ target_link_libraries(bsl_crypto PUBLIC bsl_front bsl_dynamic)
 target_link_libraries(bsl_crypto PRIVATE MLIB::mlib)
 target_link_libraries(bsl_crypto PRIVATE OpenSSL::Crypto)
 if(TARGET valgrind::valgrind)
-  target_compile_definitions(bsl_crypto PRIVATE HAVE_VALGRIND)
+  find_path(VALGRIND_INCLUDE_DIR NAMES valgrind/memcheck.h)
+  if(VALGRIND_INCLUDE_DIR)
+    target_compile_definitions(bsl_crypto PRIVATE HAVE_VALGRIND)
+    target_include_directories(bsl_crypto PRIVATE "${VALGRIND_INCLUDE_DIR}")
+  endif()
 endif(TARGET valgrind::valgrind)
 
 # Default Security Context library
