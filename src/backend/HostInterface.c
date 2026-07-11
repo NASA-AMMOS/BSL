@@ -279,7 +279,14 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
     }
 
     struct timeval timestamp;
+#if defined(HAVE_CLOCK_GETTIME)
+    struct timespec ts;
+    (void)clock_gettime(CLOCK_REALTIME, &ts);
+    timestamp.tv_sec  = ts.tv_sec;
+    timestamp.tv_usec = ts.tv_nsec / 1000;
+#else
     gettimeofday(&timestamp, NULL);
+#endif
 
     va_list args;
     va_start(args, format);
