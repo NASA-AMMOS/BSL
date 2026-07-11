@@ -61,6 +61,7 @@ target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
 target_link_libraries(bsl_mock_bpa PUBLIC qcbor::qcbor)
 target_link_libraries(bsl_mock_bpa PUBLIC Jansson::Jansson)
 target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_cose_sc bsl_sample_pp)
+target_link_libraries(bsl_mock_bpa PUBLIC Threads::Threads)
 # Installation config
 install(
     TARGETS bsl_mock_bpa
