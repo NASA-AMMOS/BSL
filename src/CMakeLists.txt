@@ -62,8 +62,8 @@ set_target_properties(bsl_crypto
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_crypto PUBLIC bsl_front bsl_dynamic)
-target_link_libraries(bsl_crypto PUBLIC MLIB::mlib)
-target_link_libraries(bsl_crypto INTERFACE OpenSSL::Crypto)
+target_link_libraries(bsl_crypto PRIVATE MLIB::mlib)
+target_link_libraries(bsl_crypto PRIVATE OpenSSL::Crypto)
 if(TARGET valgrind::valgrind)
   target_compile_definitions(bsl_crypto PRIVATE HAVE_VALGRIND)
 endif(TARGET valgrind::valgrind)
@@ -112,6 +112,7 @@ set_target_properties(bsl_cose_sc
 )
 target_link_libraries(bsl_cose_sc PUBLIC bsl_front)
 target_link_libraries(bsl_cose_sc PUBLIC bsl_crypto)
+target_link_libraries(bsl_cose_sc PUBLIC MLIB::mlib)
 target_link_libraries(bsl_cose_sc PUBLIC qcbor::qcbor)
 
 # Example Policy Provider library
