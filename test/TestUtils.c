@@ -269,12 +269,15 @@ static int BSL_TestUtils_ReadBTSD_Read(void *user_data, void *buf, size_t *bufsi
 static void BSL_TestUtils_ReadBTSD_Deinit(void *user_data)
 {
     struct BSL_TestUtils_Flat_Data_s *obj = user_data;
-    if (!obj || !obj->file)
+    if (!obj)
     {
         return;
     }
+    if (obj->file)
+    {
+        fclose(obj->file);
+    }
 
-    fclose(obj->file);
     // buffer is external data, no cleanup
     BSL_free(obj);
 }
@@ -317,12 +320,14 @@ static int BSL_TestUtils_WriteBTSD_Write(void *user_data, const void *buf, size_
 static void BSL_TestUtils_WriteBTSD_Deinit(void *user_data, bool success)
 {
     struct BSL_TestUtils_Flat_Data_s *obj = user_data;
-    if (!obj || !obj->file)
+    if (!obj)
     {
         return;
     }
-
-    fclose(obj->file);
+    if (obj->file)
+    {
+        fclose(obj->file);
+    }
 
     if (success)
     {
