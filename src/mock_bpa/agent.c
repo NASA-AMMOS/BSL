@@ -32,7 +32,9 @@
 #include <cose_sc/CoseContext.h>
 #include <policy_provider/SamplePolicyProvider.h>
 #include <errno.h>
+#include <netinet/in.h>
 #include <poll.h>
+#include <sys/socket.h>
 #include "agent.h"
 #include "log.h"
 #include "eid.h"
