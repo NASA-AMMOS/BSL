@@ -166,8 +166,6 @@ struct MockBPA_BTSD_Data_s
     char *ptr;
     /// Working size of the buffer
     size_t size;
-    /// Capacity, BTSD size
-    size_t cap;
     /// File opened for the buffer
     FILE *file;
     /// Local dead-reckoned cursor into #file
@@ -242,10 +240,10 @@ static int MockBPA_WriteBTSD_Write(void *user_data, const void *buf, size_t size
     CHK_ARG_NONNULL(buf);
     ASSERT_PRECONDITION(obj->file);
 
-    if (obj->curs + size > obj->cap)
+    if (obj->curs + size > obj->size)
     {
-        const size_t excess = (obj->curs + size) - obj->cap;
-        BSL_LOG_ERR("write too large for buffer of %zu by %zu bytes", obj->cap, excess);
+        const size_t excess = (obj->curs + size) - obj->size;
+        BSL_LOG_ERR("write too large for buffer of %zu by %zu bytes", obj->size, excess);
         return BSL_ERR_FAILURE;
     }
 
@@ -267,11 +265,11 @@ static void MockBPA_WriteBTSD_Deinit(void *user_data, bool success)
 
     fclose(obj->file);
     BSL_LOG_DEBUG("closed block number %" PRIu64 " with size %zu and cursor %zu user success %d", obj->block->blk_num,
-                  obj->cap, obj->curs, success);
-    if (obj->curs < obj->cap)
+                  obj->size, obj->curs, success);
+    if (obj->curs < obj->size)
     {
         BSL_LOG_ERR("closed block number %" PRIu64 " for writing with only %zu of %zu written", obj->block->blk_num,
-                    obj->curs, obj->cap);
+                    obj->curs, obj->size);
     }
 
     if (success)
@@ -279,7 +277,7 @@ static void MockBPA_WriteBTSD_Deinit(void *user_data, bool success)
         // now write-back the BTSD
         BSL_free(obj->block->btsd);
         obj->block->btsd     = obj->ptr;
-        obj->block->btsd_len = obj->cap;
+        obj->block->btsd_len = obj->size;
     }
     else
     {
@@ -307,21 +305,19 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
     }
     // double-buffer for this write
     obj->block = found_block;
-    obj->ptr   = NULL;
-    obj->size  = 0;
-    obj->cap   = btsd_size;
-    obj->file  = open_memstream(&obj->ptr, &obj->size);
+    obj->size  = btsd_size;
     obj->curs  = 0;
 
     if (btsd_size)
     {
         // pre-allocate BTSD size
-        if (fseeko(obj->file, (off_t)(btsd_size - 1), SEEK_SET) == 0)
-        {
-            fputc('\0', obj->file);
-            fflush(obj->file);
-            fseeko(obj->file, 0UL, SEEK_SET);
-        }
+        obj->ptr  = BSL_calloc(1, btsd_size);
+        obj->file = fmemopen(obj->ptr, obj->size, "r+");
+    }
+    else
+    {
+        obj->ptr  = BSL_calloc(1, 1);
+        obj->file = fmemopen(obj->ptr, 0, "r+");
     }
 
     BSL_SeqWriter_t *writer = BSL_calloc(1, sizeof(BSL_SeqWriter_t));
