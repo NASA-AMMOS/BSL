@@ -697,6 +697,7 @@ int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out)
     BSL_Data_Resize(&new_key->raw, key_length);
     if (rand_bytes_generator(new_key->raw.ptr, (int)new_key->raw.len) != 1)
     {
+        BSL_CryptoKey_Deinit(new_key);
         return BSL_ERR_FAILURE;
     }
 
