@@ -97,6 +97,7 @@ do
     install -m644 -D ${FN} %{buildroot}%{_libdir}/${FN}
 done
 popd
+install -m644 -D testroot/usr/lib/pkgconfig/m-lib.pc %{buildroot}%{_datadir}/pkgconfig/m-lib.pc
 
 %cmake_install
 
@@ -120,6 +121,7 @@ popd
 %license LICENSE
 %doc README.md
 %{_includedir}/m-lib/
+%{_datadir}/pkgconfig/qcbor.pc
 
 %{_includedir}/qcbor/
 %{_libdir}/pkgconfig/qcbor.pc
