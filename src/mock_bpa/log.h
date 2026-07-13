@@ -29,7 +29,7 @@
 
 #include <stdbool.h>
 #include <stdarg.h>
-#include <sys/time.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,7 +67,7 @@ void mock_bpa_LogSetLeastSeverity(int severity);
 /// Interface for BSL_HostDescriptors_t::log_is_enabled_for
 bool mock_bpa_LogIsEnabledFor(int severity);
 /// Interface for BSL_HostDescriptors_t::log_event
-void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char *filename, int lineno,
+void mock_bpa_LogEvent(const struct timespec *timestamp, int severity, const char *filename, int lineno,
                        const char *funcname, const char *format, va_list args);
 
 #ifdef __cplusplus

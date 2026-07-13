@@ -179,9 +179,6 @@ set_target_properties(bsl_dynamic
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-if(HAVE_CLOCK_GETTIME)
-  target_compile_definitions(bsl_dynamic PRIVATE HAVE_CLOCK_GETTIME)
-endif()
 target_link_libraries(bsl_dynamic PUBLIC bsl_front)
 target_link_libraries(bsl_dynamic PUBLIC MLIB::mlib)
 target_link_libraries(bsl_dynamic PUBLIC qcbor::qcbor)

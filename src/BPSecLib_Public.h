@@ -35,7 +35,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include <sys/time.h>
+#include <time.h>
 
 #include "BSLConfig.h"
 #include "Data.h"
@@ -462,7 +462,7 @@ typedef struct
      * @param[in] format The log message format string.
      * @param args Values for the format string.
      */
-    void (*log_event)(const struct timeval *timestamp, int severity, const char *filename, int lineno,
+    void (*log_event)(const struct timespec *timestamp, int severity, const char *filename, int lineno,
                       const char *funcname, const char *format, va_list args);
 
     /// @brief Optionally set dynamic memory management callbacks. Defaults to libc calls if unset.

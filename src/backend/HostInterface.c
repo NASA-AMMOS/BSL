@@ -25,7 +25,7 @@
  */
 #include <stdarg.h>
 #include <pthread.h>
-#include <sys/time.h>
+#include <time.h>
 #include <BPSecLib_Private.h>
 #include "UtilDefs_SeqReadWrite.h"
 
@@ -278,15 +278,8 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
         return;
     }
 
-    struct timeval timestamp;
-#if defined(HAVE_CLOCK_GETTIME)
-    struct timespec ts;
-    (void)clock_gettime(CLOCK_REALTIME, &ts);
-    timestamp.tv_sec  = ts.tv_sec;
-    timestamp.tv_usec = ts.tv_nsec / 1000;
-#else
-    gettimeofday(&timestamp, NULL);
-#endif
+    struct timespec timestamp;
+    (void)clock_gettime(CLOCK_REALTIME, &timestamp);
 
     va_list args;
     va_start(args, format);
@@ -304,7 +297,7 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
             size_t len    = strftime(curs, remain, "%Y-%m-%dT%H:%M:%S", &nowtm);
             curs += len;
             remain -= len;
-            snprintf(curs, remain, ".%06ldZ", timestamp.tv_usec);
+            snprintf(curs, remain, ".%06ldZ", timestamp.tv_nsec / 1000);
         }
 
         const char *severity_name = log_sev_names[severity];
