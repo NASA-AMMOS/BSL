@@ -324,7 +324,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
                 return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
 
-            int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &self->wrapped_key, NULL);
+            int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &self->wrapped_key);
 
             if (BSL_SUCCESS != wrap_result)
             {

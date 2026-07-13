@@ -362,7 +362,7 @@ void test_hmac_in(int input_case, const char *keyid, BSL_Crypto_SHAVariant_e sha
             TEST_ABORT();
     }
     int expect_hmac_sz = 0;
-    switch (hmac.SHA_variant)
+    switch (sha_var)
     {
         case BSL_CRYPTO_SHA_256:
             expect_hmac_sz = 32;
@@ -592,10 +592,9 @@ void test_key_wrap(const char *kek, const char *cek, const char *expected)
     BSL_Crypto_KeyHandle_t cek_handle;
     TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_GetRegistryKeyName("cek", &cek_handle));
 
-    BSL_Crypto_KeyHandle_t wrapped_key_handle;
-    BSL_Data_t             wrapped_key;
+    BSL_Data_t wrapped_key;
     BSL_Data_InitBuffer(&wrapped_key, cek_data.len + 8);
-    BSL_Crypto_WrapKey(kek_handle, cek_handle, &wrapped_key, &wrapped_key_handle);
+    TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_WrapKey(kek_handle, cek_handle, &wrapped_key));
 
     TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(expected, wrapped_key));
 
@@ -607,7 +606,6 @@ void test_key_wrap(const char *kek, const char *cek, const char *expected)
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&wrapped_key);
-    BSL_Crypto_ClearGeneratedKeyHandle(wrapped_key_handle);
     BSL_Crypto_RemoveRegistryKeyName("kek");
     BSL_Crypto_RemoveRegistryKeyName("cek");
 }

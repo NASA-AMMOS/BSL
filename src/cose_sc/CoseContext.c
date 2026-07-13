@@ -1542,7 +1542,7 @@ static void BSLX_CoseSc_GenerateContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Reci
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
 
-            res = BSL_Crypto_WrapKey(ctx->keyhandle, ctx->cekhandle, &recip->ciphertext, NULL);
+            res = BSL_Crypto_WrapKey(ctx->keyhandle, ctx->cekhandle, &recip->ciphertext);
             if (BSL_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed to wrap content key");
