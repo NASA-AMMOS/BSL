@@ -5,5 +5,5 @@ libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
 Name: bsl-sample-pp
 Description: BSL Sample Policy Provider
 Version: @PROJECT_VERSION@
-Requires: bsl = ${version}, bsl-default-sc = ${version}, bsl-cose-sc = ${version}
+Requires: bsl, bsl-default-sc, bsl-cose-sc
 Libs: -L${libdir} -lbsl_sample_pp
