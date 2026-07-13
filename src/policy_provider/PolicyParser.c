@@ -228,7 +228,7 @@ static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id
  */
 static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value) // NOSONAR
 {
-    if (0 == strcmp(id_str, "key_id"))
+    if (0 == strcmp(id_str, "key_name"))
     {
         const char *val_str = json_string_value(value);
         if (!val_str)
@@ -237,8 +237,33 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
         }
         BSL_Data_t as_bytes = BSL_DATA_INIT_VIEW_CSTR(val_str);
 
+        if (BSLB_IdValPairPtrMap_cget(options, BSLX_COSESC_OPTION_KEY_ID))
+        {
+            BSL_LOG_ERR("Cannot use both key_name and key_id_hex options");
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
         BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_KEY_ID);
         BSL_IdValPair_SetBytestr(opt, BSLX_COSESC_OPTION_KEY_ID, as_bytes);
+    }
+    else if (0 == strcmp(id_str, "key_id_hex"))
+    {
+        BSL_Data_t as_bytes;
+        BSL_Data_Init(&as_bytes);
+        if (BSLP_GetBytesHex(value, &as_bytes))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        if (BSLB_IdValPairPtrMap_cget(options, BSLX_COSESC_OPTION_KEY_ID))
+        {
+            BSL_LOG_ERR("Cannot use both key_name and key_id_hex options");
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_KEY_ID);
+        BSL_IdValPair_SetBytestr(opt, BSLX_COSESC_OPTION_KEY_ID, as_bytes);
+        BSL_Data_Deinit(&as_bytes);
     }
     else if (0 == strcasecmp(id_str, "target_alg"))
     {

@@ -139,7 +139,7 @@ def sc_config_modifier(orig: str, modify: Dict[str, Any]):
 
 class TestCoseScMac0(TestAgent):
 
-    def test_exampleA_1_source(self):
+    def test_exampleA_1_source_valid(self):
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_NO_SEC,
             expected_output=EXAMPLE_A_1_WITH_BIB,
@@ -202,10 +202,10 @@ class TestCoseScMac0(TestAgent):
             ))
 
     def test_exampleA_1_acceptor_failure_key_disallow(self):
-        with sc_config_modifier('data/cose-sc/policy-any-bib-accept.json', {"key_id": "ExampleA.5"}) as polfile:
+        with sc_config_modifier('data/cose-sc/policy-any-bib-accept.json', {"key_name": "ExampleA.5"}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
-                expected_output='.*<ERROR>.* Mismatched key ID value',
+                expected_output=r'.*<ERROR>.* Mismatched key ID value',
                 sec_src_eid='dtn://dst/',
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -218,7 +218,7 @@ class TestCoseScMac0(TestAgent):
         with sc_config_modifier('data/cose-sc/policy-any-bib-accept.json', {"aad_scope": {'0': 1, '-1': 2}}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
-                expected_output='.*<ERROR>.* Mismatch of AAD Scope parameter',
+                expected_output=r'.*<ERROR>.* Mismatch of AAD Scope parameter',
                 sec_src_eid='dtn://dst/',
                 policy_config=polfile.name,
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -236,7 +236,7 @@ class TestCoseScMac0(TestAgent):
     [1, 1, 0, 2, << "hello" >>, h'4EC359D2']
 ]
 ''',
-            expected_output='.*<ERROR>.* Unknown key from ID',
+            expected_output=r'.*<ERROR>.* Unknown key from ID',
             sec_src_eid='dtn://dst/',
             policy_config='data/cose-sc/policy-any-bib-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
@@ -245,7 +245,7 @@ class TestCoseScMac0(TestAgent):
             expected_output_format=DataFormat.ERR
         ))
 
-    def test_ccsds_interop_source(self):
+    def test_ccsds_interop_source_valid(self):
         self._single_test(_TestCase(
             input_data='''\
 [_
@@ -277,7 +277,7 @@ class TestCoseScMac0(TestAgent):
 
 class TestCoseScMac(TestAgent):
 
-    def test_ccsds_interop_keywrap_source(self):
+    def test_ccsds_interop_keywrap_source_valid(self):
         self._single_test(_TestCase(
             input_data=CCSDS_MAC_NO_SEC,
             # Bundle with BIB over target #1
@@ -326,7 +326,7 @@ class TestCoseScMac(TestAgent):
 
 class TestCoseScEncrypt0(TestAgent):
 
-    def test_exampleA_4_source(self):
+    def test_exampleA_4_source_valid(self):
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_NO_SEC,
             expected_output=EXAMPLE_A_4_WITH_BCB,
@@ -363,7 +363,7 @@ class TestCoseScEncrypt0(TestAgent):
         ))
 
     def test_exampleA_4_acceptor_valid_strict_key_id(self):
-        with sc_config_modifier('data/cose-sc/policy-any-bcb-accept.json', {"key_id": "ExampleA.4"}) as polfile:
+        with sc_config_modifier('data/cose-sc/policy-any-bcb-accept.json', {"key_name": "ExampleA.4"}) as polfile:
             self._single_test(_TestCase(
                 input_data=EXAMPLE_A_4_WITH_BCB,
                 expected_output=EXAMPLE_A_NO_SEC,
@@ -404,7 +404,7 @@ class TestCoseScEncrypt0(TestAgent):
 
 class TestCoseScEncrypt(TestAgent):
 
-    def test_exampleA_5_source(self):
+    def test_exampleA_5_source_valid(self):
         """ The IV header is non-deterministic """
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_NO_SEC,
@@ -429,7 +429,7 @@ class TestCoseScEncrypt(TestAgent):
             expected_output_format=DataFormat.CBORDIAG
         ))
 
-    def test_exampleA_6_source(self):
+    def test_exampleA_6_source_valid(self):
         """ The salt header is non-deterministic """
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_NO_SEC,

@@ -14,7 +14,7 @@
           "svc": "bcb-confidentiality",
           "sc_id": 3,
           "sc_parms": {
-            "key_id": "ExampleA.1",
+            "key_name": "ExampleA.1",
             "target_alg": 6,
             "aad_scope": {
               "0": 1,

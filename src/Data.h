@@ -65,6 +65,8 @@ typedef struct BSL_Data_s
     }
 
 /** Static initializer for a view on a static byte string.
+ * @param in_ptr Pointer to the start of the byte string.
+ * @param in_len Length of the view on the byte string.
  * @sa BSL_Data_InitView()
  */
 #define BSL_DATA_INIT_VIEW(in_ptr, in_len)                              \
@@ -74,6 +76,8 @@ typedef struct BSL_Data_s
     }
 
 /** Static initializer for a view on a static text string.
+ * @param cstr Pointer to the null-terminated text string.
+ * The resulting data view will not include the null terminator in its BSL_Data_t::len size.
  * @sa BSL_Data_InitView() BSL_Data_SetViewCstr()
  */
 #define BSL_DATA_INIT_VIEW_CSTR(cstr)                                                    \
