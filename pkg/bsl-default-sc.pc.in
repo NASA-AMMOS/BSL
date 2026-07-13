@@ -1,0 +1,9 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+
+Name: bsl-default-sc
+Description: BSL Default Security Context provider
+Version: @PROJECT_VERSION@
+Requires: bsl = ${version}
+Libs: -L${libdir} -lbsl_default_sc
