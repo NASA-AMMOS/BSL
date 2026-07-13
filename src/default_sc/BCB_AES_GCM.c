@@ -152,10 +152,13 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     }
 
     int retval = BSL_SUCCESS;
+    int res;
 
     BSL_Cipher_t cipher;
-    int cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
-    if (BSL_SUCCESS != cipher_init)
+    res = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
+    BSL_Crypto_ReleaseKeyHandle(cipher_key);
+    cipher_key = NULL;
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
         retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -196,7 +199,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (retval == BSL_SUCCESS)
     {
         // entire block is ciphertext
-        int res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, bcb_context->target_block.btsd_len);
+        res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, bcb_context->target_block.btsd_len);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Decrypting BTSD ciphertext failed");
@@ -217,7 +220,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        int res = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
+        res = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to finalize");
@@ -233,7 +236,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     }
 
     BSL_Cipher_Deinit(&cipher);
-    BSL_Crypto_ReleaseKeyHandle(cipher_key);
 
     return retval;
 }
@@ -304,6 +306,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     BSL_Cipher_t cipher;
     res = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
+    BSL_Crypto_ReleaseKeyHandle(cipher_key);
+    cipher_key = NULL;
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
@@ -376,7 +380,6 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
 
     BSL_Cipher_Deinit(&cipher);
-    BSL_Crypto_ReleaseKeyHandle(cipher_key);
 
     return retval;
 }

@@ -353,33 +353,39 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
         }
     }
 
-    if ((res = BSL_AuthCtx_Init(&hmac_ctx, cipher_key, self->crypto_sha_variant)) != 0)
+    int retval = BSL_SUCCESS;
+
+    res = BSL_AuthCtx_Init(&hmac_ctx, cipher_key, self->crypto_sha_variant);
+    BSL_Crypto_ReleaseKeyHandle(cipher_key);
+    cipher_key = NULL;
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_init failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
-        BSL_Crypto_ReleaseKeyHandle(cipher_key);
-        return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
-    }
-    if ((res = BSL_AuthCtx_DigestBuffer(&hmac_ctx, ippt_data->ptr, ippt_data->len)) != 0)
-    {
-        BSL_LOG_ERR("bsl_hmac_ctx_input_data_buffer failed with code %d", res);
-        BSL_AuthCtx_Deinit(&hmac_ctx);
-        BSL_Crypto_ReleaseKeyHandle(cipher_key);
-        return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
+        retval = BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
     }
 
-    if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, &self->hmac_result_val)) != BSL_SUCCESS)
+    if (BSL_SUCCESS == retval)
     {
-        BSL_LOG_ERR("bsl_hmac_ctx_finalize failed with code %d", res);
-        BSL_AuthCtx_Deinit(&hmac_ctx);
-        BSL_Crypto_ReleaseKeyHandle(cipher_key);
-        return BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
+        if ((res = BSL_AuthCtx_DigestBuffer(&hmac_ctx, ippt_data->ptr, ippt_data->len)) != BSL_SUCCESS)
+        {
+            BSL_LOG_ERR("bsl_hmac_ctx_input_data_buffer failed with code %d", res);
+            retval = BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS == retval)
+    {
+        if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, &self->hmac_result_val)) != BSL_SUCCESS)
+        {
+            BSL_LOG_ERR("bsl_hmac_ctx_finalize failed with code %d", res);
+            retval = BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
+        }
     }
 
     BSL_AuthCtx_Deinit(&hmac_ctx);
-    BSL_Crypto_ReleaseKeyHandle(cipher_key);
 
-    return BSL_SUCCESS;
+    return retval;
 }
 
 int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper, // NOSONAR

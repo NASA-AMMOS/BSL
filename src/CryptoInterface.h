@@ -188,7 +188,8 @@ void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn);
 /**
  * Initialize HMAC context resources and set private key and SHA variant
  * @param[in,out] hmac_ctx pointer to hmac context struct to init and set
- * @param[in] keyhandle handle for key to use
+ * @param[in] keyhandle handle for key to use.
+ * The HMAC context keeps its own reference to this handle.
  * @param[in] sha_var SHA variant, see RFC9173 @cite rfc9173
  * @return 0 if successful
  */
@@ -272,7 +273,8 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
  * @param enc enum for BSL_CRYPTO_ENCRYPT or BSL_CRYPTO_DECRYPT
  * @param[in] iv_val The initialization vector (IV) data, which must be non-empty.
  * The length is internally limited to INT_MAX
- * @param[in] key_handle key handle to use
+ * @param[in] key_handle key handle to use.
+ * The cipher context keeps its own reference to this handle.
  * @return 0 if successful
  */
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
