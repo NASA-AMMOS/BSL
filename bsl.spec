@@ -121,7 +121,7 @@ install -m644 -D testroot/usr/lib/pkgconfig/m-lib.pc %{buildroot}%{_datadir}/pkg
 %license LICENSE
 %doc README.md
 %{_includedir}/m-lib/
-%{_datadir}/pkgconfig/qcbor.pc
+%{_datadir}/pkgconfig/m-lib.pc
 
 %{_includedir}/qcbor/
 %{_libdir}/pkgconfig/qcbor.pc
