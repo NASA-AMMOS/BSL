@@ -332,7 +332,8 @@ void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib)
     assert(0 == BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A1_KEY, rfc9173A1_key, sizeof(rfc9173A1_key)));
     assert(0 == BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A2_KEY, rfc9173A2_key, sizeof(rfc9173A2_key)));
     assert(0 == BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A3_KEY, rfc9173A3_key, sizeof(rfc9173A3_key)));
-    assert(0 == BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A4_BCB_KEY, rfc9173A4_BCB_key, sizeof(rfc9173A4_BCB_key)));
+    assert(0
+           == BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A4_BCB_KEY, rfc9173A4_BCB_key, sizeof(rfc9173A4_BCB_key)));
 
     BSL_SecCtxDesc_t sec_desc;
     int              res;
