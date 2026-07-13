@@ -191,20 +191,17 @@ int BSL_Crypto_GetKeyStatistics(BSL_Crypto_KeyHandle_t handle, BSL_Crypto_KeySta
 ///@{
 
 /**
- * Perform key wrap
- * KEK and CEK sizes must match
+ * Perform key wrap.
+ * KEK and CEK sizes must match.
  * @param[in] kek_handle key encryption key handle (encryption key)
  * @param[in] cek_handle content encryption key handle (encryption data)
  * @param[in,out] wrapped_key output wrapped key (ciphertext) bytes
- * @param[in,out] wrapped_key_handle output wrapped key (ciphertext) handle, allocated with ::BSL_malloc(). Set to NULL
- * if handle not needed.
  */
-int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t cek_handle, BSL_Data_t *wrapped_key,
-                       BSL_Crypto_KeyHandle_t *wrapped_key_handle);
+int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t cek_handle, BSL_Data_t *wrapped_key);
 
 /**
- * Perform key unwrap
- * CEK size expected to match size of KEK
+ * Perform key unwrap.
+ * CEK size expected to match size of KEK.
  * @param[in] kek_handle key encryption key handle (decryption key)
  * @param[in] wrapped_key input wrapped key (ciphertext) bytes
  * @param[in,out] cek_handle output content encryption key (plaintext) handle.
