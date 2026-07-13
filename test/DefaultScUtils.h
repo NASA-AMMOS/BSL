@@ -52,8 +52,12 @@ extern "C" {
 /// Test helper function
 static inline int BSL_Crypto_AddRegistryKeyName(const char *name, const uint8_t *ptr, size_t len)
 {
+    BSL_Crypto_KeyHandle_t keyhandle;
+    BSL_Crypto_LoadKey(ptr, len, &keyhandle);
     BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR(name);
-    return BSL_Crypto_AddRegistryKey(&key_id, ptr, len, NULL);
+    int        res    = BSL_Crypto_AddRegistryKey(&key_id, keyhandle);
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    return res;
 }
 
 /// Test helper function

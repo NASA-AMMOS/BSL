@@ -355,12 +355,21 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer);
 int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
 
 /**
- * Generate a new cryptographic key
- * @param[in] key_length length of new key. Should be 16 or 32
+ * Generate a new cryptographic key.
+ * @param[in] key_length length of new key in bytes.
  * @param[out] key_out pointer to pointer for new key handle.
  * The handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
  */
 int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out);
+
+/**
+ * Load a new cryptographic key.
+ * @param[in] secret raw symmetric key.
+ * @param secret_len length of @c secret data.
+ * @param[out] key_out pointer to pointer for new key handle.
+ * The handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
+ */
+int BSL_Crypto_LoadKey(const uint8_t *secret, size_t secret_len, BSL_Crypto_KeyHandle_t *key_out);
 
 /**
  * Generate initialization vector (IV) for AES-GCM for BCBs
@@ -373,14 +382,12 @@ int BSL_Crypto_GenIV(BSL_Data_t *buf);
 /**
  * Add a new key to the crypto key registry
  * @param[in] keyid key ID that crypto functions will use to access key
- * @param[in] secret raw key data
- * @param secret_len length of raw key
- * @param[out] key_out Optional pointer to pointer for new key handle.
+ * @param[out] handle Key handle to add to the registry.
+ * Once the key is added it should be treated as read-only for thread-safety purposes.
  * When handle is output, the handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
  * @return Zero upon success.
  */
-int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len,
-                              BSL_Crypto_KeyHandle_t *key_out);
+int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t handle);
 
 /** Add a context-specific parameter to a known key.
  *

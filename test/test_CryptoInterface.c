@@ -794,8 +794,9 @@ void test_key_stats(void)
     BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR("testkeystats");
 
     BSL_Crypto_KeyHandle_t handle;
-    BSL_Crypto_AddRegistryKey(&key_id, test_128, sizeof(test_128), &handle);
+    BSL_Crypto_LoadKey(test_128, sizeof(test_128), &handle);
     TEST_ASSERT_NOT_NULL(handle);
+    TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&key_id, handle));
 
     test_encrypt("hello world!", "testkeystats");
 

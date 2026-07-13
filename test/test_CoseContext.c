@@ -278,16 +278,18 @@ void test_AppendixA_Example1_BIB_Source(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "dtn://src/", 1);
     {
-        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_1_kid);
         BSL_Data_t keymat;
         BSL_Data_Init(&keymat);
         TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_1_sk));
         BSL_Crypto_KeyHandle_t handle;
-        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &handle));
         BSL_Data_Deinit(&keymat);
 
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
+
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_1_kid);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, handle));
         BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
@@ -392,16 +394,18 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "dtn://dst/", 1);
     {
-        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_1_kid);
         BSL_Data_t keymat;
         BSL_Data_Init(&keymat);
         TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_1_sk));
         BSL_Crypto_KeyHandle_t handle;
-        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &handle));
         BSL_Data_Deinit(&keymat);
 
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
+
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_1_kid);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, handle));
         BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
@@ -555,16 +559,18 @@ void test_CCSDS_Example_Mac_Source(void)
     BSL_Crypto_SetRngGenerator(ccsds_mac_rng);
 
     {
-        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(ccsds_mac_kid);
         BSL_Data_t keymat;
         BSL_Data_Init(&keymat);
         TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, ccsds_mac_sk));
         BSL_Crypto_KeyHandle_t handle;
-        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &handle));
         BSL_Data_Deinit(&keymat);
 
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_AES_KW_256);
+
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(ccsds_mac_kid);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, handle));
         BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
@@ -658,16 +664,18 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "dtn://dst/", 1);
     {
-        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(ccsds_mac_kid);
         BSL_Data_t keymat;
         BSL_Data_Init(&keymat);
         TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, ccsds_mac_sk));
         BSL_Crypto_KeyHandle_t handle;
-        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &handle));
         BSL_Data_Deinit(&keymat);
 
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_AES_KW_256);
+
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(ccsds_mac_kid);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, handle));
         BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
@@ -802,11 +810,10 @@ void test_AppendixA_Example4_BCB_Source(void)
     {
         BSL_Crypto_KeyHandle_t handle;
         {
-            BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_4_kid);
             BSL_Data_t keymat;
             BSL_Data_Init(&keymat);
             TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_4_sk));
-            BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
+            TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &handle));
             BSL_Data_Deinit(&keymat);
         }
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
@@ -819,6 +826,9 @@ void test_AppendixA_Example4_BCB_Source(void)
                                      BSLX_COSEMSG_KEY_PARAM_BASEIV, buf);
             BSL_Data_Deinit(&buf);
         }
+
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_4_kid);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, handle));
         BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
@@ -921,12 +931,11 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "dtn://dst/", 1);
     {
-        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_4_kid);
         BSL_Data_t keymat;
         BSL_Data_Init(&keymat);
         TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_4_sk));
         BSL_Crypto_KeyHandle_t handle;
-        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &handle));
         BSL_Data_Deinit(&keymat);
 
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
@@ -939,6 +948,9 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
                                      BSLX_COSEMSG_KEY_PARAM_BASEIV, buf);
             BSL_Data_Deinit(&buf);
         }
+
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_4_kid);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, handle));
         BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
@@ -1097,15 +1109,17 @@ void test_AppendixA_Example5_BCB_Source(void)
     {
         BSL_Crypto_KeyHandle_t handle;
         {
-            BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_5_kid);
             BSL_Data_t keymat;
             BSL_Data_Init(&keymat);
             TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_5_sk));
-            BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
+            TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &handle));
             BSL_Data_Deinit(&keymat);
         }
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_AES_KW_256);
+
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_5_kid);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, handle));
         BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
@@ -1199,16 +1213,18 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "dtn://dst/", 1);
     {
-        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_5_kid);
         BSL_Data_t keymat;
         BSL_Data_Init(&keymat);
         TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&keymat, exA_5_sk));
         BSL_Crypto_KeyHandle_t handle;
-        BSL_Crypto_AddRegistryKey(&keyid, keymat.ptr, keymat.len, &handle);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &handle));
         BSL_Data_Deinit(&keymat);
 
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_AES_KW_256);
+
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_5_kid);
+        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, handle));
         BSL_Crypto_ReleaseKeyHandle(handle);
     }
 
