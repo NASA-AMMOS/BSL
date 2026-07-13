@@ -30,6 +30,8 @@
 #include <m-dict.h>
 #include <m-shared-ptr.h>
 #include <m-bstring.h>
+#include <openssl/core_names.h>
+#include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
@@ -42,9 +44,7 @@
  */
 typedef struct BSL_CryptoKey_s
 {
-    /// Pointer to OpenSSL PKEY struct (used in hmac ctx)
-    EVP_PKEY *pkey;
-    /// Pointer to raw key information (used in cipher ctx)
+    /// Pointer to raw key information
     BSL_Data_t raw;
     /// Additional parameter dictionary
     BSLB_IdValPairPtrMap_t params;
@@ -56,7 +56,6 @@ static void BSL_CryptoKey_Init(BSL_CryptoKey_t *key)
 {
     ASSERT_ARG_NONNULL(key);
 
-    key->pkey = NULL;
     BSL_Data_Init(&(key->raw));
     BSLB_IdValPairPtrMap_init(key->params);
 
@@ -70,11 +69,6 @@ static void BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
 {
     ASSERT_ARG_NONNULL(key);
 
-    if (key->pkey)
-    {
-        EVP_PKEY_free(key->pkey);
-        key->pkey = NULL;
-    }
     BSL_Data_Deinit(&(key->raw));
     BSLB_IdValPairPtrMap_clear(key->params);
 
@@ -236,24 +230,11 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     EVP_CIPHER_CTX_free(ctx);
     BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek, cek->raw.ptr, cek->raw.len);
 
-    EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
-    res                = EVP_PKEY_keygen_init(pctx);
-    if (res != 1)
-    {
-        BSL_CryptoKey_Deinit(cek);
-        BSL_free(cek);
-        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-    }
-
-    cek->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, cek->raw.ptr, cek->raw.len);
-    EVP_PKEY_CTX_free(pctx);
-
     *cek_handle = cek;
     return 0;
 }
 
-int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t cek_handle, BSL_Data_t *wrapped_key,
-                       BSL_Crypto_KeyHandle_t *wrapped_key_handle)
+int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t cek_handle, BSL_Data_t *wrapped_key)
 {
     CHK_ARG_NONNULL(kek_handle);
     CHK_ARG_NONNULL(cek_handle);
@@ -334,28 +315,6 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     EVP_CIPHER_CTX_free(ctx);
     BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
 
-    if (wrapped_key_handle != NULL)
-    {
-        EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
-        int           res  = EVP_PKEY_keygen_init(pctx);
-        CHK_PROPERTY(res == 1);
-
-        BSL_CryptoKey_t *new_wrapped_key_handle = BSL_malloc(sizeof(BSL_CryptoKey_t));
-        BSL_CryptoKey_Init(new_wrapped_key_handle);
-        new_wrapped_key_handle->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, wrapped_key->len);
-        BSL_Data_Init(&new_wrapped_key_handle->raw);
-
-        int ecode = 0;
-        if ((ecode = BSL_Data_CopyFrom(&new_wrapped_key_handle->raw, wrapped_key->len, wrapped_key->ptr)) < 0)
-        {
-            BSL_LOG_ERR("Failed to copy key");
-            return ecode;
-        }
-
-        *wrapped_key_handle = new_wrapped_key_handle;
-        EVP_PKEY_CTX_free(pctx);
-    }
-
     return 0;
 }
 
@@ -364,36 +323,46 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
     CHK_ARG_NONNULL(hmac_ctx);
     CHK_ARG_NONNULL(keyhandle);
 
-    hmac_ctx->keyhandle       = keyhandle;
-    BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
-
-    hmac_ctx->libhandle = EVP_MD_CTX_new();
-    CHK_PRECONDITION(hmac_ctx->libhandle != NULL);
-
-    hmac_ctx->SHA_variant = sha_var;
-
-    const EVP_MD *sha = NULL;
-    switch (hmac_ctx->SHA_variant)
+    char *digest_name;
+    switch (sha_var)
     {
         case BSL_CRYPTO_SHA_256:
-            sha = EVP_sha256();
+            digest_name = SN_sha256;
             break;
         case BSL_CRYPTO_SHA_384:
-            sha = EVP_sha384();
+            digest_name = SN_sha384;
             break;
         case BSL_CRYPTO_SHA_512:
-            sha = EVP_sha512();
+            digest_name = SN_sha512;
             break;
         default:
             BSL_LOG_ERR("Invalid SHA variant %d", sha_var);
-            return BSL_ERR_FAILURE;
+            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+
+    hmac_ctx->keyhandle       = keyhandle;
+    BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
+    CHK_PRECONDITION(key_info->raw.len > 0);
+
+    EVP_MAC *mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
+    CHK_PRECONDITION(mac != NULL);
+
+    hmac_ctx->libhandle = EVP_MAC_CTX_new(mac);
+    EVP_MAC_free(mac);
+    CHK_PRECONDITION(hmac_ctx->libhandle != NULL);
+
+    OSSL_PARAM params[2];
+    {
+        OSSL_PARAM *par = params;
+        *par++          = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, digest_name, strlen(digest_name));
+        *par++          = OSSL_PARAM_construct_end();
     }
 
     BSL_LOG_PLAINTEXT_PTR("using key", hmac_ctx, key_info->raw.ptr, key_info->raw.len);
-    int res = EVP_DigestSignInit(hmac_ctx->libhandle, NULL, sha, NULL, key_info->pkey);
+    int res = EVP_MAC_init(hmac_ctx->libhandle, key_info->raw.ptr, key_info->raw.len, params);
     CHK_PROPERTY(res == 1);
 
-    hmac_ctx->block_size = (size_t)EVP_MD_CTX_block_size(hmac_ctx->libhandle);
+    hmac_ctx->block_size = EVP_MAC_CTX_get_block_size(hmac_ctx->libhandle);
     if (hmac_ctx->block_size == 0)
     {
         hmac_ctx->block_size = 1024;
@@ -416,7 +385,8 @@ int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t d
     CHK_PRECONDITION(data_len <= INT_MAX);
 
     BSL_LOG_PLAINTEXT_PTR("data in", hmac_ctx, data, data_len);
-    int res = EVP_DigestSignUpdate(hmac_ctx->libhandle, data, (int)data_len);
+    int res = EVP_MAC_update(hmac_ctx->libhandle, data, data_len);
+    BSL_LOG_DEBUG("EVP_MAC_update took %zu bytes, return %d", data_len, res);
     CHK_PROPERTY(res == 1);
 
     BSL_CryptoKey_t *key_info = (BSL_CryptoKey_t *)hmac_ctx->keyhandle;
@@ -443,7 +413,9 @@ int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
         }
 
         BSL_LOG_PLAINTEXT_PTR("data in", hmac_ctx, hmac_ctx->in_buf.ptr, block_size);
-        EVP_DigestSignUpdate(hmac_ctx->libhandle, hmac_ctx->in_buf.ptr, block_size);
+        int res = EVP_MAC_update(hmac_ctx->libhandle, hmac_ctx->in_buf.ptr, block_size);
+        BSL_LOG_DEBUG("EVP_MAC_update took %zu bytes, return %d", block_size, res);
+        CHK_PROPERTY(res == 1);
 
         key_info->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += block_size;
     }
@@ -457,15 +429,15 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *tag)
     ASSERT_ARG_NONNULL(tag);
 
     // get the needed tag size
-    size_t size = EVP_MD_CTX_get_size(hmac_ctx->libhandle);
+    size_t size = EVP_MAC_CTX_get_mac_size(hmac_ctx->libhandle);
     CHK_PROPERTY(size > 0);
     CHK_PROPERTY(size <= INT_MAX);
     BSL_Data_Resize(tag, size);
 
-    int res = EVP_DigestSignFinal(hmac_ctx->libhandle, tag->ptr, &size);
-    BSL_LOG_DEBUG("EVP_DigestSignFinal gave %zu bytes, return %d", size, res);
-    BSL_LOG_PLAINTEXT_PTR("tag out", hmac_ctx, tag->ptr, size);
+    int res = EVP_MAC_final(hmac_ctx->libhandle, tag->ptr, &size, tag->len);
+    BSL_LOG_DEBUG("EVP_MAC_final gave %zu bytes, return %d", size, res);
     CHK_PROPERTY(res == 1);
+    BSL_LOG_PLAINTEXT_PTR("tag out", hmac_ctx, tag->ptr, size);
 
     return 0;
 }
@@ -475,7 +447,7 @@ void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
     ASSERT_ARG_NONNULL(hmac_ctx);
 
     BSL_Data_Deinit(&hmac_ctx->in_buf);
-    EVP_MD_CTX_free(hmac_ctx->libhandle);
+    EVP_MAC_CTX_free(hmac_ctx->libhandle);
     memset(hmac_ctx, 0, sizeof(BSL_AuthCtx_t));
 }
 
@@ -725,16 +697,9 @@ int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out)
     BSL_Data_Resize(&new_key->raw, key_length);
     if (rand_bytes_generator(new_key->raw.ptr, (int)new_key->raw.len) != 1)
     {
-        return -2;
+        BSL_CryptoKey_Deinit(new_key);
+        return BSL_ERR_FAILURE;
     }
-
-    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
-    CHK_PROPERTY(ctx);
-    int res = EVP_PKEY_keygen_init(ctx);
-    CHK_PROPERTY(res == 1);
-
-    new_key->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, new_key->raw.ptr, (int)new_key->raw.len);
-    EVP_PKEY_CTX_free(ctx);
 
     *key_out = new_key;
     return BSL_SUCCESS;
@@ -760,8 +725,6 @@ int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, si
     CHK_PROPERTY(key_ptr != NULL);
     // actual key struct
     BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref(key_ptr);
-
-    key->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, secret, (int)secret_len);
 
     int ecode = 0;
     if ((ecode = BSL_Data_CopyFrom(&key->raw, secret_len, secret)) < 0)
