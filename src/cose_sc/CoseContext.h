@@ -51,7 +51,7 @@ enum BSLX_CoseSC_Option_e
      * the key will be used for the recipient layer, otherwise it will be used
      * for a single-layer message.
      */
-    BSLX_COSESC_OPTION_KEY_ID,
+    BSLX_COSESC_OPTION_KEY_ID = 3000,
     /** Optional recipient algorithm as an integer.
      * The value is a COSE algorithm code point (::BSLX_CoseMsg_Alg_e).
      * Optional for source and optional filter for verifier/acceptor.
@@ -78,11 +78,36 @@ enum BSLX_CoseSC_Option_e
      * Optional for source and unused for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_IV_COUNTER_OFFSET,
+    /** An option to define a Base IV outside a COSE key.
+     * The value is a byte string used in the same way that RFC 9052
+     * defines the Base IV of a key.
+     * When present, this base will not be visible in the messaging.
+     * Optional for source and unused for verifier/acceptor.
+     */
+    BSLX_COSESC_OPTION_IV_BASE,
     /** An option to select a salt length for KDF sources.
      * The value is a length in bytes (as @c int64_t) to generate a salt.
      * Optional for source and unused for verifier/acceptor.
+     * When not present, the default salt length for the KDF algorithm
+     * will be used.
      */
     BSLX_COSESC_OPTION_SALT_LENGTH,
+    /** An option to use the key telemetry counter
+     * (number of security operations performed) as the basis of a unique
+     * salt for key derivation.
+     * The value is an offset (as @c int64_t) to add to the counter which
+     * is then converted to a byte string in network byte order.
+     * When used as a salt this is not padded.
+     * Optional for source and unused for verifier/acceptor.
+     */
+    BSLX_COSESC_OPTION_SALT_COUNTER_OFFSET,
+    /** An option to define a base salt value (similar in function to a Base IV).
+     * The value is a byte string used to determine the full salt length
+     * and XOR-ed with the salt counter.
+     * When present, this base will not be visible in the messaging.
+     * Optional for source and unused for verifier/acceptor.
+     */
+    BSLX_COSESC_OPTION_SALT_BASE,
 };
 
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.2

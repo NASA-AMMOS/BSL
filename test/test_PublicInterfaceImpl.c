@@ -149,9 +149,10 @@ void setUp(void)
 
     BSL_Data_t wrapkey_data;
     BSL_Data_Init(&wrapkey_data);
-    wrapkey_data.ptr = (uint8_t *)ApxA2_WrappedKey;
-    wrapkey_data.len = sizeof(ApxA2_WrappedKey);
+    TEST_ASSERT_EQUAL_INT(
+        0, BSL_TestUtils_DecodeBase16_cstr(&wrapkey_data, "69c411276fecddc4780df42c8a2af89296fabf34d7fae700"));
     BSL_IdValPair_SetBytestr(&ctx.param_wrapped_key, BSLX_BCB_OPT_WRAPPED_KEY, wrapkey_data);
+    BSL_Data_Deinit(&wrapkey_data);
 
     BSL_IdValPair_SetInt64(&ctx.opt_bib_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 1);
     BSL_IdValPair_SetInt64(&ctx.opt_bib_dont_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 0);

@@ -115,13 +115,8 @@ void test_AbsSecBlock_loopback(const char *hexdata, int64_t expect_ctx_id, uint6
 {
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    {
-        string_t in_text;
-        string_init_set_str(in_text, hexdata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                      "BSL_TestUtils_DecodeBase16() failed");
-        string_clear(in_text);
-    }
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, hexdata),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     TestASBDecodeEncodeClosure(in_data.ptr, in_data.len, expect_ctx_id, sample_target_block_num);
 
@@ -139,13 +134,8 @@ void test_AbsSecBlock_Decode_failure(const char *hexdata, int expect)
 {
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    {
-        string_t in_text;
-        string_init_set_str(in_text, hexdata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                      "BSL_TestUtils_DecodeBase16() failed");
-        string_clear(in_text);
-    }
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, hexdata),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
     BSL_AbsSecBlock_Init(asb);
