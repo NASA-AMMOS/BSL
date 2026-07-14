@@ -311,14 +311,14 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
     if (btsd_size)
     {
         // pre-allocate BTSD size
-        obj->ptr  = BSL_calloc(1, btsd_size);
-        obj->file = fmemopen(obj->ptr, obj->size, "r+");
+        obj->ptr = BSL_calloc(1, btsd_size + 1);
     }
     else
     {
-        obj->ptr  = BSL_calloc(1, 1);
-        obj->file = fmemopen(obj->ptr, 0, "r+");
+        // make fmemopen() happy
+        obj->ptr = BSL_calloc(1, 1);
     }
+    obj->file = fmemopen(obj->ptr, obj->size + 1, "w");
 
     BSL_SeqWriter_t *writer = BSL_calloc(1, sizeof(BSL_SeqWriter_t));
     if (!writer)
