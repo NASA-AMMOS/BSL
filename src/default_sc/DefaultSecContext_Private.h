@@ -76,7 +76,7 @@ typedef struct BSLX_BIB_s
     /// Required SHA variant
     int64_t sha_variant;
     /// Converted #sha_variant into enum value
-    BSL_CryptoCipherSHAVariant_e crypto_sha_variant;
+    BSL_Crypto_SHAVariant_e crypto_sha_variant;
 
     BSL_Data_t wrapped_key;
     int64_t    keywrap;
@@ -116,7 +116,7 @@ typedef struct BSLX_BCB_s
     /// Required AES variant (external code point)
     int64_t aes_variant;
     /// Internal enumeration for #aes_variant
-    BSL_CryptoCipherAESVariant_e bsl_aes;
+    BSL_Crypto_AESVariant_e bsl_aes;
     /// Required key size for #aes_variant
     size_t keysize;
 
