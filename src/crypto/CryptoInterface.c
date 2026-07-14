@@ -34,6 +34,7 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#include <openssl/kdf.h>
 
 #if defined(HAVE_VALGRIND)
 #include <valgrind/memcheck.h>
@@ -137,8 +138,20 @@ void BSL_Crypto_ReleaseKeyHandle(BSL_Crypto_KeyHandle_t keyhandle)
         return;
     }
 
-    BSL_CryptoKeyPtr_t *ptr = (BSL_CryptoKeyPtr_t *)keyhandle;
+    BSL_CryptoKeyPtr_t *ptr = keyhandle;
     BSL_CryptoKeyPtr_release(ptr);
+}
+
+bool BSL_Crypto_CompareKeys(BSL_Crypto_KeyHandle_t hdl1, BSL_Crypto_KeyHandle_t hdl2)
+{
+    if (!hdl1 || !hdl2)
+    {
+        return false;
+    }
+    const BSL_CryptoKey_t *key1 = BSL_CryptoKeyPtr_ref(hdl1);
+    const BSL_CryptoKey_t *key2 = BSL_CryptoKeyPtr_ref(hdl2);
+
+    return BSL_Crypto_Compare(key1->raw.ptr, key1->raw.len, key2->raw.ptr, key2->raw.len);
 }
 
 int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wrapped_key,
@@ -148,7 +161,9 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     ASSERT_ARG_NONNULL(wrapped_key);
     ASSERT_ARG_NONNULL(cek_handle);
 
-    BSL_CryptoKey_t *kek = (BSL_CryptoKey_t *)kek_handle;
+    BSL_CryptoKey_t *kek = BSL_CryptoKeyPtr_ref(kek_handle);
+
+    *cek_handle = NULL;
 
     const EVP_CIPHER *cipher;
     switch (kek->raw.len)
@@ -198,7 +213,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
 
     pthread_mutex_lock(&kek->stats_mutex);
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
-    kek->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += wrapped_key->len;
+    kek->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += cek->raw.len;
     pthread_mutex_unlock(&kek->stats_mutex);
 
     BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
@@ -240,8 +255,8 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     CHK_ARG_NONNULL(cek_handle);
     CHK_ARG_NONNULL(wrapped_key);
 
-    BSL_CryptoKey_t *cek = (BSL_CryptoKey_t *)cek_handle;
-    BSL_CryptoKey_t *kek = (BSL_CryptoKey_t *)kek_handle;
+    BSL_CryptoKey_t *kek = BSL_CryptoKeyPtr_ref(kek_handle);
+    BSL_CryptoKey_t *cek = BSL_CryptoKeyPtr_ref(cek_handle);
 
     const EVP_CIPHER *cipher;
     switch (kek->raw.len)
@@ -319,7 +334,118 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     return 0;
 }
 
-int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_CryptoCipherSHAVariant_e sha_var)
+// work-around allowance for empty salt and info
+static const uint8_t BSL_Crypto_zero = 0;
+
+#define BSL_Crypto_PtrOrZero(ptr) (ptr) ? (ptr) : (void *)&BSL_Crypto_zero
+
+int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t func, const BSL_Data_t *salt,
+                   const BSL_Data_t *info, size_t keylen, BSL_Crypto_KeyHandle_t *cek_handle)
+{
+    CHK_ARG_NONNULL(kdk_handle);
+    CHK_ARG_NONNULL(salt);
+    CHK_ARG_NONNULL(info);
+    CHK_ARG_NONNULL(cek_handle);
+    CHK_PRECONDITION(keylen > 0);
+    
+    char *digest_name;
+    switch (func)
+    {
+        case BSL_CRYPTO_KDF_HKDF_SHA_256:
+            digest_name = SN_sha256;
+            break;
+        case BSL_CRYPTO_KDF_HKDF_SHA_512:
+            digest_name = SN_sha512;
+            break;
+        default:
+            BSL_LOG_ERR("Invalid KDF func %d", func);
+            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+
+    BSL_CryptoKey_t *kdk = BSL_CryptoKeyPtr_ref(kdk_handle);
+    CHK_PRECONDITION(kdk->raw.len > 0);
+
+    BSL_CryptoKeyPtr_t *cek_ptr = BSL_CryptoKeyPtr_new();
+    // managed struct
+    BSL_CryptoKey_t *cek = BSL_CryptoKeyPtr_ref(cek_ptr);
+    CHK_PROPERTY(cek != NULL);
+
+    if (BSL_SUCCESS != BSL_Data_Resize(&cek->raw, keylen))
+    {
+        BSL_CryptoKeyPtr_release(cek_ptr);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+
+    int retval = BSL_SUCCESS;
+
+    EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
+    if (!kdf)
+    {
+        BSL_LOG_ERR("EVP_KDF_fetch: %s", ERR_error_string(ERR_get_error(), NULL));
+        retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    
+    EVP_KDF_CTX *kctx = NULL;
+    if (BSL_SUCCESS == retval)
+    {
+        kctx     = EVP_KDF_CTX_new(kdf);
+        if (!kctx)
+        {
+            BSL_LOG_ERR("EVP_KDF_CTX_new: %s", ERR_error_string(ERR_get_error(), NULL));
+            retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+    }
+    if (kdf)
+    {
+    EVP_KDF_free(kdf);
+    }
+
+    if (BSL_SUCCESS == retval)
+    {
+        OSSL_PARAM  params[5];
+        OSSL_PARAM *par = params;
+
+        *par++ = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST, digest_name, strlen(digest_name));
+        BSL_LOG_PLAINTEXT_PTR("using key", kctx, kdk->raw.ptr, kdk->raw.len);
+        *par++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY, kdk->raw.ptr, kdk->raw.len);
+        BSL_LOG_PLAINTEXT_PTR("using salt", kctx, salt->ptr, salt->len);
+        *par++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, BSL_Crypto_PtrOrZero(salt->ptr), salt->len);
+        BSL_LOG_PLAINTEXT_PTR("using info", kctx, info->ptr, info->len);
+        *par++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO, BSL_Crypto_PtrOrZero(info->ptr), info->len);
+        *par   = OSSL_PARAM_construct_end();
+
+        pthread_mutex_lock(&kdk->stats_mutex);
+        kdk->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
+        kdk->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += cek->raw.len;
+        pthread_mutex_unlock(&kdk->stats_mutex);
+
+        int res = EVP_KDF_derive(kctx, cek->raw.ptr, cek->raw.len, params);
+        BSL_LOG_DEBUG("EVP_KDF_derive gave %zu bytes, return %d", cek->raw.len, res);
+        BSL_LOG_PLAINTEXT_PTR("KDF out", kctx, cek->raw.ptr, cek->raw.len);
+        if (res <= 0)
+        {
+            BSL_LOG_ERR("EVP_KDF_derive: %s", ERR_error_string(ERR_get_error(), NULL));
+            retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+    }
+    if (kctx)
+    {
+    EVP_KDF_CTX_free(kctx);
+    }
+
+    if (BSL_SUCCESS == retval)
+    {
+    *cek_handle = cek_ptr;
+    }
+    else
+    {
+        *cek_handle =NULL;
+        BSL_CryptoKeyPtr_release(cek_ptr);
+    }
+    return retval;
+}
+
+int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SHAVariant_e sha_var)
 {
     CHK_ARG_NONNULL(hmac_ctx);
     CHK_ARG_NONNULL(keyhandle);
@@ -469,7 +595,7 @@ bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size
     return CRYPTO_memcmp(data1, data2, size1) == 0;
 }
 
-int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCipherAESVariant_e aes_var,
+int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_AESVariant_e aes_var,
                     const BSL_Data_t *iv_val, BSL_Crypto_KeyHandle_t keyhandle)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
@@ -779,7 +905,7 @@ int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t ha
 BSL_IdValPair_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
 {
     ASSERT_ARG_NONNULL(handle);
-    BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref((BSL_CryptoKeyPtr_t *)handle);
+    BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref(handle);
 
     BSL_IdValPair_t *retval = NULL;
     if (key)
@@ -807,7 +933,7 @@ BSL_IdValPair_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64
 const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
 {
     ASSERT_ARG_NONNULL(handle);
-    BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref((BSL_CryptoKeyPtr_t *)handle);
+    BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref(handle);
 
     const BSL_IdValPair_t *retval = NULL;
     if (key)
@@ -869,7 +995,7 @@ int BSL_Crypto_GetKeyStatistics(BSL_Crypto_KeyHandle_t handle, BSL_Crypto_KeySta
     ASSERT_ARG_NONNULL(handle);
     CHK_ARG_NONNULL(stats);
 
-    BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref((BSL_CryptoKeyPtr_t *)handle);
+    BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref(handle);
 
     pthread_mutex_lock(&key->stats_mutex);
     // copy as POD

@@ -84,7 +84,9 @@ bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_
  */
 int BSL_TestUtils_DecodeBase16(BSL_Data_t *output, const string_t input);
 
-/// @overload for C-string input
+/** Decode base16 from C-string input.
+ * @overload
+ */
 int BSL_TestUtils_DecodeBase16_cstr(BSL_Data_t *output, const char *input);
 
 /**

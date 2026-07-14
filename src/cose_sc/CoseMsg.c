@@ -383,15 +383,8 @@ int BSLX_CoseMsg_Recipient_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Re
     QCBOREncode_OpenArray(enc);
 
     BSLX_CoseMsg_Headers_Encode(enc, &obj->headers);
-    // ciphertext
-    if (obj->ciphertext.len)
-    {
-        QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(obj->ciphertext));
-    }
-    else
-    {
-        QCBOREncode_AddNULL(enc);
-    }
+    // ciphertext, always as bstr
+    QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(obj->ciphertext));
 
     QCBOREncode_CloseArray(enc);
     return BSL_SUCCESS;

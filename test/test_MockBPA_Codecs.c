@@ -228,12 +228,12 @@ void test_bsl_loopback_eid(const char *hexdata)
         size_t             needlen;
 
         QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, bsl_mock_encode_eid_from_ctx(&encoder, &eid), "bsl_mock_encode_eid() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_CBOR_EncodeEID(&encoder, &eid), "bsl_mock_encode_eid() failed");
         TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBOREncode_FinishGetSize(&encoder, &needlen));
 
         TEST_ASSERT_EQUAL_INT(0, BSL_Data_Resize(&out_data, needlen));
         QCBOREncode_Init(&encoder, (UsefulBuf) { out_data.ptr, out_data.len });
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, bsl_mock_encode_eid_from_ctx(&encoder, &eid), "bsl_mock_encode_eid() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_CBOR_EncodeEID(&encoder, &eid), "bsl_mock_encode_eid() failed");
 
         UsefulBufC out;
         TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBOREncode_Finish(&encoder, &out));

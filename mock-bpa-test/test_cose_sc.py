@@ -87,6 +87,15 @@ EXAMPLE_A_5_WITH_BCB = '''\
 '''
 ''' Bundle with BCB over target #1 using AESKW, adjusted sec block to #2 with flags 0x1'''
 
+EXAMPLE_A_6_WITH_BCB = '''\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [12, 3, 0, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[96, << [<< {1: 3} >>, {5: h'6F3093EBA5D85143C3DC484A'}, null, [[<< {1: -11} >>, {4: 'ExampleA.6', -20: h'2FA8C8352AEA17FAF7407271A5E90EB8'}, '']]] >>]]] >>],
+    [1, 1, 0, 2, h'6D0664951176F40600518B5C32A2A2137871F1F045AD', h'D7042DE5']
+]
+'''
+''' Bundle with BCB over target #1 using HKDF, adjusted sec block to #2 with flags 0x1'''
+
 CCSDS_MAC_NO_SEC = '''\
 [_
     [7, 0, 1, [2, [4, 9]], [2, [1, 1]], [2, [1, 1]], [819280839425, 0], 8640000000, h'179D'],
@@ -414,6 +423,7 @@ class TestCoseScEncrypt0(TestAgent):
 class TestCoseScEncrypt(TestAgent):
 
     def test_exampleA_5_source(self):
+        """ The IV header is non-deterministic """
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_NO_SEC,
             expected_output=None,
@@ -429,6 +439,33 @@ class TestCoseScEncrypt(TestAgent):
     def test_exampleA_5_acceptor_valid_loose(self):
         self._single_test(_TestCase(
             input_data=EXAMPLE_A_5_WITH_BCB,
+            expected_output=EXAMPLE_A_NO_SEC,
+            sec_src_eid='dtn://dst/',
+            policy_config='data/cose-sc/policy-any-bcb-accept.json',
+            bundle_dest_loc=BundleDestLoc.APPIN,
+            key_set="data/cose-sc/keyset-1.cbordiag",
+            is_working=True,
+            input_data_format=DataFormat.CBORDIAG,
+            expected_output_format=DataFormat.CBORDIAG
+        ))
+
+    def test_exampleA_6_source(self):
+        """ The salt header is non-deterministic """
+        self._single_test(_TestCase(
+            input_data=EXAMPLE_A_NO_SEC,
+            expected_output=None,
+            sec_src_eid='dtn://src/',
+            policy_config='data/cose-sc/policy-exA.6-source.json',
+            bundle_dest_loc=BundleDestLoc.APPIN,
+            key_set="data/cose-sc/keyset-1.cbordiag",
+            is_working=True,
+            input_data_format=DataFormat.CBORDIAG,
+            expected_output_format=DataFormat.ANYCBOR
+        ))
+
+    def test_exampleA_6_acceptor_valid_loose(self):
+        self._single_test(_TestCase(
+            input_data=EXAMPLE_A_6_WITH_BCB,
             expected_output=EXAMPLE_A_NO_SEC,
             sec_src_eid='dtn://dst/',
             policy_config='data/cose-sc/policy-any-bcb-accept.json',

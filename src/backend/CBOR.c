@@ -164,3 +164,38 @@ int BSL_CBOR_Compare_Int64(const int64_t *ltv, const int64_t *rtv)
         return -M_CMP_BASIC(*ltv, *rtv);
     }
 }
+
+int BSL_CBOR_EncodeEID(QCBOREncodeContext *enc, const BSL_HostEID_t *eid)
+{
+    int res;
+    if (QCBOREncode_IsBufferNULL(enc))
+    {
+        size_t needlen;
+
+        res = BSL_HostEID_EncodeToCBOR(eid, NULL, &needlen);
+        if (res != BSL_SUCCESS)
+        {
+            BSL_LOG_ERR("Failed to encode EID");
+            return BSL_ERR_ENCODING;
+        }
+
+        QCBOREncode_AddEncoded(enc, (UsefulBufC) { .ptr = NULL, .len = needlen });
+    }
+    else
+    {
+        BSL_Data_t eid_data;
+        BSL_Data_Init(&eid_data);
+
+        res = BSL_HostEID_EncodeToCBOR(eid, &eid_data, NULL);
+        if (res != BSL_SUCCESS)
+        {
+            BSL_LOG_ERR("Failed to encode EID");
+            return BSL_ERR_ENCODING;
+        }
+
+        QCBOREncode_AddEncoded(enc, UsefulBufC_FROM_BSL_Data(eid_data));
+        BSL_Data_Deinit(&eid_data);
+    }
+
+    return BSL_SUCCESS;
+}

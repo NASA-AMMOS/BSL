@@ -55,9 +55,9 @@ bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t
  * Provides the mapping from the security-context-specific ID defined in RFC9173
  * to the local ID of the SHA variant used by the crypto engine (OpenSSL).
  */
-static BSL_CryptoCipherSHAVariant_e map_rfc9173_sha_variant_to_crypto(uint64_t rfc9173_sha_variant)
+static BSL_Crypto_SHAVariant_e map_rfc9173_sha_variant_to_crypto(uint64_t rfc9173_sha_variant)
 {
-    BSL_CryptoCipherSHAVariant_e crypto_sha_variant;
+    BSL_Crypto_SHAVariant_e crypto_sha_variant;
     if (rfc9173_sha_variant == RFC9173_BIB_SHA_HMAC512)
     {
         crypto_sha_variant = BSL_CRYPTO_SHA_512;
