@@ -227,8 +227,8 @@ static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_re
         return NULL;
     }
     reader->user_data = obj;
-    reader->read      = MockBPA_ReadBTSD_Read;
-    reader->deinit    = MockBPA_ReadBTSD_Deinit;
+    reader->read      = &MockBPA_ReadBTSD_Read;
+    reader->deinit    = &MockBPA_ReadBTSD_Deinit;
 
     return reader;
 }
@@ -308,7 +308,7 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
     obj->size  = btsd_size;
     obj->curs  = 0;
 
-    obj->ptr  = BSL_calloc(1, btsd_size + 1);
+    obj->ptr  = BSL_calloc(1, btsd_size + 1); // reserve one for null terminator
     obj->file = fmemopen(obj->ptr, obj->size + 1, "w");
 
     BSL_SeqWriter_t *writer = BSL_calloc(1, sizeof(BSL_SeqWriter_t));
@@ -319,8 +319,8 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
         return NULL;
     }
     writer->user_data = obj;
-    writer->write     = MockBPA_WriteBTSD_Write;
-    writer->deinit    = MockBPA_WriteBTSD_Deinit;
+    writer->write     = &MockBPA_WriteBTSD_Write;
+    writer->deinit    = &MockBPA_WriteBTSD_Deinit;
 
     return writer;
 }
