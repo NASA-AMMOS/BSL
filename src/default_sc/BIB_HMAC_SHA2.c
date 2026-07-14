@@ -367,7 +367,8 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
 
     if (BSL_SUCCESS == retval)
     {
-        if ((res = BSL_AuthCtx_DigestBuffer(&hmac_ctx, ippt_data->ptr, ippt_data->len)) != BSL_SUCCESS)
+        res = BSL_AuthCtx_DigestBuffer(&hmac_ctx, ippt_data->ptr, ippt_data->len);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("bsl_hmac_ctx_input_data_buffer failed with code %d", res);
             retval = BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
@@ -376,7 +377,8 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
 
     if (BSL_SUCCESS == retval)
     {
-        if ((res = BSL_AuthCtx_Finalize(&hmac_ctx, &self->hmac_result_val)) != BSL_SUCCESS)
+        res = BSL_AuthCtx_Finalize(&hmac_ctx, &self->hmac_result_val);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("bsl_hmac_ctx_finalize failed with code %d", res);
             retval = BSL_ERR_SECURITY_CONTEXT_AUTH_FAILED;
