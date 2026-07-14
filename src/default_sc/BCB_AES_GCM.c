@@ -389,6 +389,7 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(bcb_context);
     CHK_ARG_NONNULL(sec_oper);
+    int res;
 
     CHK_PRECONDITION(bcb_context->target_block.block_num > 0);
     CHK_PRECONDITION(bcb_context->target_block.btsd_len > 0);
@@ -399,7 +400,8 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BCB_OPT_AES_VARIANT);
     if (param)
     {
-        if (BSL_SUCCESS != BSL_Variant_GetAsInt64(param, &bcb_context->aes_variant))
+        res = BSL_Variant_GetAsInt64(param, &bcb_context->aes_variant);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Invalid AES variant value");
             bcb_context->err_count++;
@@ -410,7 +412,8 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
     if (param)
     {
         BSL_Data_Deinit(&bcb_context->wrapped_key);
-        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(param, &bcb_context->wrapped_key))
+        res = BSL_Variant_GetAsBytestr(param, &bcb_context->wrapped_key);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Invalid wrapped key value");
             bcb_context->err_count++;
@@ -448,7 +451,8 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BCB_OPT_USE_KEY_WRAP);
     if (param)
     {
-        if (BSL_SUCCESS != BSL_Variant_GetAsInt64(param, &bcb_context->keywrap))
+        res = BSL_Variant_GetAsInt64(param, &bcb_context->keywrap);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Invalid use key wrap value");
             bcb_context->err_count++;

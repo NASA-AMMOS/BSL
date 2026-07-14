@@ -113,7 +113,6 @@ int mock_bpa_key_registry_init_jwk(int fd)
             if (BSL_SUCCESS != retval)
             {
                 BSL_LOG_ERR("Unable to store key");
-                break;
             }
         }
         BSL_Data_Deinit(&k_data);

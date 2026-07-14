@@ -108,7 +108,7 @@ static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BS
     for (BSLB_VariantPtrMap_it(param_it, outcome->param_list); !BSLB_VariantPtrMap_end_p(param_it);
          BSLB_VariantPtrMap_next(param_it))
     {
-        BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_ref(param_it);
+        const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_ref(param_it);
         // copy shared ptr
         BSLB_VariantPtrMap_set_at(asb->params, *(pair->key_ptr), *(pair->value_ptr));
     }
@@ -120,7 +120,7 @@ static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BS
     for (BSLB_VariantPtrMap_it(result_it, outcome->result_list); !BSLB_VariantPtrMap_end_p(result_it);
          BSLB_VariantPtrMap_next(result_it))
     {
-        BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_ref(result_it);
+        const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_ref(result_it);
         // copy shared ptr
         BSLB_VariantPtrMap_set_at(tgt->results, *(pair->key_ptr), *(pair->value_ptr));
     }
@@ -201,8 +201,8 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
 /** Common handling of binding to existing ASB content from an operation.
  */
-static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper,
-                                           BSL_AbsSecBlock_t *asb)
+static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper,
+                                           const BSL_AbsSecBlock_t *asb)
 {
     BSL_CanonicalBlock_t sec_blk;
 
