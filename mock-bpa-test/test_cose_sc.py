@@ -463,7 +463,6 @@ class TestCoseScEncrypt(TestAgent):
             policy_config='data/cose-sc/policy-exA.6-source.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.ANYCBOR
         ))
@@ -476,7 +475,6 @@ class TestCoseScEncrypt(TestAgent):
             policy_config='data/cose-sc/policy-any-bcb-accept.json',
             bundle_dest_loc=BundleDestLoc.APPIN,
             key_set="data/cose-sc/keyset-1.cbordiag",
-            is_working=True,
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
         ))
