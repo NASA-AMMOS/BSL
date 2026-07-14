@@ -26,6 +26,7 @@
 
 #include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
+#include <TextUtil.h>
 #include <mock_bpa/MockBPA.h>
 
 #include <backend/IdValPair.h>
@@ -83,9 +84,11 @@ bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_
 
 void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t bufflen)
 {
-    char ascii_buf[2 * bufflen + 1];
-    BSL_Log_DumpAsHexString(ascii_buf, sizeof(ascii_buf), buff, bufflen);
-    BSL_LOG_INFO("%s%s", message, ascii_buf);
+    BSL_Data_t val     = BSL_DATA_INIT_VIEW(buff, bufflen);
+    BSL_Data_t hex_str = BSL_DATA_INIT_NULL;
+    BSL_TextUtil_Base16_Encode(&hex_str, &val, false);
+    BSL_LOG_INFO("%s%s", message, hex_str.ptr);
+    BSL_Data_Deinit(&hex_str);
 }
 
 int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cborhex)
@@ -136,80 +139,9 @@ BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text)
     return pat;
 }
 
-/// Size of the @c BSL_TestUtils_DecodeBase16_table
-static const size_t BSL_TestUtils_DecodeBase16_lim = 0x80;
-// clang-format off
-/// Decode table for base16
-static const int BSL_TestUtils_DecodeBase16_table[0x80] =
-{
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -2, -2, -1, -1, -2, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-     0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
-    -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-};
-// clang-format on
-
-/** Decode a single character.
- *
- * @param chr The character to decode.
- * @return If positive, the decoded value.
- * -1 to indicate error.
- * -2 to indicate whitespace.
- */
-static int BSL_TestUtils_DecodeBase16_char(uint8_t chr)
-{
-    if (chr >= BSL_TestUtils_DecodeBase16_lim)
-    {
-        return -1;
-    }
-    return BSL_TestUtils_DecodeBase16_table[chr];
-}
-
-int BSL_TestUtils_DecodeBase16(BSL_Data_t *out, const string_t in)
-{
-    BSL_CHKERR1(out);
-    BSL_CHKERR1(in);
-
-    const size_t in_len = string_size(in);
-    if (in_len % 2 != 0)
-    {
-        return 1;
-    }
-    const char *curs = string_get_cstr(in);
-    const char *end  = curs + in_len;
-
-    if (BSL_Data_Resize(out, in_len / 2))
-    {
-        return 2;
-    }
-    uint8_t *out_curs = out->ptr;
-
-    while (curs < end)
-    {
-        const int high = BSL_TestUtils_DecodeBase16_char(*(curs++));
-        const int low  = BSL_TestUtils_DecodeBase16_char(*(curs++));
-        if ((high < 0) || (low < 0))
-        {
-            return 3;
-        }
-
-        const uint8_t byte = (uint8_t)((high << 4) | low);
-        *(out_curs++)      = byte;
-    }
-    return 0;
-}
-
 int BSL_TestUtils_DecodeBase16_cstr(BSL_Data_t *output, const char *input)
 {
-    m_string_t mstr;
-    m_string_init_set_cstr(mstr, input);
-    int res = BSL_TestUtils_DecodeBase16(output, mstr);
-    m_string_clear(mstr);
-    return res;
+    return BSL_TextUtil_Base16_Decode(output, input, strlen(input));
 }
 
 int BSL_TestUtils_ModifyEIDs(BSL_BundleRef_t *input_bundle, const char *src_eid, const char *dest_eid,

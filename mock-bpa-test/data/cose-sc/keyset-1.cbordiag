@@ -23,5 +23,13 @@
     / ops / 4: [5, 6], / wrap, unwrap /
     / k / -1: h'0e8a982b921d1086241798032fedc1f883eab72e4e43bb2d11cf
 ae38ad7a972e'
-  }
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'ExampleA.6',
+    / alg / 3: -11, / direct+HKDF-SHA-512 /
+    / ops / 4: [7], / derive key /
+    / k / -1: h'6c4e5271e211e0c8329ab8f363097f16516a459f12a4060cf016
+4968fdccbd63'
+  },
 ]

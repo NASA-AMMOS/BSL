@@ -7,7 +7,7 @@
           "rule_id": "1",
           "role": "a",
           "tgt": 1,
-          "loc": "appin",
+          "loc": "appout",
           "sc_id": 3
         },
         "spec": {

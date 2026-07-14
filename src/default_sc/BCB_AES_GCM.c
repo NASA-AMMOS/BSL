@@ -143,6 +143,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     else
     {
         int unwrap_result = BSL_Crypto_UnwrapKey(key_id_handle, &bcb_context->wrapped_key, &cipher_key);
+        BSL_Crypto_ReleaseKeyHandle(key_id_handle);
         if (BSL_SUCCESS != unwrap_result)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
@@ -151,10 +152,13 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     }
 
     int retval = BSL_SUCCESS;
+    int res;
 
     BSL_Cipher_t cipher;
-    int cipher_init = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
-    if (BSL_SUCCESS != cipher_init)
+    res = BSL_Cipher_Init(&cipher, BSL_CRYPTO_DECRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
+    BSL_Crypto_ReleaseKeyHandle(cipher_key);
+    cipher_key = NULL;
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
         retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -195,7 +199,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     if (retval == BSL_SUCCESS)
     {
         // entire block is ciphertext
-        int res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, bcb_context->target_block.btsd_len);
+        res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, bcb_context->target_block.btsd_len);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Decrypting BTSD ciphertext failed");
@@ -216,7 +220,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        int res = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
+        res = BSL_Cipher_FinalizeSeq(&cipher, btsd_write);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to finalize");
@@ -231,10 +235,6 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
     }
 
-    if (bcb_context->keywrap)
-    {
-        BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
-    }
     BSL_Cipher_Deinit(&cipher);
 
     return retval;
@@ -286,16 +286,17 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         if (BSL_SUCCESS != BSL_Crypto_GenKey(bcb_context->keysize, &cipher_key))
         {
             BSL_LOG_ERR("Failed to generate AES key");
-            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
+            BSL_Crypto_ReleaseKeyHandle(key_id_handle);
+            BSL_Crypto_ReleaseKeyHandle(cipher_key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
 
         int wrap_result = BSL_Crypto_WrapKey(key_id_handle, cipher_key, &bcb_context->wrapped_key);
-
+        BSL_Crypto_ReleaseKeyHandle(key_id_handle);
         if (BSL_SUCCESS != wrap_result)
         {
             BSL_LOG_ERR("Failed to wrap AES key");
-            BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
+            BSL_Crypto_ReleaseKeyHandle(cipher_key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
     }
@@ -305,6 +306,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     BSL_Cipher_t cipher;
     res = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, bcb_context->bsl_aes, &bcb_context->iv, cipher_key);
+    BSL_Crypto_ReleaseKeyHandle(cipher_key);
+    cipher_key = NULL;
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
@@ -376,11 +379,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     BSL_SeqReader_Destroy(btsd_read);
     BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
 
-    if (bcb_context->keywrap)
-    {
-        BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
-    }
     BSL_Cipher_Deinit(&cipher);
+
     return retval;
 }
 

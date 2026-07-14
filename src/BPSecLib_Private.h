@@ -161,19 +161,6 @@ typedef enum
     BSL_POLICYACTION_DROP_BUNDLE    ///< Drop the entire bundle.
 } BSL_PolicyAction_e;
 
-/**
- * Helper function to print the ASCII encoding of a given byte stream to a given target buffer.
- *
- * @todo - Can be moved to backend.
- *
- * @param dstbuf Pointer to a buffer where the C string should go.
- * @param dstlen The length in bytes of @c dstbuf
- * @param srcbuf Pointer to the buffer containing the byte stream to be printed.
- * @param srclen The length in bytes of @c srcbuf.
- * @return A copy of @c dstbuf.
- */
-char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen);
-
 /** Determine if a particular severity is being logged.
  * This function is multi-thread safe.
  *
@@ -209,28 +196,6 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 /// @overload
 #define BSL_LOG_DEBUG(...) BSL_LogEvent(LOG_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__)
 // NOLINTEND(misc-include-cleaner)
-
-/** @def BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)
- * Log plaintext as hex for debugging only when enabled by compile option
- * ::BSL_LOG_PLAINTEXT_ENABLE is non-zero.
- *
- * @param title The static C string title.
- * @param ctc A correlating context pointer to log.
- * @param ptr The data start pointer.
- * @param len The data length.
- */
-#if BSL_LOG_PLAINTEXT_ENABLE
-#define BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)                                   \
-    do                                                                                \
-    {                                                                                 \
-        char logstr[2 * (len) + 1];                                                   \
-        BSL_LOG_DEBUG("PLAINTEXT STATE (ctx %p) " title ": %s", (void *)ctx,          \
-                      BSL_Log_DumpAsHexString(logstr, sizeof(logstr), (ptr), (len))); \
-    }                                                                                 \
-    while (false)
-#else
-#define BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)
-#endif // BSL_LOG_PLAINTEXT_ENABLE
 
 /** @brief Helpful macros for expressing invariants, pre/post conditions, and arg validation.
  * The expression is nominally true and only false during exceptional cases.
@@ -1316,13 +1281,19 @@ struct BSL_SecCtxDesc_s
  */
 int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                       BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
-/// @overload execute as verifier
+/** Internal function to execute an operation as verifier or acceptor.
+ * @overload
+ */
 int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                                 BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
-/// @overload execute as source
+/** Internal function to execute an operation as source.
+ * @overload
+ */
 int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                       BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
-/// @overload execute as verifier
+/** Internal function to execute an operation as verifier or acceptor.
+ * @overload
+ */
 int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                                 BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
 

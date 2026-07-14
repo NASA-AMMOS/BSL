@@ -86,6 +86,11 @@ int BSL_CBOR_Decode(const BSL_Data_t *buf, BSL_CBOR_Decode_f func, const void *o
  */
 int BSL_CBOR_Compare_Int64(const int64_t *ltv, const int64_t *rtv);
 
+/** Helper to encode EID values in a way that is optimized for two-pass encoder.
+ * Matches ::BSL_CBOR_Encode_f signature.
+ */
+int BSL_CBOR_EncodeEID(QCBOREncodeContext *enc, const BSL_HostEID_t *eid);
+
 #ifdef __cplusplus
 } // extern C
 #endif

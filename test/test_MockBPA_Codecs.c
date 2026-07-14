@@ -56,50 +56,6 @@ void tearDown(void)
     TEST_ASSERT_EQUAL(0, deinit_code);
 }
 
-TEST_CASE("", NULL, 0)
-TEST_CASE("00", "\x00", 1)
-TEST_CASE("6869", "hi", 2)
-void test_BSL_TestUtils_DecodeBase16_valid(const char *text, const char *expect, size_t expect_len)
-{
-    string_t in_text;
-    string_init_set_str(in_text, text);
-    BSL_Data_t out_data;
-    BSL_Data_Init(&out_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&out_data, in_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
-
-    if (expect)
-    {
-        BSL_Data_t expect_data;
-        BSL_Data_InitView(&expect_data, expect_len, (BSL_DataPtr_t)expect);
-        TEST_ASSERT_TRUE(out_data.owned);
-        TEST_ASSERT_EQUAL_INT(expect_data.len, out_data.len);
-        TEST_ASSERT_EQUAL_MEMORY(expect_data.ptr, out_data.ptr, out_data.len);
-        BSL_Data_Deinit(&expect_data);
-    }
-    else
-    {
-        TEST_ASSERT_FALSE(out_data.owned);
-        TEST_ASSERT_EQUAL_INT(0, out_data.len);
-        TEST_ASSERT_NULL(out_data.ptr);
-    }
-    BSL_Data_Deinit(&out_data);
-    string_clear(in_text);
-}
-
-TEST_CASE("1")
-TEST_CASE("asd")
-void test_DecodeBase16(const char *text)
-{
-    string_t in_text;
-    string_init_set_str(in_text, text);
-    BSL_Data_t out_data;
-    BSL_Data_Init(&out_data);
-    TEST_ASSERT_NOT_EQUAL_INT(0, BSL_TestUtils_DecodeBase16(&out_data, in_text));
-    BSL_Data_Deinit(&out_data);
-    string_clear(in_text);
-}
-
 TEST_CASE(BSL_BUNDLECRCTYPE_NONE, "88070000820282030482028201028202820000821903e81903e900")
 TEST_CASE(BSL_BUNDLECRCTYPE_16, "89070001820282030482028201028202820000821903e81903e9004274FF")
 TEST_CASE(BSL_BUNDLECRCTYPE_32, "89070002820282030482028201028202820000821903e81903e90044D64C9E29")
@@ -204,12 +160,10 @@ TEST_CASE("8202820102")                   // IPN scheme
 TEST_CASE("821A00010000A203426869041819") // unknown scheme with complex data
 void test_bsl_loopback_eid(const char *hexdata)
 {
-    string_t in_text;
-    string_init_set_str(in_text, hexdata);
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                  "BSL_TestUtils_DecodeBase16() failed");
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, hexdata),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     BSL_HostEID_t eid;
     BSL_HostEID_Init(&eid);
@@ -228,12 +182,12 @@ void test_bsl_loopback_eid(const char *hexdata)
         size_t             needlen;
 
         QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, bsl_mock_encode_eid_from_ctx(&encoder, &eid), "bsl_mock_encode_eid() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_CBOR_EncodeEID(&encoder, &eid), "bsl_mock_encode_eid() failed");
         TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBOREncode_FinishGetSize(&encoder, &needlen));
 
         TEST_ASSERT_EQUAL_INT(0, BSL_Data_Resize(&out_data, needlen));
         QCBOREncode_Init(&encoder, (UsefulBuf) { out_data.ptr, out_data.len });
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, bsl_mock_encode_eid_from_ctx(&encoder, &eid), "bsl_mock_encode_eid() failed");
+        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_CBOR_EncodeEID(&encoder, &eid), "bsl_mock_encode_eid() failed");
 
         UsefulBufC out;
         TEST_ASSERT_EQUAL_INT(QCBOR_SUCCESS, QCBOREncode_Finish(&encoder, &out));
@@ -244,7 +198,6 @@ void test_bsl_loopback_eid(const char *hexdata)
     BSL_Data_Deinit(&out_data);
     BSL_HostEID_Deinit(&eid);
     BSL_Data_Deinit(&in_data);
-    string_clear(in_text);
 }
 
 TEST_CASE("9f88070000820282030482028201028202820000821903e81903e900850101000043010203ff")

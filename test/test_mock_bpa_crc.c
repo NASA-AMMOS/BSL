@@ -42,23 +42,13 @@ void test_mock_bpa_crc_crc16(const char *hexdata, const char *hexexpect)
 {
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    {
-        string_t in_text;
-        string_init_set_str(in_text, hexdata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                      "BSL_TestUtils_DecodeBase16() failed");
-        string_clear(in_text);
-    }
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, hexdata),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     BSL_Data_t expect_data;
     BSL_Data_Init(&expect_data);
-    {
-        string_t in_text;
-        string_init_set_str(in_text, hexexpect);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&expect_data, in_text),
-                                      "BSL_TestUtils_DecodeBase16() failed");
-        string_clear(in_text);
-    }
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&expect_data, hexexpect),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     UsefulBufC buf = { .ptr = in_data.ptr, .len = in_data.len };
 
@@ -78,23 +68,13 @@ void test_mock_bpa_crc_crc32c(const char *hexdata, const char *hexexpect)
 {
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    {
-        string_t in_text;
-        string_init_set_str(in_text, hexdata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                      "BSL_TestUtils_DecodeBase16() failed");
-        string_clear(in_text);
-    }
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, hexdata),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     BSL_Data_t expect_data;
     BSL_Data_Init(&expect_data);
-    {
-        string_t in_text;
-        string_init_set_str(in_text, hexexpect);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&expect_data, in_text),
-                                      "BSL_TestUtils_DecodeBase16() failed");
-        string_clear(in_text);
-    }
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&expect_data, hexexpect),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     UsefulBufC buf = { .ptr = in_data.ptr, .len = in_data.len };
 

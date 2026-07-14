@@ -41,18 +41,27 @@
 #include "CoseContext_Private.h"
 #include "CoseMsg.h"
 
-/// Acceptable target algorithms for MAC
+/** Acceptable target algorithms for MAC.
+ * @note These must be sorted for @c bsearch() to work.
+ */
 static const int64_t cose_bib_cnt_algs[] = {
-    5, 6, 7, // HMAC-SHA2
+    BSLX_COSEMSG_ALG_HMAC_SHA_256_256,
+    BSLX_COSEMSG_ALG_HMAC_SHA_384_384,
+    BSLX_COSEMSG_ALG_HMAC_SHA_512_512,
 };
-/// Acceptable target algorithms for Encrypt
+/** Acceptable target algorithms for Encrypt.
+ * @note These must be sorted for @c bsearch() to work.
+ */
 static const int64_t cose_bcb_cnt_algs[] = {
-    1, 2, 3, // AES-GCM
+    BSLX_COSEMSG_ALG_AES_GCM_128,
+    BSLX_COSEMSG_ALG_AES_GCM_192,
+    BSLX_COSEMSG_ALG_AES_GCM_256,
 };
 #if 0
 /// Acceptable recipient algorithms for MAC and Encrypt
 static const int64_t cose_recip_algs[] = {
     -13, -12, -11, -10, // direct+HKDF
+    -6, // direct
     -5, -4, -3, // AES-KW
 };
 #endif
@@ -117,6 +126,23 @@ typedef struct
     /// Key length for #tgt_alg
     size_t tgt_keylen;
 
+    /// True if #salt_length came from an option
+    bool opt_salt_length;
+    /// Optional offset to use when generating IV or Partial IV bytes
+    int64_t salt_length;
+    /// True if #salt_base came from an option
+    bool opt_salt_base;
+    /// Optional base bytes for generating salt bytes
+    BSL_Data_t salt_base;
+    /// True if #salt_offset came from an option
+    bool opt_salt_offset;
+    /// Optional offset to use when generating salt bytes
+    int64_t salt_offset;
+
+    /// True if #iv_base came from an option
+    bool opt_iv_base;
+    /// Optional base bytes for generating IV bytes, falling-back to key parameter
+    BSL_Data_t iv_base;
     /// True if #iv_offset came from an option
     bool opt_iv_offset;
     /// Optional offset to use when generating IV or Partial IV bytes
@@ -161,6 +187,8 @@ static void BSLX_CoseSc_Init(BSLX_CoseSc_t *self)
     BSL_Data_Init(&self->addl_phdr_bstr);
     BSLX_CoseMsg_HdrMapTree_init(self->addl_phdr);
     BSLX_CoseMsg_HdrMapTree_init(self->addl_uhdr);
+    BSL_Data_Init(&self->salt_base);
+    BSL_Data_Init(&self->iv_base);
     BSL_Data_Init(&self->full_iv);
     BSL_Data_Init(&self->partial_iv);
     self->cekhandle = NULL;
@@ -190,10 +218,13 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
     BSL_Data_Deinit(&self->wrapped_cek);
     if (self->cekhandle)
     {
-        BSL_Crypto_ClearGeneratedKeyHandle(self->cekhandle);
+        BSL_Crypto_ReleaseKeyHandle(self->cekhandle);
     }
+    BSL_Crypto_ReleaseKeyHandle(self->keyhandle);
     BSL_Data_Deinit(&self->partial_iv);
     BSL_Data_Deinit(&self->full_iv);
+    BSL_Data_Deinit(&self->iv_base);
+    BSL_Data_Deinit(&self->salt_base);
     BSLX_CoseMsg_HdrMapTree_clear(self->addl_uhdr);
     BSLX_CoseMsg_HdrMapTree_clear(self->addl_phdr);
     BSL_Data_Deinit(&self->addl_phdr_bstr);
@@ -313,17 +344,73 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         }
     }
 
+    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_IV_BASE);
+    if (opt)
+    {
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(opt, &self->iv_base))
+        {
+            BSL_LOG_ERR("Invalid IV base value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            self->opt_iv_base = true;
+        }
+    }
+
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET);
     if (opt)
     {
         if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->iv_offset))
         {
-            BSL_LOG_ERR("Invalid target algorithm value");
+            BSL_LOG_ERR("Invalid IV counter offset value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
         else
         {
             self->opt_iv_offset = true;
+        }
+    }
+
+    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_SALT_LENGTH);
+    if (opt)
+    {
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->salt_length))
+        {
+            BSL_LOG_ERR("Invalid salt length value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            self->opt_salt_length = true;
+        }
+    }
+
+    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_SALT_BASE);
+    if (opt)
+    {
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(opt, &self->salt_base))
+        {
+            BSL_LOG_ERR("Invalid salt base value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            self->opt_salt_base = true;
+        }
+    }
+
+    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_SALT_COUNTER_OFFSET);
+    if (opt)
+    {
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->salt_offset))
+        {
+            BSL_LOG_ERR("Invalid salt length value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            self->opt_salt_offset = true;
         }
     }
 
@@ -699,7 +786,7 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
 {
     int res;
 
-    BSL_CryptoCipherSHAVariant_e bsl_sha_var;
+    BSL_Crypto_SHAVariant_e bsl_sha_var;
     switch (ctx->tgt_alg)
     {
         case BSLX_COSEMSG_ALG_HMAC_SHA_256_256:
@@ -1331,6 +1418,226 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
     BSLX_CoseMsg_Mac0_Deinit(&msg);
 }
 
+/** Synthesize a nonce value based on option values.
+ */
+static int BSLX_CoseSc_GenerateNonce(BSL_Crypto_KeyHandle_t keyhandle, BSL_Data_t *out, BSL_Data_t *partial,
+                                     const BSL_Data_t *base, bool use_offset, int64_t offset, size_t default_len)
+{
+
+    if (use_offset)
+    { // generate the IV from an offset
+        BSL_Data_Resize(out, base->len);
+
+        BSL_Crypto_KeyStats_t stats;
+        BSL_Crypto_GetKeyStatistics(keyhandle, &stats);
+        uint64_t iv_int = (uint64_t)offset + stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED];
+
+        const size_t ctr_len = 8;
+        // Network byte order right aligned
+        uint8_t ctr_bytes[ctr_len];
+        for (size_t ix = 0; ix < ctr_len; ++ix)
+        {
+            ctr_bytes[ctr_len - ix - 1] = iv_int & 0xFF;
+            iv_int >>= 8;
+        }
+        const size_t pad = out->len - ctr_len;
+        memset(out->ptr, 0, pad);
+        memcpy(out->ptr + pad, ctr_bytes, ctr_len);
+
+        if (partial)
+        {
+            // skip leading zeros, leaving at least one byte
+            size_t skip = 0;
+            while ((skip < out->len - 1) && (out->ptr[skip] == 0))
+            {
+                ++skip;
+            }
+            BSL_Data_CopyFrom(partial, out->len - skip, out->ptr + skip);
+        }
+
+        // actually combine with the base
+        for (size_t ix = 0; ix < out->len; ++ix)
+        {
+            out->ptr[ix] ^= base->ptr[ix];
+        }
+    }
+    else
+    { // no option, use random IV
+        BSL_Data_Resize(out, default_len);
+
+        int res = BSL_Crypto_GenIV(out);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to generate IV");
+            return res;
+        }
+    }
+    return BSL_SUCCESS;
+}
+
+/** Limited fields actually used by this COSE implementation.
+ * The full set is listed in https://www.rfc-editor.org/rfc/rfc9053.html#section-5.2
+ */
+typedef struct
+{
+    /// Algorithm for which the key will be used
+    int64_t alg;
+    /// Length of key to derive
+    uint64_t key_length;
+    /// Reference to protected header for this layer
+    const BSL_Data_t *recip_phdr;
+
+    /// Reference to security source EID
+    const BSL_HostEID_t *sec_src_eid;
+    /// Reference to additional protected map (even if empty)
+    const BSL_Data_t *addl_phdr;
+
+} BSLX_CoseSc_KdfContext_t;
+
+/// Matches ::BSL_CBOR_Encode_f signature
+static int BSLX_CoseSc_KdfContext_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_KdfContext_t *obj)
+{
+    QCBOREncode_OpenArray(enc);
+
+    // AlgorithmID
+    QCBOREncode_AddInt64(enc, obj->alg);
+    { // PartyUInfo
+        QCBOREncode_OpenArray(enc);
+        QCBOREncode_AddNULL(enc);
+        QCBOREncode_AddNULL(enc);
+        QCBOREncode_AddNULL(enc);
+        QCBOREncode_CloseArray(enc);
+    }
+    { // PartyVInfo
+        QCBOREncode_OpenArray(enc);
+        QCBOREncode_AddNULL(enc);
+        QCBOREncode_AddNULL(enc);
+        QCBOREncode_AddNULL(enc);
+        QCBOREncode_CloseArray(enc);
+    }
+    { // SuppPubInfo
+        QCBOREncode_OpenArray(enc);
+        // keyDataLength
+        QCBOREncode_AddUInt64(enc, obj->key_length * 8);
+        // protected
+        QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(*(obj->recip_phdr)));
+        { // other
+            QCBOREncode_BstrWrap(enc);
+
+            QCBOREncode_AddSZString(enc, "BPSec");
+            BSL_CBOR_EncodeEID(enc, obj->sec_src_eid);
+            QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(*(obj->addl_phdr)));
+
+            QCBOREncode_CloseBstrWrap2(enc, false, NULL);
+        }
+        QCBOREncode_CloseArray(enc);
+    }
+
+    QCBOREncode_CloseArray(enc);
+    return BSL_SUCCESS;
+}
+
+/** HKDF processing for source and verifier
+ */
+static void BSLX_CoseSc_HkdfContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipient_t *recip)
+{
+    BSL_LOG_DEBUG("Deriving %zu bit content key", ctx->tgt_keylen * 8);
+    int res;
+
+    BSL_Crypto_KDFVariant_t bsl_kdf;
+    // ideal length
+    size_t salt_len;
+    switch (ctx->key_alg)
+    {
+        case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_256:
+            bsl_kdf  = BSL_CRYPTO_KDF_HKDF_SHA_256;
+            salt_len = 32;
+            break;
+        case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512:
+            bsl_kdf  = BSL_CRYPTO_KDF_HKDF_SHA_512;
+            salt_len = 64;
+            break;
+        default:
+            BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, ctx->key_alg);
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            return;
+    }
+
+    BSL_Data_t salt;
+    if (ctx->is_source)
+    {
+        // override algorithm default length
+        if (ctx->opt_salt_length)
+        {
+            salt_len = ctx->salt_length;
+        }
+
+        BSL_Data_Init(&salt);
+        res = BSLX_CoseSc_GenerateNonce(ctx->keyhandle, &salt, NULL, &ctx->salt_base, ctx->opt_salt_offset,
+                                        ctx->salt_offset, salt_len);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to generate salt");
+            ctx->status = res;
+        }
+
+        {
+            BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+            BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+
+            BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_SALT, salt);
+
+            BSLX_CoseMsg_HdrMapTree_set_at(recip->headers.uhdr, param->id, param_ptr);
+            BSLB_IdValPairPtr_release(param_ptr);
+        }
+    }
+    else
+    {
+        const BSL_IdValPair_t *head = BSLX_CoseMsg_Headers_Get(&recip->headers, BSLX_COSEMSG_HDR_SALT, false);
+        if (!head)
+        {
+            BSL_LOG_ERR("Missing required salt header");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+        else if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(head, &salt))
+        {
+            BSL_LOG_ERR("Invalid salt header");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+    }
+
+    BSL_Data_t kdf_ctx_enc;
+    BSL_Data_Init(&kdf_ctx_enc);
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_KdfContext_t kdf_ctx = {
+            .alg         = ctx->tgt_alg,
+            .key_length  = ctx->tgt_keylen,
+            .recip_phdr  = &recip->headers.phdr_bstr,
+            .sec_src_eid = BSL_SecOper_GetSecuritySource(ctx->sec_oper),
+            .addl_phdr   = &ctx->addl_phdr_bstr,
+        };
+
+        res = BSL_CBOR_Encode_Twopass(&kdf_ctx_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_KdfContext_Encode, &kdf_ctx);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to encode COSE_KDF_Context");
+            ctx->status = res;
+        }
+        // GCOV_EXCL_STOP
+    }
+
+    if (BSL_SUCCESS != BSL_Crypto_KDF(ctx->keyhandle, bsl_kdf, &salt, &kdf_ctx_enc, ctx->tgt_keylen, &ctx->cekhandle))
+    {
+        BSL_LOG_ERR("Failed to derive content key");
+        ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+
+    BSL_Data_Deinit(&kdf_ctx_enc);
+    BSL_Data_Deinit(&salt);
+}
+
 /** Common processing to source content key from recipient layer.
  */
 static void BSLX_CoseSc_GenerateContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipient_t *recip)
@@ -1345,7 +1652,6 @@ static void BSLX_CoseSc_GenerateContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Reci
         case BSLX_COSEMSG_ALG_AES_KW_128:
         case BSLX_COSEMSG_ALG_AES_KW_192:
         case BSLX_COSEMSG_ALG_AES_KW_256:
-        {
             BSL_LOG_DEBUG("Generating %zu bit content key", ctx->tgt_keylen * 8);
 
             if (BSL_SUCCESS != BSL_Crypto_GenKey(ctx->tgt_keylen, &ctx->cekhandle))
@@ -1360,13 +1666,10 @@ static void BSLX_CoseSc_GenerateContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Reci
                 BSL_LOG_ERR("Failed to wrap content key");
                 ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             }
-
             break;
-        }
         case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_256:
         case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512:
-            BSL_LOG_CRIT("Not implemented");
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            BSLX_CoseSc_HkdfContentKey(ctx, recip);
             break;
         default:
             BSL_LOG_ERR("Unsupported recipient algorithm %" PRId64, ctx->key_alg);
@@ -1377,7 +1680,7 @@ static void BSLX_CoseSc_GenerateContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Reci
 
 /** Common processing to extract content key from recipient layer.
  */
-static void BSLX_CoseSc_ExtractContentKey(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Recipient_t *recip)
+static void BSLX_CoseSc_ExtractContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipient_t *recip)
 {
     int res;
 
@@ -1401,8 +1704,7 @@ static void BSLX_CoseSc_ExtractContentKey(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg
         }
         case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_256:
         case BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512:
-            BSL_LOG_CRIT("Not implemented");
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            BSLX_CoseSc_HkdfContentKey(ctx, recip);
             break;
         default:
             BSL_LOG_ERR("Unsupported recipient algorithm %" PRId64, ctx->key_alg);
@@ -1551,7 +1853,7 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
     ASSERT_PRECONDITION(ctx->full_iv.len > 0);
     int res;
 
-    BSL_CryptoCipherAESVariant_e bsl_aes_var;
+    BSL_Crypto_AESVariant_e bsl_aes_var;
     switch (ctx->tgt_alg)
     {
         case BSLX_COSEMSG_ALG_AES_GCM_128:
@@ -1775,66 +2077,42 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
  */
 static void BSLX_CoseSc_GenerateIV(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *headers)
 {
-    // create IV bytes
-    BSL_Data_Resize(&ctx->full_iv, BSLX_COSEMSG_AESGCM_IV_LEN);
-
-    if (ctx->opt_iv_offset)
-    { // generate the IV from an offset
-        BSL_Crypto_KeyStats_t stats;
-        BSL_Crypto_GetKeyStatistics(ctx->keyhandle, &stats);
-        uint64_t iv_int = (uint64_t)ctx->iv_offset + stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED];
-
-        // Network byte order right aligned
-        const size_t ctr_len = 8;
-        uint8_t      iv_bytes[ctr_len];
-        for (size_t ix = 0; ix < ctr_len; ++ix)
-        {
-            iv_bytes[ctr_len - ix - 1] = iv_int & 0xFF;
-            iv_int >>= 8;
-        }
-        const size_t pad = ctx->full_iv.len - ctr_len;
-        memset(ctx->full_iv.ptr, 0, pad);
-        memcpy(ctx->full_iv.ptr + pad, iv_bytes, ctr_len);
-    }
-    else
-    { // no option, use random IV
-        int res = BSL_Crypto_GenIV(&ctx->full_iv);
-        if (BSL_SUCCESS != res)
-        {
-            BSL_LOG_ERR("Failed to generate IV");
-            ctx->status = res;
-        }
-    }
-
+    BSL_Data_t baseiv_view;
+    BSL_Data_Init(&baseiv_view);
     const BSL_IdValPair_t *keyparam = BSL_Crypto_GetKeyParameter(ctx->keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV);
     if (keyparam)
     {
-        BSL_Data_t baseiv_val;
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(keyparam, &baseiv_val))
+        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(keyparam, &baseiv_view))
         {
             BSL_LOG_ERR("Invalid Base IV value");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
-        else if (ctx->full_iv.len != baseiv_val.len)
-        {
-            BSL_LOG_ERR("Invalid Base IV length, need %zu got %zu", ctx->full_iv.len, baseiv_val.len);
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-        }
         else
         {
-            // skip leading zeros, leaving at least one byte
-            size_t skip = 0;
-            while ((skip < ctx->full_iv.len - 1) && (ctx->full_iv.ptr[skip] == 0))
-            {
-                ++skip;
-            }
-            BSL_Data_CopyFrom(&ctx->partial_iv, ctx->full_iv.len - skip, ctx->full_iv.ptr + skip);
+            BSL_LOG_DEBUG("Using base IV from key");
+        }
+    }
+    else if (ctx->opt_iv_base)
+    {
+        BSL_LOG_DEBUG("Using base IV from option");
+        BSL_Data_InitView(&baseiv_view, ctx->iv_base.len, ctx->iv_base.ptr);
+    }
 
-            // actually combine with the base
-            for (size_t ix = 0; ix < ctx->full_iv.len; ++ix)
-            {
-                ctx->full_iv.ptr[ix] ^= baseiv_val.ptr[ix];
-            }
+    if ((BSL_SUCCESS == ctx->status) && (baseiv_view.len > 0) && (BSLX_COSEMSG_AESGCM_IV_LEN != baseiv_view.len))
+    {
+        BSL_LOG_ERR("Invalid Base IV length, need %zu got %zu", BSLX_COSEMSG_AESGCM_IV_LEN, baseiv_view.len);
+        ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        int res =
+            BSLX_CoseSc_GenerateNonce(ctx->keyhandle, &ctx->full_iv, keyparam ? &ctx->partial_iv : NULL, &baseiv_view,
+                                      ctx->opt_iv_offset, ctx->iv_offset, BSLX_COSEMSG_AESGCM_IV_LEN);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to generate IV");
+            ctx->status = res;
         }
     }
 

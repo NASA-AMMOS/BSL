@@ -380,7 +380,7 @@ int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
 
 void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t *pair)
 {
-    QCBOREncode_AddUInt64(enc, pair->id);
+    QCBOREncode_AddInt64(enc, pair->id);
 
     if (BSL_IdValPair_IsInt64(pair))
     {

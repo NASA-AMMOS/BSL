@@ -202,12 +202,17 @@ include(GNUInstallDirs)
 if(BUILD_LIB)
     add_subdirectory(src)
 
-    configure_file(pkg/qcbor.pc.in pkg/qcbor.pc @ONLY)
-    configure_file(pkg/bsl.pc.in pkg/bsl.pc @ONLY)
+    file(GLOB PCIN_FILES "pkg/*.pc.in")
+    set(PC_FILES "")
+    foreach(PCIN_FILE ${PCIN_FILES})
+        get_filename_component(PCOUT_FILE ${PCIN_FILE} NAME_WLE)
+        set(PCOUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/pkg/${PCOUT_FILE}")
+        configure_file(${PCIN_FILE} ${PCOUT_FILE} @ONLY)
+        list(APPEND PC_FILES ${PCOUT_FILE})
+    endforeach()
+
     install(
-        FILES
-            "${CMAKE_CURRENT_BINARY_DIR}/pkg/qcbor.pc"
-            "${CMAKE_CURRENT_BINARY_DIR}/pkg/bsl.pc"
+        FILES ${PC_FILES}
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
     )
 endif(BUILD_LIB)
