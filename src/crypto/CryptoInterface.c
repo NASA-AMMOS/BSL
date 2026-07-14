@@ -347,7 +347,7 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
     CHK_ARG_NONNULL(info);
     CHK_ARG_NONNULL(cek_handle);
     CHK_PRECONDITION(keylen > 0);
-    
+
     char *digest_name;
     switch (func)
     {
@@ -384,11 +384,11 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
         BSL_LOG_ERR("EVP_KDF_fetch: %s", ERR_error_string(ERR_get_error(), NULL));
         retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
-    
+
     EVP_KDF_CTX *kctx = NULL;
     if (BSL_SUCCESS == retval)
     {
-        kctx     = EVP_KDF_CTX_new(kdf);
+        kctx = EVP_KDF_CTX_new(kdf);
         if (!kctx)
         {
             BSL_LOG_ERR("EVP_KDF_CTX_new: %s", ERR_error_string(ERR_get_error(), NULL));
@@ -397,7 +397,7 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
     }
     if (kdf)
     {
-    EVP_KDF_free(kdf);
+        EVP_KDF_free(kdf);
     }
 
     if (BSL_SUCCESS == retval)
@@ -430,16 +430,16 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
     }
     if (kctx)
     {
-    EVP_KDF_CTX_free(kctx);
+        EVP_KDF_CTX_free(kctx);
     }
 
     if (BSL_SUCCESS == retval)
     {
-    *cek_handle = cek_ptr;
+        *cek_handle = cek_ptr;
     }
     else
     {
-        *cek_handle =NULL;
+        *cek_handle = NULL;
         BSL_CryptoKeyPtr_release(cek_ptr);
     }
     return retval;

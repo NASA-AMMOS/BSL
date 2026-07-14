@@ -381,7 +381,7 @@ void test_AppendixA_Example1_BIB_Source(void)
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
-BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
 
 enum OptMismatch_e
@@ -531,7 +531,7 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
-BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
 
 /// Common input bundle for CCSDS/ESA
@@ -675,7 +675,7 @@ void test_CCSDS_Example_Mac_Source(void)
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
-BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
 
 // no use of OPT_MISMATCH_MODIFY_BLK_3 here (tag is in the ciphertext)
@@ -815,7 +815,7 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
-BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
 
 static const char *exA_4_kid = "ExampleA.4";
@@ -956,7 +956,7 @@ void test_AppendixA_Example4_BCB_Source(void)
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
-BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
 
 // no use of OPT_MISMATCH_MODIFY_BLK_3 here (tag is in the ciphertext)
@@ -1104,7 +1104,7 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
-BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
 
 static const char *exA_5_kid = "ExampleA.5";
@@ -1252,7 +1252,7 @@ void test_AppendixA_Example5_BCB_Source(void)
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
-BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
 
 // no use of OPT_MISMATCH_MODIFY_BLK_3 here (tag is in the ciphertext)
@@ -1392,7 +1392,7 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
-BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
 
 static const char *exA_6_kid = "ExampleA.6";
@@ -1445,8 +1445,8 @@ void test_AppendixA_Example6_BCB_Source(void)
         BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                BSLX_COSEMSG_KEY_PARAM_ALG, BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512);
 
-                  BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_6_kid);
-              BSL_Crypto_AddRegistryKey(&keyid, keyhandle);
+        BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_6_kid);
+        BSL_Crypto_AddRegistryKey(&keyid, keyhandle);
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
@@ -1545,5 +1545,5 @@ void test_AppendixA_Example6_BCB_Source(void)
     BSL_SecOutcome_Deinit(outcome);
     BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
-BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
