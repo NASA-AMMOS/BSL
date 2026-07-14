@@ -26,7 +26,7 @@
 #include "TestUtils.h"
 #include <bsl/mock_bpa/MockBPA.h>
 #include <bsl/cose_sc/CoseMsg.h>
-#include <bsl/dynamic//CBOR.h>
+#include <bsl/dynamic/CBOR.h>
 #include <cinttypes>
 
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv);

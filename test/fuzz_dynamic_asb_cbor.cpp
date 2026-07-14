@@ -25,8 +25,8 @@
  */
 #include "TestUtils.h"
 #include <bsl/mock_bpa/MockBPA.h>
-#include <bsl/dynamic//AbsSecBlock.h>
-#include <bsl/dynamic//CBOR.h>
+#include <bsl/dynamic/AbsSecBlock.h>
+#include <bsl/dynamic/CBOR.h>
 #include <cinttypes>
 
 #define EXPECT_EQ(expect, got)          \
