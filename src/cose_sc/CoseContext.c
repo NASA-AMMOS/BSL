@@ -218,8 +218,9 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
     BSL_Data_Deinit(&self->wrapped_cek);
     if (self->cekhandle)
     {
-        BSL_Crypto_ClearGeneratedKeyHandle(self->cekhandle);
+        BSL_Crypto_ReleaseKeyHandle(self->cekhandle);
     }
+    BSL_Crypto_ReleaseKeyHandle(self->keyhandle);
     BSL_Data_Deinit(&self->partial_iv);
     BSL_Data_Deinit(&self->full_iv);
     BSL_Data_Deinit(&self->iv_base);

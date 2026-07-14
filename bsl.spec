@@ -97,6 +97,7 @@ do
     install -m644 -D ${FN} %{buildroot}%{_libdir}/${FN}
 done
 popd
+install -m644 -D testroot/usr/lib/pkgconfig/m-lib.pc %{buildroot}%{_datadir}/pkgconfig/m-lib.pc
 
 %cmake_install
 
@@ -120,6 +121,7 @@ popd
 %license LICENSE
 %doc README.md
 %{_includedir}/m-lib/
+%{_datadir}/pkgconfig/m-lib.pc
 
 %{_includedir}/qcbor/
 %{_libdir}/pkgconfig/qcbor.pc
@@ -128,6 +130,9 @@ popd
 
 %{_includedir}/bsl/
 %{_libdir}/pkgconfig/bsl.pc
+%{_libdir}/pkgconfig/bsl-default-sc.pc
+%{_libdir}/pkgconfig/bsl-cose-sc.pc
+%{_libdir}/pkgconfig/bsl-sample-pp.pc
 %{_libdir}/libbsl_front.so
 %{_libdir}/libbsl_dynamic.so
 %{_libdir}/libbsl_crypto.so

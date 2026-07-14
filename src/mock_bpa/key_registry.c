@@ -104,7 +104,10 @@ int mock_bpa_key_registry_init_jwk(int fd)
         {
             BSL_Data_t kid_view = BSL_DATA_INIT_VIEW_CSTR(kid_str);
 
-            retval = BSL_Crypto_AddRegistryKey(&kid_view, k_data.ptr, k_data.len, NULL);
+            BSL_Crypto_KeyHandle_t keyhandle;
+            BSL_Crypto_LoadKey(k_data.ptr, k_data.len, &keyhandle);
+            retval = BSL_Crypto_AddRegistryKey(&kid_view, keyhandle);
+            BSL_Crypto_ReleaseKeyHandle(keyhandle);
         }
         BSL_Data_Deinit(&k_data);
 
@@ -199,19 +202,13 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
         {
             BSL_Data_t kid_view;
             BSL_Data_InitView(&kid_view, kid.len, (BSL_DataPtr_t)kid.ptr);
-            BSL_Crypto_KeyHandle_t handle;
 
-            retval = BSL_Crypto_AddRegistryKey(&kid_view, k_data.ptr, k_data.len, &handle);
-            BSL_LOG_DEBUG("Adding key result %d", retval);
-            if (BSL_SUCCESS != retval)
-            {
-                BSL_LOG_ERR("Unable to store key");
-                break;
-            }
+            BSL_Crypto_KeyHandle_t keyhandle;
+            BSL_Crypto_LoadKey(k_data.ptr, k_data.len, &keyhandle);
 
             if (has_alg)
             {
-                BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_ALG),
+                BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
                                        BSLX_COSEMSG_KEY_PARAM_ALG, alg);
             }
             else
@@ -223,8 +220,17 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
             {
                 BSL_Data_t view;
                 BSL_Data_InitView(&view, baseiv.len, (BSL_DataPtr_t)baseiv.ptr);
-                BSL_IdValPair_SetBytestr(BSL_Crypto_SetKeyParameter(handle, BSLX_COSEMSG_KEY_PARAM_BASEIV),
+                BSL_IdValPair_SetBytestr(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV),
                                          BSLX_COSEMSG_KEY_PARAM_BASEIV, view);
+            }
+
+            retval = BSL_Crypto_AddRegistryKey(&kid_view, keyhandle);
+            BSL_Crypto_ReleaseKeyHandle(keyhandle);
+            BSL_LOG_DEBUG("Adding key result %d", retval);
+            if (BSL_SUCCESS != retval)
+            {
+                BSL_LOG_ERR("Unable to store key");
+                break;
             }
         }
     }
