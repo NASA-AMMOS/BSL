@@ -115,21 +115,32 @@ typedef struct BSL_Crypto_KeyStats_s
 
 /** Opaque handle for key objects in the key store.
  */
-typedef void *BSL_Crypto_KeyHandle_t;
+typedef struct BSL_CryptoKeyPtr_s *BSL_Crypto_KeyHandle_t;
 
 /**
- * Generate a new cryptographic key outside of the key registry.
- * @param[in] key_length length of new key. Should be 16 or 32
+ * Generate a new cryptographic key.
+ * @param[in] key_length length of new key in bytes.
  * @param[out] key_out pointer to pointer for new key handle.
+ * The handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
  */
 int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out);
 
 /**
- * Deinit and free generated key handle
- * @param[in] keyhandle key handle to clear.
- * Key handle assumed to be generated, not present in key registry, and allocated with ::BSL_malloc().
+ * Load a new cryptographic key.
+ * @param[in] secret raw symmetric key.
+ * @param secret_len length of @c secret data.
+ * @param[out] key_out pointer to pointer for new key handle.
+ * The handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
  */
-void BSL_Crypto_ClearGeneratedKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
+int BSL_Crypto_LoadKey(const uint8_t *secret, size_t secret_len, BSL_Crypto_KeyHandle_t *key_out);
+
+/** Release a key handle after it is done being used.
+ *
+ * @param[in] keyhandle key handle to release.
+ * If the handle is null this does nothing.
+ * @post If this is the last use of the handle (including the key registry) the key will be destroyed.
+ */
+void BSL_Crypto_ReleaseKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
 
 /** Compare two keys in a time-invariant way.
  * This avoids side channel attacks which depend on comparison time.
@@ -143,26 +154,27 @@ bool BSL_Crypto_CompareKeys(BSL_Crypto_KeyHandle_t hdl1, BSL_Crypto_KeyHandle_t 
 /** Get pointers to an existing key, if present.
  *
  * @param keyid The key to search for.
- * @param[in, out] key_handle pointer to pointer for new key handle
- * @return Zero upon success.
+ * @param[in, out] key_handle pointer to pointer for new key handle.
+ * The handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
+ * @return Zero if the key was present.
  */
 int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *key_handle);
 
-/** Erase key entry from crypto library registry, if present
- *  @param[in] keyid key ID of key to remove
+/** Erase key entry from crypto library registry, if present.
+ *  @param[in] keyid key ID of key to remove.
+ * @return Zero if the key was present.
  */
 int BSL_Crypto_RemoveRegistryKey(const BSL_Data_t *keyid);
 
 /**
  * Add a new key to the crypto key registry
  * @param[in] keyid key ID that crypto functions will use to access key
- * @param[in] secret raw key data
- * @param secret_len length of raw key
- * @param[out] key_out Optional pointer to pointer for new key handle.
+ * @param[out] handle Key handle to add to the registry.
+ * Once the key is added it should be treated as read-only for thread-safety purposes.
+ * When handle is output, the handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
  * @return Zero upon success.
  */
-int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, const uint8_t *secret, size_t secret_len,
-                              BSL_Crypto_KeyHandle_t *key_out);
+int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t handle);
 
 /** Add a context-specific parameter to a known key.
  *
@@ -313,11 +325,12 @@ typedef struct BSL_Cipher_s
  * @param enc enum for BSL_CRYPTO_ENCRYPT or BSL_CRYPTO_DECRYPT
  * @param[in] iv_val The initialization vector (IV) data, which must be non-empty.
  * The length is internally limited to INT_MAX
- * @param[in] key_handle key handle to use
+ * @param[in] key_handle key handle to use.
+ * The cipher context keeps its own reference to this handle.
  * @return 0 if successful
  */
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_AESVariant_e aes_var,
-                    const BSL_Data_t *iv_val, void *key_handle);
+                    const BSL_Data_t *iv_val, BSL_Crypto_KeyHandle_t key_handle);
 
 /**
  * Add additional authenticated data (AAD) to cipher context
@@ -434,7 +447,8 @@ typedef struct BSL_AuthCtx_s
 /**
  * Initialize HMAC context resources and set private key and SHA variant
  * @param[in,out] hmac_ctx pointer to hmac context struct to init and set
- * @param[in] keyhandle handle for key to use
+ * @param[in] keyhandle handle for key to use.
+ * The HMAC context keeps its own reference to this handle.
  * @param[in] sha_var SHA variant, see RFC9173 @cite rfc9173
  * @return 0 if successful
  */
