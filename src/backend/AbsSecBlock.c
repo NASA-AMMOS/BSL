@@ -29,17 +29,18 @@
 #include <BPSecLib_Private.h>
 
 #include "AbsSecBlock.h"
+#include "TextUtil.h"
 #include "CBOR.h"
 
 void BSL_AbsSecBlock_Target_Init(BSL_AbsSecBlock_Target_t *self)
 {
     self->target_block_num = 0;
-    BSLB_IdValPairPtrList_init(self->results);
+    BSLB_VariantPtrMap_init(self->results);
 }
 
 void BSL_AbsSecBlock_Target_Deinit(BSL_AbsSecBlock_Target_t *self)
 {
-    BSLB_IdValPairPtrList_clear(self->results);
+    BSLB_VariantPtrMap_clear(self->results);
     self->target_block_num = 0;
 }
 
@@ -59,27 +60,32 @@ bool BSL_AbsSecBlock_IsConsistent(const BSL_AbsSecBlock_t *self)
     return true;
 }
 
-static void BSL_IdValPair_Print(const BSL_IdValPair_t *pair, const char *label, size_t index)
+static void BSL_Variant_Print(const BSLB_VariantPtrMap_subtype_ct *pair, const char *label, size_t index)
 {
-    if (BSL_IdValPair_IsInt64(pair))
+    const int64_t *const key_ptr = pair->key_ptr;
+
+    const BSL_Variant_t *var = BSLB_VariantPtr_cref(*(pair->value_ptr));
+
+    if (BSL_Variant_IsInt64(var))
     {
-        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%" PRIu64, label, index, pair->id, pair->_val.as_int);
+        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%" PRIu64, label, index, *key_ptr, var->_val.as_int);
     }
-    else if (BSL_IdValPair_IsBytestr(pair))
+    else if (BSL_Variant_IsBytestr(var))
     {
         BSL_Data_t val;
-        BSL_IdValPair_GetAsBytestr(pair, &val);
+        BSL_Variant_GetAsBytestr(var, &val);
 
-        char hex_str[2 * val.len + 1];
-        BSL_Log_DumpAsHexString(hex_str, sizeof(hex_str), val.ptr, val.len);
-        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, pair->id, hex_str);
+        BSL_Data_t hex_str = BSL_DATA_INIT_NULL;
+        BSL_TextUtil_Base16_Encode(&hex_str, &val, false);
+        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, *key_ptr, hex_str.ptr);
+        BSL_Data_Deinit(&hex_str);
     }
-    else if (BSL_IdValPair_IsTextstr(pair))
+    else if (BSL_Variant_IsTextstr(var))
     {
         const char *val;
-        BSL_IdValPair_GetAsTextstr(pair, &val);
+        BSL_Variant_GetAsTextstr(var, &val);
 
-        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, pair->id, val);
+        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, *key_ptr, val);
     }
 }
 
@@ -97,13 +103,13 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
         BSL_LOG_DEBUG("ASB  target[%zu]: %" PRIu64, target_ix, tgt->target_block_num);
     }
 
-    size_t                     param_ix = 0;
-    BSLB_IdValPairPtrList_it_t param_iter;
-    for (BSLB_IdValPairPtrList_it(param_iter, self->params); !BSLB_IdValPairPtrList_end_p(param_iter);
-         BSLB_IdValPairPtrList_next(param_iter), ++param_ix)
+    size_t                  param_ix = 0;
+    BSLB_VariantPtrMap_it_t param_iter;
+    for (BSLB_VariantPtrMap_it(param_iter, self->params); !BSLB_VariantPtrMap_end_p(param_iter);
+         BSLB_VariantPtrMap_next(param_iter), ++param_ix)
     {
-        const BSL_IdValPair_t *param = BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cref(param_iter));
-        BSL_IdValPair_Print(param, "Param", param_ix);
+        const BSLB_VariantPtrMap_subtype_ct *param_pair = BSLB_VariantPtrMap_cref(param_iter);
+        BSL_Variant_Print(param_pair, "Param", param_ix);
     }
 
     for (BSL_AbsSecBlock_TargetList_it(tgt_iter, self->target_results); !BSL_AbsSecBlock_TargetList_end_p(tgt_iter);
@@ -112,13 +118,13 @@ void BSL_AbsSecBlock_Print(const BSL_AbsSecBlock_t *self)
         const BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_cref(*BSL_AbsSecBlock_TargetList_ref(tgt_iter));
         BSL_LOG_DEBUG("ASB  Results for target block %" PRIu64 " are:", tgt->target_block_num);
 
-        size_t                     result_ix = 0;
-        BSLB_IdValPairPtrList_it_t result_iter;
-        for (BSLB_IdValPairPtrList_it(result_iter, tgt->results); !BSLB_IdValPairPtrList_end_p(result_iter);
-             BSLB_IdValPairPtrList_next(result_iter), ++result_ix)
+        size_t                  result_ix = 0;
+        BSLB_VariantPtrMap_it_t result_iter;
+        for (BSLB_VariantPtrMap_it(result_iter, tgt->results); !BSLB_VariantPtrMap_end_p(result_iter);
+             BSLB_VariantPtrMap_next(result_iter), ++result_ix)
         {
-            const BSL_IdValPair_t *result = BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cref(result_iter));
-            BSL_IdValPair_Print(result, "Result", result_ix);
+            const BSLB_VariantPtrMap_subtype_ct *result_pair = BSLB_VariantPtrMap_cref(result_iter);
+            BSL_Variant_Print(result_pair, "Result", result_ix);
         }
     }
 }
@@ -133,7 +139,7 @@ void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self)
 
     self->sec_context_id = 0;
     BSL_HostEID_Init(&self->source_eid);
-    BSLB_IdValPairPtrList_init(self->params);
+    BSLB_VariantPtrMap_init(self->params);
     BSL_AbsSecBlock_TargetList_init(self->target_results);
 
     // GCOV_EXCL_START
@@ -148,7 +154,7 @@ void BSL_AbsSecBlock_Deinit(BSL_AbsSecBlock_t *self)
     // GCOV_EXCL_STOP
 
     BSL_AbsSecBlock_TargetList_clear(self->target_results);
-    BSLB_IdValPairPtrList_clear(self->params);
+    BSLB_VariantPtrMap_clear(self->params);
     BSL_HostEID_Deinit(&self->source_eid);
 
     memset(self, 0, sizeof(*self));
@@ -209,43 +215,6 @@ BSL_AbsSecBlock_Target_t *BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uin
     return tgt;
 }
 
-#if 0
-void BSL_AbsSecBlock_AddParam(BSL_AbsSecBlock_t *self, BSL_IdValPair_t *param)
-{
-    // GCOV_EXCL_START
-    ASSERT_ARG_NONNULL(param);
-    ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
-    // GCOV_EXCL_STOP
-
-    BSL_IdValPair_t *item = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(self->params));
-    BSL_IdValPair_Set(item, param);
-
-    // GCOV_EXCL_START
-    ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
-    // GCOV_EXCL_STOP
-}
-
-void BSL_AbsSecBlock_AddResult(BSL_AbsSecBlock_t *self, uint64_t target_index, BSL_IdValPair_t *result)
-{
-    // GCOV_EXCL_START
-    ASSERT_ARG_NONNULL(result);
-    ASSERT_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
-    ASSERT_PRECONDITION(target_index < BSL_AbsSecBlock_TargetList_size(self->target_results));
-    // GCOV_EXCL_STOP
-
-    BSL_AbsSecBlock_TargetPtr_t *tgt_ptr = BSL_AbsSecBlock_TargetList_get(self->target_results, target_index);
-
-    BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_ref(tgt_ptr);
-
-    BSL_IdValPair_t *item = BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrList_push_new(tgt->results));
-    BSL_IdValPair_Set(item, result);
-
-    // GCOV_EXCL_START
-    ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
-    // GCOV_EXCL_STOP
-}
-#endif
-
 int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_num)
 {
     // GCOV_EXCL_START
@@ -262,7 +231,7 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
 
         if (tgt->target_block_num == target_block_num)
         {
-            things_removed += 1 + BSLB_IdValPairPtrList_size(tgt->results);
+            things_removed += 1 + BSLB_VariantPtrMap_size(tgt->results);
             BSL_AbsSecBlock_TargetList_remove(self->target_results, iter);
         }
         else
@@ -297,7 +266,7 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
 
     {
         uint64_t flags = 0;
-        if (!BSLB_IdValPairPtrList_empty_p(asb->params))
+        if (!BSLB_VariantPtrMap_empty_p(asb->params))
         {
             flags |= BSL_ABSSECBLOCK_FLAG_HAS_PARAM;
         }
@@ -310,17 +279,21 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
         return res;
     }
 
-    if (!BSLB_IdValPairPtrList_empty_p(asb->params))
+    if (!BSLB_VariantPtrMap_empty_p(asb->params))
     {
         QCBOREncode_OpenArray(enc);
 
-        BSLB_IdValPairPtrList_it_t pit;
-        for (BSLB_IdValPairPtrList_it(pit, asb->params); !BSLB_IdValPairPtrList_end_p(pit);
-             BSLB_IdValPairPtrList_next(pit))
+        BSLB_VariantPtrMap_it_t pit;
+        for (BSLB_VariantPtrMap_it(pit, asb->params); !BSLB_VariantPtrMap_end_p(pit); BSLB_VariantPtrMap_next(pit))
         {
-            const BSL_IdValPair_t *param = BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cref(pit));
+            const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_cref(pit);
             QCBOREncode_OpenArray(enc);
-            BSL_IdValPair_Encode(enc, param);
+
+            QCBOREncode_AddInt64(enc, *(pair->key_ptr));
+
+            const BSL_Variant_t *param = BSLB_VariantPtr_cref(*(pair->value_ptr));
+            BSL_Variant_Encode(enc, param);
+
             QCBOREncode_CloseArray(enc);
         }
         QCBOREncode_CloseArray(enc);
@@ -339,13 +312,18 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
 
             QCBOREncode_OpenArray(enc);
 
-            BSLB_IdValPairPtrList_it_t result_iter;
-            for (BSLB_IdValPairPtrList_it(result_iter, tgt->results); !BSLB_IdValPairPtrList_end_p(result_iter);
-                 BSLB_IdValPairPtrList_next(result_iter))
+            BSLB_VariantPtrMap_it_t result_iter;
+            for (BSLB_VariantPtrMap_it(result_iter, tgt->results); !BSLB_VariantPtrMap_end_p(result_iter);
+                 BSLB_VariantPtrMap_next(result_iter))
             {
-                const BSL_IdValPair_t *result = BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cref(result_iter));
+                const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_cref(result_iter);
                 QCBOREncode_OpenArray(enc);
-                BSL_IdValPair_Encode(enc, result);
+
+                QCBOREncode_AddInt64(enc, *(pair->key_ptr));
+
+                const BSL_Variant_t *result = BSLB_VariantPtr_cref(*(pair->value_ptr));
+                BSL_Variant_Encode(enc, result);
+
                 QCBOREncode_CloseArray(enc);
             }
 
@@ -362,6 +340,7 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
     ASSERT_ARG_NONNULL(dec);
     ASSERT_ARG_NONNULL(self);
     QCBORItem asbitem;
+    int res;
 
     QCBORDecode_EnterArray(dec, NULL);
 
@@ -428,7 +407,7 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
         BSL_Data_t eid_cbor_data;
         BSL_Data_InitView(&eid_cbor_data, eid_raw.len, (uint8_t *)eid_raw.ptr);
 
-        int res = BSL_HostEID_DecodeFromCBOR(&eid_cbor_data, &self->source_eid);
+        res = BSL_HostEID_DecodeFromCBOR(&eid_cbor_data, &self->source_eid);
         BSL_Data_Deinit(&eid_cbor_data);
         if (res != BSL_SUCCESS)
         {
@@ -445,13 +424,31 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
         QCBORDecode_EnterArray(dec, NULL);
         while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &asbitem))
         {
-            BSLB_IdValPairPtr_t **param_ptr = BSLB_IdValPairPtrList_push_new(self->params);
-            *param_ptr                      = BSLB_IdValPairPtr_new();
-
-            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(*param_ptr);
             // each parameter is a 2-item array
             QCBORDecode_EnterArray(dec, NULL);
-            BSL_IdValPair_Decode(dec, param);
+
+            int64_t item_id = 0;
+            QCBORDecode_GetInt64(dec, &item_id);
+            res = QCBORDecode_GetError(dec);
+            if (QCBOR_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed getting an int ID: code %d", res);
+                return BSL_ERR_DECODING;
+            }
+
+            {
+                BSLB_VariantPtr_t *item_ptr = BSLB_VariantPtr_new();
+                BSLB_VariantPtrMap_set_at(self->params, item_id, item_ptr);
+                BSL_Variant_t *param = BSLB_VariantPtr_ref(item_ptr);
+                res = BSL_Variant_Decode(dec, param);
+                BSLB_VariantPtr_release(item_ptr);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed getting a parameter value: code %d", res);
+                return BSL_ERR_DECODING;
+            }
+            }
+
             QCBORDecode_ExitArray(dec);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {
@@ -481,13 +478,31 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
         QCBORDecode_EnterArray(dec, NULL);
         while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &asbitem))
         {
-            BSLB_IdValPairPtr_t **result_ptr = BSLB_IdValPairPtrList_push_new(tgt->results);
-            *result_ptr                      = BSLB_IdValPairPtr_new();
-
-            BSL_IdValPair_t *result = BSLB_IdValPairPtr_ref(*result_ptr);
             // each result is a 2-item array
             QCBORDecode_EnterArray(dec, NULL);
-            BSL_IdValPair_Decode(dec, result);
+
+            int64_t item_id = 0;
+            QCBORDecode_GetInt64(dec, &item_id);
+            res = QCBORDecode_GetError(dec);
+            if (QCBOR_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed getting an int ID: code %d", res);
+                return BSL_ERR_DECODING;
+            }
+
+            {
+                BSLB_VariantPtr_t *item_ptr = BSLB_VariantPtr_new();
+                BSLB_VariantPtrMap_set_at(tgt->results, item_id, item_ptr);
+                BSL_Variant_t *result = BSLB_VariantPtr_ref(item_ptr);
+                res = BSL_Variant_Decode(dec, result);
+                BSLB_VariantPtr_release(item_ptr);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed getting a result value: code %d", res);
+                return BSL_ERR_DECODING;
+            }
+            }
+
             QCBORDecode_ExitArray(dec);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {

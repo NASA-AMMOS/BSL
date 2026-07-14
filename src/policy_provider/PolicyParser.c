@@ -20,6 +20,7 @@
  * subcontract 1700763.
  */
 #include "PolicyParser.h"
+#include <TextUtil.h>
 #include <default_sc/DefaultSecContext.h>
 #include <cose_sc/CoseContext.h>
 #include <strings.h>
@@ -74,6 +75,22 @@ static int BSLP_GetNumberInt(const json_t *value, int64_t *as_int)
     return BSL_SUCCESS;
 }
 
+/** Read a JSON value as hexadecimal bytes from text.
+ * @param[in] value The value to interpret.
+ * @param[out] as_bytes The output value.
+ */
+static int BSLP_GetBytesHex(const json_t *value, BSL_Data_t *as_bytes)
+{
+    const char *val_ptr = json_string_value(value);
+    size_t      val_len = json_string_length(value);
+    if (strncasecmp(val_ptr, "0x", 2) == 0)
+    {
+        val_ptr += 2;
+        val_len -= 2;
+    }
+    return BSL_TextUtil_Base16_Decode(as_bytes, val_ptr, val_len);
+}
+
 /** Read a JSON value as a boolean, either directly or from text.
  * @param[in] value The value to interpret.
  * @param[out] as_bool The output value.
@@ -102,17 +119,17 @@ static int BSLP_GetBoolean(const json_t *value, bool *as_bool)
 }
 
 /// Type for individual option handling according to each SC
-typedef int (*BSLP_OptionHandler_f)(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value);
+typedef int (*BSLP_OptionHandler_f)(BSLB_VariantPtrMap_t options, const char *id_str, json_t *value);
 
 /** Handle options for Security context ID 1.
  * Matches ::BSLP_OptionHandler_f signature.
  */
-static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value) // NOSONAR
+static int BSLP_PolicyOptions_SC1(BSLB_VariantPtrMap_t options, const char *id_str, json_t *value) // NOSONAR
 {
     if (0 == strcmp(id_str, "key_name"))
     {
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_KEY_ID);
-        BSL_IdValPair_SetTextstr(opt, BSLX_BIB_OPT_KEY_ID, json_string_value(value));
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_KEY_ID);
+        BSL_Variant_SetTextstr(opt, json_string_value(value));
     }
     else if (0 == strcmp(id_str, "sha_variant"))
     {
@@ -122,8 +139,8 @@ static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id
             return BSL_ERR_POLICY_CONFIG;
         }
 
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_SHA_VARIANT);
-        BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_SHA_VARIANT, as_int);
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_SHA_VARIANT);
+        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcmp(id_str, "scope_flags"))
     {
@@ -133,8 +150,8 @@ static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id
             return BSL_ERR_POLICY_CONFIG;
         }
 
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_SCOPE);
-        BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_SCOPE, as_int);
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_SCOPE);
+        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcmp(id_str, "key_wrap"))
     {
@@ -144,8 +161,8 @@ static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id
             return BSL_ERR_POLICY_CONFIG;
         }
 
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_USE_KEY_WRAP);
-        BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_USE_KEY_WRAP, (int64_t)as_bool);
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_USE_KEY_WRAP);
+        BSL_Variant_SetInt64(opt, (int64_t)as_bool);
     }
     else
     {
@@ -158,12 +175,12 @@ static int BSLP_PolicyOptions_SC1(BSLB_IdValPairPtrMap_t options, const char *id
 /** Handle options for Security context ID 2.
  * Matches ::BSLP_OptionHandler_f signature.
  */
-static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value) // NOSONAR
+static int BSLP_PolicyOptions_SC2(BSLB_VariantPtrMap_t options, const char *id_str, json_t *value) // NOSONAR
 {
     if (0 == strcmp(id_str, "key_name"))
     {
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_KEY_ID);
-        BSL_IdValPair_SetTextstr(opt, BSLX_BCB_OPT_KEY_ID, json_string_value(value));
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_KEY_ID);
+        BSL_Variant_SetTextstr(opt, json_string_value(value));
     }
     else if (0 == strcmp(id_str, "aes_variant"))
     {
@@ -173,8 +190,8 @@ static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id
             return BSL_ERR_POLICY_CONFIG;
         }
 
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_AES_VARIANT);
-        BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_AES_VARIANT, as_int);
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_AES_VARIANT);
+        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcmp(id_str, "aad_scope"))
     {
@@ -184,8 +201,8 @@ static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id
             return BSL_ERR_POLICY_CONFIG;
         }
 
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_SCOPE);
-        BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_SCOPE, as_int);
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_SCOPE);
+        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcmp(id_str, "key_wrap"))
     {
@@ -195,8 +212,8 @@ static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id
             return BSL_ERR_POLICY_CONFIG;
         }
 
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_USE_KEY_WRAP);
-        BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_USE_KEY_WRAP, (int64_t)as_bool);
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_USE_KEY_WRAP);
+        BSL_Variant_SetInt64(opt, (int64_t)as_bool);
     }
     else
     {
@@ -209,7 +226,7 @@ static int BSLP_PolicyOptions_SC2(BSLB_IdValPairPtrMap_t options, const char *id
 /** Handle options for Security context ID 3.
  * Matches ::BSLP_OptionHandler_f signature.
  */
-static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id_str, json_t *value) // NOSONAR
+static int BSLP_PolicyOptions_SC3(BSLB_VariantPtrMap_t options, const char *id_str, json_t *value) // NOSONAR
 {
     if (0 == strcmp(id_str, "key_id"))
     {
@@ -220,8 +237,8 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
         }
         BSL_Data_t as_bytes = BSL_DATA_INIT_VIEW_CSTR(val_str);
 
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_KEY_ID);
-        BSL_IdValPair_SetBytestr(opt, BSLX_COSESC_OPTION_KEY_ID, as_bytes);
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_KEY_ID);
+        BSL_Variant_SetBytestr(opt, as_bytes);
     }
     else if (0 == strcasecmp(id_str, "target_alg"))
     {
@@ -231,8 +248,8 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
             return BSL_ERR_POLICY_CONFIG;
         }
 
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_TGT_ALG);
-        BSL_IdValPair_SetInt64(opt, BSLX_COSESC_OPTION_TGT_ALG, as_int);
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_TGT_ALG);
+        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcasecmp(id_str, "aad_scope"))
     {
@@ -279,9 +296,22 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
             return BSL_ERR_POLICY_CONFIG;
         }
 
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_AAD_SCOPE);
-        BSL_IdValPair_SetRaw(opt, BSLX_COSESC_OPTION_AAD_SCOPE, enc_scope.ptr, enc_scope.len);
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_AAD_SCOPE);
+        BSL_Variant_SetRaw(opt, enc_scope.ptr, enc_scope.len);
         BSL_Data_Deinit(&enc_scope);
+    }
+    else if (0 == strcasecmp(id_str, "iv_base"))
+    {
+        BSL_Data_t as_bytes;
+        BSL_Data_Init(&as_bytes);
+        if (BSLP_GetBytesHex(value, &as_bytes))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_IV_BASE);
+        BSL_Variant_SetBytestr(opt, as_bytes);
+        BSL_Data_Deinit(&as_bytes);
     }
     else if (0 == strcasecmp(id_str, "iv_counter_offset"))
     {
@@ -291,8 +321,43 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
             return BSL_ERR_POLICY_CONFIG;
         }
 
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET);
-        BSL_IdValPair_SetInt64(opt, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET, as_int);
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET);
+        BSL_Variant_SetInt64(opt, as_int);
+    }
+    else if (0 == strcasecmp(id_str, "salt_length"))
+    {
+        int64_t as_int;
+        if (BSLP_GetNumberInt(value, &as_int))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_SALT_LENGTH);
+        BSL_Variant_SetInt64(opt, as_int);
+    }
+    else if (0 == strcasecmp(id_str, "salt_base"))
+    {
+        BSL_Data_t as_bytes;
+        BSL_Data_Init(&as_bytes);
+        if (BSLP_GetBytesHex(value, &as_bytes))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_SALT_BASE);
+        BSL_Variant_SetBytestr(opt, as_bytes);
+        BSL_Data_Deinit(&as_bytes);
+    }
+    else if (0 == strcasecmp(id_str, "salt_counter_offset"))
+    {
+        int64_t as_int;
+        if (BSLP_GetNumberInt(value, &as_int))
+        {
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_SALT_COUNTER_OFFSET);
+        BSL_Variant_SetInt64(opt, as_int);
     }
     else
     {
@@ -504,15 +569,15 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         return BSL_ERR_POLICY_CONFIG;
     }
 
-    BSLB_IdValPairPtrMap_t options;
-    BSLB_IdValPairPtrMap_init(options);
+    BSLB_VariantPtrMap_t options;
+    BSLB_VariantPtrMap_init(options);
 
     // spec attr
     const json_t *spec = json_object_get(policyrule, "spec");
     if (!spec && !json_is_object(spec))
     {
         BSL_LOG_ERR("Invalid spec attribute");
-        BSLB_IdValPairPtrMap_clear(options);
+        BSLB_VariantPtrMap_clear(options);
         return BSL_ERR_POLICY_CONFIG;
     }
     else
@@ -533,7 +598,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         else
         {
             BSL_LOG_ERR("Invalid svc parameter: %s", svc_str);
-            BSLB_IdValPairPtrMap_clear(options);
+            BSLB_VariantPtrMap_clear(options);
             return BSL_ERR_POLICY_CONFIG;
         }
 
@@ -558,7 +623,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
                 break;
             default:
                 BSL_LOG_CRIT("Unhandled context ID %" PRId64, sc_id_l);
-                BSLB_IdValPairPtrMap_clear(options);
+                BSLB_VariantPtrMap_clear(options);
                 return BSL_ERR_POLICY_CONFIG;
         }
 
@@ -574,7 +639,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to handle SC option: %s", id_str);
-                    BSLB_IdValPairPtrMap_clear(options);
+                    BSLB_VariantPtrMap_clear(options);
                     return res;
                 }
             }
@@ -590,7 +655,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
                 if (!json_is_object(entry))
                 {
                     BSL_LOG_ERR("Invalid sc_params item");
-                    BSLB_IdValPairPtrMap_clear(options);
+                    BSLB_VariantPtrMap_clear(options);
                     return BSL_ERR_POLICY_CONFIG;
                 }
 
@@ -598,7 +663,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
                 if (!id || !json_is_string(id))
                 {
                     BSL_LOG_ERR("Missing sc_params item id");
-                    BSLB_IdValPairPtrMap_clear(options);
+                    BSLB_VariantPtrMap_clear(options);
                     return BSL_ERR_POLICY_CONFIG;
                 }
                 const char *id_str = json_string_value(id);
@@ -607,7 +672,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
                 if (!value)
                 {
                     BSL_LOG_ERR("Missing sc_params item value");
-                    BSLB_IdValPairPtrMap_clear(options);
+                    BSLB_VariantPtrMap_clear(options);
                     return BSL_ERR_POLICY_CONFIG;
                 }
                 const char *value_str = json_string_value(value);
@@ -617,7 +682,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to handle SC option: %s", id_str);
-                    BSLB_IdValPairPtrMap_clear(options);
+                    BSLB_VariantPtrMap_clear(options);
                     return res;
                 }
             }
@@ -625,7 +690,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         else
         {
             BSL_LOG_ERR("No valid sc_parms present");
-            BSLB_IdValPairPtrMap_clear(options);
+            BSLB_VariantPtrMap_clear(options);
             return BSL_ERR_POLICY_CONFIG;
         }
     }
@@ -638,16 +703,17 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
                              policy_action_enum);
 
     // move options into rule
-    BSLB_IdValPairPtrMap_it_t opt_it;
-    for (BSLB_IdValPairPtrMap_it(opt_it, options); !BSLB_IdValPairPtrMap_end_p(opt_it);
-         BSLB_IdValPairPtrMap_next(opt_it))
+    BSLB_VariantPtrMap_it_t opt_it;
+    for (BSLB_VariantPtrMap_it(opt_it, options); !BSLB_VariantPtrMap_end_p(opt_it); BSLB_VariantPtrMap_next(opt_it))
     {
-        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule),
-                          BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrMap_ref(opt_it)->value_ptr));
+        const BSLB_VariantPtrMap_subtype_ct *opt_pair = BSLB_VariantPtrMap_ref(opt_it);
+
+        BSL_Variant_Set(BSLP_PolicyRule_AddOption(&rule, *(opt_pair->key_ptr)),
+                        BSLB_VariantPtr_ref(*(opt_pair->value_ptr)));
     }
 
     BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
-    BSLB_IdValPairPtrMap_clear(options);
+    BSLB_VariantPtrMap_clear(options);
     return BSL_SUCCESS;
 }
 
@@ -753,7 +819,7 @@ int BSLP_PolicyParser_FromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_
 }
 
 static void BSLP_RegisterPolicyFromBitstring(const BSLP_PolicyParser_BitstringConfig_t policy_bits,
-                                             BSLP_PolicyProvider_t *policy, BSLB_IdValPairPtrMap_t options)
+                                             BSLP_PolicyProvider_t *policy, BSLB_VariantPtrMap_t options)
 {
     BSL_LOG_DEBUG("Interpreting policy: 0x%X", policy_bits);
 
@@ -770,53 +836,53 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_PolicyParser_BitstringCo
     if (sec_block_type == 1)
     {
         {
-            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_SCOPE);
-            BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_SCOPE, RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
+            BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_SCOPE);
+            BSL_Variant_SetInt64(opt, RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
         }
         {
-            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_AES_VARIANT);
-            BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
+            BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_AES_VARIANT);
+            BSL_Variant_SetInt64(opt, RFC9173_BCB_AES_VARIANT_A128GCM);
         }
         if (use_wrapped_key)
         {
             {
-                BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_KEY_ID);
-                BSL_IdValPair_SetTextstr(opt, BSLX_BCB_OPT_KEY_ID, "9103");
+                BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_KEY_ID);
+                BSL_Variant_SetTextstr(opt, "9103");
             }
             {
-                BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_USE_KEY_WRAP);
-                BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
+                BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_USE_KEY_WRAP);
+                BSL_Variant_SetInt64(opt, 1);
             }
         }
         else
         {
             {
-                BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_KEY_ID);
-                BSL_IdValPair_SetTextstr(opt, BSLX_BCB_OPT_KEY_ID, "9102");
+                BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_KEY_ID);
+                BSL_Variant_SetTextstr(opt, "9102");
             }
             {
-                BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BCB_OPT_USE_KEY_WRAP);
-                BSL_IdValPair_SetInt64(opt, BSLX_BCB_OPT_USE_KEY_WRAP, 0);
+                BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_USE_KEY_WRAP);
+                BSL_Variant_SetInt64(opt, 0);
             }
         }
     }
     else
     {
         {
-            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_SCOPE);
-            BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_SCOPE, 0);
+            BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_SCOPE);
+            BSL_Variant_SetInt64(opt, 0);
         }
         {
-            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_SHA_VARIANT);
-            BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
+            BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_SHA_VARIANT);
+            BSL_Variant_SetInt64(opt, RFC9173_BIB_SHA_HMAC512);
         }
         {
-            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_KEY_ID);
-            BSL_IdValPair_SetTextstr(opt, BSLX_BIB_OPT_KEY_ID, "9100");
+            BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_KEY_ID);
+            BSL_Variant_SetTextstr(opt, "9100");
         }
         {
-            BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_BIB_OPT_USE_KEY_WRAP);
-            BSL_IdValPair_SetInt64(opt, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
+            BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_USE_KEY_WRAP);
+            BSL_Variant_SetInt64(opt, 0);
         }
     }
 
@@ -934,12 +1000,13 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_PolicyParser_BitstringCo
                              bundle_block_enum, policy_action_enum);
 
     // move options into rule
-    BSLB_IdValPairPtrMap_it_t opt_it;
-    for (BSLB_IdValPairPtrMap_it(opt_it, options); !BSLB_IdValPairPtrMap_end_p(opt_it);
-         BSLB_IdValPairPtrMap_next(opt_it))
+    BSLB_VariantPtrMap_it_t opt_it;
+    for (BSLB_VariantPtrMap_it(opt_it, options); !BSLB_VariantPtrMap_end_p(opt_it); BSLB_VariantPtrMap_next(opt_it))
     {
-        BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_all_in),
-                          BSLB_IdValPairPtr_ref(*BSLB_IdValPairPtrMap_ref(opt_it)->value_ptr));
+        const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_cref(opt_it);
+
+        BSL_Variant_Set(BSLP_PolicyRule_AddOption(&rule_all_in, *(pair->key_ptr)),
+                        BSLB_VariantPtr_ref(*(pair->value_ptr)));
     }
 
     BSLP_PolicyProvider_AddRule(policy, &rule_all_in, &predicate_all_in);
@@ -955,8 +1022,8 @@ int BSLP_PolicyParser_FromBitstringList(const char *policies, BSLP_PolicyProvide
     char       *pend;
     while (true)
     {
-        BSLB_IdValPairPtrMap_t options;
-        BSLB_IdValPairPtrMap_init(options);
+        BSLB_VariantPtrMap_t options;
+        BSLB_VariantPtrMap_init(options);
 
         unsigned long val = strtoul(curs, &pend, 0);
         if ((pend == curs) || (val > INT_MAX))
@@ -965,7 +1032,7 @@ int BSLP_PolicyParser_FromBitstringList(const char *policies, BSLP_PolicyProvide
         }
         curs = pend;
         BSLP_RegisterPolicyFromBitstring((int)val, policy, options);
-        BSLB_IdValPairPtrMap_clear(options);
+        BSLB_VariantPtrMap_clear(options);
 
         if (*curs == '\0')
         {

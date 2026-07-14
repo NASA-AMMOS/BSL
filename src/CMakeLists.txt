@@ -27,9 +27,10 @@ configure_file(BSLConfig.c.in BSLConfig.c @ONLY)
 add_library(bsl_front)
 target_sources(bsl_front PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
     ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Private.h
     ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Public.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextUtil.h
     ${CMAKE_CURRENT_SOURCE_DIR}/CryptoInterface.h
 )
 target_sources(bsl_front PRIVATE 
@@ -143,8 +144,9 @@ target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
 set(BSL_DYNAMIC_H
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/CBOR.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/Variant.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.h   
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.h
 )
@@ -153,7 +155,7 @@ set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/CBOR.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/HostInterface.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/Variant.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PolicyProvider.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/TelemetryCounters.c
@@ -163,6 +165,7 @@ set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityActionSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/backend/TextUtil.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.c
 )
 
@@ -178,7 +181,58 @@ target_link_libraries(bsl_dynamic PUBLIC bsl_front)
 target_link_libraries(bsl_dynamic PUBLIC MLIB::mlib)
 target_link_libraries(bsl_dynamic PUBLIC qcbor::qcbor)
 
-add_subdirectory(mock_bpa)
+add_library(bsl_mock_bpa)
+#target_compile_options(bsl_mock_bpa PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls)
+target_sources(
+  bsl_mock_bpa PUBLIC 
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/log.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/agent.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/bundle.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/crc.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/eid.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/eidpat.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/encode.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/decode.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/key_registry.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/ctr.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/MockBPA.h
+)
+target_sources(
+  bsl_mock_bpa PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/log.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/agent.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/bundle.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/crc.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/eid.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/eidpat.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/encode.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/decode.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/key_registry.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/ctr.c
+)
+set_target_properties(bsl_mock_bpa
+    PROPERTIES
+        VERSION ${CMAKE_PROJECT_VERSION}
+        SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+)
+target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
+target_link_libraries(bsl_mock_bpa PUBLIC qcbor::qcbor)
+target_link_libraries(bsl_mock_bpa PUBLIC Jansson::Jansson)
+target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_cose_sc bsl_sample_pp)
+
+if(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)
+  add_executable(bsl-mock-bpa)
+  target_sources(bsl-mock-bpa PRIVATE mock_bpa/mock_bpa.c)
+  target_link_libraries(bsl-mock-bpa PUBLIC bsl_mock_bpa bsl_crypto)
+  target_link_libraries(bsl-mock-bpa PUBLIC Threads::Threads)
+
+  # Installation config
+  install(
+      TARGETS bsl-mock-bpa
+      RUNTIME
+          COMPONENT test
+  )
+endif(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)
 
 find_program(CLANG_FORMAT "clang-format")
 if(CLANG_FORMAT)
@@ -201,6 +255,7 @@ install(
         bsl_default_sc bsl_cose_sc
         bsl_crypto
         bsl_sample_pp
+        bsl_mock_bpa
     RUNTIME
         COMPONENT runtime
     LIBRARY

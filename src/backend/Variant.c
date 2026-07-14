@@ -22,52 +22,52 @@
 
 /** @file
  * @ingroup backend_dyn
- * @brief Definition of an (id, value) pair container.
+ * @brief Definition of a variant-type container.
  */
-#include "IdValPair.h"
+#include "Variant.h"
 
-size_t BSL_IdValPair_Sizeof(void)
+size_t BSL_Variant_Sizeof(void)
 {
-    return sizeof(BSL_IdValPair_t);
+    return sizeof(BSL_Variant_t);
 }
 
-void BSL_IdValPair_Init(BSL_IdValPair_t *self)
+void BSL_Variant_Init(BSL_Variant_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(*self));
-    self->_type = BSL_IDVALPAIR_TYPE_UNKNOWN;
+    self->_type = BSLB_VARIANT_TYPE_UNKNOWN;
 }
 
-void BSL_IdValPair_InitSet(BSL_IdValPair_t *self, const BSL_IdValPair_t *src)
+void BSL_Variant_InitSet(BSL_Variant_t *self, const BSL_Variant_t *src)
 {
     if (self == src)
     {
         return;
     }
-    BSL_IdValPair_Init(self);
-    BSL_IdValPair_Set(self, src);
+    BSL_Variant_Init(self);
+    BSL_Variant_Set(self, src);
 }
 
-void BSL_IdValPair_Deinit(BSL_IdValPair_t *self)
+void BSL_Variant_Deinit(BSL_Variant_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     switch (self->_type)
     {
-        case BSL_IDVALPAIR_TYPE_UNKNOWN:
-        case BSL_IDVALPAIR_TYPE_INT64:
+        case BSLB_VARIANT_TYPE_UNKNOWN:
+        case BSLB_VARIANT_TYPE_INT64:
             break;
-        case BSL_IDVALPAIR_TYPE_BYTESTR:
-        case BSL_IDVALPAIR_TYPE_TEXTSTR:
-        case BSL_IDVALPAIR_TYPE_RAW:
+        case BSLB_VARIANT_TYPE_BYTESTR:
+        case BSLB_VARIANT_TYPE_TEXTSTR:
+        case BSLB_VARIANT_TYPE_RAW:
             m_bstring_clear(self->_val.as_bytes);
             break;
         default:
             break;
     }
-    self->_type = BSL_IDVALPAIR_TYPE_UNKNOWN;
+    self->_type = BSLB_VARIANT_TYPE_UNKNOWN;
 }
 
-void BSL_IdValPair_Set(BSL_IdValPair_t *self, const BSL_IdValPair_t *src)
+void BSL_Variant_Set(BSL_Variant_t *self, const BSL_Variant_t *src)
 {
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(src);
@@ -76,20 +76,19 @@ void BSL_IdValPair_Set(BSL_IdValPair_t *self, const BSL_IdValPair_t *src)
     {
         return;
     }
-    BSL_IdValPair_Deinit(self);
+    BSL_Variant_Deinit(self);
 
-    self->id    = src->id;
     self->_type = src->_type;
     switch (self->_type)
     {
-        case BSL_IDVALPAIR_TYPE_UNKNOWN:
+        case BSLB_VARIANT_TYPE_UNKNOWN:
             break;
-        case BSL_IDVALPAIR_TYPE_INT64:
+        case BSLB_VARIANT_TYPE_INT64:
             self->_val.as_int = src->_val.as_int;
             break;
-        case BSL_IDVALPAIR_TYPE_BYTESTR:
-        case BSL_IDVALPAIR_TYPE_TEXTSTR:
-        case BSL_IDVALPAIR_TYPE_RAW:
+        case BSLB_VARIANT_TYPE_BYTESTR:
+        case BSLB_VARIANT_TYPE_TEXTSTR:
+        case BSLB_VARIANT_TYPE_RAW:
             // workaround m_bstring issue https://github.com/P-p-H-d/mlib/issues/142
             if (m_bstring_empty_p(src->_val.as_bytes))
             {
@@ -105,7 +104,7 @@ void BSL_IdValPair_Set(BSL_IdValPair_t *self, const BSL_IdValPair_t *src)
     }
 }
 
-void BSL_IdValPair_Move(BSL_IdValPair_t *self, BSL_IdValPair_t *src)
+void BSL_Variant_Move(BSL_Variant_t *self, BSL_Variant_t *src)
 {
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(src);
@@ -114,37 +113,34 @@ void BSL_IdValPair_Move(BSL_IdValPair_t *self, BSL_IdValPair_t *src)
     {
         return;
     }
-    BSL_IdValPair_Deinit(self);
+    BSL_Variant_Deinit(self);
 
-    self->id    = src->id;
     self->_type = src->_type;
     switch (self->_type)
     {
-        case BSL_IDVALPAIR_TYPE_UNKNOWN:
+        case BSLB_VARIANT_TYPE_UNKNOWN:
             break;
-        case BSL_IDVALPAIR_TYPE_INT64:
+        case BSLB_VARIANT_TYPE_INT64:
             self->_val.as_int = src->_val.as_int;
             break;
-        case BSL_IDVALPAIR_TYPE_BYTESTR:
-        case BSL_IDVALPAIR_TYPE_TEXTSTR:
-        case BSL_IDVALPAIR_TYPE_RAW:
+        case BSLB_VARIANT_TYPE_BYTESTR:
+        case BSLB_VARIANT_TYPE_TEXTSTR:
+        case BSLB_VARIANT_TYPE_RAW:
             m_bstring_init_move(self->_val.as_bytes, src->_val.as_bytes);
             break;
         default:
             break;
     }
 
-    src->id    = 0;
-    src->_type = BSL_IDVALPAIR_TYPE_UNKNOWN;
+    src->_type = BSLB_VARIANT_TYPE_UNKNOWN;
 }
 
-void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, int64_t param_id, const char *value)
+void BSL_Variant_SetTextstr(BSL_Variant_t *self, const char *value)
 {
     ASSERT_ARG_NONNULL(self);
-    BSL_IdValPair_Deinit(self);
+    BSL_Variant_Deinit(self);
 
-    self->id    = param_id;
-    self->_type = BSL_IDVALPAIR_TYPE_TEXTSTR;
+    self->_type = BSLB_VARIANT_TYPE_TEXTSTR;
     m_bstring_init(self->_val.as_bytes);
 
     // include terminating null
@@ -159,19 +155,18 @@ void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, int64_t param_id, const cha
     }
 }
 
-bool BSL_IdValPair_IsTextstr(const BSL_IdValPair_t *self)
+bool BSL_Variant_IsTextstr(const BSL_Variant_t *self)
 {
     CHK_AS_BOOL(self);
-    return (self->_type == BSL_IDVALPAIR_TYPE_TEXTSTR);
+    return (self->_type == BSLB_VARIANT_TYPE_TEXTSTR);
 }
 
-void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, int64_t param_id, BSL_Data_t value)
+void BSL_Variant_SetBytestr(BSL_Variant_t *self, BSL_Data_t value)
 {
     ASSERT_ARG_NONNULL(self);
-    BSL_IdValPair_Deinit(self);
+    BSL_Variant_Deinit(self);
 
-    self->id    = param_id;
-    self->_type = BSL_IDVALPAIR_TYPE_BYTESTR;
+    self->_type = BSLB_VARIANT_TYPE_BYTESTR;
     m_bstring_init(self->_val.as_bytes);
     if (value.len)
     {
@@ -179,26 +174,25 @@ void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, int64_t param_id, BSL_Data_
     }
 }
 
-void BSL_IdValPair_SetInt64(BSL_IdValPair_t *self, int64_t param_id, uint64_t value)
+void BSL_Variant_SetInt64(BSL_Variant_t *self, uint64_t value)
 {
     ASSERT_ARG_NONNULL(self);
-    BSL_IdValPair_Deinit(self);
+    BSL_Variant_Deinit(self);
 
-    self->id          = param_id;
-    self->_type       = BSL_IDVALPAIR_TYPE_INT64;
+    self->_type       = BSLB_VARIANT_TYPE_INT64;
     self->_val.as_int = value;
 }
 
-bool BSL_IdValPair_IsInt64(const BSL_IdValPair_t *self)
+bool BSL_Variant_IsInt64(const BSL_Variant_t *self)
 {
     CHK_AS_BOOL(self);
-    return (self->_type == BSL_IDVALPAIR_TYPE_INT64);
+    return (self->_type == BSLB_VARIANT_TYPE_INT64);
 }
 
-int BSL_IdValPair_GetAsInt64(const BSL_IdValPair_t *self, int64_t *out)
+int BSL_Variant_GetAsInt64(const BSL_Variant_t *self, int64_t *out)
 {
-    CHK_PRECONDITION(BSL_IdValPair_IsConsistent(self));
-    BSL_CHKRET(self->_type == BSL_IDVALPAIR_TYPE_INT64, BSL_ERR_NOT_FOUND);
+    CHK_PRECONDITION(BSL_Variant_IsConsistent(self));
+    BSL_CHKRET(self->_type == BSLB_VARIANT_TYPE_INT64, BSL_ERR_NOT_FOUND);
 
     if (out)
     {
@@ -207,16 +201,16 @@ int BSL_IdValPair_GetAsInt64(const BSL_IdValPair_t *self, int64_t *out)
     return BSL_SUCCESS;
 }
 
-bool BSL_IdValPair_IsBytestr(const BSL_IdValPair_t *self)
+bool BSL_Variant_IsBytestr(const BSL_Variant_t *self)
 {
     CHK_AS_BOOL(self);
-    return (self->_type == BSL_IDVALPAIR_TYPE_BYTESTR);
+    return (self->_type == BSLB_VARIANT_TYPE_BYTESTR);
 }
 
-int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out)
+int BSL_Variant_GetAsBytestr(const BSL_Variant_t *self, BSL_Data_t *out)
 {
-    CHK_PRECONDITION(BSL_IdValPair_IsConsistent(self));
-    BSL_CHKRET(self->_type == BSL_IDVALPAIR_TYPE_BYTESTR, BSL_ERR_NOT_FOUND);
+    CHK_PRECONDITION(BSL_Variant_IsConsistent(self));
+    BSL_CHKRET(self->_type == BSLB_VARIANT_TYPE_BYTESTR, BSL_ERR_NOT_FOUND);
 
     if (out)
     {
@@ -227,10 +221,10 @@ int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out)
     return BSL_SUCCESS;
 }
 
-int BSL_IdValPair_GetAsTextstr(const BSL_IdValPair_t *self, const char **out)
+int BSL_Variant_GetAsTextstr(const BSL_Variant_t *self, const char **out)
 {
-    CHK_PRECONDITION(BSL_IdValPair_IsConsistent(self));
-    BSL_CHKRET(self->_type == BSL_IDVALPAIR_TYPE_TEXTSTR, BSL_ERR_NOT_FOUND);
+    CHK_PRECONDITION(BSL_Variant_IsConsistent(self));
+    BSL_CHKRET(self->_type == BSLB_VARIANT_TYPE_TEXTSTR, BSL_ERR_NOT_FOUND);
 
     if (out)
     {
@@ -242,14 +236,13 @@ int BSL_IdValPair_GetAsTextstr(const BSL_IdValPair_t *self, const char **out)
     return BSL_SUCCESS;
 }
 
-void BSL_IdValPair_SetRaw(BSL_IdValPair_t *self, int64_t param_id, const void *ptr, size_t len)
+void BSL_Variant_SetRaw(BSL_Variant_t *self, const void *ptr, size_t len)
 {
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(ptr);
-    BSL_IdValPair_Deinit(self);
+    BSL_Variant_Deinit(self);
 
-    self->id    = param_id;
-    self->_type = BSL_IDVALPAIR_TYPE_RAW;
+    self->_type = BSLB_VARIANT_TYPE_RAW;
     m_bstring_init(self->_val.as_bytes);
     if (len)
     {
@@ -257,16 +250,16 @@ void BSL_IdValPair_SetRaw(BSL_IdValPair_t *self, int64_t param_id, const void *p
     }
 }
 
-bool BSL_IdValPair_IsRaw(const BSL_IdValPair_t *self)
+bool BSL_Variant_IsRaw(const BSL_Variant_t *self)
 {
     CHK_AS_BOOL(self);
-    return (self->_type == BSL_IDVALPAIR_TYPE_RAW);
+    return (self->_type == BSLB_VARIANT_TYPE_RAW);
 }
 
-int BSL_IdValPair_GetAsRaw(const BSL_IdValPair_t *self, BSL_Data_t *out)
+int BSL_Variant_GetAsRaw(const BSL_Variant_t *self, BSL_Data_t *out)
 {
-    CHK_PRECONDITION(BSL_IdValPair_IsConsistent(self));
-    BSL_CHKRET(self->_type == BSL_IDVALPAIR_TYPE_RAW, BSL_ERR_NOT_FOUND);
+    CHK_PRECONDITION(BSL_Variant_IsConsistent(self));
+    BSL_CHKRET(self->_type == BSLB_VARIANT_TYPE_RAW, BSL_ERR_NOT_FOUND);
 
     if (out)
     {
@@ -277,34 +270,18 @@ int BSL_IdValPair_GetAsRaw(const BSL_IdValPair_t *self, BSL_Data_t *out)
     return BSL_SUCCESS;
 }
 
-uint64_t BSL_IdValPair_GetId(const BSL_IdValPair_t *self)
-{
-    ASSERT_PRECONDITION(BSL_IdValPair_IsConsistent(self));
-
-    return self->id;
-}
-
-bool BSL_IdValPair_IsConsistent(const BSL_IdValPair_t *self)
+bool BSL_Variant_IsConsistent(const BSL_Variant_t *self)
 {
     CHK_AS_BOOL(self != NULL);
-    CHK_AS_BOOL((self->_type > BSL_IDVALPAIR_TYPE_UNKNOWN) && (self->_type <= BSL_IDVALPAIR_TYPE_RAW));
+    CHK_AS_BOOL((self->_type > BSLB_VARIANT_TYPE_UNKNOWN) && (self->_type <= BSLB_VARIANT_TYPE_RAW));
 
     return true;
 }
 
-int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
+int BSL_Variant_Decode(QCBORDecodeContext *dec, BSL_Variant_t *var)
 {
     ASSERT_ARG_NONNULL(dec);
-    ASSERT_ARG_NONNULL(pair);
-
-    int64_t item_id = 0;
-    QCBORDecode_GetInt64(dec, &item_id);
-    int res = QCBORDecode_GetError(dec);
-    if (QCBOR_SUCCESS != res)
-    {
-        BSL_LOG_ERR("Failed getting an int ID: code %d", res);
-        return BSL_ERR_DECODING;
-    }
+    ASSERT_ARG_NONNULL(var);
 
     const size_t value_begin = QCBORDecode_Tell(dec);
 
@@ -320,12 +297,12 @@ int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
             QCBORDecode_GetInt64(dec, &dec_value);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {
-                BSL_LOG_ERR("Invalid integer value for ID %" PRId64, item_id);
+                BSL_LOG_ERR("Invalid integer value");
                 return BSL_ERR_DECODING;
             }
-            BSL_LOG_DEBUG("ASB: Parsed pair[%" PRId64 "] at %zu as int %" PRId64, item_id, value_begin, dec_value);
+            BSL_LOG_DEBUG("ASB: Parsed variant at %zu as int %" PRId64, value_begin, dec_value);
 
-            BSL_IdValPair_SetInt64(pair, item_id, dec_value);
+            BSL_Variant_SetInt64(var, dec_value);
             break;
         }
         case QCBOR_TYPE_BYTE_STRING:
@@ -334,15 +311,14 @@ int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
             QCBORDecode_GetByteString(dec, &target_buf);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {
-                BSL_LOG_ERR("Invalid bytestring value for ID %" PRId64, item_id);
+                BSL_LOG_ERR("Invalid bytestring value");
                 return BSL_ERR_DECODING;
             }
-            BSL_LOG_DEBUG("ASB: Parsed pair[%" PRId64 "] at %zu as bytestr with %zu bytes", item_id, value_begin,
-                          target_buf.len);
+            BSL_LOG_DEBUG("ASB: Parsed variant at %zu as bytestr with %zu bytes", value_begin, target_buf.len);
             BSL_Data_t data_view;
             BSL_Data_InitView(&data_view, target_buf.len, (BSL_DataPtr_t)target_buf.ptr);
 
-            BSL_IdValPair_SetBytestr(pair, item_id, data_view);
+            BSL_Variant_SetBytestr(var, data_view);
             break;
         }
         default:
@@ -351,18 +327,17 @@ int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
             QCBORDecode_VGetNextConsume(dec, &valitem);
             if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
             {
-                BSL_LOG_ERR("Invalid raw for ID %" PRId64, item_id);
+                BSL_LOG_ERR("Invalid raw CBOR");
                 return BSL_ERR_DECODING;
             }
 
             const size_t value_end = QCBORDecode_Tell(dec);
-            BSL_LOG_DEBUG("ASB: Parsed pair[%" PRId64 "] at %zu as raw QCBOR type %u, size %zu bytes", item_id,
-                          value_begin, valitem.uDataType, value_end - value_begin);
+            BSL_LOG_DEBUG("ASB: Parsed var at %zu as raw QCBOR type %u, size %zu bytes", value_begin, valitem.uDataType,
+                          value_end - value_begin);
 
             const UsefulBufC raw_buf = QCBORDecode_RetrieveUndecodedInput(dec);
 
-            BSL_IdValPair_SetRaw(pair, item_id, UsefulBuf_OffsetToPointer(raw_buf, value_begin),
-                                 value_end - value_begin);
+            BSL_Variant_SetRaw(var, UsefulBuf_OffsetToPointer(raw_buf, value_begin), value_end - value_begin);
             break;
         }
     }
@@ -373,36 +348,34 @@ int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair)
         BSL_LOG_ERR("Failed decoding a value");
         return BSL_ERR_DECODING;
     }
-    BSL_LOG_DEBUG("pair %" PRId64 " between %zu and %zu", item_id, value_begin, value_end);
+    BSL_LOG_DEBUG("var between %zu and %zu", value_begin, value_end);
 
     return BSL_SUCCESS;
 }
 
-void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t *pair)
+void BSL_Variant_Encode(QCBOREncodeContext *enc, const BSL_Variant_t *pair)
 {
-    QCBOREncode_AddInt64(enc, pair->id);
-
-    if (BSL_IdValPair_IsInt64(pair))
+    if (BSL_Variant_IsInt64(pair))
     {
         int64_t as_int;
-        BSL_IdValPair_GetAsInt64(pair, &as_int);
+        BSL_Variant_GetAsInt64(pair, &as_int);
         QCBOREncode_AddInt64(enc, as_int);
     }
-    else if (BSL_IdValPair_IsBytestr(pair))
+    else if (BSL_Variant_IsBytestr(pair))
     {
         BSL_Data_t bytestr;
-        BSL_IdValPair_GetAsBytestr(pair, &bytestr);
+        BSL_Variant_GetAsBytestr(pair, &bytestr);
         QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(bytestr));
     }
-    else if (BSL_IdValPair_IsRaw(pair))
+    else if (BSL_Variant_IsRaw(pair))
     {
         BSL_Data_t enc_data;
-        BSL_IdValPair_GetAsRaw(pair, &enc_data);
+        BSL_Variant_GetAsRaw(pair, &enc_data);
         QCBOREncode_AddEncoded(enc, UsefulBufC_FROM_BSL_Data(enc_data));
     }
     else
     {
-        BSL_LOG_CRIT("Unhandled parameter type for ID %" PRId64, pair->id);
+        BSL_LOG_CRIT("Unhandled variant type");
         QCBOREncode_AddUndef(enc);
     }
 }

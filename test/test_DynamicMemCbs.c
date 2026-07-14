@@ -37,10 +37,6 @@ static int realloc_cnt = 0;
 static int calloc_cnt  = 0;
 static int free_cnt    = 0;
 
-static BSL_IdValPair_t param_aes_variant_128;
-static BSL_IdValPair_t param_use_wrap_key;
-static BSL_IdValPair_t param_test_bcb_key_correct;
-
 static BSL_TestContext_t       LocalTestCtx;
 static BSL_SecurityActionSet_t action_set;
 static BSLP_PolicyProvider_t  *policy_provider;
@@ -99,10 +95,6 @@ void _setUp(void)
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
     BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
 
-    BSL_IdValPair_Init(&param_aes_variant_128);
-    BSL_IdValPair_Init(&param_use_wrap_key);
-    BSL_IdValPair_Init(&param_test_bcb_key_correct);
-
     BSL_SecurityActionSet_Init(&action_set);
 
     policy_provider = BSLP_PolicyProvider_Init(1);
@@ -118,10 +110,6 @@ void _setUp(void)
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
 
-    BSL_IdValPair_SetInt64(&param_aes_variant_128, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-    BSL_IdValPair_SetInt64(&param_use_wrap_key, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
-    BSL_IdValPair_SetTextstr(&param_test_bcb_key_correct, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
-
     // BSL_32
     BSLP_PolicyPredicate_t predicate_bsl_32a;
     BSLP_PolicyPredicate_InitFrom(&predicate_bsl_32a, BSL_POLICYLOCATION_CLOUT, "*:**", "*:**", "ipn:*.3.2");
@@ -129,9 +117,10 @@ void _setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_bsl_32a, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:3.2)", 2,
                              BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32a), &param_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32a), &param_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32a), &param_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32a, &predicate_bsl_32a);
 
     BSLP_PolicyPredicate_t predicate_bsl_32b;
@@ -139,9 +128,10 @@ void _setUp(void)
     BSLP_PolicyRule_t rule_bsl_32b;
     BSLP_PolicyRule_InitFrom(&rule_bsl_32b, "SOURCE BCB OVER BIB AT CLOUT FILTER(DEST=ipn:3.2)", 2, BSL_SECROLE_SOURCE,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_BIB, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32b), &param_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32b), &param_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32b), &param_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32b, &predicate_bsl_32b);
 }
 
@@ -152,10 +142,6 @@ void _tearDown(void)
     BSLP_PolicyProvider_Destroy(policy_provider);
     BSL_CryptoDeinit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
-
-    BSL_IdValPair_Deinit(&param_aes_variant_128);
-    BSL_IdValPair_Deinit(&param_use_wrap_key);
-    BSL_IdValPair_Deinit(&param_test_bcb_key_correct);
 }
 
 // Test BSL 32 with user-defined dyn mem cbs

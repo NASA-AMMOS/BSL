@@ -104,25 +104,25 @@ static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BS
     }
 
     // target-independent data
-    BSLB_IdValPairPtrList_it_t param_it;
-    for (BSLB_IdValPairPtrList_it(param_it, outcome->param_list); !BSLB_IdValPairPtrList_end_p(param_it);
-         BSLB_IdValPairPtrList_next(param_it))
+    BSLB_VariantPtrMap_it_t param_it;
+    for (BSLB_VariantPtrMap_it(param_it, outcome->param_list); !BSLB_VariantPtrMap_end_p(param_it);
+         BSLB_VariantPtrMap_next(param_it))
     {
-        BSLB_IdValPairPtr_t **ptr = BSLB_IdValPairPtrList_ref(param_it);
+        BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_ref(param_it);
         // copy shared ptr
-        BSLB_IdValPairPtrList_push_back(asb->params, *ptr);
+        BSLB_VariantPtrMap_set_at(asb->params, *(pair->key_ptr), *(pair->value_ptr));
     }
 
     // target-specific data
     BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_AddTarget(asb, sec_oper->target_block_num);
 
-    BSLB_IdValPairPtrList_it_t result_it;
-    for (BSLB_IdValPairPtrList_it(result_it, outcome->result_list); !BSLB_IdValPairPtrList_end_p(result_it);
-         BSLB_IdValPairPtrList_next(result_it))
+    BSLB_VariantPtrMap_it_t result_it;
+    for (BSLB_VariantPtrMap_it(result_it, outcome->result_list); !BSLB_VariantPtrMap_end_p(result_it);
+         BSLB_VariantPtrMap_next(result_it))
     {
-        BSLB_IdValPairPtr_t **ptr = BSLB_IdValPairPtrList_ref(result_it);
+        BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_ref(result_it);
         // copy shared ptr
-        BSLB_IdValPairPtrList_push_back(tgt->results, *ptr);
+        BSLB_VariantPtrMap_set_at(tgt->results, *(pair->key_ptr), *(pair->value_ptr));
     }
 
     int res = Encode_ASB(lib, bundle, sec_blk.block_num, asb);
@@ -238,15 +238,13 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, BSL_BundleRef_t *b
     sec_oper->sec_src_eid = &asb->source_eid;
 
     // reference all parameters
-    BSLB_IdValPairPtrList_it_t param_iter;
-    for (BSLB_IdValPairPtrList_it(param_iter, asb->params); !BSLB_IdValPairPtrList_end_p(param_iter);
-         BSLB_IdValPairPtrList_next(param_iter))
+    BSLB_VariantPtrMap_it_t param_iter;
+    for (BSLB_VariantPtrMap_it(param_iter, asb->params); !BSLB_VariantPtrMap_end_p(param_iter);
+         BSLB_VariantPtrMap_next(param_iter))
     {
-        BSLB_IdValPairPtr_t *const *ptr = BSLB_IdValPairPtrList_cref(param_iter);
+        const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_cref(param_iter);
 
-        // index by ID
-        const BSL_IdValPair_t *param = BSLB_IdValPairPtr_cref(*ptr);
-        BSLB_IdValPairPtrMap_set_at(sec_oper->_params_in, param->id, *ptr);
+        BSLB_VariantPtrMap_set_at(sec_oper->_params_in, *(pair->key_ptr), *(pair->value_ptr));
     }
 
     sec_oper->_target_index = 0;
@@ -262,15 +260,13 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, BSL_BundleRef_t *b
             continue;
         }
 
-        BSLB_IdValPairPtrList_it_t result_iter;
-        for (BSLB_IdValPairPtrList_it(result_iter, tgt->results); !BSLB_IdValPairPtrList_end_p(result_iter);
-             BSLB_IdValPairPtrList_next(result_iter))
+        BSLB_VariantPtrMap_it_t result_iter;
+        for (BSLB_VariantPtrMap_it(result_iter, tgt->results); !BSLB_VariantPtrMap_end_p(result_iter);
+             BSLB_VariantPtrMap_next(result_iter))
         {
-            BSLB_IdValPairPtr_t *const *ptr = BSLB_IdValPairPtrList_cref(result_iter);
+            const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_cref(result_iter);
 
-            // index by ID
-            const BSL_IdValPair_t *result = BSLB_IdValPairPtr_cref(*ptr);
-            BSLB_IdValPairPtrMap_set_at(sec_oper->_results_in, result->id, *ptr);
+            BSLB_VariantPtrMap_set_at(sec_oper->_results_in, *(pair->key_ptr), *(pair->value_ptr));
         }
 
         // first one wins

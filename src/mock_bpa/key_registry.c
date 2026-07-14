@@ -25,9 +25,10 @@
  */
 
 #include "key_registry.h"
-#include "text_util.h"
+#include <TextUtil.h>
 #include <backend/CBOR.h>
 #include <cose_sc/CoseMsg.h>
+#include <m-string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -94,30 +95,28 @@ int mock_bpa_key_registry_init_jwk(int fd)
             BSL_LOG_ERR("Missing \"k\" ");
             continue;
         }
-        const char *k_str = json_string_value(k);
-        BSL_LOG_DEBUG("k: %s", k_str);
 
-        m_string_t k_text;
-        m_string_init_set_cstr(k_text, k_str);
-        m_bstring_t k_data;
-        m_bstring_init(k_data);
-
-        retval = mock_bpa_base64_decode(k_data, k_text);
+        BSL_Data_t k_data;
+        BSL_Data_Init(&k_data);
+        retval = BSL_TextUtil_Base64_Decode(&k_data, json_string_value(k), json_string_length(k));
 
         if (!retval)
         {
             BSL_Data_t kid_view = BSL_DATA_INIT_VIEW_CSTR(kid_str);
 
-            const size_t   k_len = m_bstring_size(k_data);
-            const uint8_t *k_ptr = m_bstring_view(k_data, 0, k_len);
-
             BSL_Crypto_KeyHandle_t keyhandle;
-            BSL_Crypto_LoadKey(k_ptr, k_len, &keyhandle);
+            BSL_Crypto_LoadKey(k_data.ptr, k_data.len, &keyhandle);
+
             retval = BSL_Crypto_AddRegistryKey(&kid_view, keyhandle);
             BSL_Crypto_ReleaseKeyHandle(keyhandle);
+            BSL_LOG_DEBUG("Adding key result %d", retval);
+            if (BSL_SUCCESS != retval)
+            {
+                BSL_LOG_ERR("Unable to store key");
+                break;
+            }
         }
-        m_bstring_clear(k_data);
-        m_string_clear(k_text);
+        BSL_Data_Deinit(&k_data);
 
         if (retval)
         {
@@ -216,8 +215,7 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
 
             if (has_alg)
             {
-                BSL_IdValPair_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
-                                       BSLX_COSEMSG_KEY_PARAM_ALG, alg);
+                BSL_Variant_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG), alg);
             }
             else
             {
@@ -228,8 +226,8 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
             {
                 BSL_Data_t view;
                 BSL_Data_InitView(&view, baseiv.len, (BSL_DataPtr_t)baseiv.ptr);
-                BSL_IdValPair_SetBytestr(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV),
-                                         BSLX_COSEMSG_KEY_PARAM_BASEIV, view);
+                BSL_Variant_SetBytestr(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV),
+                                         view);
             }
 
             retval = BSL_Crypto_AddRegistryKey(&kid_view, keyhandle);

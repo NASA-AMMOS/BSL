@@ -25,7 +25,8 @@
  */
 #include <CryptoInterface.h>
 #include <BPSecLib_Private.h>
-#include <backend/IdValPair.h>
+#include <TextUtil.h>
+#include <backend/Variant.h>
 
 #include <m-dict.h>
 #include <m-shared-ptr.h>
@@ -48,7 +49,7 @@ typedef struct BSL_CryptoKey_s
     /// Pointer to raw key information
     BSL_Data_t raw;
     /// Additional parameter dictionary
-    BSLB_IdValPairPtrMap_t params;
+    BSLB_VariantPtrMap_t params;
     /// Statistics related to this key
     BSL_Crypto_KeyStats_t stats;
     /// Mutex for #stats
@@ -60,7 +61,7 @@ static void BSL_CryptoKey_Init(BSL_CryptoKey_t *key)
     ASSERT_ARG_NONNULL(key);
 
     BSL_Data_Init(&(key->raw));
-    BSLB_IdValPairPtrMap_init(key->params);
+    BSLB_VariantPtrMap_init(key->params);
 
     for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
     {
@@ -74,7 +75,7 @@ static void BSL_CryptoKey_Deinit(BSL_CryptoKey_t *key)
     ASSERT_ARG_NONNULL(key);
 
     BSL_Data_Deinit(&(key->raw));
-    BSLB_IdValPairPtrMap_clear(key->params);
+    BSLB_VariantPtrMap_clear(key->params);
 
     pthread_mutex_destroy(&key->stats_mutex);
     for (uint64_t i = 0; i < BSL_CRYPTO_KEYSTATS_MAX_INDEX; i++)
@@ -902,46 +903,46 @@ int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t ha
     return 0;
 }
 
-BSL_IdValPair_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
+BSL_Variant_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
 {
     ASSERT_ARG_NONNULL(handle);
     BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref(handle);
 
-    BSL_IdValPair_t *retval = NULL;
+    BSL_Variant_t *retval = NULL;
     if (key)
     {
-        BSLB_IdValPairPtr_t *param_ptr;
+        BSLB_VariantPtr_t *param_ptr;
 
-        BSLB_IdValPairPtr_t **found = BSLB_IdValPairPtrMap_get(key->params, param_id);
+        BSLB_VariantPtr_t **found = BSLB_VariantPtrMap_get(key->params, param_id);
         if (found)
         {
             param_ptr = *found;
-            retval    = BSLB_IdValPairPtr_ref(param_ptr);
+            retval    = BSLB_VariantPtr_ref(param_ptr);
         }
         else
         {
-            param_ptr = BSLB_IdValPairPtr_new();
-            BSLB_IdValPairPtrMap_set_at(key->params, param_id, param_ptr);
-            retval = BSLB_IdValPairPtr_ref(param_ptr);
+            param_ptr = BSLB_VariantPtr_new();
+            BSLB_VariantPtrMap_set_at(key->params, param_id, param_ptr);
+            retval = BSLB_VariantPtr_ref(param_ptr);
             // map keeps a reference so this is safe
-            BSLB_IdValPairPtr_release(param_ptr);
+            BSLB_VariantPtr_release(param_ptr);
         }
     }
     return retval;
 }
 
-const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
+const BSL_Variant_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
 {
     ASSERT_ARG_NONNULL(handle);
     BSL_CryptoKey_t *key = BSL_CryptoKeyPtr_ref(handle);
 
-    const BSL_IdValPair_t *retval = NULL;
+    const BSL_Variant_t *retval = NULL;
     if (key)
     {
-        BSLB_IdValPairPtr_t **found = BSLB_IdValPairPtrMap_get(key->params, param_id);
+        BSLB_VariantPtr_t **found = BSLB_VariantPtrMap_get(key->params, param_id);
         if (found)
         {
-            retval = BSLB_IdValPairPtr_ref(*found);
+            retval = BSLB_VariantPtr_ref(*found);
         }
     }
     return retval;

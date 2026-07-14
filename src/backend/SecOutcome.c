@@ -43,8 +43,8 @@ void BSL_SecOutcome_Init(BSL_SecOutcome_t *self, const BSL_SecOper_t *sec_oper)
 
     memset(self, 0, sizeof(*self));
     self->is_success = 0;
-    BSLB_IdValPairPtrList_init(self->param_list);
-    BSLB_IdValPairPtrList_init(self->result_list);
+    BSLB_VariantPtrMap_init(self->param_list);
+    BSLB_VariantPtrMap_init(self->result_list);
     self->sec_oper = sec_oper;
 
     ASSERT_POSTCONDITION(BSL_SecOutcome_IsConsistent(self));
@@ -54,8 +54,8 @@ void BSL_SecOutcome_Deinit(BSL_SecOutcome_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
 
-    BSLB_IdValPairPtrList_clear(self->param_list);
-    BSLB_IdValPairPtrList_clear(self->result_list);
+    BSLB_VariantPtrMap_clear(self->param_list);
+    BSLB_VariantPtrMap_clear(self->result_list);
     memset(self, 0, sizeof(*self));
 }
 
@@ -65,7 +65,7 @@ bool BSL_SecOutcome_IsConsistent(const BSL_SecOutcome_t *self)
     CHK_AS_BOOL(self->sec_oper != NULL);
 
     // Invariant: If it is not successful at end, it should not return any results
-    const size_t result_len = BSLB_IdValPairPtrList_size(self->result_list);
+    const size_t result_len = BSLB_VariantPtrMap_size(self->result_list);
     if (self->is_success)
     {
         CHK_AS_BOOL(result_len > 0);
@@ -74,51 +74,47 @@ bool BSL_SecOutcome_IsConsistent(const BSL_SecOutcome_t *self)
     return true;
 }
 
-BSL_IdValPair_t *BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self)
+BSL_Variant_t *BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self, int64_t result_id)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
-    BSLB_IdValPairPtr_t **item_ptr = BSLB_IdValPairPtrList_push_new(self->result_list);
 
-    *item_ptr = BSLB_IdValPairPtr_new();
-
-    return BSLB_IdValPairPtr_ref(*item_ptr);
+    return BSLB_VariantPtrMap_add(self->result_list, result_id);
 }
 
 size_t BSL_SecOutcome_CountResults(const BSL_SecOutcome_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
-    return BSLB_IdValPairPtrList_size(self->result_list);
+    return BSLB_VariantPtrMap_size(self->result_list);
 }
 
-const BSL_IdValPair_t *BSL_SecOutcome_GetResultAtIndex(const BSL_SecOutcome_t *self, size_t index)
+const BSL_Variant_t *BSL_SecOutcome_GetResult(const BSL_SecOutcome_t *self, int64_t result_id)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
-    ASSERT_PRECONDITION(index < BSLB_IdValPairPtrList_size(self->result_list));
 
-    return BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cget(self->result_list, index));
+    BSLB_VariantPtr_t *const *found = BSLB_VariantPtrMap_cget(self->result_list, result_id);
+
+    return found ? BSLB_VariantPtr_cref(*found) : NULL;
 }
 
 size_t BSL_SecOutcome_CountParams(const BSL_SecOutcome_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
 
-    return BSLB_IdValPairPtrList_size(self->param_list);
+    return BSLB_VariantPtrMap_size(self->param_list);
 }
 
-const BSL_IdValPair_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, size_t index)
+const BSL_Variant_t *BSL_SecOutcome_GetParam(const BSL_SecOutcome_t *self, int64_t param_id)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
-    ASSERT_PRECONDITION(index < BSLB_IdValPairPtrList_size(self->param_list));
 
-    return BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cget(self->param_list, index));
+    BSLB_VariantPtr_t *const *found = BSLB_VariantPtrMap_cget(self->param_list, param_id);
+
+    return found ? BSLB_VariantPtr_cref(*found) : NULL;
 }
 
-BSL_IdValPair_t *BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self)
+BSL_Variant_t *BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self, int64_t param_id)
 {
     ASSERT_PRECONDITION(BSL_SecOutcome_IsConsistent(self));
-    BSLB_IdValPairPtr_t **item_ptr = BSLB_IdValPairPtrList_push_new(self->param_list);
 
-    *item_ptr = BSLB_IdValPairPtr_new();
-
-    return BSLB_IdValPairPtr_ref(*item_ptr);
+    return BSLB_VariantPtrMap_add(self->param_list, param_id);
 }

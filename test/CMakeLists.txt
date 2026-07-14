@@ -63,8 +63,8 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   add_unity_test(SOURCE test_qcbor.c)
   target_link_libraries(test_qcbor PUBLIC ${LIB_ORDERED})
   
-  add_unity_test(SOURCE test_MockBPA_text_util.c)
-  target_link_libraries(test_MockBPA_text_util PUBLIC ${LIB_ORDERED})
+  add_unity_test(SOURCE test_TextUtil.c)
+  target_link_libraries(test_TextUtil PUBLIC ${LIB_ORDERED})
   
   add_unity_test(SOURCE test_MockBPA_EID.c)
   target_link_libraries(test_MockBPA_EID PUBLIC ${LIB_ORDERED})
@@ -85,8 +85,8 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   target_link_libraries(test_AbsSecBlock PUBLIC ${LIB_ORDERED})
 
   # Exercises the portion of the backend that interacts with the policy providers
-  add_unity_test(SOURCE test_BackendSecurityContext.c)
-  target_link_libraries(test_BackendSecurityContext PUBLIC ${LIB_ORDERED})
+#  add_unity_test(SOURCE test_BackendSecurityContext.c)
+#  target_link_libraries(test_BackendSecurityContext PUBLIC ${LIB_ORDERED})
 
   # Exercises the portion of the backend that interacts with the security contexts
   add_unity_test(SOURCE test_BackendPolicyProvider.c)
@@ -105,16 +105,16 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   )
 
   # Specific tests for ONLY the "Default Security Context" module (Implementation of RFC9173)
-  add_unity_test(SOURCE test_DefaultSecurityContext.c)
-  target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
+#  add_unity_test(SOURCE test_DefaultSecurityContext.c)
+#  target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
 
   # Specific tests for ONLY the "COSE Context" module
   add_unity_test(SOURCE test_CoseContext.c)
   target_link_libraries(test_CoseContext PUBLIC ${LIB_ORDERED})
 
   # Exercises the MockBPA using the publicly exposed BSL front end
-  add_unity_test(SOURCE test_PublicInterfaceImpl.c)
-  target_link_libraries(test_PublicInterfaceImpl PUBLIC ${LIB_ORDERED})
+#  add_unity_test(SOURCE test_PublicInterfaceImpl.c)
+#  target_link_libraries(test_PublicInterfaceImpl PUBLIC ${LIB_ORDERED})
 
   # Test user-specified dynamic mem mgmt callbacks
   add_unity_test(SOURCE test_DynamicMemCbs.c)

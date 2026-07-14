@@ -183,12 +183,12 @@ int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t ha
  * If the parameter does not already exist it will be created.
  * @return Non-NULL pointer if successful.
  */
-BSL_IdValPair_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
+BSL_Variant_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
 /** Get key parameter for read-only access.
  * @overload
  */
-const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
+const BSL_Variant_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
 /**
  * Retrieve statistics related to a crypto key

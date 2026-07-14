@@ -35,7 +35,7 @@
 #include <m-string.h>
 
 #include <BPSecLib_Private.h>
-#include <backend/IdValPair.h>
+#include <backend/Variant.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -150,7 +150,7 @@ typedef struct BSLP_PolicyRule_s
     /// Needed security context
     int64_t context_id;
     /// Security operation options for this rule
-    BSLB_IdValPairPtrList_t options;
+    BSLB_VariantPtrMap_t options;
     /// How to handle failure in finalize stage
     BSL_PolicyAction_e failure_action_code;
 } BSLP_PolicyRule_t;
@@ -212,9 +212,10 @@ M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRulePtr_t *, M_OPL_BSLP_PolicyRulePt
  * @brief Include a BPSec option on this rule.
  *
  * @param[in] self This rule
+ * @param opt_id The unique option ID.
  * @return Pointer to the Parameter to copy or move into.
  */
-BSL_IdValPair_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self);
+BSL_Variant_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self, int64_t opt_id);
 
 /// @brief Policy provider data. References shared among individual providers in BSL context
 typedef struct BSLP_PolicyProvider_s

@@ -27,8 +27,9 @@
 #include <CryptoInterface.h>
 #include <backend/PublicInterfaceImpl.h>
 #include <backend/SecOperation.h>
-#include <backend/IdValPair.h>
+#include <backend/Variant.h>
 #include <backend/SecurityActionSet.h>
+#include <policy_provider/SamplePolicyProvider.h>
 #include <mock_bpa/ctr.h>
 
 #include "TestUtils.h"
@@ -80,12 +81,7 @@ static inline int BSL_Crypto_RemoveRegistryKeyName(const char *name)
 
 typedef struct
 {
-    BSL_Data_t hmac;
-
-    BSL_IdValPair_t opt_test_key;
-    BSL_IdValPair_t opt_sha_variant;
-    BSL_IdValPair_t opt_use_key_wrap;
-    BSL_IdValPair_t opt_scope_flags;
+    //    BSL_Data_t hmac;
 
     BSL_SecOper_t sec_oper;
 } BIBTestContext;
@@ -95,27 +91,8 @@ void BIBTestContext_Deinit(BIBTestContext *obj);
 
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id);
 
-static const uint8_t ApxA2_AuthTag[]     = { 0xef, 0xa4, 0xb5, 0xac, 0x01, 0x08, 0xe3, 0x81,
-                                             0x6c, 0x56, 0x06, 0x47, 0x98, 0x01, 0xbc, 0x04 };
-static const uint8_t ApxA2_KeyEncKey[]   = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
-                                             0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70 };
-static const uint8_t ApxA2_Ciphertext[]  = { 0x3a, 0x09, 0xc1, 0xe6, 0x3f, 0xe2, 0x3a, 0x7f, 0x66, 0xa5, 0x9c, 0x73,
-                                             0x03, 0x83, 0x72, 0x41, 0xe0, 0x70, 0xb0, 0x26, 0x19, 0xfc, 0x59, 0xc5,
-                                             0x21, 0x4a, 0x22, 0xf0, 0x8c, 0xd7, 0x07, 0x95, 0xe7, 0x3e, 0x9a };
-static const uint8_t ApxA2_WrappedKey[]  = { 0x69, 0xc4, 0x11, 0x27, 0x6f, 0xec, 0xdd, 0xc4, 0x78, 0x0d, 0xf4, 0x2c,
-                                             0x8a, 0x2a, 0xf8, 0x92, 0x96, 0xfa, 0xbf, 0x34, 0xd7, 0xfa, 0xe7, 0x00 };
-static const uint8_t ApxA2_PayloadData[] = { 0x52, 0x65, 0x61, 0x64, 0x79, 0x20, 0x74, 0x6f, 0x20, 0x67, 0x65, 0x6e,
-                                             0x65, 0x72, 0x61, 0x74, 0x65, 0x20, 0x61, 0x20, 0x33, 0x32, 0x2d, 0x62,
-                                             0x79, 0x74, 0x65, 0x20, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64 };
-
 typedef struct
 {
-    BSL_IdValPair_t opt_aes_variant;
-    BSL_IdValPair_t opt_scope_flags;
-    BSL_IdValPair_t opt_test_key_id;
-    BSL_IdValPair_t opt_use_key_wrap;
-    BSL_IdValPair_t opt_wrapped_key;
-
     BSL_SecOper_t sec_oper;
 } BCBTestContext;
 
@@ -167,30 +144,9 @@ extern const struct RFC9173_TestVectors_A4_Modified
 
 } RFC9173_TestVectors_AppendixA4;
 
-typedef struct
-{
-    BSL_IdValPair_t sha_variant;
-    BSL_IdValPair_t scope_flags;
-    BSL_IdValPair_t test_key_id;
-    BSL_IdValPair_t use_key_wrap;
-} RFC9173_A1_Params;
+void BSL_TestUtils_GetRFC9173_A1Params(BSLP_PolicyRule_t *rule, const char *key_id);
 
-RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id);
-
-typedef struct
-{
-    BSL_IdValPair_t auth_code;
-    BSL_IdValPair_t content_enc_key;
-    BSL_IdValPair_t init_vector;
-    BSL_IdValPair_t key_enc_key;
-    BSL_IdValPair_t test_key_id;
-    BSL_IdValPair_t wrapped_key;
-    int64_t         context_id;
-    uint64_t        context_flags;
-    uint64_t        scope_flag;
-} RFC9173_AppendixA2_BCB;
-
-RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A2Params(const char *key_id);
+void BSL_TestUtils_GetRFC9173_A2Params(BSLP_PolicyRule_t *rule, const char *key_id);
 
 BSL_SecurityActionSet_t   *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context);
 BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void);

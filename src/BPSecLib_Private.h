@@ -161,19 +161,6 @@ typedef enum
     BSL_POLICYACTION_DROP_BUNDLE    ///< Drop the entire bundle.
 } BSL_PolicyAction_e;
 
-/**
- * Helper function to print the ASCII encoding of a given byte stream to a given target buffer.
- *
- * @todo - Can be moved to backend.
- *
- * @param dstbuf Pointer to a buffer where the C string should go.
- * @param dstlen The length in bytes of @c dstbuf
- * @param srcbuf Pointer to the buffer containing the byte stream to be printed.
- * @param srclen The length in bytes of @c srcbuf.
- * @return A copy of @c dstbuf.
- */
-char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen);
-
 /** Determine if a particular severity is being logged.
  * This function is multi-thread safe.
  *
@@ -209,28 +196,6 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 /// @overload
 #define BSL_LOG_DEBUG(...) BSL_LogEvent(LOG_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__)
 // NOLINTEND(misc-include-cleaner)
-
-/** @def BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)
- * Log plaintext as hex for debugging only when enabled by compile option
- * ::BSL_LOG_PLAINTEXT_ENABLE is non-zero.
- *
- * @param title The static C string title.
- * @param ctc A correlating context pointer to log.
- * @param ptr The data start pointer.
- * @param len The data length.
- */
-#if BSL_LOG_PLAINTEXT_ENABLE
-#define BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)                                   \
-    do                                                                                \
-    {                                                                                 \
-        char logstr[2 * (len) + 1];                                                   \
-        BSL_LOG_DEBUG("PLAINTEXT STATE (ctx %p) " title ": %s", (void *)ctx,          \
-                      BSL_Log_DumpAsHexString(logstr, sizeof(logstr), (ptr), (len))); \
-    }                                                                                 \
-    while (false)
-#else
-#define BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)
-#endif // BSL_LOG_PLAINTEXT_ENABLE
 
 /** @brief Helpful macros for expressing invariants, pre/post conditions, and arg validation.
  * The expression is nominally true and only false during exceptional cases.
@@ -573,69 +538,66 @@ typedef enum
 #define BSL_SecBlockType_IsSecBlock(block_id) \
     (((block_id) >= BSL_SECBLOCKTYPE_BIB) && ((block_id) <= BSL_SECBLOCKTYPE_BCB))
 
+/** @name Variant storage
+ */
+///@{
+
 /** Represents a security option, parameter, or result within in an ASB.
  * In an encoded ASB, these are tuples of (param-id, param-val)
  */
-typedef struct BSL_IdValPair_s BSL_IdValPair_t;
+typedef struct BSL_Variant_s BSL_Variant_t;
 
 /** Initialize to a default empty state.
  * @param[out] self The object to initialize.
  */
-void BSL_IdValPair_Init(BSL_IdValPair_t *self);
+void BSL_Variant_Init(BSL_Variant_t *self);
 
 /** Initialize to a copy of another value.
  * @param[out] self The object to initialize.
  * @param[in] src The source of the copy.
  */
-void BSL_IdValPair_InitSet(BSL_IdValPair_t *self, const BSL_IdValPair_t *src);
+void BSL_Variant_InitSet(BSL_Variant_t *self, const BSL_Variant_t *src);
 
 /** De-initialize a parameter.
  * @param[in,out] self The object to deinitialize.
  */
-void BSL_IdValPair_Deinit(BSL_IdValPair_t *self);
+void BSL_Variant_Deinit(BSL_Variant_t *self);
 
 /** Overwrite with a copy of another value.
  * @param[in,out] self The object to overwrite.
  * @param[in] src The source of the copy.
  */
-void BSL_IdValPair_Set(BSL_IdValPair_t *self, const BSL_IdValPair_t *src);
+void BSL_Variant_Set(BSL_Variant_t *self, const BSL_Variant_t *src);
 
 /** Move from another value.
  * The other value is left deinitialized.
  * @param[in,out] self The object to overwrite.
  * @param[in] src The source of the copy.
  */
-void BSL_IdValPair_Move(BSL_IdValPair_t *self, BSL_IdValPair_t *src);
-
-/** @brief Get parameter ID of this param
- * @param[in] self This BPSec Param type
- * @return The parameter ID value
- */
-uint64_t BSL_IdValPair_GetId(const BSL_IdValPair_t *self);
+void BSL_Variant_Move(BSL_Variant_t *self, BSL_Variant_t *src);
 
 /** @brief Return true if invariant conditions pass
  * @param[in] self This security parameter
  * @return true if valid, false otherwise.
  */
-bool BSL_IdValPair_IsConsistent(const BSL_IdValPair_t *self);
+bool BSL_Variant_IsConsistent(const BSL_Variant_t *self);
 
-/// @brief Return size of ::BSL_IdValPair_s struct type
-size_t BSL_IdValPair_Sizeof(void);
+/// @brief Return size of ::BSL_Variant_s struct type
+size_t BSL_Variant_Sizeof(void);
 
 /** Set to an signed integer value.
  *
  * @param[in,out] self This Security Parameter
- * @param[in] param_id ID of the parameter
  * @param[in] value The value to use.
  */
-void BSL_IdValPair_SetInt64(BSL_IdValPair_t *self, int64_t param_id, uint64_t value);
+void BSL_Variant_SetInt64(BSL_Variant_t *self, uint64_t value);
 
 /** Returns true when the value type is an integer.
  *
  * @param[in] self This Security Parameter
  * @return True when value type is integer.
  */
-bool BSL_IdValPair_IsInt64(const BSL_IdValPair_t *self);
+bool BSL_Variant_IsInt64(const BSL_Variant_t *self);
 
 /** Retrieve integer value of result when this result type is integer.
  *
@@ -643,22 +605,21 @@ bool BSL_IdValPair_IsInt64(const BSL_IdValPair_t *self);
  * @param[out] out The optional value
  * @return Zero if the value is an integer.
  */
-int BSL_IdValPair_GetAsInt64(const BSL_IdValPair_t *self, int64_t *out);
+int BSL_Variant_GetAsInt64(const BSL_Variant_t *self, int64_t *out);
 
 /** Initialize as a parameter containing a bytestring.
  *
  * @param[in,out] self This Security Parameter
- * @param[in] param_id ID of the parameter
  * @param[in] value View of bytes, which get copied into this Security Parameter.
  */
-void BSL_IdValPair_SetBytestr(BSL_IdValPair_t *self, int64_t param_id, BSL_Data_t value);
+void BSL_Variant_SetBytestr(BSL_Variant_t *self, BSL_Data_t value);
 
 /** Returns true when the value type is a byte string.
  *
  * @param[in] self This Security Parameter
  * @return True when value type is byte string.
  */
-bool BSL_IdValPair_IsBytestr(const BSL_IdValPair_t *self);
+bool BSL_Variant_IsBytestr(const BSL_Variant_t *self);
 
 /** Retrieve byte string value of a parameter.
  *
@@ -667,23 +628,22 @@ bool BSL_IdValPair_IsBytestr(const BSL_IdValPair_t *self);
  * That view must not outlive this pair instance.
  * @return Negative on error.
  */
-int BSL_IdValPair_GetAsBytestr(const BSL_IdValPair_t *self, BSL_Data_t *out);
+int BSL_Variant_GetAsBytestr(const BSL_Variant_t *self, BSL_Data_t *out);
 
 /** Initialize as a parameter containing a byte string with a null-terminated
  * text value.
  *
  * @param[in,out] self This Security Parameter
- * @param[in] param_id ID of the parameter
  * @param[in] value text string of the parameter, copied into self
  */
-void BSL_IdValPair_SetTextstr(BSL_IdValPair_t *self, int64_t param_id, const char *value);
+void BSL_Variant_SetTextstr(BSL_Variant_t *self, const char *value);
 
 /** Returns true when the value type is a text string.
  *
  * @param[in] self This Security Parameter
  * @return True when value type is text string.
  */
-bool BSL_IdValPair_IsTextstr(const BSL_IdValPair_t *self);
+bool BSL_Variant_IsTextstr(const BSL_Variant_t *self);
 
 /** Retrieve bytestring value of result when security parameter type is bytestring.
  *
@@ -692,23 +652,22 @@ bool BSL_IdValPair_IsTextstr(const BSL_IdValPair_t *self);
  * That view must not outlive this pair instance.
  * @return Negative on error.
  */
-int BSL_IdValPair_GetAsTextstr(const BSL_IdValPair_t *self, const char **out);
+int BSL_Variant_GetAsTextstr(const BSL_Variant_t *self, const char **out);
 
 /** Initialize as a parameter containing raw encoded content.
  *
  * @param[in,out] self This Security Parameter
- * @param[in] param_id ID of the parameter
  * @param[in] ptr The stat of the data.
  * @param len The length to copy.
  */
-void BSL_IdValPair_SetRaw(BSL_IdValPair_t *self, int64_t param_id, const void *ptr, size_t len);
+void BSL_Variant_SetRaw(BSL_Variant_t *self, const void *ptr, size_t len);
 
 /** Returns true when the value type is raw encoded CBOR.
  *
  * @param[in] self This Security Parameter
  * @return True when value type is raw.
  */
-bool BSL_IdValPair_IsRaw(const BSL_IdValPair_t *self);
+bool BSL_Variant_IsRaw(const BSL_Variant_t *self);
 
 /** Retrieve bytestring value of result when security parameter type is bytestring.
  *
@@ -717,7 +676,9 @@ bool BSL_IdValPair_IsRaw(const BSL_IdValPair_t *self);
  * That view must not outlive this pair instance.
  * @return Negative on error.
  */
-int BSL_IdValPair_GetAsRaw(const BSL_IdValPair_t *self, BSL_Data_t *out);
+int BSL_Variant_GetAsRaw(const BSL_Variant_t *self, BSL_Data_t *out);
+
+///@}
 
 /** Represents a Security Operation produced by a policy provider to inform the security context.
  *
@@ -789,7 +750,7 @@ const BSL_HostEID_t *BSL_SecOper_GetSecuritySource(const BSL_SecOper_t *self);
  * @param option_id The internal option ID value to search for.
  * @return Pointer to security parameter if found, otherwise NULL.
  */
-const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, int64_t option_id);
+const BSL_Variant_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, int64_t option_id);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
  *
@@ -797,7 +758,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, int64_t
  * @param param_id The parameter ID value to search for.
  * @return Pointer to security parameter if found, otherwise NULL.
  */
-const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, int64_t param_id);
+const BSL_Variant_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, int64_t param_id);
 
 /** Count the number of results present.
  * @param[in] self The security operation
@@ -811,7 +772,7 @@ size_t BSL_SecOper_ResultCount(const BSL_SecOper_t *self);
  * @param[in] index Index of security parameter list to retrieve from
  * @return Pointer to security result if found, otherwise NULL.
  */
-const BSL_IdValPair_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, int64_t param_id);
+const BSL_Variant_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, int64_t param_id);
 
 /// @brief Get the block number of the security block containing this sec operation
 /// @param[in] self This security operation
@@ -831,17 +792,10 @@ size_t BSL_SecOper_CountOptions(const BSL_SecOper_t *self);
 /** Add the given option to this operation.
  *
  * @param[in,out] self This security operation
- * @param[in] option Security option to include.
+ * @param opt_id The unique option ID.
+ * @return A non-null pointer to the option to set.
  */
-void BSL_SecOper_AppendOption(BSL_SecOper_t *self, const BSL_IdValPair_t *option);
-
-/** Add the given security parameter to this operation manually.
- * @warning This is for internal testing only, parameters normally come from
- * the input ASB.
- * @param[in,out] self This security operation
- * @param[in] param Security parameter to include.
- */
-void BSL_SecOper_AppendParam(BSL_SecOper_t *self, const BSL_IdValPair_t *param);
+BSL_Variant_t *BSL_SecOper_AppendOption(BSL_SecOper_t *self, int64_t opt_id);
 
 /** Return true if this security operation's role is SOURCE
  * @param[in] self This Security Operation
@@ -963,7 +917,7 @@ bool BSL_AbsSecBlock_ContainsTarget(const BSL_AbsSecBlock_t *self, uint64_t targ
  * @param result_id The result ID to search for.
  * @return Non-null pointer if the result is found.
  */
-const BSL_IdValPair_t *BSL_AbsSecBlock_FindResult(BSL_AbsSecBlock_t *self, uint64_t target_index, uint64_t result_id);
+const BSL_Variant_t *BSL_AbsSecBlock_FindResult(BSL_AbsSecBlock_t *self, uint64_t target_index, uint64_t result_id);
 
 /** Increments a telemetry counter in the ctx based on telemetry index
  */
@@ -999,17 +953,18 @@ bool BSL_SecOutcome_IsConsistent(const BSL_SecOutcome_t *self);
 /** Append a Security Result to this outcome.
  *
  * @param[in,out] self Non-NULL pointer to this security outcome.
+ * @param result_id The unique result ID.
  * @return Non-NULL pointer to security result just appended.
  */
-BSL_IdValPair_t *BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self);
+BSL_Variant_t *BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self, int64_t result_id);
 
 /** Get the result at index i. Panics if i is out of range.
  *
  * @param[in] self This outcome
- * @param[in] index Index in the list to retrieve
- * @return Sec Result at index
+ * @param result_id The unique result ID.
+ * @return Sec Result pointer if found, or the NULL pointer.
  */
-const BSL_IdValPair_t *BSL_SecOutcome_GetResultAtIndex(const BSL_SecOutcome_t *self, size_t index);
+const BSL_Variant_t *BSL_SecOutcome_GetResult(const BSL_SecOutcome_t *self, int64_t result_id);
 
 /** Get the number of results
  *
@@ -1021,9 +976,10 @@ size_t BSL_SecOutcome_CountResults(const BSL_SecOutcome_t *self);
 /** Append a Security Parameter to this outcome.
  *
  * @param[in,out] self Non-NULL pointer to this security outcome.
+ * @param[in] param_id The unique ID of the parameter.
  * @return Non-NULL pointer to the initialized security parameter.
  */
-BSL_IdValPair_t *BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self);
+BSL_Variant_t *BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self, int64_t param_id);
 
 /** @brief Returns number of parameters in this outcome.
  * @param[in] self This outcome
@@ -1033,10 +989,11 @@ size_t BSL_SecOutcome_CountParams(const BSL_SecOutcome_t *self);
 
 /** Get the security parameter from the security outcome at the provided index
  * @param[in] self security outcome
+ * @param[in] param_id The unique ID of the parameter.
  * @param[in] index index to retrieve security parameter from
- * @return Security parameter
+ * @return Security parameter if found, or NULL pointer.
  */
-const BSL_IdValPair_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, size_t index);
+const BSL_Variant_t *BSL_SecOutcome_GetParam(const BSL_SecOutcome_t *self, int64_t param_id);
 
 /**
  * @return size of security operation

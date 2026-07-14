@@ -24,6 +24,7 @@
  * @brief Definition of CBOR CODEC wrapper functions.
  */
 #include "CBOR.h"
+#include "TextUtil.h"
 #include <BPSecLib_Private.h>
 #include <m-core.h>
 

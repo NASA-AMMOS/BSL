@@ -510,16 +510,16 @@ void BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self)
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(BSLP_PolicyRule_t));
     string_init(self->description);
-    BSLB_IdValPairPtrList_init(self->options);
+    BSLB_VariantPtrMap_init(self->options);
 }
 
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
-    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, nparams=%zu", string_get_cstr(self->description),
-                 BSLB_IdValPairPtrList_size(self->options));
+    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, noptions=%zu", string_get_cstr(self->description),
+                 BSLB_VariantPtrMap_size(self->options));
 
     string_clear(self->description);
-    BSLB_IdValPairPtrList_clear(self->options);
+    BSLB_VariantPtrMap_clear(self->options);
 }
 
 void BSLP_PolicyRule_Move(BSLP_PolicyRule_t *self, BSLP_PolicyRule_t *src)
@@ -536,14 +536,11 @@ void BSLP_PolicyRule_Move(BSLP_PolicyRule_t *self, BSLP_PolicyRule_t *src)
     memset(src, 0, sizeof(BSLP_PolicyRule_t));
 }
 
-BSL_IdValPair_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self)
+BSL_Variant_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self, int64_t opt_id)
 {
     ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
-    BSLB_IdValPairPtr_t **item_ptr = BSLB_IdValPairPtrList_push_new(self->options);
 
-    *item_ptr = BSLB_IdValPairPtr_new();
-
-    return BSLB_IdValPairPtr_ref(*item_ptr);
+    return BSLB_VariantPtrMap_add(self->options, opt_id);
 }
 
 int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_PolicyPredicate_t *predicate,
@@ -577,12 +574,13 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
                          self->failure_action_code);
 
     // Next, append all the options from the matched rule.
-    BSLB_IdValPairPtrList_it_t pit;
-    for (BSLB_IdValPairPtrList_it(pit, self->options); !BSLB_IdValPairPtrList_end_p(pit);
-         BSLB_IdValPairPtrList_next(pit))
+    BSLB_VariantPtrMap_it_t pit;
+    for (BSLB_VariantPtrMap_it(pit, self->options); !BSLB_VariantPtrMap_end_p(pit); BSLB_VariantPtrMap_next(pit))
     {
-        const BSL_IdValPair_t *option = BSLB_IdValPairPtr_cref(*BSLB_IdValPairPtrList_cref(pit));
-        BSL_SecOper_AppendOption(sec_oper, option);
+        const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_cref(pit);
+
+        BSL_Variant_t *opt = BSL_SecOper_AppendOption(sec_oper, *(pair->key_ptr));
+        BSL_Variant_Set(opt, BSLB_VariantPtr_cref(*(pair->value_ptr)));
     }
     BSL_LOG_INFO("Created sec operation for rule `%s`", string_get_cstr(self->description));
 

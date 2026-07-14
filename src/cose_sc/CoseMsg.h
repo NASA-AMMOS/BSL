@@ -30,7 +30,7 @@
 
 #include <BSLMemory.h>
 #include <backend/CBOR.h>
-#include <backend/IdValPair.h>
+#include <backend/Variant.h>
 #include <m-bptree.h>
 #include <m-shared-ptr.h>
 #include <m-array.h>
@@ -118,14 +118,14 @@ enum BSLX_CoseMsg_KeyParam_e
 };
 
 /** @struct BSLX_CoseMsg_HdrMapTree_t
- * Defines an internal lookup dictionary for ::BSLB_IdValPairPtr_t pointers
+ * Defines an internal lookup dictionary for ::BSLB_VariantPtr_t pointers
  * which is sorted in CBOR deterministic order.
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
 M_BPTREE_DEF2(BSLX_CoseMsg_HdrMapTree, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(API_6(BSL_CBOR_Compare_Int64))),
-              BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
+              BSLB_VariantPtr_t *, M_OPL_BSLB_VariantPtr_t())
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
@@ -189,7 +189,7 @@ int BSLX_CoseMsg_Headers_CheckCrit(const BSLX_CoseMsg_Headers_t *obj);
  * when it is present. This does not imply that it needs to be present.
  * @return Non-null pointer when found, or NULL if not found.
  */
-const BSL_IdValPair_t *BSLX_CoseMsg_Headers_Get(const BSLX_CoseMsg_Headers_t *obj, int64_t label, bool need_phdr);
+const BSL_Variant_t *BSLX_CoseMsg_Headers_Get(const BSLX_CoseMsg_Headers_t *obj, int64_t label, bool need_phdr);
 
 /// Decoded COSE_Mac0
 typedef struct
