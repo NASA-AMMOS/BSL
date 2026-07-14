@@ -263,16 +263,21 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
  */
 typedef enum
 {
-    /// @brief We use undefined for zero, in case this value is never explicitly set and is just zero by default.
-    // BSL_CRYPTO_UNDEFINED = 0,
+    /// Encrypt from plaintext to ciphertext
     BSL_CRYPTO_ENCRYPT,
+    /// Decrypt from ciphertext to plaintext
     BSL_CRYPTO_DECRYPT
 } BSL_CipherMode_e;
 
+/** Choice of fully-specified cipher algorithm.
+ */
 typedef enum
 {
+    /// AES-GCM with 128-bit key
     BSL_CRYPTO_AES_128,
+    /// AES-GCM with 192-bit key
     BSL_CRYPTO_AES_192,
+    /// AES-GCM with 256-bit key
     BSL_CRYPTO_AES_256
 } BSL_Crypto_AESVariant_e;
 
@@ -392,10 +397,15 @@ int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
  */
 ///@{
 
+/** Choice of fully-specified MAC algorithm.
+ */
 typedef enum
 {
+    /// HMAC SHA2-256 with 256-bit key
     BSL_CRYPTO_SHA_256,
+    /// HMAC SHA2-384 with 384-bit key
     BSL_CRYPTO_SHA_384,
+    /// HMAC SHA2-512 with 512-bit key
     BSL_CRYPTO_SHA_512
 } BSL_Crypto_SHAVariant_e;
 
@@ -406,7 +416,7 @@ typedef struct BSL_AuthCtx_s
 {
     /// pointer to library specific data
     BSL_Crypto_LibHandle_t libhandle;
-    /// SHA variant of context
+    /// MAC variant of context
     BSL_Crypto_SHAVariant_e SHA_variant;
     /// Key handle used by context
     BSL_Crypto_KeyHandle_t keyhandle;
