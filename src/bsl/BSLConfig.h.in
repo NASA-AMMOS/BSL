@@ -1,0 +1,90 @@
+/*
+ * Copyright (c) 2024 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the BPSec Library (BSL).
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This work was performed for the Jet Propulsion Laboratory, California
+ * Institute of Technology, sponsored by the United States Government under
+ * the prime contract 80NM0018D0004 between the Caltech and NASA under
+ * subcontract 1700763.
+ */
+/** @file
+ * @ingroup frontend
+ * Compile-time static configuration for the BSL.
+ */
+#ifndef BSL_BSL_CONFIG_H_
+#define BSL_BSL_CONFIG_H_
+
+#include <bsl/front/BSLMemory.h>
+#include <stdlib.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Compile-time library version based on SemVer-2.0.0 conventions.
+ * @sa Use bsl_version() to get run-time version.
+ */
+#define BSL_VERSION "@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@"
+/** Compile-time major version number */
+#define BSL_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+/** Compile-time minor version number */
+#define BSL_VERSION_MINOR @PROJECT_VERSION_MINOR@
+/** Compile-time patch version number */
+#define BSL_VERSION_PATCH @PROJECT_VERSION_PATCH@
+
+/** Run-time library version based on SemVer-2.0.0 conventions.
+ * @note This may be different than #BSL_VERSION if using dynamic linking.
+ * @return The text form of the library version linked at runtime.
+ */
+const char * bsl_version(void);
+
+/** Control whether plaintext data debug logs are made.
+ * @warning This should not be enabled for production.
+ */
+#cmakedefine01 BSL_LOG_PLAINTEXT_ENABLE
+
+/** Force the use of M_ prefixed macros for M*LIB
+ */
+//#define M_USE_SMALL_NAME 0
+
+#undef M_MEMORY_ALLOC
+/** Define to override value/struct allocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_ALLOC(ctx, type) ((type *) BSL_malloc(sizeof(type)))
+
+#undef M_MEMORY_DEL
+/** Define to override value/struct deallocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_DEL(ctx, ptr) BSL_free(ptr)
+
+#undef M_MEMORY_REALLOC
+/** Define to override array allocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_REALLOC(ctx, type, ptr, o, n) (M_UNLIKELY((n) > SIZE_MAX / sizeof(type)) ? (type *) NULL : (type *) BSL_realloc((ptr), (n)*sizeof (type)))
+
+#undef M_MEMORY_FREE
+/** Define to override array deallocation.
+ * See m-core.h for details.
+ */
+#define M_MEMORY_FREE(ctx, type, ptr, o) BSL_free(ptr)
+
+#ifdef __cplusplus
+} // extern C
+#endif
+
+#endif  /* BSL_BSL_CONFIG_H_ */

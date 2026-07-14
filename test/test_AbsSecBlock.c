@@ -23,12 +23,12 @@
 #include <stdio.h>
 #include <unity.h>
 
-#include <BPSecLib_Private.h>
-#include <CryptoInterface.h>
-#include <dynamic/AbsSecBlock.h>
-#include <dynamic/CBOR.h>
-#include <dynamic/PublicInterfaceImpl.h>
-#include <mock_bpa/MockBPA.h>
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/CryptoInterface.h>
+#include <bsl/dynamic/AbsSecBlock.h>
+#include <bsl/dynamic/CBOR.h>
+#include <bsl/dynamic/PublicInterfaceImpl.h>
+#include <bsl/mock_bpa/MockBPA.h>
 
 #include "DefaultScUtils.h"
 

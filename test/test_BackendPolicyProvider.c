@@ -32,11 +32,11 @@
 #include <inttypes.h>
 #include <unity.h>
 
-#include <BPSecLib_Private.h>
-#include <BPSecLib_Public.h>
-#include <mock_bpa/MockBPA.h>
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/BPSecLib_Public.h>
+#include <bsl/mock_bpa/MockBPA.h>
 
-#include <sample_pp/SamplePolicyProvider.h>
+#include <bsl/sample_pp/SamplePolicyProvider.h>
 
 #include "DefaultScUtils.h"
 

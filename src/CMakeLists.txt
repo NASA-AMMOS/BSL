@@ -20,22 +20,22 @@ the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 ]]
 
-configure_file(BSLConfig.h.in BSLConfig.h @ONLY)
-configure_file(BSLConfig.c.in BSLConfig.c @ONLY)
+configure_file(bsl/BSLConfig.h.in bsl/BSLConfig.h @ONLY)
+configure_file(bsl/BSLConfig.c.in bsl/BSLConfig.c @ONLY)
 
 # Frontend library
 add_library(bsl_front)
 target_sources(bsl_front PUBLIC
-    ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Private.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/BPSecLib_Public.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Data.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/TextUtil.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/CryptoInterface.h
+    ${CMAKE_CURRENT_BINARY_DIR}/bsl/BSLConfig.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/BPSecLib_Private.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/BPSecLib_Public.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/CryptoInterface.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/front/Data.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/front/TextUtil.h
 )
 target_sources(bsl_front PRIVATE 
-    ${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Data.c
+    ${CMAKE_CURRENT_BINARY_DIR}/bsl/BSLConfig.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/front/Data.c
 )
 
 set_target_properties(bsl_front
@@ -52,7 +52,7 @@ target_include_directories(
 
 # Crypto Library
 set(BSL_CRYPTO_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/crypto/CryptoInterface.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/crypto/CryptoInterface.c
 )
 
 add_library(bsl_crypto)
@@ -75,14 +75,14 @@ endif(TARGET valgrind::valgrind)
 
 # Default Security Context library
 set(BSL_DEFAULT_SC_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/DefaultSecContext.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/DefaultSecContext_Private.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/DefaultSecContext.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/DefaultSecContext_Private.h
 )
 
 set(BSL_DEFAULT_SC_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/DefaultSecContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/BCB_AES_GCM.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/default_sc/BIB_HMAC_SHA2.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/DefaultSecContext.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/BCB_AES_GCM.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/BIB_HMAC_SHA2.c
 )
 
 add_library(bsl_default_sc)
@@ -103,12 +103,12 @@ set(BSL_COSE_SC_H
 
 add_library(bsl_cose_sc)
 target_sources(bsl_cose_sc PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/cose_sc/CoseContext.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/cose_sc/CoseMsg.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/cose_sc/CoseContext.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/cose_sc/CoseMsg.h
 )
 target_sources(bsl_cose_sc PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/cose_sc/CoseContext.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/cose_sc/CoseMsg.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/cose_sc/CoseContext.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/cose_sc/CoseMsg.c
 )
 set_target_properties(bsl_cose_sc
     PROPERTIES
@@ -122,13 +122,13 @@ target_link_libraries(bsl_cose_sc PUBLIC qcbor::qcbor)
 
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/sample_pp/SamplePolicyProvider.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/sample_pp/PolicyParser.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/SamplePolicyProvider.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/PolicyParser.h
 )
 
 set(BSL_SAMPLE_PP_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/sample_pp/SamplePolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/sample_pp/PolicyParser.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/SamplePolicyProvider.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/PolicyParser.c
 )
 
 add_library(bsl_sample_pp)
@@ -147,26 +147,27 @@ target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/AbsSecBlock.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/CBOR.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/IdValPair.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/PublicInterfaceImpl.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecOperation.h   
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/UtilDefs_SeqReadWrite.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/AbsSecBlock.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/CBOR.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/IdValPair.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/PublicInterfaceImpl.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/UtilDefs_SeqReadWrite.h
+)
+
 set(BSL_DYNAMIC_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/AbsSecBlock.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/CBOR.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/HostInterface.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/IdValPair.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/PublicInterfaceImpl.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/PolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/TelemetryCounters.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecOperation.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecurityAction.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecurityActionSet.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecurityContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecurityResultSet.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/UtilDefs_SeqReadWrite.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/AbsSecBlock.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/CBOR.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/HostInterface.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/IdValPair.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/PublicInterfaceImpl.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/PolicyProvider.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecOperation.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecurityAction.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecurityActionSet.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecurityContext.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/TelemetryCounters.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/TextUtil.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/UtilDefs_SeqReadWrite.c
 )
 
 add_library(bsl_dynamic)
@@ -184,31 +185,31 @@ target_link_libraries(bsl_dynamic PUBLIC qcbor::qcbor)
 add_library(bsl_mock_bpa)
 #target_compile_options(bsl_mock_bpa PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls)
 target_sources(
-  bsl_mock_bpa PUBLIC
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/log.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/agent.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/bundle.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/crc.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/eid.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/eidpat.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/encode.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/decode.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/key_registry.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/ctr.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/MockBPA.h
+  bsl_mock_bpa PUBLIC 
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/log.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/agent.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/bundle.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/crc.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/eid.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/eidpat.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/encode.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/decode.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/key_registry.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/ctr.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/MockBPA.h
 )
 target_sources(
   bsl_mock_bpa PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/log.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/agent.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/bundle.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/crc.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/eid.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/eidpat.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/encode.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/decode.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/key_registry.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/ctr.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/log.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/agent.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/bundle.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/crc.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/eid.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/eidpat.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/encode.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/decode.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/key_registry.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/ctr.c
 )
 set_target_properties(bsl_mock_bpa
     PROPERTIES
@@ -219,12 +220,12 @@ target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
 target_link_libraries(bsl_mock_bpa PUBLIC qcbor::qcbor)
 target_link_libraries(bsl_mock_bpa PUBLIC Jansson::Jansson)
 target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_cose_sc bsl_sample_pp)
-target_link_libraries(bsl_mock_bpa PUBLIC Threads::Threads)
 
 if(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)
   add_executable(bsl-mock-bpa)
-  target_sources(bsl-mock-bpa PRIVATE mock_bpa/mock_bpa.c)
+  target_sources(bsl-mock-bpa PRIVATE bsl/mock_bpa/mock_bpa.c)
   target_link_libraries(bsl-mock-bpa PUBLIC bsl_mock_bpa bsl_crypto)
+  target_link_libraries(bsl-mock-bpa PUBLIC Threads::Threads)
 
   # Installation config
   install(
@@ -265,14 +266,14 @@ install(
         COMPONENT devel
 )
 install(
-    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/"
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bsl"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/bsl"
     COMPONENT devel
     FILE_PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
     FILES_MATCHING PATTERN "*.h"
 )
 install(
-    FILES "${CMAKE_CURRENT_BINARY_DIR}/BSLConfig.h"
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/bsl/BSLConfig.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/bsl"
     COMPONENT devel
     PERMISSIONS OWNER_READ GROUP_READ WORLD_READ

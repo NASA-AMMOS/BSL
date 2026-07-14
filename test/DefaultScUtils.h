@@ -24,12 +24,12 @@
 
 #include <m-string.h>
 
-#include <CryptoInterface.h>
-#include <dynamic/PublicInterfaceImpl.h>
-#include <dynamic/SecOperation.h>
-#include <dynamic/IdValPair.h>
-#include <dynamic/SecurityActionSet.h>
-#include <mock_bpa/ctr.h>
+#include <bsl/CryptoInterface.h>
+#include <bsl/dynamic/PublicInterfaceImpl.h>
+#include <bsl/dynamic/SecOperation.h>
+#include <bsl/dynamic/IdValPair.h>
+#include <bsl/dynamic/SecurityActionSet.h>
+#include <bsl/mock_bpa/ctr.h>
 
 #include "TestUtils.h"
 

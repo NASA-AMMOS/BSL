@@ -33,13 +33,13 @@
 #include <stdio.h>
 #include <unity.h>
 
-#include <BPSecLib_Private.h>
-#include <mock_bpa/MockBPA.h>
-#include <CryptoInterface.h>
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/mock_bpa/MockBPA.h>
+#include <bsl/CryptoInterface.h>
 
-#include <dynamic/PublicInterfaceImpl.h>
-#include <cose_sc/CoseContext.h>
-#include <cose_sc/CoseMsg.h>
+#include <bsl/dynamic/PublicInterfaceImpl.h>
+#include <bsl/cose_sc/CoseContext.h>
+#include <bsl/cose_sc/CoseMsg.h>
 
 #include "TestUtils.h"
 
