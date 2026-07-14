@@ -35,7 +35,7 @@
 
 #include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
-#include <backend/CBOR.h>
+#include <dynamic/CBOR.h>
 
 #include "CoseContext.h"
 #include "CoseContext_Private.h"

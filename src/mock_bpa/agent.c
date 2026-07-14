@@ -26,11 +26,11 @@
  */
 #include <BPSecLib_Public.h>
 #include <BPSecLib_Private.h>
-#include <backend/UtilDefs_SeqReadWrite.h>
+#include <dynamic/UtilDefs_SeqReadWrite.h>
 #include <default_sc/DefaultSecContext.h>
 #include <default_sc/rfc9173.h>
 #include <cose_sc/CoseContext.h>
-#include <policy_provider/SamplePolicyProvider.h>
+#include <sample_pp/SamplePolicyProvider.h>
 #include <errno.h>
 #include <netinet/in.h>
 #include <poll.h>

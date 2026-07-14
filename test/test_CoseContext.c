@@ -37,7 +37,7 @@
 #include <mock_bpa/MockBPA.h>
 #include <CryptoInterface.h>
 
-#include <backend/PublicInterfaceImpl.h>
+#include <dynamic/PublicInterfaceImpl.h>
 #include <cose_sc/CoseContext.h>
 #include <cose_sc/CoseMsg.h>
 

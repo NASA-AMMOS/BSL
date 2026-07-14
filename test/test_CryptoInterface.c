@@ -28,8 +28,8 @@
 #include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
 
-#include <backend/UtilDefs_SeqReadWrite.h>
-#include <backend/PublicInterfaceImpl.h>
+#include <dynamic/UtilDefs_SeqReadWrite.h>
+#include <dynamic/PublicInterfaceImpl.h>
 #include <mock_bpa/agent.h>
 #include <mock_bpa/log.h>
 

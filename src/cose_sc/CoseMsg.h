@@ -29,8 +29,8 @@
 #define BSLX_COSEMSG_H_
 
 #include <BSLMemory.h>
-#include <backend/CBOR.h>
-#include <backend/IdValPair.h>
+#include <dynamic/CBOR.h>
+#include <dynamic/IdValPair.h>
 #include <m-bptree.h>
 #include <m-shared-ptr.h>
 #include <m-array.h>

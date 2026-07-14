@@ -26,7 +26,7 @@
  */
 
 #include <BPSecLib_Private.h>
-#include <backend/CBOR.h>
+#include <dynamic/CBOR.h>
 
 #include "CoseMsg.h"
 

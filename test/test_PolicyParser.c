@@ -31,7 +31,7 @@
 #include <mock_bpa/MockBPA.h>
 #include "DefaultScUtils.h"
 
-#include <policy_provider/PolicyParser.h>
+#include <sample_pp/PolicyParser.h>
 
 static BSL_TestContext_t      LocalTestCtx;
 static BSLP_PolicyProvider_t *policy;

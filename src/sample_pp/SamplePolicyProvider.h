@@ -35,7 +35,7 @@
 #include <m-string.h>
 
 #include <BPSecLib_Private.h>
-#include <backend/IdValPair.h>
+#include <dynamic/IdValPair.h>
 
 #ifdef __cplusplus
 extern "C" {

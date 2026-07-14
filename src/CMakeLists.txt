@@ -47,7 +47,7 @@ target_include_directories(
   bsl_front PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/bsl>
+  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Crypto Library
@@ -122,13 +122,13 @@ target_link_libraries(bsl_cose_sc PUBLIC qcbor::qcbor)
 
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/PolicyParser.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/sample_pp/SamplePolicyProvider.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/sample_pp/PolicyParser.h
 )
 
 set(BSL_SAMPLE_PP_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/SamplePolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/policy_provider/PolicyParser.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/sample_pp/SamplePolicyProvider.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/sample_pp/PolicyParser.c
 )
 
 add_library(bsl_sample_pp)
@@ -147,28 +147,26 @@ target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/CBOR.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.h
-)
-
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/AbsSecBlock.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/CBOR.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/IdValPair.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/PublicInterfaceImpl.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecOperation.h   
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/UtilDefs_SeqReadWrite.h
 set(BSL_DYNAMIC_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/AbsSecBlock.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/CBOR.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/HostInterface.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/PolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/TelemetryCounters.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityAction.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityActionSet.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/TextUtil.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/AbsSecBlock.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/CBOR.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/HostInterface.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/IdValPair.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/PublicInterfaceImpl.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/PolicyProvider.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/TelemetryCounters.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecOperation.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecurityAction.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecurityActionSet.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecurityContext.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/SecurityResultSet.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/dynamic/UtilDefs_SeqReadWrite.c
 )
 
 add_library(bsl_dynamic)

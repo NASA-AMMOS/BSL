@@ -28,10 +28,10 @@
 #include <CryptoInterface.h>
 #include <mock_bpa/MockBPA.h>
 
-#include <backend/IdValPair.h>
-#include <backend/SecurityActionSet.h>
-#include <backend/UtilDefs_SeqReadWrite.h>
-#include <policy_provider/SamplePolicyProvider.h>
+#include <dynamic/IdValPair.h>
+#include <dynamic/SecurityActionSet.h>
+#include <dynamic/UtilDefs_SeqReadWrite.h>
+#include <sample_pp/SamplePolicyProvider.h>
 #include <default_sc/DefaultSecContext.h>
 
 #include "DefaultScUtils.h"

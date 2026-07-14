@@ -33,7 +33,7 @@
 
 #include <BPSecLib_Public.h>
 #include <BPSecLib_Private.h>
-#include <policy_provider/SamplePolicyProvider.h>
+#include <sample_pp/SamplePolicyProvider.h>
 
 #include <m-atomic.h>
 #include <m-shared-ptr.h>

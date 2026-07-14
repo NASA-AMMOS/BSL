@@ -30,7 +30,7 @@
 
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
-#include <backend/CBOR.h>
+#include <dynamic/CBOR.h>
 
 #include <m-bptree.h>
 

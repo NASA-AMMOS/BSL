@@ -24,7 +24,7 @@
  * Container structs for BPv7 data.
  */
 #include <BPSecLib_Private.h>
-#include <backend/CBOR.h>
+#include <dynamic/CBOR.h>
 
 #include "ctr.h"
 #include "decode.h"

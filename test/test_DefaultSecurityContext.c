@@ -38,7 +38,7 @@
 #include <mock_bpa/MockBPA.h>
 #include <CryptoInterface.h>
 
-#include <backend/PublicInterfaceImpl.h>
+#include <dynamic/PublicInterfaceImpl.h>
 #include <default_sc/DefaultSecContext.h>
 #include <default_sc/DefaultSecContext_Private.h>
 

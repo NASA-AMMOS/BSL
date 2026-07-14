@@ -36,7 +36,7 @@
 #include <BPSecLib_Public.h>
 #include <mock_bpa/MockBPA.h>
 
-#include <policy_provider/SamplePolicyProvider.h>
+#include <sample_pp/SamplePolicyProvider.h>
 
 #include "DefaultScUtils.h"
 

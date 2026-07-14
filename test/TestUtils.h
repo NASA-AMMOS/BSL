@@ -24,10 +24,10 @@
 
 #include <m-string.h>
 
-#include <backend/PublicInterfaceImpl.h>
-#include <backend/SecOperation.h>
-#include <backend/IdValPair.h>
-#include <backend/SecurityActionSet.h>
+#include <dynamic/PublicInterfaceImpl.h>
+#include <dynamic/SecOperation.h>
+#include <dynamic/IdValPair.h>
+#include <dynamic/SecurityActionSet.h>
 #include <mock_bpa/ctr.h>
 
 #ifdef __cplusplus

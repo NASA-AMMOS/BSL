@@ -26,7 +26,7 @@
 
 #include "key_registry.h"
 #include <TextUtil.h>
-#include <backend/CBOR.h>
+#include <dynamic/CBOR.h>
 #include <cose_sc/CoseMsg.h>
 #include <m-string.h>
 #include <fcntl.h>

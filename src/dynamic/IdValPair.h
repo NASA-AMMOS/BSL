@@ -64,7 +64,7 @@
 #include <m-bptree.h>
 
 #include <BPSecLib_Private.h>
-#include <backend/CBOR.h>
+#include <dynamic/CBOR.h>
 
 #ifdef __cplusplus
 extern "C" {

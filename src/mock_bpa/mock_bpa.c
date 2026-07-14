@@ -36,7 +36,7 @@
 #include <BPSecLib_Private.h>
 #include <BPSecLib_Public.h>
 #include <CryptoInterface.h>
-#include <policy_provider/PolicyParser.h>
+#include <sample_pp/PolicyParser.h>
 
 #include "agent.h"
 #include "log.h"

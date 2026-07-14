@@ -25,9 +25,9 @@
 
 #include <BPSecLib_Private.h>
 #include <CryptoInterface.h>
-#include <backend/AbsSecBlock.h>
-#include <backend/CBOR.h>
-#include <backend/PublicInterfaceImpl.h>
+#include <dynamic/AbsSecBlock.h>
+#include <dynamic/CBOR.h>
+#include <dynamic/PublicInterfaceImpl.h>
 #include <mock_bpa/MockBPA.h>
 
 #include "DefaultScUtils.h"
