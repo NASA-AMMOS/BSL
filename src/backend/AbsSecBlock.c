@@ -340,7 +340,7 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
     ASSERT_ARG_NONNULL(dec);
     ASSERT_ARG_NONNULL(self);
     QCBORItem asbitem;
-    int res;
+    int       res;
 
     QCBORDecode_EnterArray(dec, NULL);
 
@@ -440,13 +440,13 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
                 BSLB_VariantPtr_t *item_ptr = BSLB_VariantPtr_new();
                 BSLB_VariantPtrMap_set_at(self->params, item_id, item_ptr);
                 BSL_Variant_t *param = BSLB_VariantPtr_ref(item_ptr);
-                res = BSL_Variant_Decode(dec, param);
+                res                  = BSL_Variant_Decode(dec, param);
                 BSLB_VariantPtr_release(item_ptr);
-            if (BSL_SUCCESS != res)
-            {
-                BSL_LOG_ERR("Failed getting a parameter value: code %d", res);
-                return BSL_ERR_DECODING;
-            }
+                if (BSL_SUCCESS != res)
+                {
+                    BSL_LOG_ERR("Failed getting a parameter value: code %d", res);
+                    return BSL_ERR_DECODING;
+                }
             }
 
             QCBORDecode_ExitArray(dec);
@@ -494,13 +494,13 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
                 BSLB_VariantPtr_t *item_ptr = BSLB_VariantPtr_new();
                 BSLB_VariantPtrMap_set_at(tgt->results, item_id, item_ptr);
                 BSL_Variant_t *result = BSLB_VariantPtr_ref(item_ptr);
-                res = BSL_Variant_Decode(dec, result);
+                res                   = BSL_Variant_Decode(dec, result);
                 BSLB_VariantPtr_release(item_ptr);
-            if (BSL_SUCCESS != res)
-            {
-                BSL_LOG_ERR("Failed getting a result value: code %d", res);
-                return BSL_ERR_DECODING;
-            }
+                if (BSL_SUCCESS != res)
+                {
+                    BSL_LOG_ERR("Failed getting a result value: code %d", res);
+                    return BSL_ERR_DECODING;
+                }
             }
 
             QCBORDecode_ExitArray(dec);

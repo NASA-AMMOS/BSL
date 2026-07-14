@@ -226,8 +226,7 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
             {
                 BSL_Data_t view;
                 BSL_Data_InitView(&view, baseiv.len, (BSL_DataPtr_t)baseiv.ptr);
-                BSL_Variant_SetBytestr(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV),
-                                         view);
+                BSL_Variant_SetBytestr(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV), view);
             }
 
             retval = BSL_Crypto_AddRegistryKey(&kid_view, keyhandle);
