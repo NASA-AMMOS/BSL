@@ -190,9 +190,16 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     BSL_CHKERR1(dec);
     BSL_CHKERR1(blk);
     // GCOV_EXCL_STOP
+    QCBORItem item;
 
     const size_t begin = QCBORDecode_Tell(dec);
-    QCBORDecode_EnterArray(dec, NULL);
+    QCBORDecode_EnterArray(dec, &item);
+    // definite length is needed for CRC tell at end
+    if ((QCBOR_SUCCESS != QCBORDecode_GetError(dec)) || (item.val.uCount == QCBOR_COUNT_INDICATES_INDEFINITE_LENGTH))
+    {
+        BSL_LOG_ERR("Block must start with definite-length array head, got %d", item.uDataType);
+        return 2;
+    }
 
     QCBORDecode_GetUInt64(dec, &(blk->version));
     if ((QCBOR_SUCCESS != QCBORDecode_GetError(dec)) || (blk->version != 7))
@@ -202,7 +209,17 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     }
 
     QCBORDecode_GetUInt64(dec, &(blk->flags));
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+    {
+        BSL_LOG_ERR("invalid bundle flags item");
+        return 2;
+    }
     QCBORDecode_GetUInt64(dec, &(blk->crc_type));
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+    {
+        BSL_LOG_ERR("invalid CRC type item");
+        return 2;
+    }
 
     if (0 != bsl_mock_decode_eid_from_ctx(dec, &(blk->dest_eid)))
     {
@@ -250,16 +267,17 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
             QCBORDecode_GetByteString(dec, &crc_view);
             break;
         default:
-            // nothing
-            break;
+            BSL_LOG_ERR("Unhandled CRC type %d", blk->crc_type);
+            return 2;
     }
 
+    // Tell at end of definite array
+    const size_t end = QCBORDecode_Tell(dec);
     QCBORDecode_ExitArray(dec);
     if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
     {
         return 2;
     }
-    const size_t end = QCBORDecode_Tell(dec);
 
     const UsefulBufC buf = QCBORDecode_RetrieveUndecodedInput(dec);
     if (!mock_bpa_crc_check(buf, begin, end, (int)blk->crc_type, crc_view.len))
@@ -280,14 +298,26 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
     BSL_CHKERR1(dec);
     BSL_CHKERR1(blk);
     // GCOV_EXCL_STOP
+    QCBORItem item;
 
     const size_t begin = QCBORDecode_Tell(dec);
-    QCBORDecode_EnterArray(dec, NULL);
+    QCBORDecode_EnterArray(dec, &item);
+    // definite length is needed for CRC tell at end
+    if ((QCBOR_SUCCESS != QCBORDecode_GetError(dec)) || (item.val.uCount == QCBOR_COUNT_INDICATES_INDEFINITE_LENGTH))
+    {
+        BSL_LOG_ERR("Block must start with definite-length array head, got %d", item.uDataType);
+        return 2;
+    }
 
     QCBORDecode_GetUInt64(dec, &(blk->blk_type));
     QCBORDecode_GetUInt64(dec, &(blk->blk_num));
     QCBORDecode_GetUInt64(dec, &(blk->flags));
     QCBORDecode_GetUInt64(dec, &(blk->crc_type));
+    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+    {
+        BSL_LOG_ERR("invalid block header");
+        return 2;
+    }
 
     UsefulBufC view;
     QCBORDecode_GetByteString(dec, &view);
@@ -313,18 +343,19 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
     UsefulBufC crc_view = NULLUsefulBufC;
     switch (blk->crc_type)
     {
+        case BSL_BUNDLECRCTYPE_NONE:
+            break;
         case BSL_BUNDLECRCTYPE_16:
         case BSL_BUNDLECRCTYPE_32:
             // just ignore the bytes
             QCBORDecode_GetByteString(dec, &crc_view);
             break;
         default:
-            // nothing
-            break;
+            BSL_LOG_ERR("Unhandled CRC type %d", blk->crc_type);
+            return 2;
     }
 
-    // Known QCBOR issue https://github.com/laurencelundblade/QCBOR/issues/379
-    // The tell should be after exitarray
+    // Tell at end of definite array
     const size_t end = QCBORDecode_Tell(dec);
     QCBORDecode_ExitArray(dec);
     if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
