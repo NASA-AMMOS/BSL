@@ -217,8 +217,8 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += cek->raw.len;
     pthread_mutex_unlock(&kek->stats_mutex);
 
-    BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
     int out_len = (int)cek->raw.len;
+    BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
     int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, &out_len, wrapped_key->ptr, wrapped_key->len);
     if (decrypt_res != 1)
     {
