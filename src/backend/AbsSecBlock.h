@@ -115,10 +115,10 @@ struct BSL_AbsSecBlock_s
  */
 BSL_AbsSecBlock_Target_t *BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uint64_t target_block_num);
 
-/** Remove security parameters and results found in `outcome` from this ASB
+/** Remove the target and its security results from this ASB
  *
  * @param[in,out] self This ASB
- * @param[in] outcome Security Operation outcome containing params and results
+ * @param[in] target_block_num Block number of the target to remove
  * @return Negative on error, otherwise count of things removed.
  */
 int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_num);

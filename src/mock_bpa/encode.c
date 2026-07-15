@@ -24,6 +24,8 @@
  * Definitions for bundle and block encoding.
  * @ingroup mock_bpa
  */
+#include <netinet/in.h>
+
 #include <BPSecLib_Private.h>
 
 #include "encode.h"

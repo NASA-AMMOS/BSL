@@ -236,13 +236,9 @@ void test_MultiplePolicyProviders(void)
         }
     }
 
-    BSL_SecurityResponseSet_t *response_set = BSL_TestUtils_MallocEmptyPolicyResponse();
-
-    TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_FinalizeActions(&LocalTestCtx.bsl, &action_set,
-                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref, response_set));
+    TEST_ASSERT_EQUAL(
+        0, BSL_PolicyRegistry_FinalizeActions(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref));
 
     BSL_SecurityActionSet_Deinit(&action_set);
     BSLP_PolicyProvider_Destroy(policy_provider2);
-    BSL_SecurityResponseSet_Deinit(response_set);
-    BSL_free(response_set);
 }

@@ -306,8 +306,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
     return (int)BSL_SecurityActionSet_CountErrors(output_action_set);
 }
 
-int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *output_action_set _U_,
-                        BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output _U_)
+int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle)
 {
     int                    error_ret = BSL_SUCCESS;
     BSLP_PolicyProvider_t *self      = user_data;
@@ -579,7 +578,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
     {
         const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_cref(pit);
 
-        BSL_Variant_t *opt = BSL_SecOper_AppendOption(sec_oper, *(pair->key_ptr));
+        BSL_Variant_t *opt = BSL_SecOper_AddOption(sec_oper, *(pair->key_ptr));
         BSL_Variant_Set(opt, BSLB_VariantPtr_cref(*(pair->value_ptr)));
     }
     BSL_LOG_INFO("Created sec operation for rule `%s`", string_get_cstr(self->description));

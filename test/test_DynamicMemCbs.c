@@ -24,7 +24,6 @@
 #include <BPSecLib_Public.h>
 #include <CryptoInterface.h>
 #include <backend/SecurityActionSet.h>
-#include <backend/SecurityResultSet.h>
 #include <policy_provider/SamplePolicyProvider.h>
 #include <default_sc/DefaultSecContext.h>
 #include <mock_bpa/agent.h>
@@ -149,9 +148,7 @@ void test_dyn_mem_cbs_BSL_32(void)
 {
     _setUp();
 
-    BSL_PrimaryBlock_t        primary_block;
-    BSL_SecurityResponseSet_t response_set;
-    BSL_SecurityResponseSet_Init(&response_set);
+    BSL_PrimaryBlock_t   primary_block;
     BSL_CanonicalBlock_t res_blk;
     int                  query_result = -1;
     int                  apply_result = -1;
@@ -173,8 +170,7 @@ void test_dyn_mem_cbs_BSL_32(void)
     TEST_ASSERT_EQUAL(0, query_result);
     TEST_ASSERT_EQUAL(2, BSL_SecurityActionSet_CountOperations(&action_set));
 
-    apply_result =
-        BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
+    apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
     TEST_ASSERT_EQUAL(0, apply_result);
 
     for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i++)
@@ -199,7 +195,6 @@ void test_dyn_mem_cbs_BSL_32(void)
     TEST_ASSERT_EQUAL(12, res_blk.type_code);
 
     BSL_PrimaryBlock_deinit(&primary_block);
-    BSL_SecurityResponseSet_Deinit(&response_set);
 
     _tearDown();
 

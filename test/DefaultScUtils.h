@@ -148,8 +148,7 @@ void BSL_TestUtils_GetRFC9173_A1Params(BSLP_PolicyRule_t *rule, const char *key_
 
 void BSL_TestUtils_GetRFC9173_A2Params(BSLP_PolicyRule_t *rule, const char *key_id);
 
-BSL_SecurityActionSet_t   *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context);
-BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void);
+BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context);
 
 void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib);
 

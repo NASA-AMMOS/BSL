@@ -217,8 +217,9 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += cek->raw.len;
     pthread_mutex_unlock(&kek->stats_mutex);
 
+    int out_len = (int)cek->raw.len;
     BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
-    int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, (int *)&cek->raw.len, wrapped_key->ptr, wrapped_key->len);
+    int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, &out_len, wrapped_key->ptr, wrapped_key->len);
     if (decrypt_res != 1)
     {
         BSL_LOG_ERR("EVP_DecryptUpdate: %s", ERR_error_string(ERR_get_error(), NULL));
@@ -226,6 +227,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
         BSL_CryptoKeyPtr_release(cek_ptr);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+    cek->raw.len = (size_t)out_len;
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int     final_len = 0;
@@ -307,14 +309,14 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     // wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
     BSL_Data_Resize(wrapped_key, cek->raw.len + 8);
 
-    int len = (int)wrapped_key->len;
+    int out_len = (int)wrapped_key->len;
     BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek->raw.ptr, cek->raw.len);
-    if (!EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek->raw.ptr, cek->raw.len))
+    if (!EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &out_len, cek->raw.ptr, cek->raw.len))
     {
         EVP_CIPHER_CTX_free(ctx);
         return -2;
     }
-    wrapped_key->len = (size_t)len;
+    wrapped_key->len = (size_t)out_len;
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int     final_len = 0;

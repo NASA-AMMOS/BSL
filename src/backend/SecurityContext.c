@@ -31,7 +31,6 @@
 #include "CBOR.h"
 #include "PublicInterfaceImpl.h"
 #include "SecOperation.h"
-#include "SecOutcome.h"
 #include "SecurityActionSet.h"
 
 static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_num, const BSL_AbsSecBlock_t *asb)
@@ -73,7 +72,7 @@ static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_n
 /** Common handling of needed ASB content before an operation.
  */
 static int BSL_ExecAnySource_Pre(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle _U_, BSL_SecOper_t *sec_oper,
-                                 BSL_SecOutcome_t *outcome _U_, BSL_AbsSecBlock_t *asb)
+                                 BSL_AbsSecBlock_t *asb)
 {
     asb->sec_context_id = sec_oper->context_id;
 
@@ -91,7 +90,7 @@ static int BSL_ExecAnySource_Pre(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle 
 /** Common handling of informing new ASB content after an operation.
  */
 static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper,
-                                  const BSL_SecOutcome_t *outcome, BSL_AbsSecBlock_t *asb)
+                                  BSL_AbsSecBlock_t *asb)
 {
     // un-reference outside of execution
     sec_oper->sec_src_eid = NULL;
@@ -105,7 +104,7 @@ static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BS
 
     // target-independent data
     BSLB_VariantPtrMap_it_t param_it;
-    for (BSLB_VariantPtrMap_it(param_it, outcome->param_list); !BSLB_VariantPtrMap_end_p(param_it);
+    for (BSLB_VariantPtrMap_it(param_it, sec_oper->_params); !BSLB_VariantPtrMap_end_p(param_it);
          BSLB_VariantPtrMap_next(param_it))
     {
         const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_ref(param_it);
@@ -117,7 +116,7 @@ static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BS
     BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_AddTarget(asb, sec_oper->target_block_num);
 
     BSLB_VariantPtrMap_it_t result_it;
-    for (BSLB_VariantPtrMap_it(result_it, outcome->result_list); !BSLB_VariantPtrMap_end_p(result_it);
+    for (BSLB_VariantPtrMap_it(result_it, sec_oper->_results); !BSLB_VariantPtrMap_end_p(result_it);
          BSLB_VariantPtrMap_next(result_it))
     {
         const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_ref(result_it);
@@ -135,12 +134,11 @@ static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BS
 }
 
 int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                      BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
+                      BSL_SecOper_t *sec_oper)
 {
     CHK_ARG_NONNULL(sec_context_fn);
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
-    CHK_ARG_NONNULL(outcome);
 
     int retval = BSL_SUCCESS;
 
@@ -163,7 +161,7 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     BSL_AbsSecBlock_Init(&asb);
     if (BSL_SUCCESS == retval)
     {
-        res = BSL_ExecAnySource_Pre(lib, bundle, sec_oper, outcome, &asb);
+        res = BSL_ExecAnySource_Pre(lib, bundle, sec_oper, &asb);
         if (BSL_SUCCESS != res)
         {
             retval = BSL_ERR_BUNDLE_OPERATION_FAILED;
@@ -172,8 +170,8 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
     if (BSL_SUCCESS == retval)
     {
-        res = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
-        if (res != 0) // || outcome->is_success == false)
+        res = (*sec_context_fn)(lib, bundle, sec_oper);
+        if (res != 0)
         {
             BSL_LOG_ERR("BIB Source failed!");
             retval = BSL_ERR_SECURITY_OPERATION_FAILED;
@@ -182,7 +180,7 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
     if (BSL_SUCCESS == retval)
     {
-        res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, outcome, &asb);
+        res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, &asb);
         if (BSL_SUCCESS != res)
         {
             retval = BSL_ERR_SECURITY_OPERATION_FAILED;
@@ -244,7 +242,7 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, const BSL_BundleRe
     {
         const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_cref(param_iter);
 
-        BSLB_VariantPtrMap_set_at(sec_oper->_params_in, *(pair->key_ptr), *(pair->value_ptr));
+        BSLB_VariantPtrMap_set_at(sec_oper->_params, *(pair->key_ptr), *(pair->value_ptr));
     }
 
     sec_oper->_target_index = 0;
@@ -266,7 +264,7 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, const BSL_BundleRe
         {
             const BSLB_VariantPtrMap_subtype_ct *pair = BSLB_VariantPtrMap_cref(result_iter);
 
-            BSLB_VariantPtrMap_set_at(sec_oper->_results_in, *(pair->key_ptr), *(pair->value_ptr));
+            BSLB_VariantPtrMap_set_at(sec_oper->_results, *(pair->key_ptr), *(pair->value_ptr));
         }
 
         // first one wins
@@ -277,12 +275,11 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, const BSL_BundleRe
 }
 
 int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                                BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
+                                BSL_SecOper_t *sec_oper)
 {
     CHK_ARG_NONNULL(lib);
     CHK_ARG_NONNULL(bundle);
     CHK_PRECONDITION(BSL_SecOper_IsConsistent(sec_oper));
-    CHK_PRECONDITION(BSL_SecOutcome_IsConsistent(outcome));
 
     BSL_AbsSecBlock_t asb;
     BSL_AbsSecBlock_Init(&asb);
@@ -295,8 +292,8 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
         return res;
     }
 
-    const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
-    if (sec_context_result != BSL_SUCCESS) // || outcome->is_success == false)
+    const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper);
+    if (sec_context_result != BSL_SUCCESS)
     {
         BSL_LOG_ERR("BIB Sec Ctx processing for verifier/acceptor failed!");
         BSL_AbsSecBlock_Deinit(&asb);
@@ -355,12 +352,11 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
 }
 
 int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                                BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
+                                BSL_SecOper_t *sec_oper)
 {
     CHK_ARG_NONNULL(sec_context_fn);
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
-    CHK_ARG_NONNULL(outcome);
 
     BSL_AbsSecBlock_t asb;
     BSL_AbsSecBlock_Init(&asb);
@@ -373,7 +369,7 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
         return res;
     }
 
-    const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
+    const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper);
     if (sec_context_result != BSL_SUCCESS)
     {
         BSL_LOG_ERR("BCB Sec Ctx processing for verifier/acceptor failed!");
@@ -427,12 +423,11 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
 }
 
 int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                      BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome)
+                      BSL_SecOper_t *sec_oper)
 {
     CHK_ARG_NONNULL(sec_context_fn);
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
-    CHK_ARG_NONNULL(outcome);
 
     int retval = BSL_SUCCESS;
 
@@ -455,7 +450,7 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     BSL_AbsSecBlock_Init(&asb);
     if (BSL_SUCCESS == retval)
     {
-        res = BSL_ExecAnySource_Pre(lib, bundle, sec_oper, outcome, &asb);
+        res = BSL_ExecAnySource_Pre(lib, bundle, sec_oper, &asb);
         if (BSL_SUCCESS != res)
         {
             retval = BSL_ERR_BUNDLE_OPERATION_FAILED;
@@ -464,8 +459,8 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
     if (BSL_SUCCESS == retval)
     {
-        res = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
-        if (res != 0) // || outcome->is_success == false)
+        res = (*sec_context_fn)(lib, bundle, sec_oper);
+        if (res != 0)
         {
             BSL_LOG_ERR("BCB Source failed!");
             retval = BSL_ERR_SECURITY_OPERATION_FAILED;
@@ -478,7 +473,7 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
     if (BSL_SUCCESS == retval)
     {
-        res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, outcome, &asb);
+        res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, &asb);
         if (BSL_SUCCESS != res)
         {
             retval = BSL_ERR_SECURITY_OPERATION_FAILED;
@@ -492,15 +487,14 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     }
 
     BSL_AbsSecBlock_Deinit(&asb);
-    return res;
+    return retval;
 }
 
-int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet_t *output_response,
-                                      BSL_BundleRef_t *bundle, const BSL_SecurityActionSet_t *action_set)
+int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                                      const BSL_SecurityActionSet_t *action_set)
 {
     // NOLINTBEGIN
     CHK_ARG_NONNULL(lib);
-    CHK_ARG_NONNULL(output_response);
     CHK_ARG_NONNULL(bundle);
     CHK_PRECONDITION(BSL_SecurityActionSet_IsConsistent(action_set));
     // NOLINTEND
@@ -508,12 +502,10 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
     /**
      * Notes:
      *  - It should evaluate every security operation, even if earlier ones failed.
-     *  - The outcome can indicate in the policy action response how exactly it fared (pass, fail, etc)
+     *  - The operation conclusion indicates how processing fared (pass, fail, etc.)
      *  - BCB will be a special case, since it actively manipulates the BTSD
      *
      */
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-
     BSL_SecActionList_it_t act_it;
     for (BSL_SecActionList_it(act_it, action_set->actions); !BSL_SecActionList_end_p(act_it);
          BSL_SecActionList_next(act_it))
@@ -522,7 +514,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
         for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i++)
         {
             BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
-            BSL_SecOutcome_Init(outcome, sec_oper);
+            BSL_SecOper_ClearParamsAndResults(sec_oper);
             const BSL_SecCtxDesc_t *sec_ctx = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
 
             int errcode;
@@ -535,26 +527,24 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             {
                 if (BSL_SecOper_IsRoleSource(sec_oper))
                 {
-                    errcode = BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                    errcode = BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper);
                 }
                 else
                 {
-                    errcode = BSL_ExecBIBVerifierAcceptor(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                    errcode = BSL_ExecBIBVerifierAcceptor(sec_ctx->execute, lib, bundle, sec_oper);
                 }
             }
             else
             {
                 if (BSL_SecOper_IsRoleSource(sec_oper))
                 {
-                    errcode = BSL_ExecBCBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                    errcode = BSL_ExecBCBSource(sec_ctx->execute, lib, bundle, sec_oper);
                 }
                 else
                 {
-                    errcode = BSL_ExecBCBVerifierAcceptor(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                    errcode = BSL_ExecBCBVerifierAcceptor(sec_ctx->execute, lib, bundle, sec_oper);
                 }
             }
-
-            BSL_SecOutcome_Deinit(outcome);
 
             if (errcode != BSL_SUCCESS)
             {
@@ -565,15 +555,11 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
                     BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_FAILED_SECOP);
                 }
                 BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_FAILURE);
-                BSL_SecurityResponseSet_AppendResult(output_response, errcode, sec_oper->policy_action);
                 break; // stop processing secops if there is a failure
             }
             BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_SUCCESS);
-            BSL_SecurityResponseSet_AppendResult(output_response, errcode, sec_oper->policy_action);
         }
     }
-    BSL_free(outcome);
-
     return BSL_SUCCESS;
 }
 

@@ -27,6 +27,8 @@
 #ifndef BSL_MOCK_BPA_AGENT_H_
 #define BSL_MOCK_BPA_AGENT_H_
 
+#include <netinet/in.h>
+
 #include "ctr.h"
 
 #include <BPSecLib_Public.h>
