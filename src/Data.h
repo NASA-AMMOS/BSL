@@ -58,7 +58,11 @@ typedef struct BSL_Data_s
 /** Static initializer for a data store.
  * @sa BSL_Data_Init()
  */
-#define BSL_DATA_INIT_NULL (BSL_Data_t) { .owned = false, .ptr = NULL, .len = 0 }
+#define BSL_DATA_INIT_NULL                    \
+    (BSL_Data_t)                              \
+    {                                         \
+        .owned = false, .ptr = NULL, .len = 0 \
+    }
 
 /** Static initializer for a view on a static byte string.
  * @sa BSL_Data_InitView()
