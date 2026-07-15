@@ -7,3 +7,4 @@ Description: A CBOR encoder/decoder library
 Version: @qcbor_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -lqcbor
+Libs.private: -lm

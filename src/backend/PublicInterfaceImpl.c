@@ -35,24 +35,6 @@
 #include "CBOR.h"
 #include "SecurityActionSet.h"
 
-char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen)
-{
-    ASSERT_ARG_NONNULL(dstbuf);
-
-    memset(dstbuf, 0, dstlen);
-
-    if (srcbuf)
-    {
-        static const char hex_digits[] = "0123456789ABCDEF";
-        for (size_t i = 0; i < srclen && (((i * 2) + 1) < dstlen - 1); i++)
-        {
-            dstbuf[(i * 2)]     = hex_digits[(srcbuf[i] >> 4) & 0x0F];
-            dstbuf[(i * 2) + 1] = hex_digits[srcbuf[i] & 0x0F];
-        }
-    }
-    return dstbuf;
-}
-
 size_t BSL_LibCtx_Sizeof(void)
 {
     return sizeof(BSL_LibCtx_t);

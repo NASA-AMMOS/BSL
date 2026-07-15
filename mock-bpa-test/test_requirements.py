@@ -51,7 +51,6 @@ class TestRequirements(TestAgent):
             policy_config='0x1A6,0x1A7',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -78,7 +77,6 @@ class TestRequirements(TestAgent):
             policy_config='0x04',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -105,7 +103,6 @@ class TestRequirements(TestAgent):
             policy_config='0xA6',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -132,7 +129,6 @@ class TestRequirements(TestAgent):
             policy_config='0x04',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -162,7 +158,6 @@ class TestRequirements(TestAgent):
             policy_config='0x66',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -205,7 +200,6 @@ class TestRequirements(TestAgent):
             policy_config='0x2A0',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -233,7 +227,6 @@ class TestRequirements(TestAgent):
             policy_config='0x04',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -261,7 +254,6 @@ class TestRequirements(TestAgent):
             policy_config='0x62',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -285,7 +277,6 @@ class TestRequirements(TestAgent):
             policy_config='0xA2',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -320,7 +311,6 @@ class TestRequirements(TestAgent):
             policy_config='0x5E',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -345,9 +335,8 @@ class TestRequirements(TestAgent):
             policy_config='0x62',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
-            expected_output_format=DataFormat.NONE
+            expected_output_format=DataFormat.ERR
         ))
 
     # BSL_23
@@ -379,7 +368,6 @@ class TestRequirements(TestAgent):
             policy_config='0x1A6,0x1A7',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -408,7 +396,6 @@ class TestRequirements(TestAgent):
             policy_config='0x04',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -436,7 +423,6 @@ class TestRequirements(TestAgent):
             policy_config='0x04',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -467,7 +453,6 @@ class TestRequirements(TestAgent):
             policy_config='0x04',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -489,7 +474,6 @@ class TestRequirements(TestAgent):
             policy_config='0x105',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY,
             use_bcb_rng=True
@@ -518,7 +502,6 @@ class TestRequirements(TestAgent):
             policy_config='0x105',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY,
             use_bcb_rng=True
@@ -547,7 +530,6 @@ class TestRequirements(TestAgent):
             policy_config='0x04',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -569,7 +551,6 @@ class TestRequirements(TestAgent):
             policy_config='0x86',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.HEX,
             expected_output_format=DataFormat.ERR
         ))
@@ -594,7 +575,6 @@ class TestRequirements(TestAgent):
             policy_config='0x66',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.ERR
         ))
@@ -623,7 +603,6 @@ class TestRequirements(TestAgent):
             policy_config='0x1A6,0x1A7',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.ERR
         ))
@@ -649,7 +628,6 @@ class TestRequirements(TestAgent):
             policy_config='0x0A',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -674,7 +652,6 @@ class TestRequirements(TestAgent):
             policy_config='0x0A',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -704,7 +681,6 @@ class TestRequirements(TestAgent):
             policy_config='0x46',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -736,7 +712,6 @@ class TestRequirements(TestAgent):
             policy_config='0x46',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -763,7 +738,6 @@ class TestRequirements(TestAgent):
             policy_config='0x04',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -791,7 +765,6 @@ class TestRequirements(TestAgent):
             policy_config='0x96',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))
@@ -820,7 +793,6 @@ class TestRequirements(TestAgent):
             policy_config='0x105',
             bundle_dest_loc=BundleDestLoc.CLIN,
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY,
             use_bcb_rng=True
@@ -844,7 +816,6 @@ class TestRequirements(TestAgent):
             ],
             policy_config='0x165',
             key_set="data/key_set_1.json",
-            is_working=True,
             input_data_format=DataFormat.BUNDLEARRAY,
             expected_output_format=DataFormat.BUNDLEARRAY
         ))

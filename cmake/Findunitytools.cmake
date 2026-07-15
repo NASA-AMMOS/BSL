@@ -34,7 +34,7 @@ message(STATUS "Found unity at ${unity_DIR}")
 function(add_unity_test)
   set(options OPTIONAL )
   set(oneValueArgs TARGET MAIN_NAME)
-  set(multiValueArgs SOURCE)
+  set(multiValueArgs SOURCE TIMEOUT)
   cmake_parse_arguments(
     UNITYTEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN}
   )
@@ -44,6 +44,9 @@ function(add_unity_test)
 
   if(NOT UNITYTEST_TARGET)
     set(UNITYTEST_TARGET "${BASENAME}")
+  endif()
+  if(NOT UNITYTEST_TIMEOUT)
+    set(UNITYTEST_TIMEOUT "120")
   endif()
   
   set(GEN_PARAMS "--use_param_tests=1")
@@ -71,8 +74,11 @@ function(add_unity_test)
   add_test(
     NAME ${BASENAME}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND ${TEST_EXEC_PREFIX} "${CMAKE_CURRENT_BINARY_DIR}/${BASENAME}"
+    COMMAND
+        ${TEST_EXEC_PREFIX}
+        "${CMAKE_CURRENT_BINARY_DIR}/${BASENAME}"
   )
+  set_tests_properties(${BASENAME} PROPERTIES TIMEOUT ${UNITYTEST_TIMEOUT})
 
   if(TEST_INSTALL_PREFIX)
     install(

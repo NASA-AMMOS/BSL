@@ -51,6 +51,7 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->context_id       = src->context_id;
     self->target_block_num = src->target_block_num;
     self->sec_block_num    = src->sec_block_num;
+    self->sec_src_eid      = src->sec_src_eid;
     self->policy_action    = src->policy_action;
     self->conclusion       = src->conclusion;
     self->reason_code      = src->reason_code;
@@ -78,6 +79,7 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->context_id       = src->context_id;
     self->target_block_num = src->target_block_num;
     self->sec_block_num    = src->sec_block_num;
+    self->sec_src_eid      = src->sec_src_eid;
     self->policy_action    = src->policy_action;
     self->conclusion       = src->conclusion;
     self->reason_code      = src->reason_code;
@@ -196,6 +198,13 @@ uint64_t BSL_SecOper_GetTargetBlockNum(const BSL_SecOper_t *self)
     return self->target_block_num;
 }
 
+const BSL_HostEID_t *BSL_SecOper_GetSecuritySource(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+
+    return self->sec_src_eid;
+}
+
 const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, int64_t option_id)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
@@ -212,6 +221,12 @@ const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, int64_t 
     return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
 }
 
+size_t BSL_SecOper_ResultCount(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+
+    return BSLB_IdValPairPtrMap_size(self->_results);
+}
 const BSL_IdValPair_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, int64_t result_id)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));

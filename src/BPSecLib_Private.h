@@ -161,19 +161,6 @@ typedef enum
     BSL_POLICYACTION_DROP_BUNDLE    ///< Drop the entire bundle.
 } BSL_PolicyAction_e;
 
-/**
- * Helper function to print the ASCII encoding of a given byte stream to a given target buffer.
- *
- * @todo - Can be moved to backend.
- *
- * @param dstbuf Pointer to a buffer where the C string should go.
- * @param dstlen The length in bytes of @c dstbuf
- * @param srcbuf Pointer to the buffer containing the byte stream to be printed.
- * @param srclen The length in bytes of @c srcbuf.
- * @return A copy of @c dstbuf.
- */
-char *BSL_Log_DumpAsHexString(char *dstbuf, size_t dstlen, const uint8_t *srcbuf, size_t srclen);
-
 /** Determine if a particular severity is being logged.
  * This function is multi-thread safe.
  *
@@ -210,28 +197,6 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 #define BSL_LOG_DEBUG(...) BSL_LogEvent(LOG_DEBUG, __FILE__, __LINE__, __func__, __VA_ARGS__)
 // NOLINTEND(misc-include-cleaner)
 
-/** @def BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)
- * Log plaintext as hex for debugging only when enabled by compile option
- * ::BSL_LOG_PLAINTEXT_ENABLE is non-zero.
- *
- * @param title The static C string title.
- * @param ctc A correlating context pointer to log.
- * @param ptr The data start pointer.
- * @param len The data length.
- */
-#if BSL_LOG_PLAINTEXT_ENABLE
-#define BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)                                   \
-    do                                                                                \
-    {                                                                                 \
-        char logstr[2 * (len) + 1];                                                   \
-        BSL_LOG_DEBUG("PLAINTEXT STATE (ctx %p) " title ": %s", (void *)ctx,          \
-                      BSL_Log_DumpAsHexString(logstr, sizeof(logstr), (ptr), (len))); \
-    }                                                                                 \
-    while (false)
-#else
-#define BSL_LOG_PLAINTEXT_PTR(title, ctx, ptr, len)
-#endif // BSL_LOG_PLAINTEXT_ENABLE
-
 /** @brief Helpful macros for expressing invariants, pre/post conditions, and arg validation.
  * The expression is nominally true and only false during exceptional cases.
  */
@@ -246,7 +211,10 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
     }                                                                     \
     while (0) /* GCOV_EXCL_LINE */
 
-#define CHK_AS_BOOL(expr) CHK_TEMPL(expr, "Failed Property Check: Failed to satisfy", BSL_ERR_ARG_INVALID)
+/** Check a condition and return false if the condition is false.
+ * @param expr The condition which normally evaluates to true.
+ */
+#define CHK_AS_BOOL(expr) CHK_TEMPL(expr, "Failed Property Check: Failed to satisfy", false)
 
 #define CHK_ARG_EXPR(expr) \
     CHK_TEMPL(expr, "Illegal Argument: Argument expression check failed to satisfy", BSL_ERR_ARG_INVALID)
@@ -766,6 +734,14 @@ void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t targ
  */
 bool BSL_SecOper_IsConsistent(const BSL_SecOper_t *self);
 
+/** Get the security source for an operation.
+ * If the operation role is source, this is the local security EID, otherwise
+ * it is the EID from the ASB from which this operation originated.
+ *
+ * @return A non-null pointer to the EID struct.
+ */
+const BSL_HostEID_t *BSL_SecOper_GetSecuritySource(const BSL_SecOper_t *self);
+
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
  *
  * @param[in] self This security operation
@@ -781,6 +757,12 @@ const BSL_IdValPair_t *BSL_SecOper_FindOption(const BSL_SecOper_t *self, int64_t
  * @return Pointer to security parameter if found, otherwise NULL.
  */
 const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, int64_t param_id);
+
+/** Count the number of results present.
+ * @param[in] self The security operation
+ * @return The number of results.
+ */
+size_t BSL_SecOper_ResultCount(const BSL_SecOper_t *self);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
  *
@@ -981,75 +963,6 @@ const BSL_IdValPair_t *BSL_AbsSecBlock_FindResult(BSL_AbsSecBlock_t *self, uint6
 /** Increments a telemetry counter in the ctx based on telemetry index
  */
 int BSL_TlmCounters_IncrementCounter(BSL_LibCtx_t *bsl, BSL_TlmCounterIndex_e tlm_index, uint64_t count);
-
-/** @brief Represents the output following execution of a security operation.
- */
-typedef struct BSL_SecOutcome_s BSL_SecOutcome_t;
-
-/// @brief Returns the size of the ::BSL_SecOutcome_s structure.
-size_t BSL_SecOutcome_Sizeof(void);
-
-/** Populate a pre-allocated security outcome struct.
- *
- * @param[in,out] self Non-Null pointer to this security outcome.
- * @param[in] sec_oper Security operation containing the necessary info.
- */
-void BSL_SecOutcome_Init(BSL_SecOutcome_t *self, const BSL_SecOper_t *sec_oper);
-
-/** Release any resources owned by this security outcome.
- *
- * @param[in,out] self Non-Null pointer to this security outcome.
- */
-void BSL_SecOutcome_Deinit(BSL_SecOutcome_t *self);
-
-/** Return true if internal invariants hold
- *
- * @param[in] self This sec outcome.
- * @return true if invariants hold
- */
-bool BSL_SecOutcome_IsConsistent(const BSL_SecOutcome_t *self);
-
-/** Append a Security Result to this outcome.
- *
- * @param[in,out] self Non-NULL pointer to this security outcome.
- * @return Non-NULL pointer to security result just appended.
- */
-BSL_IdValPair_t *BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self);
-
-/** Get the result at index i. Panics if i is out of range.
- *
- * @param[in] self This outcome
- * @param[in] index Index in the list to retrieve
- * @return Sec Result at index
- */
-const BSL_IdValPair_t *BSL_SecOutcome_GetResultAtIndex(const BSL_SecOutcome_t *self, size_t index);
-
-/** Get the number of results
- *
- * @param[in] self this sec outcome
- * @return number of results in sec outcome
- */
-size_t BSL_SecOutcome_CountResults(const BSL_SecOutcome_t *self);
-
-/** Append a Security Parameter to this outcome.
- *
- * @param[in,out] self Non-NULL pointer to this security outcome.
- * @return Non-NULL pointer to the initialized security parameter.
- */
-BSL_IdValPair_t *BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self);
-
-/** @brief Returns number of parameters in this outcome.
- * @param[in] self This outcome
- * @return Number of parameters
- */
-size_t BSL_SecOutcome_CountParams(const BSL_SecOutcome_t *self);
-
-/** Get the security parameter from the security outcome at the provided index
- * @param[in] self security outcome
- * @param[in] index index to retrieve security parameter from
- * @return Security parameter
- */
-const BSL_IdValPair_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, size_t index);
 
 /**
  * @return size of security operation
@@ -1290,13 +1203,19 @@ struct BSL_SecCtxDesc_s
  */
 int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                       BSL_SecOper_t *sec_oper);
-/// @overload execute as verifier
+/** Internal function to execute an operation as verifier or acceptor.
+ * @overload
+ */
 int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                                 BSL_SecOper_t *sec_oper);
-/// @overload execute as source
+/** Internal function to execute an operation as source.
+ * @overload
+ */
 int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                       BSL_SecOper_t *sec_oper);
-/// @overload execute as verifier
+/** Internal function to execute an operation as verifier or acceptor.
+ * @overload
+ */
 int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                                 BSL_SecOper_t *sec_oper);
 

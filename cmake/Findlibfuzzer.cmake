@@ -17,7 +17,7 @@ add_compile_options(
 function(add_fuzz_test)
   set(options OPTIONAL )
   set(oneValueArgs TARGET RUNS_COUNT)
-  set(multiValueArgs SOURCE EXTRA_ARGS)
+  set(multiValueArgs SOURCE EXTRA_ARGS TIMEOUT)
   cmake_parse_arguments(
     FUZZTEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN}
   )
@@ -31,6 +31,9 @@ function(add_fuzz_test)
   endif()
   if(NOT FUZZTEST_RUNS_COUNT)
     set(FUZZTEST_RUNS_COUNT "1000000")
+  endif()
+  if(NOT FUZZTEST_TIMEOUT)
+    set(FUZZTEST_TIMEOUT "120")
   endif()
 
   message(STATUS "Adding fuzz test ${FUZZTEST_TARGET} from ${ABSOLUTE_SOURCE}")
@@ -61,6 +64,7 @@ function(add_fuzz_test)
       -detect_leaks=1
       ${FUZZTEST_EXTRA_ARGS}
   )
+  set_tests_properties(${BASENAME} PROPERTIES TIMEOUT ${FUZZTEST_TIMEOUT})
 
   if(TEST_INSTALL_PREFIX)
     install(

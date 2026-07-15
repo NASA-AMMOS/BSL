@@ -69,23 +69,36 @@ static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_n
     return retval;
 }
 
-/** Common handling of informing new ASB content after an operation.
+/** Common handling of needed ASB content before an operation.
  */
-static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                                  BSL_AbsSecBlock_t *asb)
+static int BSL_ExecAnySource_Pre(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle _U_, BSL_SecOper_t *sec_oper,
+                                 BSL_AbsSecBlock_t *asb)
 {
-    BSL_CanonicalBlock_t sec_blk;
-    if (BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk) != BSL_SUCCESS)
-    {
-        BSL_LOG_ERR("Failed to get security block");
-        return BSL_ERR_HOST_CALLBACK_FAILED;
-    }
-
     asb->sec_context_id = sec_oper->context_id;
 
     if (BSL_SUCCESS != BSL_Host_GetSecSrcEID(&asb->source_eid))
     {
         BSL_LOG_ERR("Failed to get host EID");
+        return BSL_ERR_HOST_CALLBACK_FAILED;
+    }
+
+    sec_oper->sec_src_eid = &asb->source_eid;
+
+    return BSL_SUCCESS;
+}
+
+/** Common handling of informing new ASB content after an operation.
+ */
+static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper,
+                                  BSL_AbsSecBlock_t *asb)
+{
+    // un-reference outside of execution
+    sec_oper->sec_src_eid = NULL;
+
+    BSL_CanonicalBlock_t sec_blk;
+    if (BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk) != BSL_SUCCESS)
+    {
+        BSL_LOG_ERR("Failed to get security block");
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
 
@@ -127,6 +140,8 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
 
+    int retval = BSL_SUCCESS;
+
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_SOURCE_COUNT, 1);
 
     // policy may request a block number
@@ -134,38 +149,52 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to create BIB block, error=%d", res);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_BUNDLE_OPERATION_FAILED;
+        retval = BSL_ERR_BUNDLE_OPERATION_FAILED;
     }
-    BSL_LOG_DEBUG("Created new BIB block number = %" PRIu64, sec_oper->sec_block_num);
-    CHK_PROPERTY(sec_oper->sec_block_num > 1);
-
-    const int bib_result = (*sec_context_fn)(lib, bundle, sec_oper);
-    if (bib_result != 0)
+    else
     {
-        BSL_LOG_ERR("BIB Source failed!");
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_SECURITY_OPERATION_FAILED;
-    }
-
-    BSL_CanonicalBlock_t sec_blk;
-    if (BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk) != BSL_SUCCESS)
-    {
-        BSL_LOG_ERR("Could not get BIB block (num=%" PRIu64 ")", sec_oper->sec_block_num);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_SECURITY_OPERATION_FAILED;
+        BSL_LOG_DEBUG("Created new BIB block number = %" PRIu64, sec_oper->sec_block_num);
+        CHK_PROPERTY(sec_oper->sec_block_num > 1);
     }
 
     BSL_AbsSecBlock_t asb;
     BSL_AbsSecBlock_Init(&asb);
-    res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, &asb);
-    if (BSL_SUCCESS != res)
+    if (BSL_SUCCESS == retval)
     {
+        res = BSL_ExecAnySource_Pre(lib, bundle, sec_oper, &asb);
+        if (BSL_SUCCESS != res)
+        {
+            retval = BSL_ERR_BUNDLE_OPERATION_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS == retval)
+    {
+        res = (*sec_context_fn)(lib, bundle, sec_oper);
+        if (res != 0)
+        {
+            BSL_LOG_ERR("BIB Source failed!");
+            retval = BSL_ERR_SECURITY_OPERATION_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS == retval)
+    {
+        res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, &asb);
+        if (BSL_SUCCESS != res)
+        {
+            retval = BSL_ERR_SECURITY_OPERATION_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS != retval)
+    {
+        // any failure
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
     }
 
     BSL_AbsSecBlock_Deinit(&asb);
-    return res;
+    return retval;
 }
 
 /** Common handling of binding to existing ASB content from an operation.
@@ -202,6 +231,9 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, BSL_BundleRef_t *b
     BSL_Data_Deinit(&btsd_copy);
 
     CHK_PROPERTY(BSL_AbsSecBlock_IsConsistent(asb));
+
+    // reference to persistent instance
+    sec_oper->sec_src_eid = &asb->source_eid;
 
     // reference all parameters
     BSLB_IdValPairPtrList_it_t param_iter;
@@ -272,6 +304,9 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
+
+    // un-reference outside of execution
+    sec_oper->sec_src_eid = NULL;
 
     // If secop is to verify, processing is complete
     if (BSL_SecOper_IsRoleVerifier(sec_oper))
@@ -398,6 +433,8 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
 
+    int retval = BSL_SUCCESS;
+
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_SOURCE_COUNT, 1);
 
     // policy may request a block number
@@ -405,31 +442,56 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to create BCB block, error=%d", res);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_HOST_CALLBACK_FAILED;
+        retval = BSL_ERR_BUNDLE_OPERATION_FAILED;
     }
-    BSL_LOG_DEBUG("Created new BCB block number = %" PRIu64, sec_oper->sec_block_num);
-    CHK_PROPERTY(sec_oper->sec_block_num > 1);
-
-    res = (*sec_context_fn)(lib, bundle, sec_oper);
-    if (res != 0)
+    else
     {
-        BSL_LOG_ERR("BCB Source failed!");
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_SECURITY_OPERATION_FAILED;
+        BSL_LOG_DEBUG("Created new BCB block number = %" PRIu64, sec_oper->sec_block_num);
+        CHK_PROPERTY(sec_oper->sec_block_num > 1);
     }
-    BSL_LOG_INFO("BCB SOURCE operation success.");
 
     BSL_AbsSecBlock_t asb;
     BSL_AbsSecBlock_Init(&asb);
-    res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, &asb);
-    if (BSL_SUCCESS != res)
+    if (BSL_SUCCESS == retval)
     {
+        res = BSL_ExecAnySource_Pre(lib, bundle, sec_oper, &asb);
+        if (BSL_SUCCESS != res)
+        {
+            retval = BSL_ERR_BUNDLE_OPERATION_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS == retval)
+    {
+        res = (*sec_context_fn)(lib, bundle, sec_oper);
+        if (res != 0)
+        {
+            BSL_LOG_ERR("BCB Source failed!");
+            retval = BSL_ERR_SECURITY_OPERATION_FAILED;
+        }
+        else
+        {
+            BSL_LOG_DEBUG("BCB SOURCE operation success.");
+        }
+    }
+
+    if (BSL_SUCCESS == retval)
+    {
+        res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, &asb);
+        if (BSL_SUCCESS != res)
+        {
+            retval = BSL_ERR_SECURITY_OPERATION_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS != retval)
+    {
+        // any failure
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
     }
 
     BSL_AbsSecBlock_Deinit(&asb);
-    return res;
+    return retval;
 }
 
 int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,

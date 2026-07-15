@@ -52,6 +52,7 @@ calloc
 CALLOC
 Carsten
 CBOR
+CCSDS
 cek
 centric
 CFE
@@ -97,6 +98,7 @@ eid
 Encodings
 enum
 Enum
+ESA
 FFI
 filesystem
 FIPS
@@ -106,6 +108,7 @@ Frontend
 GCM
 Heiner
 Henk
+HKDF
 hmac
 Housley
 html

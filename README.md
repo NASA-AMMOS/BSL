@@ -59,10 +59,10 @@ _Note!_ BSL uses **Red Hat Enterprise Linux (RHEL 9)** as the target build envir
 The following should be installable by the system package manager:
 
 _Required: Build and Run Unit Tests_
- * CMake, GCC or Clang, OpenSSL (Development), Ninja Build, Valgrind, Memcheck.
+ * CMake, GCC or Clang, OpenSSL (Development), Ninja Build, Valgrind, Memcheck, Ruby, jansson-devel.
 
 _Optional: To Construct Docs, etc..._
- * Doxygen, Ruby, gcovr (as Python package), graphviz, plantuml, texlive-bibtex, asciidoctor.
+ * Doxygen, gcovr (as Python package), graphviz, plantuml, texlive-bibtex, asciidoctor.
 
 ## Building BSL
 

@@ -29,6 +29,7 @@
 #include <BPSecLib_Private.h>
 
 #include "AbsSecBlock.h"
+#include "TextUtil.h"
 #include "CBOR.h"
 
 void BSL_AbsSecBlock_Target_Init(BSL_AbsSecBlock_Target_t *self)
@@ -70,9 +71,10 @@ static void BSL_IdValPair_Print(const BSL_IdValPair_t *pair, const char *label, 
         BSL_Data_t val;
         BSL_IdValPair_GetAsBytestr(pair, &val);
 
-        char hex_str[2 * val.len + 1];
-        BSL_Log_DumpAsHexString(hex_str, sizeof(hex_str), val.ptr, val.len);
-        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, pair->id, hex_str);
+        BSL_Data_t hex_str = BSL_DATA_INIT_NULL;
+        BSL_TextUtil_Base16_Encode(&hex_str, &val, false);
+        BSL_LOG_DEBUG("ASB  %s[%zu]: id=%" PRIu64 " val=%s", label, index, pair->id, hex_str.ptr);
+        BSL_Data_Deinit(&hex_str);
     }
     else if (BSL_IdValPair_IsTextstr(pair))
     {
@@ -304,32 +306,10 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
         QCBOREncode_AddUInt64(enc, flags);
     }
 
-    if (QCBOREncode_IsBufferNULL(enc))
+    int res = BSL_CBOR_EncodeEID(enc, &asb->source_eid);
+    if (res != BSL_SUCCESS)
     {
-        size_t needlen;
-        int    encode_result = BSL_HostEID_EncodeToCBOR(&asb->source_eid, NULL, &needlen);
-        if (encode_result != BSL_SUCCESS)
-        {
-            BSL_LOG_ERR("Failed to encode EID");
-            return BSL_ERR_ENCODING;
-        }
-
-        QCBOREncode_AddEncoded(enc, (UsefulBufC) { .ptr = NULL, .len = needlen });
-    }
-    else
-    {
-        BSL_Data_t eid_data;
-        BSL_Data_Init(&eid_data);
-        int encode_result = BSL_HostEID_EncodeToCBOR(&asb->source_eid, &eid_data, NULL);
-        if (encode_result != BSL_SUCCESS)
-        {
-            BSL_LOG_ERR("Failed to encode EID");
-            BSL_Data_Deinit(&eid_data);
-            return BSL_ERR_ENCODING;
-        }
-
-        QCBOREncode_AddEncoded(enc, UsefulBufC_FROM_BSL_Data(eid_data));
-        BSL_Data_Deinit(&eid_data);
+        return res;
     }
 
     if (!BSLB_IdValPairPtrList_empty_p(asb->params))

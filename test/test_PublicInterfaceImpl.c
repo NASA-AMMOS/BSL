@@ -53,7 +53,6 @@ typedef struct
     BSL_IdValPair_t opt_aes_variant_128;
     BSL_IdValPair_t opt_aes_variant_256;
     BSL_IdValPair_t opt_aad_scope_flag;
-    BSL_IdValPair_t param_iv;
     BSL_IdValPair_t param_wrapped_key;
     BSL_IdValPair_t opt_test_bib_key_correct;
     BSL_IdValPair_t opt_test_bib_key_bad;
@@ -81,7 +80,6 @@ void PublicInterfaceTestCtx_init(BSL_TestPublInterfaceCtx_t *ctx)
     BSL_IdValPair_Init(&ctx->opt_aes_variant_128);
     BSL_IdValPair_Init(&ctx->opt_aes_variant_256);
     BSL_IdValPair_Init(&ctx->opt_aad_scope_flag);
-    BSL_IdValPair_Init(&ctx->param_iv);
     BSL_IdValPair_Init(&ctx->param_wrapped_key);
     BSL_IdValPair_Init(&ctx->opt_bib_use_wrap_key);
     BSL_IdValPair_Init(&ctx->opt_bib_dont_use_wrap_key);
@@ -104,7 +102,6 @@ void PublicInterfaceTestCtx_deinit(BSL_TestPublInterfaceCtx_t *ctx)
     BSL_IdValPair_Deinit(&ctx->opt_aes_variant_128);
     BSL_IdValPair_Deinit(&ctx->opt_aes_variant_256);
     BSL_IdValPair_Deinit(&ctx->opt_aad_scope_flag);
-    BSL_IdValPair_Deinit(&ctx->param_iv);
     BSL_IdValPair_Deinit(&ctx->param_wrapped_key);
     BSL_IdValPair_Deinit(&ctx->opt_bib_use_wrap_key);
     BSL_IdValPair_Deinit(&ctx->opt_bib_dont_use_wrap_key);
@@ -151,9 +148,10 @@ void setUp(void)
 
     BSL_Data_t wrapkey_data;
     BSL_Data_Init(&wrapkey_data);
-    wrapkey_data.ptr = (uint8_t *)ApxA2_WrappedKey;
-    wrapkey_data.len = sizeof(ApxA2_WrappedKey);
+    TEST_ASSERT_EQUAL_INT(
+        0, BSL_TestUtils_DecodeBase16_cstr(&wrapkey_data, "69c411276fecddc4780df42c8a2af89296fabf34d7fae700"));
     BSL_IdValPair_SetBytestr(&ctx.param_wrapped_key, BSLX_BCB_OPT_WRAPPED_KEY, wrapkey_data);
+    BSL_Data_Deinit(&wrapkey_data);
 
     BSL_IdValPair_SetInt64(&ctx.opt_bib_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 1);
     BSL_IdValPair_SetInt64(&ctx.opt_bib_dont_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
@@ -226,7 +224,6 @@ void setUp(void)
                              BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_5), &ctx.opt_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_5), &ctx.param_iv);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_5), &ctx.param_wrapped_key);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_5), &ctx.opt_aes_variant_128);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_5), &ctx.opt_bcb_use_wrap_key);
@@ -239,7 +236,6 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_6, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.6)", 2, BSL_SECROLE_ACCEPTOR,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_6), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_6), &ctx.param_iv);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_6), &ctx.param_wrapped_key);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_6), &ctx.opt_aes_variant_128);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_6), &ctx.opt_bcb_use_wrap_key);
@@ -252,7 +248,6 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_7, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.7)", 2, BSL_SECROLE_ACCEPTOR,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_7), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_7), &ctx.param_iv);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_7), &ctx.param_wrapped_key);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_7), &ctx.opt_aes_variant_128);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_7), &ctx.opt_bcb_use_wrap_key);
@@ -265,7 +260,6 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_8, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.8)", 2, BSL_SECROLE_ACCEPTOR,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_8), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_8), &ctx.param_iv);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_8), &ctx.param_wrapped_key);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_8), &ctx.opt_aes_variant_128);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_8), &ctx.opt_bcb_use_wrap_key);
@@ -293,7 +287,6 @@ void setUp(void)
                              BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9b), &ctx.opt_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9b), &ctx.param_iv);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9b), &ctx.param_wrapped_key);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9b), &ctx.opt_aes_variant_128);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9b), &ctx.opt_bcb_use_wrap_key);
@@ -407,7 +400,6 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_21, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.5)", 2, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_21), &ctx.opt_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_21), &ctx.param_iv);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_21), &ctx.param_wrapped_key);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_21), &ctx.opt_aes_variant_128);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_21), &ctx.opt_bcb_use_wrap_key);
@@ -420,7 +412,6 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_22, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.6)", 2, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_22), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_22), &ctx.param_iv);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_22), &ctx.param_wrapped_key);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_22), &ctx.opt_aes_variant_128);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_22), &ctx.opt_bcb_use_wrap_key);
@@ -433,7 +424,6 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_23, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.7)", 2, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_23), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_23), &ctx.param_iv);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_23), &ctx.param_wrapped_key);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_23), &ctx.opt_aes_variant_128);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_23), &ctx.opt_bcb_use_wrap_key);
@@ -446,7 +436,6 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_24, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.8)", 2, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_24), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_24), &ctx.param_iv);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_24), &ctx.param_wrapped_key);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_24), &ctx.opt_aes_variant_128);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_24), &ctx.opt_bcb_use_wrap_key);
@@ -474,7 +463,6 @@ void setUp(void)
                              BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_25b), &ctx.opt_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_25b), &ctx.param_iv);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_25b), &ctx.param_wrapped_key);
     BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_25b), &ctx.opt_aes_variant_128);
     BSLP_PolicyProvider_AddRule(policy, &rule_25b, &predicate_25b);
