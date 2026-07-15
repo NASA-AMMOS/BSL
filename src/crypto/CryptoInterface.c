@@ -218,7 +218,8 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     pthread_mutex_unlock(&kek->stats_mutex);
 
     BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
-    int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, (int *)&cek->raw.len, wrapped_key->ptr, wrapped_key->len);
+    int decrypted_out_len = 0;
+    int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, &decrypted_out_len, wrapped_key->ptr, wrapped_key->len);
     if (decrypt_res != 1)
     {
         BSL_LOG_ERR("EVP_DecryptUpdate: %s", ERR_error_string(ERR_get_error(), NULL));
@@ -226,6 +227,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
         BSL_CryptoKeyPtr_release(cek_ptr);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+    cek->raw.len = (size_t)decrypted_out_len;
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int     final_len = 0;
