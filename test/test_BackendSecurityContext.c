@@ -406,8 +406,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecOper_Populate(&bib_oper_primary, 1, 0, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
                          BSL_POLICYACTION_DROP_BLOCK);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bib_oper_primary, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
-    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_primary, BSLX_BIB_OPT_SHA_VARIANT),
-                         RFC9173_BIB_SHA_HMAC256);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_primary, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC256);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_primary, BSLX_BIB_OPT_SCOPE), 0);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_primary, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
 
@@ -416,8 +415,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecOper_Populate(&bib_oper_ext_block, 1, 2, 4, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
                          BSL_POLICYACTION_DROP_BLOCK);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
-    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_SHA_VARIANT),
-                         RFC9173_BIB_SHA_HMAC256);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC256);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_SCOPE), 0);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
 

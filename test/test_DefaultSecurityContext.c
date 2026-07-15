@@ -161,7 +161,8 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
 
     // Confirm the output produces one result (the AES-GCM auth code)
     TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&bcb_test_context.sec_oper));
-    const BSL_Variant_t *auth_tag_result = BSL_SecOper_FindResult(&bcb_test_context.sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
+    const BSL_Variant_t *auth_tag_result =
+        BSL_SecOper_FindResult(&bcb_test_context.sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
     TEST_ASSERT_NOT_NULL(auth_tag_result);
 
     {
@@ -259,8 +260,8 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     const BSL_Variant_t *result;
-    BIBTestContext         bibcontext;
-    BCBTestContext         bcbcontext;
+    BIBTestContext       bibcontext;
+    BCBTestContext       bcbcontext;
     BIBTestContext_Init(&bibcontext);
     BCBTestContext_Init(&bcbcontext);
     if (bib)

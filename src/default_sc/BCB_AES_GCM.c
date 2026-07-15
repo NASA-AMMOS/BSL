@@ -716,8 +716,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecOper
         if (bcb_context.wrapped_key.len > 0)
         {
             BSL_LOG_INFO("Appending BCB wrapped key param");
-            BSL_Variant_t *aes_wrapped_key_param =
-                BSL_SecOper_AddParam(sec_oper, RFC9173_BCB_SECPARAM_WRAPPEDKEY);
+            BSL_Variant_t *aes_wrapped_key_param = BSL_SecOper_AddParam(sec_oper, RFC9173_BCB_SECPARAM_WRAPPEDKEY);
             BSL_Variant_SetBytestr(aes_wrapped_key_param, bcb_context.wrapped_key);
         }
 

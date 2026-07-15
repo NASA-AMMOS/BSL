@@ -63,8 +63,7 @@ void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e rol
     BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BIB_HMAC_SHA2, 1, 2, BSL_SECBLOCKTYPE_BIB, role,
                          BSL_POLICYACTION_DROP_BLOCK);
 
-    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&context->sec_oper, BSLX_BIB_OPT_SHA_VARIANT),
-                         RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&context->sec_oper, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&context->sec_oper, BSLX_BIB_OPT_SCOPE), 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&context->sec_oper, BSLX_BIB_OPT_KEY_ID), key_id);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&context->sec_oper, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
