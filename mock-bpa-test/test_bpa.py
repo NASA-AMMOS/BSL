@@ -25,11 +25,9 @@ import io
 import logging
 import os
 import select
-import signal
 import socket
 import subprocess
-import time
-from typing import Any, List, Optional
+from typing import Any, Optional
 import unittest
 import cbor2
 from cbor_diag import diag2cbor, cbor2diag

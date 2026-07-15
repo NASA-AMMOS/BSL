@@ -27,7 +27,6 @@ import logging
 import os
 import tempfile
 from typing import Any, Dict
-import unittest
 from _test_util import _TestCase, DataFormat, BundleDestLoc
 from test_bpa import TestAgent
 
@@ -440,31 +439,6 @@ class TestCoseScEncrypt(TestAgent):
             key_set="data/cose-sc/keyset-1.cbordiag",
             input_data_format=DataFormat.CBORDIAG,
             expected_output_format=DataFormat.CBORDIAG
-        ))
-
-    def test_exampleA_6_acceptor_valid_loose(self):
-        self._single_test(_TestCase(
-            input_data=EXAMPLE_A_6_WITH_BCB,
-            expected_output=EXAMPLE_A_NO_SEC,
-            sec_src_eid='dtn://dst/',
-            policy_config='data/cose-sc/policy-any-bcb-accept.json',
-            bundle_dest_loc=BundleDestLoc.APPIN,
-            key_set="data/cose-sc/keyset-1.cbordiag",
-            input_data_format=DataFormat.CBORDIAG,
-            expected_output_format=DataFormat.CBORDIAG
-        ))
-
-    def test_exampleA_6_source(self):
-        """ The salt header is non-deterministic """
-        self._single_test(_TestCase(
-            input_data=EXAMPLE_A_NO_SEC,
-            expected_output=None,
-            sec_src_eid='dtn://src/',
-            policy_config='data/cose-sc/policy-exA.6-source.json',
-            bundle_dest_loc=BundleDestLoc.APPIN,
-            key_set="data/cose-sc/keyset-1.cbordiag",
-            input_data_format=DataFormat.CBORDIAG,
-            expected_output_format=DataFormat.ANYCBOR
         ))
 
     def test_exampleA_6_acceptor_valid_loose(self):

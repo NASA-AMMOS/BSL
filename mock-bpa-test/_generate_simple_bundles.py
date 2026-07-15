@@ -25,7 +25,6 @@ import hashlib
 import io
 
 from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
 
 # HMAC signs, encrypts, or decrypts payload string
 # This is a really messy function for now

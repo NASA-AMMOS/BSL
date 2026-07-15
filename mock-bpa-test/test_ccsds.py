@@ -22,7 +22,6 @@
 import yaml
 import cbor2
 import binascii
-import tempfile
 import json
 from _test_util import _TestCase, DataFormat, BundleDestLoc
 from test_bpa import TestAgent
@@ -44,9 +43,6 @@ def load_ccsds():
     except FileNotFoundError:
         print(f'Could not find {ccsds_spec_file}')
         return
-
-    with tempfile.TemporaryDirectory() as ccsds_test_dir:
-        print(f"Temporary directory for CCSDS test PP JSON: {ccsds_test_dir}")
 
     requirements = yaml.safe_load(s)['requirements']
     for item in requirements:
