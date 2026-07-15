@@ -29,6 +29,7 @@
 #include <backend/CBOR.h>
 #include <cose_sc/CoseMsg.h>
 #include <m-string.h>
+#include <jansson.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>

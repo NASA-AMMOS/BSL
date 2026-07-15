@@ -134,11 +134,12 @@ set_target_properties(bsl_sample_pp
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-target_link_libraries(bsl_sample_pp PUBLIC bsl_front bsl_dynamic)
-# contexts for config options
-target_link_libraries(bsl_sample_pp PUBLIC bsl_default_sc bsl_cose_sc)
+target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
+target_link_libraries(bsl_sample_pp PRIVATE bsl_dynamic)
+# contexts linked-to for config options in headers
+target_link_libraries(bsl_sample_pp INTERFACE bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
-target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
+target_link_libraries(bsl_sample_pp PRIVATE Jansson::Jansson)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H
@@ -217,7 +218,7 @@ set_target_properties(bsl_mock_bpa
 )
 target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
 target_link_libraries(bsl_mock_bpa PUBLIC qcbor::qcbor)
-target_link_libraries(bsl_mock_bpa PUBLIC Jansson::Jansson)
+target_link_libraries(bsl_mock_bpa PRIVATE Jansson::Jansson)
 target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_cose_sc bsl_sample_pp)
 
 if(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)
