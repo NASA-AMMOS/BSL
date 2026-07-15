@@ -433,8 +433,8 @@ void test_sec_accept_keyunwrap(bool bib)
     }
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
-    BIBTestContext    bibcontext;
-    BCBTestContext    bcbcontext;
+    BIBTestContext bibcontext;
+    BCBTestContext bcbcontext;
     BIBTestContext_Init(&bibcontext);
     BCBTestContext_Init(&bcbcontext);
     if (bib)

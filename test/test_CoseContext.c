@@ -342,8 +342,8 @@ void test_AppendixA_Example1_BIB_Source(void)
     TEST_ASSERT_TRUE(valid_status);
 
     // Confirm running operation as source executes without error
-    int exec_status = BSL_ExecBIBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
-                                        &sec_oper);
+    int exec_status =
+        BSL_ExecBIBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     // Confirm it produced only 1 result
@@ -626,8 +626,8 @@ void test_CCSDS_Example_Mac_Source(void)
     TEST_ASSERT_TRUE(valid_status);
 
     // Confirm running operation as source executes without error
-    int exec_status = BSL_ExecBIBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
-                                        &sec_oper);
+    int exec_status =
+        BSL_ExecBIBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     // Confirm it produced only 1 result
@@ -896,8 +896,8 @@ void test_AppendixA_Example4_BCB_Source(void)
     TEST_ASSERT_TRUE(valid_status);
 
     // Confirm running operation as source executes without error
-    int exec_status = BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
-                                        &sec_oper);
+    int exec_status =
+        BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     // Confirm it produced only 1 result
@@ -1183,8 +1183,8 @@ void test_AppendixA_Example5_BCB_Source(void)
     TEST_ASSERT_TRUE(valid_status);
 
     // Confirm running operation as source executes without error
-    int exec_status = BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
-                                        &sec_oper);
+    int exec_status =
+        BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     // Confirm it produced only 1 result
@@ -1466,8 +1466,8 @@ void test_AppendixA_Example6_BCB_Source(void)
     TEST_ASSERT_TRUE(valid_status);
 
     // Confirm running operation as source executes without error
-    int exec_status = BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
-                                        &sec_oper);
+    int exec_status =
+        BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     // Confirm it produced only 1 result

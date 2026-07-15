@@ -119,11 +119,7 @@ typedef enum
     BSL_BUNDLECRCTYPE_32 = 2,
 } BSL_BundleCRCType_e;
 
-#define BSL_TLM_COUNTERS_ZERO \
-    (BSL_TlmCounters_t)       \
-    {                         \
-        0                     \
-    }
+#define BSL_TLM_COUNTERS_ZERO (BSL_TlmCounters_t) { 0 }
 
 /** @brief Defined indices for the counter structure to hold telemetry and counts
  *
@@ -320,9 +316,12 @@ typedef struct
 } BSL_DynMemHostDescriptors_t;
 
 /// Default heap functions from libc
-#define BSL_DynMemHostDescriptors_DEFAULT                                                 \
-    {                                                                                     \
-        .malloc_cb = malloc, .realloc_cb = realloc, .calloc_cb = calloc, .free_cb = free, \
+#define BSL_DynMemHostDescriptors_DEFAULT \
+    {                                     \
+        .malloc_cb  = malloc,             \
+        .realloc_cb = realloc,            \
+        .calloc_cb  = calloc,             \
+        .free_cb    = free,               \
     }
 
 /** Dynamic BPA descriptor.
