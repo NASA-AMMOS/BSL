@@ -59,14 +59,11 @@ static bool BSL_TestSecCtx_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, 
     return (sec_oper->target_block_num != 111);
 }
 
-static int BSL_TestSecCtx_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                                  BSL_SecOutcome_t *sec_outcome)
+static int BSL_TestSecCtx_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
 {
     (void)lib;
     (void)bundle;
     (void)sec_oper;
-    (void)sec_outcome;
-
     return BSL_SUCCESS;
 }
 
@@ -188,8 +185,8 @@ void test_SecurityContext_BIB_Source(void)
  * Steps:
  *  - Get a BIB secured bundle from RFC9173 Appendix A1.4.
  *  - Create a BIB-Verify security operation with hard-coded arguments (From RFC9173 A1 ASB)
- *  - Use the high-level security context interface to create a security outcome.
- *  - Confirm the bundle's BIB HMAC matches the outcome's HMAC.
+ *  - Use the high-level security context interface to execute a security operation.
+ *  - Confirm the bundle's BIB HMAC matches the operation's HMAC.
  *
  * Notes:
  *  - Common repeated patterns are in the process of being factored out
@@ -227,11 +224,11 @@ void test_SecurityContext_BIB_Verifier(void)
  *  - Get a BIB secured bundle from RFC9173 Appendix A1.4.
  *  - Create a BIB-Verify security operation with hard-coded arguments (From RFC9173 A1 ASB)
  *  - Manipulate the arguments so they use a different key
- *  - Use the high-level security context interface to create a security outcome.
+ *  - Use the high-level security context interface to execute a security operation.
  *  - Confirm that the execution failed (return code != 0)
  *
  * Notes:
- *  - Check more than return code, look deeper into outcome.
+ *  - Check more than return code, look deeper into operation.
  */
 void test_SecurityContext_BIB_Verifier_Failure(void)
 {
@@ -271,7 +268,7 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
  * Steps:
  *  - Get a BIB secured bundle from RFC9173 Appendix A1.4.
  *  - Create a BIB-Acceptor security operation with hard-coded arguments (From RFC9173 A1 ASB)
- *  - Use the high-level security context interface to create a security outcome.
+ *  - Use the high-level security context interface to execute a security operation.
  *  - Confirm that the execution succeeds.
  *  - Check that the BIB result was removed from the bundle (by making sure the encoding matches bundle in A1.1)
  *

@@ -325,10 +325,7 @@ int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t bufsize);
 /** Static initializer for an invalid ::BSL_HostEID_t.
  * Even after this, BSL_HostEID_Init() must be used to get into a valid state.
  */
-#define BSL_HOSTEID_INIT_INVALID \
-    {                            \
-        .handle = NULL           \
-    }
+#define BSL_HOSTEID_INIT_INVALID { .handle = NULL }
 
 /** Initialize an abstract EID.
  *
@@ -382,10 +379,7 @@ int BSL_HostEID_EncodeToCBOR(const BSL_HostEID_t *eid, BSL_Data_t *encoded_bytes
 /** Static initializer for an invalid ::BSL_HostEIDPattern_t.
  * Even after this, BSL_HostEIDPattern_Init() must be used to get into a valid state.
  */
-#define BSL_HOSTEID_INIT_INVALID \
-    {                            \
-        .handle = NULL           \
-    }
+#define BSL_HOSTEID_INIT_INVALID { .handle = NULL }
 
 /** Initialize an abstract EID Pattern.
  *
@@ -826,6 +820,42 @@ void BSL_SecOper_AppendOption(BSL_SecOper_t *self, const BSL_IdValPair_t *option
  */
 void BSL_SecOper_AppendParam(BSL_SecOper_t *self, const BSL_IdValPair_t *param);
 
+/** Add an empty security parameter.
+ *
+ * @param[in,out] self This security operation.
+ * @param[in] param_id Security parameter ID.
+ * @return The parameter owned by this operation.
+ */
+BSL_IdValPair_t *BSL_SecOper_AddParam(BSL_SecOper_t *self, int64_t param_id);
+
+/** Add an empty security result.
+ *
+ * @param[in,out] self This security operation.
+ * @param[in] result_id Security result ID.
+ * @return The result owned by this operation.
+ */
+BSL_IdValPair_t *BSL_SecOper_AddResult(BSL_SecOper_t *self, int64_t result_id);
+
+/** Get the count of parameters contained within this security operation.
+ *
+ * @param[in] self This security operation
+ * @return Count of security parameters.
+ */
+size_t BSL_SecOper_CountParams(const BSL_SecOper_t *self);
+
+/** Get the count of results contained within this security operation.
+ *
+ * @param[in] self This security operation
+ * @return Count of security results.
+ */
+size_t BSL_SecOper_CountResults(const BSL_SecOper_t *self);
+
+/** Clear all parameters and results contained within this security operation.
+ *
+ * @param[in,out] self This security operation
+ */
+void BSL_SecOper_ClearParamsAndResults(BSL_SecOper_t *self);
+
 /** Return true if this security operation's role is SOURCE
  * @param[in] self This Security Operation
  * @return boolean
@@ -1240,13 +1270,10 @@ typedef bool (*BSL_SecCtx_Validate_f)(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle
  *
  * @param[in] lib The library context.
  * @param[in,out] bundle The bundle to modify.
- * @param[in] sec_oper The security operation to perform.
- * @param[in] asb For verifier or acceptor, this is the existing ASB structure.
- * @param[in,out] sec_outcome The pre-allocated outcome to populate
+ * @param[in, out] sec_oper Security operation inputs and generated outputs.
  * @return 0 if security operation performed successfully.
  */
-typedef int (*BSL_SecCtx_Execute_f)(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                                    BSL_SecOutcome_t *sec_outcome);
+typedef int (*BSL_SecCtx_Execute_f)(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);
 
 /** @brief Security Context descriptor (interface)
  */
@@ -1262,16 +1289,16 @@ struct BSL_SecCtxDesc_s
  * @warning This is exposed for testing only.
  */
 int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                      BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
+                      BSL_SecOper_t *sec_oper);
 /// @overload execute as verifier
 int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                                BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
+                                BSL_SecOper_t *sec_oper);
 /// @overload execute as source
 int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                      BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
+                      BSL_SecOper_t *sec_oper);
 /// @overload execute as verifier
 int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                                BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
+                                BSL_SecOper_t *sec_oper);
 
 #ifdef __cplusplus
 } // extern C

@@ -82,7 +82,7 @@ void tearDown(void)
  *  - Decode it into a BSL_BundleCtx struct
  *  - Create a BIB security operation with hard-coded arguments (From RFC9173 A1 ASB)
  *  - Run the DefaultSecuritContext's BSLX_BIB_Execute function and confirm result is 0.
- *  - Capture the outcome from the above function to confirm 1 result (the authentication code)
+ *  - Check the operation after the above function to confirm 1 result (the authentication code)
  *  - Capture the auth code and ensure it matches the value in the test vector.
  *
  * Notes:
@@ -101,17 +101,14 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     BIBTestContext_Init(&bib_test_context);
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_SOURCE, RFC9173_EXAMPLE_A1_KEY);
 
-    BSL_SecOutcome_t *sec_outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(sec_outcome, &bib_test_context.sec_oper);
-
     /// Confirm running BIB as source executes without error
-    int bib_exec_status =
-        BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bib_test_context.sec_oper, sec_outcome);
+    int bib_exec_status = BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bib_test_context.sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, bib_exec_status);
 
     /// Confirm it produced only 1 result
-    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(sec_outcome));
-    const BSL_IdValPair_t *bib_result = BSL_SecOutcome_GetResultAtIndex(sec_outcome, 0);
+    TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&bib_test_context.sec_oper));
+    const BSL_IdValPair_t *bib_result = BSL_SecOper_FindResult(&bib_test_context.sec_oper, RFC9173_BIB_RESULTID_HMAC);
+    TEST_ASSERT_NOT_NULL(bib_result);
 
     /// Confirm the context and result result is the right ID (Defined in RFC)
     TEST_ASSERT_EQUAL(RFC9173_BIB_RESULTID_HMAC, bib_result->id);
@@ -123,8 +120,6 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     TEST_ASSERT_TRUE(is_equal);
     BSL_Data_Deinit(&mac_view);
 
-    BSL_SecOutcome_Deinit(sec_outcome);
-    BSL_free(sec_outcome);
     BIBTestContext_Deinit(&bib_test_context);
 }
 
@@ -142,7 +137,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
  *  - Decode it into a BSL_BundleCtx struct
  *  - Create a BCB security operation with hard-coded arguments (From RFC9173 A2 ASB)
  *  - Run the DefaultSecuritContext's BSLX_BCB_Execute function and confirm result is 0.
- *  - Capture the outcome from the above function to confirm 1 result (the auth tag) is present
+ *  - Check the operation after the above function to confirm 1 result (the auth tag) is present
  *  - Capture the auth tag and ensure it matches the value in the test vector.
  *
  * Notes:
@@ -160,17 +155,15 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     BCBTestContext_Init(&bcb_test_context);
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_SOURCE);
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &bcb_test_context.sec_oper);
-
     // Execute BCB as source, confirm result is 0 (success)
-    int bcb_exec_result =
-        BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcb_test_context.sec_oper, outcome);
+    int bcb_exec_result = BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcb_test_context.sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_result);
 
     // Confirm the output produces one result (the AES-GCM auth code)
-    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
-    const BSL_IdValPair_t *auth_tag_result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
+    TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&bcb_test_context.sec_oper));
+    const BSL_IdValPair_t *auth_tag_result =
+        BSL_SecOper_FindResult(&bcb_test_context.sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
+    TEST_ASSERT_NOT_NULL(auth_tag_result);
 
     // Confirm that AUTHTAG result id is there
     TEST_ASSERT_EQUAL(RFC9173_BCB_RESULTID_AUTHTAG, auth_tag_result->id);
@@ -196,8 +189,6 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
                  BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
     TEST_ASSERT_EQUAL_MEMORY(ApxA2_Ciphertext, target_block->btsd, sizeof(ApxA2_Ciphertext));
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BCBTestContext_Deinit(&bcb_test_context);
 }
 
@@ -211,17 +202,10 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     BCBTestContext_Init(&bcb_test_context);
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_ACCEPTOR);
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &bcb_test_context.sec_oper);
-
     /// Confirm that BCB executes with SUCCESS
     int bcb_exec_result = BSL_ExecBCBVerifierAcceptor(BSLX_BCB_Execute, &LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref,
-                                                      &bcb_test_context.sec_oper, outcome);
+                                                      &bcb_test_context.sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_result);
-
-    /// Confirm that running as ACCEPTOR consumes result.
-    size_t result_count = BSL_SecOutcome_CountResults(outcome);
-    TEST_ASSERT_EQUAL(0, result_count);
 
     /// Confirm that the target block is decrypted correctly.
     MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
@@ -237,8 +221,6 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
                  BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
     TEST_ASSERT_EQUAL_MEMORY(ApxA2_PayloadData, target_block->btsd, sizeof(ApxA2_PayloadData));
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BCBTestContext_Deinit(&bcb_test_context);
 }
 
@@ -303,7 +285,6 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
-    BSL_SecOutcome_t      *sec_outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
     const BSL_IdValPair_t *result;
     BIBTestContext         bibcontext;
     BCBTestContext         bcbcontext;
@@ -334,14 +315,12 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         BSL_SecOper_AppendOption(&bibcontext.sec_oper, &bibcontext.opt_test_key);
         BSL_SecOper_AppendOption(&bibcontext.sec_oper, &bibcontext.opt_use_key_wrap);
 
-        BSL_SecOutcome_Init(sec_outcome, &bibcontext.sec_oper);
-
-        int bib_exec_status =
-            BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper, sec_outcome);
+        int bib_exec_status = BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bib_exec_status);
 
-        TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(sec_outcome));
-        result = BSL_SecOutcome_GetResultAtIndex(sec_outcome, 0);
+        TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&bibcontext.sec_oper));
+        result = BSL_SecOper_FindResult(&bibcontext.sec_oper, RFC9173_BIB_RESULTID_HMAC);
+        TEST_ASSERT_NOT_NULL(result);
 
         TEST_ASSERT_EQUAL(RFC9173_BIB_RESULTID_HMAC, result->id);
     }
@@ -370,14 +349,12 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         BSL_SecOper_AppendOption(&bcbcontext.sec_oper, &bcbcontext.opt_test_key_id);
         BSL_SecOper_AppendOption(&bcbcontext.sec_oper, &bcbcontext.opt_use_key_wrap);
 
-        BSL_SecOutcome_Init(sec_outcome, &bcbcontext.sec_oper);
-
-        int bcb_exec_status =
-            BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper, sec_outcome);
+        int bcb_exec_status = BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_status);
 
-        TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(sec_outcome));
-        result = BSL_SecOutcome_GetResultAtIndex(sec_outcome, 0);
+        TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&bcbcontext.sec_oper));
+        result = BSL_SecOper_FindResult(&bcbcontext.sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
+        TEST_ASSERT_NOT_NULL(result);
 
         TEST_ASSERT_EQUAL(RFC9173_BCB_RESULTID_AUTHTAG, result->id);
     }
@@ -385,27 +362,26 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     char logstr[500];
     if (wrap)
     {
-        int got = 0;
-        for (size_t i = 0; i < BSL_SecOutcome_CountParams(sec_outcome); i++)
+        const BSL_IdValPair_t *sec_param;
+        if (bib)
         {
-            const BSL_IdValPair_t *sec_param = BSL_SecOutcome_GetParamAt(sec_outcome, i);
-            if (sec_param->id == ((bib) ? RFC9173_BIB_PARAMID_WRAPPED_KEY : RFC9173_BCB_SECPARAM_WRAPPEDKEY))
-            {
-                got++;
-                BSL_LOG_INFO("GOT WRAPPED KEY PARAM:");
-                BSL_LOG_INFO(
-                    "EXPECTED wrapped key: %s",
-                    BSL_Log_DumpAsHexString(logstr, sizeof(logstr), wrapped_key_data.ptr, wrapped_key_data.len));
-                BSL_Data_t view;
-                TEST_ASSERT_EQUAL_INT(0, BSL_IdValPair_GetAsBytestr(sec_param, &view));
-                BSL_LOG_INFO("ACTUAL wrapped key:   %s",
-                             BSL_Log_DumpAsHexString(logstr, sizeof(logstr), view.ptr, view.len));
-                TEST_ASSERT_EQUAL(wrapped_key_data.len, view.len);
-                TEST_ASSERT_EQUAL_MEMORY(wrapped_key_data.ptr, view.ptr, wrapped_key_data.len);
-                BSL_Data_Deinit(&view);
-            }
+            sec_param = BSL_SecOper_FindParam(&bibcontext.sec_oper, RFC9173_BIB_PARAMID_WRAPPED_KEY);
         }
-        TEST_ASSERT_EQUAL(1, got);
+        else
+        {
+            sec_param = BSL_SecOper_FindParam(&bcbcontext.sec_oper, RFC9173_BCB_SECPARAM_WRAPPEDKEY);
+        }
+
+        TEST_ASSERT_NOT_NULL(sec_param);
+        BSL_LOG_INFO("GOT WRAPPED KEY PARAM:");
+        BSL_LOG_INFO("EXPECTED wrapped key: %s",
+                     BSL_Log_DumpAsHexString(logstr, sizeof(logstr), wrapped_key_data.ptr, wrapped_key_data.len));
+        BSL_Data_t view;
+        TEST_ASSERT_EQUAL_INT(0, BSL_IdValPair_GetAsBytestr(sec_param, &view));
+        BSL_LOG_INFO("ACTUAL wrapped key:   %s", BSL_Log_DumpAsHexString(logstr, sizeof(logstr), view.ptr, view.len));
+        TEST_ASSERT_EQUAL(wrapped_key_data.len, view.len);
+        TEST_ASSERT_EQUAL_MEMORY(wrapped_key_data.ptr, view.ptr, wrapped_key_data.len);
+        BSL_Data_Deinit(&view);
     }
 
     {
@@ -441,13 +417,10 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         BSL_Data_Deinit(&pt_data);
     }
 
-    BSL_SecOutcome_Deinit(sec_outcome);
-
     BSL_Data_Deinit(&result_data);
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&wrapped_key_data);
-    BSL_free(sec_outcome);
     BIBTestContext_Deinit(&bibcontext);
     BCBTestContext_Deinit(&bcbcontext);
 }
@@ -504,7 +477,6 @@ void test_sec_accept_keyunwrap(bool bib)
     }
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
-    BSL_SecOutcome_t *sec_outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
     BIBTestContext    bibcontext;
     BCBTestContext    bcbcontext;
     BIBTestContext_Init(&bibcontext);
@@ -524,10 +496,8 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_SecOper_AppendOption(&bibcontext.sec_oper, &bibcontext.opt_test_key);
         BSL_SecOper_AppendOption(&bibcontext.sec_oper, &bibcontext.opt_use_key_wrap);
 
-        BSL_SecOutcome_Init(sec_outcome, &bibcontext.sec_oper);
-
         int bib_exec_status = BSL_ExecBIBVerifierAcceptor(BSLX_BIB_Execute, &LocalTestCtx.bsl,
-                                                          &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper, sec_outcome);
+                                                          &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bib_exec_status);
     }
     else
@@ -547,10 +517,8 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_SecOper_AppendOption(&bcbcontext.sec_oper, &bcbcontext.opt_test_key_id);
         BSL_SecOper_AppendOption(&bcbcontext.sec_oper, &bcbcontext.opt_use_key_wrap);
 
-        BSL_SecOutcome_Init(sec_outcome, &bcbcontext.sec_oper);
-
         int bcb_exec_status = BSL_ExecBCBVerifierAcceptor(BSLX_BCB_Execute, &LocalTestCtx.bsl,
-                                                          &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper, sec_outcome);
+                                                          &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_status);
     }
 
@@ -583,10 +551,8 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_Data_Deinit(&pt_data);
     }
 
-    BSL_SecOutcome_Deinit(sec_outcome);
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&result_data);
-    BSL_free(sec_outcome);
     BIBTestContext_Deinit(&bibcontext);
     BCBTestContext_Deinit(&bcbcontext);
 }

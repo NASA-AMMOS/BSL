@@ -400,14 +400,11 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
     return BSL_SUCCESS;
 }
 
-int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper, // NOSONAR
-                     BSL_SecOutcome_t *sec_outcome)
+int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper) // NOSONAR
 {
     CHK_ARG_NONNULL(lib);
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
-    CHK_ARG_NONNULL(sec_outcome);
-
     CHK_PRECONDITION(BSL_SecOper_IsConsistent(sec_oper));
 
     BSLX_BIB_t bib_context;
@@ -542,24 +539,24 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
     {
         {
             BSL_LOG_DEBUG("Appending SHA variant param");
-            BSL_IdValPair_t *scope_flag_param = BSL_SecOutcome_AppendParam(sec_outcome);
+            BSL_IdValPair_t *scope_flag_param = BSL_SecOper_AddParam(sec_oper, RFC9173_BIB_PARAMID_SHA_VARIANT);
             BSL_IdValPair_SetInt64(scope_flag_param, RFC9173_BIB_PARAMID_SHA_VARIANT, bib_context.sha_variant);
         }
         {
             BSL_LOG_DEBUG("Appending IPPT scope flag param");
-            BSL_IdValPair_t *scope_flag_param = BSL_SecOutcome_AppendParam(sec_outcome);
+            BSL_IdValPair_t *scope_flag_param = BSL_SecOper_AddParam(sec_oper, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG);
             BSL_IdValPair_SetInt64(scope_flag_param, RFC9173_BIB_PARAMID_INTEG_SCOPE_FLAG, bib_context.ippt_scope);
         }
         {
             BSL_LOG_DEBUG("Appending BIB wrapped key param");
-            BSL_IdValPair_t *bib_result = BSL_SecOutcome_AppendResult(sec_outcome);
+            BSL_IdValPair_t *bib_result = BSL_SecOper_AddResult(sec_oper, RFC9173_BIB_RESULTID_HMAC);
             BSL_IdValPair_SetBytestr(bib_result, RFC9173_BIB_RESULTID_HMAC, bib_context.hmac_result_val);
         }
 
         if (bib_context.wrapped_key.len > 0)
         {
             BSL_LOG_DEBUG("Appending BIB wrapped key param");
-            BSL_IdValPair_t *wrapped_key_param = BSL_SecOutcome_AppendParam(sec_outcome);
+            BSL_IdValPair_t *wrapped_key_param = BSL_SecOper_AddParam(sec_oper, RFC9173_BIB_PARAMID_WRAPPED_KEY);
             BSL_IdValPair_SetBytestr(wrapped_key_param, RFC9173_BIB_PARAMID_WRAPPED_KEY, bib_context.wrapped_key);
         }
     }

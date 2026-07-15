@@ -56,8 +56,7 @@ enum BSLX_BIB_Options_e
 bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);
 
 /// Match signature ::BSL_SecCtx_Execute_f
-int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                     BSL_SecOutcome_t *sec_outcome);
+int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);
 
 /// Internal BCB option enumerations
 enum BSLX_BCB_Options_e
@@ -82,7 +81,6 @@ enum BSLX_BCB_Options_e
 bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);
 
 /// Match signature ::BSL_SecCtx_Execute_f
-int BSLX_BCB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                     BSL_SecOutcome_t *sec_outcome);
+int BSLX_BCB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);
 
 #endif /* BSLX_SECCTXERR_H_ */

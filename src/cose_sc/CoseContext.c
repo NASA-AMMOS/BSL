@@ -60,10 +60,8 @@ typedef struct
 {
     /// Bundle context associated with this operation
     BSL_BundleRef_t *bundle;
-    /// Operation source
-    const BSL_SecOper_t *sec_oper;
-    /// Operation outcome
-    BSL_SecOutcome_t *sec_outcome;
+    /// Operation source and output
+    BSL_SecOper_t *sec_oper;
     /// Security source cache
     BSL_HostEID_t sec_src_eid;
 
@@ -177,12 +175,10 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
     memset(self, 0, sizeof(*self));
 }
 
-static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                                BSL_SecOutcome_t *sec_outcome)
+static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
 {
     self->bundle         = bundle;
     self->sec_oper       = sec_oper;
-    self->sec_outcome    = sec_outcome;
     self->is_bib         = BSL_SecOper_IsBIB(sec_oper);
     self->is_source      = BSL_SecOper_IsRoleSource(sec_oper);
     self->overwrite_btsd = !BSL_SecOper_IsRoleVerifier(sec_oper);
@@ -349,7 +345,7 @@ bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_Se
 {
     BSLX_CoseSc_t ctx;
     BSLX_CoseSc_Init(&ctx);
-    BSLX_CoseSc_Prepare(&ctx, bundle, sec_oper, NULL);
+    BSLX_CoseSc_Prepare(&ctx, bundle, sec_oper);
 
     if (BSL_SUCCESS == ctx.status)
     {
@@ -1132,11 +1128,11 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
     if (BSL_SUCCESS == ctx->status)
     {
         {
-            BSL_IdValPair_t *param = BSL_SecOutcome_AppendParam(ctx->sec_outcome);
+            BSL_IdValPair_t *param = BSL_SecOper_AddParam(ctx->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
             BSL_IdValPair_SetRaw(param, BSLX_COSESC_PARAM_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
         }
         {
-            BSL_IdValPair_t *result = BSL_SecOutcome_AppendResult(ctx->sec_outcome);
+            BSL_IdValPair_t *result = BSL_SecOper_AddResult(ctx->sec_oper, BSLX_COSESC_RESULT_COSE_MAC0);
             BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_MAC0, msg_enc);
         }
     }
@@ -1604,11 +1600,11 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
     if (BSL_SUCCESS == ctx->status)
     {
         {
-            BSL_IdValPair_t *param = BSL_SecOutcome_AppendParam(ctx->sec_outcome);
+            BSL_IdValPair_t *param = BSL_SecOper_AddParam(ctx->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
             BSL_IdValPair_SetRaw(param, BSLX_COSESC_PARAM_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
         }
         {
-            BSL_IdValPair_t *result = BSL_SecOutcome_AppendResult(ctx->sec_outcome);
+            BSL_IdValPair_t *result = BSL_SecOper_AddResult(ctx->sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT0);
             BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_ENCRYPT0, msg_enc);
         }
     }
@@ -1749,12 +1745,11 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
     BSLX_CoseMsg_Encrypt0_Deinit(&msg);
 }
 
-int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper, // NOSONAR
-                        BSL_SecOutcome_t *sec_outcome)
+int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper) // NOSONAR
 {
     BSLX_CoseSc_t ctx;
     BSLX_CoseSc_Init(&ctx);
-    BSLX_CoseSc_Prepare(&ctx, bundle, sec_oper, sec_outcome);
+    BSLX_CoseSc_Prepare(&ctx, bundle, sec_oper);
 
     if (BSL_SUCCESS == ctx.status)
     {

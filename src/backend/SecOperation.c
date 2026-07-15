@@ -38,8 +38,8 @@ void BSL_SecOper_Init(BSL_SecOper_t *self)
 
     memset(self, 0, sizeof(*self));
     BSLB_IdValPairPtrMap_init(self->_options);
-    BSLB_IdValPairPtrMap_init(self->_params_in);
-    BSLB_IdValPairPtrMap_init(self->_results_in);
+    BSLB_IdValPairPtrMap_init(self->_params);
+    BSLB_IdValPairPtrMap_init(self->_results);
 }
 
 void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
@@ -57,8 +57,8 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
     BSLB_IdValPairPtrMap_init_set(self->_options, src->_options);
-    BSLB_IdValPairPtrMap_init_set(self->_params_in, src->_params_in);
-    BSLB_IdValPairPtrMap_init_set(self->_results_in, src->_results_in);
+    BSLB_IdValPairPtrMap_init_set(self->_params, src->_params);
+    BSLB_IdValPairPtrMap_init_set(self->_results, src->_results);
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
@@ -66,8 +66,8 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
 void BSL_SecOper_Deinit(BSL_SecOper_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    BSLB_IdValPairPtrMap_clear(self->_results_in);
-    BSLB_IdValPairPtrMap_clear(self->_params_in);
+    BSLB_IdValPairPtrMap_clear(self->_results);
+    BSLB_IdValPairPtrMap_clear(self->_params);
     BSLB_IdValPairPtrMap_clear(self->_options);
 }
 
@@ -84,8 +84,8 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
     BSLB_IdValPairPtrMap_set(self->_options, src->_options);
-    BSLB_IdValPairPtrMap_set(self->_params_in, src->_params_in);
-    BSLB_IdValPairPtrMap_set(self->_results_in, src->_results_in);
+    BSLB_IdValPairPtrMap_set(self->_params, src->_params);
+    BSLB_IdValPairPtrMap_set(self->_results, src->_results);
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
 }
@@ -145,10 +145,41 @@ void BSL_SecOper_AppendParam(BSL_SecOper_t *self, const BSL_IdValPair_t *param)
 
     BSLB_IdValPairPtr_t *item_ptr = BSLB_IdValPairPtr_new_from(*param);
 
-    BSLB_IdValPairPtrMap_set_at(self->_params_in, param->id, item_ptr);
+    BSLB_IdValPairPtrMap_set_at(self->_params, param->id, item_ptr);
     BSLB_IdValPairPtr_release(item_ptr);
 
     ASSERT_POSTCONDITION(BSL_SecOper_IsConsistent(self));
+}
+
+BSL_IdValPair_t *BSL_SecOper_AddParam(BSL_SecOper_t *self, int64_t param_id)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    return BSLB_IdValPairPtrMap_add(self->_params, param_id);
+}
+
+BSL_IdValPair_t *BSL_SecOper_AddResult(BSL_SecOper_t *self, int64_t result_id)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    return BSLB_IdValPairPtrMap_add(self->_results, result_id);
+}
+
+size_t BSL_SecOper_CountParams(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    return BSLB_IdValPairPtrMap_size(self->_params);
+}
+
+size_t BSL_SecOper_CountResults(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    return BSLB_IdValPairPtrMap_size(self->_results);
+}
+
+void BSL_SecOper_ClearParamsAndResults(BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    BSLB_IdValPairPtrMap_reset(self->_params);
+    BSLB_IdValPairPtrMap_reset(self->_results);
 }
 
 uint64_t BSL_SecOper_GetSecurityBlockNum(const BSL_SecOper_t *self)
@@ -177,7 +208,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindParam(const BSL_SecOper_t *self, int64_t 
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
-    BSLB_IdValPairPtr_t *const *found = BSLB_IdValPairPtrMap_cget(self->_params_in, param_id);
+    BSLB_IdValPairPtr_t *const *found = BSLB_IdValPairPtrMap_cget(self->_params, param_id);
     return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
 }
 
@@ -185,7 +216,7 @@ const BSL_IdValPair_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, int64_t
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
 
-    BSLB_IdValPairPtr_t *const *found = BSLB_IdValPairPtrMap_cget(self->_results_in, result_id);
+    BSLB_IdValPairPtr_t *const *found = BSLB_IdValPairPtrMap_cget(self->_results, result_id);
     return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
 }
 

@@ -534,12 +534,10 @@ void BSLX_BCB_Deinit(BSLX_BCB_t *bcb_context)
     memset(bcb_context, 0, sizeof(*bcb_context));
 }
 
-int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper, // NOSONAR
-                     BSL_SecOutcome_t *sec_outcome)
+int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper) // NOSONAR
 {
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
-    CHK_ARG_NONNULL(sec_outcome);
 
     CHK_PRECONDITION(BSL_SecOper_GetSecurityBlockNum(sec_oper) > 0);
 
@@ -711,33 +709,33 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
         if (bcb_context.authtag.len > 0)
         {
             BSL_LOG_INFO("Appending BCB Auth Tag");
-            BSL_IdValPair_t *auth_tag = BSL_SecOutcome_AppendResult(sec_outcome);
+            BSL_IdValPair_t *auth_tag = BSL_SecOper_AddResult(sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
             BSL_IdValPair_SetBytestr(auth_tag, RFC9173_BCB_RESULTID_AUTHTAG, bcb_context.authtag);
         }
 
         if (bcb_context.iv.len > 0)
         {
             BSL_LOG_INFO("Appending BCB source IV");
-            BSL_IdValPair_t *iv_param = BSL_SecOutcome_AppendParam(sec_outcome);
+            BSL_IdValPair_t *iv_param = BSL_SecOper_AddParam(sec_oper, RFC9173_BCB_SECPARAM_IV);
             BSL_IdValPair_SetBytestr(iv_param, RFC9173_BCB_SECPARAM_IV, bcb_context.iv);
         }
 
         {
             BSL_LOG_INFO("Appending BCB AES param");
-            BSL_IdValPair_t *aes_param = BSL_SecOutcome_AppendParam(sec_outcome);
+            BSL_IdValPair_t *aes_param = BSL_SecOper_AddParam(sec_oper, RFC9173_BCB_SECPARAM_AESVARIANT);
             BSL_IdValPair_SetInt64(aes_param, RFC9173_BCB_SECPARAM_AESVARIANT, bcb_context.aes_variant);
         }
 
         if (bcb_context.wrapped_key.len > 0)
         {
             BSL_LOG_INFO("Appending BCB wrapped key param");
-            BSL_IdValPair_t *aes_wrapped_key_param = BSL_SecOutcome_AppendParam(sec_outcome);
+            BSL_IdValPair_t *aes_wrapped_key_param = BSL_SecOper_AddParam(sec_oper, RFC9173_BCB_SECPARAM_WRAPPEDKEY);
             BSL_IdValPair_SetBytestr(aes_wrapped_key_param, RFC9173_BCB_SECPARAM_WRAPPEDKEY, bcb_context.wrapped_key);
         }
 
         {
             BSL_LOG_INFO("Appending BCB scope flag param");
-            BSL_IdValPair_t *scope_flag_param = BSL_SecOutcome_AppendParam(sec_outcome);
+            BSL_IdValPair_t *scope_flag_param = BSL_SecOper_AddParam(sec_oper, RFC9173_BCB_SECPARAM_AADSCOPE);
             BSL_IdValPair_SetInt64(scope_flag_param, RFC9173_BCB_SECPARAM_AADSCOPE, bcb_context.aad_scope);
         }
     }
