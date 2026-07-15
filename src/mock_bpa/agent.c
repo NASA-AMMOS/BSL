@@ -707,8 +707,6 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
 
     BSL_SecurityActionSet_t *action_set = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(action_set);
-    BSL_SecurityResponseSet_t *response_set = BSL_calloc(1, BSL_SecurityResponseSet_Sizeof());
-    BSL_SecurityResponseSet_Init(response_set);
 
     BSL_BundleRef_t bundle_ref = { .data = bundle };
     BSL_LOG_INFO("calling BSL_API_QuerySecurity");
@@ -721,7 +719,7 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
     if (!returncode)
     {
         BSL_LOG_INFO("calling BSL_API_ApplySecurity");
-        returncode = BSL_API_ApplySecurity(ctx->bsl, response_set, &bundle_ref, action_set);
+        returncode = BSL_API_ApplySecurity(ctx->bsl, &bundle_ref, action_set);
         if (returncode < 0)
         {
             BSL_LOG_ERR("Failed to apply security: code=%d", returncode);
@@ -737,8 +735,6 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
 
     BSL_SecurityActionSet_Deinit(action_set);
     BSL_free(action_set);
-    BSL_SecurityResponseSet_Deinit(response_set);
-    BSL_free(response_set);
     BSL_LOG_INFO("result code %d", returncode);
     return returncode;
 }

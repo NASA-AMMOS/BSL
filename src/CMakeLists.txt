@@ -152,7 +152,6 @@ set(BSL_DYNAMIC_H
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.h   
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.h
 )
 
@@ -165,11 +164,9 @@ set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PolicyProvider.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/TelemetryCounters.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOutcome.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityAction.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityActionSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/TextUtil.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.c
 )
@@ -189,7 +186,7 @@ target_link_libraries(bsl_dynamic PUBLIC qcbor::qcbor)
 add_library(bsl_mock_bpa)
 #target_compile_options(bsl_mock_bpa PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls)
 target_sources(
-  bsl_mock_bpa PUBLIC 
+  bsl_mock_bpa PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/log.h
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/agent.h
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/bundle.h

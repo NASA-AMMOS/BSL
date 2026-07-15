@@ -62,12 +62,11 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
 }
 
 int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions,
-                                       BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output)
+                                       BSL_BundleRef_t *bundle)
 {
     CHK_ARG_NONNULL(bsl);
     CHK_ARG_NONNULL(bsl->policy_reg);
     CHK_ARG_NONNULL(policy_actions);
-    CHK_ARG_NONNULL(response_output);
     CHK_ARG_NONNULL(bundle);
 
     size_t act_ct = BSL_SecurityActionSet_CountActions(policy_actions);
@@ -76,7 +75,7 @@ int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_Securi
         BSL_SecurityAction_t *act = BSL_SecActionList_get(policy_actions->actions, i);
 
         const BSL_PolicyDesc_t *policy = BSL_PolicyDict_get(bsl->policy_reg, act->pp_id);
-        if (BSL_SUCCESS != policy->finalize_fn(policy->user_data, policy_actions, bundle, response_output))
+        if (BSL_SUCCESS != policy->finalize_fn(policy->user_data, policy_actions, bundle))
         {
             return BSL_ERR_POLICY_FINAL;
         }
