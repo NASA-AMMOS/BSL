@@ -34,7 +34,6 @@
 #include <stdio.h>
 #include <strings.h>
 #include <syslog.h>
-#include <sys/time.h>
 #include <time.h>
 
 #include <m-shared-ptr.h>
@@ -64,7 +63,7 @@ typedef struct
     /// Source thread ID
     pthread_t thread;
     /// Source event timestamp
-    struct timeval timestamp;
+    struct timespec timestamp;
     /// Event severity enumeration
     int severity;
     /// File and function context
@@ -76,7 +75,7 @@ typedef struct
 static void mock_bpa_LogEvent_event_init(mock_bpa_LogEvent_event_t *obj)
 {
     obj->thread    = pthread_self();
-    obj->timestamp = (struct timeval) { 0 };
+    obj->timestamp = (struct timespec) { 0 };
     obj->severity  = LOG_DEBUG;
     string_init(obj->context);
     string_init(obj->message);
@@ -130,7 +129,7 @@ static void write_log(const mock_bpa_LogEvent_event_t *event)
         size_t len    = strftime(curs, remain, "%Y-%m-%dT%H:%M:%S", &nowtm);
         curs += len;
         remain -= len;
-        snprintf(curs, remain, ".%06ldZ", event->timestamp.tv_usec);
+        snprintf(curs, remain, ".%06ldZ", event->timestamp.tv_nsec / 1000);
     }
     char thrbuf[2 * sizeof(pthread_t) + 1];
     {
@@ -259,7 +258,7 @@ bool mock_bpa_LogIsEnabledFor(int severity)
 }
 
 // NOLINTBEGIN
-void mock_bpa_LogEvent(const struct timeval *timestamp, int severity, const char *filename, int lineno,
+void mock_bpa_LogEvent(const struct timespec *timestamp, int severity, const char *filename, int lineno,
                        const char *funcname, const char *format, va_list args)
 {
     BSL_CHKVOID(timestamp);
