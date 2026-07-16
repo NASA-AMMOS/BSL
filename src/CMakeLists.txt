@@ -136,8 +136,8 @@ set_target_properties(bsl_sample_pp
 )
 target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
 target_link_libraries(bsl_sample_pp PRIVATE bsl_dynamic)
-# contexts linked-to for config options in headers
-target_link_libraries(bsl_sample_pp INTERFACE bsl_default_sc bsl_cose_sc)
+# contexts linked-to for config options
+target_link_libraries(bsl_sample_pp PRIVATE bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
 target_link_libraries(bsl_sample_pp PRIVATE Jansson::Jansson)
 

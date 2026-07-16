@@ -116,9 +116,9 @@ jobs:
         env:
           PKGS: bsl bsl-sample-pp
         run: |
-          echo -n "Provides: "
+          echo "Provides:"
           pkg-config --print-provides ${PKGS}
-          echo -n "Requires: "
+          echo "Requires:"
           pkg-config --print-requires ${PKGS}
           echo -n "CFlags: "
           pkg-config --cflags ${PKGS}
