@@ -59,3 +59,4 @@ done
 
 # Python test fixtures
 ruff check --fix mock-bpa-test/
+ruff format mock-bpa-test/

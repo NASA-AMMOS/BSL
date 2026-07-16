@@ -49,6 +49,7 @@ def compose_args(args: List[str]) -> List[str]:
     if wrap == '':
         pass
     elif wrap == 'memcheck':
+        # fmt: off
         prefix = [
             'valgrind',
             '--tool=memcheck',
@@ -57,13 +58,17 @@ def compose_args(args: List[str]) -> List[str]:
             '--gen-suppressions=all',
             '--error-exitcode=2',
         ]
+        # fmt: on
     elif wrap == 'helgrind':
+        # fmt: off
         prefix = [
             'valgrind',
             '--tool=helgrind',
             '--error-exitcode=2',
         ]
+        # fmt: on
     elif wrap == 'gdb':
+        # fmt: off
         prefix = [
             'gdb',
             '-batch',
@@ -72,6 +77,7 @@ def compose_args(args: List[str]) -> List[str]:
             '-ex', 'bt',
             '--args'
         ]
+        # fmt: on
     else:
         raise ValueError(f'Unhandled TEST_EXEC_WRAP value: {wrap}')
 

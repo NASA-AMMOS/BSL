@@ -107,6 +107,7 @@ class TestAgent(unittest.TestCase):
             policy_config = "0x00"
             key_set = "data/key_set_1.json"
 
+        # fmt: off
         arglist = [
             'bsl-mock-bpa',
             '-s', sec_src_eid,
@@ -115,6 +116,7 @@ class TestAgent(unittest.TestCase):
             '-j' if pol_is_json else "-p", policy_config,
             '-k', key_set
         ]
+        # fmt: on
         arglist += ['-c'] if use_bcb_rng else []
         args = compose_args(arglist)
         self._agent = CmdRunner(args, cwd=OWNPATH, stderr=subprocess.STDOUT)
