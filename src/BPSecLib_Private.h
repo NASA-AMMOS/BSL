@@ -808,6 +808,42 @@ void BSL_SecOper_AppendOption(BSL_SecOper_t *self, const BSL_IdValPair_t *option
  */
 void BSL_SecOper_AppendParam(BSL_SecOper_t *self, const BSL_IdValPair_t *param);
 
+/** Add an empty security parameter.
+ *
+ * @param[in,out] self This security operation.
+ * @param[in] param_id Security parameter ID.
+ * @return The parameter owned by this operation.
+ */
+BSL_IdValPair_t *BSL_SecOper_AddParam(BSL_SecOper_t *self, int64_t param_id);
+
+/** Add an empty security result.
+ *
+ * @param[in,out] self This security operation.
+ * @param[in] result_id Security result ID.
+ * @return The result owned by this operation.
+ */
+BSL_IdValPair_t *BSL_SecOper_AddResult(BSL_SecOper_t *self, int64_t result_id);
+
+/** Get the count of parameters contained within this security operation.
+ *
+ * @param[in] self This security operation
+ * @return Count of security parameters.
+ */
+size_t BSL_SecOper_CountParams(const BSL_SecOper_t *self);
+
+/** Get the count of results contained within this security operation.
+ *
+ * @param[in] self This security operation
+ * @return Count of security results.
+ */
+size_t BSL_SecOper_CountResults(const BSL_SecOper_t *self);
+
+/** Clear all parameters and results contained within this security operation.
+ *
+ * @param[in,out] self This security operation
+ */
+void BSL_SecOper_ClearParamsAndResults(BSL_SecOper_t *self);
+
 /** Return true if this security operation's role is SOURCE
  * @param[in] self This Security Operation
  * @return boolean
@@ -933,75 +969,6 @@ const BSL_IdValPair_t *BSL_AbsSecBlock_FindResult(BSL_AbsSecBlock_t *self, uint6
 /** Increments a telemetry counter in the ctx based on telemetry index
  */
 int BSL_TlmCounters_IncrementCounter(BSL_LibCtx_t *bsl, BSL_TlmCounterIndex_e tlm_index, uint64_t count);
-
-/** @brief Represents the output following execution of a security operation.
- */
-typedef struct BSL_SecOutcome_s BSL_SecOutcome_t;
-
-/// @brief Returns the size of the ::BSL_SecOutcome_s structure.
-size_t BSL_SecOutcome_Sizeof(void);
-
-/** Populate a pre-allocated security outcome struct.
- *
- * @param[in,out] self Non-Null pointer to this security outcome.
- * @param[in] sec_oper Security operation containing the necessary info.
- */
-void BSL_SecOutcome_Init(BSL_SecOutcome_t *self, const BSL_SecOper_t *sec_oper);
-
-/** Release any resources owned by this security outcome.
- *
- * @param[in,out] self Non-Null pointer to this security outcome.
- */
-void BSL_SecOutcome_Deinit(BSL_SecOutcome_t *self);
-
-/** Return true if internal invariants hold
- *
- * @param[in] self This sec outcome.
- * @return true if invariants hold
- */
-bool BSL_SecOutcome_IsConsistent(const BSL_SecOutcome_t *self);
-
-/** Append a Security Result to this outcome.
- *
- * @param[in,out] self Non-NULL pointer to this security outcome.
- * @return Non-NULL pointer to security result just appended.
- */
-BSL_IdValPair_t *BSL_SecOutcome_AppendResult(BSL_SecOutcome_t *self);
-
-/** Get the result at index i. Panics if i is out of range.
- *
- * @param[in] self This outcome
- * @param[in] index Index in the list to retrieve
- * @return Sec Result at index
- */
-const BSL_IdValPair_t *BSL_SecOutcome_GetResultAtIndex(const BSL_SecOutcome_t *self, size_t index);
-
-/** Get the number of results
- *
- * @param[in] self this sec outcome
- * @return number of results in sec outcome
- */
-size_t BSL_SecOutcome_CountResults(const BSL_SecOutcome_t *self);
-
-/** Append a Security Parameter to this outcome.
- *
- * @param[in,out] self Non-NULL pointer to this security outcome.
- * @return Non-NULL pointer to the initialized security parameter.
- */
-BSL_IdValPair_t *BSL_SecOutcome_AppendParam(BSL_SecOutcome_t *self);
-
-/** @brief Returns number of parameters in this outcome.
- * @param[in] self This outcome
- * @return Number of parameters
- */
-size_t BSL_SecOutcome_CountParams(const BSL_SecOutcome_t *self);
-
-/** Get the security parameter from the security outcome at the provided index
- * @param[in] self security outcome
- * @param[in] index index to retrieve security parameter from
- * @return Security parameter
- */
-const BSL_IdValPair_t *BSL_SecOutcome_GetParamAt(const BSL_SecOutcome_t *self, size_t index);
 
 /**
  * @return size of security operation
@@ -1134,40 +1101,6 @@ const BSL_SecurityAction_t *BSL_SecurityActionSet_GetActionAtIndex(const BSL_Sec
  */
 size_t BSL_SecurityActionSet_CountErrors(const BSL_SecurityActionSet_t *self);
 
-/// @brief Returns size of this struct type
-size_t BSL_SecurityResponseSet_Sizeof(void);
-
-/** Initialize with the given count of operations and failures
- *
- */
-void BSL_SecurityResponseSet_Init(BSL_SecurityResponseSet_t *self);
-
-/** Zeroize itself and release any owned resources
- *
- * @param[in,out] self This response set.
- */
-void BSL_SecurityResponseSet_Deinit(BSL_SecurityResponseSet_t *self);
-
-/** Return true if internal consistency checks pass.
- *
- * @param[in] self This response set.
- */
-bool BSL_SecurityResponseSet_IsConsistent(const BSL_SecurityResponseSet_t *self);
-
-/** Return number of responses (operations acted upon)
- *
- * @param[in] self This response set.
- */
-size_t BSL_SecurityResponseSet_CountResponses(const BSL_SecurityResponseSet_t *self);
-
-/** Append a result code to the security response set
- * @param[in,out] self the response set to append result to
- * @param[in] result the result code to append
- * @param[in] policy_action the on-failure policy action associated with the response
- */
-void BSL_SecurityResponseSet_AppendResult(BSL_SecurityResponseSet_t *self, int64_t result,
-                                          BSL_PolicyAction_e policy_action);
-
 /** Queries the policy provider for any security operations to take on the bundle.
  *
  * @note The caller is obligated to allocate space for the policy_action_set output.
@@ -1194,12 +1127,11 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
  * @param[in] policy_actions A policy action set, which may contain error codes and other info. @preallocated
  * Caller-allocated, zeroed space for action set
  * @param[in,out] bundle Bundle seeking security operations
- * @param[in] response_output results from security context
  * @param[in] location Where in the BPA lifecycle this query arises from
  * @return 0 if success
  */
 int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions,
-                                       BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
+                                       BSL_BundleRef_t *bundle);
 
 /// @brief Callback interface to query policy provider to populate the action set
 typedef int (*BSL_PolicyInspect_f)(void *user_data, BSL_SecurityActionSet_t *output_action_set,
@@ -1208,7 +1140,7 @@ typedef int (*BSL_PolicyInspect_f)(void *user_data, BSL_SecurityActionSet_t *out
 /// @brief Callback interface to finalize policy provider over the action set. Finalize should ignore actions from
 /// different policy providers
 typedef int (*BSL_PolicyFinalize_f)(void *user_data, const BSL_SecurityActionSet_t *output_action_set,
-                                    BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output);
+                                    BSL_BundleRef_t *bundle);
 
 /// @brief Callback interface for policy provider to shut down and release any resources
 typedef void (*BSL_PolicyDeinit_f)(void *user_data);
@@ -1225,13 +1157,12 @@ struct BSL_PolicyDesc_s
 /** Call the underlying security context to perform the given action set
  *
  * @param[in] lib This BSL context
- * @param[out] output_response Pointer to allocated, zeroed memory into which the response is populated
  * @param[in,out] bundle Pointer to bundle, which may be modified.
  * @param[in] action_set Action containing all params and operations.
  * @return 0 on success, negative on failure.
  */
-int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet_t *output_response,
-                                      BSL_BundleRef_t *bundle, const BSL_SecurityActionSet_t *action_set);
+int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
+                                      const BSL_SecurityActionSet_t *action_set);
 
 /** Call the underlying security context to validate the given action set
  *
@@ -1258,13 +1189,10 @@ typedef bool (*BSL_SecCtx_Validate_f)(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle
  *
  * @param[in] lib The library context.
  * @param[in,out] bundle The bundle to modify.
- * @param[in] sec_oper The security operation to perform.
- * @param[in] asb For verifier or acceptor, this is the existing ASB structure.
- * @param[in,out] sec_outcome The pre-allocated outcome to populate
+ * @param[in, out] sec_oper Security operation inputs and generated outputs.
  * @return 0 if security operation performed successfully.
  */
-typedef int (*BSL_SecCtx_Execute_f)(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                                    BSL_SecOutcome_t *sec_outcome);
+typedef int (*BSL_SecCtx_Execute_f)(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);
 
 /** @brief Security Context descriptor (interface)
  */
@@ -1280,22 +1208,22 @@ struct BSL_SecCtxDesc_s
  * @warning This is exposed for testing only.
  */
 int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                      BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
+                      BSL_SecOper_t *sec_oper);
 /** Internal function to execute an operation as verifier or acceptor.
  * @overload
  */
 int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                                BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
+                                BSL_SecOper_t *sec_oper);
 /** Internal function to execute an operation as source.
  * @overload
  */
 int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                      BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
+                      BSL_SecOper_t *sec_oper);
 /** Internal function to execute an operation as verifier or acceptor.
  * @overload
  */
 int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
-                                BSL_SecOper_t *sec_oper, BSL_SecOutcome_t *outcome);
+                                BSL_SecOper_t *sec_oper);
 
 #ifdef __cplusplus
 } // extern C

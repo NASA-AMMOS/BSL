@@ -24,6 +24,8 @@
  * Definitions for bundle and block decoding.
  * @ingroup mock_bpa
  */
+#include <netinet/in.h>
+
 #include "decode.h"
 #include "agent.h"
 #include "crc.h"

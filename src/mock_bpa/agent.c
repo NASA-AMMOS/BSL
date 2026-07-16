@@ -32,7 +32,9 @@
 #include <cose_sc/CoseContext.h>
 #include <policy_provider/SamplePolicyProvider.h>
 #include <errno.h>
+#include <netinet/in.h>
 #include <poll.h>
+#include <sys/socket.h>
 #include "agent.h"
 #include "log.h"
 #include "eid.h"
@@ -225,8 +227,8 @@ static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_re
         return NULL;
     }
     reader->user_data = obj;
-    reader->read      = MockBPA_ReadBTSD_Read;
-    reader->deinit    = MockBPA_ReadBTSD_Deinit;
+    reader->read      = &MockBPA_ReadBTSD_Read;
+    reader->deinit    = &MockBPA_ReadBTSD_Deinit;
 
     return reader;
 }
@@ -303,18 +305,11 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
     }
     // double-buffer for this write
     obj->block = found_block;
-    obj->ptr   = NULL;
-    obj->size  = 0;
-    obj->file  = open_memstream(&obj->ptr, &obj->size);
+    obj->size  = btsd_size;
     obj->curs  = 0;
 
-    if (btsd_size)
-    {
-        // pre-allocate BTSD size
-        fseeko(obj->file, btsd_size, SEEK_SET);
-        fflush(obj->file);
-        fseeko(obj->file, 0UL, SEEK_SET);
-    }
+    obj->ptr  = BSL_calloc(1, btsd_size + 1); // reserve one for null terminator
+    obj->file = fmemopen(obj->ptr, obj->size + 1, "w");
 
     BSL_SeqWriter_t *writer = BSL_calloc(1, sizeof(BSL_SeqWriter_t));
     if (!writer)
@@ -324,8 +319,8 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
         return NULL;
     }
     writer->user_data = obj;
-    writer->write     = MockBPA_WriteBTSD_Write;
-    writer->deinit    = MockBPA_WriteBTSD_Deinit;
+    writer->write     = &MockBPA_WriteBTSD_Write;
+    writer->deinit    = &MockBPA_WriteBTSD_Deinit;
 
     return writer;
 }
@@ -712,8 +707,6 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
 
     BSL_SecurityActionSet_t *action_set = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(action_set);
-    BSL_SecurityResponseSet_t *response_set = BSL_calloc(1, BSL_SecurityResponseSet_Sizeof());
-    BSL_SecurityResponseSet_Init(response_set);
 
     BSL_BundleRef_t bundle_ref = { .data = bundle };
     BSL_LOG_INFO("calling BSL_API_QuerySecurity");
@@ -726,7 +719,7 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
     if (!returncode)
     {
         BSL_LOG_INFO("calling BSL_API_ApplySecurity");
-        returncode = BSL_API_ApplySecurity(ctx->bsl, response_set, &bundle_ref, action_set);
+        returncode = BSL_API_ApplySecurity(ctx->bsl, &bundle_ref, action_set);
         if (returncode < 0)
         {
             BSL_LOG_ERR("Failed to apply security: code=%d", returncode);
@@ -742,8 +735,6 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
 
     BSL_SecurityActionSet_Deinit(action_set);
     BSL_free(action_set);
-    BSL_SecurityResponseSet_Deinit(response_set);
-    BSL_free(response_set);
     BSL_LOG_INFO("result code %d", returncode);
     return returncode;
 }

@@ -26,6 +26,7 @@
  */
 #include <errno.h>
 #include <netdb.h>
+#include <netinet/in.h>
 #include <signal.h>
 #include <sys/socket.h>
 #include <sys/types.h>

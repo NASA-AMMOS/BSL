@@ -63,10 +63,14 @@ set_target_properties(bsl_crypto
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_crypto PUBLIC bsl_front bsl_dynamic)
-target_link_libraries(bsl_crypto PUBLIC MLIB::mlib)
-target_link_libraries(bsl_crypto INTERFACE OpenSSL::Crypto)
+target_link_libraries(bsl_crypto PRIVATE MLIB::mlib)
+target_link_libraries(bsl_crypto PRIVATE OpenSSL::Crypto)
 if(TARGET valgrind::valgrind)
-  target_compile_definitions(bsl_crypto PRIVATE HAVE_VALGRIND)
+  find_path(VALGRIND_INCLUDE_DIR NAMES valgrind/memcheck.h)
+  if(VALGRIND_INCLUDE_DIR)
+    target_compile_definitions(bsl_crypto PRIVATE HAVE_VALGRIND)
+    target_include_directories(bsl_crypto PRIVATE "${VALGRIND_INCLUDE_DIR}")
+  endif()
 endif(TARGET valgrind::valgrind)
 
 # Default Security Context library
@@ -90,8 +94,7 @@ set_target_properties(bsl_default_sc
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_default_sc PUBLIC bsl_front)
-target_link_libraries(bsl_default_sc PUBLIC bsl_crypto)
-target_link_libraries(bsl_default_sc PUBLIC qcbor::qcbor)
+target_link_libraries(bsl_default_sc PRIVATE bsl_crypto)
 
 # COSE Security Context library
 set(BSL_COSE_SC_H
@@ -112,8 +115,9 @@ set_target_properties(bsl_cose_sc
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_cose_sc PUBLIC bsl_front)
-target_link_libraries(bsl_cose_sc PUBLIC bsl_crypto)
-target_link_libraries(bsl_cose_sc PUBLIC qcbor::qcbor)
+target_link_libraries(bsl_cose_sc PUBLIC bsl_dynamic) # for CBOR API
+target_link_libraries(bsl_cose_sc PRIVATE bsl_crypto)
+target_link_libraries(bsl_cose_sc PUBLIC MLIB::mlib)
 
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
@@ -134,11 +138,12 @@ set_target_properties(bsl_sample_pp
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-target_link_libraries(bsl_sample_pp PUBLIC bsl_front bsl_dynamic)
-# contexts for config options
-target_link_libraries(bsl_sample_pp PUBLIC bsl_default_sc bsl_cose_sc)
+target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
+target_link_libraries(bsl_sample_pp PRIVATE bsl_dynamic)
+# contexts linked-to for config options
+target_link_libraries(bsl_sample_pp PRIVATE bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
-target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
+target_link_libraries(bsl_sample_pp PRIVATE Jansson::Jansson)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H
@@ -147,7 +152,6 @@ set(BSL_DYNAMIC_H
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/IdValPair.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PublicInterfaceImpl.h
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.h   
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.h
 )
 
@@ -160,11 +164,9 @@ set(BSL_DYNAMIC_C
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/PolicyProvider.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/TelemetryCounters.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOperation.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecOutcome.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityAction.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityActionSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/backend/SecurityResultSet.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/TextUtil.c
   ${CMAKE_CURRENT_SOURCE_DIR}/backend/UtilDefs_SeqReadWrite.c
 )
@@ -184,7 +186,7 @@ target_link_libraries(bsl_dynamic PUBLIC qcbor::qcbor)
 add_library(bsl_mock_bpa)
 #target_compile_options(bsl_mock_bpa PRIVATE -Wshadow -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls)
 target_sources(
-  bsl_mock_bpa PUBLIC 
+  bsl_mock_bpa PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/log.h
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/agent.h
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_bpa/bundle.h
@@ -217,14 +219,14 @@ set_target_properties(bsl_mock_bpa
 )
 target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
 target_link_libraries(bsl_mock_bpa PUBLIC qcbor::qcbor)
-target_link_libraries(bsl_mock_bpa PUBLIC Jansson::Jansson)
+target_link_libraries(bsl_mock_bpa PRIVATE Jansson::Jansson)
 target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_cose_sc bsl_sample_pp)
+target_link_libraries(bsl_mock_bpa PUBLIC Threads::Threads)
 
 if(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)
   add_executable(bsl-mock-bpa)
   target_sources(bsl-mock-bpa PRIVATE mock_bpa/mock_bpa.c)
   target_link_libraries(bsl-mock-bpa PUBLIC bsl_mock_bpa bsl_crypto)
-  target_link_libraries(bsl-mock-bpa PUBLIC Threads::Threads)
 
   # Installation config
   install(

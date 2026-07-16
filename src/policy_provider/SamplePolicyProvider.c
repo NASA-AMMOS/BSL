@@ -306,8 +306,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
     return (int)BSL_SecurityActionSet_CountErrors(output_action_set);
 }
 
-int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *output_action_set _U_,
-                        BSL_BundleRef_t *bundle, const BSL_SecurityResponseSet_t *response_output _U_)
+int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle)
 {
     int                    error_ret = BSL_SUCCESS;
     BSLP_PolicyProvider_t *self      = user_data;

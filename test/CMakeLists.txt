@@ -54,7 +54,7 @@ if(BUILD_UNITTEST OR BUILD_FUZZING)
   )
 endif(BUILD_UNITTEST OR BUILD_FUZZING)
 
-set(LIB_ORDERED bsl_mock_bpa bsl_test_utils)
+set(LIB_ORDERED bsl_mock_bpa bsl_crypto bsl_test_utils)
 
 if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
@@ -79,7 +79,7 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   target_link_libraries(test_mock_bpa_ctr PUBLIC ${LIB_ORDERED})
   
   add_unity_test(SOURCE test_CryptoInterface.c)
-  target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED})
+  target_link_libraries(test_CryptoInterface PUBLIC ${LIB_ORDERED} OpenSSL::Crypto)
 
   add_unity_test(SOURCE test_AbsSecBlock.c)
   target_link_libraries(test_AbsSecBlock PUBLIC ${LIB_ORDERED})
