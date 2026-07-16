@@ -72,7 +72,7 @@ def load_ccsds():
                     input_format = DataFormat.BUNDLEARRAY
 
                 except Exception:
-                    print(f'CCSDS | Test {t["test"]}: Bundle hex not specified.')
+                    print(f"CCSDS | Test {t['test']}: Bundle hex not specified.")
                     continue
 
                 output_format = DataFormat.ERR
@@ -102,7 +102,7 @@ def load_ccsds():
                 #       b[i|c]b_[a|s|v]_\d_\d
                 policy_desc = r["description"].split("_")
                 if len(policy_desc) != 4:
-                    print(f'CCSDS | Test {t["test"]}: Policyrule {i} misconfigured.')
+                    print(f"CCSDS | Test {t['test']}: Policyrule {i} misconfigured.")
                     success = False
                     break
 
@@ -125,13 +125,13 @@ def load_ccsds():
                         params.append(bib_param_key_good)
 
                 else:
-                    print(f'CCSDS | Test {t["test"]}: Policyrule {i} sec ctx misconfigured.')
+                    print(f"CCSDS | Test {t['test']}: Policyrule {i} sec ctx misconfigured.")
                     success = False
                     break
 
                 sec_role = policy_desc[1]
                 if sec_role != "s" and sec_role != "a" and sec_role != "v":
-                    print(f'CCSDS | Test {t["test"]}: Policyrule {i} sec role misconfigured.')
+                    print(f"CCSDS | Test {t['test']}: Policyrule {i} sec role misconfigured.")
                     success = False
                     break
 
@@ -175,7 +175,7 @@ def load_ccsds():
                 input_data_format=input_format,
                 expected_output_format=output_format,
             )
-            print(f'CCSDS | Test {t["test"]}: Appending case.')
+            print(f"CCSDS | Test {t['test']}: Appending case.")
 
     def _make_test(case):
         def _test(self):
