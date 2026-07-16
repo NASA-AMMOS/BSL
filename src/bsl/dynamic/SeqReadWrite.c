@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BPSecLib_Private.h"
 
 #include "SeqReadWrite.h"
 

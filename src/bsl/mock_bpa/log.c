@@ -26,8 +26,8 @@
  * safety of event sources.
  */
 #include "log.h"
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/BSLConfig.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BSLConfig.h"
 
 #include <pthread.h>
 #include <stdarg.h>

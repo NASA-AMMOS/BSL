@@ -25,8 +25,8 @@
  * Implementation of COSE structures @cite rfc9052.
  */
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/dynamic/CBOR.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/dynamic/CBOR.h"
 
 #include "CoseMsg.h"
 

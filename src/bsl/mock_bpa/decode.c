@@ -29,8 +29,8 @@
 #include "decode.h"
 #include "agent.h"
 #include "crc.h"
-#include <bsl/BPSecLib_Public.h>
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BPSecLib_Public.h"
+#include "bsl/BPSecLib_Private.h"
 
 #include <qcbor/qcbor_spiffy_decode.h>
 

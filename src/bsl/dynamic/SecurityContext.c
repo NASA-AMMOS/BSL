@@ -25,7 +25,7 @@
  * @ingroup backend_dyn
  *
  */
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BPSecLib_Private.h"
 
 #include "AbsSecBlock.h"
 #include "CBOR.h"

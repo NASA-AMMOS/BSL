@@ -26,7 +26,7 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <sys/time.h>
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BPSecLib_Private.h"
 #include "SeqReadWrite.h"
 
 // NOLINTNEXTLINE

@@ -63,8 +63,8 @@
 #include <m-array.h>
 #include <m-bptree.h>
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/dynamic/CBOR.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/dynamic/CBOR.h"
 
 #ifdef __cplusplus
 extern "C" {

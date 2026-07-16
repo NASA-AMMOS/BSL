@@ -28,7 +28,7 @@
 #include "crc.h"
 #include <arpa/inet.h>
 #include <inttypes.h>
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BPSecLib_Private.h"
 
 static void mock_bpa_crc_crc16_init(void *state)
 {

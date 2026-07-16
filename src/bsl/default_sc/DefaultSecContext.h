@@ -28,10 +28,10 @@
 #ifndef BSLX_SECCTXERR_H_
 #define BSLX_SECCTXERR_H_
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/BPSecLib_Public.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
 // for option values
-#include <bsl/default_sc/rfc9173.h>
+#include "bsl/default_sc/rfc9173.h"
 
 /// Internal BIB option enumerations
 enum BSLX_BIB_Options_e

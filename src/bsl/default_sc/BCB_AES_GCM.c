@@ -30,9 +30,9 @@
 #include <qcbor/qcbor_encode.h>
 #include <qcbor/qcbor_spiffy_decode.h>
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/crypto/CryptoInterface.h>
-#include <bsl/dynamic/CBOR.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/crypto/CryptoInterface.h"
+#include "bsl/dynamic/CBOR.h"
 
 #include "DefaultSecContext.h"
 #include "DefaultSecContext_Private.h"

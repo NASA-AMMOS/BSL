@@ -31,7 +31,7 @@
 #include <sys/types.h>
 #include <m-array.h>
 
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BPSecLib_Private.h"
 #include "SamplePolicyProvider.h"
 
 /** @struct BSLP_SecOperPtrList_t

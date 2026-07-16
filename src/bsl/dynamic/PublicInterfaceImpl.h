@@ -29,8 +29,8 @@
 #include <m-dict.h>
 #include <m-bptree.h>
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/BPSecLib_Public.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
 
 #ifdef __cplusplus
 extern "C" {

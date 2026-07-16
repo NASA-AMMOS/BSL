@@ -26,7 +26,7 @@
  */
 #include <netinet/in.h>
 
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BPSecLib_Private.h"
 
 #include "encode.h"
 #include "agent.h"

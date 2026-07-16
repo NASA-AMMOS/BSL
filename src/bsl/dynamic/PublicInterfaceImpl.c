@@ -27,8 +27,8 @@
  */
 #include <inttypes.h>
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/BPSecLib_Public.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
 
 #include "PublicInterfaceImpl.h"
 #include "AbsSecBlock.h"

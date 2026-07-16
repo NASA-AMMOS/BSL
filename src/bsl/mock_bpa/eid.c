@@ -25,8 +25,8 @@
  * Definitions for EID handling.
  */
 #include "eid.h"
-#include <bsl/BSLConfig.h>
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BSLConfig.h"
+#include "bsl/BPSecLib_Private.h"
 
 #include <string.h>
 #include <strings.h>

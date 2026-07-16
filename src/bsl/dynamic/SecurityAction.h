@@ -20,7 +20,7 @@
  * subcontract 1700763.
  */
 #include <m-array.h>
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BPSecLib_Private.h"
 #include "SecOperation.h"
 
 /// OPLIST for ::BSL_SecOper_s

@@ -33,9 +33,9 @@
 #include <m-deque.h>
 #include <m-bptree.h>
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/crypto/CryptoInterface.h>
-#include <bsl/dynamic/CBOR.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/crypto/CryptoInterface.h"
+#include "bsl/dynamic/CBOR.h"
 
 #include "CoseContext.h"
 #include "CoseContext_Private.h"

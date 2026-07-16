@@ -24,13 +24,13 @@
  * Definitions for Agent initialization.
  * @ingroup mock_bpa
  */
-#include <bsl/BPSecLib_Public.h>
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/dynamic/SeqReadWrite.h>
-#include <bsl/default_sc/DefaultSecContext.h>
-#include <bsl/default_sc/rfc9173.h>
-#include <bsl/cose_sc/CoseContext.h>
-#include <bsl/sample_pp/SamplePolicyProvider.h>
+#include "bsl/BPSecLib_Public.h"
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/dynamic/SeqReadWrite.h"
+#include "bsl/default_sc/DefaultSecContext.h"
+#include "bsl/default_sc/rfc9173.h"
+#include "bsl/cose_sc/CoseContext.h"
+#include "bsl/sample_pp/SamplePolicyProvider.h"
 #include <errno.h>
 #include <netinet/in.h>
 #include <poll.h>

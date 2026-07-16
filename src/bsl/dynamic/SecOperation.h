@@ -28,7 +28,7 @@
 #define BSLB_SECOPERATIONS_H_
 
 #include <stdint.h>
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BPSecLib_Private.h"
 #include "IdValPair.h"
 
 struct BSL_SecOper_s

@@ -26,8 +26,8 @@
 #include <qcbor/qcbor_encode.h>
 #include <qcbor/qcbor_spiffy_decode.h>
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/front/TextUtil.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/front/TextUtil.h"
 
 #include "AbsSecBlock.h"
 #include "CBOR.h"

@@ -33,10 +33,10 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/BPSecLib_Public.h>
-#include <bsl/crypto/CryptoInterface.h>
-#include <bsl/sample_pp/PolicyParser.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
+#include "bsl/crypto/CryptoInterface.h"
+#include "bsl/sample_pp/PolicyParser.h"
 
 #include "agent.h"
 #include "log.h"

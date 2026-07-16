@@ -24,7 +24,7 @@
  * @ingroup backend_dyn
  * @brief Defines interactions with an external Policy Provider.
  */
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BPSecLib_Private.h"
 
 #include "PublicInterfaceImpl.h"
 #include "SecurityActionSet.h"

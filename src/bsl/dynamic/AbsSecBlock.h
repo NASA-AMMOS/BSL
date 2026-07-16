@@ -39,7 +39,7 @@
 #include <qcbor/qcbor_encode.h>
 #include <qcbor/qcbor_decode.h>
 
-#include <bsl/BPSecLib_Public.h>
+#include "bsl/BPSecLib_Public.h"
 
 #include "IdValPair.h"
 

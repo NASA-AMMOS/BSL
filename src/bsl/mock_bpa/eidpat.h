@@ -32,7 +32,7 @@
 #include <m-bptree.h>
 #include <m-deque.h>
 
-#include <bsl/BPSecLib_Private.h>
+#include "bsl/BPSecLib_Private.h"
 
 #include "eid.h"
 

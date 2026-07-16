@@ -30,8 +30,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <bsl/front/SeqReader.h>
-#include <bsl/front/SeqWriter.h>
+#include "bsl/front/SeqReader.h"
+#include "bsl/front/SeqWriter.h"
 
 #ifdef __cplusplus
 extern "C" {
