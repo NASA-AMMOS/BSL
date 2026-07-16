@@ -21,10 +21,10 @@
  */
 #include <unity.h>
 
-#include <mock_bpa/agent.h>
-#include <mock_bpa/eid.h>
-#include <mock_bpa/eidpat.h>
-#include <mock_bpa/log.h>
+#include <bsl/mock_bpa/agent.h>
+#include <bsl/mock_bpa/eid.h>
+#include <bsl/mock_bpa/eidpat.h>
+#include <bsl/mock_bpa/log.h>
 
 #define TEST_CASE(...)
 

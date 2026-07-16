@@ -25,13 +25,12 @@
 #include <openssl/rand.h>
 #include <unity.h>
 
-#include <BPSecLib_Private.h>
-#include <CryptoInterface.h>
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/crypto/CryptoInterface.h>
 
-#include <backend/UtilDefs_SeqReadWrite.h>
-#include <backend/PublicInterfaceImpl.h>
-#include <mock_bpa/agent.h>
-#include <mock_bpa/log.h>
+#include <bsl/dynamic/PublicInterfaceImpl.h>
+#include <bsl/mock_bpa/agent.h>
+#include <bsl/mock_bpa/log.h>
 
 #include "DefaultScUtils.h"
 

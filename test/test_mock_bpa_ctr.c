@@ -22,9 +22,9 @@
 #include <inttypes.h>
 #include <unity.h>
 #include "DefaultScUtils.h"
-#include <mock_bpa/ctr.h>
-#include <mock_bpa/agent.h>
-#include <mock_bpa/log.h>
+#include <bsl/mock_bpa/ctr.h>
+#include <bsl/mock_bpa/agent.h>
+#include <bsl/mock_bpa/log.h>
 
 void suiteSetUp(void)
 {

@@ -7,4 +7,5 @@ Description: BSL Sample Policy Provider
 Version: @PROJECT_VERSION@
 Requires: bsl, m-lib >= 0.8
 Requires.private: jansson >= 2.14, bsl-default-sc, bsl-cose-sc
+Cflags: -I${includedir}
 Libs: -L${libdir} -lbsl_sample_pp
