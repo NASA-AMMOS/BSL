@@ -22,6 +22,7 @@
 
 /** @file
  * @ingroup crypto
+ * Backend implementation of the crypto API using ::BSL_KeyStore_Descriptors_t callbacks.
  */
 #include "KeyStore.h"
 #include "CryptoInterface.h"
@@ -39,6 +40,13 @@ BSL_KeyStore_Descriptors_t BSL_KeyStore_State = BSL_KeyStore_Descriptors_EMPTY;
 int BSL_KeyStore_Init(BSL_KeyStore_Descriptors_t desc)
 {
     // GCOV_EXCL_START
+    CHK_PRECONDITION(desc.new_key);
+    CHK_PRECONDITION(desc.acquire_key);
+    CHK_PRECONDITION(desc.release_key);
+    CHK_PRECONDITION(desc.find_key);
+    CHK_PRECONDITION(desc.set_keymat);
+    CHK_PRECONDITION(desc.get_keymat);
+    CHK_PRECONDITION(desc.get_parameter);
     CHK_PRECONDITION(desc.update_stats);
     CHK_PRECONDITION(desc.get_stats);
     // GCOV_EXCL_STOP

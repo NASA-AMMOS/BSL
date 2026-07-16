@@ -34,7 +34,7 @@ The BSL as a whole is separated into two primary layers of implementation: an AP
 The Frontend library provides the service API for the BSL to be called by its associated [BPA integration](@ref bpa-integrators) and for stable public APIs used by [Policy Provider implementations](@ref policy-providers) and [Security Context implementations](@ref security-contexts).
 The Backend library implements forward-declared structs and functions from the Frontend using specific concrete data containers, algorithms, _etc._
 
-The BSL source repository also contains @ref example-pps and @ref example-default-scs to actually exercise the BSL during testing, and a @ref mock-bpa which allows as-built integration testing of the BSL using a pseudo-daemon process.
+The BSL source repository also contains @ref example-pps and @ref example-scs to actually exercise the BSL during testing, and a @ref mock-bpa which allows as-built integration testing of the BSL using a pseudo-daemon process.
 
 @dot
 digraph example {
@@ -47,12 +47,12 @@ digraph example {
     host [ label="Host" ];
     bpa [ label="BPA" ];
     crypto [ label="Crypto\nFunctions" ];
-    reg_pol [ label="Policy\nRegistry" ];
+    reg_pp [ label="Policy Provider\nRegistry" ];
     reg_sc [ label="Security Context\nRegistry" ];
     backend -> host [ arrowhead="open", style="dashed" ];
     backend -> bpa [ arrowhead="open", style="dashed" ];
     backend -> crypto [ arrowhead="open", style="dashed" ];
-    backend -> reg_pol [ arrowhead="open", style="dashed" ];
+    backend -> reg_pp [ arrowhead="open", style="dashed" ];
     backend -> reg_sc [ arrowhead="open", style="dashed" ];
 }
 @enddot
@@ -88,8 +88,8 @@ This is the concrete implementation of a backend using dynamic heap-allocated co
 It uses POSIX APIs to provide necessary Host functions for the BSL, and OpenSSL APIs to provide crypto functions for the BSL.
 
 
-@defgroup example_pp Example Policy Provider
-@brief Implementation of a simple rule-based policy provider.
+@defgroup example_pp Sample Policy Provider
+@brief Implementation of a simple rule-based policy provider configured with JSON input.
 
 This group contains files used by the Example Policy Provider library included with the BSL.
 
@@ -100,11 +100,25 @@ This group contains files used by the Example Policy Provider library included w
 This group contains files used by the Default Security Contexts (RFC 9173 @cite rfc9173) library included with the BSL.
 
 
+@defgroup cose_sc COSE Context
+@brief Implementation of the COSE Context using the BSL crypto API.
+
+This group contains files used by the COSE Context (draft @cite draft-ietf-dtn-bpsec-cose) library included with the BSL.
+
+
+@defgroup crypto Cryptographic Processing and Key Store API
+@brief Implementation of the BSL crypto API by a software backend and user of the BSL key store interface.
+
+This group contains files used by the Default Security Contexts (RFC 9173 @cite rfc9173) library included with the BSL.
+
+
 @defgroup mock_bpa Example/Mock BP Agent
 @brief Files used in the Mock BPA used for testing.
 
 The Mock BPA performs whole-bundle encoding and decoding (CODEC) functions, but no other stateful bundle processing.
 This allows end-to-end bundle testing with real policy configurations.
+
+The Mock BPA also implements an in-memory key store registered with the BSL crypto library.
 
 
 @defgroup unit_test Unit Testing

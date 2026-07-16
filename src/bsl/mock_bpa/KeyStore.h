@@ -22,6 +22,8 @@
 
 /** @file
  * @ingroup mock_bpa
+ * Declaration of functions to load and manipulate the Mock BPA key store
+ * separate from the API used by the crypto library.
  */
 
 #ifndef BSL_MOCKBPA_KEYSTORE_H_

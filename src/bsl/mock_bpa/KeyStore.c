@@ -22,6 +22,7 @@
 
 /** @file
  * @ingroup mock_bpa
+ * Provider of a key store via the crypto API ::BSL_KeyStore_Descriptors_t.
  */
 
 #include "KeyStore.h"

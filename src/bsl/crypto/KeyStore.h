@@ -68,6 +68,10 @@ typedef struct
     uint64_t stats[BSL_CRYPTO_KEYSTATS_MAX_INDEX];
 } BSL_Crypto_KeyStats_t;
 
+/** The set of callback function pointers which actually implement
+ * a key store.
+ * When registering, all of the functions need to be non-NULL.
+ */
 typedef struct
 {
     /** Construct a new default empty key, outside of a key store.
@@ -85,24 +89,49 @@ typedef struct
     BSL_Crypto_KeyHandle_t (*acquire_key)(BSL_Crypto_KeyHandle_t handle);
 
     /** Release the use of a handle.
+     * When all active handles are released the key should be destroyed.
      * @param[in] handle The handle to release.
      * If NULL handle this is a do-nothing.
      */
     void (*release_key)(BSL_Crypto_KeyHandle_t handle);
 
-    int (*find_key)(const BSL_Data_t *key_id, BSL_Crypto_KeyHandle_t *handle);
+    /** Find an identified key in the key store.
+     * Some keys are ephemeral and not registered in the store.
+     * @param[in] keyid A unique-to-the-store identifier for a key.
+     * @param[out] handle If found, will be set non-null handle.
+     * @return BSL_SUCCESS if found.
+     */
+    int (*find_key)(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *handle);
 
+    /** Set the (plaintext) key material for a key.
+     * @param[in] handle The handle to the key.
+     * @param[in] data Non-null pointer to key bytes, which will be copied.
+     * @return BSL_SUCCESS if valid.
+     */
     int (*set_keymat)(BSL_Crypto_KeyHandle_t handle, const BSL_Data_t *data);
 
+    /** Get the (plaintext) key material for a key.
+     * @param[in] handle The handle to the key.
+     * @param[out] data Non-null pointer to output struct, which will be set
+     * to a view on the data.
+     * @return BSL_SUCCESS if valid.
+     */
     int (*get_keymat)(BSL_Crypto_KeyHandle_t handle, BSL_Data_t *view);
 
+    /** Get a specific parameter which may be attached to a key.
+     * @param[in] handle The handle to the key.
+     * @param param_id The unique identifier for the parameter.
+     * The available parameters will be determined by the key source
+     * (e.g. COSE_Key parameters).
+     * @return A non-null pointer if the parameter exists.
+     */
     const BSL_IdValPair_t *(*get_parameter)(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
-    /** @brief Update telemetry counters for a key.
+    /** Update telemetry counters for a key.
      */
     void (*update_stats)(BSL_Crypto_KeyHandle_t handle, uint64_t use, uint64_t bytes);
 
-    /** @brief Get full counters for a key.
+    /** Get full counters for a key.
      */
     int (*get_stats)(BSL_Crypto_KeyHandle_t handle, BSL_Crypto_KeyStats_t *stats);
 
@@ -171,6 +200,11 @@ bool BSL_Crypto_CompareKeys(BSL_Crypto_KeyHandle_t hdl1, BSL_Crypto_KeyHandle_t 
 int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *handle);
 
 /** Get key parameter for read-only access.
+ * @param[in] handle The handle to the key.
+ * @param param_id The unique identifier for the parameter.
+ * The available parameters will be determined by the key source
+ * (e.g. COSE_Key parameters).
+ * @return A non-null pointer if the parameter exists.
  */
 const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
