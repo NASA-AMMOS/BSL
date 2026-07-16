@@ -24,13 +24,14 @@
  * Definitions for bundle and block encoding.
  * @ingroup mock_bpa
  */
-#include <netinet/in.h>
+#include "encode.h"
+
+#include "agent.h"
+#include "crc.h"
 
 #include "bsl/BPSecLib_Private.h"
 
-#include "encode.h"
-#include "agent.h"
-#include "crc.h"
+#include <netinet/in.h>
 
 /// Match ::BSL_CBOR_Encode_f signature.
 static int bsl_mock_encode_eid_internal(QCBOREncodeContext *enc, const bsl_mock_eid_t *obj)

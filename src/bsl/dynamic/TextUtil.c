@@ -20,13 +20,15 @@
  * subcontract 1700763.
  */
 #include "bsl/front/TextUtil.h"
+
 #include "bsl/BPSecLib_Private.h"
+
+#include <inttypes.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <inttypes.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 
 int BSL_TextUtil_Base16_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool uppercase)
 {

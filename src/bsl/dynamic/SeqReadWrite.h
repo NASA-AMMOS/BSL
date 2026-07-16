@@ -26,12 +26,12 @@
 #ifndef BSL_SEQ_DATA_FLAT_H_
 #define BSL_SEQ_DATA_FLAT_H_
 
+#include "bsl/front/SeqReader.h"
+#include "bsl/front/SeqWriter.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-
-#include "bsl/front/SeqReader.h"
-#include "bsl/front/SeqWriter.h"
 
 #ifdef __cplusplus
 extern "C" {

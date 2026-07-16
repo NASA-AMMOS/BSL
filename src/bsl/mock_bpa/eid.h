@@ -27,10 +27,11 @@
 #ifndef BSL_MOCK_BPA_EID_H_
 #define BSL_MOCK_BPA_EID_H_
 
-#include <inttypes.h>
+#include "bsl/BPSecLib_Private.h"
+
 #include <m-string.h>
 
-#include "bsl/BPSecLib_Private.h"
+#include <inttypes.h>
 
 #ifdef __cplusplus
 extern "C" {

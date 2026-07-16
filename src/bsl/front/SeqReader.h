@@ -26,8 +26,8 @@
 #ifndef BSL_SEQREADER_H_
 #define BSL_SEQREADER_H_
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

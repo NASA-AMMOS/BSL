@@ -26,8 +26,9 @@
 #ifndef BSL_SEQWRITER_H_
 #define BSL_SEQWRITER_H_
 
-#include <stdint.h>
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

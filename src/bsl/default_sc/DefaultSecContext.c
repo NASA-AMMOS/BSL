@@ -24,19 +24,20 @@
  * @ingroup default_sc
  * Header for the implementation of an example default security context (RFC 9173).
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include "DefaultSecContext.h"
 
-#include <qcbor/qcbor_encode.h>
-#include <qcbor/qcbor_spiffy_decode.h>
+#include "DefaultSecContext_Private.h"
+#include "rfc9173.h"
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/crypto/CryptoInterface.h"
 
-#include "DefaultSecContext.h"
-#include "DefaultSecContext_Private.h"
-#include "rfc9173.h"
+#include <qcbor/qcbor_encode.h>
+#include <qcbor/qcbor_spiffy_decode.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 void BSLX_EncodeHeader(const BSL_CanonicalBlock_t *block, QCBOREncodeContext *encoder)
 {

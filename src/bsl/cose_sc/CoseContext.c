@@ -24,22 +24,23 @@
  * @ingroup cose_sc
  * Implementation of the COSE context @cite draft-ietf-dtn-bpsec-cose.
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include "CoseContext.h"
 
-#include <m-bstring.h>
-#include <m-variant.h>
-#include <m-deque.h>
-#include <m-bptree.h>
+#include "CoseContext_Private.h"
+#include "CoseMsg.h"
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/crypto/CryptoInterface.h"
 #include "bsl/dynamic/CBOR.h"
 
-#include "CoseContext.h"
-#include "CoseContext_Private.h"
-#include "CoseMsg.h"
+#include <m-bptree.h>
+#include <m-bstring.h>
+#include <m-deque.h>
+#include <m-variant.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 /** Acceptable target algorithms for MAC.
  * @note These must be sorted for @c bsearch() to work.

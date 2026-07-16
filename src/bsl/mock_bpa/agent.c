@@ -24,23 +24,26 @@
  * Definitions for Agent initialization.
  * @ingroup mock_bpa
  */
-#include "bsl/BPSecLib_Public.h"
+#include "agent.h"
+
+#include "decode.h"
+#include "eid.h"
+#include "eidpat.h"
+#include "encode.h"
+#include "log.h"
+
 #include "bsl/BPSecLib_Private.h"
-#include "bsl/dynamic/SeqReadWrite.h"
+#include "bsl/BPSecLib_Public.h"
+#include "bsl/cose_sc/CoseContext.h"
 #include "bsl/default_sc/DefaultSecContext.h"
 #include "bsl/default_sc/rfc9173.h"
-#include "bsl/cose_sc/CoseContext.h"
+#include "bsl/dynamic/SeqReadWrite.h"
 #include "bsl/sample_pp/SamplePolicyProvider.h"
+
 #include <errno.h>
 #include <netinet/in.h>
 #include <poll.h>
 #include <sys/socket.h>
-#include "agent.h"
-#include "log.h"
-#include "eid.h"
-#include "eidpat.h"
-#include "encode.h"
-#include "decode.h"
 
 static const char *sec_src_envar = "BSL_TEST_LOCAL_IPN_EID";
 

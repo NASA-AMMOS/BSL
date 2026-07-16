@@ -56,15 +56,15 @@
 #ifndef BSLB_IDVALPAIR_H_
 #define BSLB_IDVALPAIR_H_
 
-#include <stdint.h>
-
-#include <m-bstring.h>
-#include <m-shared-ptr.h>
-#include <m-array.h>
-#include <m-bptree.h>
-
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/dynamic/CBOR.h"
+
+#include <m-array.h>
+#include <m-bptree.h>
+#include <m-bstring.h>
+#include <m-shared-ptr.h>
+
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

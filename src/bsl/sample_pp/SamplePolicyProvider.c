@@ -25,14 +25,16 @@
  * @brief Local implementation of locally-defined data structures.
  * @ingroup example_pp
  */
+#include "SamplePolicyProvider.h"
+
+#include "bsl/BPSecLib_Private.h"
+
+#include <m-array.h>
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <m-array.h>
-
-#include "bsl/BPSecLib_Private.h"
-#include "SamplePolicyProvider.h"
 
 /** @struct BSLP_SecOperPtrList_t
  * Defines a basic list of ::BSL_SecOper_s pointers.

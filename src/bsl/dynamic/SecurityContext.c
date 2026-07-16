@@ -25,13 +25,13 @@
  * @ingroup backend_dyn
  *
  */
-#include "bsl/BPSecLib_Private.h"
-
 #include "AbsSecBlock.h"
 #include "CBOR.h"
 #include "PublicInterfaceImpl.h"
 #include "SecOperation.h"
 #include "SecurityActionSet.h"
+
+#include "bsl/BPSecLib_Private.h"
 
 static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_num, const BSL_AbsSecBlock_t *asb)
 {

@@ -19,9 +19,7 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <unity.h>
+#include "DefaultScUtils.h"
 
 #include <bsl/BPSecLib_Private.h>
 #include <bsl/crypto/CryptoInterface.h>
@@ -30,7 +28,9 @@
 #include <bsl/dynamic/PublicInterfaceImpl.h>
 #include <bsl/mock_bpa/MockBPA.h>
 
-#include "DefaultScUtils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unity.h>
 
 void suiteSetUp(void)
 {

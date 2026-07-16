@@ -24,9 +24,11 @@
  * @brief Fuzz the COSE Context result decoding.
  */
 #include "TestUtils.h"
-#include <bsl/mock_bpa/MockBPA.h>
+
 #include <bsl/cose_sc/CoseMsg.h>
 #include <bsl/dynamic/CBOR.h>
+#include <bsl/mock_bpa/MockBPA.h>
+
 #include <cinttypes>
 
 #define EXPECT_EQ(expect, got)          \

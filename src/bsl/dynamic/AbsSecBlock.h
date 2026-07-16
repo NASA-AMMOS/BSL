@@ -31,17 +31,17 @@
 #ifndef BSLB_ABSSECBLOCK_IMPL_H_
 #define BSLB_ABSSECBLOCK_IMPL_H_
 
-#include <stddef.h>
-#include <stdint.h>
-
-#include <m-shared-ptr.h>
-#include <m-array.h>
-#include <qcbor/qcbor_encode.h>
-#include <qcbor/qcbor_decode.h>
+#include "IdValPair.h"
 
 #include "bsl/BPSecLib_Public.h"
 
-#include "IdValPair.h"
+#include <m-array.h>
+#include <m-shared-ptr.h>
+#include <qcbor/qcbor_decode.h>
+#include <qcbor/qcbor_encode.h>
+
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

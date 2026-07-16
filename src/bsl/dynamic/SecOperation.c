@@ -25,6 +25,7 @@
  * @brief Defines a security operation.
  */
 #include "SecOperation.h"
+
 #include "IdValPair.h"
 
 size_t BSL_SecOper_Sizeof(void)

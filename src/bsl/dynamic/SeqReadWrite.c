@@ -24,14 +24,14 @@
  * Implementation of flat-buffer sequential access.
  */
 
+#include "SeqReadWrite.h"
+
+#include "bsl/BPSecLib_Private.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "bsl/BPSecLib_Private.h"
-
-#include "SeqReadWrite.h"
 
 void BSL_SeqReader_Destroy(BSL_SeqReader_t *obj)
 {

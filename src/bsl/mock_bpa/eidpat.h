@@ -28,13 +28,14 @@
 #ifndef BSL_MOCK_BPA_EIDPAT_H_
 #define BSL_MOCK_BPA_EIDPAT_H_
 
-#include <inttypes.h>
-#include <m-bptree.h>
-#include <m-deque.h>
+#include "eid.h"
 
 #include "bsl/BPSecLib_Private.h"
 
-#include "eid.h"
+#include <m-bptree.h>
+#include <m-deque.h>
+
+#include <inttypes.h>
 
 #ifdef __cplusplus
 extern "C" {

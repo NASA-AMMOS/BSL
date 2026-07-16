@@ -25,15 +25,16 @@
  *
  * @todo MAJOR Complete implementation for ApplySecurity so it can drop blocks or bundles as-needed.
  */
-#include <inttypes.h>
+#include "PublicInterfaceImpl.h"
+
+#include "AbsSecBlock.h"
+#include "CBOR.h"
+#include "SecurityActionSet.h"
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/BPSecLib_Public.h"
 
-#include "PublicInterfaceImpl.h"
-#include "AbsSecBlock.h"
-#include "CBOR.h"
-#include "SecurityActionSet.h"
+#include <inttypes.h>
 
 size_t BSL_LibCtx_Sizeof(void)
 {

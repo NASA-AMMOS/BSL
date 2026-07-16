@@ -29,14 +29,15 @@
 #ifndef BSLP_POLICY_PARSER_H_
 #define BSLP_POLICY_PARSER_H_
 
-#include <inttypes.h>
-#include <stdio.h>
-#include <jansson.h>
+#include "SamplePolicyProvider.h"
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/default_sc/rfc9173.h"
 
-#include "SamplePolicyProvider.h"
+#include <jansson.h>
+
+#include <inttypes.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {

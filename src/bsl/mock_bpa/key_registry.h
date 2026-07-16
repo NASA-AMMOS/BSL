@@ -27,9 +27,9 @@
 #ifndef BSL_MOCK_BPA_KEY_REGISTRY_H_
 #define BSL_MOCK_BPA_KEY_REGISTRY_H_
 
-#include <inttypes.h>
-
 #include "bsl/crypto/CryptoInterface.h"
+
+#include <inttypes.h>
 
 #ifdef __cplusplus
 extern "C" {

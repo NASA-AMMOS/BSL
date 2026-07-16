@@ -25,12 +25,13 @@
  * Definitions for EID handling.
  */
 #include "eid.h"
-#include "bsl/BSLConfig.h"
-#include "bsl/BPSecLib_Private.h"
 
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BSLConfig.h"
+
+#include <stdio.h>
 #include <string.h>
 #include <strings.h>
-#include <stdio.h>
 #include <sys/types.h>
 
 void bsl_mock_eid_init(bsl_mock_eid_t *eid)

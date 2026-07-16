@@ -29,19 +29,18 @@
  *  - It uses test inputs and vectors from the COSE Context draft @cite draft-ietf-dtn-bpsec-cose.
  *  - It does NOT use any of the "Plumbing" inside the BSL.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <unity.h>
+#include "TestUtils.h"
 
 #include <bsl/BPSecLib_Private.h>
-#include <bsl/mock_bpa/MockBPA.h>
-#include <bsl/crypto/CryptoInterface.h>
-
-#include <bsl/dynamic/PublicInterfaceImpl.h>
 #include <bsl/cose_sc/CoseContext.h>
 #include <bsl/cose_sc/CoseMsg.h>
+#include <bsl/crypto/CryptoInterface.h>
+#include <bsl/dynamic/PublicInterfaceImpl.h>
+#include <bsl/mock_bpa/MockBPA.h>
 
-#include "TestUtils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unity.h>
 
 static BSL_TestContext_t LocalTestCtx;
 

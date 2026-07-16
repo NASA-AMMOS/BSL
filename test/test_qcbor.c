@@ -19,12 +19,15 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include <inttypes.h>
-#include <unity.h>
+#include "TestUtils.h"
+
+#include <bsl/BPSecLib_Public.h>
+
 #include <m-string.h>
 #include <qcbor/qcbor_spiffy_decode.h>
-#include <bsl/BPSecLib_Public.h>
-#include "TestUtils.h"
+
+#include <inttypes.h>
+#include <unity.h>
 
 void test_qcbor_decode_without_head(void)
 {

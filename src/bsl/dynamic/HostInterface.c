@@ -23,11 +23,13 @@
  * @brief Implementation of the host BPA and its callback functions.
  * @ingroup backend_dyn
  */
-#include <stdarg.h>
-#include <pthread.h>
-#include <sys/time.h>
-#include "bsl/BPSecLib_Private.h"
 #include "SeqReadWrite.h"
+
+#include "bsl/BPSecLib_Private.h"
+
+#include <pthread.h>
+#include <stdarg.h>
+#include <sys/time.h>
 
 // NOLINTNEXTLINE
 /// Initialized to library default
