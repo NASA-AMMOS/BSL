@@ -564,6 +564,7 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
         case BSL_CRYPTO_AES_256:
             cipher = EVP_aes_256_gcm();
             break;
+        case BSL_CRYPTO_AES_192:
         default:
             BSL_LOG_ERR("Invalid AES variant");
             return BSL_ERR_FAILURE;
