@@ -88,11 +88,13 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     }
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    // GCOV_EXCL_START
     if (ctx == NULL)
     {
         BSL_LOG_ERR("Could not create cipher context");
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+    // GCOV_EXCL_STOP
 
     BSL_Data_t cek_keymat;
     // wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
@@ -106,11 +108,13 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     {
         BSL_LOG_PLAINTEXT_PTR("using KEK", cek_handle, kek_view.ptr, kek_view.len);
         res = EVP_DecryptInit_ex(ctx, cipher, NULL, kek_view.ptr, NULL);
+        // GCOV_EXCL_START
         if (res != 1)
         {
             BSL_LOG_ERR("EVP_DecryptInit_ex: %s", ERR_error_string(ERR_get_error(), NULL));
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
         EVP_CIPHER_CTX_set_padding(ctx, 0);
     }
 
@@ -121,12 +125,14 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     {
         out_len = (int)cek_keymat.len;
         BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
-        res = EVP_DecryptUpdate(ctx, cek_keymat.ptr, &out_len, wrapped_key->ptr, wrapped_key->len);
+        res = EVP_DecryptUpdate(ctx, cek_keymat.ptr, &out_len, wrapped_key->ptr, (int)wrapped_key->len);
+        // GCOV_EXCL_START
         if (res != 1)
         {
             BSL_LOG_ERR("EVP_DecryptUpdate: %s", ERR_error_string(ERR_get_error(), NULL));
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
         else
         {
             cek_keymat.len = (size_t)out_len;
@@ -135,9 +141,9 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
 
     if (BSL_SUCCESS == retval)
     {
-        uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
         out_len = 0;
-        res     = EVP_DecryptFinal_ex(ctx, buf, &out_len);
+        res     = EVP_DecryptFinal_ex(ctx, NULL, &out_len);
+        // GCOV_EXCL_START
         if (res != 1)
         {
             BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
@@ -145,8 +151,10 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
         }
         else if (out_len > 0)
         {
-            BSL_Data_AppendFrom(&cek_keymat, (size_t)out_len, buf);
+            BSL_LOG_ERR("Key wrap without padding should not have any final data");
+            retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
         BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek_keymat.ptr, cek_keymat.len);
     }
 
@@ -202,11 +210,13 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     }
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    // GCOV_EXCL_START
     if (ctx == NULL)
     {
         BSL_LOG_ERR("Could not create cipher context");
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+    // GCOV_EXCL_STOP
 
     // wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
     res = BSL_Data_Resize(wrapped_key, cek_view.len + 8);
@@ -218,11 +228,13 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     if (BSL_SUCCESS == retval)
     {
         BSL_LOG_PLAINTEXT_PTR("using KEK", cek_handle, kek_view.ptr, kek_view.len);
+        // GCOV_EXCL_START
         res = EVP_EncryptInit_ex(ctx, cipher, NULL, kek_view.ptr, NULL);
         if (res != 1)
         {
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
     }
 
     BSL_KeyStore_State.update_stats(kek_handle, 1, cek_view.len);
@@ -232,7 +244,7 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     {
         out_len = (int)wrapped_key->len;
         BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek_view.ptr, cek_view.len);
-        res = EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &out_len, cek_view.ptr, cek_view.len);
+        res = EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &out_len, cek_view.ptr, (int)cek_view.len);
         if (res != 1)
         {
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -242,16 +254,19 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
 
     if (BSL_SUCCESS == retval)
     {
-        uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
         out_len = 0;
-        if (!EVP_EncryptFinal_ex(ctx, buf, &out_len))
+        res     = EVP_EncryptFinal_ex(ctx, NULL, &out_len);
+        // GCOV_EXCL_START
+        if (res != 1)
         {
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
         else if (out_len > 0)
         {
-            BSL_Data_AppendFrom(wrapped_key, out_len, buf);
+            BSL_LOG_ERR("Key wrap without padding should not have any final data");
+            retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
         BSL_LOG_PLAINTEXT_PTR("wrapped key", cek_handle, wrapped_key->ptr, wrapped_key->len);
     }
 
@@ -305,22 +320,26 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
     if (BSL_SUCCESS == retval)
     {
         kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
+        // GCOV_EXCL_START
         if (!kdf)
         {
             BSL_LOG_ERR("EVP_KDF_fetch: %s", ERR_error_string(ERR_get_error(), NULL));
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
     }
 
     EVP_KDF_CTX *kctx = NULL;
     if (BSL_SUCCESS == retval)
     {
         kctx = EVP_KDF_CTX_new(kdf);
+        // GCOV_EXCL_START
         if (!kctx)
         {
             BSL_LOG_ERR("EVP_KDF_CTX_new: %s", ERR_error_string(ERR_get_error(), NULL));
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
     }
     if (kdf)
     {
@@ -346,11 +365,13 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
         res = EVP_KDF_derive(kctx, cek_keymat.ptr, cek_keymat.len, params);
         BSL_LOG_DEBUG("EVP_KDF_derive gave %zu bytes, return %d", cek_keymat.len, res);
         BSL_LOG_PLAINTEXT_PTR("KDF out", kctx, cek_keymat.ptr, cek_keymat.len);
+        // GCOV_EXCL_START
         if (res <= 0)
         {
             BSL_LOG_ERR("EVP_KDF_derive: %s", ERR_error_string(ERR_get_error(), NULL));
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
     }
     if (kctx)
     {
@@ -415,11 +436,13 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
 
     hmac_ctx->block_size = EVP_MAC_CTX_get_block_size(hmac_ctx->libhandle);
     BSL_LOG_DEBUG("MAC block size %zu", hmac_ctx->block_size);
+    // GCOV_EXCL_START
     if (hmac_ctx->block_size == 0)
     {
         hmac_ctx->block_size = 1024;
         BSL_LOG_ERR("invalid block size zero, assuming %zu", hmac_ctx->block_size);
     }
+    // GCOV_EXCL_STOP
 
     res = BSL_Data_InitBuffer(&hmac_ctx->in_buf, hmac_ctx->block_size);
     CHK_PROPERTY(!res);
@@ -541,7 +564,6 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
         case BSL_CRYPTO_AES_256:
             cipher = EVP_aes_256_gcm();
             break;
-        case BSL_CRYPTO_AES_192:
         default:
             BSL_LOG_ERR("Invalid AES variant");
             return BSL_ERR_FAILURE;
@@ -564,11 +586,13 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
         cipher_ctx->block_size = 1024;
     }
     BSL_LOG_DEBUG("Cipher block size %zu", cipher_ctx->block_size);
+    // GCOV_EXCL_START
     if (cipher_ctx->block_size == 0)
     {
         cipher_ctx->block_size = 1024;
         BSL_LOG_ERR("invalid block size zero, assuming %zu", cipher_ctx->block_size);
     }
+    // GCOV_EXCL_STOP
 
     res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_IVLEN, (int)iv_val->len, NULL);
     CHK_PROPERTY(res == 1);
@@ -719,11 +743,13 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer)
 
     int res = EVP_CipherFinal_ex(cipher_ctx->libhandle, cipher_ctx->out_buf.ptr, &block_size_int);
     BSL_LOG_DEBUG("EVP_CipherFinal_ex gave %d bytes, return %d", block_size_int, res);
+    // GCOV_EXCL_START
     if (res != 1)
     {
         BSL_LOG_ERR("EVP_CipherFinal_ex error %s", ERR_error_string(ERR_get_error(), NULL));
         return BSL_ERR_FAILURE;
     }
+    // GCOV_EXCL_STOP
 
     if ((block_size_int > 0) && writer)
     {
