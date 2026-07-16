@@ -6,6 +6,7 @@ libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
 Name: bsl
 Description: The Bundle Protocol Security Library (BSL)
 Version: @PROJECT_VERSION@
-Requires: qcbor >= 1.6, m-lib >= 0.8, openssl >= 3.0, jansson >= 2.14
+Requires: qcbor >= 1.6, m-lib >= 0.8
+Requires.private: openssl >= 3.0
 Cflags: -I${includedir}
 Libs: -L${libdir} -lbsl_front -lbsl_dynamic -lbsl_crypto

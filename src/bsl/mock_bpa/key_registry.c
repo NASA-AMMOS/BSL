@@ -29,6 +29,7 @@
 #include <bsl/dynamic/CBOR.h>
 #include <bsl/cose_sc/CoseMsg.h>
 #include <m-string.h>
+#include <jansson.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>

@@ -112,11 +112,23 @@ jobs:
           sparse-checkout: |
             mock-bpa-test
             lib-user-test
-      - name: Trial build
+      - name: Show pkg-config
+        env:
+          PKGS: bsl bsl-sample-pp
         run: |
-          pkg-config --print-provides --print-requires bsl
+          echo "Provides:"
+          pkg-config --print-provides ${PKGS}
+          echo "Requires:"
+          pkg-config --print-requires ${PKGS}
+          echo -n "CFlags: "
+          pkg-config --cflags ${PKGS}
+          echo -n "Libs: "
+          pkg-config --libs ${PKGS}
+      - name: Trial build
+        env:
+          PKGS: bsl bsl-sample-pp
+        run: |
           mkdir build
-          PKGS="bsl bsl-sample-pp"
           gcc -c $(pkg-config --cflags ${PKGS}) -o build/example.o lib-user-test/main.c
           gcc $(pkg-config --libs ${PKGS}) -o build/example build/example.o
           ./build/example
