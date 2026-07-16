@@ -29,7 +29,6 @@
 #include <bsl/dynamic/IdValPair.h>
 
 #define BSL_KeyStore_Descriptors_EMPTY \
-    (BSL_KeyStore_Descriptors_t)       \
     {                                  \
         .new_key = NULL                \
     }
@@ -50,7 +49,7 @@ int BSL_KeyStore_Init(BSL_KeyStore_Descriptors_t desc)
 
 void BSL_KeyStore_Deinit(void)
 {
-    BSL_KeyStore_State = BSL_KeyStore_Descriptors_EMPTY;
+    BSL_KeyStore_State = (BSL_KeyStore_Descriptors_t)BSL_KeyStore_Descriptors_EMPTY;
 }
 
 void BSL_Crypto_ReleaseKeyHandle(BSL_Crypto_KeyHandle_t keyhandle)
