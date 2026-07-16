@@ -6,4 +6,5 @@ Name: bsl-default-sc
 Description: BSL COSE Context provider
 Version: @PROJECT_VERSION@
 Requires: bsl
+Cflags: -I${includedir}
 Libs: -L${libdir} -lbsl_cose_sc
