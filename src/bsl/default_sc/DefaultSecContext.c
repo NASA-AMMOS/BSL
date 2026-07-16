@@ -32,7 +32,7 @@
 #include <qcbor/qcbor_spiffy_decode.h>
 
 #include <bsl/BPSecLib_Private.h>
-#include <bsl/CryptoInterface.h>
+#include <bsl/crypto/CryptoInterface.h>
 
 #include "DefaultSecContext.h"
 #include "DefaultSecContext_Private.h"

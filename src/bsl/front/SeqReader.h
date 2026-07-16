@@ -19,47 +19,42 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-
 /** @file
- * @ingroup mock_bpa
+ * @ingroup frontend
+ * Sequential reader interface.
  */
+#ifndef BSL_SEQREADER_H_
+#define BSL_SEQREADER_H_
 
-#ifndef BSL_MOCK_BPA_KEY_REGISTRY_H_
-#define BSL_MOCK_BPA_KEY_REGISTRY_H_
-
-#include <inttypes.h>
-#include <stdio.h>
-#include <jansson.h>
-
-#include <bsl/crypto/CryptoInterface.h>
+#include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** @brief Initialize keys
- * @param[in] file_path path to JSON file with JWKs or CBOR file with @c COSE_KeySet
- * @return 0 if successful.
- */
-int mock_bpa_key_registry_init(const char *file_path);
+// Forward declaration for file-like sequential reader.
+typedef struct BSL_SeqReader_s BSL_SeqReader_t;
 
-/** @warning Exposed only for testing.
- * @param infd The file descriptor to read from.
+/** Release resources from a sequential reader.
+ * This also frees memory of the instance itself.
+ *
+ * @param[in,out] obj The reader handle.
  */
-int mock_bpa_key_registry_init_jwk(int infd);
+void BSL_SeqReader_Destroy(BSL_SeqReader_t *obj);
 
-/** @warning Exposed only for testing.
- * @param infd The file descriptor to read from.
+/** Iterate a sequential reader.
+ *
+ * @param[in,out] obj The reader handle.
+ * @param[out] buf The output buffer to fill.
+ * @param[in,out] bufsize The available output buffer size as input,
+ * set to the used buffer size as output.
+ * @return Zero if successful.
  */
-int mock_bpa_key_registry_init_cosekey(int infd);
-
-/**
- * Custom RNG function for BCB testing
- */
-int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len);
+int BSL_SeqReader_Get(BSL_SeqReader_t *obj, uint8_t *buf, size_t *bufsize);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif
+#endif /* BSL_SEQREADER_H_ */

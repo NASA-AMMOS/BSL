@@ -23,7 +23,7 @@
  * Backend cryptography implementation
  * @ingroup backend_dyn
  */
-#include "bsl/CryptoInterface.h"
+#include "CryptoInterface.h"
 #include <bsl/BPSecLib_Private.h>
 #include <bsl/front/TextUtil.h>
 #include <bsl/dynamic/IdValPair.h>

@@ -34,7 +34,6 @@
 #include <jansson.h>
 
 #include <bsl/BPSecLib_Private.h>
-#include <bsl/CryptoInterface.h>
 #include <bsl/default_sc/rfc9173.h>
 
 #include "SamplePolicyProvider.h"

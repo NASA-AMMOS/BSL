@@ -39,16 +39,11 @@
 
 #include "bsl/BSLConfig.h"
 #include "bsl/front/Data.h"
+#include "bsl/front/SeqReader.h"
+#include "bsl/front/SeqWriter.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-/// This annotation on a function requires the caller to capture and inspect the return value.
-#if defined(__GNUC__) || defined(__clang__)
-#define BSL_REQUIRE_CHECK __attribute__((warn_unused_result))
-#else
-#define BSL_REQUIRE_CHECK
 #endif
 
 // Forward declaration of this struct.

@@ -33,7 +33,7 @@
 #include <time.h>
 
 #include <bsl/BPSecLib_Private.h>
-#include <bsl/CryptoInterface.h>
+#include <bsl/crypto/CryptoInterface.h>
 #include <bsl/dynamic/CBOR.h>
 
 #include "DefaultSecContext.h"

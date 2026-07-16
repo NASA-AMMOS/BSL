@@ -249,47 +249,6 @@ void BSL_LogEvent(int severity, const char *filename, int lineno, const char *fu
 
 #define ASSERT_POSTCONDITION(expr) ASSERT_TEMPL(expr, "Panic: Precondition failed to satisfy")
 
-// Forward declaration for file-like sequential reader.
-typedef struct BSL_SeqReader_s BSL_SeqReader_t;
-
-/** Release resources from a sequential reader.
- * This also frees memory of the instance itself.
- *
- * @param[in,out] obj The reader handle.
- */
-void BSL_SeqReader_Destroy(BSL_SeqReader_t *obj);
-
-/** Iterate a sequential reader.
- *
- * @param[in,out] obj The reader handle.
- * @param[out] buf The output buffer to fill.
- * @param[in,out] bufsize The available output buffer size as input,
- * set to the used buffer size as output.
- * @return Zero if successful.
- */
-int BSL_SeqReader_Get(BSL_SeqReader_t *obj, uint8_t *buf, size_t *bufsize);
-
-// Forward-declaration for file-like interface for a sequential writer.
-typedef struct BSL_SeqWriter_s BSL_SeqWriter_t;
-
-/** Release resources from a sequential writer and possibly commit the writes.
- * This also frees memory of the instance itself.
- *
- * @param[in,out] obj The writer handle.
- * @param success Set true if all of the writing succeeded.
- */
-void BSL_SeqWriter_Destroy(BSL_SeqWriter_t *obj, bool success);
-
-/** Iterate a sequential writer.
- *
- * @param obj The writer handle.
- * @param[in] buf The input buffer to copy from.
- * @param[in,out] bufsize The available input buffer size as input,
- * set to the used buffer size as output.
- * @return Zero if successful.
- */
-int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t bufsize);
-
 /** Static initializer for an invalid ::BSL_HostEID_t.
  * Even after this, BSL_HostEID_Init() must be used to get into a valid state.
  */

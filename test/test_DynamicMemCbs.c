@@ -22,7 +22,7 @@
 #include <unity.h>
 
 #include <bsl/BPSecLib_Public.h>
-#include <bsl/CryptoInterface.h>
+#include <bsl/crypto/CryptoInterface.h>
 #include <bsl/dynamic/SecurityActionSet.h>
 #include <bsl/sample_pp/SamplePolicyProvider.h>
 #include <bsl/default_sc/DefaultSecContext.h>

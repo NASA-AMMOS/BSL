@@ -19,47 +19,43 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-
 /** @file
- * @ingroup mock_bpa
+ * @ingroup frontend
+ * Sequential reader interface.
  */
+#ifndef BSL_SEQWRITER_H_
+#define BSL_SEQWRITER_H_
 
-#ifndef BSL_MOCK_BPA_KEY_REGISTRY_H_
-#define BSL_MOCK_BPA_KEY_REGISTRY_H_
-
-#include <inttypes.h>
-#include <stdio.h>
-#include <jansson.h>
-
-#include <bsl/crypto/CryptoInterface.h>
+#include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** @brief Initialize keys
- * @param[in] file_path path to JSON file with JWKs or CBOR file with @c COSE_KeySet
- * @return 0 if successful.
- */
-int mock_bpa_key_registry_init(const char *file_path);
+// Forward-declaration for file-like interface for a sequential writer.
+typedef struct BSL_SeqWriter_s BSL_SeqWriter_t;
 
-/** @warning Exposed only for testing.
- * @param infd The file descriptor to read from.
+/** Release resources from a sequential writer and possibly commit the writes.
+ * This also frees memory of the instance itself.
+ *
+ * @param[in,out] obj The writer handle.
+ * @param success Set true if all of the writing succeeded.
  */
-int mock_bpa_key_registry_init_jwk(int infd);
+void BSL_SeqWriter_Destroy(BSL_SeqWriter_t *obj, bool success);
 
-/** @warning Exposed only for testing.
- * @param infd The file descriptor to read from.
+/** Iterate a sequential writer.
+ *
+ * @param obj The writer handle.
+ * @param[in] buf The input buffer to copy from.
+ * @param[in,out] bufsize The available input buffer size as input,
+ * set to the used buffer size as output.
+ * @return Zero if successful.
  */
-int mock_bpa_key_registry_init_cosekey(int infd);
-
-/**
- * Custom RNG function for BCB testing
- */
-int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len);
+int BSL_SeqWriter_Put(BSL_SeqWriter_t *obj, const uint8_t *buf, size_t bufsize);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif
+#endif /* BSL_SEQWRITER_H_ */

@@ -37,7 +37,7 @@
 
 #include <bsl/BPSecLib_Private.h>
 #include <bsl/mock_bpa/MockBPA.h>
-#include <bsl/CryptoInterface.h>
+#include <bsl/crypto/CryptoInterface.h>
 #include <bsl/default_sc/DefaultSecContext.h>
 
 #include "DefaultScUtils.h"

@@ -29,7 +29,6 @@ target_sources(bsl_front PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}/bsl/BSLConfig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/BPSecLib_Private.h
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/BPSecLib_Public.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/CryptoInterface.h
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/front/Data.h
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/front/TextUtil.h
 )
@@ -50,13 +49,14 @@ target_include_directories(
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-# Crypto Library
-set(BSL_CRYPTO_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/crypto/CryptoInterface.c
-)
-
+# Crypto and Keystore library
 add_library(bsl_crypto)
-target_sources(bsl_crypto PRIVATE ${BSL_CRYPTO_C})
+target_sources(bsl_crypto PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/crypto/CryptoInterface.h
+)
+target_sources(bsl_crypto PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/crypto/CryptoInterface.c
+)
 set_target_properties(bsl_crypto
     PROPERTIES
         VERSION ${CMAKE_PROJECT_VERSION}
@@ -98,9 +98,6 @@ target_link_libraries(bsl_default_sc PUBLIC bsl_crypto)
 target_link_libraries(bsl_default_sc PUBLIC qcbor::qcbor)
 
 # COSE Security Context library
-set(BSL_COSE_SC_H
-)
-
 add_library(bsl_cose_sc)
 target_sources(bsl_cose_sc PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/cose_sc/CoseContext.h
@@ -121,19 +118,15 @@ target_link_libraries(bsl_cose_sc PUBLIC MLIB::mlib)
 target_link_libraries(bsl_cose_sc PUBLIC qcbor::qcbor)
 
 # Example Policy Provider library
-set(BSL_SAMPLE_PP_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/SamplePolicyProvider.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/PolicyParser.h
-)
-
-set(BSL_SAMPLE_PP_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/SamplePolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/PolicyParser.c
-)
-
 add_library(bsl_sample_pp)
-target_sources(bsl_sample_pp PUBLIC ${BSL_SAMPLE_PP_H})
-target_sources(bsl_sample_pp PRIVATE ${BSL_SAMPLE_PP_C})
+target_sources(bsl_sample_pp PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/SamplePolicyProvider.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/PolicyParser.h
+)
+target_sources(bsl_sample_pp PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/SamplePolicyProvider.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/PolicyParser.c
+)
 set_target_properties(bsl_sample_pp
     PROPERTIES
         VERSION ${CMAKE_PROJECT_VERSION}

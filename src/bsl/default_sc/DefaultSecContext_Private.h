@@ -34,7 +34,7 @@
 
 #include <bsl/BPSecLib_Private.h>
 #include <bsl/BPSecLib_Public.h>
-#include <bsl/CryptoInterface.h>
+#include <bsl/crypto/CryptoInterface.h>
 
 #include "rfc9173.h"
 

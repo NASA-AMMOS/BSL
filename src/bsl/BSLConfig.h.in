@@ -55,6 +55,13 @@ const char * bsl_version(void);
  */
 #cmakedefine01 BSL_LOG_PLAINTEXT_ENABLE
 
+/// This annotation on a function requires the caller to capture and inspect the return value.
+#if defined(__GNUC__) || defined(__clang__)
+#define BSL_REQUIRE_CHECK __attribute__((warn_unused_result))
+#else
+#define BSL_REQUIRE_CHECK
+#endif
+
 /** Force the use of M_ prefixed macros for M*LIB
  */
 //#define M_USE_SMALL_NAME 0

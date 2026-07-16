@@ -26,7 +26,7 @@
 #include <unity.h>
 
 #include <bsl/BPSecLib_Private.h>
-#include <bsl/CryptoInterface.h>
+#include <bsl/crypto/CryptoInterface.h>
 
 #include <bsl/dynamic/UtilDefs_SeqReadWrite.h>
 #include <bsl/dynamic/PublicInterfaceImpl.h>
