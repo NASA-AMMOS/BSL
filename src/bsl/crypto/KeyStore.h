@@ -108,18 +108,18 @@ typedef struct
 
 } BSL_KeyStore_Descriptors_t;
 
-/** Initialize the keystore subsystem.
+/** Initialize the key store subsystem.
  * This must be called once per process.
  *
  * @warning This function is not thread safe and should be used before any
  * ::BSL_LibCtx_s is initialized or other BSL interfaces used.
  *
- * @param desc The descriptor to use for future keystore access.
+ * @param desc The descriptor to use for future key store access.
  * @return Zero if successful, negative on error.
  */
 int BSL_KeyStore_Init(BSL_KeyStore_Descriptors_t desc);
 
-/** Deinitialize the keystore subsystem.
+/** Deinitialize the key store subsystem.
  * This should be called at the end of the process.
  *
  * @warning This function is not thread safe and should be used after any
