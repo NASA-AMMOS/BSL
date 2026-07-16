@@ -24,7 +24,7 @@
  * @brief Fuzz the BPv7 EID Pattern decoding from text.
  */
 #include "TestUtils.h"
-#include <mock_bpa/MockBPA.h>
+#include <bsl/mock_bpa/MockBPA.h>
 #include <m-bstring.h>
 #include <m-string.h>
 #include <cinttypes>

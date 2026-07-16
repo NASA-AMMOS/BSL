@@ -24,13 +24,13 @@
 
 #include <m-string.h>
 
-#include <CryptoInterface.h>
-#include <backend/PublicInterfaceImpl.h>
-#include <backend/SecOperation.h>
-#include <backend/Variant.h>
-#include <backend/SecurityActionSet.h>
-#include <policy_provider/SamplePolicyProvider.h>
-#include <mock_bpa/ctr.h>
+#include <bsl/crypto/CryptoInterface.h>
+#include <bsl/dynamic/PublicInterfaceImpl.h>
+#include <bsl/dynamic/SecOperation.h>
+#include <bsl/dynamic/Variant.h>
+#include <bsl/dynamic/SecurityActionSet.h>
+#include <bsl/sample_pp/SamplePolicyProvider.h>
+#include <bsl/mock_bpa/ctr.h>
 
 #include "TestUtils.h"
 

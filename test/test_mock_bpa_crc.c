@@ -22,8 +22,8 @@
 #include <inttypes.h>
 #include <unity.h>
 #include "TestUtils.h"
-#include <mock_bpa/crc.h>
-#include <mock_bpa/log.h>
+#include <bsl/mock_bpa/crc.h>
+#include <bsl/mock_bpa/log.h>
 
 void suiteSetUp(void)
 {
