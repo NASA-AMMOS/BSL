@@ -59,14 +59,11 @@ static bool BSL_TestSecCtx_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, 
     return (sec_oper->target_block_num != 111);
 }
 
-static int BSL_TestSecCtx_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper,
-                                  BSL_SecOutcome_t *sec_outcome)
+static int BSL_TestSecCtx_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
 {
     (void)lib;
     (void)bundle;
     (void)sec_oper;
-    (void)sec_outcome;
-
     return BSL_SUCCESS;
 }
 
@@ -157,11 +154,10 @@ void test_SecurityContext_BIB_Source(void)
     BIBTestContext_Init(&bib_test_context);
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_SOURCE, RFC9173_EXAMPLE_A1_KEY);
 
-    BSL_SecurityActionSet_t   *malloced_actionset   = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityActionSet_t *malloced_actionset = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
 
-    TEST_ASSERT_EQUAL(0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
-                                                           &mock_bpa_ctr->bundle_ref, malloced_actionset));
+    TEST_ASSERT_EQUAL(
+        0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, malloced_actionset));
 
     MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 2);
     TEST_ASSERT_NOT_NULL(target_ptr);
@@ -178,8 +174,6 @@ void test_SecurityContext_BIB_Source(void)
     is_equal = BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bundle_bib, mock_bpa_ctr->encoded);
     TEST_ASSERT_TRUE(is_equal);
 
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
-    BSL_free(malloced_responseset);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
     BIBTestContext_Deinit(&bib_test_context);
@@ -191,8 +185,8 @@ void test_SecurityContext_BIB_Source(void)
  * Steps:
  *  - Get a BIB secured bundle from RFC9173 Appendix A1.4.
  *  - Create a BIB-Verify security operation with hard-coded arguments (From RFC9173 A1 ASB)
- *  - Use the high-level security context interface to create a security outcome.
- *  - Confirm the bundle's BIB HMAC matches the outcome's HMAC.
+ *  - Use the high-level security context interface to execute a security operation.
+ *  - Confirm the bundle's BIB HMAC matches the operation's HMAC.
  *
  * Notes:
  *  - Common repeated patterns are in the process of being factored out
@@ -208,19 +202,16 @@ void test_SecurityContext_BIB_Verifier(void)
     BIBTestContext_Init(&bib_test_context);
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_VERIFIER, RFC9173_EXAMPLE_A1_KEY);
 
-    BSL_SecurityActionSet_t   *malloced_actionset   = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityActionSet_t *malloced_actionset = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
 
-    TEST_ASSERT_EQUAL(0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
-                                                           &mock_bpa_ctr->bundle_ref, malloced_actionset));
+    TEST_ASSERT_EQUAL(
+        0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, malloced_actionset));
     TEST_ASSERT_EQUAL(0, mock_bpa_ctr_encode(mock_bpa_ctr));
     bool is_match =
         (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bundle_bib, mock_bpa_ctr->encoded));
 
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
-    BSL_free(malloced_responseset);
     BIBTestContext_Deinit(&bib_test_context);
 
     TEST_ASSERT_TRUE(is_match);
@@ -233,11 +224,11 @@ void test_SecurityContext_BIB_Verifier(void)
  *  - Get a BIB secured bundle from RFC9173 Appendix A1.4.
  *  - Create a BIB-Verify security operation with hard-coded arguments (From RFC9173 A1 ASB)
  *  - Manipulate the arguments so they use a different key
- *  - Use the high-level security context interface to create a security outcome.
+ *  - Use the high-level security context interface to execute a security operation.
  *  - Confirm that the execution failed (return code != 0)
  *
  * Notes:
- *  - Check more than return code, look deeper into outcome.
+ *  - Check more than return code, look deeper into operation.
  */
 void test_SecurityContext_BIB_Verifier_Failure(void)
 {
@@ -255,11 +246,10 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
     BSL_IdValPair_Deinit(&bib_test_context.opt_test_key);
     BSL_IdValPair_SetTextstr(&bib_test_context.opt_test_key, old_id, RFC9173_EXAMPLE_A2_KEY);
 
-    BSL_SecurityActionSet_t   *malloced_actionset   = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityActionSet_t *malloced_actionset = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
 
-    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
-                                                                     &mock_bpa_ctr->bundle_ref, malloced_actionset));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref,
+                                                                     malloced_actionset));
 
     TEST_ASSERT_EQUAL(
         BSL_SecurityAction_GetSecOperAtIndex(BSL_SecurityActionSet_GetActionAtIndex(malloced_actionset, 0), 0)
@@ -268,8 +258,6 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
 
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
-    BSL_free(malloced_responseset);
     BIBTestContext_Deinit(&bib_test_context);
 }
 
@@ -280,7 +268,7 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
  * Steps:
  *  - Get a BIB secured bundle from RFC9173 Appendix A1.4.
  *  - Create a BIB-Acceptor security operation with hard-coded arguments (From RFC9173 A1 ASB)
- *  - Use the high-level security context interface to create a security outcome.
+ *  - Use the high-level security context interface to execute a security operation.
  *  - Confirm that the execution succeeds.
  *  - Check that the BIB result was removed from the bundle (by making sure the encoding matches bundle in A1.1)
  *
@@ -295,13 +283,12 @@ void test_SecurityContext_BIB_Acceptor(void)
     BIBTestContext_Init(&bib_test_context);
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_ACCEPTOR, RFC9173_EXAMPLE_A1_KEY);
 
-    BSL_SecurityActionSet_t   *malloced_actionset   = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
+    BSL_SecurityActionSet_t *malloced_actionset = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
 
-    int  encode_result      = -1;
-    bool is_equal_test_vec  = false;
-    int  sec_context_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
-                                                                &mock_bpa_ctr->bundle_ref, malloced_actionset);
+    int  encode_result     = -1;
+    bool is_equal_test_vec = false;
+    int  sec_context_result =
+        BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, malloced_actionset);
 
     // Note, we use the goto statements to better cleanup if failure happens
     if (sec_context_result != 0)
@@ -325,8 +312,6 @@ void test_SecurityContext_BIB_Acceptor(void)
 cleanup:
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
-    BSL_free(malloced_responseset);
     BIBTestContext_Deinit(&bib_test_context);
 
     TEST_ASSERT_EQUAL(0, sec_context_result);
@@ -393,18 +378,14 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
 
     BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
-
-    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
-                                                              &mock_bpa_ctr->bundle_ref, malloced_actionset);
+    const int exec_result =
+        BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, malloced_actionset);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_result);
 
     BSL_SecurityAction_Deinit(malloced_action);
     BSL_free(malloced_action);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
-    BSL_free(malloced_responseset);
     BSL_PrimaryBlock_deinit(&primary_block);
     BIBTestContext_Deinit(&bib_context);
     BCBTestContext_Deinit(&bcb_context);
@@ -477,11 +458,8 @@ void test_RFC9173_AppendixA_Example3_Source(void)
 
     BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
-    BSL_SecurityResponseSet_Init(malloced_responseset);
-
-    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
-                                                              &mock_bpa_ctr->bundle_ref, malloced_actionset);
+    const int exec_result =
+        BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, malloced_actionset);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_result);
     BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -490,17 +468,10 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     TEST_ASSERT_TRUE(primary_block.block_count >= 4);
     TEST_ASSERT_TRUE(primary_block.block_count <= 5);
 
-    const size_t response_count = BSL_SecurityResponseSet_CountResponses(malloced_responseset);
-    TEST_ASSERT_EQUAL(3, response_count);
-
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
-
     BSL_SecurityAction_Deinit(malloced_action);
     BSL_free(malloced_action);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
-    BSL_free(malloced_responseset);
     BSL_PrimaryBlock_deinit(&primary_block);
     BIBTestContext_Deinit(&bib_context);
     BCBTestContext_Deinit(&bcb_context);
@@ -586,10 +557,8 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
 
     BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
-
-    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
-                                                              &mock_bpa_ctr->bundle_ref, malloced_actionset);
+    const int exec_result =
+        BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, malloced_actionset);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_result);
 
     // After all the security results have been stripped, this is the bundle's result.
@@ -604,8 +573,6 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_free(malloced_action);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
-    BSL_free(malloced_responseset);
     BSL_PrimaryBlock_deinit(&primary_block);
     BIBTestContext_Deinit(&bib_context);
     BCBTestContext_Deinit(&bcb_context);
@@ -678,10 +645,8 @@ void test_RFC9173_AppendixA_Example4_Source(void)
 
     BSL_SecurityActionSet_AppendAction(malloced_actionset, malloced_action);
 
-    BSL_SecurityResponseSet_t *malloced_responseset = BSL_TestUtils_MallocEmptyPolicyResponse();
-
-    const int exec_result = BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, malloced_responseset,
-                                                              &mock_bpa_ctr->bundle_ref, malloced_actionset);
+    const int exec_result =
+        BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, malloced_actionset);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_result);
     BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -693,8 +658,6 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_free(malloced_action);
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
-    BSL_SecurityResponseSet_Deinit(malloced_responseset);
-    BSL_free(malloced_responseset);
     BSL_PrimaryBlock_deinit(&primary_block);
     BIBTestContext_Deinit(&bib_context);
     BCBTestContext_Deinit(&bcb_context);

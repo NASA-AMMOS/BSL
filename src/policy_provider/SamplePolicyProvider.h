@@ -263,8 +263,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
                      BSL_PolicyLocation_e location);
 
 /// Provides ::BSL_PolicyFinalize_f
-int BSLP_FinalizePolicy(void *user_data, const BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle,
-                        const BSL_SecurityResponseSet_t *response_output);
+int BSLP_FinalizePolicy(void *user_data, const BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle);
 
 #ifdef __cplusplus
 } // extern C

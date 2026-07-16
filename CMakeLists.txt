@@ -80,10 +80,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 # Force specific POSIX compatibility version
-add_definitions(
-  -D_XOPEN_SOURCE
-  -D_POSIX_C_SOURCE=200809L
-)
+add_definitions(-D_POSIX_C_SOURCE=200809L)
 # Generic warn/error options
 add_compile_options(
     -Wall
@@ -133,8 +130,14 @@ if(BUILD_LIB)
 endif(BUILD_LIB)
 
 include(CheckSymbolExists)
-check_symbol_exists(timespec_get "time.h" HAVE_TIMESPEC_GET)
+include(CMakePushCheckState)
+cmake_push_check_state(RESET)
+list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_POSIX_C_SOURCE=200809L")
 check_symbol_exists(clock_gettime "time.h" HAVE_CLOCK_GETTIME)
+cmake_pop_check_state()
+if(NOT HAVE_CLOCK_GETTIME)
+    message(FATAL_ERROR "clock_gettime not found")
+endif()
 
 if(BUILD_UNITTEST)
   if(TEST_MEMCHECK)

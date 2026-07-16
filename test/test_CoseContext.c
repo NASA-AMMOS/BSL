@@ -271,7 +271,7 @@ static const char *exA_1_mac0 = "9f890700028201692f2f6473742f7376638201692f2f737
  *  - Create a BIB security operation with hard-coded options
  *  - Run ::BSLX_CoseSc_Validate function and confirm result is 0.
  *  - Run ::BSLX_CoseSc_Execute function and confirm result is 0.
- *  - Capture the outcome from the above function to confirm 1 result (a COSE_Mac0 message)
+ *  - Check the operation after the above function to confirm 1 result (a COSE_Mac0 message)
  *  - Capture the MAC tag and ensure it matches the value in the test vector.
  */
 void test_AppendixA_Example1_BIB_Source(void)
@@ -338,20 +338,17 @@ void test_AppendixA_Example1_BIB_Source(void)
         BSL_IdValPair_Deinit(&option);
     }
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &sec_oper);
-
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_TRUE(valid_status);
 
     // Confirm running operation as source executes without error
-    int exec_status = BSL_ExecBIBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
-                                        &sec_oper, outcome);
+    int exec_status =
+        BSL_ExecBIBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     // Confirm it produced only 1 result
-    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
-    const BSL_IdValPair_t *result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
+    TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&sec_oper));
+    const BSL_IdValPair_t *result = BSL_SecOper_FindResult(&sec_oper, BSLX_COSESC_RESULT_COSE_MAC0);
     TEST_ASSERT_NOT_NULL(result);
     TEST_ASSERT_EQUAL(BSLX_COSESC_RESULT_COSE_MAC0, BSL_IdValPair_GetId(result));
     TEST_ASSERT_TRUE(BSL_IdValPair_IsBytestr(result));
@@ -378,8 +375,6 @@ void test_AppendixA_Example1_BIB_Source(void)
         TEST_ASSERT_EQUAL_size_t(95, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
     }
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
@@ -490,9 +485,6 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         BSL_Data_Deinit(&value);
     }
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &sec_oper);
-
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(true, valid_status);
 
@@ -501,7 +493,7 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
                                   : BSL_ERR_SECURITY_OPERATION_FAILED;
     // Confirm running operation as source executes without error
     int exec_status = BSL_ExecBIBVerifierAcceptor(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl,
-                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
+                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL_INT(expect_status, exec_status);
 
     if (alter_blk)
@@ -528,8 +520,6 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         }
     }
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
@@ -632,20 +622,17 @@ void test_CCSDS_Example_Mac_Source(void)
         BSL_IdValPair_Deinit(&option);
     }
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &sec_oper);
-
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_TRUE(valid_status);
 
     // Confirm running operation as source executes without error
-    int exec_status = BSL_ExecBIBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
-                                        &sec_oper, outcome);
+    int exec_status =
+        BSL_ExecBIBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     // Confirm it produced only 1 result
-    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
-    const BSL_IdValPair_t *result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
+    TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&sec_oper));
+    const BSL_IdValPair_t *result = BSL_SecOper_FindResult(&sec_oper, BSLX_COSESC_RESULT_COSE_MAC);
     TEST_ASSERT_NOT_NULL(result);
     TEST_ASSERT_EQUAL(BSLX_COSESC_RESULT_COSE_MAC, BSL_IdValPair_GetId(result));
     TEST_ASSERT_TRUE(BSL_IdValPair_IsBytestr(result));
@@ -672,8 +659,6 @@ void test_CCSDS_Example_Mac_Source(void)
         TEST_ASSERT_EQUAL_size_t(48, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
     }
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
@@ -773,9 +758,6 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
         BSL_Data_Deinit(&value);
     }
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &sec_oper);
-
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(true, valid_status);
 
@@ -784,7 +766,7 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
                                   : BSL_ERR_SECURITY_OPERATION_FAILED;
     // Confirm running operation as source executes without error
     int exec_status = BSL_ExecBCBVerifierAcceptor(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl,
-                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
+                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL_INT(expect_status, exec_status);
 
     if (alter_blk)
@@ -812,8 +794,6 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
         }
     }
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
@@ -912,20 +892,17 @@ void test_AppendixA_Example4_BCB_Source(void)
         BSL_IdValPair_Deinit(&option);
     }
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &sec_oper);
-
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_TRUE(valid_status);
 
     // Confirm running operation as source executes without error
-    int exec_status = BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
-                                        &sec_oper, outcome);
+    int exec_status =
+        BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     // Confirm it produced only 1 result
-    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
-    const BSL_IdValPair_t *result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
+    TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&sec_oper));
+    const BSL_IdValPair_t *result = BSL_SecOper_FindResult(&sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT0);
     TEST_ASSERT_NOT_NULL(result);
     TEST_ASSERT_EQUAL(BSLX_COSESC_RESULT_COSE_ENCRYPT0, BSL_IdValPair_GetId(result));
     TEST_ASSERT_TRUE(BSL_IdValPair_IsBytestr(result));
@@ -953,8 +930,6 @@ void test_AppendixA_Example4_BCB_Source(void)
         TEST_ASSERT_EQUAL_size_t(98, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
     }
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
@@ -1062,9 +1037,6 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         BSL_Data_Deinit(&value);
     }
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &sec_oper);
-
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(true, valid_status);
 
@@ -1073,7 +1045,7 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
                                   : BSL_ERR_SECURITY_OPERATION_FAILED;
     // Confirm running operation as source executes without error
     int exec_status = BSL_ExecBCBVerifierAcceptor(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl,
-                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
+                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL_INT(expect_status, exec_status);
 
     if (alter_blk)
@@ -1101,8 +1073,6 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         }
     }
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
@@ -1209,20 +1179,17 @@ void test_AppendixA_Example5_BCB_Source(void)
         BSL_IdValPair_Deinit(&option);
     }
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &sec_oper);
-
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_TRUE(valid_status);
 
     // Confirm running operation as source executes without error
-    int exec_status = BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
-                                        &sec_oper, outcome);
+    int exec_status =
+        BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     // Confirm it produced only 1 result
-    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
-    const BSL_IdValPair_t *result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
+    TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&sec_oper));
+    const BSL_IdValPair_t *result = BSL_SecOper_FindResult(&sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT);
     TEST_ASSERT_NOT_NULL(result);
     TEST_ASSERT_EQUAL(BSLX_COSESC_RESULT_COSE_ENCRYPT, BSL_IdValPair_GetId(result));
     TEST_ASSERT_TRUE(BSL_IdValPair_IsBytestr(result));
@@ -1249,8 +1216,6 @@ void test_AppendixA_Example5_BCB_Source(void)
         TEST_ASSERT_EQUAL_size_t(32, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
     }
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
@@ -1350,9 +1315,6 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         BSL_Data_Deinit(&value);
     }
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &sec_oper);
-
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(true, valid_status);
 
@@ -1361,7 +1323,7 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
                                   : BSL_ERR_SECURITY_OPERATION_FAILED;
     // Confirm running operation as source executes without error
     int exec_status = BSL_ExecBCBVerifierAcceptor(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl,
-                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper, outcome);
+                                                  &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL_INT(expect_status, exec_status);
 
     if (alter_blk)
@@ -1389,8 +1351,6 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         }
     }
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }
@@ -1502,20 +1462,17 @@ void test_AppendixA_Example6_BCB_Source(void)
         BSL_IdValPair_Deinit(&option);
     }
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &sec_oper);
-
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_TRUE(valid_status);
 
     // Confirm running operation as source executes without error
-    int exec_status = BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
-                                        &sec_oper, outcome);
+    int exec_status =
+        BSL_ExecBCBSource(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, exec_status);
 
     // Confirm it produced only 1 result
-    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
-    const BSL_IdValPair_t *result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
+    TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&sec_oper));
+    const BSL_IdValPair_t *result = BSL_SecOper_FindResult(&sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT);
     TEST_ASSERT_NOT_NULL(result);
     TEST_ASSERT_EQUAL(BSLX_COSESC_RESULT_COSE_ENCRYPT, BSL_IdValPair_GetId(result));
     TEST_ASSERT_TRUE(BSL_IdValPair_IsBytestr(result));
@@ -1542,8 +1499,6 @@ void test_AppendixA_Example6_BCB_Source(void)
         TEST_ASSERT_EQUAL_size_t(32, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
     }
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BSL_SecOper_Deinit(&sec_oper);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
 }

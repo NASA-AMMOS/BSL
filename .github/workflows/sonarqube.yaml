@@ -29,6 +29,8 @@ on:
 jobs:
   build:
     name: Build and analyze
+    # Forks cannot access SONAR-TOKEN secret
+    if: ${{ ! github.event.pull_request.head.repo.fork }}
     runs-on: ubuntu-24.04
     steps:
       - name: Set up OS
