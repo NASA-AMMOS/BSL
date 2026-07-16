@@ -35,10 +35,10 @@
 #include <stdio.h>
 #include <unity.h>
 
-#include <BPSecLib_Private.h>
-#include <mock_bpa/MockBPA.h>
-#include <CryptoInterface.h>
-#include <default_sc/DefaultSecContext.h>
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/mock_bpa/MockBPA.h>
+#include <bsl/crypto/CryptoInterface.h>
+#include <bsl/default_sc/DefaultSecContext.h>
 
 #include "DefaultScUtils.h"
 

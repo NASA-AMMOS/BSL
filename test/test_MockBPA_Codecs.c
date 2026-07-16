@@ -22,11 +22,11 @@
 #include <inttypes.h>
 #include <unity.h>
 
-#include <BPSecLib_Private.h>
-#include <mock_bpa/log.h>
-#include <mock_bpa/agent.h>
-#include <mock_bpa/decode.h>
-#include <mock_bpa/encode.h>
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/mock_bpa/log.h>
+#include <bsl/mock_bpa/agent.h>
+#include <bsl/mock_bpa/decode.h>
+#include <bsl/mock_bpa/encode.h>
 
 #include "DefaultScUtils.h"
 
