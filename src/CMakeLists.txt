@@ -94,8 +94,7 @@ set_target_properties(bsl_default_sc
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_default_sc PUBLIC bsl_front)
-target_link_libraries(bsl_default_sc PUBLIC bsl_crypto)
-target_link_libraries(bsl_default_sc PUBLIC qcbor::qcbor)
+target_link_libraries(bsl_default_sc PRIVATE bsl_crypto)
 
 # COSE Security Context library
 set(BSL_COSE_SC_H
@@ -116,9 +115,9 @@ set_target_properties(bsl_cose_sc
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_cose_sc PUBLIC bsl_front)
-target_link_libraries(bsl_cose_sc PUBLIC bsl_crypto)
+target_link_libraries(bsl_cose_sc PUBLIC bsl_dynamic) # for CBOR API
+target_link_libraries(bsl_cose_sc PRIVATE bsl_crypto)
 target_link_libraries(bsl_cose_sc PUBLIC MLIB::mlib)
-target_link_libraries(bsl_cose_sc PUBLIC qcbor::qcbor)
 
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
