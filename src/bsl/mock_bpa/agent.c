@@ -26,7 +26,7 @@
  */
 #include <bsl/BPSecLib_Public.h>
 #include <bsl/BPSecLib_Private.h>
-#include <bsl/dynamic/UtilDefs_SeqReadWrite.h>
+#include <bsl/dynamic/SeqReadWrite.h>
 #include <bsl/default_sc/DefaultSecContext.h>
 #include <bsl/default_sc/rfc9173.h>
 #include <bsl/cose_sc/CoseContext.h>

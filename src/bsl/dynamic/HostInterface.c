@@ -27,7 +27,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <bsl/BPSecLib_Private.h>
-#include "UtilDefs_SeqReadWrite.h"
+#include "SeqReadWrite.h"
 
 // NOLINTNEXTLINE
 /// Initialized to library default

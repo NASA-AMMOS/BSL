@@ -31,7 +31,7 @@
 
 #include <bsl/dynamic/IdValPair.h>
 #include <bsl/dynamic/SecurityActionSet.h>
-#include <bsl/dynamic/UtilDefs_SeqReadWrite.h>
+#include <bsl/dynamic/SeqReadWrite.h>
 #include <bsl/sample_pp/SamplePolicyProvider.h>
 
 #include "TestUtils.h"

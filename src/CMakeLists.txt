@@ -142,7 +142,7 @@ target_sources(bsl_dynamic PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/CBOR.h
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/IdValPair.h
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/PublicInterfaceImpl.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/UtilDefs_SeqReadWrite.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SeqReadWrite.h
 )
 target_sources(bsl_dynamic PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/AbsSecBlock.c
@@ -157,7 +157,7 @@ target_sources(bsl_dynamic PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecurityContext.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/TelemetryCounters.c
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/TextUtil.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/UtilDefs_SeqReadWrite.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SeqReadWrite.c
 )
 set_target_properties(bsl_dynamic
     PROPERTIES

@@ -31,7 +31,7 @@
 
 #include <bsl/BPSecLib_Private.h>
 
-#include "UtilDefs_SeqReadWrite.h"
+#include "SeqReadWrite.h"
 
 void BSL_SeqReader_Destroy(BSL_SeqReader_t *obj)
 {

@@ -30,13 +30,14 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <bsl/BPSecLib_Private.h>
+#include <bsl/front/SeqReader.h>
+#include <bsl/front/SeqWriter.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** Definition of a simple flat buffer iterator.
+/** Definition of a sequential reader using callbacks.
  */
 struct BSL_SeqReader_s
 {

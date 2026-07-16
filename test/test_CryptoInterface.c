@@ -28,7 +28,6 @@
 #include <bsl/BPSecLib_Private.h>
 #include <bsl/crypto/CryptoInterface.h>
 
-#include <bsl/dynamic/UtilDefs_SeqReadWrite.h>
 #include <bsl/dynamic/PublicInterfaceImpl.h>
 #include <bsl/mock_bpa/agent.h>
 #include <bsl/mock_bpa/log.h>
