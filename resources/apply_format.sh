@@ -58,4 +58,4 @@ do
 done
 
 # Python test fixtures
-ruff check --line-length=100 mock-bpa-test/
+ruff check --fix mock-bpa-test/
