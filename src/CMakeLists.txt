@@ -30,6 +30,8 @@ target_sources(bsl_front PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/BPSecLib_Private.h
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/BPSecLib_Public.h
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/front/Data.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/front/SeqReader.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/front/SeqWriter.h
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/front/TextUtil.h
 )
 target_sources(bsl_front PRIVATE 
@@ -42,11 +44,10 @@ set_target_properties(bsl_front
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-target_include_directories(
-  bsl_front PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>
+target_include_directories(bsl_front PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Crypto and Keystore library
@@ -74,20 +75,16 @@ if(TARGET valgrind::valgrind)
 endif(TARGET valgrind::valgrind)
 
 # Default Security Context library
-set(BSL_DEFAULT_SC_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/DefaultSecContext.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/DefaultSecContext_Private.h
-)
-
-set(BSL_DEFAULT_SC_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/DefaultSecContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/BCB_AES_GCM.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/BIB_HMAC_SHA2.c
-)
-
 add_library(bsl_default_sc)
-target_sources(bsl_default_sc PUBLIC ${BSL_DEFAULT_SC_H})
-target_sources(bsl_default_sc PRIVATE ${BSL_DEFAULT_SC_C})
+target_sources(bsl_default_sc PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/DefaultSecContext.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/DefaultSecContext_Private.h
+)
+target_sources(bsl_default_sc PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/DefaultSecContext.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/BCB_AES_GCM.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/default_sc/BIB_HMAC_SHA2.c
+)
 set_target_properties(bsl_default_sc
     PROPERTIES
         VERSION ${CMAKE_PROJECT_VERSION}
@@ -139,33 +136,29 @@ target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
 target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
 
 # Dynamic backend library
-set(BSL_DYNAMIC_H
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/AbsSecBlock.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/CBOR.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/IdValPair.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/PublicInterfaceImpl.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/UtilDefs_SeqReadWrite.h
-)
-
-set(BSL_DYNAMIC_C
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/AbsSecBlock.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/CBOR.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/HostInterface.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/IdValPair.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/PublicInterfaceImpl.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/PolicyProvider.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecOperation.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecurityAction.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecurityActionSet.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecurityContext.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/TelemetryCounters.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/TextUtil.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/UtilDefs_SeqReadWrite.c
-)
-
 add_library(bsl_dynamic)
-target_sources(bsl_dynamic PUBLIC ${BSL_DYNAMIC_H})
-target_sources(bsl_dynamic PRIVATE ${BSL_DYNAMIC_C})
+target_sources(bsl_dynamic PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/AbsSecBlock.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/CBOR.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/IdValPair.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/PublicInterfaceImpl.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/UtilDefs_SeqReadWrite.h
+)
+target_sources(bsl_dynamic PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/AbsSecBlock.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/CBOR.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/HostInterface.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/IdValPair.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/PublicInterfaceImpl.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/PolicyProvider.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecOperation.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecurityAction.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecurityActionSet.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/SecurityContext.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/TelemetryCounters.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/TextUtil.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/dynamic/UtilDefs_SeqReadWrite.c
+)
 set_target_properties(bsl_dynamic
     PROPERTIES
         VERSION ${CMAKE_PROJECT_VERSION}
