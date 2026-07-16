@@ -27,6 +27,7 @@
 #include "decode.h"
 #include "eidpat.h"
 #include "log.h"
+#include "key_registry.h"
 #include "agent.h"
 
 #endif //_BSL_MockBPA_MockBPA_H_

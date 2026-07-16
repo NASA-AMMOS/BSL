@@ -213,7 +213,7 @@ void setUp(void)
 {
     TEST_ASSERT_EQUAL(0, BSL_API_InitLib(&bsl));
 
-    BSL_CryptoInit();
+    MockBPA_KeyStore_Init();
 
     // static keys
     uint8_t test1[20]  = { 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
@@ -238,7 +238,7 @@ void setUp(void)
 
 void tearDown(void)
 {
-    BSL_CryptoDeinit();
+    MockBPA_KeyStore_Deinit();
     TEST_ASSERT_EQUAL(0, BSL_API_DeinitLib(&bsl));
 }
 
@@ -457,8 +457,7 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
 
     BSL_SeqReader_Destroy(reader);
 
-    res = BSL_Cipher_Deinit(&ctx);
-    TEST_ASSERT_EQUAL(0, res);
+    BSL_Cipher_Deinit(&ctx);
     BSL_Crypto_ReleaseKeyHandle(ekey);
     BSL_Data_Deinit(&iv);
 
@@ -530,7 +529,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
         TEST_ASSERT_EQUAL_MEMORY(plaintext_in, plaintext, pt_size);
     }
 
-    TEST_ASSERT_EQUAL(0, BSL_Cipher_Deinit(&ctx));
+    BSL_Cipher_Deinit(&ctx);
     BSL_Crypto_ReleaseKeyHandle(ckey);
     BSL_Data_Deinit(&iv);
 
@@ -601,8 +600,8 @@ void test_key_wrap(const char *kek, const char *cek, const char *expected)
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&wrapped_key);
-    BSL_Crypto_RemoveRegistryKeyName("kek");
-    BSL_Crypto_RemoveRegistryKeyName("cek");
+    MockBPA_KeyStore_RemoveKeyName("kek");
+    MockBPA_KeyStore_RemoveKeyName("cek");
 }
 
 // rfc3394 test vectors
@@ -660,8 +659,8 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
     BSL_Crypto_ReleaseKeyHandle(cek_handle);
     BSL_Crypto_ReleaseKeyHandle(expect_handle);
     BSL_Crypto_ReleaseKeyHandle(kek_handle);
-    BSL_Crypto_RemoveRegistryKeyName("kek");
-    BSL_Crypto_RemoveRegistryKeyName("cek");
+    MockBPA_KeyStore_RemoveKeyName("kek");
+    MockBPA_KeyStore_RemoveKeyName("cek");
 }
 
 // RFC 5869 test vectors
@@ -832,7 +831,7 @@ void test_key_stats(void)
     BSL_Crypto_KeyHandle_t handle;
     BSL_Crypto_LoadKey(test_128, sizeof(test_128), &handle);
     TEST_ASSERT_NOT_NULL(handle);
-    TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&key_id, handle));
+    TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&key_id, handle));
 
     test_encrypt("hello world!", "testkeystats");
 

@@ -94,7 +94,7 @@ int suiteTearDown(int failures)
 void _setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    BSL_CryptoInit();
+    MockBPA_KeyStore_Init();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
     BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
 
@@ -149,7 +149,7 @@ void _tearDown(void)
 {
     BSL_SecurityActionSet_Deinit(&action_set);
     BSLP_PolicyProvider_Destroy(policy_provider);
-    BSL_CryptoDeinit();
+    MockBPA_KeyStore_Deinit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 
     BSL_IdValPair_Deinit(&param_aes_variant_128);

@@ -128,7 +128,7 @@ int main(int argc, char **argv)
         return 2;
     }
     mock_bpa_LogOpen();
-    BSL_CryptoInit();
+    MockBPA_KeyStore_Init();
     if ((res = MockBPA_Agent_Init(&agent, &policy)))
     {
         BSL_LOG_ERR("Failed to initialize mock BPA, error %d", res);
@@ -252,7 +252,7 @@ int main(int argc, char **argv)
     BSL_HostEID_Deinit(&sec_eid);
     BSL_HostEID_Deinit(&app_eid);
 
-    BSL_CryptoDeinit();
+    MockBPA_KeyStore_Deinit();
     mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
     return retval;

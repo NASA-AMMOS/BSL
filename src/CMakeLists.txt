@@ -54,9 +54,11 @@ target_include_directories(bsl_front PUBLIC
 add_library(bsl_crypto)
 target_sources(bsl_crypto PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/crypto/CryptoInterface.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/crypto/KeyStore.h
 )
 target_sources(bsl_crypto PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/bsl/crypto/CryptoInterface.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/bsl/crypto/KeyStore.c
 )
 set_target_properties(bsl_crypto
     PROPERTIES

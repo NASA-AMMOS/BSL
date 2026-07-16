@@ -118,7 +118,7 @@ void PublicInterfaceTestCtx_deinit(BSL_TestPublInterfaceCtx_t *ctx)
 void setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
-    BSL_CryptoInit();
+    MockBPA_KeyStore_Init();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
     BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
     BSL_SecurityActionSet_Init(&action_set);
@@ -506,7 +506,7 @@ void setUp(void)
 void tearDown(void)
 {
     BSLP_PolicyProvider_Destroy(policy_provider);
-    BSL_CryptoDeinit();
+    MockBPA_KeyStore_Deinit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
     BSL_SecurityActionSet_Deinit(&action_set);
     PublicInterfaceTestCtx_deinit(&ctx);

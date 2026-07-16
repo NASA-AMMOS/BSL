@@ -30,6 +30,7 @@
 #include <bsl/dynamic/IdValPair.h>
 #include <bsl/dynamic/SecurityActionSet.h>
 #include <bsl/mock_bpa/ctr.h>
+#include <bsl/mock_bpa/key_registry.h>
 
 #include "TestUtils.h"
 
@@ -55,7 +56,7 @@ static inline int BSL_Crypto_AddRegistryKeyName(const char *name, const uint8_t 
     BSL_Crypto_KeyHandle_t keyhandle;
     BSL_Crypto_LoadKey(ptr, len, &keyhandle);
     BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR(name);
-    int        res    = BSL_Crypto_AddRegistryKey(&key_id, keyhandle);
+    int        res    = MockBPA_KeyStore_AddKey(&key_id, keyhandle);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
     return res;
 }
@@ -68,10 +69,10 @@ static inline int BSL_Crypto_GetRegistryKeyName(const char *name, BSL_Crypto_Key
 }
 
 /// Test helper function
-static inline int BSL_Crypto_RemoveRegistryKeyName(const char *name)
+static inline int MockBPA_KeyStore_RemoveKeyName(const char *name)
 {
     BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR(name);
-    return BSL_Crypto_RemoveRegistryKey(&key_id);
+    return MockBPA_KeyStore_RemoveKey(&key_id);
 }
 
 /// @brief Sample policy provider ID

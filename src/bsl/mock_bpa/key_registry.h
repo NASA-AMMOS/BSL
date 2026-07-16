@@ -29,11 +29,45 @@
 
 #include <inttypes.h>
 
-#include <bsl/crypto/CryptoInterface.h>
+#include <bsl/crypto/KeyStore.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/** Get key store descriptors for the process.
+ *
+ * @return Populated descriptor struct.
+ */
+BSL_KeyStore_Descriptors_t MockBPA_KeyStore_Descriptors(void);
+
+void MockBPA_KeyStore_Init(void);
+void MockBPA_KeyStore_Deinit(void);
+
+/** Erase key entry from crypto library registry, if present.
+ *  @param[in] keyid key ID of key to remove.
+ * @return Zero if the key was present.
+ */
+int MockBPA_KeyStore_RemoveKey(const BSL_Data_t *keyid);
+
+/**
+ * Add a new key to the crypto key registry
+ * @param[in] keyid key ID that crypto functions will use to access key
+ * @param[out] handle Key handle to add to the registry.
+ * Once the key is added it should be treated as read-only for thread-safety purposes.
+ * When handle is output, the handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
+ * @return Zero upon success.
+ */
+int MockBPA_KeyStore_AddKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t handle);
+
+/** Add a context-specific parameter to a known key.
+ *
+ * @param[in] handle The key ID to update.
+ * @param[in] param_id The parameter to access.
+ * If the parameter does not already exist it will be created.
+ * @return Non-NULL pointer if successful.
+ */
+BSL_IdValPair_t *MockBPA_KeyStore_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
 /** @brief Initialize keys
  * @param[in] file_path path to JSON file with JWKs or CBOR file with @c COSE_KeySet

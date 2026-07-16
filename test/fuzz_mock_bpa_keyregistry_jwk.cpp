@@ -49,7 +49,7 @@ extern "C" int LLVMFuzzerInitialize(int *argc _U_, char ***argv _U_)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     int retval = 0;
-    BSL_CryptoInit();
+    MockBPA_KeyStore_Init();
 
     FILE  *tmp = tmpfile();
     size_t got = fwrite(data, size, 1, tmp);
@@ -70,6 +70,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     fclose(tmp);
-    BSL_CryptoDeinit();
+    MockBPA_KeyStore_Deinit();
     return retval;
 }
