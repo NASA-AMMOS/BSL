@@ -24,9 +24,9 @@
  * @brief Fuzz the BPSec ASB decoding from CBOR.
  */
 #include "TestUtils.h"
-#include <mock_bpa/MockBPA.h>
-#include <backend/AbsSecBlock.h>
-#include <backend/CBOR.h>
+#include <bsl/mock_bpa/MockBPA.h>
+#include <bsl/dynamic/AbsSecBlock.h>
+#include <bsl/dynamic/CBOR.h>
 #include <cinttypes>
 
 #define EXPECT_EQ(expect, got)          \

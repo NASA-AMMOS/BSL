@@ -23,7 +23,7 @@
 #include <unity.h>
 #include <m-string.h>
 #include <qcbor/qcbor_spiffy_decode.h>
-#include <BPSecLib_Public.h>
+#include <bsl/BPSecLib_Public.h>
 #include "TestUtils.h"
 
 void test_qcbor_decode_without_head(void)

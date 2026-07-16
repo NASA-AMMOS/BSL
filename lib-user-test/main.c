@@ -2,8 +2,8 @@
  * A do-nothing executable which builds and links with the BSL and its dependencies
  */
 
-#include <BPSecLib_Public.h>
-#include <BPSecLib_Private.h>
+#include <bsl/BPSecLib_Public.h>
+#include <bsl/BPSecLib_Private.h>
 
 int main(int argc, char *argv[])
 {

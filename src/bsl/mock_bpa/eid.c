@@ -1,0 +1,226 @@
+/*
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the Bundle Protocol Security Library (BSL).
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This work was performed for the Jet Propulsion Laboratory, California
+ * Institute of Technology, sponsored by the United States Government under
+ * the prime contract 80NM0018D0004 between the Caltech and NASA under
+ * subcontract 1700763.
+ */
+
+/** @file
+ * @ingroup mock_bpa
+ * Definitions for EID handling.
+ */
+#include "eid.h"
+#include <bsl/BSLConfig.h>
+#include <bsl/BPSecLib_Private.h>
+
+#include <string.h>
+#include <strings.h>
+#include <stdio.h>
+#include <sys/types.h>
+
+void bsl_mock_eid_init(bsl_mock_eid_t *eid)
+{
+    BSL_CHKVOID(eid);
+    memset(eid, 0, sizeof(bsl_mock_eid_t));
+    eid->scheme = BSL_MOCK_EID_INVALID;
+}
+
+void bsl_mock_eid_deinit(bsl_mock_eid_t *eid)
+{
+    BSL_CHKVOID(eid);
+    switch (eid->scheme)
+    {
+        case BSL_MOCK_EID_INVALID:
+            break;
+        case BSL_MOCK_EID_DTN:
+            m_string_clear(eid->ssp.as_dtn);
+            break;
+        case BSL_MOCK_EID_IPN:
+            // int values in this struct
+            break;
+        default:
+            BSL_Data_Deinit(&(eid->ssp.as_raw));
+            break;
+    }
+    memset(eid, 0, sizeof(bsl_mock_eid_t));
+}
+
+void MockBPA_EID_Init(void *user_data _U_, BSL_HostEID_t *eid)
+{
+    BSL_CHKVOID(eid);
+    memset(eid, 0, sizeof(BSL_HostEID_t));
+    eid->handle = BSL_malloc(sizeof(bsl_mock_eid_t));
+    if (eid->handle)
+    {
+        bsl_mock_eid_init(eid->handle);
+    }
+}
+
+void MockBPA_EID_Deinit(void *user_data _U_, BSL_HostEID_t *eid)
+{
+    BSL_CHKVOID(eid);
+    if (eid->handle)
+    {
+        bsl_mock_eid_deinit(eid->handle);
+        BSL_free(eid->handle);
+    }
+    memset(eid, 0, sizeof(BSL_HostEID_t));
+}
+
+int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data _U_)
+{
+    BSL_CHKERR1(eid);
+    BSL_CHKERR1(text);
+
+    // any spaces are invalid URI
+    // agrees with isspace()
+    if (strcspn(text, " \f\n\r\t\v") < strlen(text))
+    {
+        return 2;
+    }
+
+    const char *curs = text;
+    char       *pend = strchr(text, ':');
+    if ((pend == NULL) || (pend == curs))
+    {
+        return 4;
+    }
+
+    if (strncasecmp(text, "ipn", 3) == 0)
+    {
+        curs = pend + 1;
+
+        int      count = 0;
+        uint64_t p1, p2, p3 = 0;
+        // scanf can overflow on integer without error, don't use it
+
+        p1 = strtoul(curs, &pend, 10);
+        ++count;
+        curs = pend;
+        if (*curs != '.')
+        {
+            return 2;
+        }
+        ++curs;
+
+        p2 = strtoul(curs, &pend, 10);
+        ++count;
+        curs = pend;
+        if (*curs == '.')
+        {
+            ++curs;
+
+            // third element present
+            p3 = strtoul(curs, &pend, 10);
+            ++count;
+            curs = pend;
+        }
+        if (*curs != '\0')
+        {
+            return 5;
+        }
+
+        bsl_eid_ipn_ssp_t ipn_ssp;
+        if (count == 2)
+        {
+            // two components
+            ipn_ssp.ncomp    = 2;
+            ipn_ssp.auth_num = p1 >> 32;
+            ipn_ssp.node_num = p1 & 0xFFFFFFFF;
+            ipn_ssp.svc_num  = p2;
+        }
+        else if (count == 3)
+        {
+            // three components
+            ipn_ssp.ncomp    = 3;
+            ipn_ssp.auth_num = p1;
+            ipn_ssp.node_num = p2;
+            ipn_ssp.svc_num  = p3;
+
+            if ((ipn_ssp.auth_num > UINT32_MAX) || (ipn_ssp.node_num > UINT32_MAX))
+            {
+                // parts larger than allowed
+                return 4;
+            }
+        }
+        else
+        {
+            return 4;
+        }
+
+        bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
+        ASSERT_ARG_NONNULL(eid->handle);
+        obj->scheme     = BSL_MOCK_EID_IPN;
+        obj->ssp.as_ipn = ipn_ssp;
+    }
+    else if (strncasecmp(text, "dtn", 3) == 0)
+    {
+        curs = pend + 1;
+        if (*curs == '\0')
+        {
+            // empty SSP
+            return 4;
+        }
+
+        // assume full text is URI character set
+        bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
+        ASSERT_ARG_NONNULL(eid->handle);
+        obj->scheme = BSL_MOCK_EID_DTN;
+        m_string_init_set_cstr(obj->ssp.as_dtn, curs);
+    }
+    else
+    {
+        // unhandled scheme
+        return 3;
+    }
+
+    return 0;
+}
+
+// int mock_bpa_eid_to_text(string_t out, const BSL_HostEID_t *eid, void *user_data _U_)
+// {
+//     BSL_CHKERR1(eid);
+//     BSL_CHKERR1(eid->handle);
+//     bsl_mock_eid_t *obj = (bsl_mock_eid_t *)eid->handle;
+
+//     switch (obj->scheme)
+//     {
+//         case BSL_MOCK_EID_IPN:
+//         {
+//             const bsl_eid_ipn_ssp_t *ipn = &(obj->ssp.as_ipn);
+//             switch (ipn->ncomp)
+//             {
+//                 case 2:
+//                     string_printf(out, "ipn:%" PRIu64 ".%" PRIu64, (ipn->auth_num << 32) | ipn->node_num,
+//                     ipn->svc_num); break;
+//                 case 3:
+//                     string_printf(out, "ipn:%" PRIu64 ".%" PRIu64 ".%" PRIu64, ipn->auth_num, ipn->node_num,
+//                                   ipn->svc_num);
+//                     break;
+//                 default:
+//                     // not valid
+//                     break;
+//             }
+//             break;
+//         }
+//         default:
+//             string_printf(out, "<unknown EID scheme: %d>", obj->scheme);
+//             break;
+//     }
+//     return 0;
+// }

@@ -24,15 +24,15 @@
 
 #include <m-string.h>
 
-#include <BPSecLib_Private.h>
-#include <CryptoInterface.h>
-#include <mock_bpa/MockBPA.h>
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/crypto/CryptoInterface.h>
+#include <bsl/mock_bpa/MockBPA.h>
 
-#include <backend/IdValPair.h>
-#include <backend/SecurityActionSet.h>
-#include <backend/UtilDefs_SeqReadWrite.h>
-#include <policy_provider/SamplePolicyProvider.h>
-#include <default_sc/DefaultSecContext.h>
+#include <bsl/dynamic/IdValPair.h>
+#include <bsl/dynamic/SecurityActionSet.h>
+#include <bsl/dynamic/SeqReadWrite.h>
+#include <bsl/sample_pp/SamplePolicyProvider.h>
+#include <bsl/default_sc/DefaultSecContext.h>
 
 #include "DefaultScUtils.h"
 

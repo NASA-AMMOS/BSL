@@ -24,7 +24,7 @@
  * @brief Fuzz the BPv7 EID decoding from CBOR.
  */
 #include "TestUtils.h"
-#include <mock_bpa/MockBPA.h>
+#include <bsl/mock_bpa/MockBPA.h>
 #include <cinttypes>
 
 #define EXPECT_EQ(expect, got)          \

@@ -1,0 +1,1162 @@
+/*
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the Bundle Protocol Security Library (BSL).
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This work was performed for the Jet Propulsion Laboratory, California
+ * Institute of Technology, sponsored by the United States Government under
+ * the prime contract 80NM0018D0004 between the Caltech and NASA under
+ * subcontract 1700763.
+ */
+
+/** @file
+ * Definitions for Agent initialization.
+ * @ingroup mock_bpa
+ */
+#include <bsl/BPSecLib_Public.h>
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/dynamic/SeqReadWrite.h>
+#include <bsl/default_sc/DefaultSecContext.h>
+#include <bsl/default_sc/rfc9173.h>
+#include <bsl/cose_sc/CoseContext.h>
+#include <bsl/sample_pp/SamplePolicyProvider.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <poll.h>
+#include <sys/socket.h>
+#include "agent.h"
+#include "log.h"
+#include "eid.h"
+#include "eidpat.h"
+#include "encode.h"
+#include "decode.h"
+
+static const char *sec_src_envar = "BSL_TEST_LOCAL_IPN_EID";
+
+static int MockBPA_GetEid(void *user_data, BSL_HostEID_t *result_eid)
+{
+    const char *local_ipn = getenv(sec_src_envar);
+    if (!local_ipn)
+    {
+        BSL_LOG_CRIT("Need to set environment variable %s", sec_src_envar);
+        return -1;
+    }
+
+    int x = mock_bpa_eid_from_text(result_eid, local_ipn, user_data);
+
+    return (0 == x) ? 0 : -1;
+}
+
+int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBlock_t *result_primary_block)
+{
+    if (!bundle_ref || !result_primary_block || !bundle_ref->data)
+    {
+        return -1;
+    }
+
+    const MockBPA_Bundle_t *bundle = bundle_ref->data;
+
+    BSL_PrimaryBlock_Init(result_primary_block);
+    result_primary_block->field_version              = bundle->primary_block.version;
+    result_primary_block->field_flags                = bundle->primary_block.flags;
+    result_primary_block->field_crc_type             = bundle->primary_block.crc_type;
+    result_primary_block->field_dest_eid             = &bundle->primary_block.dest_eid;
+    result_primary_block->field_src_node_id          = &bundle->primary_block.src_node_id;
+    result_primary_block->field_report_to_eid        = &bundle->primary_block.report_to_eid;
+    result_primary_block->field_bundle_creation_time = bundle->primary_block.timestamp.bundle_creation_time;
+    result_primary_block->field_seq_num              = bundle->primary_block.timestamp.seq_num;
+    result_primary_block->field_lifetime             = bundle->primary_block.lifetime;
+    result_primary_block->field_frag_offset          = bundle->primary_block.frag_offset;
+    result_primary_block->field_adu_length           = bundle->primary_block.adu_length;
+    result_primary_block->encoded                    = &bundle->primary_block.encoded;
+
+    result_primary_block->block_count = MockBPA_BlockList_size(bundle->blocks);
+
+    result_primary_block->block_numbers = BSL_calloc(result_primary_block->block_count, sizeof(uint64_t));
+    if (!result_primary_block->block_numbers)
+    {
+        return -2;
+    }
+    size_t                 ix = 0;
+    MockBPA_BlockList_it_t bit;
+    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
+    {
+        const MockBPA_CanonicalBlock_t *blk       = MockBPA_BlockList_cref(bit);
+        result_primary_block->block_numbers[ix++] = blk->blk_num;
+    }
+
+    return 0;
+}
+
+int MockBPA_GetBlockMetadata(const BSL_BundleRef_t *bundle_ref, uint64_t block_num,
+                             BSL_CanonicalBlock_t *result_canonical_block)
+{
+    CHK_ARG_NONNULL(bundle_ref);
+    CHK_ARG_NONNULL(bundle_ref->data);
+    CHK_ARG_NONNULL(result_canonical_block);
+
+    memset(result_canonical_block, 0, sizeof(*result_canonical_block));
+
+    const MockBPA_Bundle_t *bundle = bundle_ref->data;
+
+    MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
+    if (found_ptr == NULL)
+    {
+        return -3;
+    }
+    const MockBPA_CanonicalBlock_t *found_block = *found_ptr;
+
+    result_canonical_block->block_num = found_block->blk_num;
+    result_canonical_block->flags     = found_block->flags;
+    result_canonical_block->crc_type  = found_block->crc_type;
+    result_canonical_block->type_code = found_block->blk_type;
+    result_canonical_block->btsd_len  = found_block->btsd_len;
+    return 0;
+}
+
+int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t btsd_size)
+{
+    if (!bundle_ref || !bundle_ref->data || block_num == 0 || btsd_size == 0)
+    {
+        return -1;
+    }
+
+    MockBPA_Bundle_t *bundle = bundle_ref->data;
+
+    MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
+    if (found_ptr == NULL)
+    {
+        return -3;
+    }
+    MockBPA_CanonicalBlock_t *found_block = *found_ptr;
+
+    if (found_block->btsd == NULL)
+    {
+        found_block->btsd     = BSL_calloc(1, btsd_size);
+        found_block->btsd_len = btsd_size;
+    }
+    else
+    {
+        found_block->btsd     = BSL_realloc(found_block->btsd, btsd_size);
+        found_block->btsd_len = btsd_size;
+    }
+
+    // Return -9 if malloc/realloc faile. Return 0 for success.
+    return (found_block->btsd == NULL) ? -9 : 0;
+}
+
+/// Internal state for reader and writer
+struct MockBPA_BTSD_Data_s
+{
+    /// Block which must have a longer lifetime than the reader/writer
+    MockBPA_CanonicalBlock_t *block;
+
+    /// Pointer to the head of the buffer
+    char *ptr;
+    /// Working size of the buffer
+    size_t size;
+    /// File opened for the buffer
+    FILE *file;
+    /// Local dead-reckoned cursor into #file
+    size_t curs;
+};
+
+static int MockBPA_ReadBTSD_Read(void *user_data, void *buf, size_t *bufsize)
+{
+    struct MockBPA_BTSD_Data_s *obj = user_data;
+    ASSERT_ARG_NONNULL(obj);
+    CHK_ARG_NONNULL(buf);
+    CHK_ARG_NONNULL(bufsize);
+    ASSERT_PRECONDITION(obj->file);
+
+    const size_t got = fread(buf, 1, *bufsize, obj->file);
+    obj->curs += got;
+    BSL_LOG_DEBUG("reading up to %zd bytes, got %zd", *bufsize, got);
+    *bufsize = got;
+    return 0;
+}
+
+static void MockBPA_ReadBTSD_Deinit(void *user_data)
+{
+    struct MockBPA_BTSD_Data_s *obj = user_data;
+    ASSERT_ARG_NONNULL(obj);
+    ASSERT_PRECONDITION(obj->file);
+
+    fclose(obj->file);
+    // buffer is external data, no cleanup
+    BSL_free(obj);
+}
+
+static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_ref, uint64_t block_num)
+{
+    MockBPA_Bundle_t          *bundle    = bundle_ref->data;
+    MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
+    if (found_ptr == NULL)
+    {
+        return NULL;
+    }
+    MockBPA_CanonicalBlock_t *found_block = *found_ptr;
+    BSL_LOG_DEBUG("opened block number %" PRIu64 " with size %zu", found_block->blk_num, found_block->btsd_len);
+
+    struct MockBPA_BTSD_Data_s *obj = BSL_calloc(1, sizeof(struct MockBPA_BTSD_Data_s));
+    if (!obj)
+    {
+        return NULL;
+    }
+    obj->block = found_block;
+    obj->ptr   = found_block->btsd;
+    obj->size  = found_block->btsd_len;
+    obj->file  = fmemopen(obj->ptr, obj->size, "rb");
+    obj->curs  = 0;
+
+    BSL_SeqReader_t *reader = BSL_calloc(1, sizeof(BSL_SeqReader_t));
+    if (!reader)
+    {
+        BSL_free(obj);
+        return NULL;
+    }
+    reader->user_data = obj;
+    reader->read      = &MockBPA_ReadBTSD_Read;
+    reader->deinit    = &MockBPA_ReadBTSD_Deinit;
+
+    return reader;
+}
+
+static int MockBPA_WriteBTSD_Write(void *user_data, const void *buf, size_t size)
+{
+    struct MockBPA_BTSD_Data_s *obj = user_data;
+    ASSERT_ARG_NONNULL(obj);
+    CHK_ARG_NONNULL(buf);
+    ASSERT_PRECONDITION(obj->file);
+
+    if (obj->curs + size > obj->size)
+    {
+        const size_t excess = (obj->curs + size) - obj->size;
+        BSL_LOG_ERR("write too large for buffer of %zu by %zu bytes", obj->size, excess);
+        return BSL_ERR_FAILURE;
+    }
+
+    const size_t got = fwrite(buf, 1, size, obj->file);
+    obj->curs += got;
+    BSL_LOG_DEBUG("writing up to %zd bytes, got %zd", size, got);
+    if (got < size)
+    {
+        return BSL_ERR_FAILURE;
+    }
+    return BSL_SUCCESS;
+}
+
+static void MockBPA_WriteBTSD_Deinit(void *user_data, bool success)
+{
+    struct MockBPA_BTSD_Data_s *obj = user_data;
+    ASSERT_ARG_NONNULL(obj);
+    ASSERT_PRECONDITION(obj->file);
+
+    fclose(obj->file);
+    BSL_LOG_DEBUG("closed block number %" PRIu64 " with size %zu and cursor %zu user success %d", obj->block->blk_num,
+                  obj->size, obj->curs, success);
+    if (obj->curs < obj->size)
+    {
+        BSL_LOG_ERR("closed block number %" PRIu64 " for writing with only %zu of %zu written", obj->block->blk_num,
+                    obj->curs, obj->size);
+    }
+
+    if (success)
+    {
+        // now write-back the BTSD
+        BSL_free(obj->block->btsd);
+        obj->block->btsd     = obj->ptr;
+        obj->block->btsd_len = obj->size;
+    }
+    else
+    {
+        BSL_free(obj->ptr);
+    }
+    BSL_free(obj);
+}
+
+static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t btsd_size)
+{
+    MockBPA_Bundle_t          *bundle    = bundle_ref->data;
+    MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
+    if (found_ptr == NULL)
+    {
+        return NULL;
+    }
+    MockBPA_CanonicalBlock_t *found_block = *found_ptr;
+    BSL_LOG_DEBUG("opened block number %" PRIu64 " for size %zu, previous size %zu", found_block->blk_num, btsd_size,
+                  found_block->btsd_len);
+
+    struct MockBPA_BTSD_Data_s *obj = BSL_calloc(1, sizeof(struct MockBPA_BTSD_Data_s));
+    if (!obj)
+    {
+        return NULL;
+    }
+    // double-buffer for this write
+    obj->block = found_block;
+    obj->size  = btsd_size;
+    obj->curs  = 0;
+
+    obj->ptr  = BSL_calloc(1, btsd_size + 1); // reserve one for null terminator
+    obj->file = fmemopen(obj->ptr, obj->size + 1, "w");
+
+    BSL_SeqWriter_t *writer = BSL_calloc(1, sizeof(BSL_SeqWriter_t));
+    if (!writer)
+    {
+        BSL_free(obj->ptr);
+        BSL_free(obj);
+        return NULL;
+    }
+    writer->user_data = obj;
+    writer->write     = &MockBPA_WriteBTSD_Write;
+    writer->deinit    = &MockBPA_WriteBTSD_Deinit;
+
+    return writer;
+}
+
+int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, uint64_t *block_num)
+{
+    if (!bundle_ref || !bundle_ref->data || !block_num)
+    {
+        return -1;
+    }
+
+    MockBPA_Bundle_t *bundle = bundle_ref->data;
+
+    if (*block_num == 0)
+    {
+        // BPA chooses the next number
+        MockBPA_CanonicalBlock_t *const *blk_ptr = MockBPA_BlockByNum_max(bundle->blocks_num);
+        if (!blk_ptr)
+        {
+            // should have at least a payload already
+            return -2;
+        }
+        // one beyond the current largest
+        *block_num = (*blk_ptr)->blk_num + 1;
+    }
+    else
+    {
+        // Policy has requested a number
+        if (MockBPA_BlockByNum_cget(bundle->blocks_num, *block_num))
+        {
+            BSL_LOG_ERR("Requested block number %" PRIu64 " already exists", *block_num);
+            return -2;
+        }
+    }
+
+    MockBPA_CanonicalBlock_t *new_block = MockBPA_BlockList_push_back_new(bundle->blocks);
+    memset(new_block, 0, sizeof(*new_block));
+    new_block->blk_num  = *block_num;
+    new_block->blk_type = block_type_code;
+    new_block->crc_type = 0;
+    new_block->flags    = block_type_code == 12 ? 1 : 0; // BCB should have a flag of 1
+    new_block->btsd     = NULL;
+    new_block->btsd_len = 0;
+
+    MockBPA_BlockByNum_set_at(bundle->blocks_num, new_block->blk_num, new_block);
+
+    *block_num = new_block->blk_num;
+    BSL_LOG_DEBUG("Created block %" PRIu64, new_block->blk_num);
+
+    return 0;
+}
+
+int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
+{
+    if (!bundle_ref || !bundle_ref->data)
+    {
+        return -1;
+    }
+
+    MockBPA_Bundle_t         *bundle      = bundle_ref->data;
+    MockBPA_CanonicalBlock_t *found_block = NULL;
+
+    MockBPA_BlockList_it_t bit;
+    for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
+    {
+        MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_ref(bit);
+
+        if (blk->blk_num == block_num)
+        {
+            // stop with @c bit on the block
+            found_block = blk;
+            break;
+        }
+    }
+    if (found_block == NULL)
+    {
+        return -2;
+    }
+
+    // Deinit and clear the target block for removal
+    BSL_free(found_block->btsd);
+
+    MockBPA_BlockByNum_erase(bundle->blocks_num, block_num);
+    MockBPA_BlockList_remove(bundle->blocks, bit);
+    BSL_LOG_DEBUG("Removed block %" PRIu64, block_num);
+
+    return 0;
+}
+
+int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason)
+{
+    if (!bundle_ref || !bundle_ref->data)
+    {
+        return -1;
+    }
+
+    MockBPA_Bundle_t *bundle = bundle_ref->data;
+
+    // Mark the bundle for deletion
+    bundle->retain = false;
+
+    BSL_LOG_INFO("MockBPA: BSL indicated to delete bundle with reason code %" PRIi64, reason);
+    return 0;
+}
+
+BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent)
+{
+    BSL_HostDescriptors_t bpa = {
+        .user_data = agent,
+        // New-style callbacks
+        .get_sec_src_eid_fn    = &MockBPA_GetEid,
+        .bundle_metadata_fn    = &MockBPA_GetBundleMetadata,
+        .block_metadata_fn     = &MockBPA_GetBlockMetadata,
+        .block_create_fn       = &MockBPA_CreateBlock,
+        .block_remove_fn       = &MockBPA_RemoveBlock,
+        .bundle_delete_fn      = &MockBPA_DeleteBundle,
+        .block_realloc_btsd_fn = &MockBPA_ReallocBTSD,
+        .block_read_btsd_fn    = &MockBPA_ReadBTSD,
+        .block_write_btsd_fn   = &MockBPA_WriteBTSD,
+
+        // Old-style callbacks
+        .eid_init      = &MockBPA_EID_Init,
+        .eid_deinit    = &MockBPA_EID_Deinit,
+        .eid_to_cbor   = &bsl_mock_encode_eid,
+        .eid_from_cbor = &bsl_mock_decode_eid,
+        .eid_from_text = &mock_bpa_eid_from_text,
+        // .eid_to_text      = mock_bpa_eid_to_text,
+        .eidpat_init      = &mock_bpa_eidpat_init,
+        .eidpat_deinit    = &mock_bpa_eidpat_deinit,
+        .eidpat_from_text = &mock_bpa_eidpat_from_text,
+        .eidpat_match     = &mock_bpa_eidpat_match,
+
+        .log_is_enabled_for = &mock_bpa_LogIsEnabledFor,
+        // synchronous logging when no real agent is used
+        .log_event = agent ? &mock_bpa_LogEvent : NULL,
+    };
+    return bpa;
+}
+
+int MockBPA_Agent_Init(MockBPA_Agent_t *agent, BSLP_PolicyProvider_t **policy)
+{
+    int retval = 0;
+
+    atomic_init(&agent->stop_state, false);
+
+    MockBPA_data_queue_init(agent->over_rx, MOCKBPA_DATA_QUEUE_SIZE);
+    MockBPA_data_queue_init(agent->over_tx, MOCKBPA_DATA_QUEUE_SIZE);
+    MockBPA_data_queue_init(agent->under_rx, MOCKBPA_DATA_QUEUE_SIZE);
+    MockBPA_data_queue_init(agent->under_tx, MOCKBPA_DATA_QUEUE_SIZE);
+    MockBPA_data_queue_init(agent->deliver, MOCKBPA_DATA_QUEUE_SIZE);
+    MockBPA_data_queue_init(agent->forward, MOCKBPA_DATA_QUEUE_SIZE);
+    {
+        // event socket for waking the I/O thread
+        int fds[2];
+        if (pipe(fds) != 0)
+        {
+            return 3;
+        }
+        agent->tx_notify_r = fds[0];
+        agent->tx_notify_w = fds[1];
+    }
+
+    // All BSL contexts get the same config
+    MockBPA_Agent_BSL_Ctx_t *ctxs[] = {
+        &agent->appin,
+        &agent->appout,
+        &agent->clin,
+        &agent->clout,
+    };
+    for (size_t ix = 0; (ix < sizeof(ctxs) / sizeof(ctxs[0])) && !retval; ++ix)
+    {
+        MockBPA_Agent_BSL_Ctx_t *ctx = ctxs[ix];
+
+        ctx->bsl = BSL_calloc(1, BSL_LibCtx_Sizeof());
+        if (BSL_API_InitLib(ctx->bsl))
+        {
+            BSL_LOG_ERR("Failed BSL_API_InitLib()");
+            retval = 2;
+        }
+        if (pthread_mutex_init(&ctx->mutex, NULL))
+        {
+            BSL_LOG_ERR("Failed pthread_mutex_init()");
+            retval = 3;
+        }
+
+        {
+            BSL_SecCtxDesc_t sc_desc;
+            sc_desc.execute  = BSLX_BIB_Execute;
+            sc_desc.validate = BSLX_BIB_Validate;
+            ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, RFC9173_CONTEXTID_BIB_HMAC_SHA2, sc_desc));
+        }
+        {
+            BSL_SecCtxDesc_t sc_desc;
+            sc_desc.execute  = BSLX_BCB_Execute;
+            sc_desc.validate = BSLX_BCB_Validate;
+            ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, RFC9173_CONTEXTID_BCB_AES_GCM, sc_desc));
+        }
+        {
+            BSL_SecCtxDesc_t sc_desc;
+            sc_desc.execute  = BSLX_CoseSc_Execute;
+            sc_desc.validate = BSLX_CoseSc_Validate;
+            ASSERT_PROPERTY(0 == BSL_API_RegisterSecurityContext(ctx->bsl, BSLX_COSESC_CTX_ID, sc_desc));
+        }
+    }
+
+    *policy              = BSLP_PolicyProvider_Init(1);
+    agent->appin.policy  = *policy;
+    agent->appout.policy = *policy;
+    agent->clin.policy   = *policy;
+    agent->clout.policy  = *policy;
+
+    {
+        BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
+                                                                 .query_fn    = BSLP_QueryPolicy,
+                                                                 .finalize_fn = BSLP_FinalizePolicy,
+                                                                 .user_data   = agent->appin.policy };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->appin.bsl, 1, policy_callbacks));
+    }
+    {
+        BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
+                                                                 .query_fn    = BSLP_QueryPolicy,
+                                                                 .finalize_fn = BSLP_FinalizePolicy,
+                                                                 .user_data   = agent->appout.policy };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->appout.bsl, 1, policy_callbacks));
+    }
+    {
+        BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
+                                                                 .query_fn    = BSLP_QueryPolicy,
+                                                                 .finalize_fn = BSLP_FinalizePolicy,
+                                                                 .user_data   = agent->clin.policy };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->clin.bsl, 1, policy_callbacks));
+    }
+    {
+        BSL_PolicyDesc_t policy_callbacks = (BSL_PolicyDesc_t) { .deinit_fn   = BSLP_Deinit,
+                                                                 .query_fn    = BSLP_QueryPolicy,
+                                                                 .finalize_fn = BSLP_FinalizePolicy,
+                                                                 .user_data   = agent->clout.policy };
+        ASSERT_PROPERTY(BSL_SUCCESS == BSL_API_RegisterPolicyProvider(agent->clout.bsl, 1, policy_callbacks));
+    }
+
+    agent->over_addr.sin_family   = 0;
+    agent->app_addr.sin_family    = 0;
+    agent->under_addr.sin_family  = 0;
+    agent->router_addr.sin_family = 0;
+
+    return retval;
+}
+
+void MockBPA_Agent_Deinit(MockBPA_Agent_t *agent)
+{
+    // All BSL contexts get the same config
+    MockBPA_Agent_BSL_Ctx_t *ctxs[] = {
+        &agent->appin,
+        &agent->appout,
+        &agent->clin,
+        &agent->clout,
+    };
+    for (size_t ix = 0; ix < sizeof(ctxs) / sizeof(ctxs[0]); ++ix)
+    {
+        MockBPA_Agent_BSL_Ctx_t *ctx = ctxs[ix];
+
+        if (pthread_mutex_destroy(&ctx->mutex))
+        {
+            BSL_LOG_ERR("Failed pthread_mutex_destroy()");
+        }
+
+        if (BSL_API_DeinitLib(ctx->bsl))
+        {
+            BSL_LOG_ERR("Failed BSL_API_DeinitLib()");
+        }
+        BSL_free(ctx->bsl);
+        ctx->bsl = NULL;
+    }
+
+    close(agent->tx_notify_r);
+    close(agent->tx_notify_w);
+
+    MockBPA_data_queue_clear(agent->over_rx);
+    MockBPA_data_queue_clear(agent->over_tx);
+    MockBPA_data_queue_clear(agent->under_rx);
+    MockBPA_data_queue_clear(agent->under_tx);
+    MockBPA_data_queue_clear(agent->deliver);
+    MockBPA_data_queue_clear(agent->forward);
+}
+
+static int bind_udp(int *sock, const struct sockaddr_in *addr)
+{
+    *sock = socket(addr->sin_family, SOCK_DGRAM, IPPROTO_UDP);
+    if (*sock < 0)
+    {
+        BSL_LOG_ERR("Failed to open UDP socket");
+        return 2;
+    }
+    {
+        char nodebuf[INET_ADDRSTRLEN];
+        inet_ntop(addr->sin_family, &addr->sin_addr, nodebuf, sizeof(nodebuf));
+        BSL_LOG_DEBUG("Binding UDP socket to [%s]:%d", nodebuf, ntohs(addr->sin_port));
+
+        int res = bind(*sock, (struct sockaddr *)addr, sizeof(*addr));
+        if (res)
+        {
+            close(*sock);
+            BSL_LOG_ERR("Failed to bind UDP socket, errno %d", errno);
+            return 3;
+        }
+    }
+
+    return 0;
+}
+
+/// Display form for counters
+#define TLM_COUNTER_FMT "7" PRIu64
+/** Aggregate and log telemetry from all BSL contexts.
+ */
+static void MockBPA_Agent_DumpTelemetry(MockBPA_Agent_t *agent)
+{
+    BSL_TlmCounters_t tlm = BSL_TLM_COUNTERS_ZERO;
+
+    {
+        MockBPA_Agent_BSL_Ctx_t *ctxs[] = {
+            &agent->appin,
+            &agent->appout,
+            &agent->clin,
+            &agent->clout,
+        };
+        for (size_t ix = 0; ix < sizeof(ctxs) / sizeof(ctxs[0]); ++ix)
+        {
+            MockBPA_Agent_BSL_Ctx_t *ctx = ctxs[ix];
+
+            if (pthread_mutex_lock(&ctx->mutex))
+            {
+                BSL_LOG_CRIT("failed to lock mutex");
+                continue;
+            }
+
+            int result = BSL_LibCtx_AccumulateTlmCounters(ctx->bsl, &tlm);
+            if (result)
+            {
+                BSL_LOG_ERR("Error with reading telemetry from bsl context");
+                // fall-through to unlock
+            }
+
+            if (pthread_mutex_unlock(&ctx->mutex))
+            {
+                BSL_LOG_CRIT("failed to unlock mutex");
+            }
+        }
+    }
+
+    BSL_LOG_INFO("---------------------------------------------------------");
+    BSL_LOG_INFO("---------------------TELEMETRY INFO----------------------");
+    BSL_LOG_INFO("                     FAIL COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_SECOP_FAIL_COUNT]);
+    BSL_LOG_INFO("         BUNDLE INSPECTED COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_BUNDLE_INSPECTED_COUNT]);
+    BSL_LOG_INFO("               ASB DECODE COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_ASB_DECODE_COUNT]);
+    BSL_LOG_INFO("               ASB DECODE BYTES:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_ASB_DECODE_BYTES]);
+    BSL_LOG_INFO("               ASB ENCODE COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_ASB_ENCODE_COUNT]);
+    BSL_LOG_INFO("               ASB ENCODE BYTES:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_ASB_ENCODE_BYTES]);
+    BSL_LOG_INFO("             SECOP SOURCE COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_SECOP_SOURCE_COUNT]);
+    BSL_LOG_INFO("           SECOP VERIFIER COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_SECOP_VERIFIER_COUNT]);
+    BSL_LOG_INFO("           SECOP ACCEPTOR COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_SECOP_ACCEPTOR_COUNT]);
+    BSL_LOG_INFO("                TOTAL TLM COUNT:%" TLM_COUNTER_FMT, tlm.counters[BSL_TLM_TOTAL_COUNT]);
+    BSL_LOG_INFO("---------------------------------------------------------");
+}
+
+/** Process a single bundle at one of the interaction points.
+ *
+ * @param[in] agent The agent state, which is not locked for the work thread.
+ * @param[in,out] bsl The specific BSL instance to process with.
+ * @param loc The interaction point for policy use.
+ * @param[in,out] bundle The bundle to process.
+ * @return Zero if successful.
+ */
+static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t *ctx, BSL_PolicyLocation_e loc,
+                                 MockBPA_Bundle_t *bundle)
+{
+    int returncode = 0;
+    BSL_LOG_INFO("starting");
+
+    if (pthread_mutex_lock(&ctx->mutex))
+    {
+        BSL_LOG_CRIT("failed to lock mutex");
+        return 2;
+    }
+
+    BSL_SecurityActionSet_t *action_set = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
+    BSL_SecurityActionSet_Init(action_set);
+
+    BSL_BundleRef_t bundle_ref = { .data = bundle };
+    BSL_LOG_INFO("calling BSL_API_QuerySecurity");
+    returncode = BSL_API_QuerySecurity(ctx->bsl, action_set, &bundle_ref, loc);
+    if (returncode != 0)
+    {
+        BSL_LOG_ERR("Failed to query security: code=%d", returncode);
+    }
+
+    if (!returncode)
+    {
+        BSL_LOG_INFO("calling BSL_API_ApplySecurity");
+        returncode = BSL_API_ApplySecurity(ctx->bsl, &bundle_ref, action_set);
+        if (returncode < 0)
+        {
+            BSL_LOG_ERR("Failed to apply security: code=%d", returncode);
+        }
+    }
+    if (pthread_mutex_unlock(&ctx->mutex))
+    {
+        BSL_LOG_CRIT("failed to unlock mutex");
+    }
+
+    // Example telemetry dump to log
+    MockBPA_Agent_DumpTelemetry(agent);
+
+    BSL_SecurityActionSet_Deinit(action_set);
+    BSL_free(action_set);
+    BSL_LOG_INFO("result code %d", returncode);
+    return returncode;
+}
+
+static void *MockBPA_Agent_work_over_rx(void *arg)
+{
+    MockBPA_Agent_t *agent = arg;
+    BSL_LOG_INFO("started");
+    while (true)
+    {
+        mock_bpa_ctr_ptr_t *item_ptr;
+        MockBPA_data_queue_pop_move(&item_ptr, agent->over_rx);
+        mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
+        if (item->encoded.len == 0)
+        {
+            mock_bpa_ctr_ptr_release(item_ptr);
+            break;
+        }
+
+        BSL_LOG_INFO("over_rx item");
+        mock_bpa_ctr_decode(item);
+
+        MockBPA_Bundle_t *bundle = item->bundle_ref.data;
+        if (MockBPA_Agent_process(agent, &agent->appin, BSL_POLICYLOCATION_APPIN, bundle))
+        {
+            BSL_LOG_ERR("failed security processing");
+            mock_bpa_ctr_ptr_release(item_ptr);
+            continue;
+        }
+        if (!bundle->retain)
+        {
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
+            mock_bpa_ctr_ptr_release(item_ptr);
+            continue;
+        }
+
+        // loopback
+        MockBPA_data_queue_push_move(agent->deliver, &item_ptr);
+    }
+    BSL_LOG_INFO("stopped");
+
+    return NULL;
+}
+
+static void *MockBPA_Agent_work_under_rx(void *arg)
+{
+    MockBPA_Agent_t *agent = arg;
+    BSL_LOG_INFO("started");
+    while (true)
+    {
+        mock_bpa_ctr_ptr_t *item_ptr;
+        MockBPA_data_queue_pop(&item_ptr, agent->under_rx);
+        mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
+        if (item->encoded.len == 0)
+        {
+            mock_bpa_ctr_ptr_release(item_ptr);
+            break;
+        }
+
+        BSL_LOG_INFO("under_rx item");
+        if (mock_bpa_ctr_decode(item))
+        {
+            BSL_LOG_ERR("failed to decode bundle");
+            mock_bpa_ctr_ptr_release(item_ptr);
+            continue;
+        }
+
+        MockBPA_Bundle_t *bundle = item->bundle_ref.data;
+        if (MockBPA_Agent_process(agent, &agent->clin, BSL_POLICYLOCATION_CLIN, bundle))
+        {
+            BSL_LOG_ERR("failed security processing");
+            mock_bpa_ctr_ptr_release(item_ptr);
+            continue;
+        }
+        if (!bundle->retain)
+        {
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
+            mock_bpa_ctr_ptr_release(item_ptr);
+            continue;
+        }
+
+        // loopback
+        MockBPA_data_queue_push_move(agent->forward, &item_ptr);
+    }
+    BSL_LOG_INFO("stopped");
+
+    return NULL;
+}
+
+static void *MockBPA_Agent_work_deliver(void *arg)
+{
+    MockBPA_Agent_t *agent = arg;
+    BSL_LOG_INFO("started");
+    while (true)
+    {
+        mock_bpa_ctr_ptr_t *item_ptr;
+        MockBPA_data_queue_pop(&item_ptr, agent->deliver);
+        mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
+        if (item->encoded.len == 0)
+        {
+            mock_bpa_ctr_ptr_release(item_ptr);
+            break;
+        }
+
+        BSL_LOG_INFO("deliver item");
+        MockBPA_Bundle_t *bundle = item->bundle_ref.data;
+        if (MockBPA_Agent_process(agent, &agent->appout, BSL_POLICYLOCATION_APPOUT, bundle))
+        {
+            BSL_LOG_ERR("failed security processing");
+            mock_bpa_ctr_ptr_release(item_ptr);
+            continue;
+        }
+        if (!bundle->retain)
+        {
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
+            mock_bpa_ctr_ptr_release(item_ptr);
+            continue;
+        }
+
+        mock_bpa_ctr_sort_blocks(item);
+        mock_bpa_ctr_encode(item);
+        MockBPA_data_queue_push_move(agent->over_tx, &item_ptr);
+
+        {
+            uint8_t buf    = 0;
+            int     nbytes = write(agent->tx_notify_w, &buf, sizeof(buf));
+            if (nbytes < 0)
+            {
+                BSL_LOG_ERR("Failed to write: %ld", nbytes);
+            }
+        }
+    }
+    BSL_LOG_INFO("stopped");
+
+    return NULL;
+}
+
+static void *MockBPA_Agent_work_forward(void *arg)
+{
+    MockBPA_Agent_t *agent = arg;
+    BSL_LOG_INFO("started");
+    while (true)
+    {
+        mock_bpa_ctr_ptr_t *item_ptr;
+        MockBPA_data_queue_pop(&item_ptr, agent->forward);
+        mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
+        if (item->encoded.len == 0)
+        {
+            mock_bpa_ctr_ptr_release(item_ptr);
+            break;
+        }
+
+        BSL_LOG_INFO("forward item");
+        MockBPA_Bundle_t *bundle = item->bundle_ref.data;
+        if (MockBPA_Agent_process(agent, &agent->clout, BSL_POLICYLOCATION_CLOUT, bundle))
+        {
+            BSL_LOG_ERR("failed security processing");
+            mock_bpa_ctr_ptr_release(item_ptr);
+            continue;
+        }
+        if (!bundle->retain)
+        {
+            BSL_LOG_ERR("bundle was marked to delete by BSL");
+            mock_bpa_ctr_ptr_release(item_ptr);
+            continue;
+        }
+
+        mock_bpa_ctr_sort_blocks(item);
+        mock_bpa_ctr_encode(item);
+        MockBPA_data_queue_push_move(agent->under_tx, &item_ptr);
+
+        {
+            uint8_t buf    = 0;
+            int     nbytes = write(agent->tx_notify_w, &buf, sizeof(uint8_t));
+            if (nbytes < 0)
+            {
+                BSL_LOG_ERR("Failed to write, got %ld", nbytes);
+            }
+        }
+    }
+    BSL_LOG_INFO("stopped");
+
+    return NULL;
+}
+
+int MockBPA_Agent_Start(MockBPA_Agent_t *agent)
+{
+    if (pthread_create(&agent->thr_under_rx, NULL, MockBPA_Agent_work_under_rx, agent))
+    {
+        return 2;
+    }
+    if (pthread_create(&agent->thr_over_rx, NULL, MockBPA_Agent_work_over_rx, agent))
+    {
+        return 2;
+    }
+    if (pthread_create(&agent->thr_deliver, NULL, MockBPA_Agent_work_deliver, agent))
+    {
+        return 2;
+    }
+    if (pthread_create(&agent->thr_forward, NULL, MockBPA_Agent_work_forward, agent))
+    {
+        return 2;
+    }
+    return 0;
+}
+
+void MockBPA_Agent_Stop(MockBPA_Agent_t *agent)
+{
+    atomic_store(&agent->stop_state, true);
+
+    uint8_t buf    = 0;
+    int     nbytes = write(agent->tx_notify_w, &buf, sizeof(buf));
+    if (nbytes < 0)
+    {
+        BSL_LOG_ERR("Failed to write: %ld", nbytes);
+    }
+}
+
+int MockBPA_Agent_Exec(MockBPA_Agent_t *agent)
+{
+    int retval = 0;
+
+    int over_sock, under_sock;
+    if (bind_udp(&over_sock, &agent->over_addr))
+    {
+        return 3;
+    }
+    if (bind_udp(&under_sock, &agent->under_addr))
+    {
+        return 3;
+    }
+
+    struct pollfd pfds[] = {
+        { .fd = agent->tx_notify_r, .events = POLLIN },
+        { .fd = under_sock },
+        { .fd = over_sock },
+    };
+    struct pollfd *const tx_notify_pfd = pfds;
+    struct pollfd *const under_pfd     = pfds + 1;
+    struct pollfd *const over_pfd      = pfds + 2;
+
+    BSL_LOG_INFO("READY");
+
+    while (!atomic_load(&agent->stop_state))
+    {
+        under_pfd->events = POLLIN;
+        if (!MockBPA_data_queue_empty_p(agent->under_tx))
+        {
+            under_pfd->events |= POLLOUT;
+        }
+
+        over_pfd->events = POLLIN;
+        if (!MockBPA_data_queue_empty_p(agent->over_tx))
+        {
+            over_pfd->events |= POLLOUT;
+        }
+
+        int res = poll(pfds, sizeof(pfds) / sizeof(struct pollfd), -1);
+        if (res < 0)
+        {
+            if (errno != EINTR)
+            {
+                BSL_LOG_ERR("poll failed with errno: %d", errno);
+                retval = 4;
+            }
+            break;
+        }
+
+        if (tx_notify_pfd->revents & POLLIN)
+        {
+            // no actual data, just clear the pipe
+            uint8_t buf;
+            int     nbytes = read(agent->tx_notify_r, &buf, sizeof(uint8_t));
+            if (nbytes < 0)
+            {
+                BSL_LOG_ERR("Cannot read: %ld", nbytes);
+            }
+        }
+
+        if (over_pfd->revents & POLLIN)
+        {
+            uint8_t      buf[65536];
+            struct iovec iov = {
+                .iov_base = buf,
+                .iov_len  = sizeof(buf),
+            };
+            struct msghdr msg = {
+                .msg_iovlen = 1,
+                .msg_iov    = &iov,
+            };
+            ssize_t got = recvmsg(over_sock, &msg, 0);
+            if (got > 0)
+            {
+                BSL_LOG_DEBUG("over_sock recv %zd", got);
+                mock_bpa_ctr_ptr_t *item_ptr = mock_bpa_ctr_ptr_new();
+                {
+                    mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
+                    BSL_Data_AppendFrom(&item->encoded, got, buf);
+                }
+                MockBPA_data_queue_push_move(agent->over_rx, &item_ptr);
+            }
+        }
+        if (over_pfd->revents & POLLOUT)
+        {
+            mock_bpa_ctr_ptr_t *item_ptr;
+            MockBPA_data_queue_pop(&item_ptr, agent->over_tx);
+            assert(item_ptr);
+            mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
+            assert(item);
+
+            BSL_LOG_DEBUG("over_sock send %zd", item->encoded.len);
+            struct iovec iov = {
+                .iov_base = item->encoded.ptr,
+                .iov_len  = item->encoded.len,
+            };
+            struct msghdr msg = {
+                .msg_name    = &agent->app_addr,
+                .msg_namelen = sizeof(agent->app_addr),
+                .msg_iovlen  = 1,
+                .msg_iov     = &iov,
+            };
+            ssize_t got = sendmsg(over_sock, &msg, 0);
+            if (got != (ssize_t)item->encoded.len)
+            {
+                BSL_LOG_ERR("over_sock failed to send all %zd bytes, only %zd sent: %d", item->encoded.len, got, errno);
+            }
+            mock_bpa_ctr_ptr_release(item_ptr);
+        }
+
+        if (under_pfd->revents & POLLIN)
+        {
+            uint8_t      buf[65536];
+            struct iovec iov = {
+                .iov_base = buf,
+                .iov_len  = sizeof(buf),
+            };
+            struct msghdr msg = {
+                .msg_iovlen = 1,
+                .msg_iov    = &iov,
+            };
+            ssize_t got = recvmsg(under_sock, &msg, 0);
+            if (got > 0)
+            {
+                BSL_LOG_DEBUG("under_sock recv %zd", got);
+                mock_bpa_ctr_ptr_t *item_ptr = mock_bpa_ctr_ptr_new();
+                assert(item_ptr);
+                {
+                    mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
+                    BSL_Data_AppendFrom(&item->encoded, got, buf);
+                }
+                MockBPA_data_queue_push_move(agent->under_rx, &item_ptr);
+            }
+        }
+        if (under_pfd->revents & POLLOUT)
+        {
+            mock_bpa_ctr_ptr_t *item_ptr;
+            MockBPA_data_queue_pop(&item_ptr, agent->under_tx);
+            assert(item_ptr);
+            mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
+
+            BSL_LOG_DEBUG("under_sock send %zd", item->encoded.len);
+            struct iovec iov = {
+                .iov_base = item->encoded.ptr,
+                .iov_len  = item->encoded.len,
+            };
+            struct msghdr msg = {
+                .msg_name    = &agent->router_addr,
+                .msg_namelen = sizeof(agent->router_addr),
+                .msg_iovlen  = 1,
+                .msg_iov     = &iov,
+            };
+            ssize_t got = sendmsg(under_sock, &msg, 0);
+            if (got != (ssize_t)item->encoded.len)
+            {
+                BSL_LOG_ERR("under_sock failed to send all %zd bytes, only %zd sent", item->encoded.len, got);
+            }
+            mock_bpa_ctr_ptr_release(item_ptr);
+        }
+    }
+
+    close(over_sock);
+    close(under_sock);
+    return retval;
+}
+
+int MockBPA_Agent_Join(MockBPA_Agent_t *agent)
+{
+    int errors = 0;
+    BSL_LOG_INFO("cleaning up");
+    mock_bpa_ctr_ptr_t *item_ptr;
+
+    // join RX workers first
+    item_ptr = mock_bpa_ctr_ptr_new();
+    MockBPA_data_queue_push_move(agent->under_rx, &item_ptr);
+    item_ptr = mock_bpa_ctr_ptr_new();
+    MockBPA_data_queue_push_move(agent->over_rx, &item_ptr);
+    if (pthread_join(agent->thr_under_rx, NULL))
+    {
+        BSL_LOG_ERR("Failed to join the work_under_rx");
+        ++errors;
+    }
+    if (pthread_join(agent->thr_over_rx, NULL))
+    {
+        BSL_LOG_ERR("Failed to join the work_over_rx");
+        ++errors;
+    }
+
+    // then delivery/forward workers after RX are all flushed
+    item_ptr = mock_bpa_ctr_ptr_new();
+    MockBPA_data_queue_push_move(agent->forward, &item_ptr);
+    item_ptr = mock_bpa_ctr_ptr_new();
+    MockBPA_data_queue_push_move(agent->deliver, &item_ptr);
+    if (pthread_join(agent->thr_forward, NULL))
+    {
+        BSL_LOG_ERR("Failed to join the work_forward");
+        ++errors;
+    }
+    if (pthread_join(agent->thr_deliver, NULL))
+    {
+        BSL_LOG_ERR("Failed to join the work_deliver");
+        ++errors;
+    }
+
+    return errors;
+}
