@@ -24,8 +24,8 @@
  * @ingroup mock_bpa
  */
 
-#ifndef BSL_MOCK_BPA_KEY_REGISTRY_H_
-#define BSL_MOCK_BPA_KEY_REGISTRY_H_
+#ifndef BSL_MOCKBPA_KEYSTORE_H_
+#define BSL_MOCKBPA_KEYSTORE_H_
 
 #include <inttypes.h>
 
@@ -41,7 +41,12 @@ extern "C" {
  */
 BSL_KeyStore_Descriptors_t MockBPA_KeyStore_Descriptors(void);
 
+/** Initialize the key storage and register it with BSL_KeyStore_Init().
+ */
 void MockBPA_KeyStore_Init(void);
+
+/** De-register with BSL_KeyStore_Deinit() and clear all key storage.
+ */
 void MockBPA_KeyStore_Deinit(void);
 
 /** Erase key entry from crypto library registry, if present.
@@ -73,25 +78,20 @@ BSL_IdValPair_t *MockBPA_KeyStore_SetKeyParameter(BSL_Crypto_KeyHandle_t handle,
  * @param[in] file_path path to JSON file with JWKs or CBOR file with @c COSE_KeySet
  * @return 0 if successful.
  */
-int mock_bpa_key_registry_init(const char *file_path);
+int MockBPA_KeyStore_LoadFile(const char *file_path);
 
 /** @warning Exposed only for testing.
  * @param infd The file descriptor to read from.
  */
-int mock_bpa_key_registry_init_jwk(int infd);
+int MockBPA_KeyStore_LoadJwk(int infd);
 
 /** @warning Exposed only for testing.
  * @param infd The file descriptor to read from.
  */
-int mock_bpa_key_registry_init_cosekey(int infd);
-
-/**
- * Custom RNG function for BCB testing
- */
-int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len);
+int MockBPA_KeyStore_LoadCoseKeySet(int infd);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif
+#endif /* BSL_MOCKBPA_KEYSTORE_H_ */

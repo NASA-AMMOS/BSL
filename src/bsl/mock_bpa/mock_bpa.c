@@ -40,7 +40,7 @@
 
 #include "agent.h"
 #include "log.h"
-#include "key_registry.h"
+#include "KeyStore.h"
 
 // Configuration
 static BSL_HostEID_t app_eid;
@@ -118,6 +118,25 @@ static void show_usage(const char *argv0)
             BSL_VERSION, argv0);
 }
 
+/**
+ * Custom RNG function for BCB testing
+ */
+static int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len)
+{
+    if (len == 12) // IV
+    {
+        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+        memcpy(buf, iv, 12);
+    }
+    else // A3 KEY
+    {
+        uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
+                                    0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
+        memcpy(buf, rfc9173A3_key, len);
+    }
+    return 1;
+}
+
 int main(int argc, char **argv)
 {
     int retval = 0;
@@ -191,7 +210,7 @@ int main(int argc, char **argv)
                     break;
                 }
                 case 'k':
-                    if (mock_bpa_key_registry_init(optarg))
+                    if (MockBPA_KeyStore_LoadFile(optarg))
                     {
                         retval = 1;
                     }

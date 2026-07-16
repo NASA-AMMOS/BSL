@@ -63,7 +63,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (!retval)
     {
         int infd = fileno(tmp);
-        if (mock_bpa_key_registry_init_jwk(infd))
+        if (MockBPA_KeyStore_LoadJwk(infd))
         {
             retval = -1;
         }

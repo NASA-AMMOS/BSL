@@ -182,7 +182,7 @@ target_sources(
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/eidpat.h
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/encode.h
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/decode.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/key_registry.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/KeyStore.h
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/ctr.h
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/MockBPA.h
 )
@@ -196,7 +196,7 @@ target_sources(
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/eidpat.c
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/encode.c
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/decode.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/key_registry.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/KeyStore.c
   ${CMAKE_CURRENT_SOURCE_DIR}/bsl/mock_bpa/ctr.c
 )
 set_target_properties(bsl_mock_bpa

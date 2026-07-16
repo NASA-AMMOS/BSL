@@ -24,7 +24,7 @@
  * @ingroup mock_bpa
  */
 
-#include "key_registry.h"
+#include "KeyStore.h"
 #include <bsl/front/TextUtil.h>
 #include <bsl/dynamic/CBOR.h>
 #include <bsl/cose_sc/CoseMsg.h>
@@ -327,7 +327,7 @@ BSL_KeyStore_Descriptors_t MockBPA_KeyStore_Descriptors(void)
     return desc;
 }
 
-int mock_bpa_key_registry_init_jwk(int fd)
+int MockBPA_KeyStore_LoadJwk(int fd)
 {
     int retval = BSL_SUCCESS;
 
@@ -531,7 +531,7 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
     return retval;
 }
 
-int mock_bpa_key_registry_init_cosekey(int infd)
+int MockBPA_KeyStore_LoadCoseKeySet(int infd)
 {
     struct stat sb;
     if ((fstat(infd, &sb) < 0) || (sb.st_size == 0))
@@ -562,7 +562,7 @@ int mock_bpa_key_registry_init_cosekey(int infd)
     return retval;
 }
 
-int mock_bpa_key_registry_init(const char *file_path)
+int MockBPA_KeyStore_LoadFile(const char *file_path)
 {
     int retval = BSL_SUCCESS;
 
@@ -582,11 +582,11 @@ int mock_bpa_key_registry_init(const char *file_path)
 
     if (is_json)
     {
-        retval = mock_bpa_key_registry_init_jwk(infd);
+        retval = MockBPA_KeyStore_LoadJwk(infd);
     }
     else if (is_cbor)
     {
-        retval = mock_bpa_key_registry_init_cosekey(infd);
+        retval = MockBPA_KeyStore_LoadCoseKeySet(infd);
     }
     else
     {
@@ -595,20 +595,4 @@ int mock_bpa_key_registry_init(const char *file_path)
     }
 
     return retval;
-}
-
-int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len)
-{
-    if (len == 12) // IV
-    {
-        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
-        memcpy(buf, iv, 12);
-    }
-    else // A3 KEY
-    {
-        uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
-                                    0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
-        memcpy(buf, rfc9173A3_key, len);
-    }
-    return 1;
 }
