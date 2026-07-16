@@ -226,7 +226,10 @@ if(BUILD_DOCS_API OR BUILD_DOCS_MAN)
 endif(BUILD_DOCS_API OR BUILD_DOCS_MAN)
 
 add_custom_command(
-    DEPENDS CMakeGraphVizOptions.cmake
+    DEPENDS
+        CMakeGraphVizOptions.cmake
+        CMakeLists.txt
+        src/CMakeLists.txt
     OUTPUT dep_chart.dot
     COMMAND ${CMAKE_COMMAND} "--graphviz=dep_chart.dot" .
 )

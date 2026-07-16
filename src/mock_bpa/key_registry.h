@@ -28,8 +28,6 @@
 #define BSL_MOCK_BPA_KEY_REGISTRY_H_
 
 #include <inttypes.h>
-#include <stdio.h>
-#include <jansson.h>
 
 #include <CryptoInterface.h>
 

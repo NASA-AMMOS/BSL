@@ -94,8 +94,7 @@ set_target_properties(bsl_default_sc
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_default_sc PUBLIC bsl_front)
-target_link_libraries(bsl_default_sc PUBLIC bsl_crypto)
-target_link_libraries(bsl_default_sc PUBLIC qcbor::qcbor)
+target_link_libraries(bsl_default_sc PRIVATE bsl_crypto)
 
 # COSE Security Context library
 set(BSL_COSE_SC_H
@@ -116,9 +115,9 @@ set_target_properties(bsl_cose_sc
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
 target_link_libraries(bsl_cose_sc PUBLIC bsl_front)
-target_link_libraries(bsl_cose_sc PUBLIC bsl_crypto)
+target_link_libraries(bsl_cose_sc PUBLIC bsl_dynamic) # for CBOR API
+target_link_libraries(bsl_cose_sc PRIVATE bsl_crypto)
 target_link_libraries(bsl_cose_sc PUBLIC MLIB::mlib)
-target_link_libraries(bsl_cose_sc PUBLIC qcbor::qcbor)
 
 # Example Policy Provider library
 set(BSL_SAMPLE_PP_H
@@ -139,11 +138,12 @@ set_target_properties(bsl_sample_pp
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-target_link_libraries(bsl_sample_pp PUBLIC bsl_front bsl_dynamic)
-# contexts for config options
-target_link_libraries(bsl_sample_pp PUBLIC bsl_default_sc bsl_cose_sc)
+target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
+target_link_libraries(bsl_sample_pp PRIVATE bsl_dynamic)
+# contexts linked-to for config options
+target_link_libraries(bsl_sample_pp PRIVATE bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
-target_link_libraries(bsl_sample_pp PUBLIC Jansson::Jansson)
+target_link_libraries(bsl_sample_pp PRIVATE Jansson::Jansson)
 
 # Dynamic backend library
 set(BSL_DYNAMIC_H
@@ -219,7 +219,7 @@ set_target_properties(bsl_mock_bpa
 )
 target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
 target_link_libraries(bsl_mock_bpa PUBLIC qcbor::qcbor)
-target_link_libraries(bsl_mock_bpa PUBLIC Jansson::Jansson)
+target_link_libraries(bsl_mock_bpa PRIVATE Jansson::Jansson)
 target_link_libraries(bsl_mock_bpa PUBLIC bsl_front bsl_dynamic bsl_default_sc bsl_cose_sc bsl_sample_pp)
 target_link_libraries(bsl_mock_bpa PUBLIC Threads::Threads)
 
