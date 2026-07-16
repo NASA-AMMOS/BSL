@@ -30,7 +30,7 @@
 #include <bsl/dynamic/IdValPair.h>
 #include <bsl/dynamic/SecurityActionSet.h>
 #include <bsl/mock_bpa/ctr.h>
-#include <bsl/mock_bpa/key_registry.h>
+#include <bsl/mock_bpa/KeyStore.h>
 
 #include "TestUtils.h"
 

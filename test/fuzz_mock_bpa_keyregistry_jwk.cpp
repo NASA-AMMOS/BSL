@@ -25,7 +25,7 @@
  */
 #include "TestUtils.h"
 #include <bsl/mock_bpa/MockBPA.h>
-#include <bsl/mock_bpa/key_registry.h>
+#include <bsl/mock_bpa/KeyStore.h>
 #include <bsl/crypto/CryptoInterface.h>
 #include <cinttypes>
 
