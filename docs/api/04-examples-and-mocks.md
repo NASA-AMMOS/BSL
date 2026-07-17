@@ -77,7 +77,7 @@ The path to the JSON file should be passed to the Mock BPA with the `-j` command
 
 ## Key Management
 
-The keys used by the example SCs registered in the Mock BPA's key store are obtained from a file using either the JSON Web Key (JWK) Set format of RFC 7517 @cite rfc7517 or the COSE_KeySet format of RFC 9052 @cite rfc9052.
+The keys used by the example SCs registered in the Mock BPA's key store are obtained from a file using either the JSON Web Key (JWK) Set format of RFC 7517 @cite rfc7517 or the COSE Key Set format of RFC 9052 @cite rfc9052.
 
 The implementation to support these SCs only handles symmetric keys and only the minimal header parameters needed for key ID ("kid") and symmetric key material itself ("k").
 
