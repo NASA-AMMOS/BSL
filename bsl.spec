@@ -122,6 +122,7 @@ install -m644 -D testroot/usr/lib/pkgconfig/m-lib.pc %{buildroot}%{_datadir}/pkg
 %doc README.md
 %{_includedir}/m-lib/
 %{_datadir}/pkgconfig/m-lib.pc
+%{_datadir}/cmake/Modules/FindMLIB.cmake
 
 %{_includedir}/qcbor/
 %{_libdir}/pkgconfig/qcbor.pc
@@ -133,6 +134,7 @@ install -m644 -D testroot/usr/lib/pkgconfig/m-lib.pc %{buildroot}%{_datadir}/pkg
 %{_libdir}/pkgconfig/bsl-default-sc.pc
 %{_libdir}/pkgconfig/bsl-cose-sc.pc
 %{_libdir}/pkgconfig/bsl-sample-pp.pc
+%{_libdir}/cmake/bsl/
 %{_libdir}/libbsl_front.so
 %{_libdir}/libbsl_dynamic.so
 %{_libdir}/libbsl_crypto.so
