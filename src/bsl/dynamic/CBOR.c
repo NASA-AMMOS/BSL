@@ -24,8 +24,10 @@
  * @brief Definition of CBOR CODEC wrapper functions.
  */
 #include "CBOR.h"
-#include <bsl/front/TextUtil.h>
-#include <bsl/BPSecLib_Private.h>
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/front/TextUtil.h"
+
 #include <m-core.h>
 
 int BSL_CBOR_Encode_GetSize(size_t *needlen, BSL_CBOR_Encode_f func, const void *obj)

@@ -31,16 +31,16 @@
 #ifndef BSL_BPSECLIB_PUBLIC_H_
 #define BSL_BPSECLIB_PUBLIC_H_
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdarg.h>
-#include <time.h>
-
 #include "bsl/BSLConfig.h"
 #include "bsl/front/Data.h"
 #include "bsl/front/SeqReader.h"
 #include "bsl/front/SeqWriter.h"
+
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {

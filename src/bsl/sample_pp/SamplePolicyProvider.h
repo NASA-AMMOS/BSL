@@ -28,14 +28,14 @@
 #ifndef BSLP_SAMPLE_POLICY_PROVIDER_H
 #define BSLP_SAMPLE_POLICY_PROVIDER_H
 
-#include <stdint.h>
-#include <pthread.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/dynamic/Variant.h"
 
 #include <m-array.h>
 #include <m-string.h>
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/dynamic/Variant.h>
+#include <pthread.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

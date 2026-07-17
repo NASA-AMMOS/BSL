@@ -26,6 +26,8 @@
  */
 #include "SecOperation.h"
 
+#include "Variant.h"
+
 size_t BSL_SecOper_Sizeof(void)
 {
     return sizeof(BSL_SecOper_t);

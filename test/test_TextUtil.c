@@ -23,8 +23,9 @@
  * Test the TextUtil.h interfaces.
  */
 #include <bsl/front/TextUtil.h>
-#include <unity.h>
+
 #include <string.h>
+#include <unity.h>
 
 #define TEST_CASE(...)
 

@@ -20,7 +20,9 @@
  * subcontract 1700763.
  */
 #include "eidpat.h"
-#include <bsl/BPSecLib_Private.h>
+
+#include "bsl/BPSecLib_Private.h"
+
 #include <strings.h>
 
 int bsl_eidpat_numrange_seg_cmp(const bsl_eidpat_numrange_seg_t *left, const bsl_eidpat_numrange_seg_t *right)

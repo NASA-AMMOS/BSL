@@ -22,17 +22,17 @@
 #ifndef _BSL_DEFAULTSCUTILS_H_
 #define _BSL_DEFAULTSCUTILS_H_
 
-#include <m-string.h>
+#include "TestUtils.h"
 
 #include <bsl/crypto/CryptoInterface.h>
 #include <bsl/dynamic/PublicInterfaceImpl.h>
 #include <bsl/dynamic/SecOperation.h>
-#include <bsl/dynamic/Variant.h>
 #include <bsl/dynamic/SecurityActionSet.h>
+#include <bsl/dynamic/Variant.h>
 #include <bsl/sample_pp/SamplePolicyProvider.h>
 #include <bsl/mock_bpa/ctr.h>
 
-#include "TestUtils.h"
+#include <m-string.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -20,21 +20,20 @@
  * subcontract 1700763.
  */
 #undef NDEBUG // force assertions
-#include <assert.h>
-
-#include <m-string.h>
+#include "TestUtils.h"
 
 #include <bsl/BPSecLib_Private.h>
 #include <bsl/crypto/CryptoInterface.h>
 #include <bsl/front/TextUtil.h>
-#include <bsl/mock_bpa/MockBPA.h>
-
-#include <bsl/dynamic/Variant.h>
 #include <bsl/dynamic/SecurityActionSet.h>
 #include <bsl/dynamic/SeqReadWrite.h>
+#include <bsl/dynamic/Variant.h>
 #include <bsl/sample_pp/SamplePolicyProvider.h>
+#include <bsl/mock_bpa/MockBPA.h>
 
-#include "TestUtils.h"
+#include <m-string.h>
+
+#include <assert.h>
 
 int BSL_TestContext_Init(BSL_TestContext_t *ctx)
 {

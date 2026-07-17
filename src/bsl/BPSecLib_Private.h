@@ -34,17 +34,17 @@
 #ifndef BSL_BPSECLIB_PRIVATE_H_
 #define BSL_BPSECLIB_PRIVATE_H_
 
+#include "BPSecLib_Public.h"
+
 #include <inttypes.h>
-#include <stdio.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
 #include <syslog.h>
 #include <time.h>
-#include <sys/types.h>
-
-#include "BPSecLib_Public.h"
 
 #ifdef __cplusplus
 extern "C" {

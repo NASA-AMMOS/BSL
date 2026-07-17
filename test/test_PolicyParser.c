@@ -24,14 +24,13 @@
  *
  * @brief Test the config reader of the Sample Policy Provider.
  */
-#include <unity.h>
-
-#include <bsl/BPSecLib_Private.h>
-
-#include <bsl/mock_bpa/MockBPA.h>
 #include "DefaultScUtils.h"
 
+#include <bsl/BPSecLib_Private.h>
 #include <bsl/sample_pp/PolicyParser.h>
+#include <bsl/mock_bpa/MockBPA.h>
+
+#include <unity.h>
 
 static BSL_TestContext_t      LocalTestCtx;
 static BSLP_PolicyProvider_t *policy;

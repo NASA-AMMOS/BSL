@@ -23,14 +23,15 @@
  * @brief Concrete implementation of the Abstract Security Block defined in RFC 9172.
  * @ingroup backend_dyn
  */
+#include "AbsSecBlock.h"
+
+#include "CBOR.h"
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/front/TextUtil.h"
+
 #include <qcbor/qcbor_encode.h>
 #include <qcbor/qcbor_spiffy_decode.h>
-
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/front/TextUtil.h>
-
-#include "AbsSecBlock.h"
-#include "CBOR.h"
 
 void BSL_AbsSecBlock_Target_Init(BSL_AbsSecBlock_Target_t *self)
 {

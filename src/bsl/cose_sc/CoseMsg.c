@@ -25,10 +25,10 @@
  * Implementation of COSE structures @cite rfc9052.
  */
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/dynamic/CBOR.h>
-
 #include "CoseMsg.h"
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/dynamic/CBOR.h"
 
 void BSLX_CoseMsg_HdrMapTree_update(BSLX_CoseMsg_HdrMapTree_t base, const BSLX_CoseMsg_HdrMapTree_t addl)
 {

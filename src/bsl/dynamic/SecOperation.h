@@ -27,9 +27,11 @@
 #ifndef BSLB_SECOPERATIONS_H_
 #define BSLB_SECOPERATIONS_H_
 
-#include <stdint.h>
-#include <bsl/BPSecLib_Private.h>
 #include "Variant.h"
+
+#include "bsl/BPSecLib_Private.h"
+
+#include <stdint.h>
 
 struct BSL_SecOper_s
 {

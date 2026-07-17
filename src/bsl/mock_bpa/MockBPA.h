@@ -22,11 +22,11 @@
 #ifndef _BSL_MockBPA_MockBPA_H_
 #define _BSL_MockBPA_MockBPA_H_
 
+#include "agent.h"
 #include "crc.h"
-#include "encode.h"
 #include "decode.h"
 #include "eidpat.h"
+#include "encode.h"
 #include "log.h"
-#include "agent.h"
 
 #endif //_BSL_MockBPA_MockBPA_H_

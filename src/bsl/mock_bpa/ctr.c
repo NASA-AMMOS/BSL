@@ -23,12 +23,13 @@
  * @ingroup mock_bpa
  * Container structs for BPv7 data.
  */
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/dynamic/CBOR.h>
-
 #include "ctr.h"
+
 #include "decode.h"
 #include "encode.h"
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/dynamic/CBOR.h"
 
 void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr)
 {

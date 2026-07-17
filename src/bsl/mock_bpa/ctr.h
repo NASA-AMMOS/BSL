@@ -27,8 +27,9 @@
 #define BSL_MOCK_BPA_CTR_H_
 
 #include "bundle.h"
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/BPSecLib_Public.h>
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
 
 #include <m-core.h>
 

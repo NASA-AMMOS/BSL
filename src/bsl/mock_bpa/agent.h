@@ -27,22 +27,21 @@
 #ifndef BSL_MOCK_BPA_AGENT_H_
 #define BSL_MOCK_BPA_AGENT_H_
 
-#include <netinet/in.h>
-
 #include "ctr.h"
 
-#include <bsl/BPSecLib_Public.h>
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/sample_pp/SamplePolicyProvider.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
+#include "bsl/sample_pp/SamplePolicyProvider.h"
 
 #include <m-atomic.h>
-#include <m-shared-ptr.h>
 #include <m-buffer.h>
+#include <m-shared-ptr.h>
 #include <m-string.h>
 
 #include <arpa/inet.h>
-#include <pthread.h>
 #include <inttypes.h>
+#include <netinet/in.h>
+#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {

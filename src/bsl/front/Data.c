@@ -24,7 +24,9 @@
  * Implementation of the data containers for handling variable-sized buffers and ownership.
  */
 #include "Data.h"
+
 #include "bsl/BPSecLib_Private.h"
+
 #include <string.h>
 
 static void bsl_data_int_reset(BSL_Data_t *data)

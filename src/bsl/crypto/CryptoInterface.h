@@ -27,13 +27,13 @@
 #ifndef BSL_FRONTEND_CRYPTO_INTERFACE_H_
 #define BSL_FRONTEND_CRYPTO_INTERFACE_H_
 
-#include <stdint.h>
-
+#include "bsl/BPSecLib_Private.h" // TODO replace with Variant.h
 #include "bsl/BSLConfig.h"
 #include "bsl/front/Data.h"
 #include "bsl/front/SeqReader.h"
 #include "bsl/front/SeqWriter.h"
-#include "bsl/BPSecLib_Private.h" // TODO replace with Variant.h
+
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

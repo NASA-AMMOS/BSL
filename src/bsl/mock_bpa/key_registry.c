@@ -25,15 +25,18 @@
  */
 
 #include "key_registry.h"
-#include <bsl/front/TextUtil.h>
-#include <bsl/dynamic/CBOR.h>
-#include <bsl/cose_sc/CoseMsg.h>
-#include <m-string.h>
+
+#include "bsl/front/TextUtil.h"
+#include "bsl/dynamic/CBOR.h"
+#include "bsl/cose_sc/CoseMsg.h"
+
 #include <jansson.h>
+#include <m-string.h>
+
 #include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 int mock_bpa_key_registry_init_jwk(int fd)
 {

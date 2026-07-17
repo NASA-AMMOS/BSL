@@ -20,11 +20,13 @@
  * subcontract 1700763.
  */
 #include "PolicyParser.h"
-#include <bsl/front/TextUtil.h>
-#include <bsl/default_sc/DefaultSecContext.h>
-#include <bsl/cose_sc/CoseContext.h>
-#include <strings.h>
+
+#include "bsl/front/TextUtil.h"
+#include "bsl/cose_sc/CoseContext.h"
+#include "bsl/default_sc/DefaultSecContext.h"
+
 #include <errno.h>
+#include <strings.h>
 
 /** Read a text value as long integer.
  * The entire text must be consumed to be valid.
