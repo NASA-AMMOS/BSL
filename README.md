@@ -195,6 +195,15 @@ Start the mock BPA with local sockets:
 
 Send a trial bundle from the underlayer, which is taken from Appendix A.1.4 of RFC 9173.
 ```sh
-echo 9f88070000820282010282028202018202820201820018281a000f4240850b0200005856810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e185010100005823526561647920746f2067656e657261746520612033322d62797465207061796c6f6164ff | xxd -r -p | socat stdio udp-sendto:localhost:4556,pf=ip6,sourceport=14556 | xxd -p
+echo 9f88070000820282010282028202018202820201820018281a000f4240850b0200005856810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e185010100005823526561647920746f2067656e657261746520612033322d62797465207061796c6f6164ff | \
+    xxd -r -p | \
+    socat stdio udp-sendto:localhost:4556,pf=ip6,sourceport=14556 | \
+    xxd -p
 ```
+This example assumes that the `bsl-mock-bpa` resolves "localhost" to an IPv6 address (which is the default on RHEL-9), if not the socat can replace `pf=ip6` with `pf=ip4` to force IPv4 use.
+
 Alternatively for the overlayer app socket use `socat stdio udp-sendto:localhost:24556,pf=ip6,sourceport=34556` instead.
+
+> [!NOTE]
+> The output can be observed as CBOR extended diagnostic notation (EDN) using a CLI tool such as [cbor-diag](https://github.com/cabo/cbor-diag) by replacing `xxd -p` with `cbor2diag.rb`.
+> Similarly, the input can be provided in EDN by piping through `diag2cbor.rb` instead of hex piped through `xxd -r -p`.
