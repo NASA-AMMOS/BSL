@@ -24,15 +24,17 @@
  * Definitions for bundle and block decoding.
  * @ingroup mock_bpa
  */
-#include <netinet/in.h>
-
 #include "decode.h"
+
 #include "agent.h"
 #include "crc.h"
-#include <bsl/BPSecLib_Public.h>
-#include <bsl/BPSecLib_Private.h>
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
 
 #include <qcbor/qcbor_spiffy_decode.h>
+
+#include <netinet/in.h>
 
 int bsl_mock_decode_eid(const BSL_Data_t *encoded_bytes, BSL_HostEID_t *eid)
 {

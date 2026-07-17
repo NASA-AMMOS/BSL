@@ -19,16 +19,16 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include <inttypes.h>
-#include <unity.h>
+#include "DefaultScUtils.h"
 
 #include <bsl/BPSecLib_Private.h>
-#include <bsl/mock_bpa/log.h>
 #include <bsl/mock_bpa/agent.h>
 #include <bsl/mock_bpa/decode.h>
 #include <bsl/mock_bpa/encode.h>
+#include <bsl/mock_bpa/log.h>
 
-#include "DefaultScUtils.h"
+#include <inttypes.h>
+#include <unity.h>
 
 static BSL_LibCtx_t bsl;
 

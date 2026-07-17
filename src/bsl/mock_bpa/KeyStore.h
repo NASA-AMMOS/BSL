@@ -29,9 +29,9 @@
 #ifndef BSL_MOCKBPA_KEYSTORE_H_
 #define BSL_MOCKBPA_KEYSTORE_H_
 
-#include <inttypes.h>
-
 #include <bsl/crypto/KeyStore.h>
+
+#include <inttypes.h>
 
 #ifdef __cplusplus
 extern "C" {

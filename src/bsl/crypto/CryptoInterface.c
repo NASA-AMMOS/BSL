@@ -24,15 +24,16 @@
  * Backend cryptography implementation
  */
 #include "CryptoInterface.h"
-#include <bsl/front/TextUtil.h>
-#include <bsl/BPSecLib_Private.h>
 
-#include <m-core.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/front/TextUtil.h"
+#include "bsl/dynamic/IdValPair.h"
+
 #include <openssl/core_names.h>
-#include <openssl/evp.h>
 #include <openssl/err.h>
-#include <openssl/rand.h>
+#include <openssl/evp.h>
 #include <openssl/kdf.h>
+#include <openssl/rand.h>
 
 #if defined(HAVE_VALGRIND)
 #include <valgrind/memcheck.h>

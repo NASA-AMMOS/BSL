@@ -27,8 +27,9 @@
 #ifndef BSL_MOCK_BPA_DECODE_H_
 #define BSL_MOCK_BPA_DECODE_H_
 
-#include "eid.h"
 #include "bundle.h"
+#include "eid.h"
+
 #include <qcbor/qcbor_decode.h>
 
 #ifdef __cplusplus

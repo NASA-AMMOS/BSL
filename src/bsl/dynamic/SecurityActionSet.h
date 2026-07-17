@@ -26,8 +26,9 @@
 #ifndef BSLB_SECACTIONSET_H_
 #define BSLB_SECACTIONSET_H_
 
-#include <bsl/BPSecLib_Private.h>
 #include "SecurityAction.h"
+
+#include "bsl/BPSecLib_Private.h"
 
 /** @struct BSL_SecActionList_t
  * Defines a basic list of ::BSL_SecurityAction_s.

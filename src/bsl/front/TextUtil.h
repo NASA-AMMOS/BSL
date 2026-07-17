@@ -27,6 +27,7 @@
 #define BSLB_TEXTUTIL_H_
 
 #include "Data.h"
+
 #include <stdint.h>
 
 #ifdef __cplusplus

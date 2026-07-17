@@ -24,6 +24,15 @@
  * This is the main entry for a mock BPA daemon that communicates through
  * unix domain sockets.
  */
+#include "agent.h"
+#include "KeyStore.h"
+#include "log.h"
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
+#include "bsl/crypto/CryptoInterface.h"
+#include "bsl/sample_pp/PolicyParser.h"
+
 #include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -32,15 +41,6 @@
 #include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
-
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/BPSecLib_Public.h>
-#include <bsl/crypto/CryptoInterface.h>
-#include <bsl/sample_pp/PolicyParser.h>
-
-#include "agent.h"
-#include "log.h"
-#include "KeyStore.h"
 
 // Configuration
 static BSL_HostEID_t app_eid;

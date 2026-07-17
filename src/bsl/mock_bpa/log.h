@@ -27,8 +27,8 @@
 #ifndef BSL_MOCK_BPA_LOG_H_
 #define BSL_MOCK_BPA_LOG_H_
 
-#include <stdbool.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <time.h>
 
 #ifdef __cplusplus

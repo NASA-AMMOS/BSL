@@ -28,15 +28,15 @@
 #ifndef BSLB_DEFAULT_SECURITY_CONTEXT_PRIVATE_H_
 #define BSLB_DEFAULT_SECURITY_CONTEXT_PRIVATE_H_
 
-#include <stdint.h>
+#include "rfc9173.h"
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
+#include "bsl/crypto/CryptoInterface.h"
 
 #include <qcbor/qcbor_encode.h>
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/BPSecLib_Public.h>
-#include <bsl/crypto/CryptoInterface.h>
-
-#include "rfc9173.h"
+#include <stdint.h>
 
 /*
  * Convenience struct containing metadata as a block.

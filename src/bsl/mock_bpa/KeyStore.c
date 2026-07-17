@@ -26,20 +26,21 @@
  */
 
 #include "KeyStore.h"
+
 #include <bsl/front/TextUtil.h>
 #include <bsl/dynamic/CBOR.h>
 #include <bsl/cose_sc/CoseMsg.h>
 
+#include <jansson.h>
+#include <m-bstring.h>
 #include <m-dict.h>
 #include <m-shared-ptr.h>
-#include <m-bstring.h>
-
 #include <m-string.h>
-#include <jansson.h>
+
 #include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 /**
  * Struct to hold private key information

@@ -26,8 +26,14 @@
  * safety of event sources.
  */
 #include "log.h"
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/BSLConfig.h>
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BSLConfig.h"
+
+#include <m-atomic.h>
+#include <m-buffer.h>
+#include <m-shared-ptr.h>
+#include <m-string.h>
 
 #include <pthread.h>
 #include <stdarg.h>
@@ -35,11 +41,6 @@
 #include <strings.h>
 #include <syslog.h>
 #include <time.h>
-
-#include <m-shared-ptr.h>
-#include <m-buffer.h>
-#include <m-string.h>
-#include <m-atomic.h>
 
 /// Number of events to buffer to I/O thread
 #define MOCK_BPA_LOG_QUEUE_SIZE 100

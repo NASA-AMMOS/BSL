@@ -24,9 +24,11 @@
  * @brief Fuzz the simplified JWK file decoding.
  */
 #include "TestUtils.h"
-#include <bsl/mock_bpa/MockBPA.h>
-#include <bsl/mock_bpa/KeyStore.h>
+
 #include <bsl/crypto/CryptoInterface.h>
+#include <bsl/mock_bpa/KeyStore.h>
+#include <bsl/mock_bpa/MockBPA.h>
+
 #include <cinttypes>
 
 #define EXPECT_EQ(expect, got)          \

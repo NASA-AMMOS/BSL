@@ -28,9 +28,9 @@
 #ifndef BSLX_COSECONTEXT_H_
 #define BSLX_COSECONTEXT_H_
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/BPSecLib_Public.h>
-#include <bsl/dynamic/CBOR.h>
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
+#include "bsl/dynamic/CBOR.h"
 
 #include <m-bptree.h>
 

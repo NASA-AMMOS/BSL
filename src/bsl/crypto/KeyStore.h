@@ -33,10 +33,10 @@
 #ifndef BSL_CRYPTO_KEYSTORE_H_
 #define BSL_CRYPTO_KEYSTORE_H_
 
-#include <stdint.h>
-
-#include "bsl/front/Data.h"
 #include "bsl/BPSecLib_Private.h" // TODO replace with Variant.h
+#include "bsl/front/Data.h"
+
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

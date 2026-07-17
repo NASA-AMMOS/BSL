@@ -24,10 +24,10 @@
  * @ingroup backend_dyn
  * @brief Defines interactions with an external Policy Provider.
  */
-#include <bsl/BPSecLib_Private.h>
-
 #include "PublicInterfaceImpl.h"
 #include "SecurityActionSet.h"
+
+#include "bsl/BPSecLib_Private.h"
 
 int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set,
                                       const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location)

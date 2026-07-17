@@ -35,8 +35,7 @@ echo "Check format from root: $SELFDIR"
 ./resources/apply_format.sh
 ./resources/apply_license.sh
 
-changed=$(git status --porcelain=1)
-if [[ -n "${changed}" ]]; then
+if ! git diff -q; then
   echo "Error: Files changed after formatting:"
   git diff
   exit 1
