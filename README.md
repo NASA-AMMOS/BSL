@@ -22,8 +22,6 @@ subcontract 1700763.
 
 # The NASA AMMOS BPSec Library (BSL)
 
-![example workflow](https://github.com/github/docs/actions/workflows/build-test.yml/badge.svg)
-
 The BPSec Library (BSL) is an implementation of *Bundle Protocol Security* as specified in [RFC 9172](https://datatracker.ietf.org/doc/rfc9172/) and [RFC 9173](https://datatracker.ietf.org/doc/rfc9173/), with a flexible architecture enabling ready adaptability to flight or ground systems.
 
 The BSL exposes an interface via C header files (under `src`), and contains an example backend implementing this interface in `src/backend`. The BSL also contains an implementation of the Default Security Context (RFC 9173) under `src/security_context` and a sample policy provider under `src/policy_provider`. Together these form a complete the set of functionality required to execute Bundle Protocol Security.
@@ -174,22 +172,29 @@ Then execute the test suite using:
 python3 -m pytest mock-bpa-test --log-cli-level=info
 ```
 
-### Running with Wireshark and Local Sockets
+### Running with Wireshark and Local UDP transport
 
+The Mock BPA uses local UDP datagram transport.
+This relies on the fact the the loopback device will have a large MTU to avoid the need for BP PDU segmentation.
+
+The UDP ports can be monitored using stock Wireshark with the following command line:
 ```sh
-wireshark -i lo -f 'port 4556 or port 24556' -k
+wireshark -i lo -k \
+    -f 'udp port 4556 or udp port 14556 or udp port 24556 or udp port 34556' \
+    -d 'udp.port==14556,bundle' -d 'udp.port==24556,bundle' -d 'udp.port==34556,bundle' \
+    -Y bpv7
 ```
 
 Start the mock BPA with local sockets:
 ```sh
 ./build.sh
 ./build.sh install
-./build.sh run bsl-mock-bpa -u localhost:4556 -r localhost:14556 -o localhost:24556 -a localhost:34556
+./build.sh run \
+    bsl-mock-bpa -u localhost:4556 -r localhost:14556 -o localhost:24556 -a localhost:34556
 ```
 
 Send a trial bundle from the underlayer, which is taken from Appendix A.1.4 of RFC 9173.
 ```sh
 echo 9f88070000820282010282028202018202820201820018281a000f4240850b0200005856810101018202820201828201078203008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e185010100005823526561647920746f2067656e657261746520612033322d62797465207061796c6f6164ff | xxd -r -p | socat stdio udp-sendto:localhost:4556,pf=ip6,sourceport=14556 | xxd -p
 ```
-Alternatively for the overlayer app socket use `socat stdio unix-sendto:/tmp/foo.sock` instead.
-
+Alternatively for the overlayer app socket use `socat stdio udp-sendto:localhost:24556,pf=ip6,sourceport=34556` instead.
