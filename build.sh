@@ -39,6 +39,7 @@ function usage {
     echo "  apply-format   - Apply format to all source code"
     echo "  apply-license  - Apply/update license preamble to files"
     echo "  check          - Run unit tests"
+    echo "  check-install  - Build a test executable linked to BSL"
     echo "  clean          - Clean build artifacts"
     echo "  deps           - Build dependend libraries"
     echo "  docs           - Build HTML and/or PDF doxygen"
@@ -56,7 +57,8 @@ function cmd_check_format {
 }
 
 function cmd_apply_format {
-    exec ./resources/apply_format.sh
+    shift
+    exec ./resources/apply_format. "$@"
 }
 
 function cmd_apply_license {
@@ -66,6 +68,31 @@ function cmd_apply_license {
 function cmd_check {
     shift
     ctest --test-dir ${BUILDDIR} --output-on-failure "$@"
+}
+
+function cmd_check_install {
+    cd "${SELFDIR}"
+    if [[ -d testroot ]]
+    then
+        export PKG_CONFIG_PATH=$(find testroot/ -type d -name pkgconfig | tr '\n' ':')
+        PREFIX="--define-variable=prefix=testroot/usr"
+        echo "Using prefix: ${PREFIX}"
+    fi
+    PKGS="bsl bsl-sample-pp"
+
+    echo "Provides:"
+    pkg-config --print-provides ${PKGS}
+    echo "Requires:"
+    pkg-config --print-requires ${PKGS}
+    echo -n "CFlags: "
+    pkg-config --cflags ${PKGS} ${PREFIX}
+    echo -n "Libs: "
+    pkg-config --libs ${PKGS} ${PREFIX}
+
+    mkdir -p build
+    gcc -c -o build/example.o lib-user-test/main.c $(pkg-config --cflags ${PKGS} ${PREFIX})
+    gcc -o build/example build/example.o $(pkg-config --libs ${PKGS} ${PREFIX})
+    ./build/example
 }
 
 function cmd_clean {
@@ -184,13 +211,16 @@ case "$1" in
         cmd_check_format
         ;;
     apply-format)
-        cmd_apply_format
+        cmd_apply_format "$@"
         ;;
     apply-license)
         cmd_apply_license
         ;;
     check)
         cmd_check "$@"
+        ;;
+    check-install)
+        cmd_check_install
         ;;
     clean)
         cmd_clean

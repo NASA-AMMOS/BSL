@@ -93,6 +93,7 @@ target_sources(bsl_default_sc
             TYPE HEADERS
             FILES
                 bsl/default_sc/DefaultSecContext.h
+                bsl/default_sc/rfc9173.h
     PRIVATE
         FILE_SET private_headers
             TYPE HEADERS
