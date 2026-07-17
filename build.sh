@@ -75,8 +75,10 @@ function cmd_check_install {
     if [[ -d testroot ]]
     then
         export PKG_CONFIG_PATH=$(find testroot/ -type d -name pkgconfig | tr '\n' ':')
-        PREFIX="--define-variable=prefix=testroot/usr"
-        echo "Using prefix: ${PREFIX}"
+        PKG_PREFIX="--define-variable=prefix=testroot/usr"
+        echo "Using prefix: ${PKG_PREFIX}"
+    else
+        PKG_PREFIX=""
     fi
     PKGS="bsl bsl-sample-pp"
 
@@ -85,13 +87,13 @@ function cmd_check_install {
     echo "Requires:"
     pkg-config --print-requires ${PKGS}
     echo -n "CFlags: "
-    pkg-config --cflags ${PKGS} ${PREFIX}
+    pkg-config ${PKG_PREFIX} --cflags ${PKGS}
     echo -n "Libs: "
-    pkg-config --libs ${PKGS} ${PREFIX}
+    pkg-config ${PKG_PREFIX} --libs ${PKGS}
 
     mkdir -p build
-    gcc -c -o build/example.o lib-user-test/main.c $(pkg-config --cflags ${PKGS} ${PREFIX})
-    gcc -o build/example build/example.o $(pkg-config --libs ${PKGS} ${PREFIX})
+    gcc -c -o build/example.o lib-user-test/main.c $(pkg-config ${PKG_PREFIX} --cflags ${PKGS})
+    gcc -o build/example build/example.o $(pkg-config ${PKG_PREFIX} --libs ${PKGS})
     ./build/example
 }
 
