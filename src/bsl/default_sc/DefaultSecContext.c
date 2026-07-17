@@ -58,7 +58,6 @@ bool BSLX_ValidateTargetType(const BSL_BundleRef_t *bundle, const BSL_SecOper_t 
         return false;
     }
 
-    return !(tgt_block.type_code == BSL_BLOCK_TYPE_PRIMARY || 
-                tgt_block.type_code == BSL_BLOCK_TYPE_BIB || 
-                tgt_block.type_code == BSL_BLOCK_TYPE_BCB);
+    return !(tgt_block.type_code == BSL_BLOCK_TYPE_PRIMARY || tgt_block.type_code == BSL_BLOCK_TYPE_BIB
+             || tgt_block.type_code == BSL_BLOCK_TYPE_BCB);
 }

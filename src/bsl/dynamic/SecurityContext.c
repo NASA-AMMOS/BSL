@@ -608,7 +608,8 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
             }
         }
 
-        action->validation_state = (0 == secop_invalid_count) ? BSL_ACTION_VALIDATION_SUCCESS : BSL_ACTION_VALIDATION_FAILURE;
+        action->validation_state =
+            (0 == secop_invalid_count) ? BSL_ACTION_VALIDATION_SUCCESS : BSL_ACTION_VALIDATION_FAILURE;
     }
 
     return BSL_SUCCESS;
