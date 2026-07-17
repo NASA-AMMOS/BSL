@@ -19,18 +19,17 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include <unity.h>
-
-#include <BPSecLib_Public.h>
-#include <CryptoInterface.h>
-#include <backend/SecurityActionSet.h>
-#include <backend/SecurityResultSet.h>
-#include <policy_provider/SamplePolicyProvider.h>
-#include <default_sc/DefaultSecContext.h>
-#include <mock_bpa/agent.h>
-#include <mock_bpa/log.h>
-
 #include "DefaultScUtils.h"
+
+#include <bsl/BPSecLib_Public.h>
+#include <bsl/crypto/CryptoInterface.h>
+#include <bsl/dynamic/SecurityActionSet.h>
+#include <bsl/default_sc/DefaultSecContext.h>
+#include <bsl/sample_pp/SamplePolicyProvider.h>
+#include <bsl/mock_bpa/agent.h>
+#include <bsl/mock_bpa/log.h>
+
+#include <unity.h>
 
 void suiteSetUp(void)
 {
@@ -149,9 +148,10 @@ void setUp(void)
 
     BSL_Data_t wrapkey_data;
     BSL_Data_Init(&wrapkey_data);
-    wrapkey_data.ptr = (uint8_t *)ApxA2_WrappedKey;
-    wrapkey_data.len = sizeof(ApxA2_WrappedKey);
+    TEST_ASSERT_EQUAL_INT(
+        0, BSL_TestUtils_DecodeBase16_cstr(&wrapkey_data, "69c411276fecddc4780df42c8a2af89296fabf34d7fae700"));
     BSL_IdValPair_SetBytestr(&ctx.param_wrapped_key, BSLX_BCB_OPT_WRAPPED_KEY, wrapkey_data);
+    BSL_Data_Deinit(&wrapkey_data);
 
     BSL_IdValPair_SetInt64(&ctx.opt_bib_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 1);
     BSL_IdValPair_SetInt64(&ctx.opt_bib_dont_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
@@ -560,10 +560,8 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                         const char *secsrc_eid, BSL_SecRole_e sec_role, int sec_block_type, uint8_t target_block,
                         BSL_PolicyAction_e policy_act, bool good_key, int sec_blks_ct, int expected_act_ct)
 {
-    BSL_PrimaryBlock_t        primary_block;
-    BSL_SecurityResponseSet_t response_set;
-    BSL_SecurityResponseSet_Init(&response_set);
-    BSL_TlmCounters_t tlm = BSL_TLM_COUNTERS_ZERO;
+    BSL_PrimaryBlock_t primary_block;
+    BSL_TlmCounters_t  tlm = BSL_TLM_COUNTERS_ZERO;
 
     int query_result = -1;
     int apply_result = -1;
@@ -624,8 +622,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             TEST_ASSERT_EQUAL(0, query_result);
             TEST_ASSERT_EQUAL(expected_act_ct, BSL_SecurityActionSet_CountOperations(&action_set));
 
-            apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set,
-                                                 &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
+            apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
             TEST_ASSERT_EQUAL(0, apply_result);
             BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -701,8 +698,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             TEST_ASSERT_EQUAL(0, query_result);
             TEST_ASSERT_EQUAL(expected_act_ct, BSL_SecurityActionSet_CountOperations(&action_set));
 
-            apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set,
-                                                 &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
+            apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
             TEST_ASSERT_EQUAL(0, apply_result);
             BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -797,8 +793,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             TEST_ASSERT_EQUAL(0, query_result);
             TEST_ASSERT_EQUAL(expected_act_ct, BSL_SecurityActionSet_CountOperations(&action_set));
 
-            apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set,
-                                                 &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
+            apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
             TEST_ASSERT_EQUAL(0, apply_result);
             BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -835,16 +830,13 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
             break;
         }
     }
-    BSL_SecurityResponseSet_Deinit(&response_set);
 }
 
 // Recommended BSL_6 be removed
 // But, here's the fixture anyways, can be used for a future PP enhancement ticket (like #68)
 void n_test_BSL_6(void)
 {
-    BSL_PrimaryBlock_t        primary_block;
-    BSL_SecurityResponseSet_t response_set;
-    BSL_SecurityResponseSet_Init(&response_set);
+    BSL_PrimaryBlock_t   primary_block;
     BSL_CanonicalBlock_t res_blk;
     int                  query_result = -1;
     int                  apply_result = -1;
@@ -868,8 +860,7 @@ void n_test_BSL_6(void)
     TEST_ASSERT_EQUAL(1, action_set.action_count);
     TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
 
-    apply_result =
-        BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
+    apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
     TEST_ASSERT_EQUAL(0, apply_result);
     TEST_ASSERT_EQUAL(
         BSL_SECOP_CONCLUSION_FAILURE,
@@ -878,16 +869,13 @@ void n_test_BSL_6(void)
     BSL_BundleCtx_GetBundleMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(2, primary_block.block_count);
 
-    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_PrimaryBlock_deinit(&primary_block);
 }
 
 // Recreate MockBPA test BSL_43
 void test_BSL_32(void)
 {
-    BSL_PrimaryBlock_t        primary_block;
-    BSL_SecurityResponseSet_t response_set;
-    BSL_SecurityResponseSet_Init(&response_set);
+    BSL_PrimaryBlock_t   primary_block;
     BSL_CanonicalBlock_t res_blk;
     int                  query_result = -1;
     int                  apply_result = -1;
@@ -909,8 +897,7 @@ void test_BSL_32(void)
     TEST_ASSERT_EQUAL(0, query_result);
     TEST_ASSERT_EQUAL(2, BSL_SecurityActionSet_CountOperations(&action_set));
 
-    apply_result =
-        BSL_API_ApplySecurity(&LocalTestCtx.bsl, &response_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
+    apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
     TEST_ASSERT_EQUAL(0, apply_result);
 
     for (size_t i = 0; i < BSL_SecurityActionSet_CountActions(&action_set); i++)
@@ -936,6 +923,5 @@ void test_BSL_32(void)
     TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref, 4, &res_blk));
     TEST_ASSERT_EQUAL(12, res_blk.type_code);
 
-    BSL_SecurityResponseSet_Deinit(&response_set);
     BSL_PrimaryBlock_deinit(&primary_block);
 }

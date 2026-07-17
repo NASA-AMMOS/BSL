@@ -27,15 +27,15 @@ from typing import Any, Optional
 @unique
 class DataFormat(IntEnum):
     BUNDLEARRAY = 0
-    ''' Python structures used with cbor2 library. '''
+    """ Python structures used with cbor2 library. """
     HEX = 1
-    ''' Data is hex-encoded bytes '''
+    """ Data is hex-encoded bytes """
     ERR = 2
-    ''' No expected output, the error log is scanned '''
+    """ No expected output, the error log is scanned """
     CBORDIAG = 4
-    ''' Full CBOR diagnostic notation with cbor-diag library. '''
+    """ Full CBOR diagnostic notation with cbor-diag library. """
     ANYCBOR = 5
-    ''' Output is not deterministic, any well-formed CBOR is acceptable '''
+    """ Output is not deterministic, any well-formed CBOR is acceptable """
 
 
 @unique
@@ -48,29 +48,26 @@ class BundleDestLoc(IntEnum):
 # Holds a simple test case
 class _TestCase:
     input_data: Any
-    ''' representation of input bundle '''
+    """ representation of input bundle """
     input_data_format: DataFormat
-    ''' data format of :py:attr:`input_data` '''
+    """ data format of :py:attr:`input_data` """
 
     policy_config: str
-    ''' decimal digit representing uint32 for policy configuration OR path to JSON-encoded ION-like policy rules '''
+    """ decimal digit representing uint32 for policy configuration OR path to JSON-encoded ION-like policy rules """
 
     key_set: str
-    ''' path to JWK-encoded key set (named .json) or COSE_KeySet (named .cbor) '''
+    """ path to JWK-encoded key set (named .json) or COSE_KeySet (named .cbor) """
 
     expected_output: Any
-    ''' either list representation of expected output bundle OR a string to search log output for match '''
+    """ either list representation of expected output bundle OR a string to search log output for match """
     expected_output_format: DataFormat
-    '''     data format of :py:attr:`expected_output` '''
+    """     data format of :py:attr:`expected_output` """
 
     sec_src_eid: Optional[str] = None
-    ''' Security source for all operations '''
-
-    is_working: bool = True
-    ''' True if test working (can be removed once all tests are working) '''
+    """ Security source for all operations """
 
     bundle_dest_loc: BundleDestLoc = BundleDestLoc.CLIN
-    ''' local outgoing interaction point of the output bundle '''
+    """ local outgoing interaction point of the output bundle """
 
     use_bcb_rng: bool = False
-    ''' If true, test will use custom rng callback for BCB testing '''
+    """ If true, test will use custom rng callback for BCB testing """

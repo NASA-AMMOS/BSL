@@ -29,16 +29,15 @@
  * @ingroup unit-tests
  */
 
+#include "DefaultScUtils.h"
+
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/BPSecLib_Public.h>
+#include <bsl/sample_pp/SamplePolicyProvider.h>
+#include <bsl/mock_bpa/MockBPA.h>
+
 #include <inttypes.h>
 #include <unity.h>
-
-#include <BPSecLib_Private.h>
-#include <BPSecLib_Public.h>
-#include <mock_bpa/MockBPA.h>
-
-#include <policy_provider/SamplePolicyProvider.h>
-
-#include "DefaultScUtils.h"
 
 static BSL_TestContext_t      LocalTestCtx;
 static BSLP_PolicyProvider_t *policy_provider;
@@ -245,13 +244,9 @@ void test_MultiplePolicyProviders(void)
         }
     }
 
-    BSL_SecurityResponseSet_t *response_set = BSL_TestUtils_MallocEmptyPolicyResponse();
-
-    TEST_ASSERT_EQUAL(0, BSL_PolicyRegistry_FinalizeActions(&LocalTestCtx.bsl, &action_set,
-                                                            &LocalTestCtx.mock_bpa_ctr.bundle_ref, response_set));
+    TEST_ASSERT_EQUAL(
+        0, BSL_PolicyRegistry_FinalizeActions(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref));
 
     BSL_SecurityActionSet_Deinit(&action_set);
     BSLP_PolicyProvider_Destroy(policy_provider2);
-    BSL_SecurityResponseSet_Deinit(response_set);
-    BSL_free(response_set);
 }

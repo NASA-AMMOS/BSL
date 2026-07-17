@@ -80,10 +80,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 # Force specific POSIX compatibility version
-add_definitions(
-  -D_XOPEN_SOURCE
-  -D_POSIX_C_SOURCE=200809L
-)
+add_definitions(-D_POSIX_C_SOURCE=200809L)
 # Generic warn/error options
 add_compile_options(
     -Wall
@@ -133,8 +130,14 @@ if(BUILD_LIB)
 endif(BUILD_LIB)
 
 include(CheckSymbolExists)
-check_symbol_exists(timespec_get "time.h" HAVE_TIMESPEC_GET)
+include(CMakePushCheckState)
+cmake_push_check_state(RESET)
+list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_POSIX_C_SOURCE=200809L")
 check_symbol_exists(clock_gettime "time.h" HAVE_CLOCK_GETTIME)
+cmake_pop_check_state()
+if(NOT HAVE_CLOCK_GETTIME)
+    message(FATAL_ERROR "clock_gettime not found")
+endif()
 
 if(BUILD_UNITTEST)
   if(TEST_MEMCHECK)
@@ -199,12 +202,17 @@ include(GNUInstallDirs)
 if(BUILD_LIB)
     add_subdirectory(src)
 
-    configure_file(pkg/qcbor.pc.in pkg/qcbor.pc @ONLY)
-    configure_file(pkg/bsl.pc.in pkg/bsl.pc @ONLY)
+    file(GLOB PCIN_FILES "pkg/*.pc.in")
+    set(PC_FILES "")
+    foreach(PCIN_FILE ${PCIN_FILES})
+        get_filename_component(PCOUT_FILE ${PCIN_FILE} NAME_WLE)
+        set(PCOUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/pkg/${PCOUT_FILE}")
+        configure_file(${PCIN_FILE} ${PCOUT_FILE} @ONLY)
+        list(APPEND PC_FILES ${PCOUT_FILE})
+    endforeach()
+
     install(
-        FILES
-            "${CMAKE_CURRENT_BINARY_DIR}/pkg/qcbor.pc"
-            "${CMAKE_CURRENT_BINARY_DIR}/pkg/bsl.pc"
+        FILES ${PC_FILES}
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
     )
 endif(BUILD_LIB)
@@ -218,7 +226,10 @@ if(BUILD_DOCS_API OR BUILD_DOCS_MAN)
 endif(BUILD_DOCS_API OR BUILD_DOCS_MAN)
 
 add_custom_command(
-    DEPENDS CMakeGraphVizOptions.cmake
+    DEPENDS
+        CMakeGraphVizOptions.cmake
+        CMakeLists.txt
+        src/CMakeLists.txt
     OUTPUT dep_chart.dot
     COMMAND ${CMAKE_COMMAND} "--graphviz=dep_chart.dot" .
 )

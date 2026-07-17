@@ -30,19 +30,22 @@
  *  - It does NOT use any of the "Plumbing" inside the BSL.
  *  - It only directly calls the interfaces exposed by the Default Security Context.
  */
-#include <stdlib.h>
+#include "DefaultScUtils.h"
+
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/crypto/CryptoInterface.h>
+#include <bsl/dynamic/PublicInterfaceImpl.h>
+#include <bsl/default_sc/DefaultSecContext.h>
+#include <bsl/default_sc/DefaultSecContext_Private.h>
+#include <bsl/mock_bpa/MockBPA.h>
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <unity.h>
 
-#include <BPSecLib_Private.h>
-#include <mock_bpa/MockBPA.h>
-#include <CryptoInterface.h>
-
-#include <backend/PublicInterfaceImpl.h>
-#include <default_sc/DefaultSecContext.h>
-#include <default_sc/DefaultSecContext_Private.h>
-
-#include "DefaultScUtils.h"
+static const char *ApxA2_AuthTag     = "efa4b5ac0108e3816c5606479801bc04";
+static const char *ApxA2_Ciphertext  = "3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a";
+static const char *ApxA2_PayloadData = "526561647920746f2067656e657261746520612033322d62797465207061796c6f6164";
 
 static BSL_TestContext_t LocalTestCtx;
 
@@ -82,7 +85,7 @@ void tearDown(void)
  *  - Decode it into a BSL_BundleCtx struct
  *  - Create a BIB security operation with hard-coded arguments (From RFC9173 A1 ASB)
  *  - Run the DefaultSecuritContext's BSLX_BIB_Execute function and confirm result is 0.
- *  - Capture the outcome from the above function to confirm 1 result (the authentication code)
+ *  - Check the operation after the above function to confirm 1 result (the authentication code)
  *  - Capture the auth code and ensure it matches the value in the test vector.
  *
  * Notes:
@@ -101,17 +104,14 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     BIBTestContext_Init(&bib_test_context);
     BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_SOURCE, RFC9173_EXAMPLE_A1_KEY);
 
-    BSL_SecOutcome_t *sec_outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(sec_outcome, &bib_test_context.sec_oper);
-
     /// Confirm running BIB as source executes without error
-    int bib_exec_status =
-        BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bib_test_context.sec_oper, sec_outcome);
+    int bib_exec_status = BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bib_test_context.sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, bib_exec_status);
 
     /// Confirm it produced only 1 result
-    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(sec_outcome));
-    const BSL_IdValPair_t *bib_result = BSL_SecOutcome_GetResultAtIndex(sec_outcome, 0);
+    TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&bib_test_context.sec_oper));
+    const BSL_IdValPair_t *bib_result = BSL_SecOper_FindResult(&bib_test_context.sec_oper, RFC9173_BIB_RESULTID_HMAC);
+    TEST_ASSERT_NOT_NULL(bib_result);
 
     /// Confirm the context and result result is the right ID (Defined in RFC)
     TEST_ASSERT_EQUAL(RFC9173_BIB_RESULTID_HMAC, bib_result->id);
@@ -119,12 +119,9 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
     /// Confirm the actual HMAC tag matches what is in the RFC
     BSL_Data_t mac_view;
     TEST_ASSERT_EQUAL(0, BSL_IdValPair_GetAsBytestr(bib_result, &mac_view));
-    bool is_equal = BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_hmac, mac_view);
-    TEST_ASSERT_TRUE(is_equal);
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_hmac, mac_view));
     BSL_Data_Deinit(&mac_view);
 
-    BSL_SecOutcome_Deinit(sec_outcome);
-    BSL_free(sec_outcome);
     BIBTestContext_Deinit(&bib_test_context);
 }
 
@@ -142,7 +139,7 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
  *  - Decode it into a BSL_BundleCtx struct
  *  - Create a BCB security operation with hard-coded arguments (From RFC9173 A2 ASB)
  *  - Run the DefaultSecuritContext's BSLX_BCB_Execute function and confirm result is 0.
- *  - Capture the outcome from the above function to confirm 1 result (the auth tag) is present
+ *  - Check the operation after the above function to confirm 1 result (the auth tag) is present
  *  - Capture the auth tag and ensure it matches the value in the test vector.
  *
  * Notes:
@@ -160,17 +157,15 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     BCBTestContext_Init(&bcb_test_context);
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_SOURCE);
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &bcb_test_context.sec_oper);
-
     // Execute BCB as source, confirm result is 0 (success)
-    int bcb_exec_result =
-        BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcb_test_context.sec_oper, outcome);
+    int bcb_exec_result = BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcb_test_context.sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_result);
 
     // Confirm the output produces one result (the AES-GCM auth code)
-    TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(outcome));
-    const BSL_IdValPair_t *auth_tag_result = BSL_SecOutcome_GetResultAtIndex(outcome, 0);
+    TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&bcb_test_context.sec_oper));
+    const BSL_IdValPair_t *auth_tag_result =
+        BSL_SecOper_FindResult(&bcb_test_context.sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
+    TEST_ASSERT_NOT_NULL(auth_tag_result);
 
     // Confirm that AUTHTAG result id is there
     TEST_ASSERT_EQUAL(RFC9173_BCB_RESULTID_AUTHTAG, auth_tag_result->id);
@@ -179,8 +174,8 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
         // Confirm expected vs actual auth tag byte length's match and they are equal
         BSL_Data_t view;
         TEST_ASSERT_EQUAL(0, BSL_IdValPair_GetAsBytestr(auth_tag_result, &view));
-        TEST_ASSERT_EQUAL_size_t(sizeof(ApxA2_AuthTag), view.len);
-        TEST_ASSERT_EQUAL_MEMORY(ApxA2_AuthTag, view.ptr, sizeof(ApxA2_AuthTag));
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(ApxA2_AuthTag, view));
+        BSL_Data_Deinit(&view);
     }
 
     MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
@@ -188,16 +183,10 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
     MockBPA_CanonicalBlock_t *target_block = *target_ptr;
     TEST_ASSERT_NOT_NULL(target_block);
 
-    TEST_ASSERT_EQUAL_size_t(sizeof(ApxA2_Ciphertext), target_block->btsd_len);
-    char logstr[500];
-    BSL_LOG_INFO("EXPECTED payload: %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), ApxA2_Ciphertext, sizeof(ApxA2_Ciphertext)));
-    BSL_LOG_INFO("ACTUAL payload:   %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
-    TEST_ASSERT_EQUAL_MEMORY(ApxA2_Ciphertext, target_block->btsd, sizeof(ApxA2_Ciphertext));
+    BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(ApxA2_Ciphertext, btsd_view));
+    BSL_Data_Deinit(&btsd_view);
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BCBTestContext_Deinit(&bcb_test_context);
 }
 
@@ -211,17 +200,10 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     BCBTestContext_Init(&bcb_test_context);
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_ACCEPTOR);
 
-    BSL_SecOutcome_t *outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BSL_SecOutcome_Init(outcome, &bcb_test_context.sec_oper);
-
     /// Confirm that BCB executes with SUCCESS
     int bcb_exec_result = BSL_ExecBCBVerifierAcceptor(BSLX_BCB_Execute, &LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref,
-                                                      &bcb_test_context.sec_oper, outcome);
+                                                      &bcb_test_context.sec_oper);
     TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_result);
-
-    /// Confirm that running as ACCEPTOR consumes result.
-    size_t result_count = BSL_SecOutcome_CountResults(outcome);
-    TEST_ASSERT_EQUAL(0, result_count);
 
     /// Confirm that the target block is decrypted correctly.
     MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
@@ -229,16 +211,10 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     MockBPA_CanonicalBlock_t *target_block = *target_ptr;
     TEST_ASSERT_NOT_NULL(target_block);
 
-    TEST_ASSERT_EQUAL_size_t(sizeof(ApxA2_PayloadData), target_block->btsd_len);
-    char logstr[500];
-    BSL_LOG_INFO("EXPECTED payload: %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), ApxA2_PayloadData, sizeof(ApxA2_PayloadData)));
-    BSL_LOG_INFO("ACTUAL payload:   %s",
-                 BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
-    TEST_ASSERT_EQUAL_MEMORY(ApxA2_PayloadData, target_block->btsd, sizeof(ApxA2_PayloadData));
+    BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
+    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(ApxA2_PayloadData, btsd_view));
+    BSL_Data_Deinit(&btsd_view);
 
-    BSL_SecOutcome_Deinit(outcome);
-    BSL_free(outcome);
     BCBTestContext_Deinit(&bcb_test_context);
 }
 
@@ -261,49 +237,33 @@ int rfc3394_cek(unsigned char *buf, int len)
 TEST_MATRIX([ true, false ], [ true, false ])
 void test_sec_source_keywrap(bool wrap, bool bib)
 {
-    string_t cek_str;
-    string_init_set_str(cek_str, "00112233445566778899AABBCCDDEEFF");
     BSL_Data_t cek_data;
     BSL_Data_Init(&cek_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&cek_data, cek_str), 0);
-    string_clear(cek_str);
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&cek_data, "00112233445566778899AABBCCDDEEFF"));
 
-    string_t kek_str;
-    string_init_set_str(kek_str, "000102030405060708090A0B0C0D0E0F");
     BSL_Data_t kek_data;
     BSL_Data_Init(&kek_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&kek_data, kek_str), 0);
-    string_clear(kek_str);
+    TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&kek_data, "000102030405060708090A0B0C0D0E0F"));
 
-    string_t wrapped_key_str;
-    string_init_set_str(wrapped_key_str, "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5");
-    BSL_Data_t wrapped_key_data;
-    BSL_Data_Init(&wrapped_key_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&wrapped_key_data, wrapped_key_str), 0);
-    string_clear(wrapped_key_str);
+    const char *wrapped_key_hex = "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5";
 
-    string_t result_data_str;
+    const char *result_data_hex;
     if (bib)
     {
         // sign
-        string_init_set_str(result_data_str, "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
-                                             "4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B");
+        result_data_hex = "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
+                          "4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B";
     }
     else
     {
         // authtag
-        string_init_set_str(result_data_str, "F6DC43C2EE046C7AE713F0531B2BCB48");
+        result_data_hex = "F6DC43C2EE046C7AE713F0531B2BCB48";
     }
-    BSL_Data_t result_data;
-    BSL_Data_Init(&result_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&result_data, result_data_str), 0);
-    string_clear(result_data_str);
 
     TEST_ASSERT_EQUAL(
         0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
-    BSL_SecOutcome_t      *sec_outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
     const BSL_IdValPair_t *result;
     BIBTestContext         bibcontext;
     BCBTestContext         bcbcontext;
@@ -334,14 +294,12 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         BSL_SecOper_AppendOption(&bibcontext.sec_oper, &bibcontext.opt_test_key);
         BSL_SecOper_AppendOption(&bibcontext.sec_oper, &bibcontext.opt_use_key_wrap);
 
-        BSL_SecOutcome_Init(sec_outcome, &bibcontext.sec_oper);
-
-        int bib_exec_status =
-            BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper, sec_outcome);
+        int bib_exec_status = BSLX_BIB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bib_exec_status);
 
-        TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(sec_outcome));
-        result = BSL_SecOutcome_GetResultAtIndex(sec_outcome, 0);
+        TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&bibcontext.sec_oper));
+        result = BSL_SecOper_FindResult(&bibcontext.sec_oper, RFC9173_BIB_RESULTID_HMAC);
+        TEST_ASSERT_NOT_NULL(result);
 
         TEST_ASSERT_EQUAL(RFC9173_BIB_RESULTID_HMAC, result->id);
     }
@@ -370,84 +328,58 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         BSL_SecOper_AppendOption(&bcbcontext.sec_oper, &bcbcontext.opt_test_key_id);
         BSL_SecOper_AppendOption(&bcbcontext.sec_oper, &bcbcontext.opt_use_key_wrap);
 
-        BSL_SecOutcome_Init(sec_outcome, &bcbcontext.sec_oper);
-
-        int bcb_exec_status =
-            BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper, sec_outcome);
+        int bcb_exec_status = BSLX_BCB_Execute(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_status);
 
-        TEST_ASSERT_EQUAL(1, BSL_SecOutcome_CountResults(sec_outcome));
-        result = BSL_SecOutcome_GetResultAtIndex(sec_outcome, 0);
+        TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&bcbcontext.sec_oper));
+        result = BSL_SecOper_FindResult(&bcbcontext.sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
+        TEST_ASSERT_NOT_NULL(result);
 
         TEST_ASSERT_EQUAL(RFC9173_BCB_RESULTID_AUTHTAG, result->id);
     }
 
-    char logstr[500];
     if (wrap)
     {
-        int got = 0;
-        for (size_t i = 0; i < BSL_SecOutcome_CountParams(sec_outcome); i++)
+        const BSL_IdValPair_t *sec_param;
+        if (bib)
         {
-            const BSL_IdValPair_t *sec_param = BSL_SecOutcome_GetParamAt(sec_outcome, i);
-            if (sec_param->id == ((bib) ? RFC9173_BIB_PARAMID_WRAPPED_KEY : RFC9173_BCB_SECPARAM_WRAPPEDKEY))
-            {
-                got++;
-                BSL_LOG_INFO("GOT WRAPPED KEY PARAM:");
-                BSL_LOG_INFO(
-                    "EXPECTED wrapped key: %s",
-                    BSL_Log_DumpAsHexString(logstr, sizeof(logstr), wrapped_key_data.ptr, wrapped_key_data.len));
-                BSL_Data_t view;
-                TEST_ASSERT_EQUAL_INT(0, BSL_IdValPair_GetAsBytestr(sec_param, &view));
-                BSL_LOG_INFO("ACTUAL wrapped key:   %s",
-                             BSL_Log_DumpAsHexString(logstr, sizeof(logstr), view.ptr, view.len));
-                TEST_ASSERT_EQUAL(wrapped_key_data.len, view.len);
-                TEST_ASSERT_EQUAL_MEMORY(wrapped_key_data.ptr, view.ptr, wrapped_key_data.len);
-                BSL_Data_Deinit(&view);
-            }
+            sec_param = BSL_SecOper_FindParam(&bibcontext.sec_oper, RFC9173_BIB_PARAMID_WRAPPED_KEY);
         }
-        TEST_ASSERT_EQUAL(1, got);
+        else
+        {
+            sec_param = BSL_SecOper_FindParam(&bcbcontext.sec_oper, RFC9173_BCB_SECPARAM_WRAPPEDKEY);
+        }
+
+        TEST_ASSERT_NOT_NULL(sec_param);
+        BSL_Data_t view;
+        TEST_ASSERT_EQUAL_INT(0, BSL_IdValPair_GetAsBytestr(sec_param, &view));
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(wrapped_key_hex, view));
+        BSL_Data_Deinit(&view);
     }
 
     {
-        BSL_LOG_INFO("EXPECTED result: %s",
-                     BSL_Log_DumpAsHexString(logstr, sizeof(logstr), result_data.ptr, result_data.len));
-
         BSL_Data_t view;
         TEST_ASSERT_EQUAL(0, BSL_IdValPair_GetAsBytestr(result, &view));
-        BSL_LOG_INFO("ACTUAL result:   %s", BSL_Log_DumpAsHexString(logstr, sizeof(logstr), view.ptr, view.len));
-        TEST_ASSERT_EQUAL_size_t(result_data.len, view.len);
-        TEST_ASSERT_EQUAL_MEMORY(result_data.ptr, view.ptr, result_data.len);
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(result_data_hex, view));
+        BSL_Data_Deinit(&view);
     }
 
     if (!bib)
     {
-        string_t pt_str;
-        string_init_set_str(pt_str, "15585e19f60c0978ede4105e529f9b0006c13c9804a9c75ab46d4ed46f1097cfa03967");
-        BSL_Data_t pt_data;
-        BSL_Data_Init(&pt_data);
-        TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&pt_data, pt_str), 0);
-        string_clear(pt_str);
+        const char *pt_data_hex = "15585e19f60c0978ede4105e529f9b0006c13c9804a9c75ab46d4ed46f1097cfa03967";
 
         MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
         TEST_ASSERT_NOT_NULL(target_ptr);
         MockBPA_CanonicalBlock_t *target_block = *target_ptr;
         TEST_ASSERT_NOT_NULL(target_block);
 
-        BSL_LOG_INFO("EXPECTED payload: %s", BSL_Log_DumpAsHexString(logstr, sizeof(logstr), pt_data.ptr, pt_data.len));
-        BSL_LOG_INFO("ACTUAL payload:   %s",
-                     BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
-        TEST_ASSERT_EQUAL_MEMORY(pt_data.ptr, target_block->btsd, pt_data.len);
-
-        BSL_Data_Deinit(&pt_data);
+        BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(pt_data_hex, btsd_view));
+        BSL_Data_Deinit(&btsd_view);
     }
 
-    BSL_SecOutcome_Deinit(sec_outcome);
-
-    BSL_Data_Deinit(&result_data);
     BSL_Data_Deinit(&cek_data);
     BSL_Data_Deinit(&kek_data);
-    BSL_Data_Deinit(&wrapped_key_data);
-    BSL_free(sec_outcome);
     BIBTestContext_Deinit(&bibcontext);
     BCBTestContext_Deinit(&bcbcontext);
 }
@@ -470,29 +402,25 @@ void test_sec_accept_keyunwrap(bool bib)
                              "a4b5ac0108e3816c5606479801bc04850101000058233a09c1e63fe23a7f66a59c73"
                              "03837241e070b02619fc59c5214a22f08cd70795e73e9aff";
 
-    string_t kek_str;
-    string_init_set_str(kek_str, "6162636465666768696a6b6c6d6e6f70");
     BSL_Data_t kek_data;
     BSL_Data_Init(&kek_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&kek_data, kek_str), 0);
-    string_clear(kek_str);
+    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16_cstr(&kek_data, "6162636465666768696a6b6c6d6e6f70"), 0);
 
-    string_t result_data_str;
+    const char *result_data_str;
     if (bib)
     {
         // sign
-        string_init_set_str(result_data_str, "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
-                                             "4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B");
+        result_data_str = "756D484ED764AEF06A35C53D6033B5311258EE21748B5FD53A53C8F55793D7A6B021E0CEC"
+                          "4A5C461CA6C179649EC7BBFC1EA89639409B809086B820216EFCF7B";
     }
     else
     {
         // authtag
-        string_init_set_str(result_data_str, "F6DC43C2EE046C7AE713F0531B2BCB48");
+        result_data_str = "F6DC43C2EE046C7AE713F0531B2BCB48";
     }
     BSL_Data_t result_data;
     BSL_Data_Init(&result_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&result_data, result_data_str), 0);
-    string_clear(result_data_str);
+    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16_cstr(&result_data, result_data_str), 0);
 
     if (bib)
     {
@@ -504,9 +432,8 @@ void test_sec_accept_keyunwrap(bool bib)
     }
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
-    BSL_SecOutcome_t *sec_outcome = BSL_calloc(1, BSL_SecOutcome_Sizeof());
-    BIBTestContext    bibcontext;
-    BCBTestContext    bcbcontext;
+    BIBTestContext bibcontext;
+    BCBTestContext bcbcontext;
     BIBTestContext_Init(&bibcontext);
     BCBTestContext_Init(&bcbcontext);
     if (bib)
@@ -524,10 +451,8 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_SecOper_AppendOption(&bibcontext.sec_oper, &bibcontext.opt_test_key);
         BSL_SecOper_AppendOption(&bibcontext.sec_oper, &bibcontext.opt_use_key_wrap);
 
-        BSL_SecOutcome_Init(sec_outcome, &bibcontext.sec_oper);
-
         int bib_exec_status = BSL_ExecBIBVerifierAcceptor(BSLX_BIB_Execute, &LocalTestCtx.bsl,
-                                                          &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper, sec_outcome);
+                                                          &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bib_exec_status);
     }
     else
@@ -547,46 +472,27 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_SecOper_AppendOption(&bcbcontext.sec_oper, &bcbcontext.opt_test_key_id);
         BSL_SecOper_AppendOption(&bcbcontext.sec_oper, &bcbcontext.opt_use_key_wrap);
 
-        BSL_SecOutcome_Init(sec_outcome, &bcbcontext.sec_oper);
-
         int bcb_exec_status = BSL_ExecBCBVerifierAcceptor(BSLX_BCB_Execute, &LocalTestCtx.bsl,
-                                                          &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper, sec_outcome);
+                                                          &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper);
         TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_status);
     }
 
     if (!bib)
     {
-        string_t pt_str;
-        string_init_set_str(pt_str, "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164");
-        BSL_Data_t pt_data;
-        BSL_Data_Init(&pt_data);
-        TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16(&pt_data, pt_str), 0);
-        string_clear(pt_str);
+        const char *pt_data_hex = "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164";
 
         MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
         TEST_ASSERT_NOT_NULL(target_ptr);
         MockBPA_CanonicalBlock_t *target_block = *target_ptr;
         TEST_ASSERT_NOT_NULL(target_block);
 
-        {
-            char logstr[2 * pt_data.len + 1];
-            BSL_LOG_INFO("EXPECTED payload: %s",
-                         BSL_Log_DumpAsHexString(logstr, sizeof(logstr), pt_data.ptr, pt_data.len));
-        }
-        {
-            char logstr[2 * target_block->btsd_len + 1];
-            BSL_LOG_INFO("ACTUAL payload:   %s",
-                         BSL_Log_DumpAsHexString(logstr, sizeof(logstr), target_block->btsd, target_block->btsd_len));
-        }
-        TEST_ASSERT_EQUAL_MEMORY(pt_data.ptr, target_block->btsd, pt_data.len);
-
-        BSL_Data_Deinit(&pt_data);
+        BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(pt_data_hex, btsd_view));
+        BSL_Data_Deinit(&btsd_view);
     }
 
-    BSL_SecOutcome_Deinit(sec_outcome);
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&result_data);
-    BSL_free(sec_outcome);
     BIBTestContext_Deinit(&bibcontext);
     BCBTestContext_Deinit(&bcbcontext);
 }

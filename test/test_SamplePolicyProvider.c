@@ -27,14 +27,13 @@
  *
  * @ingroup unit-tests
  */
-#include <unity.h>
-
-#include <BPSecLib_Private.h>
-
-#include <mock_bpa/MockBPA.h>
 #include "DefaultScUtils.h"
 
-#include <policy_provider/SamplePolicyProvider.h>
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/sample_pp/SamplePolicyProvider.h>
+#include <bsl/mock_bpa/MockBPA.h>
+
+#include <unity.h>
 
 static BSL_TestContext_t LocalTestCtx;
 

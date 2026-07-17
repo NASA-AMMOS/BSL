@@ -20,21 +20,20 @@
  * subcontract 1700763.
  */
 #undef NDEBUG // force assertions
-#include <assert.h>
+#include "DefaultScUtils.h"
+
+#include <bsl/BPSecLib_Private.h>
+#include <bsl/crypto/CryptoInterface.h>
+#include <bsl/dynamic/IdValPair.h>
+#include <bsl/dynamic/SecurityActionSet.h>
+#include <bsl/dynamic/SeqReadWrite.h>
+#include <bsl/default_sc/DefaultSecContext.h>
+#include <bsl/sample_pp/SamplePolicyProvider.h>
+#include <bsl/mock_bpa/MockBPA.h>
 
 #include <m-string.h>
 
-#include <BPSecLib_Private.h>
-#include <CryptoInterface.h>
-#include <mock_bpa/MockBPA.h>
-
-#include <backend/IdValPair.h>
-#include <backend/SecurityActionSet.h>
-#include <backend/UtilDefs_SeqReadWrite.h>
-#include <policy_provider/SamplePolicyProvider.h>
-#include <default_sc/DefaultSecContext.h>
-
-#include "DefaultScUtils.h"
+#include <assert.h>
 
 #define quick_data(field, tgt) BSL_Data_InitView(&(field), sizeof(tgt), (BSL_DataPtr_t)(tgt))
 
@@ -244,11 +243,6 @@ BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bi
     BSL_SecurityAction_Deinit(act);
     BSL_free(act);
     return action_set;
-}
-
-BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void)
-{
-    return BSL_calloc(1, BSL_SecurityResponseSet_Sizeof());
 }
 
 int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len)

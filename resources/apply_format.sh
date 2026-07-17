@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ##
 ## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
@@ -58,4 +58,5 @@ do
 done
 
 # Python test fixtures
-autopep8 --max-line-length=100 -ir mock-bpa-test/
+ruff check --fix mock-bpa-test/
+ruff format mock-bpa-test/

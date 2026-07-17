@@ -22,16 +22,16 @@
 #ifndef _BSL_DEFAULTSCUTILS_H_
 #define _BSL_DEFAULTSCUTILS_H_
 
-#include <m-string.h>
-
-#include <CryptoInterface.h>
-#include <backend/PublicInterfaceImpl.h>
-#include <backend/SecOperation.h>
-#include <backend/IdValPair.h>
-#include <backend/SecurityActionSet.h>
-#include <mock_bpa/ctr.h>
-
 #include "TestUtils.h"
+
+#include <bsl/crypto/CryptoInterface.h>
+#include <bsl/dynamic/IdValPair.h>
+#include <bsl/dynamic/PublicInterfaceImpl.h>
+#include <bsl/dynamic/SecOperation.h>
+#include <bsl/dynamic/SecurityActionSet.h>
+#include <bsl/mock_bpa/ctr.h>
+
+#include <m-string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,12 +52,16 @@ extern "C" {
 /// Test helper function
 static inline int BSL_Crypto_AddRegistryKeyName(const char *name, const uint8_t *ptr, size_t len)
 {
+    BSL_Crypto_KeyHandle_t keyhandle;
+    BSL_Crypto_LoadKey(ptr, len, &keyhandle);
     BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR(name);
-    return BSL_Crypto_AddRegistryKey(&key_id, ptr, len, NULL);
+    int        res    = BSL_Crypto_AddRegistryKey(&key_id, keyhandle);
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    return res;
 }
 
 /// Test helper function
-static inline int BSL_Crypto_GetRegistryKeyName(const char *name, void **handle)
+static inline int BSL_Crypto_GetRegistryKeyName(const char *name, BSL_Crypto_KeyHandle_t *handle)
 {
     BSL_Data_t key_id = BSL_DATA_INIT_VIEW_CSTR(name);
     return BSL_Crypto_GetRegistryKey(&key_id, handle);
@@ -90,19 +94,6 @@ void BIBTestContext_Init(BIBTestContext *obj);
 void BIBTestContext_Deinit(BIBTestContext *obj);
 
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id);
-
-static const uint8_t ApxA2_AuthTag[]     = { 0xef, 0xa4, 0xb5, 0xac, 0x01, 0x08, 0xe3, 0x81,
-                                             0x6c, 0x56, 0x06, 0x47, 0x98, 0x01, 0xbc, 0x04 };
-static const uint8_t ApxA2_KeyEncKey[]   = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
-                                             0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70 };
-static const uint8_t ApxA2_Ciphertext[]  = { 0x3a, 0x09, 0xc1, 0xe6, 0x3f, 0xe2, 0x3a, 0x7f, 0x66, 0xa5, 0x9c, 0x73,
-                                             0x03, 0x83, 0x72, 0x41, 0xe0, 0x70, 0xb0, 0x26, 0x19, 0xfc, 0x59, 0xc5,
-                                             0x21, 0x4a, 0x22, 0xf0, 0x8c, 0xd7, 0x07, 0x95, 0xe7, 0x3e, 0x9a };
-static const uint8_t ApxA2_WrappedKey[]  = { 0x69, 0xc4, 0x11, 0x27, 0x6f, 0xec, 0xdd, 0xc4, 0x78, 0x0d, 0xf4, 0x2c,
-                                             0x8a, 0x2a, 0xf8, 0x92, 0x96, 0xfa, 0xbf, 0x34, 0xd7, 0xfa, 0xe7, 0x00 };
-static const uint8_t ApxA2_PayloadData[] = { 0x52, 0x65, 0x61, 0x64, 0x79, 0x20, 0x74, 0x6f, 0x20, 0x67, 0x65, 0x6e,
-                                             0x65, 0x72, 0x61, 0x74, 0x65, 0x20, 0x61, 0x20, 0x33, 0x32, 0x2d, 0x62,
-                                             0x79, 0x74, 0x65, 0x20, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64 };
 
 typedef struct
 {
@@ -188,8 +179,7 @@ typedef struct
 
 RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A2Params(const char *key_id);
 
-BSL_SecurityActionSet_t   *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context);
-BSL_SecurityResponseSet_t *BSL_TestUtils_MallocEmptyPolicyResponse(void);
+BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context);
 
 void BSL_TestUtils_SetupDefaultSecurityContext(BSL_LibCtx_t *bsl_lib);
 

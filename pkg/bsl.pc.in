@@ -3,9 +3,10 @@ exec_prefix=${prefix}/@CMAKE_INSTALL_BINDIR@
 includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
 
-Name: @PROJECT_NAME@
+Name: bsl
 Description: The Bundle Protocol Security Library (BSL)
 Version: @PROJECT_VERSION@
-Requires: qcbor > 1.6, openssl >= 3.0, jansson >= 2.14
-Cflags: -I${includedir}/bsl -I${includedir}/m-lib
+Requires: qcbor >= 1.6, m-lib >= 0.8
+Requires.private: openssl >= 3.0
+Cflags: -I${includedir}
 Libs: -L${libdir} -lbsl_front -lbsl_dynamic -lbsl_crypto

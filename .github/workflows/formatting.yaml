@@ -45,7 +45,7 @@ jobs:
       - name: Set up OS
         run: |
           sudo apt-get update && sudo apt-get install -y \
-              clang-format jq python3-pip
-          pip3 install autopep8 licenseheaders
+              clang-format jq python3-pip python3-wheel
+          pip3 install ruff licenseheaders
       - name: Check code formatting
         run: ./build.sh check-format

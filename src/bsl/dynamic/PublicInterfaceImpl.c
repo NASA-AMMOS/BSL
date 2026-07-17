@@ -1,0 +1,254 @@
+/*
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the Bundle Protocol Security Library (BSL).
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This work was performed for the Jet Propulsion Laboratory, California
+ * Institute of Technology, sponsored by the United States Government under
+ * the prime contract 80NM0018D0004 between the Caltech and NASA under
+ * subcontract 1700763.
+ */
+/** @file PublicInterfaceImpl.c
+ * @ingroup backend_dyn
+ * Implementation of the dynamic backend Public API.
+ *
+ * @todo MAJOR Complete implementation for ApplySecurity so it can drop blocks or bundles as-needed.
+ */
+#include "PublicInterfaceImpl.h"
+
+#include "AbsSecBlock.h"
+#include "CBOR.h"
+#include "SecurityActionSet.h"
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
+
+#include <inttypes.h>
+
+size_t BSL_LibCtx_Sizeof(void)
+{
+    return sizeof(BSL_LibCtx_t);
+}
+
+int BSL_API_InitLib(BSL_LibCtx_t *lib)
+{
+    CHK_ARG_NONNULL(lib);
+
+    memset(&lib->tlm_counters, 0, sizeof(BSL_TlmCounters_t));
+
+    BSL_SecCtxDict_init(lib->sc_reg);
+    BSL_PolicyDict_init(lib->policy_reg);
+    return BSL_SUCCESS;
+}
+
+int BSL_API_DeinitLib(BSL_LibCtx_t *lib)
+{
+    CHK_ARG_NONNULL(lib);
+
+    BSL_PolicyDict_it_t policy_reg_it;
+    for (BSL_PolicyDict_it(policy_reg_it, lib->policy_reg); !BSL_PolicyDict_end_p(policy_reg_it);
+         BSL_PolicyDict_next(policy_reg_it))
+    {
+        const BSL_PolicyDesc_t *policy = BSL_PolicyDict_cref(policy_reg_it)->value_ptr;
+        if (policy->deinit_fn != NULL)
+        {
+            // Call the policy deinit function
+            (policy->deinit_fn)(policy->user_data);
+        }
+        else
+        {
+            BSL_LOG_WARNING("Policy Provider offered no deinit function");
+        }
+    }
+
+    BSL_PolicyDict_clear(lib->policy_reg);
+    BSL_SecCtxDict_clear(lib->sc_reg);
+    return BSL_SUCCESS;
+}
+
+int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t *tlm)
+{
+    CHK_ARG_NONNULL(lib);
+
+    for (size_t ix = 0; ix < sizeof(tlm->counters) / sizeof(uint64_t); ++ix)
+    {
+        tlm->counters[ix] += lib->tlm_counters.counters[ix];
+    }
+
+    return BSL_SUCCESS;
+}
+
+void BSL_PrimaryBlock_Init(BSL_PrimaryBlock_t *obj)
+{
+    memset(obj, 0, sizeof(*obj));
+}
+
+void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+
+    BSL_free(obj->block_numbers);
+    obj->block_numbers = NULL;
+
+    memset(obj, 0, sizeof(*obj));
+}
+
+int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_SecCtxDesc_t desc)
+{
+    CHK_ARG_NONNULL(lib);
+    CHK_ARG_EXPR(desc.validate != NULL);
+    CHK_ARG_EXPR(desc.execute != NULL);
+
+    BSL_SecCtxDict_set_at(lib->sc_reg, sec_ctx_id, desc);
+    return BSL_SUCCESS;
+}
+
+int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_PolicyDesc_t desc)
+{
+    CHK_ARG_NONNULL(lib);
+    CHK_ARG_EXPR(desc.query_fn != NULL);
+    CHK_ARG_EXPR(desc.finalize_fn != NULL);
+
+    BSL_PolicyDict_set_at(lib->policy_reg, pp_id, desc);
+    return BSL_SUCCESS;
+}
+
+int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle,
+                          BSL_PolicyLocation_e location)
+{
+    CHK_ARG_NONNULL(bsl);
+    CHK_ARG_NONNULL(output_action_set);
+    CHK_ARG_NONNULL(bundle);
+
+    BSL_LOG_INFO("Querying policy provider for security actions...");
+    int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
+    BSL_LOG_INFO("Completed query: status=%d", query_status);
+
+    BSL_TlmCounters_IncrementCounter(bsl, BSL_TLM_BUNDLE_INSPECTED_COUNT, 1);
+
+    // Here - find the sec block numbers for all ASBs
+
+    // Explanation:
+    // This segment of code finds the block number of the security block
+    // that targets (protects) a block whose ID is `target_block_num`
+    //
+    // I.e., "Get me the security block whose target contains `target_block_num`"
+    BSL_PrimaryBlock_t primary_block;
+    if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
+    {
+        BSL_LOG_ERR("Cannot get bundle primary block");
+        return BSL_ERR_HOST_CALLBACK_FAILED;
+    }
+
+    for (size_t ix = 0; ix < primary_block.block_count; ix++)
+    {
+        BSL_CanonicalBlock_t block;
+        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, primary_block.block_numbers[ix], &block))
+        {
+            BSL_LOG_WARNING("Failed to get block number %" PRIu64, primary_block.block_numbers[ix]);
+            continue;
+        }
+        BSL_SecActionList_it_t act_it;
+        for (BSL_SecActionList_it(act_it, output_action_set->actions); !BSL_SecActionList_end_p(act_it);
+             BSL_SecActionList_next(act_it))
+        {
+            BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
+            for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j++)
+            {
+                BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, j);
+                if (block.type_code != sec_oper->_service_type)
+                {
+                    continue;
+                }
+
+                // ASB decoder needs the whole BTSD now
+                BSL_Data_t btsd_copy;
+                BSL_Data_InitBuffer(&btsd_copy, block.btsd_len);
+
+                BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, block.block_num);
+                BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
+                BSL_SeqReader_Destroy(btsd_read);
+
+                BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
+                BSL_AbsSecBlock_Init(asb);
+                if (BSL_SUCCESS == BSL_CBOR_Decode(&btsd_copy, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb))
+                {
+                    if (BSL_AbsSecBlock_ContainsTarget(asb, sec_oper->target_block_num))
+                    {
+                        sec_oper->sec_block_num = block.block_num;
+                    }
+                }
+                else
+                {
+                    BSL_LOG_WARNING("Failed to parse ASB from BTSD");
+                    BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
+                }
+                BSL_AbsSecBlock_Deinit(asb);
+                BSL_free(asb);
+
+                BSL_Data_Deinit(&btsd_copy);
+            }
+        }
+    }
+    BSL_PrimaryBlock_deinit(&primary_block);
+
+    if (BSL_SUCCESS != BSL_SecCtx_ValidatePolicyActionSet(bsl, bundle, output_action_set))
+    {
+        BSL_LOG_ERR("Error while validating action set");
+        return BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+    }
+
+    return BSL_SUCCESS;
+}
+
+int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_BundleRef_t *bundle, const BSL_SecurityActionSet_t *policy_actions)
+{
+    CHK_ARG_NONNULL(bsl);
+    CHK_ARG_NONNULL(bundle);
+    CHK_ARG_NONNULL(policy_actions);
+
+    int exec_code = BSL_SecCtx_ExecutePolicyActionSet(bsl, bundle, policy_actions);
+    if (exec_code < BSL_SUCCESS)
+    {
+        BSL_LOG_ERR("Failed to execute policy action set");
+    }
+
+    BSL_SecActionList_it_t act_it;
+    for (BSL_SecActionList_it(act_it, policy_actions->actions); !BSL_SecActionList_end_p(act_it);
+         BSL_SecActionList_next(act_it))
+    {
+        BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
+        for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i++)
+        {
+            BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
+
+            BSL_SecOper_ConclusionState_e conclusion = BSL_SecOper_GetConclusion(sec_oper);
+
+            // When the operation was a success, there's nothing further to do.
+            if (conclusion == BSL_SECOP_CONCLUSION_SUCCESS)
+            {
+                BSL_LOG_DEBUG("Security operation success, target block num = %" PRIu64, sec_oper->target_block_num);
+            }
+            else
+            {
+                BSL_LOG_DEBUG("Security operation failure, target block num = %" PRIu64, sec_oper->target_block_num);
+            }
+        }
+    }
+
+    int finalize_status = BSL_PolicyRegistry_FinalizeActions(bsl, policy_actions, bundle);
+    BSL_LOG_INFO("Completed finalize: status=%d", finalize_status);
+
+    return BSL_SUCCESS;
+}

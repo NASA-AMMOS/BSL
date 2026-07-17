@@ -24,9 +24,11 @@
  * @brief Fuzz the simplified @c COSE_KeySet file decoding.
  */
 #include "TestUtils.h"
-#include <mock_bpa/MockBPA.h>
-#include <mock_bpa/key_registry.h>
-#include <CryptoInterface.h>
+
+#include <bsl/crypto/CryptoInterface.h>
+#include <bsl/mock_bpa/key_registry.h>
+#include <bsl/mock_bpa/MockBPA.h>
+
 #include <cinttypes>
 
 #define EXPECT_EQ(expect, got)          \

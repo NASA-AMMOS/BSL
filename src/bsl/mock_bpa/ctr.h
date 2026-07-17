@@ -1,0 +1,72 @@
+/*
+ * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
+ * Laboratory LLC.
+ *
+ * This file is part of the Bundle Protocol Security Library (BSL).
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This work was performed for the Jet Propulsion Laboratory, California
+ * Institute of Technology, sponsored by the United States Government under
+ * the prime contract 80NM0018D0004 between the Caltech and NASA under
+ * subcontract 1700763.
+ */
+/** @file
+ * @ingroup mock_bpa
+ * Container structs for BPv7 data.
+ */
+#ifndef BSL_MOCK_BPA_CTR_H_
+#define BSL_MOCK_BPA_CTR_H_
+
+#include "bundle.h"
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/BPSecLib_Public.h"
+
+#include <m-core.h>
+
+/// A container for encoded and decoded bundle data
+typedef struct
+{
+    /// Encoded PDU
+    BSL_Data_t encoded;
+    /// The decoded bundle
+    MockBPA_Bundle_t *bundle;
+    /// External reference to #bundle
+    BSL_BundleRef_t bundle_ref;
+} mock_bpa_ctr_t;
+
+void mock_bpa_ctr_init(mock_bpa_ctr_t *ctr);
+
+void mock_bpa_ctr_deinit(mock_bpa_ctr_t *ctr);
+
+/** Sort canonical blocks in a bundle by descending block number.
+ * This ensures the primary block is the last block.
+ * @param[in,out] ctr The container to read and decode PDU data from.
+ */
+void mock_bpa_ctr_sort_blocks(mock_bpa_ctr_t *ctr);
+
+/** Decode a bundle PDU into a container.
+ * @param[in,out] ctr The container to read and decode PDU data from.
+ * @return Zero if successful.
+ */
+int mock_bpa_ctr_decode(mock_bpa_ctr_t *ctr);
+
+/** Encode to a bundle PDU in a container.
+ * @param[in,out] ctr The container to encode and write PDU data into.
+ * @return Zero if successful.
+ */
+int mock_bpa_ctr_encode(mock_bpa_ctr_t *ctr);
+
+/// M*LIB OPLIST for ::mock_bpa_ctr_t
+#define M_OPL_mock_bpa_ctr_t() (INIT(API_2(mock_bpa_ctr_init)), INIT_SET(0), SET(0), CLEAR(API_2(mock_bpa_ctr_deinit)))
+
+#endif /* BSL_MOCK_BPA_CTR_H_ */

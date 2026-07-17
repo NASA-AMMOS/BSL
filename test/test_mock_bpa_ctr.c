@@ -19,12 +19,14 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+#include "DefaultScUtils.h"
+
+#include <bsl/mock_bpa/agent.h>
+#include <bsl/mock_bpa/ctr.h>
+#include <bsl/mock_bpa/log.h>
+
 #include <inttypes.h>
 #include <unity.h>
-#include "DefaultScUtils.h"
-#include <mock_bpa/ctr.h>
-#include <mock_bpa/agent.h>
-#include <mock_bpa/log.h>
 
 void suiteSetUp(void)
 {
@@ -67,13 +69,8 @@ void test_mock_bpa_ctr_loopback_decode_encode(const char *hexdata)
 {
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    {
-        string_t in_text;
-        string_init_set_str(in_text, hexdata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                      "BSL_TestUtils_DecodeBase16() failed");
-        string_clear(in_text);
-    }
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, hexdata),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     mock_bpa_ctr_t ctr;
     mock_bpa_ctr_init(&ctr);
@@ -113,13 +110,8 @@ void test_mock_bpa_ctr_decode_invalid(const char *hexdata)
 {
     BSL_Data_t in_data;
     BSL_Data_Init(&in_data);
-    {
-        string_t in_text;
-        string_init_set_str(in_text, hexdata);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16(&in_data, in_text),
-                                      "BSL_TestUtils_DecodeBase16() failed");
-        string_clear(in_text);
-    }
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, BSL_TestUtils_DecodeBase16_cstr(&in_data, hexdata),
+                                  "BSL_TestUtils_DecodeBase16_cstr() failed");
 
     mock_bpa_ctr_t ctr;
     mock_bpa_ctr_init(&ctr);

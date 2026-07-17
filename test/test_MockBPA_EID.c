@@ -19,12 +19,12 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include <unity.h>
+#include <bsl/mock_bpa/agent.h>
+#include <bsl/mock_bpa/eid.h>
+#include <bsl/mock_bpa/eidpat.h>
+#include <bsl/mock_bpa/log.h>
 
-#include <mock_bpa/agent.h>
-#include <mock_bpa/eid.h>
-#include <mock_bpa/eidpat.h>
-#include <mock_bpa/log.h>
+#include <unity.h>
 
 #define TEST_CASE(...)
 

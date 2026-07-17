@@ -22,13 +22,13 @@
 #ifndef _BSL_TESTUTILS_H_
 #define _BSL_TESTUTILS_H_
 
-#include <m-string.h>
+#include <bsl/dynamic/IdValPair.h>
+#include <bsl/dynamic/PublicInterfaceImpl.h>
+#include <bsl/dynamic/SecOperation.h>
+#include <bsl/dynamic/SecurityActionSet.h>
+#include <bsl/mock_bpa/ctr.h>
 
-#include <backend/PublicInterfaceImpl.h>
-#include <backend/SecOperation.h>
-#include <backend/IdValPair.h>
-#include <backend/SecurityActionSet.h>
-#include <mock_bpa/ctr.h>
+#include <m-string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,17 +74,12 @@ void BSL_TestUtils_PrintHexToBuffer(const char *message, uint8_t *buff, size_t b
 bool BSL_TestUtils_IsB16StrEqualTo(const char *expected_hex, BSL_Data_t encoded_val);
 
 /** Decode base16 text form.
- * This is defined in Section 8 of RFC 4648 @cite rfc4648.
- * @note This function uses heap allocation for its output.
  *
  * @param[out] output The output buffer, which will be sized to its data.
  * @param[in] input The input buffer to read, which must be null terminated.
  * Whitespace in the input must have already been removed with strip_space().
  * @return Zero upon success.
  */
-int BSL_TestUtils_DecodeBase16(BSL_Data_t *output, const string_t input);
-
-/// @overload for C-string input
 int BSL_TestUtils_DecodeBase16_cstr(BSL_Data_t *output, const char *input);
 
 /**
