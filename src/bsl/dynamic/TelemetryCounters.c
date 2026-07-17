@@ -24,9 +24,9 @@
  * @ingroup backend_dyn
  * @brief Defines interactions with an external Policy Provider.
  */
-#include <bsl/BPSecLib_Private.h>
-
 #include "PublicInterfaceImpl.h"
+
+#include "bsl/BPSecLib_Private.h"
 
 int BSL_TlmCounters_IncrementCounter(BSL_LibCtx_t *bsl, BSL_TlmCounterIndex_e tlm_index, uint64_t count)
 {

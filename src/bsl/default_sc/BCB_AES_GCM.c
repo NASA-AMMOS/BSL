@@ -25,18 +25,18 @@
  * Contains functionality and data structures to implement BCB using security context in RFC9173.
  *
  */
-#include <stdlib.h>
+#include "DefaultSecContext.h"
+#include "DefaultSecContext_Private.h"
+#include "rfc9173.h"
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/crypto/CryptoInterface.h"
+#include "bsl/dynamic/CBOR.h"
 
 #include <qcbor/qcbor_encode.h>
 #include <qcbor/qcbor_spiffy_decode.h>
 
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/crypto/CryptoInterface.h>
-#include <bsl/dynamic/CBOR.h>
-
-#include "DefaultSecContext.h"
-#include "DefaultSecContext_Private.h"
-#include "rfc9173.h"
+#include <stdlib.h>
 
 bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper) // NOSONAR
 {

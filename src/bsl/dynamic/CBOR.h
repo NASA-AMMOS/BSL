@@ -26,7 +26,7 @@
 #ifndef BSLB_CBOR_H_
 #define BSLB_CBOR_H_
 
-#include <bsl/BPSecLib_Public.h>
+#include "bsl/BPSecLib_Public.h"
 
 #include <qcbor/qcbor_encode.h>
 #include <qcbor/qcbor_spiffy_decode.h>

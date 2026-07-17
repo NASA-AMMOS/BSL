@@ -30,8 +30,8 @@
 #include "eid.h"
 
 #include <m-algo.h>
-#include <m-deque.h>
 #include <m-bptree.h>
+#include <m-deque.h>
 
 #ifdef __cplusplus
 extern "C" {

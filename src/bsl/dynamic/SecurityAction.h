@@ -19,9 +19,11 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include <m-array.h>
-#include <bsl/BPSecLib_Private.h>
 #include "SecOperation.h"
+
+#include "bsl/BPSecLib_Private.h"
+
+#include <m-array.h>
 
 /// OPLIST for ::BSL_SecOper_s
 #define M_OPL_BSL_SecOper_t()                                                                          \

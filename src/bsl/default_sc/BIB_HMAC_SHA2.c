@@ -26,19 +26,20 @@
  * Note the prefix "xdefsc" means "Example Default Security Context".
  */
 
-#include <qcbor/qcbor_encode.h>
-#include <qcbor/qcbor_spiffy_decode.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <time.h>
-
-#include <bsl/BPSecLib_Private.h>
-#include <bsl/crypto/CryptoInterface.h>
-#include <bsl/dynamic/CBOR.h>
-
 #include "DefaultSecContext.h"
 #include "DefaultSecContext_Private.h"
 #include "rfc9173.h"
+
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/crypto/CryptoInterface.h"
+#include "bsl/dynamic/CBOR.h"
+
+#include <qcbor/qcbor_encode.h>
+#include <qcbor/qcbor_spiffy_decode.h>
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <time.h>
 
 bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper) // NOSONAR
 {

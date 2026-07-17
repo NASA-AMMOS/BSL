@@ -28,12 +28,13 @@
 #ifndef BSLX_COSEMSG_H_
 #define BSLX_COSEMSG_H_
 
-#include <bsl/front/BSLMemory.h>
-#include <bsl/dynamic/CBOR.h>
-#include <bsl/dynamic/IdValPair.h>
+#include "bsl/front/BSLMemory.h"
+#include "bsl/dynamic/CBOR.h"
+#include "bsl/dynamic/IdValPair.h"
+
+#include <m-array.h>
 #include <m-bptree.h>
 #include <m-shared-ptr.h>
-#include <m-array.h>
 
 #ifdef __cplusplus
 extern "C" {

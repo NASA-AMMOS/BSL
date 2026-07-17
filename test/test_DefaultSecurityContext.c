@@ -30,19 +30,18 @@
  *  - It does NOT use any of the "Plumbing" inside the BSL.
  *  - It only directly calls the interfaces exposed by the Default Security Context.
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <unity.h>
+#include "DefaultScUtils.h"
 
 #include <bsl/BPSecLib_Private.h>
-#include <bsl/mock_bpa/MockBPA.h>
 #include <bsl/crypto/CryptoInterface.h>
-
 #include <bsl/dynamic/PublicInterfaceImpl.h>
 #include <bsl/default_sc/DefaultSecContext.h>
 #include <bsl/default_sc/DefaultSecContext_Private.h>
+#include <bsl/mock_bpa/MockBPA.h>
 
-#include "DefaultScUtils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unity.h>
 
 static const char *ApxA2_AuthTag     = "efa4b5ac0108e3816c5606479801bc04";
 static const char *ApxA2_Ciphertext  = "3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e9a";

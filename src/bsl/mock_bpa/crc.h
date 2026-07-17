@@ -27,8 +27,10 @@
 #ifndef BSL_MOCK_BPA_CRC_H_
 #define BSL_MOCK_BPA_CRC_H_
 
-#include <bsl/BPSecLib_Public.h>
+#include "bsl/BPSecLib_Public.h"
+
 #include <qcbor/UsefulBuf.h>
+
 #include <stdbool.h>
 #include <stdint.h>
 

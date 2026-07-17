@@ -28,7 +28,7 @@
 #ifndef BSLX_COSECONTEXT_PRIVATE_H_
 #define BSLX_COSECONTEXT_PRIVATE_H_
 
-#include <bsl/BPSecLib_Public.h>
+#include "bsl/BPSecLib_Public.h"
 
 #ifdef __cplusplus
 extern "C" {
