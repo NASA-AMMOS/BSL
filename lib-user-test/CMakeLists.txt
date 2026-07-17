@@ -1,4 +1,4 @@
-<!--
+#[[
 Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
@@ -18,6 +18,16 @@ This work was performed for the Jet Propulsion Laboratory, California
 Institute of Technology, sponsored by the United States Government under
 the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
--->
-# BSL Library User Test
-This directory contains a simple test C source which should compile and link against the BSL when it is installed correctly.
+]]
+cmake_minimum_required(VERSION 3.23)
+
+project(lib-user-test LANGUAGES C)
+
+find_package(bsl REQUIRED)
+message(STATUS "Found BSL ${bsl_VERSION}")
+find_package(MLIB REQUIRED)
+find_package(qcbor REQUIRED)
+
+add_executable(example)
+target_sources(example PRIVATE main.c)
+target_link_libraries(example PUBLIC bsl::bsl_sample_pp bsl::bsl_dynamic)

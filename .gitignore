@@ -16,3 +16,4 @@ __pycache__/
 .pytest_cache/
 mock-bpa-test/ccsds_bpsec_redbook_requirements_modified.yaml
 /deps/
+/lib-user-test/build/

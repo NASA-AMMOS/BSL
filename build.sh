@@ -70,12 +70,12 @@ function cmd_check {
     ctest --test-dir ${BUILDDIR} --output-on-failure "$@"
 }
 
-function cmd_check_install {
+function cmd_check_install_pkgconfig {
     cd "${SELFDIR}"
     if [[ -d testroot ]]
     then
-        export PKG_CONFIG_PATH=$(find testroot/ -type d -name pkgconfig | tr '\n' ':')
-        PKG_PREFIX="--define-variable=prefix=testroot/usr"
+        export PKG_CONFIG_PATH=$(find ${PWD}/testroot/ -type d -name pkgconfig | tr '\n' ':')
+        PKG_PREFIX="--define-variable=prefix=${PWD}/testroot/usr"
         echo "Using prefix: ${PKG_PREFIX}"
     else
         PKG_PREFIX=""
@@ -91,10 +91,29 @@ function cmd_check_install {
     echo -n "Libs: "
     pkg-config ${PKG_PREFIX} --libs ${PKGS}
 
+    cd lib-user-test
     mkdir -p build
-    gcc -c -o build/example.o lib-user-test/main.c $(pkg-config ${PKG_PREFIX} --cflags ${PKGS})
+    gcc -c -o build/example.o main.c $(pkg-config ${PKG_PREFIX} --cflags ${PKGS})
     gcc -o build/example build/example.o $(pkg-config ${PKG_PREFIX} --libs ${PKGS})
     ./build/example
+    rm -rf build
+}
+
+function cmd_check_install_cmake {
+    cd "${SELFDIR}"
+    # setenv.sh has aleady set DESTDIR and PREFIX
+
+    cd lib-user-test
+    cmake -S . -B build \
+        -DCMAKE_FIND_DEBUG_MODE=ON \
+        -DCMAKE_PREFIX_PATH=${DESTDIR}${PREFIX} \
+        -DCMAKE_MODULE_PATH=${DESTDIR}${PREFIX}/share/cmake \
+        -DCMAKE_INSTALL_PREFIX=${PREFIX} \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -G Ninja
+    cmake --build build
+    ./build/example
+    rm -rf build
 }
 
 function cmd_clean {
@@ -222,7 +241,8 @@ case "$1" in
         cmd_check "$@"
         ;;
     check-install)
-        cmd_check_install
+        cmd_check_install_pkgconfig
+        cmd_check_install_cmake
         ;;
     clean)
         cmd_clean

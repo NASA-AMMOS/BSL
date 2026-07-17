@@ -20,6 +20,7 @@ the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 ]]
 cmake_minimum_required(VERSION 3.23)
+cmake_policy(SET CMP0144 OLD)
 message(STATUS "Build mode ${CMAKE_BUILD_TYPE}")
 
 option(BUILD_LIB "Build the library itself" ON)
@@ -36,7 +37,7 @@ if(BSL_LOG_PLAINTEXT_ENABLE)
     message(WARNING "Plaintext logging is enabled, be aware that this may leak secrets at the DEBUG log level!")
 endif(BSL_LOG_PLAINTEXT_ENABLE)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -202,6 +203,7 @@ include(GNUInstallDirs)
 if(BUILD_LIB)
     add_subdirectory(src)
 
+    # pkg-config for BSL libraries
     file(GLOB PCIN_FILES "pkg/*.pc.in")
     set(PC_FILES "")
     foreach(PCIN_FILE ${PCIN_FILES})
@@ -210,10 +212,42 @@ if(BUILD_LIB)
         configure_file(${PCIN_FILE} ${PCOUT_FILE} @ONLY)
         list(APPEND PC_FILES ${PCOUT_FILE})
     endforeach()
-
     install(
         FILES ${PC_FILES}
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+    )
+
+    # cmakeConfig for BSL targets
+    include(CMakePackageConfigHelpers)
+
+    configure_package_config_file(
+        pkg/${PROJECT_NAME}Config.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+    )
+    write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
+    )
+    install(
+        FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+        COMPONENT devel
+    )
+    install(
+        EXPORT ${PROJECT_NAME}Targets
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+        COMPONENT devel
+    )
+    # transitive search for M*LIB
+    install(
+        FILES cmake/FindMLIB.cmake
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/Modules/
+        COMPONENT devel
     )
 endif(BUILD_LIB)
 
