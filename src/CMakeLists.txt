@@ -36,6 +36,7 @@ target_sources(bsl_front
                 ${CMAKE_CURRENT_BINARY_DIR}/bsl/BSLConfig.h
                 bsl/BPSecLib_Private.h
                 bsl/BPSecLib_Public.h
+                bsl/front/BSLMemory.h
                 bsl/front/Data.h
                 bsl/front/SeqReader.h
                 bsl/front/SeqWriter.h
@@ -145,15 +146,11 @@ target_sources(bsl_sample_pp
         FILE_SET public_headers
             TYPE HEADERS
             FILES
+                bsl/sample_pp/PolicyParser.h
                 bsl/sample_pp/SamplePolicyProvider.h
     PRIVATE
-        FILE_SET private_headers
-            TYPE HEADERS
-            FILES
-                bsl/sample_pp/PolicyParser.h
-    PRIVATE
-        bsl/sample_pp/SamplePolicyProvider.c
         bsl/sample_pp/PolicyParser.c
+        bsl/sample_pp/SamplePolicyProvider.c
 )
 set_target_properties(bsl_sample_pp
     PROPERTIES
@@ -177,6 +174,9 @@ target_sources(bsl_dynamic
                 bsl/dynamic/AbsSecBlock.h
                 bsl/dynamic/CBOR.h
                 bsl/dynamic/IdValPair.h
+                bsl/dynamic/SecOperation.h
+                bsl/dynamic/SecurityAction.h
+                bsl/dynamic/SecurityActionSet.h
                 bsl/dynamic/SeqReadWrite.h
     PRIVATE
         FILE_SET private_headers
@@ -214,16 +214,16 @@ target_sources(bsl_mock_bpa
         FILE_SET public_headers
             TYPE HEADERS
             FILES
-                bsl/mock_bpa/log.h
                 bsl/mock_bpa/agent.h
                 bsl/mock_bpa/bundle.h
                 bsl/mock_bpa/crc.h
+                bsl/mock_bpa/ctr.h
+                bsl/mock_bpa/decode.h
                 bsl/mock_bpa/eid.h
                 bsl/mock_bpa/eidpat.h
                 bsl/mock_bpa/encode.h
-                bsl/mock_bpa/decode.h
                 bsl/mock_bpa/key_registry.h
-                bsl/mock_bpa/ctr.h
+                bsl/mock_bpa/log.h
                 bsl/mock_bpa/MockBPA.h
     PRIVATE
         bsl/mock_bpa/log.c
