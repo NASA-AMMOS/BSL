@@ -107,7 +107,6 @@ function cmd_check_install_cmake {
     cmake -S . -B build \
         -DCMAKE_FIND_DEBUG_MODE=ON \
         -DCMAKE_PREFIX_PATH=${DESTDIR}${PREFIX} \
-        -DCMAKE_MODULE_PATH=${DESTDIR}${PREFIX}/share/cmake \
         -DCMAKE_INSTALL_PREFIX=${PREFIX} \
         -DCMAKE_BUILD_TYPE=Debug \
         -G Ninja

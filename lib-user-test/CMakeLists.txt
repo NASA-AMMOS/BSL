@@ -20,6 +20,8 @@ the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 ]]
 cmake_minimum_required(VERSION 3.23)
+# may not be needed for system install, but add anyway
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../testroot/${CMAKE_ROOT}/Modules")
 
 project(lib-user-test LANGUAGES C)
 

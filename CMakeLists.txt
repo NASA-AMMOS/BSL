@@ -246,7 +246,7 @@ if(BUILD_LIB)
     # transitive search for M*LIB
     install(
         FILES cmake/FindMLIB.cmake
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/Modules/
+        DESTINATION ${CMAKE_ROOT}/Modules/
         COMPONENT devel
     )
 endif(BUILD_LIB)
