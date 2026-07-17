@@ -89,7 +89,7 @@ size_t BSL_SecurityActionSet_CountInvalidActions(const BSL_SecurityActionSet_t *
          BSL_SecActionList_next(actlist_it))
     {
         const BSL_SecurityAction_t *action = BSL_SecActionList_cref(actlist_it);
-        invalid_act_count += !action->validated;
+        invalid_act_count += (action->validation_state != BSL_ACTION_VALIDATION_SUCCESS);
     }
 
     return invalid_act_count;

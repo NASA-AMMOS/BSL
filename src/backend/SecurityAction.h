@@ -39,10 +39,23 @@ M_ARRAY_DEF(BSL_SecOperList, BSL_SecOper_t, M_OPL_BSL_SecOper_t())
 // NOLINTEND
 /// @endcond
 
+/**
+ * @brief Indicates the validation state of a security action
+ */
+typedef enum
+{
+    /// @brief Security action pending validation
+    BSL_ACTION_VALIDATION_PENDING = 1,
+    /// @brief Security action successfully validated
+    BSL_ACTION_VALIDATION_SUCCESS,
+    /// @brief Security action is invalid
+    BSL_ACTION_VALIDATION_FAILURE,
+} BSL_SecurityAction_ValidationState_e;
+
 struct BSL_SecurityAction_s
 {
     BSL_SecOperList_t sec_op_list;
     size_t            err_ct;
     uint64_t          pp_id;
-    bool              validated;
+    BSL_SecurityAction_ValidationState_e validation_state;
 };

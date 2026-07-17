@@ -320,7 +320,7 @@ int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *outp
         uint64_t pp_id = self->pp_id;
         pthread_mutex_unlock(&self->mutex);
 
-        if (BSL_SecurityAction_GetPPID(action) != pp_id)
+        if (BSL_SecurityAction_GetPPID(action) != pp_id || !BSL_SecurityAction_Validated(action))
         {
             continue;
         }

@@ -48,3 +48,16 @@ void BSLX_EncodeHeader(const BSL_CanonicalBlock_t *block, QCBOREncodeContext *en
     QCBOREncode_AddUInt64(encoder, block->block_num);
     QCBOREncode_AddUInt64(encoder, block->flags);
 }
+
+bool BSLX_ValidateTargetType(const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+{
+    BSL_CanonicalBlock_t tgt_block;
+    if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &tgt_block))
+    {
+        return false;
+    }
+
+    return !(tgt_block.type_code == BSL_BLOCK_TYPE_PRIMARY || 
+                tgt_block.type_code == BSL_BLOCK_TYPE_BIB || 
+                tgt_block.type_code == BSL_BLOCK_TYPE_BCB);
+}

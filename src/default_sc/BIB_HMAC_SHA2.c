@@ -48,6 +48,13 @@ bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t
     ASSERT_ARG_NONNULL(lib);
     ASSERT_ARG_NONNULL(bundle);
     ASSERT_ARG_NONNULL(sec_oper);
+
+    if (!BSLX_ValidateTargetType(bundle, sec_oper))
+    {
+        BSL_LOG_INFO("BIB Validate failed: invalid target block type");
+        return false;
+    }
+
     return true;
 }
 
