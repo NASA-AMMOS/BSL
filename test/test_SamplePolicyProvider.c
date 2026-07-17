@@ -30,8 +30,8 @@
 #include "DefaultScUtils.h"
 
 #include <bsl/BPSecLib_Private.h>
-#include <bsl/mock_bpa/MockBPA.h>
 #include <bsl/sample_pp/SamplePolicyProvider.h>
+#include <bsl/mock_bpa/MockBPA.h>
 
 #include <unity.h>
 

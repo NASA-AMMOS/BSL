@@ -23,11 +23,11 @@
 
 #include <bsl/BPSecLib_Public.h>
 #include <bsl/crypto/CryptoInterface.h>
-#include <bsl/default_sc/DefaultSecContext.h>
 #include <bsl/dynamic/SecurityActionSet.h>
+#include <bsl/default_sc/DefaultSecContext.h>
+#include <bsl/sample_pp/SamplePolicyProvider.h>
 #include <bsl/mock_bpa/agent.h>
 #include <bsl/mock_bpa/log.h>
-#include <bsl/sample_pp/SamplePolicyProvider.h>
 
 #include <unity.h>
 

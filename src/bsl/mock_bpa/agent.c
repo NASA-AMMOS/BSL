@@ -34,10 +34,10 @@
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/BPSecLib_Public.h"
+#include "bsl/dynamic/SeqReadWrite.h"
 #include "bsl/cose_sc/CoseContext.h"
 #include "bsl/default_sc/DefaultSecContext.h"
 #include "bsl/default_sc/rfc9173.h"
-#include "bsl/dynamic/SeqReadWrite.h"
 #include "bsl/sample_pp/SamplePolicyProvider.h"
 
 #include <errno.h>

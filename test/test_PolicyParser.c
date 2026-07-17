@@ -27,8 +27,8 @@
 #include "DefaultScUtils.h"
 
 #include <bsl/BPSecLib_Private.h>
-#include <bsl/mock_bpa/MockBPA.h>
 #include <bsl/sample_pp/PolicyParser.h>
+#include <bsl/mock_bpa/MockBPA.h>
 
 #include <unity.h>
 

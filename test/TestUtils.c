@@ -24,12 +24,12 @@
 
 #include <bsl/BPSecLib_Private.h>
 #include <bsl/crypto/CryptoInterface.h>
+#include <bsl/front/TextUtil.h>
 #include <bsl/dynamic/IdValPair.h>
 #include <bsl/dynamic/SecurityActionSet.h>
 #include <bsl/dynamic/SeqReadWrite.h>
-#include <bsl/front/TextUtil.h>
-#include <bsl/mock_bpa/MockBPA.h>
 #include <bsl/sample_pp/SamplePolicyProvider.h>
+#include <bsl/mock_bpa/MockBPA.h>
 
 #include <m-string.h>
 

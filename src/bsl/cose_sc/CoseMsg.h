@@ -28,9 +28,9 @@
 #ifndef BSLX_COSEMSG_H_
 #define BSLX_COSEMSG_H_
 
+#include "bsl/front/BSLMemory.h"
 #include "bsl/dynamic/CBOR.h"
 #include "bsl/dynamic/IdValPair.h"
-#include "bsl/front/BSLMemory.h"
 
 #include <m-array.h>
 #include <m-bptree.h>

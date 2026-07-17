@@ -48,14 +48,27 @@ ExperimentalAutoDetectBinPacking: false
 ForEachMacros: []
 IncludeBlocks: Regroup
 IncludeCategories:
+ - Regex: '^["<]bsl/front/'
+   Priority: 20
+   SortPriority: 21
+ - Regex: '^["<]bsl/dynamic/'
+   Priority: 20
+   SortPriority: 22
+ - Regex: '^["<]bsl/(default_sc|cose_sc|sample_pp)/'
+   Priority: 20
+   SortPriority: 23
+ - Regex: '^["<]bsl/mock_bpa/'
+   Priority: 20
+   SortPriority: 24
  - Regex: '^["<]bsl/'
-   Priority: 2
+   Priority: 20
+   SortPriority: 20
  - Regex: '^".*'
-   Priority: 1
+   Priority: 10
  - Regex: '^<(m-|qcbor|openssl/|jansson)'
-   Priority: 3
+   Priority: 30
  - Regex: '^<'
-   Priority: 4
+   Priority: 40
 IncludeIsMainRegex: '$'
 IndentCaseLabels: true
 IndentExternBlock: NoIndent

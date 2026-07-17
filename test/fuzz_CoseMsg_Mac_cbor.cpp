@@ -25,8 +25,8 @@
  */
 #include "TestUtils.h"
 
-#include <bsl/cose_sc/CoseMsg.h>
 #include <bsl/dynamic/CBOR.h>
+#include <bsl/cose_sc/CoseMsg.h>
 #include <bsl/mock_bpa/MockBPA.h>
 
 #include <cinttypes>

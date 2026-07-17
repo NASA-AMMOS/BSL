@@ -21,9 +21,9 @@
  */
 #include "PolicyParser.h"
 
+#include "bsl/front/TextUtil.h"
 #include "bsl/cose_sc/CoseContext.h"
 #include "bsl/default_sc/DefaultSecContext.h"
-#include "bsl/front/TextUtil.h"
 
 #include <errno.h>
 #include <strings.h>

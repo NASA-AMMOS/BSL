@@ -32,10 +32,10 @@
 #include "TestUtils.h"
 
 #include <bsl/BPSecLib_Private.h>
-#include <bsl/cose_sc/CoseContext.h>
-#include <bsl/cose_sc/CoseMsg.h>
 #include <bsl/crypto/CryptoInterface.h>
 #include <bsl/dynamic/PublicInterfaceImpl.h>
+#include <bsl/cose_sc/CoseContext.h>
+#include <bsl/cose_sc/CoseMsg.h>
 #include <bsl/mock_bpa/MockBPA.h>
 
 #include <stdio.h>

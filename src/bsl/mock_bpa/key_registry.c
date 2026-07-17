@@ -26,9 +26,9 @@
 
 #include "key_registry.h"
 
-#include "bsl/cose_sc/CoseMsg.h"
-#include "bsl/dynamic/CBOR.h"
 #include "bsl/front/TextUtil.h"
+#include "bsl/dynamic/CBOR.h"
+#include "bsl/cose_sc/CoseMsg.h"
 
 #include <jansson.h>
 #include <m-string.h>
