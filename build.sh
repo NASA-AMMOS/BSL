@@ -72,7 +72,7 @@ function cmd_check {
 
 function cmd_check_install_pkgconfig {
     # setenv.sh has aleady set DESTDIR and PREFIX
-    if [[ -n "${DESTDIR}" && "${DESTDIR}" != "/" ]]
+    if [[ -n "${DESTDIR}" && -d "${DESTDIR}"]]
     then
         export PKG_CONFIG_PATH=$(find ${DESTDIR}${PREFIX} -type d -name pkgconfig | tr '\n' ':')
         PKG_PREFIX="--define-variable=prefix=${DESTDIR}${PREFIX}"
@@ -95,6 +95,7 @@ function cmd_check_install_pkgconfig {
     mkdir -p build
     gcc -c -o build/example.o main.c $(pkg-config ${PKG_PREFIX} --cflags ${PKGS})
     gcc -o build/example build/example.o $(pkg-config ${PKG_PREFIX} --libs ${PKGS})
+    ldd ./build/example
     ./build/example
     rm -rf build
 }
@@ -109,6 +110,7 @@ function cmd_check_install_cmake {
         -DCMAKE_BUILD_TYPE=Debug \
         -G Ninja
     cmake --build build
+    ldd ./build/example
     ./build/example
     rm -rf build
 }

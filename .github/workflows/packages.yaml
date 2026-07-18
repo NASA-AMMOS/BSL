@@ -114,7 +114,7 @@ jobs:
             mock-bpa-test
             lib-user-test
       - name: Trial build
-        run: ./build.sh check-install
+        run: DESTDIR="" ./build.sh check-install
       - name: Mock BPA tests
         run: |
           pip3 install -r mock-bpa-test/requirements.txt
