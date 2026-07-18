@@ -89,7 +89,8 @@ jobs:
         run: |
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
-          dnf install -y python3-pip python3-wheel gcc pkgconf-pkg-config
+          dnf install -y \
+              python3-pip python3-wheel gcc pkgconf-pkg-config cmake
       - name: Download packages
         uses: actions/download-artifact@v8
         with:

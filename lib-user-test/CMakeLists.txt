@@ -20,15 +20,28 @@ the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 ]]
 cmake_minimum_required(VERSION 3.23)
-# may not be needed for system install, but add anyway
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../testroot/${CMAKE_ROOT}/Modules")
 
 project(lib-user-test LANGUAGES C)
 
+set(PKG_CONFIG_ARGN "--define-prefix")
+find_package(PkgConfig REQUIRED)
+include(CMakePrintHelpers)
+
+
 find_package(bsl REQUIRED)
 message(STATUS "Found BSL ${bsl_VERSION}")
-find_package(MLIB REQUIRED)
+
+pkg_search_module(MLIB m-lib REQUIRED IMPORTED_TARGET)
+add_library(MLIB::mlib ALIAS PkgConfig::MLIB)
+message(STATUS "Found M*LIB ${MLIB_VERSION}")
+
 find_package(qcbor REQUIRED)
+message(STATUS "Found QCBOR ${qcbor_VERSION}")
+
+cmake_print_properties(
+  TARGETS bsl::bsl_front MLIB::mlib qcbor::qcbor
+  PROPERTIES LOCATION INTERFACE_INCLUDE_DIRECTORIES
+)
 
 add_executable(example)
 target_sources(example PRIVATE main.c)

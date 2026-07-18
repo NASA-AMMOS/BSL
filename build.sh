@@ -71,11 +71,11 @@ function cmd_check {
 }
 
 function cmd_check_install_pkgconfig {
-    cd "${SELFDIR}"
-    if [[ -d testroot ]]
+    # setenv.sh has aleady set DESTDIR and PREFIX
+    if [[ -n "${DESTDIR}" && "${DESTDIR}" != "/" ]]
     then
-        export PKG_CONFIG_PATH=$(find ${PWD}/testroot/ -type d -name pkgconfig | tr '\n' ':')
-        PKG_PREFIX="--define-variable=prefix=${PWD}/testroot/usr"
+        export PKG_CONFIG_PATH=$(find ${DESTDIR}${PREFIX} -type d -name pkgconfig | tr '\n' ':')
+        PKG_PREFIX="--define-variable=prefix=${DESTDIR}${PREFIX}"
         echo "Using prefix: ${PKG_PREFIX}"
     else
         PKG_PREFIX=""
@@ -91,7 +91,7 @@ function cmd_check_install_pkgconfig {
     echo -n "Libs: "
     pkg-config ${PKG_PREFIX} --libs ${PKGS}
 
-    cd lib-user-test
+    cd "${SELFDIR}/lib-user-test"
     mkdir -p build
     gcc -c -o build/example.o main.c $(pkg-config ${PKG_PREFIX} --cflags ${PKGS})
     gcc -o build/example build/example.o $(pkg-config ${PKG_PREFIX} --libs ${PKGS})
@@ -100,12 +100,10 @@ function cmd_check_install_pkgconfig {
 }
 
 function cmd_check_install_cmake {
-    cd "${SELFDIR}"
     # setenv.sh has aleady set DESTDIR and PREFIX
-
-    cd lib-user-test
+    cd "${SELFDIR}/lib-user-test"
     cmake -S . -B build \
-        -DCMAKE_FIND_DEBUG_MODE=ON \
+        -DCMAKE_FIND_DEBUG_MODE=OFF \
         -DCMAKE_PREFIX_PATH=${DESTDIR}${PREFIX} \
         -DCMAKE_INSTALL_PREFIX=${PREFIX} \
         -DCMAKE_BUILD_TYPE=Debug \
