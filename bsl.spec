@@ -122,7 +122,6 @@ install -m644 -D testroot/usr/lib/pkgconfig/m-lib.pc %{buildroot}%{_datadir}/pkg
 %doc README.md
 %{_includedir}/m-lib/
 %{_datadir}/pkgconfig/m-lib.pc
-%{_datadir}/cmake/Modules/FindMLIB.cmake
 
 %{_includedir}/qcbor/
 %{_libdir}/pkgconfig/qcbor.pc

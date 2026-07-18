@@ -243,12 +243,6 @@ if(BUILD_LIB)
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
         COMPONENT devel
     )
-    # transitive search for M*LIB
-    install(
-        FILES cmake/FindMLIB.cmake
-        DESTINATION ${CMAKE_ROOT}/Modules/
-        COMPONENT devel
-    )
 endif(BUILD_LIB)
 
 set(TEST_INSTALL_PREFIX "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}")
