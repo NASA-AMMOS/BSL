@@ -137,7 +137,7 @@ set_target_properties(bsl_cose_sc
 target_link_libraries(bsl_cose_sc PUBLIC bsl_front)
 target_link_libraries(bsl_cose_sc PUBLIC bsl_dynamic) # for CBOR API
 target_link_libraries(bsl_cose_sc PRIVATE bsl_crypto)
-target_link_libraries(bsl_cose_sc PRIVATE MLIB::mlib)
+target_link_libraries(bsl_cose_sc PUBLIC MLIB::mlib)
 target_link_libraries(bsl_cose_sc PRIVATE qcbor::qcbor)
 
 # Example Policy Provider library
