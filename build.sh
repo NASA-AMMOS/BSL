@@ -58,7 +58,7 @@ function cmd_check_format {
 
 function cmd_apply_format {
     shift
-    exec ./resources/apply_format. "$@"
+    exec ./resources/apply_format.sh "$@"
 }
 
 function cmd_apply_license {
@@ -72,7 +72,7 @@ function cmd_check {
 
 function cmd_check_install_pkgconfig {
     # setenv.sh has aleady set DESTDIR and PREFIX
-    if [[ -n "${DESTDIR}" && -d "${DESTDIR}"]]
+    if [[ -n "${DESTDIR}" && -d "${DESTDIR}" ]]
     then
         export PKG_CONFIG_PATH=$(find ${DESTDIR}${PREFIX} -type d -name pkgconfig | tr '\n' ':')
         PKG_PREFIX="--define-variable=prefix=${DESTDIR}${PREFIX}"

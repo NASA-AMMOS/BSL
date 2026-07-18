@@ -26,7 +26,6 @@
  */
 #include "CoseContext.h"
 
-#include "CoseContext_Private.h"
 #include "CoseMsg.h"
 
 #include "bsl/BPSecLib_Private.h"
