@@ -150,16 +150,16 @@ if(BUILD_FUZZING)
   target_link_libraries(fuzz_CoseMsg_Encrypt_cbor PUBLIC ${LIB_ORDERED})
 
   add_fuzz_test(
-    SOURCE fuzz_mock_bpa_keyregistry_jwk.cpp
+    SOURCE fuzz_Crypto_KeyLoader_LoadJwkSet.cpp
     RUNS_COUNT 300000
     EXTRA_ARGS "-dict=libfuzzer-json.dict"
   )
-  target_link_libraries(fuzz_mock_bpa_keyregistry_jwk PUBLIC ${LIB_ORDERED})
+  target_link_libraries(fuzz_Crypto_KeyLoader_LoadJwkSet PUBLIC ${LIB_ORDERED})
 
   add_fuzz_test(
-    SOURCE fuzz_mock_bpa_keyregistry_cosekey.cpp
+    SOURCE fuzz_Crypto_KeyLoader_LoadCoseKeySet.cpp
     RUNS_COUNT 300000
   )
-  target_link_libraries(fuzz_mock_bpa_keyregistry_cosekey PUBLIC ${LIB_ORDERED})
+  target_link_libraries(fuzz_Crypto_KeyLoader_LoadCoseKeySet PUBLIC ${LIB_ORDERED})
 
 endif(BUILD_FUZZING)

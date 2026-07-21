@@ -21,11 +21,11 @@
  */
 /** @file
  * @ingroup fuzz_test
- * @brief Fuzz the simplified JWK file decoding.
+ * @brief Fuzz the simplified @c COSE_KeySet file decoding.
  */
 #include "TestUtils.h"
 
-#include <bsl/crypto/CryptoInterface.h>
+#include <bsl/crypto/KeyLoader.h>
 #include <bsl/mock_bpa/KeyStore.h>
 #include <bsl/mock_bpa/MockBPA.h>
 
@@ -65,7 +65,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (!retval)
     {
         int infd = fileno(tmp);
-        if (MockBPA_KeyStore_LoadJwk(infd))
+        if (BSL_Crypto_KeyLoader_LoadCoseKeySet(infd))
         {
             retval = -1;
         }
