@@ -39,6 +39,7 @@ function usage {
     echo "  apply-format   - Apply format to all source code"
     echo "  apply-license  - Apply/update license preamble to files"
     echo "  check          - Run unit tests"
+    echo "  check-install  - Build a test executable linked to BSL"
     echo "  clean          - Clean build artifacts"
     echo "  deps           - Build dependend libraries"
     echo "  docs           - Build HTML and/or PDF doxygen"
@@ -56,16 +57,45 @@ function cmd_check_format {
 }
 
 function cmd_apply_format {
-    exec ./resources/apply_format.sh
+    shift
+    exec ./resources/apply_format.sh "$@"
 }
 
 function cmd_apply_license {
-    exec ./resources/apply_license.sh
+    shift
+    exec ./resources/apply_license.sh "$@"
 }
 
 function cmd_check {
     shift
     ctest --test-dir ${BUILDDIR} --output-on-failure "$@"
+}
+
+function cmd_check_install {
+    cd "${SELFDIR}"
+    if [[ -d testroot ]]
+    then
+        export PKG_CONFIG_PATH=$(find testroot/ -type d -name pkgconfig | tr '\n' ':')
+        PKG_PREFIX="--define-variable=prefix=testroot/usr"
+        echo "Using prefix: ${PKG_PREFIX}"
+    else
+        PKG_PREFIX=""
+    fi
+    PKGS="bsl bsl-sample-pp"
+
+    echo "Provides:"
+    pkg-config --print-provides ${PKGS}
+    echo "Requires:"
+    pkg-config --print-requires ${PKGS}
+    echo -n "CFlags: "
+    pkg-config ${PKG_PREFIX} --cflags ${PKGS}
+    echo -n "Libs: "
+    pkg-config ${PKG_PREFIX} --libs ${PKGS}
+
+    mkdir -p build
+    gcc -c -o build/example.o lib-user-test/main.c $(pkg-config ${PKG_PREFIX} --cflags ${PKGS})
+    gcc -o build/example build/example.o $(pkg-config ${PKG_PREFIX} --libs ${PKGS})
+    ./build/example
 }
 
 function cmd_clean {
@@ -184,13 +214,16 @@ case "$1" in
         cmd_check_format
         ;;
     apply-format)
-        cmd_apply_format
+        cmd_apply_format "$@"
         ;;
     apply-license)
-        cmd_apply_license
+        cmd_apply_license "$@"
         ;;
     check)
         cmd_check "$@"
+        ;;
+    check-install)
+        cmd_check_install
         ;;
     clean)
         cmd_clean

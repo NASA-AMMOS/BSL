@@ -4,6 +4,10 @@
 
 #include <bsl/BPSecLib_Public.h>
 #include <bsl/BPSecLib_Private.h>
+#include <bsl/default_sc/DefaultSecContext.h>
+#include <bsl/cose_sc/CoseContext.h>
+#include <bsl/sample_pp/SamplePolicyProvider.h>
+#include <bsl/sample_pp/PolicyParser.h>
 
 int main(int argc, char *argv[])
 {
