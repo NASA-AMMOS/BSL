@@ -31,6 +31,7 @@
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/BPSecLib_Public.h"
 #include "bsl/crypto/CryptoInterface.h"
+#include "bsl/crypto/KeyLoader.h"
 #include "bsl/sample_pp/PolicyParser.h"
 
 #include <errno.h>
@@ -210,7 +211,7 @@ int main(int argc, char **argv)
                     break;
                 }
                 case 'k':
-                    if (MockBPA_KeyStore_LoadFile(optarg))
+                    if (BSL_Crypto_KeyLoader_LoadFile(optarg))
                     {
                         retval = 1;
                     }

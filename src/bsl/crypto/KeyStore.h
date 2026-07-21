@@ -98,11 +98,18 @@ typedef struct
     /** Find an identified key in the key store.
      * Some keys are ephemeral and not registered in the store.
      * @param[in] keyid A unique-to-the-store identifier for a key.
-     * @param[out] handle If found, will be set non-null handle.
+     * @param[out] handle If found, will be set non-NULL handle.
      * @return BSL_SUCCESS if found.
      */
     int (*find_key)(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *handle);
 
+    /** Add a key to the key store.
+     * @param[in] keyid A unique-to-the-store identifier for a key.
+     * @param[in] handle The non-NULL handle to the key to add.
+     * @return BSL_SUCCESS if added.
+     */
+    int (*add_key)(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t handle);
+    
     /** Set the (plaintext) key material for a key.
      * @param[in] handle The handle to the key.
      * @param[in] data Non-null pointer to key bytes, which will be copied.
@@ -126,6 +133,15 @@ typedef struct
      * @return A non-null pointer if the parameter exists.
      */
     const BSL_IdValPair_t *(*get_parameter)(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
+
+    /** Set a key parameter before it is added to the key store.
+     * @param[in] handle The handle to the key.
+     * @param param_id The unique identifier for the parameter.
+     * @return A non-null pointer to the parameter.
+     * If the parameter already exists, the pointer will be to the
+     * pre-existing value.
+     */
+    BSL_IdValPair_t *(*set_parameter)(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
     /** Update telemetry counters for a key.
      */

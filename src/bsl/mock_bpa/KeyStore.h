@@ -76,22 +76,6 @@ int MockBPA_KeyStore_AddKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t hand
  */
 BSL_IdValPair_t *MockBPA_KeyStore_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
-/** @brief Initialize keys
- * @param[in] file_path path to JSON file with JWK Set or CBOR file with @c COSE_KeySet
- * @return 0 if successful.
- */
-int MockBPA_KeyStore_LoadFile(const char *file_path);
-
-/** @warning Exposed only for testing.
- * @param infd The file descriptor to read from.
- */
-int MockBPA_KeyStore_LoadJwk(int infd);
-
-/** @warning Exposed only for testing.
- * @param infd The file descriptor to read from.
- */
-int MockBPA_KeyStore_LoadCoseKeySet(int infd);
-
 #ifdef __cplusplus
 } // extern C
 #endif

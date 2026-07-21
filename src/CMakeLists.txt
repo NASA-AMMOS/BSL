@@ -65,9 +65,11 @@ target_sources(bsl_crypto
             TYPE HEADERS
             FILES
                 bsl/crypto/CryptoInterface.h
+                bsl/crypto/KeyLoader.h
                 bsl/crypto/KeyStore.h
     PRIVATE
         bsl/crypto/CryptoInterface.c
+        bsl/crypto/KeyLoader.c
         bsl/crypto/KeyStore.c
 )
 set_target_properties(bsl_crypto
@@ -78,6 +80,7 @@ set_target_properties(bsl_crypto
 target_link_libraries(bsl_crypto PUBLIC bsl_front bsl_dynamic)
 target_link_libraries(bsl_crypto PRIVATE MLIB::mlib)
 target_link_libraries(bsl_crypto PRIVATE qcbor::qcbor)
+target_link_libraries(bsl_crypto PRIVATE Jansson::Jansson) # for key loader
 target_link_libraries(bsl_crypto PRIVATE OpenSSL::Crypto)
 if(TARGET valgrind::valgrind)
   find_path(VALGRIND_INCLUDE_DIR NAMES valgrind/memcheck.h)
@@ -248,7 +251,6 @@ set_target_properties(bsl_mock_bpa
 target_link_libraries(bsl_mock_bpa PUBLIC bsl_sample_pp bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
 target_link_libraries(bsl_mock_bpa PUBLIC qcbor::qcbor)
-target_link_libraries(bsl_mock_bpa PRIVATE Jansson::Jansson)
 target_link_libraries(bsl_mock_bpa PUBLIC Threads::Threads)
 
 if(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)

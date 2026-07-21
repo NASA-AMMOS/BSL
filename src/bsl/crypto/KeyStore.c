@@ -46,9 +46,11 @@ int BSL_KeyStore_Init(BSL_KeyStore_Descriptors_t desc)
     CHK_PRECONDITION(desc.acquire_key);
     CHK_PRECONDITION(desc.release_key);
     CHK_PRECONDITION(desc.find_key);
+    CHK_PRECONDITION(desc.add_key);
     CHK_PRECONDITION(desc.set_keymat);
     CHK_PRECONDITION(desc.get_keymat);
     CHK_PRECONDITION(desc.get_parameter);
+    CHK_PRECONDITION(desc.set_parameter);
     CHK_PRECONDITION(desc.update_stats);
     CHK_PRECONDITION(desc.get_stats);
     // GCOV_EXCL_STOP
