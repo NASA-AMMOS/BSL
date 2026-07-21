@@ -58,7 +58,7 @@ function cmd_check_format {
 
 function cmd_apply_format {
     shift
-    exec ./resources/apply_format. "$@"
+    exec ./resources/apply_format.sh "$@"
 }
 
 function cmd_apply_license {
