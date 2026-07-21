@@ -112,26 +112,8 @@ jobs:
           sparse-checkout: |
             mock-bpa-test
             lib-user-test
-      - name: Show pkg-config
-        env:
-          PKGS: bsl bsl-sample-pp
-        run: |
-          echo "Provides:"
-          pkg-config --print-provides ${PKGS}
-          echo "Requires:"
-          pkg-config --print-requires ${PKGS}
-          echo -n "CFlags: "
-          pkg-config --cflags ${PKGS}
-          echo -n "Libs: "
-          pkg-config --libs ${PKGS}
       - name: Trial build
-        env:
-          PKGS: bsl bsl-sample-pp
-        run: |
-          mkdir build
-          gcc -c $(pkg-config --cflags ${PKGS}) -o build/example.o lib-user-test/main.c
-          gcc $(pkg-config --libs ${PKGS}) -o build/example build/example.o
-          ./build/example
+        run: ./build.sh check-install
       - name: Mock BPA tests
         run: |
           pip3 install -r mock-bpa-test/requirements.txt
