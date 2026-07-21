@@ -320,8 +320,6 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         TEST_ASSERT_EQUAL(1, BSL_SecOper_CountResults(&bcbcontext.sec_oper));
         result = BSL_SecOper_FindResult(&bcbcontext.sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
         TEST_ASSERT_NOT_NULL(result);
-
-        TEST_ASSERT_EQUAL(RFC9173_BCB_RESULTID_AUTHTAG, result->id);
     }
 
     if (wrap)
@@ -425,17 +423,13 @@ void test_sec_accept_keyunwrap(bool bib)
     if (bib)
     {
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKeyName("kek_wrap", kek_data.ptr, kek_data.len));
-        BSL_Variant_SetTextstr(&bibcontext.opt_test_key, BSLX_BIB_OPT_KEY_ID, "kek_wrap");
-        BSL_Variant_SetInt64(&bibcontext.opt_use_key_wrap, BSLX_BIB_OPT_USE_KEY_WRAP, 1);
-        BSL_Variant_SetInt64(&bibcontext.opt_scope_flags, BSLX_BIB_OPT_SCOPE, 0);
-        BSL_Variant_SetInt64(&bibcontext.opt_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-
         BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
                              BSL_POLICYACTION_DROP_BLOCK);
-        BSL_SecOper_AddOption(&bibcontext.sec_oper, &bibcontext.opt_sha_variant);
-        BSL_SecOper_AddOption(&bibcontext.sec_oper, &bibcontext.opt_scope_flags);
-        BSL_SecOper_AddOption(&bibcontext.sec_oper, &bibcontext.opt_test_key);
-        BSL_SecOper_AddOption(&bibcontext.sec_oper, &bibcontext.opt_use_key_wrap);
+        BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bibcontext.sec_oper, BSLX_BIB_OPT_KEY_ID), "kek_wrap");
+        BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bibcontext.sec_oper, BSLX_BIB_OPT_USE_KEY_WRAP), 1);
+        BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bibcontext.sec_oper, BSLX_BIB_OPT_SCOPE), 0);
+        BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bibcontext.sec_oper, BSLX_BIB_OPT_SHA_VARIANT),
+                             RFC9173_BIB_SHA_HMAC512);
 
         int bib_exec_status = BSL_ExecBIBVerifierAcceptor(BSLX_BIB_Execute, &LocalTestCtx.bsl,
                                                           &mock_bpa_ctr->bundle_ref, &bibcontext.sec_oper);
@@ -446,17 +440,14 @@ void test_sec_accept_keyunwrap(bool bib)
         BSL_Crypto_SetRngGenerator(rfc3394_cek);
 
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKeyName("kek_wrap", kek_data.ptr, kek_data.len));
-        BSL_Variant_SetTextstr(&bcbcontext.opt_test_key_id, BSLX_BCB_OPT_KEY_ID, "kek_wrap");
-        BSL_Variant_SetInt64(&bcbcontext.opt_use_key_wrap, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
-        BSL_Variant_SetInt64(&bcbcontext.opt_scope_flags, BSLX_BCB_OPT_SCOPE, RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
-        BSL_Variant_SetInt64(&bcbcontext.opt_aes_variant, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-
         BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
                              BSL_POLICYACTION_DROP_BLOCK);
-        BSL_SecOper_AddOption(&bcbcontext.sec_oper, &bcbcontext.opt_aes_variant);
-        BSL_SecOper_AddOption(&bcbcontext.sec_oper, &bcbcontext.opt_scope_flags);
-        BSL_SecOper_AddOption(&bcbcontext.sec_oper, &bcbcontext.opt_test_key_id);
-        BSL_SecOper_AddOption(&bcbcontext.sec_oper, &bcbcontext.opt_use_key_wrap);
+        BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcbcontext.sec_oper, BSLX_BCB_OPT_KEY_ID), "kek_wrap");
+        BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcbcontext.sec_oper, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
+        BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcbcontext.sec_oper, BSLX_BCB_OPT_SCOPE),
+                             RFC9173_BCB_AADSCOPEFLAGID_INC_NONE);
+        BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcbcontext.sec_oper, BSLX_BCB_OPT_AES_VARIANT),
+                             RFC9173_BCB_AES_VARIANT_A128GCM);
 
         int bcb_exec_status = BSL_ExecBCBVerifierAcceptor(BSLX_BCB_Execute, &LocalTestCtx.bsl,
                                                           &mock_bpa_ctr->bundle_ref, &bcbcontext.sec_oper);

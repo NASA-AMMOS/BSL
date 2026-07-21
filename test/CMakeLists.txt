@@ -105,8 +105,8 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   )
 
   # Specific tests for ONLY the "Default Security Context" module (Implementation of RFC9173)
-#  add_unity_test(SOURCE test_DefaultSecurityContext.c)
-#  target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
+  add_unity_test(SOURCE test_DefaultSecurityContext.c)
+  target_link_libraries(test_DefaultSecurityContext PUBLIC ${LIB_ORDERED})
 
   # Specific tests for ONLY the "COSE Context" module
   add_unity_test(SOURCE test_CoseContext.c)
