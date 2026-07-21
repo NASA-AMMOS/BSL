@@ -39,7 +39,7 @@ extern "C" {
 #define BSLX_COSESC_CTX_ID 3
 
 /// Internal option enumerations
-enum BSLX_CoseSC_Option_e
+enum BSLX_CoseSc_Option_e
 {
     /** Key ID as a byte string.
      * The value is a byte string (which may contain encoded UTF8 text).
@@ -109,7 +109,7 @@ enum BSLX_CoseSC_Option_e
 };
 
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.2
-enum BSLX_CoseSC_Param_e
+enum BSLX_CoseSc_Param_e
 {
     /// Additional Protected headers
     BSLX_COSESC_PARAM_ADDL_PHDR = 3,
@@ -120,7 +120,7 @@ enum BSLX_CoseSC_Param_e
 };
 
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.3
-enum BSLX_CoseSC_Result_e
+enum BSLX_CoseSc_Result_e
 {
     BSLX_COSESC_RESULT_COSE_ENCRYPT0 = 16,
     BSLX_COSESC_RESULT_COSE_MAC0     = 17,
@@ -131,7 +131,7 @@ enum BSLX_CoseSC_Result_e
 };
 
 /// Special keys for AAD Scope parameter
-enum BSLX_CoseSC_AadScope_Special_e
+enum BSLX_CoseSc_AadScope_Special_e
 {
     /// Reference the security target block
     BSLX_COSESC_AADSCOPE_SPECIAL_TARGET = -1,
@@ -140,7 +140,7 @@ enum BSLX_CoseSC_AadScope_Special_e
 };
 
 /// Flags for AAD Scope parameter
-enum BSLX_CoseSC_AadScope_Flag_e
+enum BSLX_CoseSc_AadScope_Flag_e
 {
     /// Include block header items in AAD
     BSLX_COSESC_AADSCOPE_FLAG_METADATA = 0x1,
@@ -152,10 +152,10 @@ enum BSLX_CoseSC_AadScope_Flag_e
  */
 typedef struct
 {
-    /// Block number or special key from ::BSLX_CoseSC_AadScope_Special_e
+    /// Block number or special key from ::BSLX_CoseSc_AadScope_Special_e
     int64_t key;
-    /** Choice of flags from ::BSLX_CoseSC_AAD_Flag_e.
-     * This type is compatible with ::BSL_IdValPair_t storage.
+    /** Choice of flags from ::BSLX_CoseSc_AadScope_Flag_e.
+     * This type is compatible with ::BSL_IdValPair_s storage.
      */
     int64_t flags;
 } BSLX_CoseSc_AadScope_Item_t;
