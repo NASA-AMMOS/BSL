@@ -334,9 +334,6 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
     BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(4, primary_block.block_count);
 
-    BIBTestContext bib_context;
-    BIBTestContext_Init(&bib_context);
-
     BSL_SecOper_t bib_oper_primary;
     BSL_SecOper_Init(&bib_oper_primary);
     BSL_SecOper_Populate(&bib_oper_primary, 1, 0, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
@@ -350,9 +347,6 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
                          BSL_POLICYACTION_DROP_BLOCK);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
-
-    BCBTestContext bcb_context;
-    BCBTestContext_Init(&bcb_context);
 
     BSL_SecOper_t bcb_oper;
     BSL_SecOper_Init(&bcb_oper);
@@ -380,8 +374,6 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
     BSL_PrimaryBlock_deinit(&primary_block);
-    BIBTestContext_Deinit(&bib_context);
-    BCBTestContext_Deinit(&bcb_context);
 }
 
 void test_RFC9173_AppendixA_Example3_Source(void)
@@ -397,9 +389,6 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_PrimaryBlock_t primary_block;
     BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(2, primary_block.block_count);
-
-    BIBTestContext bib_context;
-    BIBTestContext_Init(&bib_context);
 
     BSL_SecOper_t bib_oper_primary;
     BSL_SecOper_Init(&bib_oper_primary);
@@ -419,21 +408,13 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_SCOPE), 0);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
 
-    BCBTestContext bcb_context;
-    BCBTestContext_Init(&bcb_context);
-
-    BSL_Variant_SetTextstr(&bcb_context.opt_test_key_id, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A3_KEY);
-    BSL_Variant_SetInt64(&bcb_context.opt_scope_flags, BSLX_BCB_OPT_SCOPE, 0);
-    BSL_Variant_SetInt64(&bcb_context.opt_aes_variant, BSLX_BCB_OPT_AES_VARIANT, 1);
-    BSL_Variant_SetInt64(&bcb_context.opt_use_key_wrap, BSLX_BCB_OPT_USE_KEY_WRAP, 0);
-
     BSL_SecOper_t bcb_oper;
     BSL_SecOper_Init(&bcb_oper);
     BSL_SecOper_Populate(&bcb_oper, 2, 1, 5, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_SecOper_AddOption(&bcb_oper, &bcb_context.opt_test_key_id);
-    BSL_SecOper_AddOption(&bcb_oper, &bcb_context.opt_scope_flags);
-    BSL_SecOper_AddOption(&bcb_oper, &bcb_context.opt_aes_variant);
-    BSL_SecOper_AddOption(&bcb_oper, &bcb_context.opt_use_key_wrap);
+    BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_oper, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A3_KEY);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_oper, BSLX_BCB_OPT_SCOPE), 0);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_oper, BSLX_BCB_OPT_AES_VARIANT), 1);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_oper, BSLX_BCB_OPT_USE_KEY_WRAP), 0);
 
     BSL_SecurityActionSet_t *malloced_actionset = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(malloced_actionset);
@@ -461,8 +442,6 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
     BSL_PrimaryBlock_deinit(&primary_block);
-    BIBTestContext_Deinit(&bib_context);
-    BCBTestContext_Deinit(&bcb_context);
 }
 
 void test_RFC9173_AppendixA_Example4_Acceptor(void)
@@ -490,49 +469,35 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     TEST_ASSERT_EQUAL(2, bcb_block.block_num);
     TEST_ASSERT_EQUAL(1, bcb_block.flags);
 
-    BCBTestContext bcb_context;
-    BCBTestContext_Init(&bcb_context);
-
     // FIRST we must decrypt the BCB targets.
-    BSL_Variant_SetTextstr(&bcb_context.opt_test_key_id, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
-    BSL_Variant_SetInt64(&bcb_context.opt_scope_flags, BSLX_BCB_OPT_SCOPE, 0x07);
-    BSL_Variant_SetInt64(&bcb_context.opt_aes_variant, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
-    BSL_Variant_SetInt64(&bcb_context.opt_use_key_wrap, BSLX_BCB_OPT_USE_KEY_WRAP, 0);
-
     BSL_SecOper_t bcb_op_tgt_payload;
     BSL_SecOper_Init(&bcb_op_tgt_payload);
     BSL_SecOper_Populate(&bcb_op_tgt_payload, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSL_SecOper_AddOption(&bcb_op_tgt_payload, &bcb_context.opt_test_key_id);
-    BSL_SecOper_AddOption(&bcb_op_tgt_payload, &bcb_context.opt_scope_flags);
-    BSL_SecOper_AddOption(&bcb_op_tgt_payload, &bcb_context.opt_aes_variant);
-    BSL_SecOper_AddOption(&bcb_op_tgt_payload, &bcb_context.opt_use_key_wrap);
+    BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_SCOPE), 0x07);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A256GCM);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_USE_KEY_WRAP), 0);
 
     BSL_SecOper_t bcb_op_tgt_bib;
     BSL_SecOper_Init(&bcb_op_tgt_bib);
     BSL_SecOper_Populate(&bcb_op_tgt_bib, 2, 3, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSL_SecOper_AddOption(&bcb_op_tgt_bib, &bcb_context.opt_test_key_id);
-    BSL_SecOper_AddOption(&bcb_op_tgt_bib, &bcb_context.opt_scope_flags);
-    BSL_SecOper_AddOption(&bcb_op_tgt_bib, &bcb_context.opt_aes_variant);
-    BSL_SecOper_AddOption(&bcb_op_tgt_bib, &bcb_context.opt_use_key_wrap);
-
-    BIBTestContext bib_context;
-    BIBTestContext_Init(&bib_context);
-
-    BSL_Variant_SetTextstr(&bib_context.opt_test_key, BSLX_BIB_OPT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_Variant_SetInt64(&bib_context.opt_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
-    BSL_Variant_SetInt64(&bib_context.opt_scope_flags, BSLX_BIB_OPT_SCOPE, 0x07);
-    BSL_Variant_SetInt64(&bib_context.opt_use_key_wrap, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
+    BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_SCOPE), 0x07);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A256GCM);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_USE_KEY_WRAP), 0);
 
     BSL_SecOper_t bib_oper_payload;
     BSL_SecOper_Init(&bib_oper_payload);
     BSL_SecOper_Populate(&bib_oper_payload, 1, 1, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSL_SecOper_AddOption(&bib_oper_payload, &bib_context.opt_test_key);
-    BSL_SecOper_AddOption(&bib_oper_payload, &bib_context.opt_sha_variant);
-    BSL_SecOper_AddOption(&bib_oper_payload, &bib_context.opt_scope_flags);
-    BSL_SecOper_AddOption(&bib_oper_payload, &bib_context.opt_use_key_wrap);
+    BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC384);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_SCOPE), 0x07);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
 
     BSL_SecurityActionSet_t *malloced_actionset = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(malloced_actionset);
@@ -562,8 +527,6 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
     BSL_PrimaryBlock_deinit(&primary_block);
-    BIBTestContext_Deinit(&bib_context);
-    BCBTestContext_Deinit(&bcb_context);
 }
 
 void test_RFC9173_AppendixA_Example4_Source(void)
@@ -579,48 +542,34 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_BundleCtx_GetBundleMetadata(&mock_bpa_ctr->bundle_ref, &primary_block);
     TEST_ASSERT_EQUAL(1, primary_block.block_count);
 
-    BIBTestContext bib_context;
-    BIBTestContext_Init(&bib_context);
-
-    BSL_Variant_SetTextstr(&bib_context.opt_test_key, BSLX_BIB_OPT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_Variant_SetInt64(&bib_context.opt_sha_variant, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
-    BSL_Variant_SetInt64(&bib_context.opt_scope_flags, BSLX_BIB_OPT_SCOPE, 0x07);
-    BSL_Variant_SetInt64(&bib_context.opt_use_key_wrap, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
-
     BSL_SecOper_t bib_oper_payload;
     BSL_SecOper_Init(&bib_oper_payload);
     BSL_SecOper_Populate(&bib_oper_payload, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSL_SecOper_AddOption(&bib_oper_payload, &bib_context.opt_test_key);
-    BSL_SecOper_AddOption(&bib_oper_payload, &bib_context.opt_sha_variant);
-    BSL_SecOper_AddOption(&bib_oper_payload, &bib_context.opt_scope_flags);
-    BSL_SecOper_AddOption(&bib_oper_payload, &bib_context.opt_use_key_wrap);
-
-    BCBTestContext bcb_context;
-    BCBTestContext_Init(&bcb_context);
-
-    BSL_Variant_SetTextstr(&bcb_context.opt_test_key_id, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
-    BSL_Variant_SetInt64(&bcb_context.opt_scope_flags, BSLX_BCB_OPT_SCOPE, 0x07);
-    BSL_Variant_SetInt64(&bcb_context.opt_aes_variant, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
-    BSL_Variant_SetInt64(&bcb_context.opt_use_key_wrap, BSLX_BCB_OPT_USE_KEY_WRAP, 0);
+    BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC384);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_SCOPE), 0x07);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
 
     BSL_SecOper_t bcb_op_tgt_payload;
     BSL_SecOper_Init(&bcb_op_tgt_payload);
     BSL_SecOper_Populate(&bcb_op_tgt_payload, 2, 1, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSL_SecOper_AddOption(&bcb_op_tgt_payload, &bcb_context.opt_test_key_id);
-    BSL_SecOper_AddOption(&bcb_op_tgt_payload, &bcb_context.opt_scope_flags);
-    BSL_SecOper_AddOption(&bcb_op_tgt_payload, &bcb_context.opt_aes_variant);
-    BSL_SecOper_AddOption(&bcb_op_tgt_payload, &bcb_context.opt_use_key_wrap);
+    BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_SCOPE), 0x07);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A256GCM);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_USE_KEY_WRAP), 0);
 
     BSL_SecOper_t bcb_op_tgt_bib;
     BSL_SecOper_Init(&bcb_op_tgt_bib);
     BSL_SecOper_Populate(&bcb_op_tgt_bib, 2, 2, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
                          BSL_POLICYACTION_DROP_BLOCK);
-    BSL_SecOper_AddOption(&bcb_op_tgt_bib, &bcb_context.opt_test_key_id);
-    BSL_SecOper_AddOption(&bcb_op_tgt_bib, &bcb_context.opt_scope_flags);
-    BSL_SecOper_AddOption(&bcb_op_tgt_bib, &bcb_context.opt_aes_variant);
-    BSL_SecOper_AddOption(&bcb_op_tgt_bib, &bcb_context.opt_use_key_wrap);
+    BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_SCOPE), 0x07);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A256GCM);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_USE_KEY_WRAP), 0);
 
     BSL_SecurityActionSet_t *malloced_actionset = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(malloced_actionset);
@@ -647,6 +596,4 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
     BSL_PrimaryBlock_deinit(&primary_block);
-    BIBTestContext_Deinit(&bib_context);
-    BCBTestContext_Deinit(&bcb_context);
 }

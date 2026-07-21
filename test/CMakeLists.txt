@@ -85,8 +85,8 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   target_link_libraries(test_AbsSecBlock PUBLIC ${LIB_ORDERED})
 
   # Exercises the portion of the backend that interacts with the policy providers
-#  add_unity_test(SOURCE test_BackendSecurityContext.c)
-#  target_link_libraries(test_BackendSecurityContext PUBLIC ${LIB_ORDERED})
+  add_unity_test(SOURCE test_BackendSecurityContext.c)
+  target_link_libraries(test_BackendSecurityContext PUBLIC ${LIB_ORDERED})
 
   # Exercises the portion of the backend that interacts with the security contexts
   add_unity_test(SOURCE test_BackendPolicyProvider.c)
