@@ -264,8 +264,8 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
             return BSL_ERR_POLICY_CONFIG;
         }
 
-        const size_t scope_count = json_object_size(value);
-        BSLX_CoseSc_AadScope_Item_t *scope = BSL_calloc(scope_count, sizeof(BSLX_CoseSc_AadScope_Item_t));
+        const size_t                 scope_count = json_object_size(value);
+        BSLX_CoseSc_AadScope_Item_t *scope       = BSL_calloc(scope_count, sizeof(BSLX_CoseSc_AadScope_Item_t));
         for (size_t item_ix = 0; val_it; ++item_ix)
         {
             int64_t blk_num;
@@ -284,7 +284,7 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
             }
 
             BSL_LOG_DEBUG("AAD Scope for block %" PRId64 " has flags 0x%" PRIx64, blk_num, aad_flags);
-            scope[item_ix] = (BSLX_CoseSc_AadScope_Item_t){ .key=blk_num, .flags=aad_flags};
+            scope[item_ix] = (BSLX_CoseSc_AadScope_Item_t) { .key = blk_num, .flags = aad_flags };
 
             val_it = json_object_iter_next(value, val_it);
         }

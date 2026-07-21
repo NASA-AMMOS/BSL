@@ -1,6 +1,5 @@
 #include "AadScope.h"
 
-
 int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_AadScope_t *scope)
 {
     // aad-scope map

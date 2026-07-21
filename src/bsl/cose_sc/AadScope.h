@@ -29,7 +29,9 @@
 #define BSLX_COSESC_AADSCOPE_H_
 
 #include "CoseContext.h"
+
 #include "bsl/dynamic/CBOR.h"
+
 #include <m-bptree.h>
 
 #ifdef __cplusplus

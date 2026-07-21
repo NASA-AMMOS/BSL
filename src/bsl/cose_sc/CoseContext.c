@@ -44,33 +44,33 @@
 
 int BSLX_CoseSc_SetAadScope(BSL_IdValPair_t *option, const BSLX_CoseSc_AadScope_Item_t *list, size_t count)
 {
-  ASSERT_ARG_NONNULL(option);
-  ASSERT_ARG_NONNULL(list);
-  
-  BSLX_CoseSc_AadScope_t obj;
-  BSLX_CoseSc_AadScope_init(obj);
-  
-  for (size_t item_ix = 0; item_ix < count; ++item_ix)
-  {
-    const BSLX_CoseSc_AadScope_Item_t *item = &list[item_ix];
-    BSLX_CoseSc_AadScope_set_at(obj, item->key, item->flags);
-  }
+    ASSERT_ARG_NONNULL(option);
+    ASSERT_ARG_NONNULL(list);
 
-  BSL_Data_t aad_scope_enc;
-  BSL_Data_Init(&aad_scope_enc);
-  int res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &obj);
-  // GCOV_EXCL_START
-  if (BSL_SUCCESS != res)
-  {
-      BSL_LOG_ERR("Failed to encode AAD Scope");
-  }
-  // GCOV_EXCL_STOP
+    BSLX_CoseSc_AadScope_t obj;
+    BSLX_CoseSc_AadScope_init(obj);
 
-  BSL_IdValPair_SetRaw(option, BSLX_COSESC_OPTION_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
-  BSL_Data_Deinit(&aad_scope_enc);
+    for (size_t item_ix = 0; item_ix < count; ++item_ix)
+    {
+        const BSLX_CoseSc_AadScope_Item_t *item = &list[item_ix];
+        BSLX_CoseSc_AadScope_set_at(obj, item->key, item->flags);
+    }
 
-  BSLX_CoseSc_AadScope_clear(obj);
-  return res;
+    BSL_Data_t aad_scope_enc;
+    BSL_Data_Init(&aad_scope_enc);
+    int res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &obj);
+    // GCOV_EXCL_START
+    if (BSL_SUCCESS != res)
+    {
+        BSL_LOG_ERR("Failed to encode AAD Scope");
+    }
+    // GCOV_EXCL_STOP
+
+    BSL_IdValPair_SetRaw(option, BSLX_COSESC_OPTION_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
+    BSL_Data_Deinit(&aad_scope_enc);
+
+    BSLX_CoseSc_AadScope_clear(obj);
+    return res;
 }
 
 /** Acceptable target algorithms for MAC.

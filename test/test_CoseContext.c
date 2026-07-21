@@ -319,12 +319,12 @@ void test_AppendixA_Example1_BIB_Source(void)
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
 
-            BSLX_CoseSc_AadScope_Item_t scope[] = {
-              {0, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
-              {BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
-            };
-            const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
-            TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
+        BSLX_CoseSc_AadScope_Item_t scope[] = {
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+        };
+        const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
 
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
@@ -458,15 +458,15 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     }
     if (mismatch != OPT_MISMATCH_NO_AAD_SCOPE)
     {
-      BSL_IdValPair_t option;
-      BSL_IdValPair_Init(&option);
+        BSL_IdValPair_t option;
+        BSL_IdValPair_Init(&option);
 
-      BSLX_CoseSc_AadScope_Item_t scope[] = {
-        {0, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
-        {BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
-      };
-      const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
-      TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
+        BSLX_CoseSc_AadScope_Item_t scope[] = {
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+        };
+        const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
 
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
@@ -592,8 +592,8 @@ void test_CCSDS_Example_Mac_Source(void)
         BSL_IdValPair_Init(&option);
 
         BSLX_CoseSc_AadScope_Item_t scope[] = {
-          {0, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
-          {BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
         TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
@@ -723,8 +723,8 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
         BSL_IdValPair_Init(&option);
 
         BSLX_CoseSc_AadScope_Item_t scope[] = {
-          {0, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
-          {BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
         TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
@@ -850,12 +850,12 @@ void test_AppendixA_Example4_BCB_Source(void)
         BSL_IdValPair_Init(&option);
 
         BSLX_CoseSc_AadScope_Item_t scope[] = {
-          {0, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
-          {BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
         TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
-        
+
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
     }
@@ -990,8 +990,8 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         BSL_IdValPair_Init(&option);
 
         BSLX_CoseSc_AadScope_Item_t scope[] = {
-          {0, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
-          {BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
         TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
@@ -1125,8 +1125,8 @@ void test_AppendixA_Example5_BCB_Source(void)
         BSL_IdValPair_Init(&option);
 
         BSLX_CoseSc_AadScope_Item_t scope[] = {
-          {0, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
-          {BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
         TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
@@ -1256,8 +1256,8 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         BSL_IdValPair_Init(&option);
 
         BSLX_CoseSc_AadScope_Item_t scope[] = {
-          {0, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
-          {BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
         TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
@@ -1396,12 +1396,12 @@ void test_AppendixA_Example6_BCB_Source(void)
         BSL_IdValPair_Init(&option);
 
         BSLX_CoseSc_AadScope_Item_t scope[] = {
-          {0, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
-          {BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA},
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
         TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
-        
+
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
     }

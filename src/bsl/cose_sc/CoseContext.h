@@ -145,18 +145,19 @@ enum BSLX_CoseSC_AadScope_Flag_e
     /// Include block header items in AAD
     BSLX_COSESC_AADSCOPE_FLAG_METADATA = 0x1,
     /// Include BTSD in AAD
-    BSLX_COSESC_AADSCOPE_FLAG_BTSD     = 0x2,
+    BSLX_COSESC_AADSCOPE_FLAG_BTSD = 0x2,
 };
 
 /** Native C structure for each item of COSE Context AAD Scope.
  */
-typedef struct {
-  /// Block number or special key from ::BSLX_CoseSC_AadScope_Special_e
-  int64_t key;
-  /** Choice of flags from ::BSLX_CoseSC_AAD_Flag_e.
-   * This type is compatible with ::BSL_IdValPair_t storage.
-   */
-  int64_t flags;
+typedef struct
+{
+    /// Block number or special key from ::BSLX_CoseSC_AadScope_Special_e
+    int64_t key;
+    /** Choice of flags from ::BSLX_CoseSC_AAD_Flag_e.
+     * This type is compatible with ::BSL_IdValPair_t storage.
+     */
+    int64_t flags;
 } BSLX_CoseSc_AadScope_Item_t;
 
 /** Utility to set the ::BSLX_COSESC_OPTION_AAD_SCOPE option without exposing
