@@ -58,11 +58,12 @@ function cmd_check_format {
 
 function cmd_apply_format {
     shift
-    exec ./resources/apply_format. "$@"
+    exec ./resources/apply_format.sh "$@"
 }
 
 function cmd_apply_license {
-    exec ./resources/apply_license.sh
+    shift
+    exec ./resources/apply_license.sh "$@"
 }
 
 function cmd_check {
@@ -216,7 +217,7 @@ case "$1" in
         cmd_apply_format "$@"
         ;;
     apply-license)
-        cmd_apply_license
+        cmd_apply_license "$@"
         ;;
     check)
         cmd_check "$@"
