@@ -96,9 +96,6 @@ git submodule update --init --recursive
 
 This will take about a minute to build and run the unit tests, there should be 100% success.
 
-> [!NOTE]
-> On earlier versions of CMake (<3.20), `./build.sh check` target may not run correctly.
-
 #### Optional Additional Build Targets
 
 Code Coverage
