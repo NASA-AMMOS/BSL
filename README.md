@@ -60,10 +60,10 @@ BSL/
 The following should be installable by the system package manager:
 
 _Required: Build and Run Unit Tests_
- * CMake, GCC or Clang, OpenSSL (Development), Ninja Build, Valgrind, Memcheck, Ruby, jansson-devel.
+ * CMake, GCC or Clang, OpenSSL (development), Ninja Build, Valgrind, Memcheck, Ruby, Jansson (development).
 
 _Optional: To Construct Docs, etc..._
- * Doxygen, gcovr (as Python package), graphviz, plantuml, texlive-bibtex, asciidoctor.
+ * Doxygen, gcovr (as Python package), pkg-config tool, graphviz, plantuml, texlive-bibtex, asciidoctor.
 
 ## Building BSL
 
