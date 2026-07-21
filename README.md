@@ -60,10 +60,10 @@ BSL/
 The following should be installable by the system package manager:
 
 _Required: Build and Run Unit Tests_
- * CMake, GCC or Clang, OpenSSL (Development), Ninja Build, Valgrind, Memcheck, Ruby, jansson-devel.
+ * CMake, GCC or Clang, OpenSSL (development), Ninja Build, Valgrind, Memcheck, Ruby, Jansson (development).
 
 _Optional: To Construct Docs, etc..._
- * Doxygen, gcovr (as Python package), graphviz, plantuml, texlive-bibtex, asciidoctor.
+ * Doxygen, gcovr (as Python package), pkg-config tool, graphviz, plantuml, texlive-bibtex, asciidoctor.
 
 ## Building BSL
 
@@ -95,9 +95,6 @@ git submodule update --init --recursive
 ```
 
 This will take about a minute to build and run the unit tests, there should be 100% success.
-
-> [!NOTE]
-> On earlier versions of CMake (<3.20), `./build.sh check` target may not run correctly.
 
 #### Optional Additional Build Targets
 
