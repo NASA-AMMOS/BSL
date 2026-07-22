@@ -117,9 +117,6 @@ void BSL_Variant_Encode(QCBOREncodeContext *enc, const BSL_Variant_t *pair);
 /** @struct BSLB_VariantPtr_t
  * Thread safe shared pointers to ::BSL_Variant_s instances.
  */
-/** @struct BSLB_VariantPtrList_t
- * Defines an internal list of ::BSLB_VariantPtr_t pointers.
- */
 /** @struct BSLB_VariantPtrMap_t
  * Defines an internal lookup dictionary for ::BSLB_VariantPtr_t pointers
  * by integer keys.
