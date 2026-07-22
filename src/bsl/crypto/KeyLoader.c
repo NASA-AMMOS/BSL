@@ -2,7 +2,7 @@
 
 #include <bsl/front/TextUtil.h>
 #include <bsl/dynamic/CBOR.h>
-#include <bsl/dynamic/IdValPair.h>
+#include <bsl/dynamic/Variant.h>
 #include <bsl/cose_sc/CoseMsg.h>
 
 #include <jansson.h>
@@ -125,6 +125,11 @@ int BSL_Crypto_KeyLoader_LoadJwkSet(int fd)
             BSL_Crypto_LoadKey(k_data.ptr, k_data.len, &keyhandle);
             retval = BSL_KeyStore_State.add_key(&kid_view, keyhandle);
             BSL_Crypto_ReleaseKeyHandle(keyhandle);
+            BSL_LOG_DEBUG("Adding key result %d", retval);
+            if (BSL_SUCCESS != retval)
+            {
+                BSL_LOG_ERR("Unable to store key");
+            }
         }
         BSL_Data_Deinit(&k_data);
 
@@ -225,8 +230,7 @@ static int BSL_Crypto_KeyLoader_LoadCoseKeySet_decode(QCBORDecodeContext *dec, c
 
             if (has_alg)
             {
-                BSL_IdValPair_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
-                                       BSLX_COSEMSG_KEY_PARAM_ALG, alg);
+                BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG), alg);
             }
             else
             {
@@ -237,8 +241,8 @@ static int BSL_Crypto_KeyLoader_LoadCoseKeySet_decode(QCBORDecodeContext *dec, c
             {
                 BSL_Data_t view;
                 BSL_Data_InitView(&view, baseiv.len, (BSL_DataPtr_t)baseiv.ptr);
-                BSL_IdValPair_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV),
-                                         BSLX_COSEMSG_KEY_PARAM_BASEIV, view);
+                BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV),
+                                       view);
             }
 
             retval = BSL_KeyStore_State.add_key(&kid_view, keyhandle);

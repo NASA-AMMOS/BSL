@@ -129,8 +129,10 @@ target_sources(bsl_cose_sc
         FILE_SET private_headers
             TYPE HEADERS
             FILES
+                bsl/cose_sc/AadScope.h
                 bsl/cose_sc/CoseMsg.h
     PRIVATE
+        bsl/cose_sc/AadScope.c
         bsl/cose_sc/CoseContext.c
         bsl/cose_sc/CoseMsg.c
 )
@@ -142,7 +144,7 @@ set_target_properties(bsl_cose_sc
 target_link_libraries(bsl_cose_sc PUBLIC bsl_front)
 target_link_libraries(bsl_cose_sc PUBLIC bsl_dynamic) # for CBOR API
 target_link_libraries(bsl_cose_sc PRIVATE bsl_crypto)
-target_link_libraries(bsl_cose_sc PUBLIC MLIB::mlib)
+target_link_libraries(bsl_cose_sc PRIVATE MLIB::mlib)
 target_link_libraries(bsl_cose_sc PRIVATE qcbor::qcbor)
 
 # Example Policy Provider library
@@ -179,7 +181,7 @@ target_sources(bsl_dynamic
             FILES
                 bsl/dynamic/AbsSecBlock.h
                 bsl/dynamic/CBOR.h
-                bsl/dynamic/IdValPair.h
+                bsl/dynamic/Variant.h
                 bsl/dynamic/SecOperation.h
                 bsl/dynamic/SecurityAction.h
                 bsl/dynamic/SecurityActionSet.h
@@ -193,7 +195,7 @@ target_sources(bsl_dynamic
         bsl/dynamic/AbsSecBlock.c
         bsl/dynamic/CBOR.c
         bsl/dynamic/HostInterface.c
-        bsl/dynamic/IdValPair.c
+        bsl/dynamic/Variant.c
         bsl/dynamic/PublicInterfaceImpl.c
         bsl/dynamic/PolicyProvider.c
         bsl/dynamic/SecOperation.c

@@ -131,7 +131,7 @@ typedef struct
      * (e.g. COSE_Key parameters).
      * @return A non-null pointer if the parameter exists.
      */
-    const BSL_IdValPair_t *(*get_parameter)(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
+    const BSL_Variant_t *(*get_parameter)(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
     /** Set a key parameter before it is added to the key store.
      * @param[in] handle The handle to the key.
@@ -140,7 +140,7 @@ typedef struct
      * If the parameter already exists, the pointer will be to the
      * pre-existing value.
      */
-    BSL_IdValPair_t *(*set_parameter)(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
+    BSL_Variant_t *(*set_parameter)(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
     /** Update telemetry counters for a key.
      */
@@ -223,7 +223,7 @@ int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *h
  * (e.g. COSE_Key parameters).
  * @return A non-null pointer if the parameter exists.
  */
-const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
+const BSL_Variant_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
 /**
  * Retrieve statistics related to a crypto key

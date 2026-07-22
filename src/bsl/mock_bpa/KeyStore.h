@@ -74,7 +74,7 @@ int MockBPA_KeyStore_AddKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t hand
  * If the parameter does not already exist it will be created.
  * @return Non-NULL pointer if successful.
  */
-BSL_IdValPair_t *MockBPA_KeyStore_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
+BSL_Variant_t *MockBPA_KeyStore_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
 
 #ifdef __cplusplus
 } // extern C

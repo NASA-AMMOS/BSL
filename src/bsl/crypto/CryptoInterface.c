@@ -27,7 +27,7 @@
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/front/TextUtil.h"
-#include "bsl/dynamic/IdValPair.h"
+#include "bsl/dynamic/Variant.h"
 
 #include <openssl/core_names.h>
 #include <openssl/err.h>

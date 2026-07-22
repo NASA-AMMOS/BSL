@@ -25,10 +25,11 @@
 #include "TestUtils.h"
 
 #include <bsl/crypto/CryptoInterface.h>
-#include <bsl/dynamic/IdValPair.h>
 #include <bsl/dynamic/PublicInterfaceImpl.h>
 #include <bsl/dynamic/SecOperation.h>
 #include <bsl/dynamic/SecurityActionSet.h>
+#include <bsl/dynamic/Variant.h>
+#include <bsl/sample_pp/SamplePolicyProvider.h>
 #include <bsl/mock_bpa/ctr.h>
 #include <bsl/mock_bpa/KeyStore.h>
 
@@ -81,12 +82,7 @@ static inline int MockBPA_KeyStore_RemoveKeyName(const char *name)
 
 typedef struct
 {
-    BSL_Data_t hmac;
-
-    BSL_IdValPair_t opt_test_key;
-    BSL_IdValPair_t opt_sha_variant;
-    BSL_IdValPair_t opt_use_key_wrap;
-    BSL_IdValPair_t opt_scope_flags;
+    //    BSL_Data_t hmac;
 
     BSL_SecOper_t sec_oper;
 } BIBTestContext;
@@ -98,12 +94,6 @@ void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e rol
 
 typedef struct
 {
-    BSL_IdValPair_t opt_aes_variant;
-    BSL_IdValPair_t opt_scope_flags;
-    BSL_IdValPair_t opt_test_key_id;
-    BSL_IdValPair_t opt_use_key_wrap;
-    BSL_IdValPair_t opt_wrapped_key;
-
     BSL_SecOper_t sec_oper;
 } BCBTestContext;
 
@@ -155,30 +145,9 @@ extern const struct RFC9173_TestVectors_A4_Modified
 
 } RFC9173_TestVectors_AppendixA4;
 
-typedef struct
-{
-    BSL_IdValPair_t sha_variant;
-    BSL_IdValPair_t scope_flags;
-    BSL_IdValPair_t test_key_id;
-    BSL_IdValPair_t use_key_wrap;
-} RFC9173_A1_Params;
+void BSL_TestUtils_GetRFC9173_A1Params(BSLP_PolicyRule_t *rule, const char *key_id);
 
-RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A1Params(const char *key_id);
-
-typedef struct
-{
-    BSL_IdValPair_t auth_code;
-    BSL_IdValPair_t content_enc_key;
-    BSL_IdValPair_t init_vector;
-    BSL_IdValPair_t key_enc_key;
-    BSL_IdValPair_t test_key_id;
-    BSL_IdValPair_t wrapped_key;
-    int64_t         context_id;
-    uint64_t        context_flags;
-    uint64_t        scope_flag;
-} RFC9173_AppendixA2_BCB;
-
-RFC9173_A1_Params BSL_TestUtils_GetRFC9173_A2Params(const char *key_id);
+void BSL_TestUtils_GetRFC9173_A2Params(BSLP_PolicyRule_t *rule, const char *key_id);
 
 BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bib_context);
 

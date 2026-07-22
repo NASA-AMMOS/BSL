@@ -29,7 +29,7 @@
 #include "CryptoInterface.h"
 
 #include <bsl/front/TextUtil.h>
-#include <bsl/dynamic/IdValPair.h>
+#include <bsl/dynamic/Variant.h>
 
 #define BSL_KeyStore_Descriptors_EMPTY \
     {                                  \
@@ -137,7 +137,7 @@ int BSL_Crypto_LoadKey(const uint8_t *secret, size_t secret_len, BSL_Crypto_KeyH
     return BSL_SUCCESS;
 }
 
-const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
+const BSL_Variant_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id)
 {
     ASSERT_PRECONDITION(BSL_KeyStore_State.get_parameter);
     return BSL_KeyStore_State.get_parameter(handle, param_id);
