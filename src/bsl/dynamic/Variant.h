@@ -133,11 +133,31 @@ M_BPTREE_DEF2(BSLB_VariantPtrMap, 4, int64_t, M_BASIC_OPLIST, BSLB_VariantPtr_t 
 // NOLINTEND
 
 /** Workaround default shared-ptr INIT being a NULL pointer.
- * @param[in,out] map The map to enusre a specific key exists in.
+ * @param[in,out] map The map to ensure a specific key exists in.
  * @param key The key to add or update.
  * @return A non-null pointer to a value in the map.
  */
-BSL_Variant_t *BSLB_VariantPtrMap_add(BSLB_VariantPtrMap_t map, int64_t key);
+static inline BSL_Variant_t *BSLB_VariantPtrMap_add(BSLB_VariantPtrMap_t map, int64_t key)
+{
+    BSLB_VariantPtr_t **found = BSLB_VariantPtrMap_get(map, key);
+
+    BSL_Variant_t *item;
+    if (found)
+    {
+        BSL_LOG_WARNING("map key %" PRId64 " already exists, reusing it", key);
+        item = BSLB_VariantPtr_ref(*found);
+    }
+    else
+    {
+        BSLB_VariantPtr_t *item_ptr = BSLB_VariantPtr_new();
+        BSLB_VariantPtrMap_set_at(map, key, item_ptr);
+        // map keeps a reference
+        item = BSLB_VariantPtr_ref(item_ptr);
+        BSLB_VariantPtr_release(item_ptr);
+    }
+
+    return item;
+}
 
 #ifdef __cplusplus
 } // extern C

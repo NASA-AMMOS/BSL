@@ -379,25 +379,3 @@ void BSL_Variant_Encode(QCBOREncodeContext *enc, const BSL_Variant_t *pair)
         QCBOREncode_AddUndef(enc);
     }
 }
-
-BSL_Variant_t *BSLB_VariantPtrMap_add(BSLB_VariantPtrMap_t map, int64_t key)
-{
-    BSLB_VariantPtr_t **found = BSLB_VariantPtrMap_get(map, key);
-
-    BSL_Variant_t *item;
-    if (found)
-    {
-        BSL_LOG_WARNING("map key %" PRId64 " already exists, reusing it", key);
-        item = BSLB_VariantPtr_ref(*found);
-    }
-    else
-    {
-        BSLB_VariantPtr_t *item_ptr = BSLB_VariantPtr_new();
-        BSLB_VariantPtrMap_set_at(map, key, item_ptr);
-        // map keeps a reference
-        item = BSLB_VariantPtr_ref(item_ptr);
-        BSLB_VariantPtr_release(item_ptr);
-    }
-
-    return item;
-}
