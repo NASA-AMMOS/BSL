@@ -46,6 +46,7 @@ int BSL_Crypto_KeyLoader_LoadFile(const char *file_path)
         BSL_LOG_ERR("Unhandled key file extension for %s", file_path);
         retval = BSL_ERR_ARG_INVALID;
     }
+    close(infd);
 
     return retval;
 }
@@ -260,7 +261,6 @@ int BSL_Crypto_KeyLoader_LoadCoseKeySet(int infd)
     if ((fstat(infd, &sb) < 0) || (sb.st_size == 0))
     {
         BSL_LOG_ERR("Error getting file size");
-        close(infd);
         return BSL_ERR_DECODING;
     }
 
@@ -268,7 +268,6 @@ int BSL_Crypto_KeyLoader_LoadCoseKeySet(int infd)
     if (!data)
     {
         BSL_LOG_ERR("Error in mmap");
-        close(infd);
         return BSL_ERR_DECODING;
     }
 
@@ -281,6 +280,5 @@ int BSL_Crypto_KeyLoader_LoadCoseKeySet(int infd)
     {
         BSL_LOG_ERR("Error in munmap");
     }
-    close(infd);
     return retval;
 }
