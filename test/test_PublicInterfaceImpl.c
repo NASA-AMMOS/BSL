@@ -44,76 +44,9 @@ int suiteTearDown(int failures)
     return failures;
 }
 
-typedef struct
-{
-    BSL_IdValPair_t opt_scope_flag;
-    BSL_IdValPair_t opt_scope_flag_7;
-    BSL_IdValPair_t opt_sha_variant_512;
-    BSL_IdValPair_t opt_sha_variant_384;
-    BSL_IdValPair_t opt_aes_variant_128;
-    BSL_IdValPair_t opt_aes_variant_256;
-    BSL_IdValPair_t opt_aad_scope_flag;
-    BSL_IdValPair_t param_wrapped_key;
-    BSL_IdValPair_t opt_test_bib_key_correct;
-    BSL_IdValPair_t opt_test_bib_key_bad;
-    BSL_IdValPair_t opt_bib_use_wrap_key;
-    BSL_IdValPair_t opt_bib_dont_use_wrap_key;
-    BSL_IdValPair_t opt_bcb_use_wrap_key;
-    BSL_IdValPair_t opt_bcb_dont_use_wrap_key;
-    BSL_IdValPair_t opt_test_bcb_key_correct;
-    BSL_IdValPair_t opt_test_bcb_key_bad;
-    BSL_IdValPair_t opt_test_bcb_2_key_correct;
-    BSL_IdValPair_t opt_test_bcb_2_key_bad;
-} BSL_TestPublInterfaceCtx_t;
-
-static BSL_TestContext_t          LocalTestCtx;
-static BSL_SecurityActionSet_t    action_set;
-static BSL_TestPublInterfaceCtx_t ctx;
-static BSLP_PolicyProvider_t     *policy_provider;
-
-void PublicInterfaceTestCtx_init(BSL_TestPublInterfaceCtx_t *ctx)
-{
-    BSL_IdValPair_Init(&ctx->opt_scope_flag);
-    BSL_IdValPair_Init(&ctx->opt_scope_flag_7);
-    BSL_IdValPair_Init(&ctx->opt_sha_variant_512);
-    BSL_IdValPair_Init(&ctx->opt_sha_variant_384);
-    BSL_IdValPair_Init(&ctx->opt_aes_variant_128);
-    BSL_IdValPair_Init(&ctx->opt_aes_variant_256);
-    BSL_IdValPair_Init(&ctx->opt_aad_scope_flag);
-    BSL_IdValPair_Init(&ctx->param_wrapped_key);
-    BSL_IdValPair_Init(&ctx->opt_bib_use_wrap_key);
-    BSL_IdValPair_Init(&ctx->opt_bib_dont_use_wrap_key);
-    BSL_IdValPair_Init(&ctx->opt_bcb_use_wrap_key);
-    BSL_IdValPair_Init(&ctx->opt_bcb_dont_use_wrap_key);
-    BSL_IdValPair_Init(&ctx->opt_test_bib_key_correct);
-    BSL_IdValPair_Init(&ctx->opt_test_bib_key_bad);
-    BSL_IdValPair_Init(&ctx->opt_test_bcb_key_correct);
-    BSL_IdValPair_Init(&ctx->opt_test_bcb_key_bad);
-    BSL_IdValPair_Init(&ctx->opt_test_bcb_2_key_correct);
-    BSL_IdValPair_Init(&ctx->opt_test_bcb_2_key_bad);
-}
-
-void PublicInterfaceTestCtx_deinit(BSL_TestPublInterfaceCtx_t *ctx)
-{
-    BSL_IdValPair_Deinit(&ctx->opt_scope_flag);
-    BSL_IdValPair_Deinit(&ctx->opt_scope_flag_7);
-    BSL_IdValPair_Deinit(&ctx->opt_sha_variant_512);
-    BSL_IdValPair_Deinit(&ctx->opt_sha_variant_384);
-    BSL_IdValPair_Deinit(&ctx->opt_aes_variant_128);
-    BSL_IdValPair_Deinit(&ctx->opt_aes_variant_256);
-    BSL_IdValPair_Deinit(&ctx->opt_aad_scope_flag);
-    BSL_IdValPair_Deinit(&ctx->param_wrapped_key);
-    BSL_IdValPair_Deinit(&ctx->opt_bib_use_wrap_key);
-    BSL_IdValPair_Deinit(&ctx->opt_bib_dont_use_wrap_key);
-    BSL_IdValPair_Deinit(&ctx->opt_bcb_use_wrap_key);
-    BSL_IdValPair_Deinit(&ctx->opt_bcb_dont_use_wrap_key);
-    BSL_IdValPair_Deinit(&ctx->opt_test_bib_key_correct);
-    BSL_IdValPair_Deinit(&ctx->opt_test_bib_key_bad);
-    BSL_IdValPair_Deinit(&ctx->opt_test_bcb_key_correct);
-    BSL_IdValPair_Deinit(&ctx->opt_test_bcb_key_bad);
-    BSL_IdValPair_Deinit(&ctx->opt_test_bcb_2_key_correct);
-    BSL_IdValPair_Deinit(&ctx->opt_test_bcb_2_key_bad);
-}
+static BSL_TestContext_t       LocalTestCtx;
+static BSL_SecurityActionSet_t action_set;
+static BSLP_PolicyProvider_t  *policy_provider;
 
 void setUp(void)
 {
@@ -122,7 +55,6 @@ void setUp(void)
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
     BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
     BSL_SecurityActionSet_Init(&action_set);
-    PublicInterfaceTestCtx_init(&ctx);
     policy_provider = BSLP_PolicyProvider_Init(1);
 
     /// Register the policy provider with some rules
@@ -136,34 +68,10 @@ void setUp(void)
 
     BSLP_PolicyProvider_t *policy = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID)->user_data;
 
-    // FIXME these params need managed lifecycle to ensure Deinit (by some means)
-    BSL_IdValPair_SetInt64(&ctx.opt_scope_flag, BSLX_BIB_OPT_SCOPE, 0);
-    BSL_IdValPair_SetInt64(&ctx.opt_scope_flag_7, BSLX_BIB_OPT_SCOPE, 0x7);
-    BSL_IdValPair_SetInt64(&ctx.opt_sha_variant_512, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC512);
-    BSL_IdValPair_SetInt64(&ctx.opt_sha_variant_384, BSLX_BIB_OPT_SHA_VARIANT, RFC9173_BIB_SHA_HMAC384);
-
-    BSL_IdValPair_SetInt64(&ctx.opt_aes_variant_128, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A128GCM);
-    BSL_IdValPair_SetInt64(&ctx.opt_aes_variant_256, BSLX_BCB_OPT_AES_VARIANT, RFC9173_BCB_AES_VARIANT_A256GCM);
-    BSL_IdValPair_SetInt64(&ctx.opt_aad_scope_flag, BSLX_BCB_OPT_SCOPE, 0);
-
     BSL_Data_t wrapkey_data;
     BSL_Data_Init(&wrapkey_data);
     TEST_ASSERT_EQUAL_INT(
         0, BSL_TestUtils_DecodeBase16_cstr(&wrapkey_data, "69c411276fecddc4780df42c8a2af89296fabf34d7fae700"));
-    BSL_IdValPair_SetBytestr(&ctx.param_wrapped_key, BSLX_BCB_OPT_WRAPPED_KEY, wrapkey_data);
-    BSL_Data_Deinit(&wrapkey_data);
-
-    BSL_IdValPair_SetInt64(&ctx.opt_bib_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 1);
-    BSL_IdValPair_SetInt64(&ctx.opt_bib_dont_use_wrap_key, BSLX_BIB_OPT_USE_KEY_WRAP, 0);
-    BSL_IdValPair_SetTextstr(&ctx.opt_test_bib_key_correct, BSLX_BIB_OPT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_IdValPair_SetTextstr(&ctx.opt_test_bib_key_bad, BSLX_BIB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
-
-    BSL_IdValPair_SetInt64(&ctx.opt_bcb_use_wrap_key, BSLX_BCB_OPT_USE_KEY_WRAP, 1);
-    BSL_IdValPair_SetInt64(&ctx.opt_bcb_dont_use_wrap_key, BSLX_BCB_OPT_USE_KEY_WRAP, 0);
-    BSL_IdValPair_SetTextstr(&ctx.opt_test_bcb_key_correct, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A2_KEY);
-    BSL_IdValPair_SetTextstr(&ctx.opt_test_bcb_key_bad, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
-    BSL_IdValPair_SetTextstr(&ctx.opt_test_bcb_2_key_correct, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A4_BCB_KEY);
-    BSL_IdValPair_SetTextstr(&ctx.opt_test_bcb_2_key_bad, BSLX_BCB_OPT_KEY_ID, RFC9173_EXAMPLE_A1_KEY);
 
     // test bib accepting with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
     // CLIN, SRC=ipn:1.1, ACCEPTOR, BIB, PAYLOAD, DROP BLOCK, good key
@@ -173,10 +81,10 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_1, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.1) WITH POLICY DROP BLOCK", 1,
                              BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_1), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_1), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_1), &ctx.opt_test_bib_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_1), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_1, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_1, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_1, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_1, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_1, &predicate_1);
 
     // CLIN, SRC=ipn:1.2, ACCEPTOR, BIB, PAYLOAD, DROP BUNDLE, bad key
@@ -185,10 +93,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_2;
     BSLP_PolicyRule_InitFrom(&rule_2, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.2)", 1, BSL_SECROLE_ACCEPTOR,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_2), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_2), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_2), &ctx.opt_test_bib_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_2), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_2, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_2, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_2, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_2, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_2, &predicate_2);
 
     // CLIN, SRC=ipn:1.3, ACCEPTOR, BIB, PAYLOAD, DROP BLOCK, bad key
@@ -197,10 +105,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_3;
     BSLP_PolicyRule_InitFrom(&rule_3, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.3)", 1, BSL_SECROLE_ACCEPTOR,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_3), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_3), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_3), &ctx.opt_test_bib_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_3), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_3, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_3, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_3, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_3, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_3, &predicate_3);
 
     // CLIN, SRC=ipn:1.4, ACCEPTOR, BIB, PAYLOAD, NOTHING, bad key
@@ -209,10 +117,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_4;
     BSLP_PolicyRule_InitFrom(&rule_4, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.4)", 1, BSL_SECROLE_ACCEPTOR,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_4), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_4), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_4), &ctx.opt_test_bib_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_4), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_4, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_4, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_4, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_4, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_4, &predicate_4);
 
     // test bcb accepting with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
@@ -223,10 +131,10 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_5, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.5) WITH POLICY DROP BLOCK", 2,
                              BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_5), &ctx.opt_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_5), &ctx.param_wrapped_key);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_5), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_5), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_5, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetBytestr(BSLP_PolicyRule_AddOption(&rule_5, BSLX_BCB_OPT_WRAPPED_KEY), wrapkey_data);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_5, BSLX_BCB_OPT_AES_VARIANT), RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_5, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_5, &predicate_5);
 
     // CLIN, SRC=ipn:1.6, ACCEPTOR, BCB, PAYLOAD, DROP BUNDLE, bad key
@@ -235,10 +143,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_6;
     BSLP_PolicyRule_InitFrom(&rule_6, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.6)", 2, BSL_SECROLE_ACCEPTOR,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_6), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_6), &ctx.param_wrapped_key);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_6), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_6), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_6, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetBytestr(BSLP_PolicyRule_AddOption(&rule_6, BSLX_BCB_OPT_WRAPPED_KEY), wrapkey_data);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_6, BSLX_BCB_OPT_AES_VARIANT), RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_6, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_6, &predicate_6);
 
     // CLIN, SRC=ipn:1.7, ACCEPTOR, BCB, PAYLOAD, DROP BLOCK, bad key
@@ -247,10 +155,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_7;
     BSLP_PolicyRule_InitFrom(&rule_7, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.7)", 2, BSL_SECROLE_ACCEPTOR,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_7), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_7), &ctx.param_wrapped_key);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_7), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_7), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_7, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetBytestr(BSLP_PolicyRule_AddOption(&rule_7, BSLX_BCB_OPT_WRAPPED_KEY), wrapkey_data);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_7, BSLX_BCB_OPT_AES_VARIANT), RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_7, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_7, &predicate_7);
 
     // CLIN, SRC=ipn:1.8, ACCEPTOR, BCB, PAYLOAD, NOTHING, bad key
@@ -259,10 +167,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_8;
     BSLP_PolicyRule_InitFrom(&rule_8, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.8)", 2, BSL_SECROLE_ACCEPTOR,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_8), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_8), &ctx.param_wrapped_key);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_8), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_8), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_8, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetBytestr(BSLP_PolicyRule_AddOption(&rule_8, BSLX_BCB_OPT_WRAPPED_KEY), wrapkey_data);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_8, BSLX_BCB_OPT_AES_VARIANT), RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_8, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_8, &predicate_8);
 
     // test bib & bcb accpeting with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
@@ -274,10 +182,10 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_9a, "ACCEPT BIB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.9) WITH POLICY DROP BLOCK", 1,
                              BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9a), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9a), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9a), &ctx.opt_test_bib_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9a), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_9a, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_9a, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_9a, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_9a, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_9a, &predicate_9a);
 
     BSLP_PolicyPredicate_t predicate_9b;
@@ -286,10 +194,11 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_9b, "ACCEPT BCB OVER PAYLOAD AT CLIN FILTER(SRC=ipn:1.9) WITH POLICY DROP BLOCK", 2,
                              BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9b), &ctx.opt_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9b), &ctx.param_wrapped_key);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9b), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_9b), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_9b, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetBytestr(BSLP_PolicyRule_AddOption(&rule_9b, BSLX_BCB_OPT_WRAPPED_KEY), wrapkey_data);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_9b, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_9b, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_9b, &predicate_9b);
 
     // test bib sourcing with good key
@@ -300,10 +209,10 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_13, "SOURCE BIB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:1.1) WITH POLICY DROP BLOCK",
                              1, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_13), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_13), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_13), &ctx.opt_test_bib_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_13), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_13, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_13, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_13, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_13, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_13, &predicate_13);
 
     // test bcb sourcing with good key
@@ -313,9 +222,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_14;
     BSLP_PolicyRule_InitFrom(&rule_14, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:1.5)", 2, BSL_SECROLE_SOURCE,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_14), &ctx.opt_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_14), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_14), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_14, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_14, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_14, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_14, &predicate_14);
 
     // test bib & bcb sourcing with good key
@@ -327,10 +237,10 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_15a, "SOURCE BIB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:1.9) WITH POLICY DROP BLOCK",
                              1, BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_15a), &ctx.opt_sha_variant_384);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_15a), &ctx.opt_scope_flag_7);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_15a), &ctx.opt_test_bib_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_15a), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_15a, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC384);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_15a, BSLX_BIB_OPT_SCOPE), 0x7);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_15a, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_15a, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_15a, &predicate_15a);
 
     BSLP_PolicyPredicate_t predicate_15b;
@@ -338,9 +248,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_15b;
     BSLP_PolicyRule_InitFrom(&rule_15b, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:1.9)", 2, BSL_SECROLE_SOURCE,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_15b), &ctx.opt_test_bcb_2_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_15b), &ctx.opt_aes_variant_256);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_15b), &ctx.opt_bcb_dont_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_15b, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A4_BCB_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_15b, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A256GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_15b, BSLX_BCB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_15b, &predicate_15b);
 
     // test bib verif with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
@@ -350,10 +261,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_17;
     BSLP_PolicyRule_InitFrom(&rule_17, "VERIFY BIB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.1)", 1, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_17), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_17), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_17), &ctx.opt_test_bib_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_17), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_17, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_17, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_17, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_17, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_17, &predicate_17);
 
     // APPIN, DEST=ipn:1.2, VERIF, BIB, PAYLOAD, DROP BUNDLE, bad key
@@ -362,10 +273,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_18;
     BSLP_PolicyRule_InitFrom(&rule_18, "VERIFY BIB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.2)", 1, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_18), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_18), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_18), &ctx.opt_test_bib_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_18), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_18, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_18, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_18, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_18, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_18, &predicate_18);
 
     // APPIN, DEST=ipn:1.3, VERIF, BIB, PAYLOAD, DROP BLOCK, bad key
@@ -374,10 +285,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_19;
     BSLP_PolicyRule_InitFrom(&rule_19, "VERIFY BIB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.3)", 1, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_19), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_19), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_19), &ctx.opt_test_bib_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_19), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_19, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_19, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_19, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_19, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_19, &predicate_19);
 
     // APPIN, DEST=ipn:1.4, VERIF, BIB, PAYLOAD, NOTHING, bad key
@@ -386,10 +297,10 @@ void setUp(void)
     BSLP_PolicyRule_t rule_20;
     BSLP_PolicyRule_InitFrom(&rule_20, "VERIFY BIB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.4)", 1, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_20), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_20), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_20), &ctx.opt_test_bib_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_20), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_20, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_20, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_20, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_20, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_20, &predicate_20);
 
     // test bcb verif with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
@@ -399,10 +310,11 @@ void setUp(void)
     BSLP_PolicyRule_t rule_21;
     BSLP_PolicyRule_InitFrom(&rule_21, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.5)", 2, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_21), &ctx.opt_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_21), &ctx.param_wrapped_key);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_21), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_21), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_21, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetBytestr(BSLP_PolicyRule_AddOption(&rule_21, BSLX_BCB_OPT_WRAPPED_KEY), wrapkey_data);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_21, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_21, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_21, &predicate_21);
 
     // APPIN, DEST=ipn:1.6, VERIF, BCB, PAYLOAD, DROP BUNDLE, bad key
@@ -411,10 +323,11 @@ void setUp(void)
     BSLP_PolicyRule_t rule_22;
     BSLP_PolicyRule_InitFrom(&rule_22, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.6)", 2, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_22), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_22), &ctx.param_wrapped_key);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_22), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_22), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_22, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetBytestr(BSLP_PolicyRule_AddOption(&rule_22, BSLX_BCB_OPT_WRAPPED_KEY), wrapkey_data);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_22, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_22, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_22, &predicate_22);
 
     // APPIN, DEST=ipn:1.7, VERIF, BCB, PAYLOAD, DROP BLOCK, bad key
@@ -423,10 +336,11 @@ void setUp(void)
     BSLP_PolicyRule_t rule_23;
     BSLP_PolicyRule_InitFrom(&rule_23, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.7)", 2, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_23), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_23), &ctx.param_wrapped_key);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_23), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_23), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_23, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetBytestr(BSLP_PolicyRule_AddOption(&rule_23, BSLX_BCB_OPT_WRAPPED_KEY), wrapkey_data);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_23, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_23, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_23, &predicate_23);
 
     // APPIN, DEST=ipn:1.8, VERIF, BCB, PAYLOAD, NOTHING, bad key
@@ -435,10 +349,11 @@ void setUp(void)
     BSLP_PolicyRule_t rule_24;
     BSLP_PolicyRule_InitFrom(&rule_24, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.8)", 2, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_24), &ctx.opt_test_bcb_key_bad);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_24), &ctx.param_wrapped_key);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_24), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_24), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_24, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetBytestr(BSLP_PolicyRule_AddOption(&rule_24, BSLX_BCB_OPT_WRAPPED_KEY), wrapkey_data);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_24, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_24, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_24, &predicate_24);
 
     // test bib & bcb verif with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
@@ -450,10 +365,10 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_25a, "VERIFY BIB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.9)", 1,
                              BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_25a), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_25a), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_25a), &ctx.opt_test_bib_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_25a), &ctx.opt_bib_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_25a, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_25a, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_25a, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_25a, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_25a, &predicate_25a);
 
     BSLP_PolicyPredicate_t predicate_25b;
@@ -462,9 +377,11 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_25b, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.9)", 2,
                              BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_25b), &ctx.opt_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_25b), &ctx.param_wrapped_key);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_25b), &ctx.opt_aes_variant_128);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_25b, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetBytestr(BSLP_PolicyRule_AddOption(&rule_25b, BSLX_BCB_OPT_WRAPPED_KEY), wrapkey_data);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_25b, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_25b, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_25b, &predicate_25b);
 
     // BSL 6
@@ -474,10 +391,10 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(
         &rule_bsl_6, "SOURCE BIB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:0.6) WITH POLICY DROP BLOCK", 1,
         BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_6), &ctx.opt_sha_variant_512);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_6), &ctx.opt_scope_flag);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_6), &ctx.opt_test_bib_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_6), &ctx.opt_bcb_dont_use_wrap_key);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_6, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_6, BSLX_BIB_OPT_SCOPE), 0);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_bsl_6, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_6, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_6, &predicate_bsl_6);
 
     // BSL_32
@@ -487,9 +404,10 @@ void setUp(void)
     BSLP_PolicyRule_InitFrom(&rule_bsl_32a, "SOURCE BCB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:3.2)", 2,
                              BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
                              BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32a), &ctx.opt_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32a), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32a), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32a, &predicate_bsl_32a);
 
     BSLP_PolicyPredicate_t predicate_bsl_32b;
@@ -497,10 +415,12 @@ void setUp(void)
     BSLP_PolicyRule_t rule_bsl_32b;
     BSLP_PolicyRule_InitFrom(&rule_bsl_32b, "SOURCE BCB OVER BIB AT CLOUT FILTER(DEST=ipn:3.2)", 2, BSL_SECROLE_SOURCE,
                              BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_BIB, BSL_POLICYACTION_DROP_BLOCK);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32b), &ctx.opt_test_bcb_key_correct);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32b), &ctx.opt_aes_variant_128);
-    BSL_IdValPair_Set(BSLP_PolicyRule_AddOption(&rule_bsl_32b), &ctx.opt_bcb_use_wrap_key);
+    BSL_Variant_SetTextstr(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A2_KEY);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_AES_VARIANT),
+                         RFC9173_BCB_AES_VARIANT_A128GCM);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32b, &predicate_bsl_32b);
+    BSL_Data_Deinit(&wrapkey_data);
 }
 
 void tearDown(void)
@@ -509,7 +429,6 @@ void tearDown(void)
     BSL_CryptoDeinit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
     BSL_SecurityActionSet_Deinit(&action_set);
-    PublicInterfaceTestCtx_deinit(&ctx);
 }
 
 #define TEST_BOTH_BIB_BCB 99

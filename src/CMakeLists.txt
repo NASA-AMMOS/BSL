@@ -176,7 +176,7 @@ target_sources(bsl_dynamic
             FILES
                 bsl/dynamic/AbsSecBlock.h
                 bsl/dynamic/CBOR.h
-                bsl/dynamic/IdValPair.h
+                bsl/dynamic/Variant.h
                 bsl/dynamic/SecOperation.h
                 bsl/dynamic/SecurityAction.h
                 bsl/dynamic/SecurityActionSet.h
@@ -190,7 +190,7 @@ target_sources(bsl_dynamic
         bsl/dynamic/AbsSecBlock.c
         bsl/dynamic/CBOR.c
         bsl/dynamic/HostInterface.c
-        bsl/dynamic/IdValPair.c
+        bsl/dynamic/Variant.c
         bsl/dynamic/PublicInterfaceImpl.c
         bsl/dynamic/PolicyProvider.c
         bsl/dynamic/SecOperation.c

@@ -42,7 +42,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-int BSLX_CoseSc_SetAadScope(BSL_IdValPair_t *option, const BSLX_CoseSc_AadScope_Item_t *list, size_t count)
+int BSLX_CoseSc_SetAadScope(BSL_Variant_t *option, const BSLX_CoseSc_AadScope_Item_t *list, size_t count)
 {
     ASSERT_ARG_NONNULL(option);
     ASSERT_ARG_NONNULL(list);
@@ -66,7 +66,7 @@ int BSLX_CoseSc_SetAadScope(BSL_IdValPair_t *option, const BSLX_CoseSc_AadScope_
     }
     // GCOV_EXCL_STOP
 
-    BSL_IdValPair_SetRaw(option, BSLX_COSESC_OPTION_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
+    BSL_Variant_SetRaw(option, aad_scope_enc.ptr, aad_scope_enc.len);
     BSL_Data_Deinit(&aad_scope_enc);
 
     BSLX_CoseSc_AadScope_clear(obj);
@@ -300,14 +300,14 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, BS
 
 static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec_oper)
 {
-    const BSL_IdValPair_t *opt;
+    const BSL_Variant_t *opt;
 
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_KEY_ID);
     if (opt)
     {
         BSL_Data_t kid_view;
         BSL_Data_Init(&kid_view);
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(opt, &kid_view))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(opt, &kid_view))
         {
             BSL_LOG_ERR("Invalid key ID value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -323,7 +323,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_TGT_ALG);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->tgt_alg))
+        if (BSL_SUCCESS != BSL_Variant_GetAsInt64(opt, &self->tgt_alg))
         {
             BSL_LOG_ERR("Invalid target algorithm value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -337,7 +337,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_KEY_ALG);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->key_alg))
+        if (BSL_SUCCESS != BSL_Variant_GetAsInt64(opt, &self->key_alg))
         {
             BSL_LOG_ERR("Invalid target algorithm value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -352,7 +352,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     if (opt)
     {
         BSL_Data_t enc_data;
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsRaw(opt, &enc_data))
+        if (BSL_SUCCESS != BSL_Variant_GetAsRaw(opt, &enc_data))
         {
             BSL_LOG_ERR("Invalid AAD Scope value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -375,7 +375,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_IV_BASE);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(opt, &self->iv_base))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(opt, &self->iv_base))
         {
             BSL_LOG_ERR("Invalid IV base value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -389,7 +389,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->iv_offset))
+        if (BSL_SUCCESS != BSL_Variant_GetAsInt64(opt, &self->iv_offset))
         {
             BSL_LOG_ERR("Invalid IV counter offset value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -403,7 +403,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_SALT_LENGTH);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->salt_length))
+        if (BSL_SUCCESS != BSL_Variant_GetAsInt64(opt, &self->salt_length))
         {
             BSL_LOG_ERR("Invalid salt length value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -417,7 +417,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_SALT_BASE);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(opt, &self->salt_base))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(opt, &self->salt_base))
         {
             BSL_LOG_ERR("Invalid salt base value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -431,7 +431,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_SALT_COUNTER_OFFSET);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(opt, &self->salt_offset))
+        if (BSL_SUCCESS != BSL_Variant_GetAsInt64(opt, &self->salt_offset))
         {
             BSL_LOG_ERR("Invalid salt length value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -908,10 +908,10 @@ static void BSLX_CoseSc_GetAndValidateTarget(BSLX_CoseSc_t *self, const BSLX_Cos
 
     if (headers)
     {
-        const BSL_IdValPair_t *hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_ALG, true);
+        const BSL_Variant_t *hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_ALG, true);
         if (hdr)
         {
-            if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(hdr, &hdr_alg_val))
+            if (BSL_SUCCESS != BSL_Variant_GetAsInt64(hdr, &hdr_alg_val))
             {
                 BSL_LOG_ERR("Invalid header alg value");
                 self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -983,10 +983,10 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
     int64_t    hdr_alg_val = 0;
     if (headers)
     {
-        const BSL_IdValPair_t *hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_KID, false);
+        const BSL_Variant_t *hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_KID, false);
         if (hdr)
         {
-            if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(hdr, &hdr_kid_view))
+            if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(hdr, &hdr_kid_view))
             {
                 BSL_LOG_ERR("Invalid header key ID value");
                 self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -1002,7 +1002,7 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
         hdr = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_ALG, false);
         if (hdr)
         {
-            if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(hdr, &hdr_alg_val))
+            if (BSL_SUCCESS != BSL_Variant_GetAsInt64(hdr, &hdr_alg_val))
             {
                 BSL_LOG_ERR("Invalid header alg value");
                 self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -1066,11 +1066,11 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
     }
 
     // Key itself must agree with chosen alg
-    const BSL_IdValPair_t *param = BSL_Crypto_GetKeyParameter(self->keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG);
+    const BSL_Variant_t *param = BSL_Crypto_GetKeyParameter(self->keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG);
     if (param)
     {
         int64_t key_alg_int;
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsInt64(param, &key_alg_int))
+        if (BSL_SUCCESS != BSL_Variant_GetAsInt64(param, &key_alg_int))
         {
             BSL_LOG_ERR("Invalid key algorithm value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -1101,11 +1101,11 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
 
 static void BSLX_CoseSc_GetAndValidateAddlHeaders(BSLX_CoseSc_t *self)
 {
-    const BSL_IdValPair_t *param = BSL_SecOper_FindParam(self->sec_oper, BSLX_COSESC_PARAM_ADDL_PHDR);
+    const BSL_Variant_t *param = BSL_SecOper_FindParam(self->sec_oper, BSLX_COSESC_PARAM_ADDL_PHDR);
     if (param)
     {
         BSL_Data_t view;
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(param, &view))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(param, &view))
         {
             BSL_LOG_ERR("Invalid Additional Protected parameter");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -1128,7 +1128,7 @@ static void BSLX_CoseSc_GetAndValidateAddlHeaders(BSLX_CoseSc_t *self)
     if (param)
     {
         BSL_Data_t view;
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(param, &view))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(param, &view))
         {
             BSL_LOG_ERR("Invalid Additional Protected parameter");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -1147,11 +1147,11 @@ static void BSLX_CoseSc_GetAndValidateAddlHeaders(BSLX_CoseSc_t *self)
 
 static void BSLX_CoseSc_GetAndValidateAadScope(BSLX_CoseSc_t *self)
 {
-    const BSL_IdValPair_t *param = BSL_SecOper_FindParam(self->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
+    const BSL_Variant_t *param = BSL_SecOper_FindParam(self->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
     if (param)
     {
         BSL_Data_t enc_data;
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsRaw(param, &enc_data))
+        if (BSL_SUCCESS != BSL_Variant_GetAsRaw(param, &enc_data))
         {
             BSL_LOG_ERR("Invalid AAD Scope parameter");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -1191,24 +1191,24 @@ static void BSLX_CoseSc_SourceHeaders(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t
 {
     // Content layer always starts the same
     {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+        BSLB_VariantPtr_t *param_ptr = BSLB_VariantPtr_new();
+        BSL_Variant_t     *param     = BSLB_VariantPtr_ref(param_ptr);
 
-        BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->tgt_alg);
+        BSL_Variant_SetInt64(param, ctx->tgt_alg);
 
-        BSLX_CoseMsg_HdrMapTree_set_at(headers0->phdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
+        BSLX_CoseMsg_HdrMapTree_set_at(headers0->phdr, BSLX_COSEMSG_HDR_ALG, param_ptr);
+        BSLB_VariantPtr_release(param_ptr);
     }
 
     BSLX_CoseMsg_HdrMapTree_t *kid_hdr = headers1 ? &(headers1->uhdr) : &(headers0->uhdr);
     {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-        BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+        BSLB_VariantPtr_t *param_ptr = BSLB_VariantPtr_new();
+        BSL_Variant_t     *param     = BSLB_VariantPtr_ref(param_ptr);
 
-        BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_KID, ctx->kid);
+        BSL_Variant_SetBytestr(param, ctx->kid);
 
-        BSLX_CoseMsg_HdrMapTree_set_at(*kid_hdr, param->id, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
+        BSLX_CoseMsg_HdrMapTree_set_at(*kid_hdr, BSLX_COSEMSG_HDR_KID, param_ptr);
+        BSLB_VariantPtr_release(param_ptr);
     }
 
     if (headers1)
@@ -1223,13 +1223,13 @@ static void BSLX_CoseSc_SourceHeaders(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t
             alg_hdr = found ? &(headers1->uhdr) : &(headers1->phdr);
         }
         {
-            BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-            BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+            BSLB_VariantPtr_t *param_ptr = BSLB_VariantPtr_new();
+            BSL_Variant_t     *param     = BSLB_VariantPtr_ref(param_ptr);
 
-            BSL_IdValPair_SetInt64(param, BSLX_COSEMSG_HDR_ALG, ctx->key_alg);
+            BSL_Variant_SetInt64(param, ctx->key_alg);
 
-            BSLX_CoseMsg_HdrMapTree_set_at(*alg_hdr, param->id, param_ptr);
-            BSLB_IdValPairPtr_release(param_ptr);
+            BSLX_CoseMsg_HdrMapTree_set_at(*alg_hdr, BSLX_COSEMSG_HDR_ALG, param_ptr);
+            BSLB_VariantPtr_release(param_ptr);
         }
 
         BSLX_CoseMsg_Headers_DerivePhdr(headers1);
@@ -1282,8 +1282,8 @@ static void BSLX_CoseSc_AddAadScope(BSLX_CoseSc_t *ctx)
     // GCOV_EXCL_STOP
     else
     {
-        BSL_IdValPair_t *param = BSL_SecOper_AddParam(ctx->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
-        BSL_IdValPair_SetRaw(param, BSLX_COSESC_PARAM_AAD_SCOPE, aad_scope_enc.ptr, aad_scope_enc.len);
+        BSL_Variant_t *param = BSL_SecOper_AddParam(ctx->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
+        BSL_Variant_SetRaw(param, aad_scope_enc.ptr, aad_scope_enc.len);
     }
 
     BSL_Data_Deinit(&aad_scope_enc);
@@ -1324,8 +1324,8 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
         // GCOV_EXCL_STOP
         else
         {
-            BSL_IdValPair_t *result = BSL_SecOper_AddResult(ctx->sec_oper, BSLX_COSESC_RESULT_COSE_MAC0);
-            BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_MAC0, msg_enc);
+            BSL_Variant_t *result = BSL_SecOper_AddResult(ctx->sec_oper, BSLX_COSESC_RESULT_COSE_MAC0);
+            BSL_Variant_SetBytestr(result, msg_enc);
         }
         BSL_Data_Deinit(&msg_enc);
     }
@@ -1335,7 +1335,7 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
 
 /** Internal processing to verify a COSE_Mac0 message.
  */
-static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair_t *result)
+static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_Variant_t *result)
 {
     int res;
 
@@ -1352,7 +1352,7 @@ static void BSLX_CoseSc_Mac0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPai
     {
         BSL_Data_t msg_enc;
         BSL_Data_Init(&msg_enc);
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(result, &msg_enc))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(result, &msg_enc))
         {
             BSL_LOG_ERR("Failed to get encoded message");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
@@ -1560,24 +1560,24 @@ static void BSLX_CoseSc_HkdfContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipien
         }
 
         {
-            BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
-            BSL_IdValPair_t     *param     = BSLB_IdValPairPtr_ref(param_ptr);
+            BSLB_VariantPtr_t *param_ptr = BSLB_VariantPtr_new();
+            BSL_Variant_t     *param     = BSLB_VariantPtr_ref(param_ptr);
 
-            BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_SALT, salt);
+            BSL_Variant_SetBytestr(param, salt);
 
-            BSLX_CoseMsg_HdrMapTree_set_at(recip->headers.uhdr, param->id, param_ptr);
-            BSLB_IdValPairPtr_release(param_ptr);
+            BSLX_CoseMsg_HdrMapTree_set_at(recip->headers.uhdr, BSLX_COSEMSG_HDR_SALT, param_ptr);
+            BSLB_VariantPtr_release(param_ptr);
         }
     }
     else
     {
-        const BSL_IdValPair_t *head = BSLX_CoseMsg_Headers_Get(&recip->headers, BSLX_COSEMSG_HDR_SALT, false);
+        const BSL_Variant_t *head = BSLX_CoseMsg_Headers_Get(&recip->headers, BSLX_COSEMSG_HDR_SALT, false);
         if (!head)
         {
             BSL_LOG_ERR("Missing required salt header");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
-        else if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(head, &salt))
+        else if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(head, &salt))
         {
             BSL_LOG_ERR("Invalid salt header");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -1734,8 +1734,8 @@ static void BSLX_CoseSc_Mac_Source(BSLX_CoseSc_t *ctx)
         // GCOV_EXCL_STOP
         else
         {
-            BSL_IdValPair_t *result = BSL_SecOper_AddResult(ctx->sec_oper, BSLX_COSESC_RESULT_COSE_MAC);
-            BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_MAC, msg_enc);
+            BSL_Variant_t *result = BSL_SecOper_AddResult(ctx->sec_oper, BSLX_COSESC_RESULT_COSE_MAC);
+            BSL_Variant_SetBytestr(result, msg_enc);
         }
         BSL_Data_Deinit(&msg_enc);
     }
@@ -1745,7 +1745,7 @@ static void BSLX_CoseSc_Mac_Source(BSLX_CoseSc_t *ctx)
 
 /** Internal processing to verify a COSE_Mac message.
  */
-static void BSLX_CoseSc_Mac_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair_t *result)
+static void BSLX_CoseSc_Mac_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_Variant_t *result)
 {
     int res;
 
@@ -1762,7 +1762,7 @@ static void BSLX_CoseSc_Mac_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair
     {
         BSL_Data_t msg_enc;
         BSL_Data_Init(&msg_enc);
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(result, &msg_enc))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(result, &msg_enc))
         {
             BSL_LOG_ERR("Failed to get encoded message");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
@@ -2057,10 +2057,10 @@ static void BSLX_CoseSc_GenerateIV(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *h
 {
     BSL_Data_t baseiv_view;
     BSL_Data_Init(&baseiv_view);
-    const BSL_IdValPair_t *keyparam = BSL_Crypto_GetKeyParameter(ctx->keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV);
+    const BSL_Variant_t *keyparam = BSL_Crypto_GetKeyParameter(ctx->keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV);
     if (keyparam)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(keyparam, &baseiv_view))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(keyparam, &baseiv_view))
         {
             BSL_LOG_ERR("Invalid Base IV value");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -2097,23 +2097,23 @@ static void BSLX_CoseSc_GenerateIV(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *h
     // prefer partial when defined
     if (ctx->partial_iv.len > 0)
     {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+        BSLB_VariantPtr_t *param_ptr = BSLB_VariantPtr_new();
         {
-            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(param_ptr);
-            BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_PARTIALIV, ctx->partial_iv);
+            BSL_Variant_t *param = BSLB_VariantPtr_ref(param_ptr);
+            BSL_Variant_SetBytestr(param, ctx->partial_iv);
         }
         BSLX_CoseMsg_HdrMapTree_set_at(headers->uhdr, BSLX_COSEMSG_HDR_PARTIALIV, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
+        BSLB_VariantPtr_release(param_ptr);
     }
     else
     {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+        BSLB_VariantPtr_t *param_ptr = BSLB_VariantPtr_new();
         {
-            BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(param_ptr);
-            BSL_IdValPair_SetBytestr(param, BSLX_COSEMSG_HDR_IV, ctx->full_iv);
+            BSL_Variant_t *param = BSLB_VariantPtr_ref(param_ptr);
+            BSL_Variant_SetBytestr(param, ctx->full_iv);
         }
         BSLX_CoseMsg_HdrMapTree_set_at(headers->uhdr, BSLX_COSEMSG_HDR_IV, param_ptr);
-        BSLB_IdValPairPtr_release(param_ptr);
+        BSLB_VariantPtr_release(param_ptr);
     }
 }
 
@@ -2121,10 +2121,10 @@ static void BSLX_CoseSc_GenerateIV(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *h
  */
 static void BSLX_CoseSc_ExtractIV(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *headers)
 {
-    const BSL_IdValPair_t *head_iv = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_IV, false);
+    const BSL_Variant_t *head_iv = BSLX_CoseMsg_Headers_Get(headers, BSLX_COSEMSG_HDR_IV, false);
     if (head_iv)
     {
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(head_iv, &ctx->full_iv))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(head_iv, &ctx->full_iv))
         {
             BSL_LOG_ERR("Invalid IV header");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -2140,7 +2140,7 @@ static void BSLX_CoseSc_ExtractIV(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers
         BSL_Data_Resize(&ctx->full_iv, BSLX_COSEMSG_AESGCM_IV_LEN);
 
         BSL_Data_t partialiv_val;
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(head_iv, &partialiv_val))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(head_iv, &partialiv_val))
         {
             BSL_LOG_ERR("Invalid IV header");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -2153,13 +2153,13 @@ static void BSLX_CoseSc_ExtractIV(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers
 
         BSL_Data_t baseiv_val;
         // need to combine with key Base IV
-        const BSL_IdValPair_t *keyparam = BSL_Crypto_GetKeyParameter(ctx->keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV);
+        const BSL_Variant_t *keyparam = BSL_Crypto_GetKeyParameter(ctx->keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV);
         if (!keyparam)
         {
             BSL_LOG_ERR("Key is missing Base IV");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
-        else if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(keyparam, &baseiv_val))
+        else if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(keyparam, &baseiv_val))
         {
             BSL_LOG_ERR("Invalid Base IV value");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -2225,8 +2225,8 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
         // GCOV_EXCL_STOP
         else
         {
-            BSL_IdValPair_t *result = BSL_SecOper_AddResult(ctx->sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT0);
-            BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_ENCRYPT0, msg_enc);
+            BSL_Variant_t *result = BSL_SecOper_AddResult(ctx->sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT0);
+            BSL_Variant_SetBytestr(result, msg_enc);
         }
         BSL_Data_Deinit(&msg_enc);
     }
@@ -2236,7 +2236,7 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
 
 /** Internal processing to verify a COSE_Encrypt0 message.
  */
-static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair_t *result)
+static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_Variant_t *result)
 {
     int res;
 
@@ -2253,7 +2253,7 @@ static void BSLX_CoseSc_Encrypt0_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVa
     {
         BSL_Data_t msg_enc;
         BSL_Data_Init(&msg_enc);
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(result, &msg_enc))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(result, &msg_enc))
         {
             BSL_LOG_ERR("Failed to get encoded message");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -2337,8 +2337,8 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
         // GCOV_EXCL_STOP
         else
         {
-            BSL_IdValPair_t *result = BSL_SecOper_AddResult(ctx->sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT);
-            BSL_IdValPair_SetBytestr(result, BSLX_COSESC_RESULT_COSE_ENCRYPT, msg_enc);
+            BSL_Variant_t *result = BSL_SecOper_AddResult(ctx->sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT);
+            BSL_Variant_SetBytestr(result, msg_enc);
         }
         BSL_Data_Deinit(&msg_enc);
     }
@@ -2348,7 +2348,7 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
 
 /** Internal processing to verify a COSE_Encrypt message.
  */
-static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdValPair_t *result)
+static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_Variant_t *result)
 {
     int res;
 
@@ -2365,7 +2365,7 @@ static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_IdVal
     {
         BSL_Data_t msg_enc;
         BSL_Data_Init(&msg_enc);
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsBytestr(result, &msg_enc))
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(result, &msg_enc))
         {
             BSL_LOG_ERR("Failed to get encoded message");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -2473,10 +2473,9 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecO
             {
                 if (ctx.is_bib)
                 {
-                    const BSL_IdValPair_t *result_mac0 =
+                    const BSL_Variant_t *result_mac0 =
                         BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC0);
-                    const BSL_IdValPair_t *result_mac =
-                        BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC);
+                    const BSL_Variant_t *result_mac = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC);
                     if (result_mac0)
                     {
                         BSLX_CoseSc_Mac0_VerifyAccept(&ctx, result_mac0);
@@ -2493,9 +2492,9 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecO
                 }
                 else
                 {
-                    const BSL_IdValPair_t *result_enc0 =
+                    const BSL_Variant_t *result_enc0 =
                         BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT0);
-                    const BSL_IdValPair_t *result_enc =
+                    const BSL_Variant_t *result_enc =
                         BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT);
                     if (result_enc0)
                     {

@@ -155,7 +155,7 @@ typedef struct
     /// Block number or special key from ::BSLX_CoseSc_AadScope_Special_e
     int64_t key;
     /** Choice of flags from ::BSLX_CoseSc_AadScope_Flag_e.
-     * This type is compatible with ::BSL_IdValPair_s storage.
+     * This type is compatible with ::BSL_Variant_s storage.
      */
     int64_t flags;
 } BSLX_CoseSc_AadScope_Item_t;
@@ -170,7 +170,7 @@ typedef struct
  * @param count The number of @b pairs of values in the @c list array.
  * @return BSL_SUCCESS if successful.
  */
-int BSLX_CoseSc_SetAadScope(BSL_IdValPair_t *option, const BSLX_CoseSc_AadScope_Item_t *list, size_t count);
+int BSLX_CoseSc_SetAadScope(BSL_Variant_t *option, const BSLX_CoseSc_AadScope_Item_t *list, size_t count);
 
 /// Match signature ::BSL_SecCtx_Validate_f
 bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);
