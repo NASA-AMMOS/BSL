@@ -33,6 +33,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct BSL_SecOper_s
 {
     /// @brief Security context ID
@@ -79,5 +83,9 @@ struct BSL_SecOper_s
     /// @brief Security results used or produced by this operation.
     BSLB_VariantPtrMap_t _results;
 };
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* BSLB_SECOPERATIONS_H_ */

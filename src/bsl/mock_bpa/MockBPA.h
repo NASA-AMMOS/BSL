@@ -29,4 +29,12 @@
 #include "encode.h"
 #include "log.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef __cplusplus
+} // extern C
+#endif
+
 #endif //_BSL_MockBPA_MockBPA_H_
