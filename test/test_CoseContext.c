@@ -951,7 +951,6 @@ void test_AppendixA_Example5_BCB_Source(void)
 
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_5_kid);
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, keyhandle));
-        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, keyhandle));
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
