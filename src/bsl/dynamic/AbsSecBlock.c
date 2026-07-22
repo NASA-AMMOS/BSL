@@ -26,6 +26,7 @@
 #include "AbsSecBlock.h"
 
 #include "CBOR.h"
+#include "Variant.h"
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/front/TextUtil.h"
@@ -438,11 +439,9 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
             }
 
             {
-                BSLB_VariantPtr_t *item_ptr = BSLB_VariantPtr_new();
-                BSLB_VariantPtrMap_set_at(self->params, item_id, item_ptr);
-                BSL_Variant_t *param = BSLB_VariantPtr_ref(item_ptr);
-                res                  = BSL_Variant_Decode(dec, param);
-                BSLB_VariantPtr_release(item_ptr);
+                BSL_Variant_t *param = BSLB_VariantPtrMap_add(self->params, item_id);
+
+                res = BSL_Variant_Decode(dec, param);
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed getting a parameter value: code %d", res);
@@ -492,11 +491,9 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
             }
 
             {
-                BSLB_VariantPtr_t *item_ptr = BSLB_VariantPtr_new();
-                BSLB_VariantPtrMap_set_at(tgt->results, item_id, item_ptr);
-                BSL_Variant_t *result = BSLB_VariantPtr_ref(item_ptr);
-                res                   = BSL_Variant_Decode(dec, result);
-                BSLB_VariantPtr_release(item_ptr);
+                BSL_Variant_t *result = BSLB_VariantPtrMap_add(tgt->results, item_id);
+
+                res = BSL_Variant_Decode(dec, result);
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed getting a result value: code %d", res);

@@ -245,7 +245,9 @@ void test_AppendixA_Example1_BIB_Source(void)
             { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
-        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE), scope, scope_count));
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS,
+                              BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE),
+                                                      scope, scope_count));
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -366,7 +368,9 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
             { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
-        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE), scope, scope_count));
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS,
+                              BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE),
+                                                      scope, scope_count));
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -479,7 +483,9 @@ void test_CCSDS_Example_Mac_Source(void)
             { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
-        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE), scope, scope_count));
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS,
+                              BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE),
+                                                      scope, scope_count));
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -590,7 +596,9 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
             { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
-        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE), scope, scope_count));
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS,
+                              BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE),
+                                                      scope, scope_count));
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -694,7 +702,9 @@ void test_AppendixA_Example4_BCB_Source(void)
             { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
-        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE), scope, scope_count));
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS,
+                              BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE),
+                                                      scope, scope_count));
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -812,7 +822,9 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
             { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
-        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE), scope, scope_count));
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS,
+                              BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE),
+                                                      scope, scope_count));
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -929,7 +941,9 @@ void test_AppendixA_Example5_BCB_Source(void)
             { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
-        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE), scope, scope_count));
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS,
+                              BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE),
+                                                      scope, scope_count));
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -1038,7 +1052,9 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
             { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
-        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE), scope, scope_count));
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS,
+                              BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE),
+                                                      scope, scope_count));
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -1154,7 +1170,9 @@ void test_AppendixA_Example6_BCB_Source(void)
             { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
         };
         const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
-        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE), scope, scope_count));
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS,
+                              BSLX_CoseSc_SetAadScope(BSL_SecOper_AddOption(&sec_oper, BSLX_COSESC_OPTION_AAD_SCOPE),
+                                                      scope, scope_count));
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
