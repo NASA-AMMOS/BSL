@@ -174,7 +174,7 @@ void BSL_Variant_SetBytestr(BSL_Variant_t *self, BSL_Data_t value)
     }
 }
 
-void BSL_Variant_SetInt64(BSL_Variant_t *self, uint64_t value)
+void BSL_Variant_SetInt64(BSL_Variant_t *self, int64_t value)
 {
     ASSERT_ARG_NONNULL(self);
     BSL_Variant_Deinit(self);
