@@ -549,7 +549,7 @@ size_t BSL_Variant_Sizeof(void);
  * @param[in,out] self This Security Parameter
  * @param[in] value The value to use.
  */
-void BSL_Variant_SetInt64(BSL_Variant_t *self, uint64_t value);
+void BSL_Variant_SetInt64(BSL_Variant_t *self, int64_t value);
 
 /** Returns true when the value type is an integer.
  *

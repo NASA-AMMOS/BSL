@@ -545,7 +545,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecOper
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
 
-    // Next populate its parameters from the IdValPairs in the security operations
+    // Next populate its parameters from the Variants in the security operations
     if (BSL_SUCCESS != BSLX_BCB_GetOptions(bundle, &bcb_context, sec_oper))
     {
         BSL_LOG_ERR("Failed to get BCB parameters");

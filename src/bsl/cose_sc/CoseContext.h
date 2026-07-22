@@ -30,9 +30,6 @@
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/BPSecLib_Public.h"
-#include "bsl/dynamic/CBOR.h"
-
-#include <m-bptree.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,7 +39,7 @@ extern "C" {
 #define BSLX_COSESC_CTX_ID 3
 
 /// Internal option enumerations
-enum BSLX_CoseSC_Option_e
+enum BSLX_CoseSc_Option_e
 {
     /** Key ID as a byte string.
      * The value is a byte string (which may contain encoded UTF8 text).
@@ -64,7 +61,8 @@ enum BSLX_CoseSC_Option_e
      */
     BSLX_COSESC_OPTION_TGT_ALG,
     /** AAD Scope as raw encoded data.
-     * The value is encoded CBOR interpreted as ::BSLX_CoseSc_AadScope_t.
+     * The value is encoded CBOR interpreted as ::BSLX_CoseSc_AadScope_t,
+     * and can use the BSLX_CoseSc_SetAadScope() helper in policy providers.
      * Optional for source, optional exact-match for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_AAD_SCOPE,
@@ -111,7 +109,7 @@ enum BSLX_CoseSC_Option_e
 };
 
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.2
-enum BSLX_CoseSC_Param_e
+enum BSLX_CoseSc_Param_e
 {
     /// Additional Protected headers
     BSLX_COSESC_PARAM_ADDL_PHDR = 3,
@@ -122,7 +120,7 @@ enum BSLX_CoseSC_Param_e
 };
 
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.3
-enum BSLX_CoseSC_Result_e
+enum BSLX_CoseSc_Result_e
 {
     BSLX_COSESC_RESULT_COSE_ENCRYPT0 = 16,
     BSLX_COSESC_RESULT_COSE_MAC0     = 17,
@@ -132,30 +130,47 @@ enum BSLX_CoseSC_Result_e
     BSLX_COSESC_RESULT_COSE_SIGN     = 98,
 };
 
-/** @struct BSLX_CoseSc_AadScope_t
- * An internal representation of AAD Scope map, with keys sorted in
- * CBOR deterministic order and values as a bit mask of
- * ::BSLX_CoseSC_AAD_Flag_e flags.
- */
-// NOLINTBEGIN
-/// @cond Doxygen_Suppress
-// GCOV_EXCL_START
-M_BPTREE_DEF2(BSLX_CoseSc_AadScope, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(API_6(BSL_CBOR_Compare_Int64))),
-              uint64_t, M_BASIC_OPLIST)
-// GCOV_EXCL_STOP
-/// @endcond
-// NOLINTEND
-
-/// Flags for AAD Scope parameter
-enum BSLX_CoseSC_AAD_Flag_e
+/// Special keys for AAD Scope parameter
+enum BSLX_CoseSc_AadScope_Special_e
 {
-    BSLX_COSESC_AAD_FLAG_METADATA = 0x1,
-    BSLX_COSESC_AAD_FLAG_BTSD     = 0x2,
+    /// Reference the security target block
+    BSLX_COSESC_AADSCOPE_SPECIAL_TARGET = -1,
+    /// Reference the parent security block
+    BSLX_COSESC_AADSCOPE_SPECIAL_SECURITY = -2,
 };
 
-int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_AadScope_t *scope);
+/// Flags for AAD Scope parameter
+enum BSLX_CoseSc_AadScope_Flag_e
+{
+    /// Include block header items in AAD
+    BSLX_COSESC_AADSCOPE_FLAG_METADATA = 0x1,
+    /// Include BTSD in AAD
+    BSLX_COSESC_AADSCOPE_FLAG_BTSD = 0x2,
+};
 
-int BSLX_CoseSc_AadScope_Decode(QCBORDecodeContext *dec, BSLX_CoseSc_AadScope_t *scope);
+/** Native C structure for each item of COSE Context AAD Scope.
+ */
+typedef struct
+{
+    /// Block number or special key from ::BSLX_CoseSc_AadScope_Special_e
+    int64_t key;
+    /** Choice of flags from ::BSLX_CoseSc_AadScope_Flag_e.
+     * This type is compatible with ::BSL_Variant_s storage.
+     */
+    int64_t flags;
+} BSLX_CoseSc_AadScope_Item_t;
+
+/** Utility to set the ::BSLX_COSESC_OPTION_AAD_SCOPE option without exposing
+ * the encoding internals.
+ *
+ * @param[in,out] option Pointer to the option to set the AAD Scope on.
+ * @param[in] list Pointer to an array of integer values, each
+ * subsequent pair of values is interpreted as a (key, value) in the scope map.
+ * The order of keys in this form is not significant.
+ * @param count The number of @b pairs of values in the @c list array.
+ * @return BSL_SUCCESS if successful.
+ */
+int BSLX_CoseSc_SetAadScope(BSL_Variant_t *option, const BSLX_CoseSc_AadScope_Item_t *list, size_t count);
 
 /// Match signature ::BSL_SecCtx_Validate_f
 bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);

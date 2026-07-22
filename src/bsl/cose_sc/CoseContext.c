@@ -26,7 +26,7 @@
  */
 #include "CoseContext.h"
 
-#include "CoseContext_Private.h"
+#include "AadScope.h"
 #include "CoseMsg.h"
 
 #include "bsl/BPSecLib_Private.h"
@@ -41,6 +41,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
+int BSLX_CoseSc_SetAadScope(BSL_Variant_t *option, const BSLX_CoseSc_AadScope_Item_t *list, size_t count)
+{
+    ASSERT_ARG_NONNULL(option);
+    ASSERT_ARG_NONNULL(list);
+
+    BSLX_CoseSc_AadScope_t obj;
+    BSLX_CoseSc_AadScope_init(obj);
+
+    for (size_t item_ix = 0; item_ix < count; ++item_ix)
+    {
+        const BSLX_CoseSc_AadScope_Item_t *item = &list[item_ix];
+        BSLX_CoseSc_AadScope_set_at(obj, item->key, item->flags);
+    }
+
+    BSL_Data_t aad_scope_enc;
+    BSL_Data_Init(&aad_scope_enc);
+    int res = BSL_CBOR_Encode_Twopass(&aad_scope_enc, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &obj);
+    // GCOV_EXCL_START
+    if (BSL_SUCCESS != res)
+    {
+        BSL_LOG_ERR("Failed to encode AAD Scope");
+    }
+    // GCOV_EXCL_STOP
+
+    BSL_Variant_SetRaw(option, aad_scope_enc.ptr, aad_scope_enc.len);
+    BSL_Data_Deinit(&aad_scope_enc);
+
+    BSLX_CoseSc_AadScope_clear(obj);
+    return res;
+}
 
 /** Acceptable target algorithms for MAC.
  * @note These must be sorted for @c bsearch() to work.
@@ -462,56 +493,6 @@ bool BSLX_CoseSc_Validate(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_Se
     return valid;
 }
 
-int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_AadScope_t *scope)
-{
-    // aad-scope map
-    QCBOREncode_OpenMap(enc);
-
-    BSLX_CoseSc_AadScope_it_t aads_it;
-    for (BSLX_CoseSc_AadScope_it(aads_it, *scope); !BSLX_CoseSc_AadScope_end_p(aads_it);
-         BSLX_CoseSc_AadScope_next(aads_it))
-    {
-        const BSLX_CoseSc_AadScope_subtype_ct *aads_pair = BSLX_CoseSc_AadScope_cref(aads_it);
-        QCBOREncode_AddInt64(enc, *(aads_pair->key_ptr));
-        QCBOREncode_AddUInt64(enc, *(aads_pair->value_ptr));
-    }
-
-    QCBOREncode_CloseMap(enc);
-    return BSL_SUCCESS;
-}
-
-int BSLX_CoseSc_AadScope_Decode(QCBORDecodeContext *dec, BSLX_CoseSc_AadScope_t *scope)
-{
-    BSLX_CoseSc_AadScope_reset(*scope);
-
-    QCBORItem item;
-    QCBORDecode_EnterArray(dec, &item); // using QCBOR_DECODE_MODE_MAP_AS_ARRAY
-
-    while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
-    {
-        int64_t blk_num;
-        QCBORDecode_GetInt64(dec, &blk_num);
-        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
-        {
-            BSL_LOG_ERR("Invalid AAD Scope map key");
-            break;
-        }
-
-        uint64_t aad_flags;
-        QCBORDecode_GetUInt64(dec, &aad_flags);
-        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
-        {
-            BSL_LOG_ERR("Invalid AAD Scope map value");
-            break;
-        }
-
-        BSLX_CoseSc_AadScope_set_at(*scope, blk_num, aad_flags);
-    }
-
-    QCBORDecode_ExitArray(dec);
-    return BSL_SUCCESS;
-}
-
 /** @struct BSLX_CoseSc_ChunkItem_t
  * A variant which can be either:
  *  - @c data An instance of @c m_bstring_t
@@ -665,7 +646,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
         if (blk_num == 0)
         {
             // primary block
-            if (aad_flags & BSLX_COSESC_AAD_FLAG_METADATA)
+            if (aad_flags & BSLX_COSESC_AADSCOPE_FLAG_METADATA)
             {
                 m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
@@ -691,7 +672,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
                 }
             }
 
-            if (aad_flags & BSLX_COSESC_AAD_FLAG_METADATA)
+            if (aad_flags & BSLX_COSESC_AADSCOPE_FLAG_METADATA)
             {
                 m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
@@ -700,7 +681,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
                 *total += BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_POSITIVE_INT, aad_block.block_num);
                 *total += BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_POSITIVE_INT, aad_block.flags);
             }
-            if (aad_flags & BSLX_COSESC_AAD_FLAG_BTSD)
+            if (aad_flags & BSLX_COSESC_AADSCOPE_FLAG_BTSD)
             {
                 // CBOR head and seq stream
                 {
