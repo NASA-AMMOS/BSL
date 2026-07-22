@@ -264,31 +264,32 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
             return BSL_ERR_POLICY_CONFIG;
         }
 
-        BSLX_CoseSc_AadScope_t scope;
-        BSLX_CoseSc_AadScope_init(scope);
-        while (val_it)
+        const size_t                 scope_count = json_object_size(value);
+        BSLX_CoseSc_AadScope_Item_t *scope       = BSL_calloc(scope_count, sizeof(BSLX_CoseSc_AadScope_Item_t));
+        for (size_t item_ix = 0; val_it; ++item_ix)
         {
             int64_t blk_num;
             if (BSLP_GetTextAsInt(&blk_num, json_object_iter_key(val_it), json_object_iter_key_len(val_it)))
             {
                 BSL_LOG_ERR("AAD Scope invalid map key");
-                BSLX_CoseSc_AadScope_clear(scope);
+                BSL_free(scope);
                 return BSL_ERR_POLICY_CONFIG;
             }
             int64_t aad_flags;
             if (BSLP_GetNumberInt(json_object_iter_value(val_it), &aad_flags))
             {
                 BSL_LOG_ERR("AAD Scope invalid map value");
-                BSLX_CoseSc_AadScope_clear(scope);
+                BSL_free(scope);
                 return BSL_ERR_POLICY_CONFIG;
             }
 
             BSL_LOG_DEBUG("AAD Scope for block %" PRId64 " has flags 0x%" PRIx64, blk_num, aad_flags);
-            BSLX_CoseSc_AadScope_set_at(scope, blk_num, aad_flags);
+            scope[item_ix] = (BSLX_CoseSc_AadScope_Item_t) { .key = blk_num, .flags = aad_flags };
 
             val_it = json_object_iter_next(value, val_it);
         }
 
+#if 0
         BSL_Data_t enc_scope;
         BSL_Data_Init(&enc_scope);
         int res = BSL_CBOR_Encode_Twopass(&enc_scope, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
@@ -299,10 +300,14 @@ static int BSLP_PolicyOptions_SC3(BSLB_IdValPairPtrMap_t options, const char *id
             BSL_Data_Deinit(&enc_scope);
             return BSL_ERR_POLICY_CONFIG;
         }
-
-        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_AAD_SCOPE);
+        
         BSL_IdValPair_SetRaw(opt, BSLX_COSESC_OPTION_AAD_SCOPE, enc_scope.ptr, enc_scope.len);
         BSL_Data_Deinit(&enc_scope);
+#endif
+
+        BSL_IdValPair_t *opt = BSLB_IdValPairPtrMap_add(options, BSLX_COSESC_OPTION_AAD_SCOPE);
+        BSLX_CoseSc_SetAadScope(opt, scope, scope_count);
+        BSL_free(scope);
     }
     else if (0 == strcasecmp(id_str, "iv_base"))
     {

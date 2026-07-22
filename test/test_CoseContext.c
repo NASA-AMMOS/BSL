@@ -318,21 +318,14 @@ void test_AppendixA_Example1_BIB_Source(void)
     {
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        {
-            BSLX_CoseSc_AadScope_t scope;
-            BSLX_CoseSc_AadScope_init(scope);
-            BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
-            BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
 
-            BSL_Data_t value;
-            BSL_Data_Init(&value);
-            int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
-            TEST_ASSERT_EQUAL_INT_MESSAGE(BSL_SUCCESS, res, "Failed BSL_CBOR_Encode_Twopass()");
-            BSLX_CoseSc_AadScope_clear(scope);
+        BSLX_CoseSc_AadScope_Item_t scope[] = {
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+        };
+        const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
 
-            BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
-            BSL_Data_Deinit(&value);
-        }
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
     }
@@ -465,23 +458,18 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     }
     if (mismatch != OPT_MISMATCH_NO_AAD_SCOPE)
     {
-        BSLX_CoseSc_AadScope_t scope;
-        BSLX_CoseSc_AadScope_init(scope);
-        BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
-        BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
-
-        BSL_Data_t value;
-        BSL_Data_Init(&value);
-        int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(BSL_SUCCESS, res, "Failed BSL_CBOR_Encode_Twopass()");
-        BSLX_CoseSc_AadScope_clear(scope);
-
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
+
+        BSLX_CoseSc_AadScope_Item_t scope[] = {
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+        };
+        const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
+
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
-        BSL_Data_Deinit(&value);
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -602,21 +590,14 @@ void test_CCSDS_Example_Mac_Source(void)
     {
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        {
-            BSLX_CoseSc_AadScope_t scope;
-            BSLX_CoseSc_AadScope_init(scope);
-            BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
-            BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
 
-            BSL_Data_t value;
-            BSL_Data_Init(&value);
-            int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
-            TEST_ASSERT_EQUAL_INT_MESSAGE(BSL_SUCCESS, res, "Failed BSL_CBOR_Encode_Twopass()");
-            BSLX_CoseSc_AadScope_clear(scope);
+        BSLX_CoseSc_AadScope_Item_t scope[] = {
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+        };
+        const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
 
-            BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
-            BSL_Data_Deinit(&value);
-        }
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
     }
@@ -738,23 +719,18 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
     }
     if (mismatch != OPT_MISMATCH_NO_AAD_SCOPE)
     {
-        BSLX_CoseSc_AadScope_t scope;
-        BSLX_CoseSc_AadScope_init(scope);
-        BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
-        BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
-
-        BSL_Data_t value;
-        BSL_Data_Init(&value);
-        int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(BSL_SUCCESS, res, "Failed BSL_CBOR_Encode_Twopass()");
-        BSLX_CoseSc_AadScope_clear(scope);
-
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
+
+        BSLX_CoseSc_AadScope_Item_t scope[] = {
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+        };
+        const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
+
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
-        BSL_Data_Deinit(&value);
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -872,21 +848,14 @@ void test_AppendixA_Example4_BCB_Source(void)
     {
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        {
-            BSLX_CoseSc_AadScope_t scope;
-            BSLX_CoseSc_AadScope_init(scope);
-            BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
-            BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
 
-            BSL_Data_t value;
-            BSL_Data_Init(&value);
-            int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
-            TEST_ASSERT_EQUAL_INT_MESSAGE(BSL_SUCCESS, res, "Failed BSL_CBOR_Encode_Twopass()");
-            BSLX_CoseSc_AadScope_clear(scope);
+        BSLX_CoseSc_AadScope_Item_t scope[] = {
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+        };
+        const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
 
-            BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
-            BSL_Data_Deinit(&value);
-        }
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
     }
@@ -1017,23 +986,18 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     }
     if (mismatch != OPT_MISMATCH_NO_AAD_SCOPE)
     {
-        BSLX_CoseSc_AadScope_t scope;
-        BSLX_CoseSc_AadScope_init(scope);
-        BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
-        BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
-
-        BSL_Data_t value;
-        BSL_Data_Init(&value);
-        int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(BSL_SUCCESS, res, "Failed BSL_CBOR_Encode_Twopass()");
-        BSLX_CoseSc_AadScope_clear(scope);
-
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
+
+        BSLX_CoseSc_AadScope_Item_t scope[] = {
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+        };
+        const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
+
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
-        BSL_Data_Deinit(&value);
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -1159,21 +1123,14 @@ void test_AppendixA_Example5_BCB_Source(void)
     {
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        {
-            BSLX_CoseSc_AadScope_t scope;
-            BSLX_CoseSc_AadScope_init(scope);
-            BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
-            BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
 
-            BSL_Data_t value;
-            BSL_Data_Init(&value);
-            int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
-            TEST_ASSERT_EQUAL_INT_MESSAGE(BSL_SUCCESS, res, "Failed BSL_CBOR_Encode_Twopass()");
-            BSLX_CoseSc_AadScope_clear(scope);
+        BSLX_CoseSc_AadScope_Item_t scope[] = {
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+        };
+        const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
 
-            BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
-            BSL_Data_Deinit(&value);
-        }
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
     }
@@ -1295,23 +1252,18 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     }
     if (mismatch != OPT_MISMATCH_NO_AAD_SCOPE)
     {
-        BSLX_CoseSc_AadScope_t scope;
-        BSLX_CoseSc_AadScope_init(scope);
-        BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
-        BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
-
-        BSL_Data_t value;
-        BSL_Data_Init(&value);
-        int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
-        TEST_ASSERT_EQUAL_INT_MESSAGE(BSL_SUCCESS, res, "Failed BSL_CBOR_Encode_Twopass()");
-        BSLX_CoseSc_AadScope_clear(scope);
-
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
+
+        BSLX_CoseSc_AadScope_Item_t scope[] = {
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+        };
+        const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
+
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
-        BSL_Data_Deinit(&value);
     }
 
     bool valid_status = BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
@@ -1442,21 +1394,14 @@ void test_AppendixA_Example6_BCB_Source(void)
     {
         BSL_IdValPair_t option;
         BSL_IdValPair_Init(&option);
-        {
-            BSLX_CoseSc_AadScope_t scope;
-            BSLX_CoseSc_AadScope_init(scope);
-            BSLX_CoseSc_AadScope_set_at(scope, 0, 0x1);
-            BSLX_CoseSc_AadScope_set_at(scope, -1, 0x1);
 
-            BSL_Data_t value;
-            BSL_Data_Init(&value);
-            int res = BSL_CBOR_Encode_Twopass(&value, (BSL_CBOR_Encode_f)&BSLX_CoseSc_AadScope_Encode, &scope);
-            TEST_ASSERT_EQUAL_INT_MESSAGE(BSL_SUCCESS, res, "Failed BSL_CBOR_Encode_Twopass()");
-            BSLX_CoseSc_AadScope_clear(scope);
+        BSLX_CoseSc_AadScope_Item_t scope[] = {
+            { 0, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+            { BSLX_COSESC_AADSCOPE_SPECIAL_TARGET, BSLX_COSESC_AADSCOPE_FLAG_METADATA },
+        };
+        const size_t scope_count = sizeof(scope) / sizeof(scope[0]);
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLX_CoseSc_SetAadScope(&option, scope, scope_count));
 
-            BSL_IdValPair_SetRaw(&option, BSLX_COSESC_OPTION_AAD_SCOPE, value.ptr, value.len);
-            BSL_Data_Deinit(&value);
-        }
         BSL_SecOper_AppendOption(&sec_oper, &option);
         BSL_IdValPair_Deinit(&option);
     }

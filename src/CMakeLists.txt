@@ -124,8 +124,10 @@ target_sources(bsl_cose_sc
         FILE_SET private_headers
             TYPE HEADERS
             FILES
+                bsl/cose_sc/AadScope.h
                 bsl/cose_sc/CoseMsg.h
     PRIVATE
+        bsl/cose_sc/AadScope.c
         bsl/cose_sc/CoseContext.c
         bsl/cose_sc/CoseMsg.c
 )
@@ -137,7 +139,7 @@ set_target_properties(bsl_cose_sc
 target_link_libraries(bsl_cose_sc PUBLIC bsl_front)
 target_link_libraries(bsl_cose_sc PUBLIC bsl_dynamic) # for CBOR API
 target_link_libraries(bsl_cose_sc PRIVATE bsl_crypto)
-target_link_libraries(bsl_cose_sc PUBLIC MLIB::mlib)
+target_link_libraries(bsl_cose_sc PRIVATE MLIB::mlib)
 target_link_libraries(bsl_cose_sc PRIVATE qcbor::qcbor)
 
 # Example Policy Provider library

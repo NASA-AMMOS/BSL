@@ -5,6 +5,7 @@ libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
 Name: bsl-cose-sc
 Description: BSL COSE Context provider
 Version: @PROJECT_VERSION@
-Requires: bsl, m-lib
+Requires: bsl
+Requires.private: m-lib
 Cflags: -I${includedir}
 Libs: -L${libdir} -lbsl_cose_sc
