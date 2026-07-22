@@ -66,6 +66,10 @@ void BSL_KeyStore_Deinit(void)
 
 void BSL_Crypto_ReleaseKeyHandle(BSL_Crypto_KeyHandle_t keyhandle)
 {
+    if (!keyhandle)
+    {
+        return;
+    }
     ASSERT_PRECONDITION(BSL_KeyStore_State.release_key);
     BSL_KeyStore_State.release_key(keyhandle);
 }
@@ -79,9 +83,9 @@ bool BSL_Crypto_CompareKeys(BSL_Crypto_KeyHandle_t hdl1, BSL_Crypto_KeyHandle_t 
     }
 
     BSL_Data_t key1_view;
-    CHK_PRECONDITION(BSL_SUCCESS == BSL_KeyStore_State.get_keymat(hdl1, &key1_view));
+    CHK_AS_BOOL(BSL_SUCCESS == BSL_KeyStore_State.get_keymat(hdl1, &key1_view));
     BSL_Data_t key2_view;
-    CHK_PRECONDITION(BSL_SUCCESS == BSL_KeyStore_State.get_keymat(hdl2, &key2_view));
+    CHK_AS_BOOL(BSL_SUCCESS == BSL_KeyStore_State.get_keymat(hdl2, &key2_view));
 
     return BSL_Crypto_Compare(key1_view.ptr, key1_view.len, key2_view.ptr, key2_view.len);
 }

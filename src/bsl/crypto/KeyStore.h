@@ -90,8 +90,7 @@ typedef struct
 
     /** Release the use of a handle.
      * When all active handles are released the key should be destroyed.
-     * @param[in] handle The handle to release.
-     * If NULL handle this is a do-nothing.
+     * @param[in] handle The non-NULL handle to release.
      */
     void (*release_key)(BSL_Crypto_KeyHandle_t handle);
 
@@ -109,7 +108,7 @@ typedef struct
      * @return BSL_SUCCESS if added.
      */
     int (*add_key)(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t handle);
-    
+
     /** Set the (plaintext) key material for a key.
      * @param[in] handle The handle to the key.
      * @param[in] data Non-null pointer to key bytes, which will be copied.
@@ -186,6 +185,8 @@ int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out);
  * @param secret_len length of @c secret data.
  * @param[out] key_out pointer to pointer for new key handle.
  * The handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
+ * This applies even to cases where this function fails but still sets @c key_out non-NULL.
+ * @return BSL_SUCCESS if successful.
  */
 int BSL_Crypto_LoadKey(const uint8_t *secret, size_t secret_len, BSL_Crypto_KeyHandle_t *key_out);
 

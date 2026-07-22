@@ -313,7 +313,7 @@ BSL_KeyStore_Descriptors_t MockBPA_KeyStore_Descriptors(void)
         .acquire_key   = &MockBPA_KeyStore_Acquire,
         .release_key   = &MockBPA_KeyStore_Release,
         .find_key      = &MockBPA_KeyStore_FindKey,
-        .add_key = &MockBPA_KeyStore_AddKey,
+        .add_key       = &MockBPA_KeyStore_AddKey,
         .get_parameter = &MockBPA_KeyStore_GetKeyParameter,
         .set_parameter = &MockBPA_KeyStore_SetKeyParameter,
         .update_stats  = &MockBPA_KeyStore_UpdateStats,
