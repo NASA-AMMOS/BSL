@@ -25,6 +25,10 @@
 
 #include <m-array.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// OPLIST for ::BSL_SecOper_s
 #define M_OPL_BSL_SecOper_t()                                                                          \
     (INIT(API_2(BSL_SecOper_Init)), INIT_SET(API_6(BSL_SecOper_InitSet)), SET(API_6(BSL_SecOper_Set)), \
@@ -48,3 +52,7 @@ struct BSL_SecurityAction_s
     uint64_t          pp_id;
     bool              validated;
 };
+
+#ifdef __cplusplus
+} // extern C
+#endif

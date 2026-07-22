@@ -28,6 +28,10 @@
 #ifndef BSLB_RFC9173_H_
 #define BSLB_RFC9173_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// @brief https://www.rfc-editor.org/rfc/rfc9173.html#name-security-context-identifier
 enum rfc9173_secctx_id_e
 {
@@ -116,5 +120,9 @@ enum rfc9173_bcb_aad_scope_flag_ids_e
     RFC9173_BCB_AADSCOPEFLAGID_INC_TARGET_HEADER   = 2,
     RFC9173_BCB_AADSCOPEFLAGID_INC_SECURITY_HEADER = 4,
 };
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* BSLB_RFC9173_H_ */
