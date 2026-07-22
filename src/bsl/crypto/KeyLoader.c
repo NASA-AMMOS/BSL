@@ -139,7 +139,7 @@ int BSL_Crypto_KeyLoader_LoadJwkSet(int fd)
 /** Decode a @c COSE_KeySet array.
  *  Matches ::BSL_CBOR_Decode_f signature.
  */
-static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const void *obj _U_)
+static int BSL_Crypto_KeyLoader_LoadCoseKeySet_decode(QCBORDecodeContext *dec, const void *obj _U_)
 {
     int retval = BSL_SUCCESS;
 
@@ -273,7 +273,7 @@ int BSL_Crypto_KeyLoader_LoadCoseKeySet(int infd)
     BSL_Data_t view;
     BSL_Data_InitView(&view, sb.st_size, (BSL_DataPtr_t)data);
 
-    int retval = BSL_CBOR_Decode(&view, &mock_bpa_key_registry_cosekey_decode, NULL);
+    int retval = BSL_CBOR_Decode(&view, &BSL_Crypto_KeyLoader_LoadCoseKeySet_decode, NULL);
 
     if (munmap(data, sb.st_size) < 0)
     {
