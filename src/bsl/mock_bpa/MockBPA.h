@@ -27,6 +27,7 @@
 #include "decode.h"
 #include "eidpat.h"
 #include "encode.h"
+#include "KeyStore.h"
 #include "log.h"
 
 #ifdef __cplusplus

@@ -60,13 +60,13 @@ int suiteTearDown(int failures)
 
 void setUp(void)
 {
-    BSL_CryptoInit();
+    MockBPA_KeyStore_Init();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
 }
 
 void tearDown(void)
 {
-    BSL_CryptoDeinit();
+    MockBPA_KeyStore_Deinit();
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 }
 
@@ -219,11 +219,11 @@ void test_AppendixA_Example1_BIB_Source(void)
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &keyhandle));
         BSL_Data_Deinit(&keymat);
 
-        BSL_Variant_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
+        BSL_Variant_SetInt64(MockBPA_KeyStore_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
                              BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
 
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_1_kid);
-        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, keyhandle));
+        TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
@@ -314,11 +314,11 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &keyhandle));
         BSL_Data_Deinit(&keymat);
 
-        BSL_Variant_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
+        BSL_Variant_SetInt64(MockBPA_KeyStore_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
                              BSLX_COSEMSG_ALG_HMAC_SHA_384_384);
 
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_1_kid);
-        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, keyhandle));
+        TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_1_mac0));
@@ -457,11 +457,11 @@ void test_CCSDS_Example_Mac_Source(void)
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &keyhandle));
         BSL_Data_Deinit(&keymat);
 
-        BSL_Variant_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
+        BSL_Variant_SetInt64(MockBPA_KeyStore_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
                              BSLX_COSEMSG_ALG_AES_KW_256);
 
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(ccsds_mac_kid);
-        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, keyhandle));
+        TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, ccsds_mac_nosec));
@@ -541,11 +541,11 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &keyhandle));
         BSL_Data_Deinit(&keymat);
 
-        BSL_Variant_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
+        BSL_Variant_SetInt64(MockBPA_KeyStore_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
                              BSLX_COSEMSG_ALG_AES_KW_256);
 
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(ccsds_mac_kid);
-        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, keyhandle));
+        TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, ccsds_mac_bib));
@@ -666,18 +666,18 @@ void test_AppendixA_Example4_BCB_Source(void)
             TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &keyhandle));
             BSL_Data_Deinit(&keymat);
         }
-        BSL_Variant_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
+        BSL_Variant_SetInt64(MockBPA_KeyStore_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
                              BSLX_COSEMSG_ALG_AES_GCM_256);
         {
             BSL_Data_t buf;
             BSL_Data_Init(&buf);
             TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&buf, exA_4_biv));
-            BSL_Variant_SetBytestr(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV), buf);
+            BSL_Variant_SetBytestr(MockBPA_KeyStore_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV), buf);
             BSL_Data_Deinit(&buf);
         }
 
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_4_kid);
-        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, keyhandle));
+        TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
@@ -761,18 +761,18 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &keyhandle));
         BSL_Data_Deinit(&keymat);
 
-        BSL_Variant_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
+        BSL_Variant_SetInt64(MockBPA_KeyStore_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
                              BSLX_COSEMSG_ALG_AES_GCM_256);
         {
             BSL_Data_t buf;
             BSL_Data_Init(&buf);
             TEST_ASSERT_EQUAL(0, BSL_TestUtils_DecodeBase16_cstr(&buf, exA_4_biv));
-            BSL_Variant_SetBytestr(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV), buf);
+            BSL_Variant_SetBytestr(MockBPA_KeyStore_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV), buf);
             BSL_Data_Deinit(&buf);
         }
 
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_4_kid);
-        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, keyhandle));
+        TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_4_enc0));
@@ -916,11 +916,11 @@ void test_AppendixA_Example5_BCB_Source(void)
             TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &keyhandle));
             BSL_Data_Deinit(&keymat);
         }
-        BSL_Variant_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
+        BSL_Variant_SetInt64(MockBPA_KeyStore_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
                              BSLX_COSEMSG_ALG_AES_KW_256);
 
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_5_kid);
-        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, keyhandle));
+        TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
@@ -999,11 +999,11 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &keyhandle));
         BSL_Data_Deinit(&keymat);
 
-        BSL_Variant_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
+        BSL_Variant_SetInt64(MockBPA_KeyStore_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
                              BSLX_COSEMSG_ALG_AES_KW_256);
 
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_5_kid);
-        TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKey(&keyid, keyhandle));
+        TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_5_enc));
@@ -1144,11 +1144,11 @@ void test_AppendixA_Example6_BCB_Source(void)
             TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_LoadKey(keymat.ptr, keymat.len, &keyhandle));
             BSL_Data_Deinit(&keymat);
         }
-        BSL_Variant_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
+        BSL_Variant_SetInt64(MockBPA_KeyStore_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG),
                              BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512);
 
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_6_kid);
-        BSL_Crypto_AddRegistryKey(&keyid, keyhandle);
+        MockBPA_KeyStore_AddKey(&keyid, keyhandle);
     }
 
     TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));

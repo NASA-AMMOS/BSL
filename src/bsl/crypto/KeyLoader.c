@@ -1,34 +1,9 @@
-/*
- * Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
- * Laboratory LLC.
- *
- * This file is part of the Bundle Protocol Security Library (BSL).
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *     http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * This work was performed for the Jet Propulsion Laboratory, California
- * Institute of Technology, sponsored by the United States Government under
- * the prime contract 80NM0018D0004 between the Caltech and NASA under
- * subcontract 1700763.
- */
+#include "KeyLoader.h"
 
-/** @file
- * @ingroup mock_bpa
- */
-
-#include "key_registry.h"
-
-#include "bsl/front/TextUtil.h"
-#include "bsl/dynamic/CBOR.h"
-#include "bsl/cose_sc/CoseMsg.h"
+#include <bsl/front/TextUtil.h>
+#include <bsl/dynamic/CBOR.h>
+#include <bsl/dynamic/Variant.h>
+#include <bsl/cose_sc/CoseMsg.h>
 
 #include <jansson.h>
 #include <m-string.h>
@@ -38,7 +13,45 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-int mock_bpa_key_registry_init_jwk(int fd)
+extern BSL_KeyStore_Descriptors_t BSL_KeyStore_State;
+
+int BSL_Crypto_KeyLoader_LoadFile(const char *file_path)
+{
+    int retval = BSL_SUCCESS;
+
+    int infd = open(file_path, O_RDONLY);
+    if (infd < 0)
+    {
+        BSL_LOG_ERR("Failed to open input file %s", file_path);
+        return BSL_ERR_DECODING;
+    }
+
+    BSL_LOG_INFO("Reading keys from %s", file_path);
+    m_string_t path;
+    m_string_init_set_cstr(path, file_path);
+    bool is_json = m_string_end_with_str_p(path, ".json");
+    bool is_cbor = m_string_end_with_str_p(path, ".cbor");
+    m_string_clear(path);
+
+    if (is_json)
+    {
+        retval = BSL_Crypto_KeyLoader_LoadJwkSet(infd);
+    }
+    else if (is_cbor)
+    {
+        retval = BSL_Crypto_KeyLoader_LoadCoseKeySet(infd);
+    }
+    else
+    {
+        BSL_LOG_ERR("Unhandled key file extension for %s", file_path);
+        retval = BSL_ERR_ARG_INVALID;
+    }
+    close(infd);
+
+    return retval;
+}
+
+int BSL_Crypto_KeyLoader_LoadJwkSet(int fd)
 {
     int retval = BSL_SUCCESS;
 
@@ -110,8 +123,7 @@ int mock_bpa_key_registry_init_jwk(int fd)
 
             BSL_Crypto_KeyHandle_t keyhandle;
             BSL_Crypto_LoadKey(k_data.ptr, k_data.len, &keyhandle);
-
-            retval = BSL_Crypto_AddRegistryKey(&kid_view, keyhandle);
+            retval = BSL_KeyStore_State.add_key(&kid_view, keyhandle);
             BSL_Crypto_ReleaseKeyHandle(keyhandle);
             BSL_LOG_DEBUG("Adding key result %d", retval);
             if (BSL_SUCCESS != retval)
@@ -135,7 +147,7 @@ int mock_bpa_key_registry_init_jwk(int fd)
 /** Decode a @c COSE_KeySet array.
  *  Matches ::BSL_CBOR_Decode_f signature.
  */
-static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const void *obj _U_)
+static int BSL_Crypto_KeyLoader_LoadCoseKeySet_decode(QCBORDecodeContext *dec, const void *obj _U_)
 {
     int retval = BSL_SUCCESS;
 
@@ -218,7 +230,7 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
 
             if (has_alg)
             {
-                BSL_Variant_SetInt64(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG), alg);
+                BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG), alg);
             }
             else
             {
@@ -229,10 +241,11 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
             {
                 BSL_Data_t view;
                 BSL_Data_InitView(&view, baseiv.len, (BSL_DataPtr_t)baseiv.ptr);
-                BSL_Variant_SetBytestr(BSL_Crypto_SetKeyParameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV), view);
+                BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV),
+                                       view);
             }
 
-            retval = BSL_Crypto_AddRegistryKey(&kid_view, keyhandle);
+            retval = BSL_KeyStore_State.add_key(&kid_view, keyhandle);
             BSL_Crypto_ReleaseKeyHandle(keyhandle);
             BSL_LOG_DEBUG("Adding key result %d", retval);
             if (BSL_SUCCESS != retval)
@@ -246,13 +259,12 @@ static int mock_bpa_key_registry_cosekey_decode(QCBORDecodeContext *dec, const v
     return retval;
 }
 
-int mock_bpa_key_registry_init_cosekey(int infd)
+int BSL_Crypto_KeyLoader_LoadCoseKeySet(int infd)
 {
     struct stat sb;
     if ((fstat(infd, &sb) < 0) || (sb.st_size == 0))
     {
         BSL_LOG_ERR("Error getting file size");
-        close(infd);
         return BSL_ERR_DECODING;
     }
 
@@ -260,70 +272,17 @@ int mock_bpa_key_registry_init_cosekey(int infd)
     if (!data)
     {
         BSL_LOG_ERR("Error in mmap");
-        close(infd);
         return BSL_ERR_DECODING;
     }
 
     BSL_Data_t view;
     BSL_Data_InitView(&view, sb.st_size, (BSL_DataPtr_t)data);
 
-    int retval = BSL_CBOR_Decode(&view, &mock_bpa_key_registry_cosekey_decode, NULL);
+    int retval = BSL_CBOR_Decode(&view, &BSL_Crypto_KeyLoader_LoadCoseKeySet_decode, NULL);
 
     if (munmap(data, sb.st_size) < 0)
     {
         BSL_LOG_ERR("Error in munmap");
     }
-    close(infd);
     return retval;
-}
-
-int mock_bpa_key_registry_init(const char *file_path)
-{
-    int retval = BSL_SUCCESS;
-
-    int infd = open(file_path, O_RDONLY);
-    if (infd < 0)
-    {
-        BSL_LOG_ERR("Failed to open input file %s", file_path);
-        return BSL_ERR_DECODING;
-    }
-
-    BSL_LOG_INFO("Reading keys from %s", file_path);
-    m_string_t path;
-    m_string_init_set_cstr(path, file_path);
-    bool is_json = m_string_end_with_str_p(path, ".json");
-    bool is_cbor = m_string_end_with_str_p(path, ".cbor");
-    m_string_clear(path);
-
-    if (is_json)
-    {
-        retval = mock_bpa_key_registry_init_jwk(infd);
-    }
-    else if (is_cbor)
-    {
-        retval = mock_bpa_key_registry_init_cosekey(infd);
-    }
-    else
-    {
-        BSL_LOG_ERR("Unhandled key file extension for %s", file_path);
-        retval = BSL_ERR_ARG_INVALID;
-    }
-
-    return retval;
-}
-
-int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len)
-{
-    if (len == 12) // IV
-    {
-        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
-        memcpy(buf, iv, 12);
-    }
-    else // A3 KEY
-    {
-        uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
-                                    0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
-        memcpy(buf, rfc9173A3_key, len);
-    }
-    return 1;
 }
