@@ -986,6 +986,10 @@ size_t BSL_SecurityAction_CountErrors(const BSL_SecurityAction_t *self);
  */
 uint64_t BSL_SecurityAction_GetPPID(const BSL_SecurityAction_t *self);
 
+/** @brief Returns true if security action is validated by sec ctx
+ */
+bool BSL_SecurityAction_Validated(const BSL_SecurityAction_t *self);
+
 /// @brief Returns size of the struct, helpful for dynamic allocation.
 /// @return Size of the struct
 size_t BSL_SecurityActionSet_Sizeof(void);

@@ -53,9 +53,9 @@ def load_ccsds():
             if not t["working"]:
                 continue
 
-            outcome = t["outcome"].split(" ")[0] == "SUCCESS."
-            if outcome:
-                input = t["incoming_bundle"]["hex"][2:].replace(" ", "")[:-1]
+            outcome = t['outcome'].split(' ')[0]
+            if outcome == "SUCCESS." or outcome == "SOFT":
+                input = t['incoming_bundle']['hex'][2:].replace(" ", "")[:-1]
                 b_input = binascii.unhexlify(input)
                 cbor_input = cbor2.loads(b_input)
                 input_format = DataFormat.BUNDLEARRAY
@@ -147,7 +147,8 @@ def load_ccsds():
                             "loc": "appin",
                             "sc_id": sec_ctx,
                         },
-                        "spec": {"sc_id": sec_ctx, "sc_parms": params},
+                        'policy_action_on_fail': 'delete_bundle',
+                        "spec": {"sc_id": sec_ctx, "sc_parms": params, 'svc': ("bib-integrity" if sec_ctx == 1 else "bcb-confidentiality")},
                         "policy_action_on_fail": "delete_bundle",
                     }
                 }

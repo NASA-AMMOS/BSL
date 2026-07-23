@@ -511,6 +511,13 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle
          BSL_SecActionList_next(act_it))
     {
         BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
+
+        if (BSL_ACTION_VALIDATION_SUCCESS != act->validation_state)
+        {
+            BSL_LOG_INFO("Security action not validated, skipping... pp_id=%" PRIu64, act->pp_id);
+            continue;
+        }
+
         for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i++)
         {
             BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
@@ -597,7 +604,8 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
             }
         }
 
-        action->validated = (0 == secop_invalid_count);
+        action->validation_state =
+            (0 == secop_invalid_count) ? BSL_ACTION_VALIDATION_SUCCESS : BSL_ACTION_VALIDATION_FAILURE;
     }
 
     return BSL_SUCCESS;

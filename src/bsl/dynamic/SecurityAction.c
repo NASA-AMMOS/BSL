@@ -31,9 +31,9 @@ void BSL_SecurityAction_Init(BSL_SecurityAction_t *self)
     ASSERT_ARG_NONNULL(self);
 
     BSL_SecOperList_init(self->sec_op_list);
-    self->err_ct    = 0;
-    self->pp_id     = 0;
-    self->validated = false;
+    self->err_ct           = 0;
+    self->pp_id            = 0;
+    self->validation_state = BSL_ACTION_VALIDATION_PENDING;
 }
 
 void BSL_SecurityAction_InitSet(BSL_SecurityAction_t *self, const BSL_SecurityAction_t *src)
@@ -41,9 +41,9 @@ void BSL_SecurityAction_InitSet(BSL_SecurityAction_t *self, const BSL_SecurityAc
     ASSERT_ARG_NONNULL(self);
 
     BSL_SecOperList_init_set(self->sec_op_list, src->sec_op_list);
-    self->err_ct    = src->err_ct;
-    self->pp_id     = src->pp_id;
-    self->validated = src->validated;
+    self->err_ct           = src->err_ct;
+    self->pp_id            = src->pp_id;
+    self->validation_state = src->validation_state;
 }
 
 void BSL_SecurityAction_Set(BSL_SecurityAction_t *self, const BSL_SecurityAction_t *src)
@@ -51,9 +51,9 @@ void BSL_SecurityAction_Set(BSL_SecurityAction_t *self, const BSL_SecurityAction
     ASSERT_ARG_NONNULL(self);
 
     BSL_SecOperList_set(self->sec_op_list, src->sec_op_list);
-    self->err_ct    = src->err_ct;
-    self->pp_id     = src->pp_id;
-    self->validated = src->validated;
+    self->err_ct           = src->err_ct;
+    self->pp_id            = src->pp_id;
+    self->validation_state = src->validation_state;
 }
 
 void BSL_SecurityAction_Deinit(BSL_SecurityAction_t *self)
@@ -102,4 +102,10 @@ uint64_t BSL_SecurityAction_GetPPID(const BSL_SecurityAction_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     return self->pp_id;
+}
+
+bool BSL_SecurityAction_Validated(const BSL_SecurityAction_t *self)
+{
+    ASSERT_ARG_NONNULL(self);
+    return self->validation_state == BSL_ACTION_VALIDATION_SUCCESS;
 }
