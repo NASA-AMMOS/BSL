@@ -65,8 +65,12 @@ target_sources(bsl_crypto
             TYPE HEADERS
             FILES
                 bsl/crypto/CryptoInterface.h
+                bsl/crypto/KeyLoader.h
+                bsl/crypto/KeyStore.h
     PRIVATE
         bsl/crypto/CryptoInterface.c
+        bsl/crypto/KeyLoader.c
+        bsl/crypto/KeyStore.c
 )
 set_target_properties(bsl_crypto
     PROPERTIES
@@ -76,6 +80,7 @@ set_target_properties(bsl_crypto
 target_link_libraries(bsl_crypto PUBLIC bsl_front bsl_dynamic)
 target_link_libraries(bsl_crypto PRIVATE MLIB::mlib)
 target_link_libraries(bsl_crypto PRIVATE qcbor::qcbor)
+target_link_libraries(bsl_crypto PRIVATE Jansson::Jansson) # for key loader
 target_link_libraries(bsl_crypto PRIVATE OpenSSL::Crypto)
 if(TARGET valgrind::valgrind)
   find_path(VALGRIND_INCLUDE_DIR NAMES valgrind/memcheck.h)
@@ -124,8 +129,10 @@ target_sources(bsl_cose_sc
         FILE_SET private_headers
             TYPE HEADERS
             FILES
+                bsl/cose_sc/AadScope.h
                 bsl/cose_sc/CoseMsg.h
     PRIVATE
+        bsl/cose_sc/AadScope.c
         bsl/cose_sc/CoseContext.c
         bsl/cose_sc/CoseMsg.c
 )
@@ -137,7 +144,7 @@ set_target_properties(bsl_cose_sc
 target_link_libraries(bsl_cose_sc PUBLIC bsl_front)
 target_link_libraries(bsl_cose_sc PUBLIC bsl_dynamic) # for CBOR API
 target_link_libraries(bsl_cose_sc PRIVATE bsl_crypto)
-target_link_libraries(bsl_cose_sc PUBLIC MLIB::mlib)
+target_link_libraries(bsl_cose_sc PRIVATE MLIB::mlib)
 target_link_libraries(bsl_cose_sc PRIVATE qcbor::qcbor)
 
 # Example Policy Provider library
@@ -173,7 +180,7 @@ target_sources(bsl_dynamic
             FILES
                 bsl/dynamic/AbsSecBlock.h
                 bsl/dynamic/CBOR.h
-                bsl/dynamic/IdValPair.h
+                bsl/dynamic/Variant.h
                 bsl/dynamic/SecOperation.h
                 bsl/dynamic/SecurityAction.h
                 bsl/dynamic/SecurityActionSet.h
@@ -187,7 +194,7 @@ target_sources(bsl_dynamic
         bsl/dynamic/AbsSecBlock.c
         bsl/dynamic/CBOR.c
         bsl/dynamic/HostInterface.c
-        bsl/dynamic/IdValPair.c
+        bsl/dynamic/Variant.c
         bsl/dynamic/PublicInterfaceImpl.c
         bsl/dynamic/PolicyProvider.c
         bsl/dynamic/SecOperation.c
@@ -222,7 +229,7 @@ target_sources(bsl_mock_bpa
                 bsl/mock_bpa/eid.h
                 bsl/mock_bpa/eidpat.h
                 bsl/mock_bpa/encode.h
-                bsl/mock_bpa/key_registry.h
+                bsl/mock_bpa/KeyStore.h
                 bsl/mock_bpa/log.h
                 bsl/mock_bpa/MockBPA.h
     PRIVATE
@@ -234,7 +241,7 @@ target_sources(bsl_mock_bpa
         bsl/mock_bpa/eidpat.c
         bsl/mock_bpa/encode.c
         bsl/mock_bpa/decode.c
-        bsl/mock_bpa/key_registry.c
+        bsl/mock_bpa/KeyStore.c
         bsl/mock_bpa/ctr.c
 )
 set_target_properties(bsl_mock_bpa
@@ -245,7 +252,6 @@ set_target_properties(bsl_mock_bpa
 target_link_libraries(bsl_mock_bpa PUBLIC bsl_sample_pp bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_mock_bpa PUBLIC MLIB::mlib)
 target_link_libraries(bsl_mock_bpa PUBLIC qcbor::qcbor)
-target_link_libraries(bsl_mock_bpa PRIVATE Jansson::Jansson)
 target_link_libraries(bsl_mock_bpa PUBLIC Threads::Threads)
 
 if(BUILD_MOCK_BPA AND NOT BUILD_FUZZING)

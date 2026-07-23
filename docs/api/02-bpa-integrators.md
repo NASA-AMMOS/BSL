@@ -77,9 +77,13 @@ digraph bpa_interaction {
 }
 @enddot
 
-# BPA Callback API {#bpa-callback-api}
+# BPA Callback APIs {#bpa-callback-api}
 
 Separate from the API used to call into the BSL to initiate security processing, the BSL relies on specific functions provided by the BPA to do its normal processing.
-Some of these functions are for introspecting and manipulating specific bundle or block contents, others are for encoding and decoding EID and EID Pattern values.
+Some of these functions are for introspecting and manipulating specific bundle or block contents, others are for encoding and decoding EID and EID Pattern values, and a separate set are used by the internal BSL crypto library for key store access.
 
-The BSL dynamic backend declares a set of functions which are delegated to the BPA, which are registered in the dynamic backend using the ::BSL_HostDescriptors_t struct and the BSL_HostDescriptors_Set() function.
+The BSL dynamic backend declares a set of functions which are delegated to the BPA.
+These are registered in the dynamic backend using the ::BSL_HostDescriptors_t struct and the BSL_HostDescriptors_Set() function.
+
+The BSL crypto library declares a set of functions which are delegated to the BPA.
+These are registered in the crypto library using the ::BSL_KeyStore_Descriptors_t struct and the BSL_KeyStore_Init() function.

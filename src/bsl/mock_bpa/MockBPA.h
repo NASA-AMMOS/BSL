@@ -27,6 +27,15 @@
 #include "decode.h"
 #include "eidpat.h"
 #include "encode.h"
+#include "KeyStore.h"
 #include "log.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif //_BSL_MockBPA_MockBPA_H_

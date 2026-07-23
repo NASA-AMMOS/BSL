@@ -19,40 +19,47 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-#include "SecOperation.h"
 
-#include "bsl/BPSecLib_Private.h"
+/** @file
+ * @ingroup cose_sc
+ * Header for the implementation of the COSE context @cite draft-ietf-dtn-bpsec-cose.
+ */
 
-#include <m-array.h>
+#ifndef BSLX_COSESC_AADSCOPE_H_
+#define BSLX_COSESC_AADSCOPE_H_
+
+#include "CoseContext.h"
+
+#include "bsl/dynamic/CBOR.h"
+
+#include <m-bptree.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/// OPLIST for ::BSL_SecOper_s
-#define M_OPL_BSL_SecOper_t()                                                                          \
-    (INIT(API_2(BSL_SecOper_Init)), INIT_SET(API_6(BSL_SecOper_InitSet)), SET(API_6(BSL_SecOper_Set)), \
-     CLEAR(API_2(BSL_SecOper_Deinit)))
-
-/** @struct BSL_SecOperList_t
- * Defines a basic list of ::BSL_SecOper_s.
+/** @struct BSLX_CoseSc_AadScope_t
+ * An internal representation of AAD Scope map, with keys sorted in
+ * CBOR deterministic order and values as a bit mask of
+ * ::BSLX_CoseSc_AadScope_Flag_e flags.
  */
-/// @cond Doxygen_Suppress
 // NOLINTBEGIN
+/// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_ARRAY_DEF(BSL_SecOperList, BSL_SecOper_t, M_OPL_BSL_SecOper_t())
+M_BPTREE_DEF2(BSLX_CoseSc_AadScope, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(API_6(BSL_CBOR_Compare_Int64))),
+              uint64_t, M_BASIC_OPLIST)
 // GCOV_EXCL_STOP
-// NOLINTEND
 /// @endcond
+// NOLINTEND
 
-struct BSL_SecurityAction_s
-{
-    BSL_SecOperList_t sec_op_list;
-    size_t            err_ct;
-    uint64_t          pp_id;
-    bool              validated;
-};
+/// Matches ::BSL_CBOR_Encode_f signature.
+int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_AadScope_t *scope);
+
+/// Matches ::BSL_CBOR_Decode_f signature.
+int BSLX_CoseSc_AadScope_Decode(QCBORDecodeContext *dec, BSLX_CoseSc_AadScope_t *scope);
 
 #ifdef __cplusplus
 } // extern C
 #endif
+
+#endif /* BSLX_COSESC_AADSCOPE_H_ */

@@ -31,7 +31,7 @@
 #ifndef BSLB_ABSSECBLOCK_IMPL_H_
 #define BSLB_ABSSECBLOCK_IMPL_H_
 
-#include "IdValPair.h"
+#include "Variant.h"
 
 #include "bsl/BPSecLib_Public.h"
 
@@ -53,7 +53,7 @@ typedef struct
     uint64_t target_block_num;
 
     /// Results for just this target
-    BSLB_IdValPairPtrList_t results;
+    BSLB_VariantPtrMap_t results;
 } BSL_AbsSecBlock_Target_t;
 
 /// Initialize a new target structure
@@ -98,7 +98,7 @@ struct BSL_AbsSecBlock_s
     BSL_HostEID_t source_eid;
 
     /// @brief List of pointers to security parameters
-    BSLB_IdValPairPtrList_t params;
+    BSLB_VariantPtrMap_t params;
 
     /** @brief List of targets and their parameters.
      * This is stored together internally for consistency.

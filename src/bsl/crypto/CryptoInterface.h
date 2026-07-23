@@ -20,12 +20,14 @@
  * subcontract 1700763.
  */
 /** @file
- * @ingroup frontend
+ * @ingroup crypto
  * Abstract interface for crypto processing.
  * This file is organized into groups based on topic: key registry, HMAC, cipher, etc.
  */
 #ifndef BSL_FRONTEND_CRYPTO_INTERFACE_H_
 #define BSL_FRONTEND_CRYPTO_INTERFACE_H_
+
+#include "KeyStore.h"
 
 #include "bsl/BPSecLib_Private.h" // TODO replace with Variant.h
 #include "bsl/BSLConfig.h"
@@ -38,16 +40,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/** Initialize the crypto subsystem.
- * This must be called once per process.
- */
-void BSL_CryptoInit(void);
-
-/** Deinitialize the crypto subsystem.
- * This should be called at the end of the process.
- */
-void BSL_CryptoDeinit(void);
 
 /**
  * Function pointer def for random bytestring generator
@@ -86,121 +78,6 @@ bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size
 /** Opaque handle for backend library objects for stateful processing.
  */
 typedef void *BSL_Crypto_LibHandle_t;
-
-/** @name Key registry interface
- *
- * There are two forms of managed crypto keys in this interface:
- * 1. Identified keys persisted in a long-term, thread-safe registry.
- *    These keys have byte string names (which can contain UTF8 text) and can
- *    have additional parameters to restrict their use.
- * 2. Anonymous ephemeral keys used for individual operations and then discarded.
- *    These keys do not have names and are typically key-wrapped or the result of a
- *    key derivation function (KDF).
- */
-///@{
-
-typedef enum
-{
-    BSL_CRYPTO_KEYSTATS_TIMES_USED = 0,
-    BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED,
-    /// Not a real index, used to size arrays
-    BSL_CRYPTO_KEYSTATS_MAX_INDEX
-} BSL_Crypto_KeyStatCounterIndex_t;
-
-/**
- * Structure containing statistics for individual keys
- */
-typedef struct BSL_Crypto_KeyStats_s
-{
-    /// Counters for each ::BSL_Crypto_KeyStatCounterIndex_t value
-    uint64_t stats[BSL_CRYPTO_KEYSTATS_MAX_INDEX];
-} BSL_Crypto_KeyStats_t;
-
-/** Opaque handle for key objects in the key store.
- */
-typedef struct BSL_CryptoKeyPtr_s *BSL_Crypto_KeyHandle_t;
-
-/**
- * Generate a new cryptographic key.
- * @param[in] key_length length of new key in bytes.
- * @param[out] key_out pointer to pointer for new key handle.
- * The handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
- */
-int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out);
-
-/**
- * Load a new cryptographic key.
- * @param[in] secret raw symmetric key.
- * @param secret_len length of @c secret data.
- * @param[out] key_out pointer to pointer for new key handle.
- * The handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
- */
-int BSL_Crypto_LoadKey(const uint8_t *secret, size_t secret_len, BSL_Crypto_KeyHandle_t *key_out);
-
-/** Release a key handle after it is done being used.
- *
- * @param[in] keyhandle key handle to release.
- * If the handle is null this does nothing.
- * @post If this is the last use of the handle (including the key registry) the key will be destroyed.
- */
-void BSL_Crypto_ReleaseKeyHandle(BSL_Crypto_KeyHandle_t keyhandle);
-
-/** Compare two keys in a time-invariant way.
- * This avoids side channel attacks which depend on comparison time.
- *
- * @param[in] hdl1 The first key handle.
- * @param[in] hdl2 The second key handle.
- * @return True if they compare equal.
- */
-bool BSL_Crypto_CompareKeys(BSL_Crypto_KeyHandle_t hdl1, BSL_Crypto_KeyHandle_t hdl2);
-
-/** Get pointers to an existing key, if present.
- *
- * @param keyid The key to search for.
- * @param[in, out] key_handle pointer to pointer for new key handle.
- * The handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
- * @return Zero if the key was present.
- */
-int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *key_handle);
-
-/** Erase key entry from crypto library registry, if present.
- *  @param[in] keyid key ID of key to remove.
- * @return Zero if the key was present.
- */
-int BSL_Crypto_RemoveRegistryKey(const BSL_Data_t *keyid);
-
-/**
- * Add a new key to the crypto key registry
- * @param[in] keyid key ID that crypto functions will use to access key
- * @param[out] handle Key handle to add to the registry.
- * Once the key is added it should be treated as read-only for thread-safety purposes.
- * When handle is output, the handle must be released with BSL_Crypto_ReleaseKeyHandle() when it is done being used.
- * @return Zero upon success.
- */
-int BSL_Crypto_AddRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t handle);
-
-/** Add a context-specific parameter to a known key.
- *
- * @param[in] handle The key ID to update.
- * @param[in] param_id The parameter to access.
- * If the parameter does not already exist it will be created.
- * @return Non-NULL pointer if successful.
- */
-BSL_IdValPair_t *BSL_Crypto_SetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
-
-/** Get key parameter for read-only access.
- * @overload
- */
-const BSL_IdValPair_t *BSL_Crypto_GetKeyParameter(BSL_Crypto_KeyHandle_t handle, int64_t param_id);
-
-/**
- * Retrieve statistics related to a crypto key
- * @param[in] handle The handle of a key in the crypto registry to retrieve the stats of.
- * @param[out] stats struct containing statistics related to the key id
- */
-int BSL_Crypto_GetKeyStatistics(BSL_Crypto_KeyHandle_t handle, BSL_Crypto_KeyStats_t *stats);
-
-///@} key registry
 
 /** @name AES Key Wrap interface */
 ///@{
@@ -394,9 +271,8 @@ int BSL_Cipher_FinalizeSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqWriter_t *writer);
 /**
  * De-initialize crypto context resources
  * @param cipher_ctx pointer to context to deinitialize
- * @return 0 if successful
  */
-int BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
+void BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
 
 ///@} cipher
 

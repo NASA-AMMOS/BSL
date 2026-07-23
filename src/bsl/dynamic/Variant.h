@@ -20,9 +20,9 @@
  * subcontract 1700763.
  */
 /**
- * @file IdValPair.h
+ * @file
  * @ingroup backend_dyn
- * @brief Defines the RFC 9172 Security Parameter of the Abstract Security Block
+ * @brief Declaration of a variant-type container for options, parameters, and results.
  *
  * @details
  *
@@ -53,8 +53,8 @@
  * @ingroup backend_dyn
  * @brief Declaration of an (id, value) pair container.
  */
-#ifndef BSLB_IDVALPAIR_H_
-#define BSLB_IDVALPAIR_H_
+#ifndef BSLB_VARIANT_H_
+#define BSLB_VARIANT_H_
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/dynamic/CBOR.h"
@@ -70,85 +70,91 @@
 extern "C" {
 #endif
 
-/** @brief Types of values in ::BSL_IdValPair_s.
+/** @brief Types of values in ::BSL_Variant_s.
  * Security options, parameters, and results defined in RFC9173 may be unsigned integers or bytestrings.
  */
-enum BSL_IdValPair_Type_e
+enum BSLB_Variant_Type_e
 {
-    BSL_IDVALPAIR_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
-    BSL_IDVALPAIR_TYPE_INT64,       ///< Indicates value type is a signed integer.
-    BSL_IDVALPAIR_TYPE_BYTESTR,     ///< Indicates the value is a byte string.
-    BSL_IDVALPAIR_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
-    BSL_IDVALPAIR_TYPE_RAW,         ///< Indicates the value is raw encoded bytes.
+    BSLB_VARIANT_TYPE_UNKNOWN = 0, ///< Indicates parsed value not of expected type.
+    BSLB_VARIANT_TYPE_INT64,       ///< Indicates value type is a signed integer.
+    BSLB_VARIANT_TYPE_BYTESTR,     ///< Indicates the value is a byte string.
+    BSLB_VARIANT_TYPE_TEXTSTR,     ///< Indicates the value is a text string.
+    BSLB_VARIANT_TYPE_RAW,         ///< Indicates the value is raw encoded bytes.
 };
 
-struct BSL_IdValPair_s
+struct BSL_Variant_s
 {
-    /// @brief Identifier for the pair
-    int64_t id;
-
     /// @brief Indicates how #_val needs to be used.
-    enum BSL_IdValPair_Type_e _type;
+    enum BSLB_Variant_Type_e _type;
     /// The value storage based on #_type
     union
     {
-        /// Valid when #_type is ::BSL_IDVALPAIR_TYPE_INT64
+        /// Valid when #_type is ::BSLB_VARIANT_TYPE_INT64
         int64_t as_int;
-        /** Valid when #_type is ::BSL_IDVALPAIR_TYPE_BYTESTR or ::BSL_IDVALPAIR_TYPE_TEXTSTR
-         * or ::BSL_IDVALPAIR_TYPE_RAW
+        /** Valid when #_type is ::BSLB_VARIANT_TYPE_BYTESTR or ::BSLB_VARIANT_TYPE_TEXTSTR
+         * or ::BSLB_VARIANT_TYPE_RAW
          */
         m_bstring_t as_bytes;
     } _val;
 };
 
-/// OPLIST for ::BSL_IdValPair_s
-#define M_OPL_BSL_IdValPair_t()                                                             \
-    (INIT(API_2(BSL_IdValPair_Init)), INIT_SET(API_6(BSL_IdValPair_InitSet)), INIT_MOVE(0), \
-     CLEAR(API_2(BSL_IdValPair_Deinit)), SET(API_6(BSL_IdValPair_Set)), MOVE(API_6(BSL_IdValPair_Move)))
+/// OPLIST for ::BSL_Variant_s
+#define M_OPL_BSL_Variant_t()                                                           \
+    (INIT(API_2(BSL_Variant_Init)), INIT_SET(API_6(BSL_Variant_InitSet)), INIT_MOVE(0), \
+     CLEAR(API_2(BSL_Variant_Deinit)), SET(API_6(BSL_Variant_Set)), MOVE(API_6(BSL_Variant_Move)))
 
 /** Decode from CBOR, as a pair of items either in an array or from
  * a map key-value.
  * Matches the ::BSL_CBOR_Decode_f signature.
  */
-int BSL_IdValPair_Decode(QCBORDecodeContext *dec, BSL_IdValPair_t *pair);
+int BSL_Variant_Decode(QCBORDecodeContext *dec, BSL_Variant_t *pair);
 
 /** Encode to CBOR, as a pair of items either in an array or a map key-value.
  * Matches the ::BSL_CBOR_Encode_f signature.
  */
-void BSL_IdValPair_Encode(QCBOREncodeContext *enc, const BSL_IdValPair_t *pair);
+void BSL_Variant_Encode(QCBOREncodeContext *enc, const BSL_Variant_t *pair);
 
-/** @struct BSLB_IdValPairPtr_t
- * Thread safe shared pointers to ::BSL_IdValPair_s instances.
+/** @struct BSLB_VariantPtr_t
+ * Thread safe shared pointers to ::BSL_Variant_s instances.
  */
-/** @struct BSLB_IdValPairPtrList_t
- * Defines an internal list of ::BSLB_IdValPairPtr_t pointers.
- */
-/** @struct BSLB_IdValPairPtrMap_t
- * Defines an internal lookup dictionary for ::BSLB_IdValPairPtr_t pointers
+/** @struct BSLB_VariantPtrMap_t
+ * Defines an internal lookup dictionary for ::BSLB_VariantPtr_t pointers
  * by integer keys.
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_SHARED_PTR_DEF(BSLB_IdValPairPtr, BSL_IdValPair_t, M_OPL_BSL_IdValPair_t())
-#define M_OPL_BSLB_IdValPairPtr_t() M_SHARED_PTR_OPLIST(BSLB_IdValPairPtr, M_OPL_BSL_IdValPair_t())
+M_SHARED_PTR_DEF(BSLB_VariantPtr, BSL_Variant_t, M_OPL_BSL_Variant_t())
+#define M_OPL_BSLB_VariantPtr_t() M_SHARED_PTR_OPLIST(BSLB_VariantPtr, M_OPL_BSL_Variant_t())
 
-M_ARRAY_DEF(BSLB_IdValPairPtrList, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
-M_BPTREE_DEF2(BSLB_IdValPairPtrMap, 4, int64_t, M_BASIC_OPLIST, BSLB_IdValPairPtr_t *, M_OPL_BSLB_IdValPairPtr_t())
+M_BPTREE_DEF2(BSLB_VariantPtrMap, 4, int64_t, M_BASIC_OPLIST, BSLB_VariantPtr_t *, M_OPL_BSLB_VariantPtr_t())
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND
 
 /** Workaround default shared-ptr INIT being a NULL pointer.
+ * @param[in,out] map The map to ensure a specific key exists in.
+ * @param key The key to add or update.
+ * @return A non-null pointer to a value in the map.
  */
-static inline BSL_IdValPair_t *BSLB_IdValPairPtrMap_add(BSLB_IdValPairPtrMap_t map, int64_t key)
+static inline BSL_Variant_t *BSLB_VariantPtrMap_add(BSLB_VariantPtrMap_t map, int64_t key)
 {
-    BSLB_IdValPairPtr_t *item_ptr = BSLB_IdValPairPtr_new();
+    BSLB_VariantPtr_t **found = BSLB_VariantPtrMap_get(map, key);
 
-    BSL_IdValPair_t *item = BSLB_IdValPairPtr_ref(item_ptr);
-
-    BSLB_IdValPairPtrMap_set_at(map, key, item_ptr);
-    BSLB_IdValPairPtr_release(item_ptr);
+    BSL_Variant_t *item;
+    if (found)
+    {
+        BSL_LOG_WARNING("map key %" PRId64 " already exists, reusing it", key);
+        item = BSLB_VariantPtr_ref(*found);
+    }
+    else
+    {
+        BSLB_VariantPtr_t *item_ptr = BSLB_VariantPtr_new();
+        BSLB_VariantPtrMap_set_at(map, key, item_ptr);
+        // map keeps a reference
+        item = BSLB_VariantPtr_ref(item_ptr);
+        BSLB_VariantPtr_release(item_ptr);
+    }
 
     return item;
 }
@@ -157,4 +163,4 @@ static inline BSL_IdValPair_t *BSLB_IdValPairPtrMap_add(BSLB_IdValPairPtrMap_t m
 } // extern C
 #endif
 
-#endif /* BSLB_IDVALPAIR_H_ */
+#endif /* BSLB_VARIANT_H_ */
