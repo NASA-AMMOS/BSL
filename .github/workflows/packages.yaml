@@ -89,7 +89,9 @@ jobs:
         run: |
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
-          dnf install -y python3-pip python3-wheel gcc pkgconf-pkg-config
+          dnf install -y \
+              gcc pkgconf-pkg-config cmake ninja-build \
+              python3-pip python3-wheel
       - name: Download packages
         uses: actions/download-artifact@v8
         with:
@@ -113,7 +115,7 @@ jobs:
             mock-bpa-test
             lib-user-test
       - name: Trial build
-        run: ./build.sh check-install
+        run: DESTDIR="" ./build.sh check-install
       - name: Mock BPA tests
         run: |
           pip3 install -r mock-bpa-test/requirements.txt
