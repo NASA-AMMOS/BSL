@@ -96,9 +96,11 @@ jobs:
         run: |
           ./check_symbols.py bsl_front bsl_dynamic --prefix bsl_
           ./check_symbols.py bsl_crypto --prefix bsl_ bslb_
-          ./check_symbols.py bsl_default_sc --prefix bslx_
+          ./check_symbols.py bsl_default_sc bsl_cose_sc --prefix bslx_
           ./check_symbols.py bsl_sample_pp --prefix bslp_
           ./check_symbols.py bsl_mock_bpa --prefix MockBPA_ bsl_eidpat_ bsl_mock_ mock_bpa_
+      - name: Trial build
+        run: ./build.sh check-install
       - name: Test
         run: ./build.sh check
       - name: Collect coverage

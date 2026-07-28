@@ -21,12 +21,12 @@
  */
 /** @file
  * @ingroup fuzz_test
- * @brief Fuzz the simplified @c COSE_KeySet file decoding.
+ * @brief Fuzz the simplified JWK file decoding.
  */
 #include "TestUtils.h"
 
-#include <bsl/crypto/CryptoInterface.h>
-#include <bsl/mock_bpa/key_registry.h>
+#include <bsl/crypto/KeyLoader.h>
+#include <bsl/mock_bpa/KeyStore.h>
 #include <bsl/mock_bpa/MockBPA.h>
 
 #include <cinttypes>
@@ -51,7 +51,7 @@ extern "C" int LLVMFuzzerInitialize(int *argc _U_, char ***argv _U_)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     int retval = 0;
-    BSL_CryptoInit();
+    MockBPA_KeyStore_Init();
 
     FILE  *tmp = tmpfile();
     size_t got = fwrite(data, size, 1, tmp);
@@ -65,13 +65,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (!retval)
     {
         int infd = fileno(tmp);
-        if (mock_bpa_key_registry_init_cosekey(infd))
+        if (BSL_Crypto_KeyLoader_LoadJwkSet(infd))
         {
             retval = -1;
         }
     }
 
     fclose(tmp);
-    BSL_CryptoDeinit();
+    MockBPA_KeyStore_Deinit();
     return retval;
 }

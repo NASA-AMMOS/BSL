@@ -30,6 +30,10 @@
 
 #include "bsl/BPSecLib_Private.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /** @struct BSL_SecActionList_t
  * Defines a basic list of ::BSL_SecurityAction_s.
  */
@@ -53,5 +57,9 @@ struct BSL_SecurityActionSet_s
     size_t              invalid_act_count;
     size_t              operation_count;
 };
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* BSLB_SECACTIONSET_H_ */

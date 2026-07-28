@@ -22,10 +22,10 @@
 #ifndef _BSL_TESTUTILS_H_
 #define _BSL_TESTUTILS_H_
 
-#include <bsl/dynamic/IdValPair.h>
 #include <bsl/dynamic/PublicInterfaceImpl.h>
 #include <bsl/dynamic/SecOperation.h>
 #include <bsl/dynamic/SecurityActionSet.h>
+#include <bsl/dynamic/Variant.h>
 #include <bsl/mock_bpa/ctr.h>
 
 #include <m-string.h>

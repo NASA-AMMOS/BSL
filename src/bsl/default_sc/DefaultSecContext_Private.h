@@ -38,6 +38,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Convenience struct containing metadata as a block.
  * Avoids the need to pass many arguments to functions.
@@ -146,5 +150,9 @@ int  BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context);
 int  BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context);
 void BSLX_EncodeHeader(const BSL_CanonicalBlock_t *block, QCBOREncodeContext *encoder);
 bool BSLX_ValidateTargetType(const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif

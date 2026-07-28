@@ -144,9 +144,10 @@ typedef struct MockBPA_Agent_s
 
 } MockBPA_Agent_t;
 
-/** Get host descriptors without a specific agent.
+/** Get host descriptors for a specific agent.
  *
  * @param[in] agent The agent to associate as user data.
+ * @return Populated descriptor struct.
  */
 BSL_HostDescriptors_t MockBPA_Agent_Descriptors(MockBPA_Agent_t *agent);
 

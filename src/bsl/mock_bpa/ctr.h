@@ -33,6 +33,10 @@
 
 #include <m-core.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// A container for encoded and decoded bundle data
 typedef struct
 {
@@ -68,5 +72,9 @@ int mock_bpa_ctr_encode(mock_bpa_ctr_t *ctr);
 
 /// M*LIB OPLIST for ::mock_bpa_ctr_t
 #define M_OPL_mock_bpa_ctr_t() (INIT(API_2(mock_bpa_ctr_init)), INIT_SET(0), SET(0), CLEAR(API_2(mock_bpa_ctr_deinit)))
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* BSL_MOCK_BPA_CTR_H_ */

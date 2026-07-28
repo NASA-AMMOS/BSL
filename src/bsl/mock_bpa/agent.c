@@ -21,8 +21,9 @@
  */
 
 /** @file
- * Definitions for Agent initialization.
  * @ingroup mock_bpa
+ * Definitions for Agent initialization and
+ * provider of host functions via the API ::BSL_HostDescriptors_t.
  */
 #include "agent.h"
 

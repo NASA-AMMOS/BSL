@@ -25,17 +25,41 @@
  * Header for the implementation of the COSE context @cite draft-ietf-dtn-bpsec-cose.
  */
 
-#ifndef BSLX_COSECONTEXT_PRIVATE_H_
-#define BSLX_COSECONTEXT_PRIVATE_H_
+#ifndef BSLX_COSESC_AADSCOPE_H_
+#define BSLX_COSESC_AADSCOPE_H_
 
-#include "bsl/BPSecLib_Public.h"
+#include "CoseContext.h"
+
+#include "bsl/dynamic/CBOR.h"
+
+#include <m-bptree.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/** @struct BSLX_CoseSc_AadScope_t
+ * An internal representation of AAD Scope map, with keys sorted in
+ * CBOR deterministic order and values as a bit mask of
+ * ::BSLX_CoseSc_AadScope_Flag_e flags.
+ */
+// NOLINTBEGIN
+/// @cond Doxygen_Suppress
+// GCOV_EXCL_START
+M_BPTREE_DEF2(BSLX_CoseSc_AadScope, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(API_6(BSL_CBOR_Compare_Int64))),
+              uint64_t, M_BASIC_OPLIST)
+// GCOV_EXCL_STOP
+/// @endcond
+// NOLINTEND
+
+/// Matches ::BSL_CBOR_Encode_f signature.
+int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_AadScope_t *scope);
+
+/// Matches ::BSL_CBOR_Decode_f signature.
+int BSLX_CoseSc_AadScope_Decode(QCBORDecodeContext *dec, BSLX_CoseSc_AadScope_t *scope);
+
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* BSLX_COSECONTEXT_PRIVATE_H_ */
+#endif /* BSLX_COSESC_AADSCOPE_H_ */

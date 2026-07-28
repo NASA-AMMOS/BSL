@@ -33,6 +33,10 @@
 // for option values
 #include "bsl/default_sc/rfc9173.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// Internal BIB option enumerations
 enum BSLX_BIB_Options_e
 {
@@ -82,5 +86,9 @@ bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t
 
 /// Match signature ::BSL_SecCtx_Execute_f
 int BSLX_BCB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* BSLX_SECCTXERR_H_ */

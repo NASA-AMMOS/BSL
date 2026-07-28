@@ -51,6 +51,7 @@ callee's
 calloc
 CALLOC
 Carsten
+cbor
 CBOR
 CCSDS
 cek
@@ -127,6 +128,7 @@ isspace
 JHU
 Josefsson
 JPL
+json
 JSON
 JWK
 JWKs

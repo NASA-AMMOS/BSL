@@ -27,11 +27,15 @@
 #ifndef BSLB_SECOPERATIONS_H_
 #define BSLB_SECOPERATIONS_H_
 
-#include "IdValPair.h"
+#include "Variant.h"
 
 #include "bsl/BPSecLib_Private.h"
 
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct BSL_SecOper_s
 {
@@ -65,7 +69,7 @@ struct BSL_SecOper_s
     BSL_SecBlockType_e _service_type;
 
     /// @brief Options set by the policy provider
-    BSLB_IdValPairPtrMap_t _options;
+    BSLB_VariantPtrMap_t _options;
 
     /** @brief Index of the existing target block in the ASB if the #_role is not source.
      * This will be distinct because the same source+function can only
@@ -74,10 +78,14 @@ struct BSL_SecOper_s
     size_t _target_index;
 
     /// @brief Security parameters used or produced by this operation.
-    BSLB_IdValPairPtrMap_t _params;
+    BSLB_VariantPtrMap_t _params;
 
     /// @brief Security results used or produced by this operation.
-    BSLB_IdValPairPtrMap_t _results;
+    BSLB_VariantPtrMap_t _results;
 };
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif /* BSLB_SECOPERATIONS_H_ */

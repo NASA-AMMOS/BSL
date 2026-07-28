@@ -39,11 +39,13 @@ This PP is registered and used by the @ref mock-bpa for many BSL testing cases.
 
 Sources related to these example PPs are associated with the @ref example_pp group.
 
-# Example Default Security Contexts {#example-default-scs}
+# Example Security Contexts {#example-scs}
 
 The two Default Security Contexts defined in RFC 9173 @cite rfc9173 offer minimal, interoperable, and pre-shared-key-focused integrity and confidentiality operations.
 
-An implementation of these two SCs is maintained as part of the BSL source and uses the BSL crypto library as an interface to the OpenSSL library @cite lib:openssl from the host OS.
+The COSE Context defined in an internet draft @cite draft-ietf-dtn-bpsec-cose offers more full-featured, layered symmetric key options including key wrapping and key derivation.
+
+An implementation of each of these SCs is maintained as part of the BSL source and uses the BSL crypto library as an wrapper for the OpenSSL library @cite lib:openssl from the host OS and a key store registered with the crypto library (part of the @ref bpa-callback-api).
 These SCs are registered and used by the @ref mock-bpa for BSL testing.
 
 Sources related to these example SCs are associated with the @ref default_sc group.
@@ -55,7 +57,7 @@ The Mock BPA uses an un-framed UDPCL-like interface for its underlayer and also 
 
 The Mock BPA is limited to a single registered endpoint, and does no other handling normally required by RFC 9171 @cite rfc9171. So for this reason it is not a true BPA and must not be treated as one.
 
-Upon startup, the Mock BPA registers a single [ION-based Example Policy Provider](@ref example-pps) and the two [example Default Security Contexts](@ref example-default-scs).
+Upon startup, the Mock BPA registers a single [ION-based Example Policy Provider](@ref example-pps) and all of the [example Security Contexts](@ref example-scs).
 
 Sources related to the Mock BPA are associated with the @ref mock_bpa group.
 
@@ -75,7 +77,7 @@ The path to the JSON file should be passed to the Mock BPA with the `-j` command
 
 ## Key Management
 
-The keys used by the example SCs registered in the Mock BPA's Cryptographic Library instance are obtained from a file using the JSON Web Key (JWK) format of RFC 7517 @cite rfc7517.
+The keys used by the example SCs registered in the Mock BPA's key store are obtained from a file using either the JSON Web Key (JWK) Set format of RFC 7517 @cite rfc7517 or the COSE Key Set format of RFC 9052 @cite rfc9052.
 
 The implementation to support these SCs only handles symmetric keys and only the minimal header parameters needed for key ID ("kid") and symmetric key material itself ("k").
 
@@ -94,4 +96,4 @@ The table below contains the Mock BPA executable command line options. See the M
 | `-s`      | The endpoint ID of the local security source used to handle BPSec.                                                                |
 | `-p`      | The comma-separated bit fields representing policies to initialize Mock BPA with.                                                 |
 | `-j`      | The path to a ION-Like Policy JSON-encoded policy structure file containing policies to initialize Mock BPA with.                 |
-| `-k`      | The path to a JSON Web Key (JWK) formatted file containing keys to register with the BPA's Cryptographic Library instance.        |
+| `-k`      | The path to a JSON Web Key (JWK) file (named ".json") or COSE Key Set (named ".cbor") containing keys to register with the BPA's key store.        |

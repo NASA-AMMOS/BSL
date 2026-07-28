@@ -25,12 +25,13 @@
  * unix domain sockets.
  */
 #include "agent.h"
-#include "key_registry.h"
+#include "KeyStore.h"
 #include "log.h"
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/BPSecLib_Public.h"
 #include "bsl/crypto/CryptoInterface.h"
+#include "bsl/crypto/KeyLoader.h"
 #include "bsl/sample_pp/PolicyParser.h"
 
 #include <errno.h>
@@ -118,6 +119,25 @@ static void show_usage(const char *argv0)
             BSL_VERSION, argv0);
 }
 
+/**
+ * Custom RNG function for BCB testing
+ */
+static int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len)
+{
+    if (len == 12) // IV
+    {
+        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+        memcpy(buf, iv, 12);
+    }
+    else // A3 KEY
+    {
+        uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
+                                    0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
+        memcpy(buf, rfc9173A3_key, len);
+    }
+    return 1;
+}
+
 int main(int argc, char **argv)
 {
     int retval = 0;
@@ -128,7 +148,7 @@ int main(int argc, char **argv)
         return 2;
     }
     mock_bpa_LogOpen();
-    BSL_CryptoInit();
+    MockBPA_KeyStore_Init();
     if ((res = MockBPA_Agent_Init(&agent, &policy)))
     {
         BSL_LOG_ERR("Failed to initialize mock BPA, error %d", res);
@@ -191,7 +211,7 @@ int main(int argc, char **argv)
                     break;
                 }
                 case 'k':
-                    if (mock_bpa_key_registry_init(optarg))
+                    if (BSL_Crypto_KeyLoader_LoadFile(optarg))
                     {
                         retval = 1;
                     }
@@ -252,7 +272,7 @@ int main(int argc, char **argv)
     BSL_HostEID_Deinit(&sec_eid);
     BSL_HostEID_Deinit(&app_eid);
 
-    BSL_CryptoDeinit();
+    MockBPA_KeyStore_Deinit();
     mock_bpa_LogClose();
     BSL_HostDescriptors_Clear();
     return retval;

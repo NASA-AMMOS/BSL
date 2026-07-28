@@ -19,45 +19,38 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-
 /** @file
- * @ingroup mock_bpa
+ * @ingroup crypto
+ * Common functions to load keys from file.
  */
+#ifndef BSL_CRYPTO_KEYLOADER_H_
+#define BSL_CRYPTO_KEYLOADER_H_
 
-#ifndef BSL_MOCK_BPA_KEY_REGISTRY_H_
-#define BSL_MOCK_BPA_KEY_REGISTRY_H_
-
-#include "bsl/crypto/CryptoInterface.h"
-
-#include <inttypes.h>
+#include "KeyStore.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** @brief Initialize keys
- * @param[in] file_path path to JSON file with JWKs or CBOR file with @c COSE_KeySet
+/** Load keys from file.
+ *
+ * @param[in] file_path path to JSON file with JWK Set or CBOR file with @c COSE_KeySet
  * @return 0 if successful.
  */
-int mock_bpa_key_registry_init(const char *file_path);
+int BSL_Crypto_KeyLoader_LoadFile(const char *file_path);
 
 /** @warning Exposed only for testing.
  * @param infd The file descriptor to read from.
  */
-int mock_bpa_key_registry_init_jwk(int infd);
+int BSL_Crypto_KeyLoader_LoadJwkSet(int infd);
 
 /** @warning Exposed only for testing.
  * @param infd The file descriptor to read from.
  */
-int mock_bpa_key_registry_init_cosekey(int infd);
-
-/**
- * Custom RNG function for BCB testing
- */
-int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len);
+int BSL_Crypto_KeyLoader_LoadCoseKeySet(int infd);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif
+#endif /* BSL_CRYPTO_KEYLOADER_H_ */

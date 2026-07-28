@@ -39,6 +39,7 @@ function usage {
     echo "  apply-format   - Apply format to all source code"
     echo "  apply-license  - Apply/update license preamble to files"
     echo "  check          - Run unit tests"
+    echo "  check-install  - Build a test executable linked to BSL"
     echo "  clean          - Clean build artifacts"
     echo "  deps           - Build dependend libraries"
     echo "  docs           - Build HTML and/or PDF doxygen"
@@ -56,16 +57,63 @@ function cmd_check_format {
 }
 
 function cmd_apply_format {
-    exec ./resources/apply_format.sh
+    shift
+    exec ./resources/apply_format.sh "$@"
 }
 
 function cmd_apply_license {
-    exec ./resources/apply_license.sh
+    shift
+    exec ./resources/apply_license.sh "$@"
 }
 
 function cmd_check {
     shift
     ctest --test-dir ${BUILDDIR} --output-on-failure "$@"
+}
+
+function cmd_check_install_pkgconfig {
+    # setenv.sh has aleady set DESTDIR and PREFIX
+    if [[ -n "${DESTDIR}" && -d "${DESTDIR}" ]]
+    then
+        export PKG_CONFIG_PATH=$(find ${DESTDIR}${PREFIX} -type d -name pkgconfig | tr '\n' ':')
+        PKG_PREFIX="--define-variable=prefix=${DESTDIR}${PREFIX}"
+        echo "Using prefix: ${PKG_PREFIX}"
+    else
+        PKG_PREFIX=""
+    fi
+    PKGS="bsl bsl-sample-pp"
+
+    echo "Provides:"
+    pkg-config --print-provides ${PKGS}
+    echo "Requires:"
+    pkg-config --print-requires ${PKGS}
+    echo -n "CFlags: "
+    pkg-config ${PKG_PREFIX} --cflags ${PKGS}
+    echo -n "Libs: "
+    pkg-config ${PKG_PREFIX} --libs ${PKGS}
+
+    cd "${SELFDIR}/lib-user-test"
+    mkdir -p build
+    gcc -c -o build/example.o main.c $(pkg-config ${PKG_PREFIX} --cflags ${PKGS})
+    gcc -o build/example build/example.o $(pkg-config ${PKG_PREFIX} --libs ${PKGS})
+    ldd ./build/example
+    ./build/example
+    rm -rf build
+}
+
+function cmd_check_install_cmake {
+    # setenv.sh has aleady set DESTDIR and PREFIX
+    cd "${SELFDIR}/lib-user-test"
+    cmake -S . -B build \
+        -DCMAKE_FIND_DEBUG_MODE=OFF \
+        -DCMAKE_PREFIX_PATH=${DESTDIR}${PREFIX} \
+        -DCMAKE_INSTALL_PREFIX=${PREFIX} \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -G Ninja
+    cmake --build build
+    ldd ./build/example
+    ./build/example
+    rm -rf build
 }
 
 function cmd_clean {
@@ -184,13 +232,17 @@ case "$1" in
         cmd_check_format
         ;;
     apply-format)
-        cmd_apply_format
+        cmd_apply_format "$@"
         ;;
     apply-license)
-        cmd_apply_license
+        cmd_apply_license "$@"
         ;;
     check)
         cmd_check "$@"
+        ;;
+    check-install)
+        cmd_check_install_pkgconfig
+        cmd_check_install_cmake
         ;;
     clean)
         cmd_clean

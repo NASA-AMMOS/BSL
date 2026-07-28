@@ -53,8 +53,11 @@ int BSLX_CoseMsg_Headers_Encode_Map(QCBOREncodeContext *enc, const BSLX_CoseMsg_
     for (BSLX_CoseMsg_HdrMapTree_it(map_it, *map); !BSLX_CoseMsg_HdrMapTree_end_p(map_it);
          BSLX_CoseMsg_HdrMapTree_next(map_it))
     {
-        const BSL_IdValPair_t *value = BSLB_IdValPairPtr_cref(*(BSLX_CoseMsg_HdrMapTree_ref(map_it)->value_ptr));
-        BSL_IdValPair_Encode(enc, value);
+        const BSLX_CoseMsg_HdrMapTree_subtype_ct *pair = BSLX_CoseMsg_HdrMapTree_cref(map_it);
+        QCBOREncode_AddInt64(enc, *(pair->key_ptr));
+
+        const BSL_Variant_t *value = BSLB_VariantPtr_cref(*(pair->value_ptr));
+        BSL_Variant_Encode(enc, value);
     }
 
     QCBOREncode_CloseMap(enc);
@@ -72,18 +75,21 @@ int BSLX_CoseMsg_Headers_Decode_Map(QCBORDecodeContext *dec, BSLX_CoseMsg_HdrMap
     QCBORItem item;
     while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
     {
-        BSLB_IdValPairPtr_t *param_ptr = BSLB_IdValPairPtr_new();
+        int64_t label = 0;
+        QCBORDecode_GetInt64(dec, &label);
 
-        BSL_IdValPair_t *param = BSLB_IdValPairPtr_ref(param_ptr);
-        if (BSL_SUCCESS != BSL_IdValPair_Decode(dec, param))
+        BSLB_VariantPtr_t *param_ptr = BSLB_VariantPtr_new();
+
+        BSL_Variant_t *param = BSLB_VariantPtr_ref(param_ptr);
+        if (BSL_SUCCESS != BSL_Variant_Decode(dec, param))
         {
-            BSLB_IdValPairPtr_release(param_ptr);
+            BSLB_VariantPtr_release(param_ptr);
             return BSL_ERR_DECODING;
         }
         else
         {
-            BSLX_CoseMsg_HdrMapTree_set_at(*map, param->id, param_ptr);
-            BSLB_IdValPairPtr_release(param_ptr);
+            BSLX_CoseMsg_HdrMapTree_set_at(*map, label, param_ptr);
+            BSLB_VariantPtr_release(param_ptr);
         }
     }
 
@@ -212,11 +218,11 @@ static int BSLX_CoseMsg_Headers_CheckCrit_Decode(QCBORDecodeContext *dec, const 
 
 int BSLX_CoseMsg_Headers_CheckCrit(const BSLX_CoseMsg_Headers_t *obj)
 {
-    const BSL_IdValPair_t *hdr = BSLX_CoseMsg_Headers_Get(obj, BSLX_COSEMSG_HDR_CRIT, true);
+    const BSL_Variant_t *hdr = BSLX_CoseMsg_Headers_Get(obj, BSLX_COSEMSG_HDR_CRIT, true);
     if (hdr)
     {
         BSL_Data_t view;
-        if (BSL_SUCCESS != BSL_IdValPair_GetAsRaw(hdr, &view))
+        if (BSL_SUCCESS != BSL_Variant_GetAsRaw(hdr, &view))
         {
             BSL_LOG_ERR("Header crit is present but invalid");
             return BSL_ERR_DECODING;
@@ -227,9 +233,9 @@ int BSLX_CoseMsg_Headers_CheckCrit(const BSLX_CoseMsg_Headers_t *obj)
     return BSL_SUCCESS;
 }
 
-const BSL_IdValPair_t *BSLX_CoseMsg_Headers_Get(const BSLX_CoseMsg_Headers_t *obj, int64_t label, bool need_phdr)
+const BSL_Variant_t *BSLX_CoseMsg_Headers_Get(const BSLX_CoseMsg_Headers_t *obj, int64_t label, bool need_phdr)
 {
-    BSLB_IdValPairPtr_t *const *found = BSLX_CoseMsg_HdrMapTree_cget(obj->phdr, label);
+    BSLB_VariantPtr_t *const *found = BSLX_CoseMsg_HdrMapTree_cget(obj->phdr, label);
     if (!found)
     {
         found = BSLX_CoseMsg_HdrMapTree_cget(obj->uhdr, label);
@@ -239,7 +245,7 @@ const BSL_IdValPair_t *BSLX_CoseMsg_Headers_Get(const BSLX_CoseMsg_Headers_t *ob
             found = NULL;
         }
     }
-    return found ? BSLB_IdValPairPtr_cref(*found) : NULL;
+    return found ? BSLB_VariantPtr_cref(*found) : NULL;
 }
 
 void BSLX_CoseMsg_Mac0_Init(BSLX_CoseMsg_Mac0_t *obj)

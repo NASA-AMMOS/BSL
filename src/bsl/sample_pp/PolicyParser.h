@@ -34,8 +34,6 @@
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/default_sc/rfc9173.h"
 
-#include <jansson.h>
-
 #include <inttypes.h>
 #include <stdio.h>
 
