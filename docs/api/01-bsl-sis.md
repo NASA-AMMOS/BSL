@@ -1,6 +1,6 @@
 @page bsl-sis BSL Interface Specification (SIS)
 <!--
-Copyright (c) 2025 The Johns Hopkins University Applied Physics
+Copyright (c) 2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Bundle Protocol Security Library (BSL).
@@ -31,6 +31,7 @@ Bundle Protocol Security Library (BPSec Lib) Software Interface Specification (S
 | Revision | Submission Date | Affection Sections or Pages | Change Summary            |
 |----------|-----------------|-----------------------------|---------------------------|
 | Initial  | 10/2/2024       | All                         | Initial issue of document |
+| A        | 7/29/2026       | All                         | Updating copyright year and instances of "example policy provider" |
 
 
 
@@ -58,7 +59,7 @@ Section 2 covers miscellaneous information about operating assumptions, includin
 
 Section 3 provides an overview of the BSL API, which application programmers should use as an introduction to using the BSL. Note that this document does not provide details of individual functions or constants within the BSL. Those may be found in referenced documents including the auto-generated source code documentation.
 
-Finally, the BSL is open-source software whose design and implementation should be expected to evolve in response to operational feedback. As such, this and related documentation may become out-of-date relative to the leading-edge of the BSL code repository. In general, the documentation (including the READMEs, auto-generated API spec, code examples, etc) found in the open-source GitHub repository should be considered the ground source of truth when information appears inconsistent. 
+Finally, the BSL is open-source software whose design and implementation should be expected to evolve in response to operational feedback. As such, this and related documentation may become out-of-date relative to the leading-edge of the BSL code repository. In general, the documentation (including the READMEs, auto-generated API spec, code s, etc) found in the open-source GitHub repository should be considered the ground source of truth when information appears inconsistent. 
 
 ## 1.3: Terminology and Notation
 
@@ -121,7 +122,7 @@ The BSL is expected to operate on a host with FIPS 140-mode enabled and SE Linux
 
 The BSL is a software library that compiles to a Linux shared or static object, which must be linked to a host binary in order to execute. The BSL does not itself produce and run any independent threads of execution.
 
-Host applications must link to the BSL object files during their build process, according to the instructions and examples located in the BSL wiki page on GitHub. Host applications will call C functions directly to execute BPSec subroutines. If the host application is not programmed in C or C++, then a suitable Foreign Function Interface (FFI) for that specific programming language should be used. Note, the authors of the BSL cannot guarantee the correctness when using BSL with an FFI.
+Host applications must link to the BSL object files during their build process, according to the instructions and s located in the BSL wiki page on GitHub. Host applications will call C functions directly to execute BPSec subroutines. If the host application is not programmed in C or C++, then a suitable Foreign Function Interface (FFI) for that specific programming language should be used. Note, the authors of the BSL cannot guarantee the correctness when using BSL with an FFI.
 
 
 ## 2.3: Standards and Protocols
@@ -142,13 +143,13 @@ There is no specific runtime initialization for the BSL. However, software devel
 
 ## 3.1: Frontend vs Backend
 
-The BSL implementation has two central notional components: The “Frontend API” and the “Dynamic Backend”. This distinction permits the existence of multiple backends that implement BPSec functionality, each potentially tailored to operational settings, to be accessed via a common interface. For example, a Bundle Protocol Agent running in SWaP-constrained hardware may need an implementation using strict memory-management that fits in a small memory footprint, whereas a BPA serving as a Bundle Protocol Router on conventional hardware may choose to use a backend leveraging hardware acceleration and greater access to computing resources. The BSL ships with a default backend, written in C99 with some dynamic data structures, which balances suitability for constrained systems and overall flexibility. 
+The BSL implementation has two central notional components: The “Frontend API” and the “Dynamic Backend”. This distinction permits the existence of multiple backends that implement BPSec functionality, each potentially tailored to operational settings, to be accessed via a common interface. For , a Bundle Protocol Agent running in SWaP-constrained hardware may need an implementation using strict memory-management that fits in a small memory footprint, whereas a BPA serving as a Bundle Protocol Router on conventional hardware may choose to use a backend leveraging hardware acceleration and greater access to computing resources. The BSL ships with a default backend, written in C99 with some dynamic data structures, which balances suitability for constrained systems and overall flexibility. 
 
 The “Frontend API” defines the stable public interface for the BSL, which the host application uses to invoke BPSec functionality. The “Frontend API” is mostly abstract, containing forward-declared data structures, function prototypes, and limited compiled artifacts. Application programmers for a BPA generally need to be familiar only with the frontend API – its functions and structures. Adhering to this API permits the BPA to be agnostic to the implementation details of any backend.
 
 The “Dynamic Backend” is the default implementation of a backend implementing the Frontend API and contains the functionality detailed in RFC 9172. It uses the term “Dynamic” since it supports since it permits the use of dynamic data structures with flexible memory consumption (as opposed to statically allocated memory).
 
-Backends may be swapped out with another implementation that implements the front-end API. Since BPSec may be deployed in many types of systems with different resources and different operational environments, there is unlikely to be a one-size-fits-all backend implementation. The backend provided here should be understood as an example and reference for more tailored mission-specific implementations.
+Backends may be swapped out with another implementation that implements the front-end API. Since BPSec may be deployed in many types of systems with different resources and different operational environments, there is unlikely to be a one-size-fits-all backend implementation. The backend provided here should be understood as an  and reference for more tailored mission-specific implementations.
 
 
 ## 3.2: Instructions for Building Documentation
@@ -157,7 +158,7 @@ The most up-to-date documentation will be found in the BSL’s GitHub page, and 
 
 Instructions to build the documentation using doxygen as HTML (and/or PDF, among other formats) may be found in the README.md file. Assuming a RHEL9 platform, the Linux tool xdg-open may be used to open the index.html found under build/default/docs/doxygen/html/index.html.
 
-The menu on the left-hand side includes this overview, as well as links to the top-level modules in the repository. These include the Frontend API, Dynamic Backend, the default security context, the example Security Policy Provider, and a “mock” BPA required to exercise the Frontend. Delving further into each of these shows the relevant files, functions, and data structures.
+The menu on the left-hand side includes this overview, as well as links to the top-level modules in the repository. These include the Frontend API, Dynamic Backend, the default security context, the Sample Security Policy Provider, and a “mock” BPA required to exercise the Frontend. Delving further into each of these shows the relevant files, functions, and data structures.
 
 Links will be found in Table 3 above.
 
@@ -168,14 +169,14 @@ As indicated in the prior section, the BSL has four main components. The princip
 
  * The **Frontend API** defines the software interface between host Bundle Protocol Agents and the underlying security operations implemented in a Dynamic Backend. The API remains an invariant regardless of which backend is selected.
  * The **Dynamic Backend** is an implementation of the BPSec security operations that adheres to the Frontend API. The BSL’s design and implementation facilitate “swapping” backend implementations tailored for mission-specific constraints. The BSL ships with a default backend, which may not be suitable for all operational environments.
- * The **Example Security Policy Provider** is a library used internally by the BSL to query which security operations need to be applied to a given Bundle, and what those security parameters are (such as key, hash type, etc). The BSL provides an example security provider exercising the policy provider interface.
+ * The **Sample Security Policy Provider** is a library used internally by the BSL to query which security operations need to be applied to a given Bundle, and what those security parameters are (such as key, hash type, etc). The BSL provides a sample security provider exercising the policy provider interface.
  * The **Example Default Security Contexts** perform the actual cryptographic functionality. The Default Security Context is detailed in RFC 9173. The BSL implements this via the security context interface, and uses OpenSSL as the underlying cryptographic software.
 
 ## 3.4: BSL Context Initialization
 
 The BSL requires the existence of a Security Policy Provider (commonly referred to as the “Policy Provider” throughout subsequent documentation), which governs what security actions should be performed upon a particular bundle, and a Security Context, which handles all cryptographic material and safely performs the cryptographic functionality.
 
-An example Policy Provider is included in the repository, as well as an implementation of the Default Security Context (as specified in RFC 9173).
+An sample Policy Provider is included in the repository, as well as an implementation of the Default Security Context (as specified in RFC 9173).
 
 Refer to the doxygen-generated documentation in the repository for the relevant BSL initialization functions, that provision the library with the appropriate policy provider and security context.
 
