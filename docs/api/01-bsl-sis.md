@@ -59,7 +59,7 @@ Section 2 covers miscellaneous information about operating assumptions, includin
 
 Section 3 provides an overview of the BSL API, which application programmers should use as an introduction to using the BSL. Note that this document does not provide details of individual functions or constants within the BSL. Those may be found in referenced documents including the auto-generated source code documentation.
 
-Finally, the BSL is open-source software whose design and implementation should be expected to evolve in response to operational feedback. As such, this and related documentation may become out-of-date relative to the leading-edge of the BSL code repository. In general, the documentation (including the READMEs, auto-generated API spec, code s, etc) found in the open-source GitHub repository should be considered the ground source of truth when information appears inconsistent. 
+Finally, the BSL is open-source software whose design and implementation should be expected to evolve in response to operational feedback. As such, this and related documentation may become out-of-date relative to the leading-edge of the BSL code repository. In general, the documentation (including the READMEs, auto-generated API spec, code examples, etc) found in the open-source GitHub repository should be considered the ground source of truth when information appears inconsistent. 
 
 ## 1.3: Terminology and Notation
 
@@ -122,7 +122,7 @@ The BSL is expected to operate on a host with FIPS 140-mode enabled and SE Linux
 
 The BSL is a software library that compiles to a Linux shared or static object, which must be linked to a host binary in order to execute. The BSL does not itself produce and run any independent threads of execution.
 
-Host applications must link to the BSL object files during their build process, according to the instructions and s located in the BSL wiki page on GitHub. Host applications will call C functions directly to execute BPSec subroutines. If the host application is not programmed in C or C++, then a suitable Foreign Function Interface (FFI) for that specific programming language should be used. Note, the authors of the BSL cannot guarantee the correctness when using BSL with an FFI.
+Host applications must link to the BSL object files during their build process, according to the instructions and examples located in the BSL wiki page on GitHub. Host applications will call C functions directly to execute BPSec subroutines. If the host application is not programmed in C or C++, then a suitable Foreign Function Interface (FFI) for that specific programming language should be used. Note, the authors of the BSL cannot guarantee the correctness when using BSL with an FFI.
 
 
 ## 2.3: Standards and Protocols
@@ -143,13 +143,13 @@ There is no specific runtime initialization for the BSL. However, software devel
 
 ## 3.1: Frontend vs Backend
 
-The BSL implementation has two central notional components: The “Frontend API” and the “Dynamic Backend”. This distinction permits the existence of multiple backends that implement BPSec functionality, each potentially tailored to operational settings, to be accessed via a common interface. For , a Bundle Protocol Agent running in SWaP-constrained hardware may need an implementation using strict memory-management that fits in a small memory footprint, whereas a BPA serving as a Bundle Protocol Router on conventional hardware may choose to use a backend leveraging hardware acceleration and greater access to computing resources. The BSL ships with a default backend, written in C99 with some dynamic data structures, which balances suitability for constrained systems and overall flexibility. 
+The BSL implementation has two central notional components: The “Frontend API” and the “Dynamic Backend”. This distinction permits the existence of multiple backends that implement BPSec functionality, each potentially tailored to operational settings, to be accessed via a common interface. For example, a Bundle Protocol Agent running in SWaP-constrained hardware may need an implementation using strict memory-management that fits in a small memory footprint, whereas a BPA serving as a Bundle Protocol Router on conventional hardware may choose to use a backend leveraging hardware acceleration and greater access to computing resources. The BSL ships with a default backend, written in C99 with some dynamic data structures, which balances suitability for constrained systems and overall flexibility. 
 
 The “Frontend API” defines the stable public interface for the BSL, which the host application uses to invoke BPSec functionality. The “Frontend API” is mostly abstract, containing forward-declared data structures, function prototypes, and limited compiled artifacts. Application programmers for a BPA generally need to be familiar only with the frontend API – its functions and structures. Adhering to this API permits the BPA to be agnostic to the implementation details of any backend.
 
 The “Dynamic Backend” is the default implementation of a backend implementing the Frontend API and contains the functionality detailed in RFC 9172. It uses the term “Dynamic” since it supports since it permits the use of dynamic data structures with flexible memory consumption (as opposed to statically allocated memory).
 
-Backends may be swapped out with another implementation that implements the front-end API. Since BPSec may be deployed in many types of systems with different resources and different operational environments, there is unlikely to be a one-size-fits-all backend implementation. The backend provided here should be understood as an  and reference for more tailored mission-specific implementations.
+Backends may be swapped out with another implementation that implements the front-end API. Since BPSec may be deployed in many types of systems with different resources and different operational environments, there is unlikely to be a one-size-fits-all backend implementation. The backend provided here should be understood as an example and reference for more tailored mission-specific implementations.
 
 
 ## 3.2: Instructions for Building Documentation
