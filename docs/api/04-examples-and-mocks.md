@@ -1,6 +1,6 @@
 @page examples-and-mocks Example PPs, SCs, and Mock BPA
 <!--
-Copyright (c) 2025 The Johns Hopkins University Applied Physics
+Copyright (c) 2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Bundle Protocol Security Library (BSL).
@@ -21,7 +21,7 @@ the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 -->
 
-This page discusses example Policy Providers (PPs), Security Contexts (SCs), and a mock BPA used for testing the BSL proper.
+This page discusses examples of Policy Providers (PPs), Security Contexts (SCs), and a mock BPA used for testing the BSL proper.
 The BSL proper is associated with the @ref frontend and @ref backend_dyn groups.
 
 # Example Policy Providers {#example-pps}
@@ -48,7 +48,7 @@ The COSE Context defined in an internet draft @cite draft-ietf-dtn-bpsec-cose of
 An implementation of each of these SCs is maintained as part of the BSL source and uses the BSL crypto library as an wrapper for the OpenSSL library @cite lib:openssl from the host OS and a key store registered with the crypto library (part of the @ref bpa-callback-api).
 These SCs are registered and used by the @ref mock-bpa for BSL testing.
 
-Sources related to these example SCs are associated with the @ref default_sc group.
+Sources related to these  SCs are associated with the @ref default_sc group.
 
 # Mock BPA {#mock-bpa}
 
@@ -63,7 +63,7 @@ Sources related to the Mock BPA are associated with the @ref mock_bpa group.
 
 ## Policy Management
 
-The policies used by the Mock BPA example policy providers can be provided with two different methods.
+The policies used by the Mock BPA sample policy providers can be provided with two different methods.
 
 ### Policy Bit Fields
 
