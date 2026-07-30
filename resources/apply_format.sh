@@ -58,5 +58,13 @@ do
 done
 
 # Python test fixtures
-ruff check --fix mock-bpa-test/
-ruff format mock-bpa-test/
+pushd mock-bpa-test/
+ANYERR=0
+ruff format || ANYERR=$((ANYERR + 1))
+ruff check --fix || ANYERR=$((ANYERR + 1))
+ty check --fix || ANYERR=$((ANYERR + 1))
+popd
+if [[ "${ANYERR}" -ne 0 ]]
+then
+    exit ${ANYERR}
+fi

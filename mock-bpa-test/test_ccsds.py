@@ -21,7 +21,6 @@
 #
 import json
 import logging
-import unittest
 
 import cbor2
 import yaml
@@ -33,7 +32,7 @@ LOGGER = logging.getLogger(__name__)
 """ Logger for this module. """
 
 
-def load_ccsds(cls: TestAgent):
+def load_ccsds(cls: type[TestAgent]):
     """Add test functions based on configuration file."""
     cases = {}
 
