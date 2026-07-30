@@ -171,7 +171,7 @@ jobs:
       - name: Test Prep
         run: |
           pip3 install --upgrade pip
-          pip3 install -r mock-bpa-test/requirements.txt
+          pip3 install -e mock-bpa-test
       - name: Test
         env:
           TEST_EXEC_WRAP: 'memcheck'
