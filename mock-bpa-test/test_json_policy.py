@@ -19,7 +19,7 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
-from _test_util import _TestCase, DataFormat, BundleDestLoc
+from _test_util import BundleDestLoc, DataFormat, _TestCase
 from test_bpa import TestAgent
 
 # Test Cases utilizing JSON policy definitions with the Default contexts
