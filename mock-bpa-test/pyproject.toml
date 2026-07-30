@@ -25,6 +25,14 @@ dependencies = [
   "pyyaml",
 ]
 
+[project.optional-dependencies]
+format = [
+  "ruff ==0.16.0",
+  "ty == 0.0.65",
+  "licenseheaders ==0.8.8",
+]
+
+
 [tool.setuptools.packages.find]
 exclude = ["test*", "helpers", "data"]
 
