@@ -22,7 +22,7 @@
 ##
 set -e
 
-if [[ -z "$SELFDIR" ]];
+if [[ -z "$SELFDIR" ]]
 then
     echo "$SELFDIR not defined"
     exit 1
@@ -35,10 +35,11 @@ echo "Check format from root: $SELFDIR"
 ./resources/apply_format.sh
 ./resources/apply_license.sh
 
-if ! git diff -q; then
-  echo "Error: Files changed after formatting:"
-  git diff
-  exit 1
+if ! git diff --quiet
+then
+    echo "Error: Files changed after formatting:"
+    git diff
+    exit 1
 fi
 
 exit 0

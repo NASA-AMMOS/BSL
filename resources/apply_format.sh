@@ -62,7 +62,10 @@ pushd mock-bpa-test/
 ANYERR=0
 ruff format || ANYERR=$((ANYERR + 1))
 ruff check --fix || ANYERR=$((ANYERR + 1))
-ty check --fix || ANYERR=$((ANYERR + 1))
+if which ty
+then
+    ty check --fix || ANYERR=$((ANYERR + 1))
+fi
 popd
 if [[ "${ANYERR}" -ne 0 ]]
 then
