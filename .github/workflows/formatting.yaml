@@ -37,15 +37,20 @@ jobs:
       contents: read
       actions: write
     steps:
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.9"
+          cache: "pip"
+      - name: Set up OS
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+              clang-format jq
+          pip3 install -e mock-bpa-test[format] # for formatting
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: false
-      - name: Set up OS
-        run: |
-          sudo apt-get update && sudo apt-get install -y \
-              clang-format jq python3-pip python3-wheel
-          pip3 install -e mock-bpa-test[format] # for formatting
       - name: Check code formatting
         run: ./build.sh check-format
