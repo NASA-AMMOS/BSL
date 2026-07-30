@@ -27,16 +27,18 @@ import os
 import select
 import socket
 import subprocess
-from typing import Any, Optional
 import unittest
-import cbor2
-from cbor_diag import diag2cbor, cbor2diag
+from typing import Any, Optional
 
+import cbor2
+from cbor_diag import cbor2diag, diag2cbor
+
+from _test_util import BundleDestLoc, DataFormat, _TestCase
 from helpers import CmdRunner, compose_args
-from _test_util import _TestCase, DataFormat, BundleDestLoc
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
+""" Logger for this module. """
 
 
 class TestAgent(unittest.TestCase):
@@ -158,7 +160,7 @@ class TestAgent(unittest.TestCase):
 
     def _wait_for(self, sock: socket.socket, timeout: float = 1.0) -> bytes:
         LOGGER.debug("Waiting for socket data...")
-        rrd, rwr, rxp = select.select([sock], [], [], timeout)
+        rrd, _rwr, _rxp = select.select([sock], [], [], timeout)
         if not rrd:
             raise TimeoutError("Did not receive bundle in time")
         data = sock.recv(65535)

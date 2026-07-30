@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mock-bpa-test"
+version = "0.0.0"
+authors = [
+  { name="JHU/APL", email="dtnma-support@jhuapl.edu" },
+]
+description = "BSL Mock BPA test fixtures"
+readme = "../README.md"
+license = "Apache-2.0"
+license-files = ["../LICENSE"]
+requires-python = ">=3.9"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+
+dependencies = [
+  "cbor2 ~= 5.6.0",
+  "cbor-diag ~= 1.1",
+  "pytest",
+  "pytest-subtests",
+  "pyyaml",
+]
+
+[tool.pytest.ini_options]
+norecursedirs = ["helpers"]
+log_level = "DEBUG"
+log_cli = true
+log_cli_level = "WARNING"
+
+[tool.ruff]
+line-length=100
+[tool.ruff.lint]
+ignore = ["FA"]

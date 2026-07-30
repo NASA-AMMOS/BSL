@@ -20,8 +20,8 @@
 # subcontract 1700763.
 #
 
-import logging
 import datetime
+import logging
 import time
 from typing import Optional
 

@@ -26,8 +26,9 @@ import json
 import logging
 import os
 import tempfile
-from typing import Any, Dict
-from _test_util import _TestCase, DataFormat, BundleDestLoc
+from typing import Any
+
+from _test_util import BundleDestLoc, DataFormat, _TestCase
 from test_bpa import TestAgent
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
@@ -120,7 +121,7 @@ CCSDS_MAC_WITH_BIB = """\
 
 
 @contextlib.contextmanager
-def sc_config_modifier(orig: str, modify: Dict[str, Any]):
+def sc_config_modifier(orig: str, modify: dict[str, Any]):
     """A context for modifying baseline configurations"""
     with tempfile.NamedTemporaryFile("w+", suffix=".json") as polfile:
         with open(os.path.join(OWNPATH, orig), "r") as infile:
