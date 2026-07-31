@@ -22,12 +22,13 @@
 
 import logging
 import os
+import queue
 import re
 import signal
 import subprocess
 import threading
-from typing import List, Literal, Optional, Union
-import queue
+from typing import Literal, Optional, Union
+
 from .timer import Timer
 
 LOGGER = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ PROJPATH = os.path.abspath(os.path.join(OWNPATH, "..", ".."))
 """ Project top path """
 
 
-def compose_args(args: List[str]) -> List[str]:
+def compose_args(args: list[str]) -> list[str]:
     """Combine executions arguments with any prefix scripts and/or tools
     needed to run from the `testroot` environment.
     """
@@ -85,7 +86,7 @@ def compose_args(args: List[str]) -> List[str]:
     return args
 
 
-WaitStream = Union[Literal["stdout"], Literal["stderr"]]
+WaitStream = Literal["stdout", "stderr"]
 """ Name for output stream """
 
 
@@ -98,7 +99,7 @@ class CmdRunner:
     :py:func:`subprocess.Popen`
     """
 
-    def __init__(self, args: List[str], **kwargs):
+    def __init__(self, args: list[str], **kwargs):
         self._args = args
         self._kwargs = kwargs
 

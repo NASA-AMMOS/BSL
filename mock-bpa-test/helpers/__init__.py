@@ -23,8 +23,8 @@
 from .runner import CmdRunner, compose_args
 from .timer import Timer
 
-__all__ = {
-    CmdRunner,
-    compose_args,
-    Timer,
-}
+__all__ = (
+    "CmdRunner",
+    "Timer",
+    "compose_args",
+)

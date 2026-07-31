@@ -19,7 +19,7 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
-from _test_util import _TestCase, DataFormat, BundleDestLoc
+from _test_util import BundleDestLoc, DataFormat, _TestCase
 from test_bpa import TestAgent
 
 # Test Cases specified by the Requirements Document
@@ -331,7 +331,6 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                #
                 expected_output=[
                     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                     [
@@ -353,7 +352,6 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                #
                 policy_config="0x2A0",
                 bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",
@@ -386,7 +384,6 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                #
                 expected_output=[
                     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                     [
@@ -417,7 +414,6 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                #
                 policy_config="0x04",
                 bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",
@@ -452,7 +448,6 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                #
                 expected_output=[
                     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                     [
@@ -508,7 +503,6 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                #
                 expected_output=[
                     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
                     [
@@ -521,7 +515,6 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                #
                 policy_config="0xA2",
                 bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",
@@ -739,7 +732,6 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                #
                 policy_config="0x04",
                 bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",
@@ -789,7 +781,6 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                #
                 policy_config="0x04",
                 bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",
@@ -1411,7 +1402,6 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                #
                 policy_config="0x96",
                 bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",
@@ -1462,7 +1452,6 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                #
                 policy_config="0x105",
                 bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",

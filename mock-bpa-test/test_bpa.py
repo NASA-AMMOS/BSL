@@ -27,16 +27,18 @@ import os
 import select
 import socket
 import subprocess
-from typing import Any, Optional
 import unittest
-import cbor2
-from cbor_diag import diag2cbor, cbor2diag
+from typing import Any, Optional, cast
 
+import cbor2
+from cbor_diag import cbor2diag, diag2cbor
+
+from _test_util import BundleDestLoc, DataFormat, _TestCase
 from helpers import CmdRunner, compose_args
-from _test_util import _TestCase, DataFormat, BundleDestLoc
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
 LOGGER = logging.getLogger(__name__)
+""" Logger for this module. """
 
 
 class TestAgent(unittest.TestCase):
@@ -45,14 +47,14 @@ class TestAgent(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
 
+        self._agent: Optional[CmdRunner] = None
+        self._ol_sock: Optional[socket.socket] = None
+        self._ul_sock: Optional[socket.socket] = None
+
     def setUp(self):
         path = os.path.abspath(os.path.join(OWNPATH, ".."))
         os.chdir(path)
         LOGGER.info("Working in %s", path)
-
-        self._agent = None
-        self._ol_sock = None
-        self._ul_sock = None
 
     def tearDown(self):
         self._stop()
@@ -158,31 +160,33 @@ class TestAgent(unittest.TestCase):
 
     def _wait_for(self, sock: socket.socket, timeout: float = 1.0) -> bytes:
         LOGGER.debug("Waiting for socket data...")
-        rrd, rwr, rxp = select.select([sock], [], [], timeout)
+        rrd, _rwr, _rxp = select.select([sock], [], [], timeout)
         if not rrd:
             raise TimeoutError("Did not receive bundle in time")
         data = sock.recv(65535)
         LOGGER.debug(f"WAIT FOR GOT: {data.hex()}")
         return data
 
-    def _single_test(self, testcase: Optional[_TestCase]):
+    def _single_test(self, testcase: _TestCase):
         # start mock BPA using specified policy config
         self._start(testcase)
+        self._agent = cast(CmdRunner, self._agent)
 
         tx_data = self._encode(testcase.input_data, testcase.input_data_format)
 
-        test_sock = (
+        test_socket = (
             self._ol_sock if testcase.bundle_dest_loc == BundleDestLoc.APPIN else self._ul_sock
         )
+        test_sock = cast(socket.socket, test_socket)
+
+        if tx_data:
+            test_sock.send(tx_data)
+            LOGGER.info("Sent data:\n%s\n", tx_data.hex())
 
         if testcase.expected_output_format == DataFormat.ERR:
-            test_sock.send(tx_data)
             LOGGER.debug("waiting")
-
             with self.assertRaises(TimeoutError):
                 self._wait_for(test_sock, timeout=0.1)
-
-            LOGGER.info("\nTransferred data:\n%s\n", tx_data.hex())
 
             LOGGER.warning("Check log output to validate expected error")
 
@@ -197,9 +201,6 @@ class TestAgent(unittest.TestCase):
         else:
             # actual data
             expected_rx = self._encode(testcase.expected_output, testcase.expected_output_format)
-
-            test_sock.send(tx_data)
-            LOGGER.info("Sent data:\n%s\n", tx_data.hex())
 
             rx_data = self._wait_for(test_sock)
             if expected_rx is not None:
@@ -217,6 +218,4 @@ class TestStartStop(TestAgent):
 
     def test_start_stop(self):
         self._start(None)
-        ret = self._agent.stop()
-        self._agent = None
-        self.assertEqual(0, ret)
+        self._stop()

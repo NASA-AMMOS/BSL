@@ -118,5 +118,5 @@ jobs:
         run: DESTDIR="" ./build.sh check-install
       - name: Mock BPA tests
         run: |
-          pip3 install -r mock-bpa-test/requirements.txt
+          pip3 install -e mock-bpa-test/
           python3 -m pytest mock-bpa-test

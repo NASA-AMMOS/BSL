@@ -19,34 +19,36 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
-import yaml
-import cbor2
-import binascii
 import json
-from _test_util import _TestCase, DataFormat, BundleDestLoc
+import logging
+
+import cbor2
+import yaml
+
+from _test_util import BundleDestLoc, DataFormat, _TestCase
 from test_bpa import TestAgent
 
+LOGGER = logging.getLogger(__name__)
+""" Logger for this module. """
 
-class TestCCSDS(TestAgent):
-    pass
 
-
-def load_ccsds():
+def load_ccsds(cls: type[TestAgent]):
+    """Add test functions based on configuration file."""
     cases = {}
 
     ccsds_test_dir = "mock-bpa-test/ccsds_json/"
     ccsds_spec_file = "mock-bpa-test/ccsds_bpsec_redbook_requirements_modified.yaml"
 
     try:
-        s = open(ccsds_spec_file)
+        with open(ccsds_spec_file) as infile:
+            requirements = yaml.safe_load(infile)["requirements"]
     except FileNotFoundError:
-        print(f"Could not find {ccsds_spec_file}")
+        LOGGER.warning(f"Could not find {ccsds_spec_file}")
         return
 
-    requirements = yaml.safe_load(s)["requirements"]
     for item in requirements:
-        if "tests" not in item.keys():
-            # print(f'CCSDS | Item {item["item"]}: Skipping item - No test(s) specified.')
+        if "tests" not in item:
+            # LOGGER.error(f'CCSDS | Item {item["item"]}: Skipping item - No test(s) specified.')
             continue
 
         for t in item["tests"]:
@@ -56,23 +58,23 @@ def load_ccsds():
             outcome = t["outcome"].split(" ")[0] == "SUCCESS."
             if outcome:
                 input = t["incoming_bundle"]["hex"][2:].replace(" ", "")[:-1]
-                b_input = binascii.unhexlify(input)
+                b_input = bytes.fromhex(input)
                 cbor_input = cbor2.loads(b_input)
                 input_format = DataFormat.BUNDLEARRAY
 
                 output = t["outgoing_bundle"]["hex"][2:].replace(" ", "")[:-1]
-                b_output = binascii.unhexlify(output)
+                b_output = bytes.fromhex(output)
                 output = cbor2.loads(b_output)
                 output_format = DataFormat.BUNDLEARRAY
             else:
                 try:
                     input = t["incoming_bundle"]["hex"][2:].replace(" ", "")[:-1]
-                    b_input = binascii.unhexlify(input)
+                    b_input = bytes.fromhex(input)
                     cbor_input = cbor2.loads(b_input)
                     input_format = DataFormat.BUNDLEARRAY
 
-                except Exception:
-                    print(f"CCSDS | Test {t['test']}: Bundle hex not specified.")
+                except KeyError:
+                    LOGGER.error(f"CCSDS | Test {t['test']}: Bundle hex not specified.")
                     continue
 
                 output_format = DataFormat.ERR
@@ -102,7 +104,7 @@ def load_ccsds():
                 #       b[i|c]b_[a|s|v]_\d_\d
                 policy_desc = r["description"].split("_")
                 if len(policy_desc) != 4:
-                    print(f"CCSDS | Test {t['test']}: Policyrule {i} misconfigured.")
+                    LOGGER.error(f"CCSDS | Test {t['test']}: Policyrule {i} misconfigured.")
                     success = False
                     break
 
@@ -125,13 +127,15 @@ def load_ccsds():
                         params.append(bib_param_key_good)
 
                 else:
-                    print(f"CCSDS | Test {t['test']}: Policyrule {i} sec ctx misconfigured.")
+                    LOGGER.error(f"CCSDS | Test {t['test']}: Policyrule {i} sec ctx misconfigured.")
                     success = False
                     break
 
                 sec_role = policy_desc[1]
                 if sec_role != "s" and sec_role != "a" and sec_role != "v":
-                    print(f"CCSDS | Test {t['test']}: Policyrule {i} sec role misconfigured.")
+                    LOGGER.error(
+                        f"CCSDS | Test {t['test']}: Policyrule {i} sec role misconfigured."
+                    )
                     success = False
                     break
 
@@ -151,14 +155,14 @@ def load_ccsds():
                         "policy_action_on_fail": "delete_bundle",
                     }
                 }
-                print(f"Appending new Policy Rule {pr}")
+                LOGGER.info(f"Appending new Policy Rule {pr}")
                 policyrules.append(pr)
 
             if not success:
                 continue
 
             final_json = json.dumps({"policyrule_set": policyrules})
-            print(f"Final rule set {final_json}")
+            LOGGER.info(f"Final rule set {final_json}")
             finame = ccsds_test_dir + f"{t['test']}.json"
             with open(finame, "w") as f:
                 f.write(final_json)
@@ -175,7 +179,7 @@ def load_ccsds():
                 input_data_format=input_format,
                 expected_output_format=output_format,
             )
-            print(f"CCSDS | Test {t['test']}: Appending case.")
+            LOGGER.info(f"CCSDS | Test {t['test']}: Appending case.")
 
     def _make_test(case):
         def _test(self):
@@ -183,8 +187,10 @@ def load_ccsds():
 
         return _test
 
-    for id, case in cases.items():
-        setattr(TestCCSDS, f"test_{id}", _make_test(case))
+    for id, test_case in cases.items():
+        setattr(cls, f"test_{id}", _make_test(test_case))
 
 
-load_ccsds()
+@load_ccsds
+class TestCCSDS(TestAgent):
+    pass

@@ -19,8 +19,8 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
-from enum import IntEnum, unique
 from dataclasses import dataclass
+from enum import IntEnum, unique
 from typing import Any, Optional
 
 
