@@ -22,7 +22,7 @@
 
 /**
  * @file
- * @ingroup example_pp
+ * @ingroup sample_pp
  * Entry point for the sample policy provider of the BSL.
  * Configuration input is handled by @ref PolicyParser.h functions.
  */
