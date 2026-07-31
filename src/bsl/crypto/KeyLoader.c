@@ -21,7 +21,7 @@
  */
 /** @file
  * @ingroup crypto
- * Implementation of the key loader logic for JWT Set and COSE Key Set.
+ * Implementation of the key loader logic for JWK Set and COSE Key Set.
  */
 #include "KeyLoader.h"
 
