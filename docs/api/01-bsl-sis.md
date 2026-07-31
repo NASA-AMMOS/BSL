@@ -176,7 +176,7 @@ As indicated in the prior section, the BSL has four main components. The princip
 
 The BSL requires the existence of a Security Policy Provider (commonly referred to as the “Policy Provider” throughout subsequent documentation), which governs what security actions should be performed upon a particular bundle, and a Security Context, which handles all cryptographic material and safely performs the cryptographic functionality.
 
-An sample Policy Provider is included in the repository, as well as an implementation of the Default Security Context (as specified in RFC 9173).
+A sample Policy Provider is included in the repository, as well as an implementation of the Default Security Context (as specified in RFC 9173).
 
 Refer to the doxygen-generated documentation in the repository for the relevant BSL initialization functions, that provision the library with the appropriate policy provider and security context.
 
