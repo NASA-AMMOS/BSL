@@ -28,27 +28,44 @@ The BSL proper is associated with the @ref frontend and @ref backend_dyn groups.
 
 The unit tests of the BSL use, where necessary, very minimal implementations of a PP to set up preconditons for test cases.
 
+## Bit Field Policy
+
 The Mock BPA uses a PP implementation tailored to meet the needs of the BSL acceptance tests.
 This PP uses a set of bit fields within an integer program argument to control policy options; the fields are documented on ::BSLP_PolicyParser_BitstringConfig_t.
 It also allows multiple integer policy values to be configured in a single running Mock BPA.
 This PP is registered and used by the @ref mock-bpa for many BSL testing cases.
 
+Sources for this policy provider are internal to the @ref mock_bpa group and its library used for unit testing.
+
+## ION-Heritage Sample Policy Provider {#sample-pp}
+
 A more full-featured draft PP maintained as part of the BSL source is based on the JSON-encoded policy structure used in the earlier ION implementation of the Default Security Contexts @cite ion-bpsec-policy.
 This PP parses an ION-Like JSON structure to configure policy rules within a running Mock BPA. See the _BSL User Guide_ @cite bsl_user_guide for details on specific JSON structure and attributes.
 This PP is registered and used by the @ref mock-bpa for many BSL testing cases.
 
-Sources related to these example PPs are associated with the @ref example_pp group.
+Sources related to this provider are associated with the @ref sample_pp group.
 
 # Example Security Contexts {#example-scs}
 
+The BSL source contains example implementations of three security contexts which all use the @ref bsl-crypto for their cryptographic processing.
+
+These SCs are registered and used by the @ref mock-bpa for BSL testing.
+
+## Default Contexts {#default-scs}
+
 The two Default Security Contexts defined in RFC 9173 @cite rfc9173 offer minimal, interoperable, and pre-shared-key-focused integrity and confidentiality operations.
+
+Sources related to these example SCs are associated with the @ref default_sc group.
+
+## COSE Context {#cose-sc}
 
 The COSE Context defined in an internet draft @cite draft-ietf-dtn-bpsec-cose offers more full-featured, layered symmetric key options including key wrapping and key derivation.
 
-An implementation of each of these SCs is maintained as part of the BSL source and uses the BSL crypto library as an wrapper for the OpenSSL library @cite lib:openssl from the host OS and a key store registered with the crypto library (part of the @ref bpa-callback-api).
-These SCs are registered and used by the @ref mock-bpa for BSL testing.
+Sources related to the COSE SC are associated with the @ref cose_sc group.
 
-Sources related to these example SCs are associated with the @ref default_sc group.
+## BSL Crypto Library {#bsl-crypto}
+
+This is a wrapper for the OpenSSL library @cite lib:openssl from the host OS and an API to access a shared key store (part of the @ref bpa-callback-api).
 
 # Mock BPA {#mock-bpa}
 
@@ -57,7 +74,7 @@ The Mock BPA uses an un-framed UDPCL-like interface for its underlayer and also 
 
 The Mock BPA is limited to a single registered endpoint, and does no other handling normally required by RFC 9171 @cite rfc9171. So for this reason it is not a true BPA and must not be treated as one.
 
-Upon startup, the Mock BPA registers a single [ION-based Example Policy Provider](@ref example-pps) and all of the [example Security Contexts](@ref example-scs).
+Upon startup, the Mock BPA registers a single @ref sample-pp and all of the @ref example-scs.
 
 Sources related to the Mock BPA are associated with the @ref mock_bpa group.
 
@@ -78,6 +95,7 @@ The path to the JSON file should be passed to the Mock BPA with the `-j` command
 ## Key Management
 
 The keys used by the example SCs registered in the Mock BPA's key store are obtained from a file using either the JSON Web Key (JWK) Set format of RFC 7517 @cite rfc7517 or the COSE Key Set format of RFC 9052 @cite rfc9052.
+This key store is accessed via the @ref bsl-crypto APIs for use by the policy providers registered with the Mock BPA.
 
 The implementation to support these SCs only handles symmetric keys and only the minimal header parameters needed for key ID ("kid") and symmetric key material itself ("k").
 

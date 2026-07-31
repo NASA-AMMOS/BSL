@@ -102,10 +102,11 @@ This is the concrete implementation of a backend using dynamic heap-allocated co
 It uses POSIX APIs to provide necessary Host functions for the BSL, and OpenSSL APIs to provide crypto functions for the BSL.
 
 
-@defgroup example_pp Example Policy Provider
+@defgroup sample_pp Sample Policy Provider
 @brief Implementation of a simple rule-based policy provider configured with JSON input.
 
 This group contains files used by the Sample Policy Provider library included with the BSL.
+The structure of the JSON configuration has heritage from the ION BPSec implementation and is documented in more detail in the BSL User Guide @cite bsl_user_guide.
 
 
 @defgroup default_sc Default Security Contexts
@@ -126,7 +127,7 @@ This group contains files used by the COSE Context (draft @cite draft-ietf-dtn-b
 This group contains files used by the Default Security Contexts (RFC 9173 @cite rfc9173) library included with the BSL.
 
 
-@defgroup mock_bpa Example/Mock BP Agent
+@defgroup mock_bpa Mock BP Agent
 @brief Files used in the Mock BPA used for testing.
 
 The Mock BPA performs whole-bundle encoding and decoding (CODEC) functions, but no other stateful bundle processing.
