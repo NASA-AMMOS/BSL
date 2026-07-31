@@ -41,7 +41,7 @@ BSL/
 ├── src/                 # Source code, top level is header-only API
 ├── src/front            # Implementation of BSL frontend
 ├── src/dynamic          # Implementation of dynamic backend
-├── src/sample_pp        # Implementation of the example policy provider
+├── src/sample_pp        # Implementation of the sample policy provider
 ├── src/default_sc       # Implementation of Default Security Contexts (RFC 9173)
 ├── src/cose_sc          # Implementation of COSE Context
 ├── src/crypto           # Implementation of BSL crypto library and key store interface
