@@ -124,7 +124,7 @@ This group contains files used by the COSE Context (draft @cite draft-ietf-dtn-b
 @defgroup crypto Cryptographic Processing and Key Store API
 @brief Implementation of the BSL crypto API by a software backend and user of the BSL key store interface.
 
-This group contains files used by the Default Security Contexts (RFC 9173 @cite rfc9173) library included with the BSL.
+This group contains files used by the all of the security context implementations (@ref default-scs and @ref cose-sc) included with the BSL.
 
 
 @defgroup mock_bpa Mock BP Agent
