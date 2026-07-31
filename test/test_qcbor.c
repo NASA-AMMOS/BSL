@@ -19,6 +19,10 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+/** @file
+ * @ingroup unit_test
+ * Test the QCBOR library behavior for BSL needs.
+ */
 #include "TestUtils.h"
 
 #include <bsl/BPSecLib_Public.h>

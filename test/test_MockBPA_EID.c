@@ -19,6 +19,10 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+/** @file
+ * @ingroup unit_test
+ * Test the EID codecs of the Mock BPA.
+ */
 #include <bsl/mock_bpa/agent.h>
 #include <bsl/mock_bpa/eid.h>
 #include <bsl/mock_bpa/eidpat.h>
