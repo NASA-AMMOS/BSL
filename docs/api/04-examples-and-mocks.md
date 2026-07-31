@@ -48,7 +48,7 @@ The COSE Context defined in an internet draft @cite draft-ietf-dtn-bpsec-cose of
 An implementation of each of these SCs is maintained as part of the BSL source and uses the BSL crypto library as an wrapper for the OpenSSL library @cite lib:openssl from the host OS and a key store registered with the crypto library (part of the @ref bpa-callback-api).
 These SCs are registered and used by the @ref mock-bpa for BSL testing.
 
-Sources related to these  SCs are associated with the @ref default_sc group.
+Sources related to these example SCs are associated with the @ref default_sc group.
 
 # Mock BPA {#mock-bpa}
 
