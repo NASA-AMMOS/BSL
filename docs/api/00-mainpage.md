@@ -74,7 +74,7 @@ digraph example {
 The BSL comes with a @ref frontend and a @ref backend_dyn implementation which uses heap-allocated, dynamically-sized data structures and run-time registration capabilities.
 For a more constrained (_e.g._, flight software) environment an alternative backend could be implemented with fixed-size data containers and constant-time registry lookup algorithms.
 
-The BSL source repository also contains @ref sample-pps and @ref example-scs to actually exercise the BSL during testing, and a @ref mock-bpa which allows as-built integration testing of the BSL using a pseudo-daemon process.
+The BSL source repository also contains @ref example-pps and @ref example-scs to actually exercise the BSL during testing, and a @ref mock-bpa which allows as-built integration testing of the BSL using a pseudo-daemon process.
 Together these use the abstract Frontend and populate the otherwise empty Dynamic Backend registries to create an out-of-the-box usable BPSec implementation.
 
 # Dependencies
@@ -102,7 +102,7 @@ This is the concrete implementation of a backend using dynamic heap-allocated co
 It uses POSIX APIs to provide necessary Host functions for the BSL, and OpenSSL APIs to provide crypto functions for the BSL.
 
 
-@defgroup sample_pp Sample Policy Provider
+@defgroup example_pp Example Policy Provider
 @brief Implementation of a simple rule-based policy provider configured with JSON input.
 
 This group contains files used by the Sample Policy Provider library included with the BSL.
