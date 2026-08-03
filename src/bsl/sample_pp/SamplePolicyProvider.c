@@ -282,7 +282,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
 
         if (i >= BSLP_SecOperPtrList_size(secops))
         {
-            BSL_LOG_INFO("append to end");
+            BSL_LOG_DEBUG("append to end");
             BSLP_SecOperPtrList_push_back(secops, sec_oper);
         }
         BSL_LOG_INFO("Created sec operation for rule `%s`", string_get_cstr(rule->description));

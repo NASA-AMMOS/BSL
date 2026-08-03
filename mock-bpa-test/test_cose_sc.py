@@ -37,7 +37,7 @@ LOGGER = logging.getLogger(__name__)
 EXAMPLE_A_NO_SEC = """\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
-    [1, 1, 0, 2, << "hello" >>, h'4EC359D2']
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
 ]
 """
 """ Example A input bundle with no security blocks """
@@ -46,7 +46,7 @@ EXAMPLE_A_1_WITH_BIB = """\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
     [11, 2, 0, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[17, << [<< {1: 6} >>, {4: 'ExampleA.1'}, null, h'EC8260A38A1A00FEF2CD4AAE063F50F01C5645E84C6C4893CA895EED44EF60A5F50F9ADF5CC5654499B881E589637805'] >>]]] >>],
-    [1, 1, 0, 2, << "hello" >>, h'4EC359D2']
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
 ]
 """
 """ Bundle with BIB over target #1, adjusted sec block to #2 """
@@ -55,7 +55,7 @@ EXAMPLE_A_1_WITH_BIB_ADDL_UHDR = """\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
     [11, 2, 0, 0, << [1], 3, 1, [1, "//src/"], [[4, <<{4: 'ExampleA.1'}>>], [5, {0: 1, -1: 1}]], [[[17, << [<< {1: 6} >>, {}, null, h'EC8260A38A1A00FEF2CD4AAE063F50F01C5645E84C6C4893CA895EED44EF60A5F50F9ADF5CC5654499B881E589637805'] >>]]] >>],
-    [1, 1, 0, 2, << "hello" >>, h'4EC359D2']
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
 ]
 """
 """ Adapted to use additional unprotected headers parameter"""
@@ -95,6 +95,34 @@ EXAMPLE_A_6_WITH_BCB = """\
 ]
 """
 """ Bundle with BCB over target #1 using HKDF, adjusted sec block to #2 with flags 0x1"""
+
+EXAMPLE_A_11_NO_SEC = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],\
+    [6, 2, 0, 0, << [1, "//src/"] >>],
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
+]
+"""
+""" Example A input bundle with no security blocks """
+
+EXAMPLE_A_11_WITH_BIB = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [11, 3, 0, 0, << [2], 3, 1, [1, "//src/"], [[5, {0: 1, 1: 3, -1: 1}]], [[[17, << [<< {1: 6} >>, {4: h'4578616D706C65412E31'}, null, h'D0218BCC266210D32BE089950E733EF3FF8B502DF628710C7085B72A29EB0867D2DEAA71C2CAB26A9EFBA0465E9B5521'] >>]]] >>],
+    [6, 2, 0, 0, << [1, "//src/"] >>],
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
+]
+"""
+""" Bundle with BIB over target #2 """
+
+EXAMPLE_A_12_WITH_BIB = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [11, 3, 0, 0, << [1], 3, 1, [1, "//src/"], [[3, << {4: h'4578616D706C65412E31'} >>], [5, {0: 1, -1: 1}]], [[[17, << [<< {1: 6} >>, {}, null, h'73D54E469FCC5E66F4A3DD81A1486012F08C4D662A15EABA7516D1AA2ED6D23785659682317543BA5FC7E7DD19D46D98'] >>]]] >>],
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
+]
+"""
+""" Bundle with BIB over target #1 and additional protected """
 
 CCSDS_MAC_NO_SEC = """\
 [_
@@ -255,7 +283,7 @@ class TestCoseScMac0(TestAgent):
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
     [11, 2, 0, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[17, << [<< {1: 6} >>, {4: 'missing'}, null, h'EC8260A38A1A00FEF2CD4AAE063F50F01C5645E84C6C4893CA895EED44EF60A5F50F9ADF5CC5654499B881E589637805'] >>]]] >>],
-    [1, 1, 0, 2, << "hello" >>, h'4EC359D2']
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
 ]
 """,
                 expected_output=".*<ERROR>.* Unknown key from ID",
@@ -340,7 +368,7 @@ class TestCoseScMac(TestAgent):
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
     [11, 2, 0, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[97, << [<< {1: 6} >>, {}, null, h'252BC95D2B2A87EB7FF6CEF7EE8C015F95AE7C3B490B5277151CB4E29D7DBE848AD27208269E621BA5EF828FC9DA53BA', [['', {1: -6, 4: 'ExampleA.1'}, null]]] >>]]] >>],
-    [1, 1, 0, 2, << "hello" >>, h'4EC359D2']
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
 ]
 """,
                 expected_output=EXAMPLE_A_NO_SEC,
@@ -480,7 +508,6 @@ class TestCoseScEncrypt(TestAgent):
         )
 
     def test_exampleA_6_source(self):
-        """The salt header is non-deterministic"""
         self._single_test(
             _TestCase(
                 input_data=EXAMPLE_A_NO_SEC,
@@ -501,6 +528,48 @@ class TestCoseScEncrypt(TestAgent):
                 expected_output=EXAMPLE_A_NO_SEC,
                 sec_src_eid="dtn://dst/",
                 policy_config="data/cose-sc/policy-any-bcb-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_exampleA_11_source(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_11_NO_SEC,
+                expected_output=EXAMPLE_A_11_WITH_BIB,
+                sec_src_eid="dtn://src/",
+                policy_config="data/cose-sc/policy-exA.11-source.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_exampleA_11_acceptor_valid_loose(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_11_WITH_BIB,
+                expected_output=EXAMPLE_A_11_NO_SEC,
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-exA.11-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_exampleA_12_acceptor_valid_loose(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_12_WITH_BIB,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-any-bib-accept.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
                 input_data_format=DataFormat.CBORDIAG,

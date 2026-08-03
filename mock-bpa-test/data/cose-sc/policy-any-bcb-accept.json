@@ -2,7 +2,7 @@
   "policyrule_set": [
     {
       "policyrule": {
-        "desc": "Confidentiality source rule",
+        "desc": "Confidentiality accept rule",
         "filter": {
           "rule_id": "1",
           "role": "a",

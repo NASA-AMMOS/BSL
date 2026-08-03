@@ -6,7 +6,7 @@
         "filter": {
           "rule_id": "1",
           "role": "a",
-          "tgt": 1,
+          "tgt": 6,
           "loc": "appout",
           "sc_id": 3
         },

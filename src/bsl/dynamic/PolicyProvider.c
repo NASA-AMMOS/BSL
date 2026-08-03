@@ -54,7 +54,8 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
         for (size_t i = act_ct; i < new_act_ct; i++)
         {
             BSL_SecurityAction_t *act = BSL_SecActionList_get(output_action_set->actions, i);
-            act->pp_id                = *BSL_PolicyDict_cref(policy_reg_it)->key_ptr;
+
+            act->pp_id = *BSL_PolicyDict_cref(policy_reg_it)->key_ptr;
         }
     }
 
