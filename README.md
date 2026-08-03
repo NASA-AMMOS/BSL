@@ -24,7 +24,9 @@ subcontract 1700763.
 
 The BPSec Library (BSL) is an implementation of *Bundle Protocol Security* as specified in [RFC 9172](https://datatracker.ietf.org/doc/rfc9172/) and [RFC 9173](https://datatracker.ietf.org/doc/rfc9173/), with a flexible architecture enabling ready adaptability to flight or ground systems.
 
-The BSL exposes an interface via C header files (under `src/bsl`), and contains an example backend implementing this interface in `src/bsl/backend`. The BSL also contains an implementation of the Default Security Context (RFC 9173) under `src/bsl/default_sc` and a sample policy provider under `src/bsl/sample_pp`. Together these form a complete the set of functionality required to execute Bundle Protocol Security.
+The BSL exposes an interface via C header files (under `src/bsl` and `src/bsl/front`), and contains a dynamic (heap-allocated) backend implementing this interface in `src/bsl/dynamic`.
+The BSL also contains an implementation of the Default Security Context (RFC 9173) under `src/bsl/default_sc`, the symmetric key profile fo COSE Context under `src/bsl/cose_sc`, and a sample policy provider under `src/bsl/sample_pp`.
+Together these form a complete the set of functionality required to execute Bundle Protocol Security.
 
 ## Project Organization
 
