@@ -19,6 +19,10 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+/** @file
+ * @ingroup unit_test
+ * Common functions for testing Default Security Contexts.
+ */
 #ifndef _BSL_DEFAULTSCUTILS_H_
 #define _BSL_DEFAULTSCUTILS_H_
 

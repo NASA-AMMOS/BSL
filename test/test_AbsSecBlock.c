@@ -19,6 +19,10 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+/** @file
+ * @ingroup unit_test
+ * Test the abstract security block (ASB) codec of the BSL.
+ */
 #include "DefaultScUtils.h"
 
 #include <bsl/BPSecLib_Private.h>

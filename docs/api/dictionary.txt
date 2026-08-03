@@ -62,7 +62,9 @@ ciphertext
 CLA
 clin
 codebase
+codec
 CODEC
+codecs
 config
 CONOPs
 const

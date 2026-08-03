@@ -20,7 +20,7 @@
  * subcontract 1700763.
  */
 /** @file
- * @ingroup unit-tests
+ * @ingroup unit_test
  *
  * @brief Test the config reader of the Sample Policy Provider.
  */

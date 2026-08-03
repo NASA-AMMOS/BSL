@@ -19,6 +19,10 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+/** @file
+ * @ingroup crypto
+ * Implementation of the key loader logic for JWK Set and COSE Key Set.
+ */
 #include "KeyLoader.h"
 
 #include <bsl/front/TextUtil.h>

@@ -29,7 +29,7 @@
  *  - They test correctness mostly by verifying that operations modify the bundle as intended
  *  - They are checked against test vectors in Appendix A of RFC9173.
  *
- * @ingroup unit-tests
+ * @ingroup unit_test
  */
 #include "DefaultScUtils.h"
 

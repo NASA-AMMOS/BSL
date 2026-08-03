@@ -37,9 +37,8 @@ echo "Check format from root: $SELFDIR"
 
 if ! git diff --quiet
 then
+    git status
     echo "Error: Files changed after formatting:"
     git diff
     exit 1
 fi
-
-exit 0

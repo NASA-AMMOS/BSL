@@ -19,6 +19,11 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+/**
+ * @file
+ * @ingroup sample_pp
+ * Implementation of the JSON parser for this policy.
+ */
 #include "PolicyParser.h"
 
 #include "bsl/front/TextUtil.h"

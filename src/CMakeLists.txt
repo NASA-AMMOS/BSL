@@ -147,7 +147,7 @@ target_link_libraries(bsl_cose_sc PRIVATE bsl_crypto)
 target_link_libraries(bsl_cose_sc PRIVATE MLIB::mlib)
 target_link_libraries(bsl_cose_sc PRIVATE qcbor::qcbor)
 
-# Example Policy Provider library
+# Sample Policy Provider library
 add_library(bsl_sample_pp)
 target_sources(bsl_sample_pp
     PUBLIC
