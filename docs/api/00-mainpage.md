@@ -1,6 +1,6 @@
 @mainpage Introduction
 <!--
-Copyright (c) 2025 The Johns Hopkins University Applied Physics
+Copyright (c) 2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.
 
 This file is part of the Bundle Protocol Security Library (BSL).
@@ -102,10 +102,11 @@ This is the concrete implementation of a backend using dynamic heap-allocated co
 It uses POSIX APIs to provide necessary Host functions for the BSL, and OpenSSL APIs to provide crypto functions for the BSL.
 
 
-@defgroup example_pp Sample Policy Provider
+@defgroup sample_pp Sample Policy Provider
 @brief Implementation of a simple rule-based policy provider configured with JSON input.
 
-This group contains files used by the Example Policy Provider library included with the BSL.
+This group contains files used by the Sample Policy Provider library included with the BSL.
+The structure of the JSON configuration has heritage from the ION BPSec implementation and is documented in more detail in the BSL User Guide @cite bsl_user_guide.
 
 
 @defgroup default_sc Default Security Contexts
@@ -123,10 +124,10 @@ This group contains files used by the COSE Context (draft @cite draft-ietf-dtn-b
 @defgroup crypto Cryptographic Processing and Key Store API
 @brief Implementation of the BSL crypto API by a software backend and user of the BSL key store interface.
 
-This group contains files used by the Default Security Contexts (RFC 9173 @cite rfc9173) library included with the BSL.
+This group contains files used by all of the security context implementations (@ref default-scs and @ref cose-sc) included with the BSL.
 
 
-@defgroup mock_bpa Example/Mock BP Agent
+@defgroup mock_bpa Mock BP Agent
 @brief Files used in the Mock BPA used for testing.
 
 The Mock BPA performs whole-bundle encoding and decoding (CODEC) functions, but no other stateful bundle processing.
@@ -139,7 +140,7 @@ The Mock BPA also implements an in-memory key store registered with the BSL cryp
 @brief Files used for unit testing of BSL behaviors.
 
 This exercises internal and external APIs for consistency, but not end-to-end bundle testing.
-Tests cover the BSL itself, its example security contexts and example policy provider.
+Tests cover the BSL itself, its example security contexts and sample policy provider.
 
 
 @defgroup fuzz_test Fuzz Testing

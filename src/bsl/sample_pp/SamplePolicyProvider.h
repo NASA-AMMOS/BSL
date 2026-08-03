@@ -22,8 +22,8 @@
 
 /**
  * @file
+ * @ingroup sample_pp
  * @brief Spec of locally-defined data structures.
- * @ingroup example_pp
  */
 #ifndef BSLP_SAMPLE_POLICY_PROVIDER_H
 #define BSLP_SAMPLE_POLICY_PROVIDER_H

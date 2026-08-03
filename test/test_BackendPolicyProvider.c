@@ -26,7 +26,7 @@
  * Notes:
  *  - There is one leaky abstraction (it does import SamplePolicyProvider.h) for concrete struct def size.
  *
- * @ingroup unit-tests
+ * @ingroup unit_test
  */
 
 #include "DefaultScUtils.h"

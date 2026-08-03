@@ -19,10 +19,9 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-
 /**
  * @file
- * @ingroup example_pp
+ * @ingroup sample_pp
  * Entry point for the sample policy provider of the BSL.
  * Configuration input is handled by @ref PolicyParser.h functions.
  */

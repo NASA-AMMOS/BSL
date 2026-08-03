@@ -20,6 +20,7 @@
  * subcontract 1700763.
  */
 /** @file
+ * @ingroup unit_test
  * Test the TextUtil.h interfaces.
  */
 #include <bsl/front/TextUtil.h>

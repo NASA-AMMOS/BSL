@@ -20,7 +20,7 @@
  * subcontract 1700763.
  */
 /** @file
- * @ingroup unit-tests
+ * @ingroup unit_test
  *
  * @brief Specific low-level tests of the COSE Context
  *

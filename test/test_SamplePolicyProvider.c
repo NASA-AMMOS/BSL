@@ -25,7 +25,7 @@
  *
  * Notes:
  *
- * @ingroup unit-tests
+ * @ingroup unit_test
  */
 #include "DefaultScUtils.h"
 

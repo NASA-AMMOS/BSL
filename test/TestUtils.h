@@ -19,6 +19,10 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+/** @file
+ * @ingroup unit_test
+ * Common unit test utility declarations.
+ */
 #ifndef _BSL_TESTUTILS_H_
 #define _BSL_TESTUTILS_H_
 

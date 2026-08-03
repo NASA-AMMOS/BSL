@@ -23,7 +23,7 @@
 /**
  * @file
  * @brief Local implementation of locally-defined data structures.
- * @ingroup example_pp
+ * @ingroup sample_pp
  */
 #include "SamplePolicyProvider.h"
 
