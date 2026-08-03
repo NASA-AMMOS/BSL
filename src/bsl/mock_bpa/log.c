@@ -68,9 +68,9 @@ typedef struct
     /// Event severity enumeration
     int severity;
     /// File and function context
-    string_t context;
+    m_string_t context;
     /// Fully formatted message
-    string_t message;
+    m_string_t message;
 } mock_bpa_LogEvent_event_t;
 
 static void mock_bpa_LogEvent_event_init(mock_bpa_LogEvent_event_t *obj)
@@ -78,14 +78,14 @@ static void mock_bpa_LogEvent_event_init(mock_bpa_LogEvent_event_t *obj)
     obj->thread    = pthread_self();
     obj->timestamp = (struct timespec) { 0 };
     obj->severity  = LOG_DEBUG;
-    string_init(obj->context);
-    string_init(obj->message);
+    m_string_init(obj->context);
+    m_string_init(obj->message);
 }
 
 static void mock_bpa_LogEvent_event_deinit(mock_bpa_LogEvent_event_t *obj)
 {
-    string_clear(obj->message);
-    string_clear(obj->context);
+    m_string_clear(obj->message);
+    m_string_clear(obj->context);
 }
 
 /// OPLIST for mock_bpa_LogEvent_event_t
@@ -109,6 +109,8 @@ static mock_bpa_LogEvent_queue_t event_queue;
 static pthread_t thr_sink;
 /// True if ::thr_sink is valid
 static atomic_bool thr_valid = ATOMIC_VAR_INIT(false);
+/// Log internal error once
+static atomic_bool did_crit = ATOMIC_VAR_INIT(false);
 // NOLINTEND
 
 // NOLINTBEGIN
@@ -146,8 +148,8 @@ static void write_log(const mock_bpa_LogEvent_event_t *event)
         }
         *out = '\0';
     }
-    fprintf(stderr, "%s T:%s <%s> [%s] %s\n", tmbuf, thrbuf, severity_name, string_get_cstr(event->context),
-            string_get_cstr(event->message));
+    fprintf(stderr, "%s T:%s <%s> [%s] %s\n", tmbuf, thrbuf, severity_name, m_string_get_cstr(event->context),
+            m_string_get_cstr(event->message));
     fflush(stderr);
 }
 // NOLINTEND
@@ -160,7 +162,7 @@ static void *work_sink(void *arg _U_)
         mock_bpa_LogEvent_event_ptr_t *event_ptr;
         mock_bpa_LogEvent_queue_pop_move(&event_ptr, event_queue);
         const mock_bpa_LogEvent_event_t *event = mock_bpa_LogEvent_event_ptr_cref(event_ptr);
-        if (string_empty_p(event->message))
+        if (m_string_empty_p(event->message))
         {
             running = false;
         }
@@ -183,7 +185,7 @@ void mock_bpa_LogOpen(void)
         mock_bpa_LogEvent_event_t manual;
         mock_bpa_LogEvent_event_init(&manual);
         manual.severity = LOG_CRIT;
-        string_set_str(manual.message, "mock_bpa_LogOpen() failed");
+        m_string_set_cstr(manual.message, "mock_bpa_LogOpen() failed");
         write_log(&manual);
         mock_bpa_LogEvent_event_deinit(&manual);
     }
@@ -206,7 +208,7 @@ void mock_bpa_LogClose(void)
         mock_bpa_LogEvent_event_t manual;
         mock_bpa_LogEvent_event_init(&manual);
         manual.severity = LOG_CRIT;
-        string_set_str(manual.message, "mock_bpa_LogClose() failed");
+        m_string_set_cstr(manual.message, "mock_bpa_LogClose() failed");
         write_log(&manual);
         mock_bpa_LogEvent_event_deinit(&manual);
     }
@@ -284,13 +286,13 @@ void mock_bpa_LogEvent(const struct timespec *timestamp, int severity, const cha
         {
             pos = filename;
         }
-        string_printf(event->context, "%s:%d:%s", pos, lineno, funcname);
+        m_string_printf(event->context, "%s:%d:%s", pos, lineno, funcname);
     }
 
-    string_vprintf(event->message, format, args);
+    m_string_vprintf(event->message, format, args);
 
     // ignore empty messages
-    if (string_empty_p(event->message))
+    if (m_string_empty_p(event->message))
     {
         mock_bpa_LogEvent_event_ptr_release(event_ptr);
     }
@@ -302,13 +304,16 @@ void mock_bpa_LogEvent(const struct timespec *timestamp, int severity, const cha
         }
         else
         {
-            mock_bpa_LogEvent_event_t manual;
-            mock_bpa_LogEvent_event_init(&manual);
-            manual.severity = LOG_CRIT;
-            string_set_str(manual.message, "mock_bpa_LogEvent() called before mock_bpa_openlog()");
-            write_log(&manual);
-            mock_bpa_LogEvent_event_deinit(&manual);
-
+            if (!atomic_load(&did_crit))
+            {
+                mock_bpa_LogEvent_event_t manual;
+                mock_bpa_LogEvent_event_init(&manual);
+                manual.severity = LOG_CRIT;
+                m_string_set_cstr(manual.message, "mock_bpa_LogEvent() called before mock_bpa_openlog()");
+                write_log(&manual);
+                mock_bpa_LogEvent_event_deinit(&manual);
+                atomic_store(&did_crit, true);
+            }
             write_log(event);
             mock_bpa_LogEvent_event_ptr_release(event_ptr);
         }

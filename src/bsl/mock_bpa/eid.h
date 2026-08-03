@@ -95,7 +95,7 @@ void MockBPA_EID_Deinit(void *user_data, BSL_HostEID_t *eid);
 int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data);
 
 /// Interface for BSL_HostDescriptors_t::eid_to_text
-// int mock_bpa_eid_to_text(string_t out, const BSL_HostEID_t *eid, void *user_data);
+// int mock_bpa_eid_to_text(m_string_t out, const BSL_HostEID_t *eid, void *user_data);
 
 #ifdef __cplusplus
 } // extern C

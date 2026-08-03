@@ -32,6 +32,8 @@
 #include <m-bptree.h>
 #include <m-dict.h>
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,7 +44,7 @@ extern "C" {
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
+M_DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
 // GCOV_EXCL_STOP
 /// @endcond
 
@@ -53,7 +55,7 @@ DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLI
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-BPTREE_DEF2(BSL_PolicyDict, 4, uint64_t, M_BASIC_OPLIST, BSL_PolicyDesc_t, M_POD_OPLIST)
+M_BPTREE_DEF2(BSL_PolicyDict, 4, uint64_t, M_BASIC_OPLIST, BSL_PolicyDesc_t, M_POD_OPLIST)
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND

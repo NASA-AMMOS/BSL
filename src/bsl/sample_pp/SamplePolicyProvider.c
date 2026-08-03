@@ -191,15 +191,15 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
         const BSLP_PolicyPredicate_t *predicate = BSLP_PolicyPredicatePtr_cref(*BSLP_PolicyPredicateList_cref(pred_it));
         if (!BSLP_PolicyRule_IsConsistent(rule))
         {
-            BSL_LOG_ERR("Rule `%s` is not consistent", string_get_cstr(rule->description));
+            BSL_LOG_ERR("Rule `%s` is not consistent", m_string_get_cstr(rule->description));
             continue;
         }
-        BSL_LOG_DEBUG("Evaluating against rule `%s`", string_get_cstr(rule->description));
+        BSL_LOG_DEBUG("Evaluating against rule `%s`", m_string_get_cstr(rule->description));
 
         if (!BSLP_PolicyPredicate_IsMatch(predicate, location, primary_block.field_src_node_id,
                                           primary_block.field_dest_eid))
         {
-            BSL_LOG_DEBUG("Rule `%s` not a match", string_get_cstr(rule->description));
+            BSL_LOG_DEBUG("Rule `%s` not a match", m_string_get_cstr(rule->description));
             continue;
         }
 
@@ -285,7 +285,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
             BSL_LOG_INFO("append to end");
             BSLP_SecOperPtrList_push_back(secops, sec_oper);
         }
-        BSL_LOG_INFO("Created sec operation for rule `%s`", string_get_cstr(rule->description));
+        BSL_LOG_INFO("Created sec operation for rule `%s`", m_string_get_cstr(rule->description));
     }
     pthread_mutex_unlock(&self->mutex);
 
@@ -490,7 +490,7 @@ int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, const char *desc, int64_t 
                              BSL_PolicyAction_e failure_action_code)
 {
     BSLP_PolicyRule_Init(self);
-    string_set_str(self->description, desc);
+    m_string_set_cstr(self->description, desc);
 
     self->sec_block_type      = sec_block_type;
     self->target_block_type   = target_block_type;
@@ -510,16 +510,16 @@ void BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(BSLP_PolicyRule_t));
-    string_init(self->description);
+    m_string_init(self->description);
     BSLB_VariantPtrMap_init(self->options);
 }
 
 void BSLP_PolicyRule_Deinit(BSLP_PolicyRule_t *self)
 {
-    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, noptions=%zu", string_get_cstr(self->description),
+    BSL_LOG_INFO("BSLP_PolicyRule_Deinit: %s, noptions=%zu", m_string_get_cstr(self->description),
                  BSLB_VariantPtrMap_size(self->options));
 
-    string_clear(self->description);
+    m_string_clear(self->description);
     BSLB_VariantPtrMap_clear(self->options);
 }
 
@@ -583,7 +583,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
         BSL_Variant_t *opt = BSL_SecOper_AddOption(sec_oper, *(pair->key_ptr));
         BSL_Variant_Set(opt, BSLB_VariantPtr_cref(*(pair->value_ptr)));
     }
-    BSL_LOG_INFO("Created sec operation for rule `%s`", string_get_cstr(self->description));
+    BSL_LOG_INFO("Created sec operation for rule `%s`", m_string_get_cstr(self->description));
 
     return BSL_SUCCESS;
 }
