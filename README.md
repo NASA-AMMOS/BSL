@@ -24,7 +24,7 @@ subcontract 1700763.
 
 The BPSec Library (BSL) is an implementation of *Bundle Protocol Security* as specified in [RFC 9172](https://datatracker.ietf.org/doc/rfc9172/) and [RFC 9173](https://datatracker.ietf.org/doc/rfc9173/), with a flexible architecture enabling ready adaptability to flight or ground systems.
 
-The BSL exposes an interface via C header files (under `src`), and contains an example backend implementing this interface in `src/backend`. The BSL also contains an implementation of the Default Security Context (RFC 9173) under `src/security_context` and a sample policy provider under `src/policy_provider`. Together these form a complete the set of functionality required to execute Bundle Protocol Security.
+The BSL exposes an interface via C header files (under `src/bsl`), and contains an example backend implementing this interface in `src/bsl/backend`. The BSL also contains an implementation of the Default Security Context (RFC 9173) under `src/bsl/default_sc` and a sample policy provider under `src/bsl/sample_pp`. Together these form a complete the set of functionality required to execute Bundle Protocol Security.
 
 ## Project Organization
 
@@ -38,14 +38,14 @@ BSL/
 ├── docs/                # Doxygen pages and templates
 ├── pkg/                 # Material for building RPMs and pkg-config
 ├── resources/           # Additional helper util scripts
-├── src/                 # Source code, top level is header-only API
-├── src/front            # Implementation of BSL frontend
-├── src/dynamic          # Implementation of dynamic backend
-├── src/sample_pp        # Implementation of the example policy provider
-├── src/default_sc       # Implementation of Default Security Contexts (RFC 9173)
-├── src/cose_sc          # Implementation of COSE Context
-├── src/crypto           # Implementation of BSL crypto library and key store interface
-├── src/mock_bpa         # Implementation of example Mock BPA
+├── src/bsl/             # Source code, top level is header-only API
+├── src/bsl/front        # Implementation of BSL frontend
+├── src/bsl/dynamic      # Implementation of dynamic backend
+├── src/bsl/sample_pp    # Implementation of the example policy provider
+├── src/bsl/default_sc   # Implementation of Default Security Contexts (RFC 9173)
+├── src/bsl/cose_sc      # Implementation of COSE Context
+├── src/bsl/crypto       # Implementation of BSL crypto library and key store interface
+├── src/bsl/mock_bpa     # Implementation of example Mock BPA
 ├── test/                # Unit tests
 ├── mock-bpa-test/       # Full BSL test/example using Mock BPA
 └── lib-user-test/       # Test an installation of the BSL for building
@@ -151,7 +151,7 @@ After install, a trial executable which simply links against the installed BSL u
 
 ## Testing with the Mock BPA
 
-The Mock BPA demonstrates how a BPA may interact with the BSL, it is found in `src/mock_bpa`.
+The Mock BPA demonstrates how a BPA may interact with the BSL, it is found in `src/bsl/mock_bpa`.
 
 Details of the Mock BPA are found in the Doxygen documentation.
 
