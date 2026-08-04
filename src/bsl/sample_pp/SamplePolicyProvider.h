@@ -140,7 +140,7 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
 typedef struct BSLP_PolicyRule_s
 {
     /// Human-friendly text
-    string_t description;
+    m_string_t description;
     /// Role for this operation
     BSL_SecRole_e role;
     /// Block type of the security target to match

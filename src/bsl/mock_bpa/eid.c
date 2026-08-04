@@ -193,7 +193,7 @@ int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data
     return 0;
 }
 
-// int mock_bpa_eid_to_text(string_t out, const BSL_HostEID_t *eid, void *user_data _U_)
+// int mock_bpa_eid_to_text(m_string_t out, const BSL_HostEID_t *eid, void *user_data _U_)
 // {
 //     BSL_CHKERR1(eid);
 //     BSL_CHKERR1(eid->handle);
@@ -207,10 +207,10 @@ int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data
 //             switch (ipn->ncomp)
 //             {
 //                 case 2:
-//                     string_printf(out, "ipn:%" PRIu64 ".%" PRIu64, (ipn->auth_num << 32) | ipn->node_num,
+//                     m_string_printf(out, "ipn:%" PRIu64 ".%" PRIu64, (ipn->auth_num << 32) | ipn->node_num,
 //                     ipn->svc_num); break;
 //                 case 3:
-//                     string_printf(out, "ipn:%" PRIu64 ".%" PRIu64 ".%" PRIu64, ipn->auth_num, ipn->node_num,
+//                     m_string_printf(out, "ipn:%" PRIu64 ".%" PRIu64 ".%" PRIu64, ipn->auth_num, ipn->node_num,
 //                                   ipn->svc_num);
 //                     break;
 //                 default:
@@ -220,7 +220,7 @@ int mock_bpa_eid_from_text(BSL_HostEID_t *eid, const char *text, void *user_data
 //             break;
 //         }
 //         default:
-//             string_printf(out, "<unknown EID scheme: %d>", obj->scheme);
+//             m_string_printf(out, "<unknown EID scheme: %d>", obj->scheme);
 //             break;
 //     }
 //     return 0;

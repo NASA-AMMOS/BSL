@@ -64,7 +64,7 @@ const char * bsl_version(void);
 
 /** Force the use of M_ prefixed macros for M*LIB
  */
-//#define M_USE_SMALL_NAME 0
+#define M_USE_SMALL_NAME 0
 
 #undef M_MEMORY_ALLOC
 /** Define to override value/struct allocation.
