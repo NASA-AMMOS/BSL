@@ -19,7 +19,6 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
-
 /** @file
  * @ingroup cose_sc
  * Implementation of the COSE context @cite draft-ietf-dtn-bpsec-cose.
@@ -687,7 +686,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
                 {
                     m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
 
-                    *total += BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, 0);
+                    *total += BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, aad_block.btsd_len);
                 }
                 {
                     BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
@@ -1018,15 +1017,17 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
     // Check for conflict and find key or fail
     if (hdr_kid && self->opt_kid)
     {
+        BSL_LOG_DEBUG("Using key ID from option");
         if (BSL_Data_Cmp(&self->kid, &hdr_kid_view) != 0)
         {
-            BSL_LOG_ERR("Mismatched key ID value");
+            BSL_LOG_ERR("Mismatched key ID value between option and header");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             return;
         }
     }
     else if (hdr_kid)
     {
+        BSL_LOG_DEBUG("Using key ID from message header", hdr_alg_val);
         BSL_Data_CopyFrom(&self->kid, hdr_kid_view.len, hdr_kid_view.ptr);
     }
     else if (!self->opt_kid)
@@ -1045,6 +1046,7 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
 
     if (hdr_alg && self->opt_key_alg)
     {
+        BSL_LOG_DEBUG("Using key algorithm from option");
         if (hdr_alg_val != self->key_alg)
         {
             BSL_LOG_ERR("Mismatched key alg value, op has %" PRId64 " header has %" PRId64, self->key_alg, hdr_alg_val);

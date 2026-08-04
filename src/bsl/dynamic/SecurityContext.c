@@ -600,5 +600,61 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
         action->validated = (0 == secop_invalid_count);
     }
 
+    // Diagnostics about validated operations
+    if (BSL_LogIsEnabledFor(LOG_DEBUG))
+    {
+        BSL_LOG_DEBUG("Security actions validated, count: %zu", BSL_SecActionList_size(action_set->actions));
+
+        BSL_SecActionList_it_t act_it;
+        for (BSL_SecActionList_it(act_it, action_set->actions); !BSL_SecActionList_end_p(act_it);
+             BSL_SecActionList_next(act_it))
+        {
+            const BSL_SecurityAction_t *act = BSL_SecActionList_cref(act_it);
+            BSL_LOG_DEBUG("  Action from policy provider ID: % " PRIu64, act->pp_id);
+            BSL_LOG_DEBUG("    Fully validated: %d", act->validated);
+            BSL_LOG_DEBUG("    Operations count: %zu", BSL_SecOperList_size(act->sec_op_list));
+
+            BSL_SecOperList_it_t op_it;
+            for (BSL_SecOperList_it(op_it, act->sec_op_list); !BSL_SecOperList_end_p(op_it);
+                 BSL_SecOperList_next(op_it))
+            {
+                const BSL_SecOper_t *oper = BSL_SecOperList_cref(op_it);
+
+                BSL_LOG_DEBUG("    Operation details:");
+
+                const char *role_name = NULL;
+                switch (oper->_role)
+                {
+                    case BSL_SECROLE_SOURCE:
+                        role_name = "source";
+                        break;
+                    case BSL_SECROLE_VERIFIER:
+                        role_name = "verifier";
+                        break;
+                    case BSL_SECROLE_ACCEPTOR:
+                        role_name = "acceptor";
+                        break;
+                }
+                BSL_LOG_DEBUG("      Role: %s", role_name);
+
+                const char *svc_name = NULL;
+                switch (oper->_service_type)
+                {
+                    case BSL_SECBLOCKTYPE_BIB:
+                        svc_name = "BIB";
+                        break;
+                    case BSL_SECBLOCKTYPE_BCB:
+                        svc_name = "BCB";
+                        break;
+                }
+                BSL_LOG_DEBUG("      Service: %s", svc_name);
+
+                BSL_LOG_DEBUG("      Target block number: %" PRIu64, oper->target_block_num);
+                BSL_LOG_DEBUG("      Security block number: %" PRIu64, oper->sec_block_num);
+                BSL_LOG_DEBUG("      Options count: %zu", BSLB_VariantPtrMap_size(oper->_options));
+            }
+        }
+    }
+
     return BSL_SUCCESS;
 }
