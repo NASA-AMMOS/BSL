@@ -34,11 +34,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-24.04', 'centos-9']
+        os:
+          - name: 'ubuntu-24.04'
+            image: null
+          - name: 'centos-9'
+            image: 'quay.io/centos/centos:stream9'
+          - name: 'centos-10'
+            image: 'quay.io/centos/centos:stream10'
         compiler: ['gcc', 'clang']
     name: Unit Test (${{matrix.os}} ${{matrix.compiler}})
-    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
-    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+    runs-on: ${{ matrix.os.image != null && 'ubuntu-latest' || matrix.os.image }}
+    container: ${{ matrix.os.image }}
     permissions:
       contents: read
       actions: write
