@@ -34,11 +34,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-24.04', 'centos-9']
+        os:
+          - name: 'ubuntu-24.04'
+            image: null
+          - name: 'centos-9'
+            image: 'quay.io/centos/centos:stream9'
+          - name: 'centos-10'
+            image: 'quay.io/centos/centos:stream10'
         compiler: ['clang']
-    name: Fuzzing (${{matrix.os}} ${{matrix.compiler}})
-    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
-    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+    name: Fuzzing (${{matrix.os.name}} ${{matrix.compiler}})
+    runs-on: ${{ matrix.os.image != null && 'ubuntu-latest' || matrix.os.name }}
+    container: ${{ matrix.os.image }}
     permissions:
       contents: read
       actions: write
@@ -47,7 +53,7 @@ jobs:
       CXX: ${{matrix.compiler=='clang' && 'clang++' || 'g++'}}
     steps:
       - name: Set up OS
-        if: startsWith(matrix.os, 'ubuntu')
+        if: startsWith(matrix.os.name, 'ubuntu')
         env:
           PIP_BREAK_SYSTEM_PACKAGES: 1
         run: |
@@ -61,7 +67,7 @@ jobs:
           sudo pip3 install gcovr
           sudo gem install cbor-diag
       - name: Set up OS
-        if: startsWith(matrix.os, 'centos')
+        if: startsWith(matrix.os.name, 'centos')
         run: |
           dnf install -y epel-release
           crb enable
@@ -104,7 +110,7 @@ jobs:
       - name: Archive coverage
         uses: actions/upload-artifact@v6
         with:
-          name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
+          name: ${{github.job}}-${{matrix.os.name}}-${{matrix.compiler}}-coverage
           path: build/default/coverage*
       - name: Report coverage
         run: ./build.sh coverage-summary >> $GITHUB_STEP_SUMMARY

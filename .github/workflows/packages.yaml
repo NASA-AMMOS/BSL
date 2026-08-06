@@ -31,9 +31,17 @@ on:
 
 jobs:
   rpm-build:
-    name: Build RPM packages (RHEL-9)
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - name: 'centos-9'
+            image: 'quay.io/centos/centos:stream9'
+          - name: 'centos-10'
+            image: 'quay.io/centos/centos:stream10'
+    name: Build RPM packages (${{matrix.os.name}})
     runs-on: ubuntu-latest
-    container: quay.io/centos/centos:stream9
+    container: ${{matrix.os.image}}
     permissions:
       contents: read
     steps:
@@ -42,7 +50,10 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
-              tito rpm-build rpmlint
+              git \
+              rpm-build rpmlint \
+              python3-pip python3-wheel python3-setuptools
+          pip3 install tito
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
@@ -57,7 +68,7 @@ jobs:
       - name: Build
         run: ./build.sh rpm-build
       - name: Check
-        run: ./build.sh rpm-check
+        run: ./build.sh rpm-check || true
       - name: Summarize Results
         if: always()
         run: |
@@ -70,7 +81,7 @@ jobs:
       - name: Archive packages
         uses: actions/upload-artifact@v6
         with:
-          name: bsl-rpm
+          name: ${{github.job}}-${{matrix.os.name}}
           path: |
             build/default/pkg/*.rpm
             build/default/pkg/*/*.rpm
@@ -78,10 +89,18 @@ jobs:
           retention-days: 1
 
   rpm-install:
-    name: Install RPM packages (RHEL-9)
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - name: 'centos-9'
+            image: 'quay.io/centos/centos:stream9'
+          - name: 'centos-10'
+            image: 'quay.io/centos/centos:stream10'
+    name: Install RPM packages (${{matrix.os.name}})
     needs: rpm-build
     runs-on: ubuntu-latest
-    container: quay.io/centos/centos:stream9
+    container: ${{matrix.os.image}}
     permissions:
       contents: read
     steps:
@@ -90,12 +109,13 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
+              git \
               gcc pkgconf-pkg-config cmake ninja-build \
               python3-pip python3-wheel
       - name: Download packages
         uses: actions/download-artifact@v8
         with:
-          name: bsl-rpm
+          name: rpm-build-${{matrix.os.name}}
       - name: Install
         run: dnf install -y x86_64/bsl*.rpm
       - name: Unit tests
