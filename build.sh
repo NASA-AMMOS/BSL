@@ -162,7 +162,7 @@ function cmd_prep {
 }
 
 function cmd_rpm_build {
-    if ! git describe 2>/dev/null >/dev/null
+    if test -d .git && ! git describe --always 2>/dev/null >/dev/null
     then
         git config --global --add safe.directory ${PWD}
         for NAME in ${PWD}/deps/*
