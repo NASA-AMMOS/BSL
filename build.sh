@@ -180,11 +180,19 @@ function cmd_rpm_build {
 function cmd_rpm_check {
     # Package scanning
     pushd build/default/pkg
+
+    for FILEPATH in x86_64/*.rpm
+    do
+        rpm -pqi "${FILEPATH}"
+        echo "Requires:"
+        rpm -pqR "${FILEPATH}"
+        echo "Files:"
+        rpm -pql "${FILEPATH}"
+    done
+
     rpmlint --file=${SELFDIR}/pkg/rpmlintrc . | tee rpmlint.txt
 
-    # Trial install
-    dnf install -y x86_64/*.rpm
-    dnf repoquery -l 'bsl*'
+    popd
 }
 
 function cmd_rpm_container {
