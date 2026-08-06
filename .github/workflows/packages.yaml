@@ -50,7 +50,9 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
-              rpm-build rpmlint python3-pip python3-wheel
+              git \
+              rpm-build rpmlint \
+              python3-pip python3-wheel
           pip3 install tito
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -107,6 +109,7 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
+              git \
               gcc pkgconf-pkg-config cmake ninja-build \
               python3-pip python3-wheel
       - name: Download packages
