@@ -52,7 +52,7 @@ jobs:
           dnf install -y \
               git \
               rpm-build rpmlint \
-              python3-pip python3-wheel
+              python3-pip python3-wheel python3-setuptools
           pip3 install tito
       - name: Checkout repository
         uses: actions/checkout@v6
