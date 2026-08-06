@@ -5,8 +5,7 @@ Version: 1.1.1
 Release: 1%{?dist}
 Summary: The Bundle Protocol Security Library (BSL)
 URL: https://github.com/NASA-AMMOS/BSL
-# License "Apache-2.0" is not accepted by rpmlint
-License: ASL 2.0
+License: Apache-2.0
 Source0: %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 BuildRequires: rsync
