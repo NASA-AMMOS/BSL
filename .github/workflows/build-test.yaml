@@ -43,7 +43,7 @@ jobs:
             image: 'quay.io/centos/centos:stream10'
         compiler: ['gcc', 'clang']
     name: Unit Test (${{matrix.os}} ${{matrix.compiler}})
-    runs-on: ${{ matrix.os.image != null && 'ubuntu-latest' || matrix.os.image }}
+    runs-on: ${{ matrix.os.image != null && 'ubuntu-latest' || matrix.os.name }}
     container: ${{ matrix.os.image }}
     permissions:
       contents: read
