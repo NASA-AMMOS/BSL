@@ -1,3 +1,6 @@
 addFilter(r'\S+ W: invalid-url Source0: bsl-.*')
-addFilter(r'bsl\.\S+ E: shared-lib-without-dependency-information /usr/lib64/libbsl_front\.so\.')
 addFilter(r'\S+ E: changelog-time-in-future .+')
+addFilter(r'\S+ E: unused-rpmlintrc-filter .+)
+addFilter(r'bsl\.\S+ E: shared-lib-without-dependency-information /usr/lib64/libbsl_front\.so\.')
+addFilter(r'bsl-debugsource\.\S+ E: files-duplicated-waste .+')
+addFilter(r'bsl-test-devel\.\S+ E: static-library-without-debuginfo /usr/lib64/libunity.a')
