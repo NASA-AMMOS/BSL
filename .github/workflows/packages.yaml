@@ -31,9 +31,17 @@ on:
 
 jobs:
   rpm-build:
-    name: Build RPM packages (RHEL-9)
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - name: 'centos-9'
+            image: 'quay.io/centos/centos:stream9'
+          - name: 'centos-10'
+            image: 'quay.io/centos/centos:stream10'
+    name: Build RPM packages (${{matrix.os.name}})
     runs-on: ubuntu-latest
-    container: quay.io/centos/centos:stream9
+    container: ${{matrix.os.image}}
     permissions:
       contents: read
     steps:
@@ -70,7 +78,7 @@ jobs:
       - name: Archive packages
         uses: actions/upload-artifact@v6
         with:
-          name: bsl-rpm
+          name: ${{github.job}}-${{matrix.os.name}}
           path: |
             build/default/pkg/*.rpm
             build/default/pkg/*/*.rpm
@@ -78,10 +86,18 @@ jobs:
           retention-days: 1
 
   rpm-install:
-    name: Install RPM packages (RHEL-9)
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - name: 'centos-9'
+            image: 'quay.io/centos/centos:stream9'
+          - name: 'centos-10'
+            image: 'quay.io/centos/centos:stream10'
+    name: Install RPM packages (${{matrix.os.name}})
     needs: rpm-build
     runs-on: ubuntu-latest
-    container: quay.io/centos/centos:stream9
+    container: ${{matrix.os.image}}
     permissions:
       contents: read
     steps:
@@ -95,7 +111,7 @@ jobs:
       - name: Download packages
         uses: actions/download-artifact@v8
         with:
-          name: bsl-rpm
+          name: rpm-build-${{matrix.os.name}}
       - name: Install
         run: dnf install -y x86_64/bsl*.rpm
       - name: Unit tests

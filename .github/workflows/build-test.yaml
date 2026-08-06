@@ -200,5 +200,5 @@ jobs:
       - name: Archive coverage
         uses: actions/upload-artifact@v6
         with:
-          name: ${{github.job}}-${{matrix.os}}-gcc-coverage
+          name: ${{github.job}}-${{matrix.os.name}}-gcc-coverage
           path: build/default/coverage*
