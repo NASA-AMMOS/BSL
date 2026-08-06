@@ -42,7 +42,7 @@ jobs:
           - name: 'centos-10'
             image: 'quay.io/centos/centos:stream10'
         compiler: ['gcc', 'clang']
-    name: Unit Test (${{matrix.os}} ${{matrix.compiler}})
+    name: Unit Test (${{matrix.os.name}} ${{matrix.compiler}})
     runs-on: ${{ matrix.os.image != null && 'ubuntu-latest' || matrix.os.name }}
     container: ${{ matrix.os.image }}
     permissions:
@@ -123,16 +123,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-24.04', 'centos-9']
-    name: Mock BPA Test (${{matrix.os}} gcc)
-    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
-    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+        os:
+          - name: 'ubuntu-24.04'
+            image: null
+          - name: 'centos-9'
+            image: 'quay.io/centos/centos:stream9'
+          - name: 'centos-10'
+            image: 'quay.io/centos/centos:stream10'
+        compiler: ['gcc']
+    name: Mock BPA Test (${{matrix.os.name}} ${{matrix.compiler}})
+    runs-on: ${{ matrix.os.image != null && 'ubuntu-latest' || matrix.os.name }}
+    container: ${{ matrix.os.image }}
     permissions:
       contents: read
       actions: write
+    env:
+      CC: ${{matrix.compiler=='clang' && 'clang' || 'gcc'}}
+      CXX: ${{matrix.compiler=='clang' && 'clang++' || 'g++'}}
     steps:
       - name: Set up OS
-        if: startsWith(matrix.os, 'ubuntu')
+        if: startsWith(matrix.os.name, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -142,7 +152,7 @@ jobs:
               python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Set up OS
-        if: startsWith(matrix.os, 'centos')
+        if: startsWith(matrix.os.name, 'centos')
         run: |
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
