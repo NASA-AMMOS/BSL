@@ -194,7 +194,7 @@ int bsl_mock_decode_primary(QCBORDecodeContext *dec, MockBPA_PrimaryBlock_t *blk
     BSL_CHKERR1(dec);
     BSL_CHKERR1(blk);
     // GCOV_EXCL_STOP
-    QCBORItem item;
+    QCBORItem item = { .uDataType = QCBOR_TYPE_NONE };
 
     const size_t begin = QCBORDecode_Tell(dec);
     QCBORDecode_EnterArray(dec, &item);
@@ -302,7 +302,7 @@ int bsl_mock_decode_canonical(QCBORDecodeContext *dec, MockBPA_CanonicalBlock_t 
     BSL_CHKERR1(dec);
     BSL_CHKERR1(blk);
     // GCOV_EXCL_STOP
-    QCBORItem item;
+    QCBORItem item = { .uDataType = QCBOR_TYPE_NONE };
 
     const size_t begin = QCBORDecode_Tell(dec);
     QCBORDecode_EnterArray(dec, &item);
@@ -384,15 +384,17 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
     BSL_CHKERR1(bundle);
     // GCOV_EXCL_STOP
 
-    QCBORItem decitem;
+    QCBORItem decitem = { .uDataType = QCBOR_TYPE_NONE };
     QCBORDecode_EnterArray(dec, &decitem);
     if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
     {
+        BSL_LOG_ERR("Bundle must start with array head, got %d", decitem.uDataType);
         return 2;
     }
     if (decitem.val.uCount != QCBOR_COUNT_INDICATES_INDEFINITE_LENGTH)
     {
         BSL_LOG_WARNING("Bundle starts with definite length array");
+        // continue after warning
     }
 
     BSL_LOG_DEBUG("decoding primary block...");
