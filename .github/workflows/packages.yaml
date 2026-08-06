@@ -50,7 +50,8 @@ jobs:
           dnf config-manager --set-enabled crb
           dnf install -y epel-release
           dnf install -y \
-              tito rpm-build rpmlint
+              rpm-build rpmlint python3-pip python3-wheel
+          pip3 install tito
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
