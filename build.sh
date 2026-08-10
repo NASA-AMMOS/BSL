@@ -134,7 +134,7 @@ function cmd_coverage_summary {
         ATTRVAL="src.bsl.${DIRNAME}"
         COV_XPATH="format-number(/coverage/packages/package[@name='${ATTRVAL}']/@line-rate * 100, '#.0')"
         COV_PERC=$(xmlstarlet sel -t -v "${COV_XPATH}" -n build/default/coverage-xml.xml 2>/dev/null)
-        echo "| `bsl/${DIRNAME}` | ${COV_PERC}% |"
+        echo "| \`bsl/${DIRNAME}\` | ${COV_PERC}% |"
     done
 }
 
