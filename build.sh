@@ -101,6 +101,27 @@ function cmd_check_install_pkgconfig {
     rm -rf build
 }
 
+function cmd_check_install_autotools {
+    # setenv.sh has aleady set DESTDIR and PREFIX
+    if [[ -n "${DESTDIR}" && -d "${DESTDIR}" ]]
+    then
+        export PKG_CONFIG_PATH=$(find ${DESTDIR}${PREFIX} -type d -name pkgconfig | tr '\n' ':')
+        PKG_PREFIX="--define-variable=prefix=${DESTDIR}${PREFIX}"
+        echo "Using prefix: ${PKG_PREFIX}"
+    else
+        PKG_PREFIX=""
+    fi
+    export PKG_CONFIG="pkg-config ${PKG_PREFIX}"
+
+    cd "${SELFDIR}/lib-user-test"
+    autoreconf -fi
+    mkdir -p build
+    (cd build && ../configure && make)
+    ldd ./build/example
+    ./build/example
+    rm -rf build
+}
+
 function cmd_check_install_cmake {
     # setenv.sh has aleady set DESTDIR and PREFIX
     cd "${SELFDIR}/lib-user-test"
@@ -249,6 +270,7 @@ case "$1" in
         ;;
     check-install)
         cmd_check_install_pkgconfig
+        cmd_check_install_autotools
         cmd_check_install_cmake
         ;;
     clean)

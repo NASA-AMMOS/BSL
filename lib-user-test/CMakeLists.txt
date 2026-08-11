@@ -21,7 +21,7 @@ subcontract 1700763.
 ]]
 cmake_minimum_required(VERSION 3.23)
 
-project(lib-user-test LANGUAGES C)
+project(lib-user-test VERSION 0.0.0 LANGUAGES C)
 
 set(PKG_CONFIG_ARGN "--define-prefix")
 find_package(PkgConfig REQUIRED)
