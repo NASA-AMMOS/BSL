@@ -1,11 +1,13 @@
 FROM quay.io/centos/centos:stream9
 
-RUN dnf config-manager --set-enabled crb
 RUN --mount=type=cache,target=/var/cache/yum \
-    dnf install -y epel-release
+    dnf install -y 'dnf-command(config-manager)' epel-release
+RUN dnf config-manager --set-enabled crb
 # Dependencies for general RPM building
 RUN --mount=type=cache,target=/var/cache/yum \
-    dnf install -y git rsync tito rpm-build rpmlint
+    dnf install -y git rsync rpm-build rpmlint python3-pip python3-wheel python3-setuptools
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip3 install tito
 
 COPY bsl.spec /usr/local/src/bsl/
 WORKDIR /usr/local/src/bsl
