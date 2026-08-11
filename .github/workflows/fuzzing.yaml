@@ -69,8 +69,8 @@ jobs:
       - name: Set up OS
         if: startsWith(matrix.os.name, 'centos')
         run: |
-          dnf install -y epel-release
-          crb enable
+          dnf install -y 'dnf-command(config-manager)' epel-release
+          dnf config-manager --set-enabled crb
           dnf install -y \
               git rsync \
               cmake ninja-build \

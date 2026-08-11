@@ -47,8 +47,8 @@ jobs:
     steps:
       - name: Set up OS
         run: |
+          dnf install -y 'dnf-command(config-manager)' epel-release
           dnf config-manager --set-enabled crb
-          dnf install -y epel-release
           dnf install -y \
               git \
               rpm-build rpmlint \
