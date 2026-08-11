@@ -20,7 +20,7 @@ AC_PROG_CC_C_O # Need to have per product flags myexecutable_CFLAG
 
 # Checks for libraries
 PKG_PROG_PKG_CONFIG
-PKG_CHECK_MODULES([BSL], [bsl >= 2.0.0])
+PKG_CHECK_MODULES([BSL], [bsl]) # should depend on specific version
 
 AC_HEADER_ASSERT # ./configure --disable-assert to define NDEBUG 
 

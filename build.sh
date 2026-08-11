@@ -111,7 +111,7 @@ function cmd_check_install_autotools {
     else
         PKG_PREFIX=""
     fi
-    export PKG_CONFIG="pkg-config --define-prefix"
+    export PKG_CONFIG="pkg-config ${PKG_PREFIX}"
 
     cd "${SELFDIR}/lib-user-test"
     autoreconf -fi
