@@ -64,7 +64,7 @@ jobs:
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
               libssl-dev libjansson-dev \
               valgrind xmlstarlet \
-              autoconf automake \
+              autoconf autoconf-archive automake \
               python3 python3-pip python3-wheel
           sudo pip3 install gcovr
       - name: Set up OS
@@ -79,7 +79,7 @@ jobs:
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
               openssl-devel jansson-devel \
               valgrind valgrind-devel xmlstarlet \
-              autoconf automake \
+              autoconf autoconf-archive automake \
               python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Checkout repository
