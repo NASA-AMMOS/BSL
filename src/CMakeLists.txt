@@ -45,12 +45,12 @@ target_sources(bsl_front
         bsl/BSLConfig.c
         bsl/front/Data.c
 )
-
 set_target_properties(bsl_front
     PROPERTIES
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
+target_compile_definitions(bsl_front PUBLIC _POSIX_C_SOURCE=${POSIX_C_SOURCE})
 target_include_directories(bsl_front PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
@@ -180,11 +180,12 @@ target_sources(bsl_dynamic
             FILES
                 bsl/dynamic/AbsSecBlock.h
                 bsl/dynamic/CBOR.h
-                bsl/dynamic/Variant.h
+                bsl/dynamic/MLibConfig.h
                 bsl/dynamic/SecOperation.h
                 bsl/dynamic/SecurityAction.h
                 bsl/dynamic/SecurityActionSet.h
                 bsl/dynamic/SeqReadWrite.h
+                bsl/dynamic/Variant.h
     PRIVATE
         FILE_SET private_headers
             TYPE HEADERS

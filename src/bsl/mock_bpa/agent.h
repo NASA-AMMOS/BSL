@@ -31,6 +31,7 @@
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/BPSecLib_Public.h"
+#include "bsl/dynamic/MLibConfig.h"
 #include "bsl/sample_pp/SamplePolicyProvider.h"
 
 #include <m-atomic.h>

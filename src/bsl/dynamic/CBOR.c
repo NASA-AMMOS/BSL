@@ -25,6 +25,8 @@
  */
 #include "CBOR.h"
 
+#include "MLibConfig.h"
+
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/front/TextUtil.h"
 

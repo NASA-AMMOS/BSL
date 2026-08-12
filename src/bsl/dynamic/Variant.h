@@ -56,8 +56,10 @@
 #ifndef BSLB_VARIANT_H_
 #define BSLB_VARIANT_H_
 
+#include "CBOR.h"
+#include "MLibConfig.h"
+
 #include "bsl/BPSecLib_Private.h"
-#include "bsl/dynamic/CBOR.h"
 
 #include <m-array.h>
 #include <m-bptree.h>

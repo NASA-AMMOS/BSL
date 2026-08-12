@@ -116,7 +116,7 @@ function cmd_check_install_autotools {
     cd "${SELFDIR}/lib-user-test"
     autoreconf -fi
     mkdir -p build
-    (cd build && ../configure && make)
+    (cd build && ../configure && make V=1)
     ldd ./build/example
     ./build/example
     rm -rf build
@@ -131,7 +131,7 @@ function cmd_check_install_cmake {
         -DCMAKE_INSTALL_PREFIX=${PREFIX} \
         -DCMAKE_BUILD_TYPE=Debug \
         -G Ninja
-    cmake --build build
+    cmake --build build --verbose
     ldd ./build/example
     ./build/example
     rm -rf build

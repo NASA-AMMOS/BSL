@@ -26,6 +26,7 @@
 #include "TestUtils.h"
 
 #include <bsl/BPSecLib_Public.h>
+#include <bsl/dynamic/MLibConfig.h>
 
 #include <m-string.h>
 #include <qcbor/qcbor_spiffy_decode.h>

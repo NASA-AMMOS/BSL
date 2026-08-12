@@ -28,6 +28,7 @@
 #define BSL_MOCK_BPA_EID_H_
 
 #include "bsl/BPSecLib_Private.h"
+#include "bsl/dynamic/MLibConfig.h"
 
 #include <m-string.h>
 

@@ -32,6 +32,7 @@
 #define BSL_BPSECLIB_PUBLIC_H_
 
 #include "bsl/BSLConfig.h"
+#include "bsl/front/BSLMemory.h"
 #include "bsl/front/Data.h"
 #include "bsl/front/SeqReader.h"
 #include "bsl/front/SeqWriter.h"

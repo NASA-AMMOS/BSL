@@ -44,7 +44,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <syslog.h>
-#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {

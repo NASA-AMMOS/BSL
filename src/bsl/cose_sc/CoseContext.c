@@ -31,6 +31,7 @@
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/crypto/CryptoInterface.h"
 #include "bsl/dynamic/CBOR.h"
+#include "bsl/dynamic/MLibConfig.h"
 
 #include <m-bptree.h>
 #include <m-bstring.h>

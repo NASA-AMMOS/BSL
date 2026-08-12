@@ -26,6 +26,7 @@
 #include "KeyLoader.h"
 
 #include <bsl/front/TextUtil.h>
+#include "bsl/dynamic/MLibConfig.h"
 #include <bsl/dynamic/CBOR.h>
 #include <bsl/dynamic/Variant.h>
 #include <bsl/cose_sc/CoseMsg.h>

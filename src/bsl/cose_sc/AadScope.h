@@ -31,6 +31,7 @@
 #include "CoseContext.h"
 
 #include "bsl/dynamic/CBOR.h"
+#include "bsl/dynamic/MLibConfig.h"
 
 #include <m-bptree.h>
 
