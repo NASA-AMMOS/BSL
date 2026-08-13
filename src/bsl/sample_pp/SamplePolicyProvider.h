@@ -33,6 +33,7 @@
 #include "bsl/dynamic/Variant.h"
 
 #include <m-array.h>
+#include <m-shared-ptr.h>
 #include <m-string.h>
 
 #include <pthread.h>

@@ -164,7 +164,9 @@ set_target_properties(bsl_sample_pp
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-target_link_libraries(bsl_sample_pp PUBLIC bsl_front bsl_dynamic)
+target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
+# dynamic used for Variant containers
+target_link_libraries(bsl_sample_pp PUBLIC bsl_dynamic)
 # contexts linked-to for config options
 target_link_libraries(bsl_sample_pp PRIVATE bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
