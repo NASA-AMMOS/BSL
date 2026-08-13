@@ -72,6 +72,7 @@ function cmd_check {
 }
 
 function cmd_check_install_pkgconfig {
+    echo -e "\n\n"
     # setenv.sh has aleady set DESTDIR and PREFIX
     if [[ -n "${DESTDIR}" && -d "${DESTDIR}" ]]
     then
@@ -81,27 +82,29 @@ function cmd_check_install_pkgconfig {
     else
         PKG_PREFIX=""
     fi
+    export PKG_CONFIG="pkg-config ${PKG_PREFIX}"
     PKGS="bsl bsl-sample-pp"
 
     echo "Provides:"
-    pkg-config --print-provides ${PKGS}
+    ${PKG_CONFIG} --print-provides ${PKGS}
     echo "Requires:"
-    pkg-config --print-requires ${PKGS}
+    ${PKG_CONFIG} --print-requires ${PKGS}
     echo -n "CFlags: "
-    pkg-config ${PKG_PREFIX} --cflags ${PKGS}
+    ${PKG_CONFIG} --cflags ${PKGS}
     echo -n "Libs: "
-    pkg-config ${PKG_PREFIX} --libs ${PKGS}
+    ${PKG_CONFIG} --libs ${PKGS}
 
     cd "${SELFDIR}/lib-user-test"
     mkdir -p build
-    gcc -c -o build/example.o main.c $(pkg-config ${PKG_PREFIX} --cflags ${PKGS})
-    gcc -o build/example build/example.o $(pkg-config ${PKG_PREFIX} --libs ${PKGS})
+    gcc -c -o build/example.o main.c -Wall -Wpedantic -Werror $(${PKG_CONFIG} --cflags ${PKGS})
+    gcc -o build/example build/example.o $(${PKG_CONFIG} --libs ${PKGS})
     ldd ./build/example
     ./build/example
     rm -rf build
 }
 
 function cmd_check_install_autotools {
+    echo -e "\n\n"
     # setenv.sh has aleady set DESTDIR and PREFIX
     if [[ -n "${DESTDIR}" && -d "${DESTDIR}" ]]
     then
@@ -123,6 +126,7 @@ function cmd_check_install_autotools {
 }
 
 function cmd_check_install_cmake {
+    echo -e "\n\n"
     # setenv.sh has aleady set DESTDIR and PREFIX
     cd "${SELFDIR}/lib-user-test"
     cmake -S . -B build \

@@ -28,7 +28,7 @@ find_package(PkgConfig REQUIRED)
 include(CMakePrintHelpers)
 
 
-find_package(bsl REQUIRED)
+find_package(bsl CONFIG REQUIRED)
 message(STATUS "Found BSL ${bsl_VERSION}")
 
 pkg_search_module(MLIB m-lib REQUIRED IMPORTED_TARGET)
@@ -45,4 +45,5 @@ cmake_print_properties(
 
 add_executable(example)
 target_sources(example PRIVATE main.c)
-target_link_libraries(example PUBLIC bsl::bsl_sample_pp bsl::bsl_dynamic)
+target_compile_definitions(example PRIVATE _POSIX_C_SOURCE=200809L)
+target_link_libraries(example PRIVATE bsl::bsl_sample_pp bsl::bsl_dynamic)

@@ -321,6 +321,9 @@ typedef struct
         .malloc_cb = malloc, .realloc_cb = realloc, .calloc_cb = calloc, .free_cb = free, \
     }
 
+// Forward declaration
+struct timespec;
+
 /** Dynamic BPA descriptor.
  *
  * @warning All functions in this structure must be thread safe, as they

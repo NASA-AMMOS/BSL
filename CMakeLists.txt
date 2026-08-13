@@ -82,8 +82,8 @@ endif(BUILD_FUZZING)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
-# Force specific POSIX compatibility version
-set(POSIX_C_SOURCE "200809L")
+# Force specific POSIX compatibility version for this project
+add_compile_definitions(_POSIX_C_SOURCE=200809L)
 # Generic warn/error options
 add_compile_options(
     -Wall

@@ -50,7 +50,6 @@ set_target_properties(bsl_front
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-target_compile_definitions(bsl_front PUBLIC _POSIX_C_SOURCE=${POSIX_C_SOURCE})
 target_include_directories(bsl_front PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
