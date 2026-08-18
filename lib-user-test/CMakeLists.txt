@@ -21,14 +21,14 @@ subcontract 1700763.
 ]]
 cmake_minimum_required(VERSION 3.23)
 
-project(lib-user-test LANGUAGES C)
+project(lib-user-test VERSION 0.0.0 LANGUAGES C)
 
 set(PKG_CONFIG_ARGN "--define-prefix")
 find_package(PkgConfig REQUIRED)
 include(CMakePrintHelpers)
 
 
-find_package(bsl REQUIRED)
+find_package(bsl CONFIG REQUIRED)
 message(STATUS "Found BSL ${bsl_VERSION}")
 
 pkg_search_module(MLIB m-lib REQUIRED IMPORTED_TARGET)
@@ -45,4 +45,5 @@ cmake_print_properties(
 
 add_executable(example)
 target_sources(example PRIVATE main.c)
-target_link_libraries(example PUBLIC bsl::bsl_sample_pp bsl::bsl_dynamic)
+target_compile_definitions(example PRIVATE _POSIX_C_SOURCE=200809L)
+target_link_libraries(example PRIVATE bsl::bsl_sample_pp bsl::bsl_dynamic)

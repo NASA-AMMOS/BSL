@@ -30,6 +30,7 @@
 
 #include "bsl/front/BSLMemory.h"
 #include "bsl/dynamic/CBOR.h"
+#include "bsl/dynamic/MLibConfig.h"
 #include "bsl/dynamic/Variant.h"
 
 #include <m-array.h>

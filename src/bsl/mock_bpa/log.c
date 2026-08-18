@@ -29,6 +29,7 @@
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/BSLConfig.h"
+#include "bsl/dynamic/MLibConfig.h"
 
 #include <m-atomic.h>
 #include <m-buffer.h>

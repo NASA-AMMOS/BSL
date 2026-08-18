@@ -26,6 +26,7 @@
 #include "Data.h"
 
 #include "bsl/BPSecLib_Private.h"
+#include "bsl/front/BSLMemory.h"
 
 #include <string.h>
 

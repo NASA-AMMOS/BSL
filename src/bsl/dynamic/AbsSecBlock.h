@@ -31,6 +31,7 @@
 #ifndef BSLB_ABSSECBLOCK_IMPL_H_
 #define BSLB_ABSSECBLOCK_IMPL_H_
 
+#include "MLibConfig.h"
 #include "Variant.h"
 
 #include "bsl/BPSecLib_Public.h"

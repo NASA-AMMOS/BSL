@@ -26,6 +26,8 @@
 #ifndef BSL_CTX_DYN_H_
 #define BSL_CTX_DYN_H_
 
+#include "MLibConfig.h"
+
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/BPSecLib_Public.h"
 

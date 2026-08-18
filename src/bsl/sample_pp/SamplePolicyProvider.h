@@ -29,9 +29,11 @@
 #define BSLP_SAMPLE_POLICY_PROVIDER_H
 
 #include "bsl/BPSecLib_Private.h"
+#include "bsl/dynamic/MLibConfig.h"
 #include "bsl/dynamic/Variant.h"
 
 #include <m-array.h>
+#include <m-shared-ptr.h>
 #include <m-string.h>
 
 #include <pthread.h>

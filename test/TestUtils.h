@@ -26,6 +26,7 @@
 #ifndef _BSL_TESTUTILS_H_
 #define _BSL_TESTUTILS_H_
 
+#include <bsl/dynamic/MLibConfig.h>
 #include <bsl/dynamic/PublicInterfaceImpl.h>
 #include <bsl/dynamic/SecOperation.h>
 #include <bsl/dynamic/SecurityActionSet.h>

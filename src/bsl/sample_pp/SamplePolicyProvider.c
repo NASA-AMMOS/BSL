@@ -28,6 +28,7 @@
 #include "SamplePolicyProvider.h"
 
 #include "bsl/BPSecLib_Private.h"
+#include "bsl/dynamic/MLibConfig.h"
 
 #include <m-array.h>
 

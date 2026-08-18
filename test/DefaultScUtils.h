@@ -29,6 +29,7 @@
 #include "TestUtils.h"
 
 #include <bsl/crypto/CryptoInterface.h>
+#include <bsl/dynamic/MLibConfig.h>
 #include <bsl/dynamic/PublicInterfaceImpl.h>
 #include <bsl/dynamic/SecOperation.h>
 #include <bsl/dynamic/SecurityActionSet.h>

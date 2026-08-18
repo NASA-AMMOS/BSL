@@ -27,7 +27,8 @@
 
 #include "KeyStore.h"
 
-#include <bsl/dynamic/Variant.h>
+#include "bsl/dynamic/MLibConfig.h"
+#include "bsl/dynamic/Variant.h"
 
 #include <m-bstring.h>
 #include <m-dict.h>

@@ -29,6 +29,8 @@
 
 #include "eid.h"
 
+#include "bsl/dynamic/MLibConfig.h"
+
 #include <m-algo.h>
 #include <m-bptree.h>
 #include <m-deque.h>

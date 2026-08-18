@@ -45,7 +45,6 @@ target_sources(bsl_front
         bsl/BSLConfig.c
         bsl/front/Data.c
 )
-
 set_target_properties(bsl_front
     PROPERTIES
         VERSION ${CMAKE_PROJECT_VERSION}
@@ -165,7 +164,9 @@ set_target_properties(bsl_sample_pp
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
 )
-target_link_libraries(bsl_sample_pp PUBLIC bsl_front bsl_dynamic)
+target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
+# dynamic used for Variant containers
+target_link_libraries(bsl_sample_pp PUBLIC bsl_dynamic)
 # contexts linked-to for config options
 target_link_libraries(bsl_sample_pp PRIVATE bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
@@ -180,11 +181,12 @@ target_sources(bsl_dynamic
             FILES
                 bsl/dynamic/AbsSecBlock.h
                 bsl/dynamic/CBOR.h
-                bsl/dynamic/Variant.h
+                bsl/dynamic/MLibConfig.h
                 bsl/dynamic/SecOperation.h
                 bsl/dynamic/SecurityAction.h
                 bsl/dynamic/SecurityActionSet.h
                 bsl/dynamic/SeqReadWrite.h
+                bsl/dynamic/Variant.h
     PRIVATE
         FILE_SET private_headers
             TYPE HEADERS
