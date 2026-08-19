@@ -206,7 +206,7 @@ class TestBcbAesGcm(TestAgent):
         self._single_test(
             _TestCase(
                 input_data=EXAMPLE_A_NO_SEC,
-                expected_output=None, # non-deterministic BTSD
+                expected_output=None,  # non-deterministic BTSD
                 sec_src_eid="ipn:2.1",
                 policy_config="data/default-scs/policy-exA.2-source.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -286,7 +286,7 @@ class TestBcbAesGcm(TestAgent):
         self._single_test(
             _TestCase(
                 input_data=EXAMPLE_EMPTY_PAYLOAD,
-                expected_output=None, # non-deterministic BTSD
+                expected_output=None,  # non-deterministic BTSD
                 sec_src_eid="ipn:2.1",
                 policy_config="data/default-scs/policy-exA.2-cek-source.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,

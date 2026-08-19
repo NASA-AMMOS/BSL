@@ -213,7 +213,8 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, const BSL_BundleRe
 
     // ASB decoder needs the whole BTSD now
     BSL_Data_t btsd_copy;
-    BSL_Data_InitBuffer(&btsd_copy, sec_blk.btsd_len);
+    res = BSL_Data_InitBuffer(&btsd_copy, sec_blk.btsd_len);
+    CHK_PROPERTY(BSL_SUCCESS == res);
 
     BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, sec_blk.block_num);
     BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);

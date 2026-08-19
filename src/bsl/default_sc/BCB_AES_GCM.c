@@ -392,7 +392,6 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
     int res;
 
     CHK_PRECONDITION(bcb_context->target_block.block_num > 0);
-    CHK_PRECONDITION(bcb_context->target_block.btsd_len > 0);
 
     bcb_context->keywrap = -1;
 
@@ -503,7 +502,6 @@ int BSLX_BCB_Init(BSLX_BCB_t *bcb_context, BSL_BundleRef_t *bundle, const BSL_Se
     }
 
     CHK_POSTCONDITION(bcb_context->target_block.block_num > 0);
-    CHK_POSTCONDITION(bcb_context->target_block.btsd_len > 0);
     return BSL_SUCCESS;
 }
 

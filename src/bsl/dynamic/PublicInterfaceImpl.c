@@ -174,7 +174,8 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
 
                 // ASB decoder needs the whole BTSD now
                 BSL_Data_t btsd_copy;
-                BSL_Data_InitBuffer(&btsd_copy, block.btsd_len);
+                int        res = BSL_Data_InitBuffer(&btsd_copy, block.btsd_len);
+                CHK_PROPERTY(BSL_SUCCESS == res);
 
                 BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, block.block_num);
                 BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
@@ -182,7 +183,8 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
 
                 BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
                 BSL_AbsSecBlock_Init(asb);
-                if (BSL_SUCCESS == BSL_CBOR_Decode(&btsd_copy, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb))
+                res = BSL_CBOR_Decode(&btsd_copy, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb);
+                if (BSL_SUCCESS == res)
                 {
                     if (BSL_AbsSecBlock_ContainsTarget(asb, sec_oper->target_block_num))
                     {
