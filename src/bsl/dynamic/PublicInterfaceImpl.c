@@ -242,7 +242,7 @@ int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_BundleRef_t *bundle, const BSL_
             }
             else
             {
-                BSL_LOG_DEBUG("Security operation failure; target block num = %" PRIu64 ", reason code = %" PRIu64, 
+                BSL_LOG_DEBUG("Security operation failure; target block num = %" PRIu64 ", reason code = %d",
                                 sec_oper->target_block_num, sec_oper->reason_code);
             }
         }
