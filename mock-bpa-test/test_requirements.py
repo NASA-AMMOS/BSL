@@ -1018,7 +1018,7 @@ class TestRequirements(TestAgent):
                     ],
                 ],
                 # Confirm that the operations fails and returns a Reason Code 8.
-                expected_output=r".*reason code = 8",
+                expected_output=r".*BSL indicated to delete bundle with reason code 8",
                 # Execute as a BIB acceptor.
                 policy_config="0xA6",
                 bundle_dest_loc=BundleDestLoc.CLIN,
