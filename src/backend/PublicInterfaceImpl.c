@@ -185,7 +185,8 @@ int BSL_API_QuerySecurity(const BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *outp
 
                 // ASB decoder needs the whole BTSD now
                 BSL_Data_t btsd_copy;
-                BSL_Data_InitBuffer(&btsd_copy, block.btsd_len);
+                int        res = BSL_Data_InitBuffer(&btsd_copy, block.btsd_len);
+                CHK_PROPERTY(BSL_SUCCESS == res);
 
                 BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, block.block_num);
                 BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);

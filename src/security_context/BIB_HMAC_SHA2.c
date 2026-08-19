@@ -259,20 +259,33 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
 
     if (self->target_block.block_num > 0)
     {
-        // IPPT needs the whole data now
         BSL_Data_t btsd_copy;
-        BSL_Data_InitBuffer(&btsd_copy, self->target_block.btsd_len);
+        // IPPT needs the whole data now
+        int res = BSL_Data_InitBuffer(&btsd_copy, self->target_block.btsd_len);
+        CHK_PROPERTY(BSL_SUCCESS == res);
 
-        BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(self->bundle, self->target_block.block_num);
-        if (!btsd_read)
+        // only copy data if the destination is real, not just size calculation
+        if (ippt_space->ptr)
         {
-            BSL_LOG_ERR("Failed to open BTSD reader on block %" PRIu64, self->target_block.block_num);
-        }
-        BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-        BSL_SeqReader_Destroy(btsd_read);
-        if (btsd_copy.len != self->target_block.btsd_len)
-        {
-            BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", self->target_block.btsd_len, btsd_copy.len);
+            int retval = BSL_SUCCESS;
+
+            BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(self->bundle, self->target_block.block_num);
+            if (!btsd_read)
+            {
+                BSL_LOG_ERR("Failed to open BTSD reader on block %" PRIu64, self->target_block.block_num);
+                retval = BSL_ERR_FAILURE;
+            }
+            BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
+            if (btsd_copy.len != self->target_block.btsd_len)
+            {
+                BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", self->target_block.btsd_len, btsd_copy.len);
+                retval = BSL_ERR_FAILURE;
+            }
+            BSL_SeqReader_Destroy(btsd_read);
+            if (BSL_SUCCESS != retval)
+            {
+                return retval;
+            }
         }
 
         UsefulBufC buf = { .ptr = btsd_copy.ptr, .len = btsd_copy.len };
@@ -474,9 +487,9 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
         BSL_LOG_WARNING("Failed to get security block data");
     }
 
-    // first determine the size needed, then encode actual IPPT
     BSL_Data_t ippt_space = BSL_DATA_INIT_NULL;
-    int        ippt_len   = BSLX_BIB_GenIPPT(&bib_context, &ippt_space);
+    // first determine the size needed, then encode actual IPPT
+    int ippt_len = BSLX_BIB_GenIPPT(&bib_context, &ippt_space);
     if (ippt_len <= 0)
     {
         BSL_LOG_ERR("GenIPPT returned %d", ippt_len);
@@ -484,7 +497,9 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, const BSL_SecOp
         BSL_Data_Deinit(&ippt_space);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
-    BSL_Data_InitBuffer(&ippt_space, ippt_len);
+    int res = BSL_Data_InitBuffer(&ippt_space, ippt_len);
+    CHK_PROPERTY(BSL_SUCCESS == res);
+
     ippt_len = BSLX_BIB_GenIPPT(&bib_context, &ippt_space);
     if (ippt_len <= 0)
     {

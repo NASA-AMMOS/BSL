@@ -71,7 +71,9 @@ void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int6
 
     // Confirm that when we encode it, we get the original.
     BSL_Data_t encoded_cbor;
-    BSL_Data_InitBuffer(&encoded_cbor, asb_cbor_bytelen);
+
+    int res = BSL_Data_InitBuffer(&encoded_cbor, asb_cbor_bytelen);
+    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, res);
 
     const ssize_t encode_result = BSL_AbsSecBlock_EncodeToCBOR(asb, &encoded_cbor);
     TEST_ASSERT_GREATER_THAN(BSL_SUCCESS, encode_result);
