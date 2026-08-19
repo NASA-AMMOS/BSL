@@ -188,8 +188,6 @@ class TestAgent(unittest.TestCase):
             with self.assertRaises(TimeoutError):
                 self._wait_for(test_sock, timeout=0.1)
 
-            LOGGER.warning("Check log output to validate expected error")
-
             err_case_str = testcase.expected_output
             LOGGER.debug(f"ERR CASE STR: {err_case_str}")
 
