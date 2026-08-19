@@ -1,0 +1,39 @@
+{
+  "policyrule_set": [
+    {
+      "policyrule": {
+        "desc": "Confidentiality accept rule",
+        "filter": {
+          "rule_id": "1",
+          "role": "a",
+          "tgt": 1,
+          "loc": "appout",
+          "sc_id": 2
+        },
+        "spec": {
+          "svc": "bcb",
+          "sc_id": 2,
+          "sc_parms": [
+            {
+              "id": "key_name",
+              "value": "ExampleA.2"
+            },
+            {
+              "id": "aes_variant",
+              "value": "1"
+            },
+            {
+              "id": "aad_scope",
+              "value": "0"
+            },
+            {
+              "id": "key_wrap",
+              "value": "1"
+            }
+          ]
+        },
+        "policy_action_on_fail": "delete_bundle"
+      }
+    }
+  ]
+}
