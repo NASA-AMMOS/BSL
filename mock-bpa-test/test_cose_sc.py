@@ -51,6 +51,14 @@ EXAMPLE_A_1_WITH_BIB = """\
 """
 """ Bundle with BIB over target #1, adjusted sec block to #2 """
 
+EXAMPLE_A_EMPTY_PAYLOAD = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [1, 1, 0, 2, h'']
+]
+"""
+""" Example A input bundle adjusted to have empty payload """
+
 EXAMPLE_A_1_WITH_BIB_ADDL_UHDR = """\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
