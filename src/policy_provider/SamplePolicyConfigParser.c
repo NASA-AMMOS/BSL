@@ -464,6 +464,10 @@ int BSLP_RegisterPolicyFromJSON(const char *policy_cfg_path, BSLP_PolicyProvider
                     }
                 }
             }
+            else
+            {
+                BSL_LOG_ERR("INVALID or missing sc_parms");
+            }
         }
 
         // event set (currently parsed, but not utilized/initialized meaningfully)
