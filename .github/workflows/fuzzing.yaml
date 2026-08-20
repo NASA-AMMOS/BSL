@@ -26,7 +26,7 @@ on:
   push:
     branches:
       - main
-      - 'apl-fy[0-9][0-9]'
+      - 'support/*'
   pull_request: {} # any target
 
 jobs:
