@@ -22,6 +22,11 @@ subcontract 1700763.
 
 # The NASA AMMOS BPSec Library (BSL)
 
+[![Product Guide](https://img.shields.io/badge/Project-Product_Guide-blue)](https://nasa-ammos.github.io/BSL-docs/product-guide/html/index.html)
+[![User Guide](https://img.shields.io/badge/Project-User_Guide-blue)](https://nasa-ammos.github.io/BSL-docs/user-guide/html/index.html)
+[![API Documentation](https://github.com/NASA-AMMOS/BSL/actions/workflows/docs.yaml/badge.svg)](https://nasa-ammos.github.io/BSL/)
+[![Sonar Coverage](https://img.shields.io/sonar/coverage/NASA-AMMOS_BSL?server=https%3A%2F%2Fsonarcloud.io)](https://sonarcloud.io/project/overview?id=NASA-AMMOS_BSL)
+
 The BPSec Library (BSL) is an implementation of *Bundle Protocol Security* as specified in [RFC 9172](https://datatracker.ietf.org/doc/rfc9172/) and [RFC 9173](https://datatracker.ietf.org/doc/rfc9173/), with a flexible architecture enabling ready adaptability to flight or ground systems.
 
 The BSL exposes an interface via C header files (under `src/bsl` and `src/bsl/front`), and contains a dynamic (heap-allocated) backend implementing this interface in `src/bsl/dynamic`.
