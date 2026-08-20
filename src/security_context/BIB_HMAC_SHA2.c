@@ -195,6 +195,9 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
             self->hash_size = 32;
             break;
         }
+        default:
+            BSL_LOG_ERR("Invalid SHA variant %" PRIu64, self->sha_variant);
+            return BSL_ERR_PROPERTY_CHECK_FAILED;
     }
 
     if (self->integrity_scope_flags < 0)
@@ -389,7 +392,7 @@ int BSLX_BIB_GenHMAC(BSLX_BIB_t *self, const BSL_Data_t *ippt_data)
         }
     }
 
-    if ((res = BSL_AuthCtx_Init(&hmac_ctx, cipher_key, self->sha_variant)) != 0)
+    if ((res = BSL_AuthCtx_Init(&hmac_ctx, cipher_key, (int)(self->sha_variant))) != 0)
     {
         BSL_LOG_ERR("bsl_hmac_ctx_init failed with code %d", res);
         BSL_AuthCtx_Deinit(&hmac_ctx);
