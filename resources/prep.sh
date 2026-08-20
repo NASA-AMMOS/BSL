@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ##
 ## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
@@ -26,18 +26,21 @@
 #
 set -e
 
-if [ -z "$SELFDIR" ]
+if [[ -z "$SELFDIR" ]]
 then
   echo "SELFDIR not defined"
   exit 1
 fi
+cd "${SELFDIR}"
 
-cd $SELFDIR
-source ${SELFDIR}/setenv.sh
+if test -d .git && ! git describe --always 2>/dev/null >/dev/null
+then
+    git config --global --add safe.directory ${PWD}
+fi
 
-cmake -S . -B ${SELFDIR}/build/default \
+cmake -S . -B ./build/default \
   -DCMAKE_PREFIX_PATH=${DESTDIR}${PREFIX} \
-  -DCMAKE_INSTALL_PREFIX=${DESTDIR}${PREFIX} \
+  -DCMAKE_INSTALL_PREFIX=${PREFIX} \
   -DCMAKE_BUILD_TYPE=Debug \
   -G Ninja \
   "$@"
