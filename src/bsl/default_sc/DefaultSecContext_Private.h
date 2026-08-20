@@ -82,8 +82,12 @@ typedef struct BSLX_BIB_s
     /// Converted #sha_variant into enum value
     BSL_Crypto_SHAVariant_e crypto_sha_variant;
 
+    /// True if key wrap is enabled
+    bool keywrap;
+    /// True if #keywrap came from an option
+    bool opt_keywrap;
+
     BSL_Data_t wrapped_key;
-    int64_t    keywrap;
     BSL_Data_t hmac_result_val;
 } BSLX_BIB_t;
 
