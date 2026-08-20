@@ -21,14 +21,10 @@
 #
 """Test Cases utilizing JSON policy definitions with the COSE context"""
 
-import contextlib
-import json
 import logging
 import os
-import tempfile
-from typing import Any
 
-from _test_util import BundleDestLoc, DataFormat, _TestCase
+from _test_util import BundleDestLoc, DataFormat, _TestCase, sc_config_modifier
 from test_bpa import TestAgent
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
@@ -156,23 +152,6 @@ CCSDS_MAC_WITH_BIB = """\
 """ Bundle with BIB over target #1 """
 
 
-@contextlib.contextmanager
-def sc_config_modifier(orig: str, modify: dict[str, Any]):
-    """A context for modifying baseline configurations"""
-    with tempfile.NamedTemporaryFile("w+", suffix=".json") as polfile:
-        with open(os.path.join(OWNPATH, orig), "r") as infile:
-            poldata = json.load(infile)
-
-        params: dict = poldata["policyrule_set"][0]["policyrule"]["spec"]["sc_parms"]
-        LOGGER.debug("Original params:\n%s", params)
-        params |= modify
-        LOGGER.debug("Modified params:\n%s", params)
-
-        json.dump(poldata, polfile)
-        polfile.flush()
-        yield polfile
-
-
 class TestCoseScMac0(TestAgent):
     def test_exampleA_1_source(self):
         self._single_test(
@@ -218,14 +197,15 @@ class TestCoseScMac0(TestAgent):
 
     def test_exampleA_1_acceptor_valid_strict_target_alg(self):
         with sc_config_modifier(
-            "data/cose-sc/policy-any-bib-accept.json", {"target_alg": 6}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-any-bib-accept.json"),
+            modify={"target_alg": 6},
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_1_WITH_BIB,
                     expected_output=EXAMPLE_A_NO_SEC,
                     sec_src_eid="dtn://dst/",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/cose-sc/keyset-1.cbordiag",
                     input_data_format=DataFormat.CBORDIAG,
@@ -235,14 +215,15 @@ class TestCoseScMac0(TestAgent):
 
     def test_exampleA_1_acceptor_valid_strict_aad_scope(self):
         with sc_config_modifier(
-            "data/cose-sc/policy-any-bib-accept.json", {"aad_scope": {"0": 1, "-1": 1}}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-any-bib-accept.json"),
+            modify={"aad_scope": {"0": 1, "-1": 1}},
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_1_WITH_BIB,
                     expected_output=EXAMPLE_A_NO_SEC,
                     sec_src_eid="dtn://dst/",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/cose-sc/keyset-1.cbordiag",
                     input_data_format=DataFormat.CBORDIAG,
@@ -252,14 +233,15 @@ class TestCoseScMac0(TestAgent):
 
     def test_exampleA_1_acceptor_failure_key_disallow(self):
         with sc_config_modifier(
-            "data/cose-sc/policy-any-bib-accept.json", {"key_id": "ExampleA.5"}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-any-bib-accept.json"),
+            modify={"key_id": "ExampleA.5"},
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_1_WITH_BIB,
                     expected_output=".*<ERROR>.* Mismatched key ID value",
                     sec_src_eid="dtn://dst/",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/cose-sc/keyset-1.cbordiag",
                     input_data_format=DataFormat.CBORDIAG,
@@ -269,14 +251,15 @@ class TestCoseScMac0(TestAgent):
 
     def test_exampleA_1_acceptor_failure_aad_mismatch(self):
         with sc_config_modifier(
-            "data/cose-sc/policy-any-bib-accept.json", {"aad_scope": {"0": 1, "-1": 2}}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-any-bib-accept.json"),
+            modify={"aad_scope": {"0": 1, "-1": 2}},
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_1_WITH_BIB,
                     expected_output=".*<ERROR>.* Mismatch of AAD Scope parameter",
                     sec_src_eid="dtn://dst/",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/cose-sc/keyset-1.cbordiag",
                     input_data_format=DataFormat.CBORDIAG,
@@ -435,14 +418,15 @@ class TestCoseScEncrypt0(TestAgent):
 
     def test_exampleA_4_acceptor_valid_strict_key_id(self):
         with sc_config_modifier(
-            "data/cose-sc/policy-any-bcb-accept.json", {"key_id": "ExampleA.4"}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-any-bcb-accept.json"),
+            modify={"key_id": "ExampleA.4"},
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_4_WITH_BCB,
                     expected_output=EXAMPLE_A_NO_SEC,
                     sec_src_eid="dtn://dst/",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/cose-sc/keyset-1.cbordiag",
                     input_data_format=DataFormat.CBORDIAG,
@@ -452,14 +436,15 @@ class TestCoseScEncrypt0(TestAgent):
 
     def test_exampleA_4_acceptor_valid_strict_target_alg(self):
         with sc_config_modifier(
-            "data/cose-sc/policy-any-bcb-accept.json", {"target_alg": 3}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-any-bcb-accept.json"),
+            modify={"target_alg": 3},
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_4_WITH_BCB,
                     expected_output=EXAMPLE_A_NO_SEC,
                     sec_src_eid="dtn://dst/",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/cose-sc/keyset-1.cbordiag",
                     input_data_format=DataFormat.CBORDIAG,
@@ -469,14 +454,15 @@ class TestCoseScEncrypt0(TestAgent):
 
     def test_exampleA_4_acceptor_valid_strict_aad_scope(self):
         with sc_config_modifier(
-            "data/cose-sc/policy-any-bcb-accept.json", {"aad_scope": {"0": 1, "-1": 1}}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-any-bcb-accept.json"),
+            modify={"aad_scope": {"0": 1, "-1": 1}},
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_4_WITH_BCB,
                     expected_output=EXAMPLE_A_NO_SEC,
                     sec_src_eid="dtn://dst/",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/cose-sc/keyset-1.cbordiag",
                     input_data_format=DataFormat.CBORDIAG,
