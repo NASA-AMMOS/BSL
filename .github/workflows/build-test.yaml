@@ -34,11 +34,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-24.04', 'centos-9']
+        os:
+          - name: 'ubuntu-24.04'
+            image: null
+          - name: 'centos-9'
+            image: 'quay.io/centos/centos:stream9'
         compiler: ['gcc', 'clang']
-    name: Unit Test (${{matrix.os}} ${{matrix.compiler}})
-    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
-    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+    name: Unit Test (${{matrix.os.name}} ${{matrix.compiler}})
+    runs-on: ${{ matrix.os.image != null && 'ubuntu-latest' || matrix.os.name }}
+    container: ${{ matrix.os.image }}
     permissions:
       contents: read
       actions: write
@@ -47,7 +51,9 @@ jobs:
       CXX: ${{matrix.compiler=='clang' && 'clang++' || 'g++'}}
     steps:
       - name: Set up OS
-        if: startsWith(matrix.os, 'ubuntu')
+        if: startsWith(matrix.os.name, 'ubuntu')
+        env:
+          PIP_BREAK_SYSTEM_PACKAGES: 1
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -57,12 +63,12 @@ jobs:
               libssl-dev libjansson-dev \
               valgrind xmlstarlet \
               python3 python3-pip python3-wheel
-          pip3 install gcovr
+          sudo pip3 install gcovr
       - name: Set up OS
-        if: startsWith(matrix.os, 'centos')
+        if: startsWith(matrix.os.name, 'centos')
         run: |
-          dnf install -y epel-release
-          crb enable
+          dnf install -y 'dnf-command(config-manager)' epel-release
+          dnf config-manager --set-enabled crb
           dnf install -y \
               git rsync \
               cmake ninja-build \
@@ -108,23 +114,31 @@ jobs:
       - name: Archive coverage
         uses: actions/upload-artifact@v6
         with:
-          name: ${{github.job}}-${{matrix.os}}-${{matrix.compiler}}-coverage
+          name: ${{github.job}}-${{matrix.os.name}}-${{matrix.compiler}}-coverage
           path: build/default/coverage*
 
   mock-bpa-test:
     strategy:
       fail-fast: false
       matrix:
-        os: ['ubuntu-24.04', 'centos-9']
-    name: Mock BPA Test (${{matrix.os}} gcc)
-    runs-on: ${{ matrix.os == 'centos-9' && 'ubuntu-24.04' || matrix.os }}
-    container: ${{ matrix.os == 'centos-9' && 'quay.io/centos/centos:stream9' || null }}
+        os:
+          - name: 'ubuntu-24.04'
+            image: null
+          - name: 'centos-9'
+            image: 'quay.io/centos/centos:stream9'
+        compiler: ['gcc']
+    name: Mock BPA Test (${{matrix.os.name}} ${{matrix.compiler}})
+    runs-on: ${{ matrix.os.image != null && 'ubuntu-latest' || matrix.os.name }}
+    container: ${{ matrix.os.image }}
     permissions:
       contents: read
       actions: write
+    env:
+      CC: ${{matrix.compiler=='clang' && 'clang' || 'gcc'}}
+      CXX: ${{matrix.compiler=='clang' && 'clang++' || 'g++'}}
     steps:
       - name: Set up OS
-        if: startsWith(matrix.os, 'ubuntu')
+        if: startsWith(matrix.os.name, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -134,10 +148,10 @@ jobs:
               python3 python3-pip python3-wheel
           pip3 install gcovr
       - name: Set up OS
-        if: startsWith(matrix.os, 'centos')
+        if: startsWith(matrix.os.name, 'centos')
         run: |
+          dnf install -y 'dnf-command(config-manager)' epel-release
           dnf config-manager --set-enabled crb
-          dnf install -y epel-release
           dnf install -y \
               git rsync \
               cmake ninja-build \
@@ -169,10 +183,11 @@ jobs:
       - name: Test Prep
         run: |
           pip3 install --upgrade pip
-          pip3 install -r mock-bpa-test/requirements.txt
+          pip3 install -e mock-bpa-test/
       - name: Test
         env:
-          TEST_MEMCHECK: '1'
+          TEST_EXEC_WRAP: 'memcheck'
+          TEST_LOG_LEVEL: 'info'
         run: python3 -m pytest mock-bpa-test
       - name: Collect coverage
         run: |
@@ -181,5 +196,5 @@ jobs:
       - name: Archive coverage
         uses: actions/upload-artifact@v6
         with:
-          name: ${{github.job}}-${{matrix.os}}-gcc-coverage
+          name: ${{github.job}}-${{matrix.os.name}}-gcc-coverage
           path: build/default/coverage*
