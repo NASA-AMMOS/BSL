@@ -27,19 +27,17 @@
 #include "BPSecLib_Private.h"
 #include <string.h>
 
+/// Internal state reset to default
 static void bsl_data_int_reset(BSL_Data_t *data)
 {
-    ASSERT_ARG_NONNULL(data);
-
     data->owned = false;
     data->ptr   = NULL;
     data->len   = 0;
 }
 
+/// Internal free of owned data without changing state
 static void bsl_data_int_free(BSL_Data_t *data)
 {
-    ASSERT_ARG_NONNULL(data);
-
     if (data->owned && data->ptr)
     {
         BSL_free(data->ptr);
@@ -55,22 +53,33 @@ int BSL_Data_Init(BSL_Data_t *data)
 
 int BSL_Data_InitBuffer(BSL_Data_t *data, size_t bytelen)
 {
-    CHK_ARG_NONNULL(data);
-    CHK_ARG_EXPR(bytelen > 0);
-
+    ASSERT_ARG_NONNULL(data);
     bsl_data_int_reset(data);
+
+    if (bytelen == 0)
+    {
+        // nothing to do
+        return BSL_SUCCESS;
+    }
+
+    data->owned = true;
     data->ptr   = BSL_malloc(bytelen);
     data->len   = bytelen;
-    data->owned = true;
-    memset(data->ptr, 0, bytelen);
-
-    CHK_POSTCONDITION(data->ptr != NULL);
-    return BSL_SUCCESS;
+    if (data->ptr)
+    {
+        memset(data->ptr, 0, bytelen);
+        return BSL_SUCCESS;
+    }
+    else
+    {
+        return BSL_ERR_INSUFFICIENT_SPACE;
+    }
 }
 
 int BSL_Data_InitView(BSL_Data_t *data, size_t len, const BSL_DataPtr_t src)
 {
-    CHK_ARG_NONNULL(data);
+    ASSERT_ARG_NONNULL(data);
+    bsl_data_int_reset(data);
 
     data->owned = false;
     data->ptr   = src;

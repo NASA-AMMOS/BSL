@@ -57,13 +57,31 @@ EXAMPLE_A_2_WITH_BCB = """\
 """
 """ Bundle with BCB over target #1, adjusted sec block to #2 with flags 0x1"""
 
-EXAMPLE_A_NO_PAYLOAD = """\
+EXAMPLE_EMPTY_PAYLOAD = """\
 [_
     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
     [1, 1, 0, 0, h'']
 ]
 """
-""" Example A input bundle with an empty payload edge case """
+""" Example A input bundle adjusted to have empty payload """
+
+EXAMPLE_EMPTY_PAYLOAD_WITH_BIB = """\
+[_
+    [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+    [11, 2, 0, 0, << [1], 1, 1, [2, [2, 1]], [[1, 7], [3, 0]], [[[1, h'97F2168D91EA3BC9BE02FDC225AD2DCF70DD823BA4E13E11E599D8ACFB364502014F25220DFA5FFFDFF98C0C1BE7B235CA53A0B09B2F0D1776220F2E7A8DF372']]] >>],
+    [1, 1, 0, 0, h'']
+]
+"""
+""" Bundle with BIB over target #1 """
+
+EXAMPLE_EMPTY_PAYLOAD_WITH_BCB = """\
+[_
+    [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+    [12, 2, 1, 0, << [1], 2, 1, [2, [2, 1]], [[1, h'5477656C7665313231323132'], [2, 1], [3, h'69C411276FECDDC4780DF42C8A2AF89296FABF34D7FAE700'], [4, 0]], [[[1, h'EFA4B5AC0108E3816C5606479801BC04']]] >>],
+    [1, 1, 0, 0, h'']
+]
+"""
+""" Bundle with BCB over target #1 """
 
 
 class TestBibHmacSha(TestAgent):
@@ -151,13 +169,27 @@ class TestBibHmacSha(TestAgent):
                 )
             )
 
+    def test_empty_target_source(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_EMPTY_PAYLOAD,
+                expected_output=EXAMPLE_EMPTY_PAYLOAD_WITH_BIB,
+                sec_src_eid="ipn:2.1",
+                policy_config="data/default-scs/policy-exA.1-source.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
 
 class TestBcbAesGcm(TestAgent):
     def test_exampleA_2_source(self):
         self._single_test(
             _TestCase(
                 input_data=EXAMPLE_A_NO_SEC,
-                expected_output=None,
+                expected_output=None,  # non-deterministic BTSD
                 sec_src_eid="ipn:2.1",
                 policy_config="data/default-scs/policy-exA.2-source.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -236,3 +268,17 @@ class TestBcbAesGcm(TestAgent):
                     expected_output_format=DataFormat.ERR,
                 )
             )
+
+    def test_empty_target_source(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_EMPTY_PAYLOAD,
+                expected_output=None,  # non-deterministic BTSD
+                sec_src_eid="ipn:2.1",
+                policy_config="data/default-scs/policy-exA.2-cek-source.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ANYCBOR,
+            )
+        )

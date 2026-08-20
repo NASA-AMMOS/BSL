@@ -25,6 +25,7 @@
  * @ingroup example_security_context
  *
  */
+#include <limits.h>
 #include <stdlib.h>
 
 #include <qcbor/qcbor_encode.h>
@@ -97,6 +98,7 @@ int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
 static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 {
     CHK_ARG_NONNULL(bcb_context);
+    int res;
 
     BSL_LOG_INFO("BCB attempting to decrypt");
 
@@ -121,7 +123,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     void *key_id_handle;
     void *cipher_key;
 
-    if (BSL_SUCCESS != BSL_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle))
+    res = BSL_Crypto_GetRegistryKey(bcb_context->key_id, &key_id_handle);
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Cannot get registry key");
         BSL_Data_Deinit(&bcb_context->authtag);
@@ -141,8 +144,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     }
     else
     {
-        int unwrap_result = BSL_Crypto_UnwrapKey(key_id_handle, &bcb_context->wrapped_key, &cipher_key);
-        if (BSL_SUCCESS != unwrap_result)
+        res = BSL_Crypto_UnwrapKey(key_id_handle, &bcb_context->wrapped_key, &cipher_key);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to unwrap AES key");
             BSL_Data_Deinit(&bcb_context->authtag);
@@ -163,7 +166,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        if (BSL_SUCCESS != BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
+        res = BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, (int)bcb_context->aad.len);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to add AAD");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -207,7 +211,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         // Last step is to compute the authentication tag, with is produced
         // as an output parameter to this cipher suite.
-        if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, bcb_context->authtag.ptr))
+        res = BSL_Cipher_SetTag(&cipher, bcb_context->authtag.ptr);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to set auth tag");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -248,7 +253,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     // AAD must already be populated
     CHK_PRECONDITION(bcb_context->aad.ptr != NULL);
-    CHK_PRECONDITION(bcb_context->aad.len > 0);
+    CHK_PRECONDITION((bcb_context->aad.len > 0) && (bcb_context->aad.len <= INT_MAX));
 
     // Must have a key ID from the security operation parameters
     CHK_PRECONDITION(bcb_context->key_id);
@@ -262,9 +267,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     // https://www.rfc-editor.org/rfc/rfc9173.html#name-initialization-vector-iv
     // "A value of 12 bytes SHOULD be used unless local security policy requires a different length"
     BSL_Data_Resize(&bcb_context->iv, RFC9173_BCB_DEFAULT_IV_LEN);
-    void        *iv_ptr = bcb_context->iv.ptr;
-    const size_t iv_len = bcb_context->iv.len;
-    if (BSL_SUCCESS != BSL_Crypto_GenIV(iv_ptr, iv_len))
+    int res = BSL_Crypto_GenIV(bcb_context->iv.ptr, (int)(bcb_context->iv.len));
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to generate IV");
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -323,9 +327,10 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     int retval = BSL_SUCCESS;
 
     BSL_Cipher_t cipher = { 0 };
-    int          cipher_init =
-        BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, aes_mode, bcb_context->iv.ptr, bcb_context->iv.len, cipher_key);
-    if (BSL_SUCCESS != cipher_init)
+
+    res = BSL_Cipher_Init(&cipher, BSL_CRYPTO_ENCRYPT, aes_mode, bcb_context->iv.ptr, (int)(bcb_context->iv.len),
+                          cipher_key);
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to init BCB AES cipher");
         retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -333,7 +338,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        if (BSL_SUCCESS != BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, bcb_context->aad.len))
+        res = BSL_Cipher_AddAAD(&cipher, bcb_context->aad.ptr, (int)(bcb_context->aad.len));
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to add AAD");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -382,7 +388,8 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     if (retval == BSL_SUCCESS)
     {
         BSL_Data_InitBuffer(&bcb_context->authtag, BSL_CRYPTO_AESGCM_AUTH_TAG_LEN);
-        if (BSL_SUCCESS != BSL_Cipher_GetTag(&cipher, (void **)&bcb_context->authtag.ptr))
+        res = BSL_Cipher_GetTag(&cipher, (void **)&bcb_context->authtag.ptr);
+        if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to get authentication tag");
             retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -408,7 +415,6 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
     CHK_ARG_NONNULL(sec_oper);
 
     CHK_PRECONDITION(bcb_context->target_block.block_num > 0);
-    CHK_PRECONDITION(bcb_context->target_block.btsd_len > 0);
 
     bcb_context->keywrap = -1;
 
@@ -441,13 +447,13 @@ int BSLX_BCB_GetParams(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, c
             {
                 BSL_LOG_DEBUG("BCB parsing AES variant (optid=%" PRIu64 ")", param_id);
                 ASSERT_PRECONDITION(is_int);
-                bcb_context->aes_variant = BSL_SecParam_GetAsUint64(param);
-                if (bcb_context->aes_variant < RFC9173_BCB_AES_VARIANT_A128GCM
-                    || bcb_context->aes_variant > RFC9173_BCB_AES_VARIANT_A256GCM)
+                uint64_t val = BSL_SecParam_GetAsUint64(param);
+                if ((val < RFC9173_BCB_AES_VARIANT_A128GCM) || (val > RFC9173_BCB_AES_VARIANT_A256GCM))
                 {
                     BSL_LOG_ERR("Unknown AES variant %" PRIu64, bcb_context->aes_variant);
                     bcb_context->err_count++;
                 }
+                bcb_context->aes_variant = (int)val;
                 break;
             }
             case RFC9173_BCB_SECPARAM_WRAPPEDKEY:
@@ -576,7 +582,6 @@ int BSLX_BCB_Init(BSLX_BCB_t *bcb_context, BSL_BundleRef_t *bundle, const BSL_Se
     }
 
     CHK_POSTCONDITION(bcb_context->target_block.block_num > 0);
-    CHK_POSTCONDITION(bcb_context->target_block.btsd_len > 0);
     return BSL_SUCCESS;
 }
 
@@ -641,7 +646,7 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, const BSL_S
     bcb_context.overwrite_btsd = BSL_SecOper_IsRoleAcceptor(sec_oper);
 
     // Select whether to call the encrypt or decrypt function
-    int (*crypto_fn)(BSLX_BCB_t *) = BSL_SecOper_IsRoleSource(sec_oper) ? BSLX_BCB_Encrypt : BSLX_BCB_Decrypt;
+    int (*crypto_fn)(BSLX_BCB_t *) = BSL_SecOper_IsRoleSource(sec_oper) ? &BSLX_BCB_Encrypt : &BSLX_BCB_Decrypt;
 
     // Perform the encryption/decryption
     if (BSL_SUCCESS != crypto_fn(&bcb_context))

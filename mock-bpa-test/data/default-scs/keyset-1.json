@@ -7,6 +7,11 @@
     },
     {
       "kty": "oct",
+      "kid": "ExampleA.2-cek",
+      "k": "cXdlcnR5dWlvcGFzZGZnaA=="
+    },
+    {
+      "kty": "oct",
       "kid": "ExampleA.2",
       "k": "YWJjZGVmZ2hpamtsbW5vcA=="
     }
