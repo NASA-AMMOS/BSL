@@ -26,7 +26,8 @@ on:
     - cron: '0 0 * * 0'
   push:
     branches:
-    - main
+      - main
+      - 'support/*'
   pull_request: {} # any target
 
 jobs:
