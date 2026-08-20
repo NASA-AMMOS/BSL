@@ -73,9 +73,11 @@ void TestASBDecodeEncodeClosure(uint8_t *asb_cbor, size_t asb_cbor_bytelen, int6
 
     // Confirm that when we encode it, we get the original.
     BSL_Data_t encoded_cbor;
-    BSL_Data_InitBuffer(&encoded_cbor, asb_cbor_bytelen);
 
-    int res = BSL_CBOR_Encode_Twopass(&encoded_cbor, (BSL_CBOR_Encode_f)&BSL_AbsSecBlock_Encode, asb);
+    int res = BSL_Data_InitBuffer(&encoded_cbor, asb_cbor_bytelen);
+    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, res);
+
+    res = BSL_CBOR_Encode_Twopass(&encoded_cbor, (BSL_CBOR_Encode_f)&BSL_AbsSecBlock_Encode, asb);
     TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, res);
 
     // Make sure the lengths match and then make sure the bytes match

@@ -98,8 +98,11 @@ int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out)
     int retval = BSL_SUCCESS;
 
     BSL_Data_t keymat;
-    BSL_Data_InitBuffer(&keymat, key_length);
-    if (BSL_SUCCESS != BSL_Crypto_GenIV(&keymat)) // FIXME rename for clarity
+    int        res = BSL_Data_InitBuffer(&keymat, key_length);
+    CHK_PROPERTY(BSL_SUCCESS == res);
+
+    res = BSL_Crypto_GenIV(&keymat);
+    if (BSL_SUCCESS != res)
     {
         BSL_Data_Deinit(&keymat);
         return BSL_ERR_FAILURE;

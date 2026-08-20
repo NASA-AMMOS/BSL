@@ -182,10 +182,13 @@ static int MockBPA_ReadBTSD_Read(void *user_data, void *buf, size_t *bufsize)
     ASSERT_ARG_NONNULL(obj);
     CHK_ARG_NONNULL(buf);
     CHK_ARG_NONNULL(bufsize);
-    ASSERT_PRECONDITION(obj->file);
 
-    const size_t got = fread(buf, 1, *bufsize, obj->file);
-    obj->curs += got;
+    size_t got = 0;
+    if (obj->file)
+    {
+        got = fread(buf, 1, *bufsize, obj->file);
+        obj->curs += got;
+    }
     BSL_LOG_DEBUG("reading up to %zd bytes, got %zd", *bufsize, got);
     *bufsize = got;
     return 0;
@@ -195,9 +198,11 @@ static void MockBPA_ReadBTSD_Deinit(void *user_data)
 {
     struct MockBPA_BTSD_Data_s *obj = user_data;
     ASSERT_ARG_NONNULL(obj);
-    ASSERT_PRECONDITION(obj->file);
 
-    fclose(obj->file);
+    if (obj->file)
+    {
+        fclose(obj->file);
+    }
     // buffer is external data, no cleanup
     BSL_free(obj);
 }
@@ -221,7 +226,7 @@ static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_re
     obj->block = found_block;
     obj->ptr   = found_block->btsd;
     obj->size  = found_block->btsd_len;
-    obj->file  = fmemopen(obj->ptr, obj->size, "rb");
+    obj->file  = (obj->ptr) ? fmemopen(obj->ptr, obj->size, "rb") : NULL;
     obj->curs  = 0;
 
     BSL_SeqReader_t *reader = BSL_calloc(1, sizeof(BSL_SeqReader_t));

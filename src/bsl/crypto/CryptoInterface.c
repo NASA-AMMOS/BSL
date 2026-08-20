@@ -312,7 +312,8 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
     CHK_PRECONDITION(BSL_SUCCESS == BSL_KeyStore_State.get_keymat(kdk_handle, &kdk_view));
 
     BSL_Data_t cek_keymat;
-    if (BSL_SUCCESS != BSL_Data_InitBuffer(&cek_keymat, keylen))
+    res = BSL_Data_InitBuffer(&cek_keymat, keylen);
+    if (BSL_SUCCESS != res)
     {
         retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
@@ -446,7 +447,7 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
     // GCOV_EXCL_STOP
 
     res = BSL_Data_InitBuffer(&hmac_ctx->in_buf, hmac_ctx->block_size);
-    CHK_PROPERTY(!res);
+    CHK_PROPERTY(BSL_SUCCESS == res);
 
     BSL_KeyStore_State.update_stats(keyhandle, 1, 0);
 
@@ -605,10 +606,9 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
     CHK_PROPERTY(res == 1);
 
     res = BSL_Data_InitBuffer(&cipher_ctx->in_buf, cipher_ctx->block_size);
-    CHK_PROPERTY(!res);
-
+    CHK_PROPERTY(BSL_SUCCESS == res);
     res = BSL_Data_InitBuffer(&cipher_ctx->out_buf, cipher_ctx->block_size);
-    CHK_PROPERTY(!res);
+    CHK_PROPERTY(BSL_SUCCESS == res);
 
     BSL_KeyStore_State.update_stats(cipher_ctx->keyhandle, 1, 0);
 

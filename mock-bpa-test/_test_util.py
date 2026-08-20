@@ -19,9 +19,16 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
+import contextlib
+import json
+import logging
+import tempfile
+from collections.abc import Generator
 from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import Any, Optional
+
+LOGGER = logging.getLogger(__name__)
 
 
 @unique
@@ -71,3 +78,38 @@ class _TestCase:
 
     use_bcb_rng: bool = False
     """ If true, test will use custom rng callback for BCB testing """
+
+
+@contextlib.contextmanager
+def sc_config_modifier(orig: str, modify: dict[str, Any]) -> Generator[str, None, None]:
+    """A context for modifying baseline configurations
+
+    :param orig: The original file path, relative to this directory.
+    :param modify: Updates to the context parameters, either modifying or adding.
+    :return: A generator for temporary files which exist for the duration
+        of this context.
+    """
+    with tempfile.NamedTemporaryFile("w+", suffix=".json") as polfile:
+        with open(orig, "r") as infile:
+            poldata = json.load(infile)
+
+        params = poldata["policyrule_set"][0]["policyrule"]["spec"]["sc_parms"]
+        LOGGER.debug("Original params:\n%s", params)
+        if isinstance(params, dict):
+            params |= modify
+        elif isinstance(params, list):
+            # replace existing
+            for pair in params:
+                key = pair["id"]
+                if key in modify:
+                    pair["value"] = str(modify.pop(key))
+            # add remaining
+            for key, val in modify.items():
+                params.append({"id": key, "value": str(val)})
+        else:
+            raise TypeError(f"bad type {type(params)}")
+        LOGGER.debug("Modified params:\n%s", params)
+
+        json.dump(poldata, polfile)
+        polfile.flush()
+        yield polfile.name
