@@ -21,15 +21,11 @@
 #
 """Test Cases utilizing JSON policy definitions with the default contexts"""
 
-import contextlib
-import json
 import logging
 import os
-import tempfile
 import unittest
-from typing import Any
 
-from _test_util import BundleDestLoc, DataFormat, _TestCase
+from _test_util import BundleDestLoc, DataFormat, _TestCase, sc_config_modifier
 from test_bpa import TestAgent
 
 OWNPATH = os.path.dirname(os.path.abspath(__file__))
@@ -70,35 +66,6 @@ EXAMPLE_A_NO_PAYLOAD = """\
 """ Example A input bundle with an empty payload edge case """
 
 
-@contextlib.contextmanager
-def sc_config_modifier(orig: str, modify: dict[str, Any]):
-    """A context for modifying baseline configurations"""
-    with tempfile.NamedTemporaryFile("w+", suffix=".json") as polfile:
-        with open(os.path.join(OWNPATH, orig), "r") as infile:
-            poldata = json.load(infile)
-
-        params = poldata["policyrule_set"][0]["policyrule"]["spec"]["sc_parms"]
-        LOGGER.debug("Original params:\n%s", params)
-        if isinstance(params, dict):
-            params |= modify
-        elif isinstance(params, list):
-            # replace existing
-            for pair in params:
-                key = pair['id']
-                if key in modify:
-                    pair['value'] = str(modify.pop(key))
-            # add remaining
-            for key, val in modify.items():
-                params.append({'id': key, 'value': str(val)})
-        else:
-            raise TypeError(f"bad type {type(params)}")
-        LOGGER.debug("Modified params:\n%s", params)
-
-        json.dump(poldata, polfile)
-        polfile.flush()
-        yield polfile
-
-
 class TestBibHmacSha(TestAgent):
     def test_exampleA_1_source(self):
         self._single_test(
@@ -130,14 +97,15 @@ class TestBibHmacSha(TestAgent):
 
     def test_exampleA_1_acceptor_failure_key_mismatch(self):
         with sc_config_modifier(
-            "data/default-scs/policy-exA.1-accept.json", {"key_name": "ExampleA.2"}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.1-accept.json"),
+            modify={"key_name": "ExampleA.2"}
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_1_WITH_BIB,
                     expected_output=".*<ERROR>.* Security operation mismatch - ASB does NOT contain block 1",
                     sec_src_eid="ipn:1.0",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/default-scs/keyset-1.json",
                     input_data_format=DataFormat.CBORDIAG,
@@ -148,14 +116,15 @@ class TestBibHmacSha(TestAgent):
     @unittest.skip("the operation still proceeds after mismatch")
     def test_exampleA_1_acceptor_failure_sha_variant(self):
         with sc_config_modifier(
-            "data/default-scs/policy-exA.1-accept.json", {"sha_variant": 6}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.1-accept.json"),
+            modify={"sha_variant": 6}
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_1_WITH_BIB,
                     expected_output=".*<ERROR>.* SHA variant mismatch, needed 6 got 7",
                     sec_src_eid="ipn:1.0",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/default-scs/keyset-1.json",
                     input_data_format=DataFormat.CBORDIAG,
@@ -166,14 +135,15 @@ class TestBibHmacSha(TestAgent):
     @unittest.skip("the operation still proceeds after mismatch")
     def test_exampleA_1_acceptor_failure_aad_mismatch(self):
         with sc_config_modifier(
-            "data/default-scs/policy-exA.1-accept.json", {"scope_flags": 0x1}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.1-accept.json"),
+            modify={"scope_flags": 0x1}
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_1_WITH_BIB,
                     expected_output=".*<WARNING>.* IPPT Scope mismatch, needed 1 got 0",
                     sec_src_eid="ipn:1.0",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/default-scs/keyset-1.json",
                     input_data_format=DataFormat.CBORDIAG,
@@ -213,14 +183,15 @@ class TestBcbAesGcm(TestAgent):
 
     def test_exampleA_2_acceptor_failure_key_mismatch(self):
         with sc_config_modifier(
-            "data/default-scs/policy-exA.2-accept.json", {"key_name": "ExampleA.1"}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.2-accept.json"),
+            modify={"key_name": "ExampleA.1"}
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_2_WITH_BCB,
                     expected_output=".*<ERROR>.* Failed to unwrap AES key",
                     sec_src_eid="ipn:1.0",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/default-scs/keyset-1.json",
                     input_data_format=DataFormat.CBORDIAG,
@@ -231,14 +202,15 @@ class TestBcbAesGcm(TestAgent):
     @unittest.skip("the operation still proceeds after mismatch")
     def test_exampleA_2_acceptor_failure_aes_variant(self):
         with sc_config_modifier(
-            "data/default-scs/policy-exA.2-accept.json", {"aes_variant": 2}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.2-accept.json"),
+            modify={"aes_variant": 2}
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_2_WITH_BCB,
                     expected_output=".*<ERROR>.* AES variant mismatch, needed 2 got 1",
                     sec_src_eid="ipn:1.0",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/default-scs/keyset-1.json",
                     input_data_format=DataFormat.CBORDIAG,
@@ -249,14 +221,15 @@ class TestBcbAesGcm(TestAgent):
     @unittest.skip("the operation still proceeds after mismatch")
     def test_exampleA_2_acceptor_failure_aad_mismatch(self):
         with sc_config_modifier(
-            "data/default-scs/policy-exA.2-accept.json", {"aad_scope": 0x1}
-        ) as polfile:
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.2-accept.json"),
+            modify={"aad_scope": 0x1}
+        ) as polfile_path:
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_2_WITH_BCB,
                     expected_output=".*<WARNING>.* AAD Scope mismatch, needed 1 got 0",
                     sec_src_eid="ipn:1.0",
-                    policy_config=polfile.name,
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/default-scs/keyset-1.json",
                     input_data_format=DataFormat.CBORDIAG,

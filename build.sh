@@ -52,17 +52,17 @@ function usage {
 
 function cmd_check_format {
     shift
-    exec ./resources/check_format.sh
+    exec ./resources/check_format.sh "$@"
 }
 
 function cmd_apply_format {
     shift
-    exec ./resources/apply_format.sh
+    exec ./resources/apply_format.sh "$@"
 }
 
 function cmd_apply_license {
     shift
-    exec ./resources/apply_license.sh
+    exec ./resources/apply_license.sh "$@"
 }
 
 function cmd_check {
@@ -191,7 +191,7 @@ case "$1" in
         echo "Test-after-shift: $@"
         ;;
     check-format)
-        cmd_check_format
+        cmd_check_format "$@"
         ;;
     apply-format)
         cmd_apply_format "$@"

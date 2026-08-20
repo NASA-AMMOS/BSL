@@ -100,15 +100,15 @@ class TestAgent(unittest.TestCase):
             if key_set.endswith(".cbordiag"):
                 key_file = key_set[:-4]
                 with (
-                    open(os.path.join(OWNPATH, key_set), "r") as infile,
-                    open(os.path.join(OWNPATH, key_file), "wb") as outfile,
+                    open(key_set, "r") as infile,
+                    open(key_file, "wb") as outfile,
                 ):
                     outfile.write(diag2cbor(infile.read()))
                 key_set = key_file
 
         else:
             policy_config = "0x00"
-            key_set = os.path.join(OWNPATH, "key_set_1.json")
+            key_set = os.path.join(OWNPATH, "data/key_set_1.json")
 
         # fmt: off
         arglist = [
@@ -189,8 +189,6 @@ class TestAgent(unittest.TestCase):
             LOGGER.debug("waiting")
             with self.assertRaises(TimeoutError):
                 self._wait_for(test_sock, timeout=0.1)
-
-            LOGGER.warning("Check log output to validate expected error")
 
             err_case_str = testcase.expected_output
             LOGGER.debug(f"ERR CASE STR: {err_case_str}")
