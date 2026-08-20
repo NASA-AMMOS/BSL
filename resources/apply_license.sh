@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ##
 ## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
@@ -30,13 +30,13 @@
 #
 set -e
 
-if [ -z "$SELFDIR" ];
+if [[ -z "$SELFDIR" ]];
 then
   echo "SELFDIR not defined"
   exit 1
 fi
 
-cd $SELFDIR
+cd "${SELFDIR}"
 
 LICENSEOPTS="${LICENSEOPTS} --tmpl ${SELFDIR}/resources/apply_license.tmpl"
 LICENSEOPTS="${LICENSEOPTS} --years 2025-2026"
@@ -55,7 +55,7 @@ fi
 
 echo "Applying markings to source..."
 # Directory trees
-for DIRNAME in resources cmake src test mock-bpa-test docs pkg .github
+for DIRNAME in resources cmake src test mock-bpa-test lib-user-test docs pkg .github
 do
     licenseheaders ${LICENSEOPTS} --dir ${SELFDIR}/${DIRNAME}
 done

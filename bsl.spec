@@ -5,9 +5,8 @@ Version: 1.1.1
 Release: 1%{?dist}
 Summary: The Bundle Protocol Security Library (BSL)
 URL: https://github.com/NASA-AMMOS/BSL
-# License "Apache-2.0" is not accepted by rpmlint
-License: ASL 2.0
-Source0: %{name}-%{version}.tar.gz
+License: Apache-2.0
+Source0: %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 BuildRequires: rsync
 BuildRequires: cmake
@@ -28,26 +27,27 @@ Runtime files needed to use the BPSec Library (BSL).
 
 %package devel
 Summary: Development files for the BSL
-Requires: %{name}%{?_isa} = %{version}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 %description devel
 Development files needed to build and link to the BSL.
 
 %package test
 Summary: Unit test and Mock BPA executables for the BSL
+Requires: %{name}%{?_isa} = %{version}-%{release}
 %description test
 This package contains executables needed to test the associated
 BSL library build.
 
 %package test-devel
 Summary: Development files for the BSL test fixtures
-Requires: %{name}-test%{?_isa} = %{version}
+Requires: %{name}-test%{?_isa} = %{version}-%{release}
 %description test-devel
 Development files needed to build and link to the BSL mock BPA.
 
 %if %{with apidoc}
 %package apidoc
 Summary: API documentation for the BSL
-Requires: %{name}%{?_isa} = %{version}
+Requires: %{name}%{?_isa} = %{version}-%{release}
 %description apidoc
 API documentation in the form of HTML package generated
 from the API with Doxygen.
@@ -57,16 +57,17 @@ from the API with Doxygen.
 %prep
 %setup -q
 
-./build.sh deps
+
+%build
+# non-package dependencies into ./testroot
+DESTDIR=${PWD}/testroot ./build.sh deps
 
 %cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo \
        -DCMAKE_PREFIX_PATH=${PWD}/testroot/usr \
        -DPROJECT_VERSION=%{version} \
        -DBUILD_UNITTEST=YES -DTEST_MEMCHECK=NO -DBUILD_COVERAGE=NO \
-       -DBUILD_DOCS_MAN=YES %{?with_apidoc:-DBUILD_DOCS_API=YES}
+       -DBUILD_DOCS_MAN=YES -DBUILD_DOCS_API=%{?with_apidoc:YES}%{!?with_apidoc:NO}
 
-
-%build
 %cmake_build 
 %cmake_build --target docs-man
 %if %{with apidoc}
@@ -116,10 +117,12 @@ popd
 %files devel
 %license LICENSE
 %doc README.md
-%{_includedir}/bsl
-%{_includedir}/qcbor
-%{_includedir}/m-lib
+%{_includedir}/m-lib/
+
+%{_includedir}/qcbor/
 %{_libdir}/libqcbor.so
+
+%{_includedir}/bsl/
 %{_libdir}/libbsl_front.so
 %{_libdir}/libbsl_dynamic.so
 %{_libdir}/libbsl_crypto.so
@@ -138,16 +141,17 @@ popd
 %files test-devel
 %license LICENSE
 %doc README.md
-%{_includedir}/unity
-%{_libdir}/cmake/unity
+%{_includedir}/unity/
+%{_libdir}/cmake/unity/
 %{_libdir}/libunity.a
+
 %{_libdir}/libbsl_mock_bpa.so
 %{_libdir}/libbsl_test_utils.so
 
 %if %{with apidoc}
 %files apidoc
 %license LICENSE
-%{_docdir}/bsl
+%doc %lang(en) %{_docdir}/bsl
 %endif
 
 

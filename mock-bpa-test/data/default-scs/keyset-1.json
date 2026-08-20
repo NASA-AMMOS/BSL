@@ -1,0 +1,14 @@
+{
+  "keys": [
+    {
+      "kty": "oct",
+      "kid": "ExampleA.1",
+      "k": "GisaKxorGisaKxorGisaKw=="
+    },
+    {
+      "kty": "oct",
+      "kid": "ExampleA.2",
+      "k": "YWJjZGVmZ2hpamtsbW5vcA=="
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "policyrule_set": [
+    {
+      "policyrule": {
+        "desc": "Integrity accept rule",
+        "filter": {
+          "rule_id": "1",
+          "role": "a",
+          "tgt": 1,
+          "loc": "appout",
+          "sc_id": 1
+        },
+        "spec": {
+          "svc": "bib",
+          "sc_id": 1,
+          "sc_parms": [
+            {
+              "id": "key_name",
+              "value": "ExampleA.1"
+            },
+            {
+              "id": "sha_variant",
+              "value": "7"
+            },
+            {
+              "id": "scope_flags",
+              "value": "0"
+            },
+            {
+              "id": "key_wrap",
+              "value": "0"
+            }
+          ]
+        },
+        "policy_action_on_fail": "delete_bundle"
+      }
+    }
+  ]
+}

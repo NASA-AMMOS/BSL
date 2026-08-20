@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ##
 ## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
@@ -26,7 +26,7 @@
 #
 set -e
 
-if [ -z "$SELFDIR" ];
+if [[ -z "$SELFDIR" ]];
 then
     echo "SELFDIR not defined"
     exit 1
@@ -42,6 +42,20 @@ else
     ARGS=$(find src test -iname '*.h' -o -iname '*.c' -o -iname '*.cpp')
 fi
 clang-format --style=file -i $ARGS
+
+# Test configs
+for FILENAME in $(find . \( -path './deps' -prune -o -name '*.json' \) -a -type f)
+do
+    if jq . <"${FILENAME}" >"${FILENAME}.new"
+    then
+        mv "${FILENAME}.new" "${FILENAME}"
+    else
+        ERR=$?
+        echo "Failed to format ${FILENAME}" >/dev/stderr
+        rm "${FILENAME}.new"
+        exit $ERR
+    fi
+done
 
 # Python test fixtures
 autopep8 --max-line-length=100 -ir mock-bpa-test/

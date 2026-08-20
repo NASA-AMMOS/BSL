@@ -47,22 +47,23 @@ jobs:
               cmake ninja-build ruby build-essential \
               libssl-dev libjansson-dev \
               doxygen graphviz plantuml \
-              dblatex texlive texlive-latex-extra texlive-font-utils \
+              ${{github.event_name != 'pull_request' && 'dblatex texlive texlive-latex-extra texlive-font-utils' || 'texlive-binaries'}} \
               xmlstarlet aspell
       - name: Dependency build
         run: ./build.sh deps
       - name: Prep
         run: >
           ./build.sh prep
-          -DBUILD_TESTING=OFF -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=OFF
+          -DBUILD_TESTING=OFF -DBUILD_UNITTEST=OFF -DTEST_MEMCHECK=OFF -DBUILD_COVERAGE=OFF
           -DBUILD_DOCS_API=ON
       - name: Build
-        run: ./build.sh --target docs-api-html docs-api-pdf docs-api-misspelling
+        run: ./build.sh --target docs-api
       - name: Misspelling
         env:
           MISSPELLING_TXT: 'build/default/docs/api/misspelling.txt'
+          MISSPELLING_CTX_TXT: 'build/default/docs/api/misspelling-ctx.txt'
         # success means file is present and empty
-        run: test -f "${MISSPELLING_TXT}" -a ! -s "${MISSPELLING_TXT}" || (cat "${MISSPELLING_TXT}"; exit 1)
+        run: test -f "${MISSPELLING_TXT}" -a ! -s "${MISSPELLING_TXT}" || (cat "${MISSPELLING_TXT}"; printf "\nIn context:\n"; cat "${MISSPELLING_CTX_TXT}"; exit 1)
       - name: Install
         run: ./build.sh install --component docs-api
       - name: Compress
@@ -91,7 +92,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     needs: apidoc
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
@@ -104,11 +105,11 @@ jobs:
           tar -xf html.tar
           rm html.tar
       - name: Setup Pages
-        uses: actions/configure-pages@v3
+        uses: actions/configure-pages@v6
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: testroot/usr/share/doc/bsl/
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

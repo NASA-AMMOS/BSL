@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 ##
 ## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
 ## Laboratory LLC.
@@ -27,8 +27,8 @@
 set -e
 set -o pipefail
 
-source setenv.sh
 export SELFDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
+source ${SELFDIR}/setenv.sh
 BUILDDIR=${SELFDIR}/build/default
 
 function usage {
@@ -51,19 +51,23 @@ function usage {
 }
 
 function cmd_check_format {
-    ./resources/check_format.sh
+    shift
+    exec ./resources/check_format.sh "$@"
 }
 
 function cmd_apply_format {
-    ./resources/apply_format.sh
+    shift
+    exec ./resources/apply_format.sh "$@"
 }
 
 function cmd_apply_license {
-    ./resources/apply_license.sh
+    shift
+    exec ./resources/apply_license.sh "$@"
 }
 
 function cmd_check {
-    cmake --build ${BUILDDIR} --target test
+    shift
+    ctest --test-dir ${BUILDDIR} --output-on-failure "$@"
 }
 
 function cmd_clean {
@@ -90,7 +94,7 @@ function cmd_coverage_summary {
 }
 
 function cmd_deps {
-    ./resources/deps.sh
+    exec ./resources/deps.sh
 }
 
 function cmd_docs {
@@ -108,13 +112,20 @@ function cmd_lint {
 
 function cmd_prep {
     shift
-    ./resources/prep.sh "$@"
+    exec ./resources/prep.sh "$@"
 }
 
 function cmd_rpm_build {
-    if ! git describe 2>/dev/null >/dev/null
+    if test -d .git && ! git describe --always 2>/dev/null >/dev/null
     then
         git config --global --add safe.directory ${PWD}
+        for NAME in ${PWD}/deps/*
+        do
+            if [[ -d ${NAME} ]]
+            then
+                git config --global --add safe.directory ${NAME}
+            fi
+        done
     fi
     tito build -o build/default/pkg --test --srpm
     tito build -o build/default/pkg --test --rpm
@@ -123,11 +134,19 @@ function cmd_rpm_build {
 function cmd_rpm_check {
     # Package scanning
     pushd build/default/pkg
+
+    for FILEPATH in x86_64/*.rpm
+    do
+        rpm -pqi "${FILEPATH}"
+        echo "Requires:"
+        rpm -pqR "${FILEPATH}"
+        echo "Files:"
+        rpm -pql "${FILEPATH}"
+    done
+
     rpmlint --file=${SELFDIR}/pkg/rpmlintrc . | tee rpmlint.txt
 
-    # Trial install
-    dnf install -y x86_64/*.rpm
-    dnf repoquery -l 'bsl*'
+    popd
 }
 
 function cmd_rpm_container {
@@ -157,18 +176,9 @@ function cmd_rpm_container {
 }
 
 function cmd_run {
-    # testroot installed files
-    DESTDIR=${DESTDIR:-${SELFDIR}/testroot}
-    PREFIX=${PREFIX:-/usr}
-
-    if [ -n "${DESTDIR}" -o -n "${PREFIX}" ]
-    then
-        export LD_LIBRARY_PATH=${DESTDIR}${PREFIX}/lib:${DESTDIR}${PREFIX}/lib64
-        export PATH=${PATH}:${DESTDIR}${PREFIX}/bin
-    fi
-
     shift
-    exec $@
+    # Environment is already set by setenv.sh
+    exec "$@"
 }
 
 function cmd_default {
@@ -181,16 +191,16 @@ case "$1" in
         echo "Test-after-shift: $@"
         ;;
     check-format)
-        cmd_check_format
+        cmd_check_format "$@"
         ;;
     apply-format)
-        cmd_apply_format
+        cmd_apply_format "$@"
         ;;
     apply-license)
-        cmd_apply_license
+        cmd_apply_license "$@"
         ;;
     check)
-        cmd_check
+        cmd_check "$@"
         ;;
     clean)
         cmd_clean

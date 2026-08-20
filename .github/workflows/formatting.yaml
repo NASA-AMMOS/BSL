@@ -37,6 +37,10 @@ jobs:
       contents: read
       actions: write
     steps:
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
@@ -45,7 +49,7 @@ jobs:
       - name: Set up OS
         run: |
           sudo apt-get update && sudo apt-get install -y \
-              clang-format python3-pip
-          pip3 install autopep8 licenseheaders
+              clang-format jq
+          pip3 install -e mock-bpa-test[format] # for formatting
       - name: Check code formatting
         run: ./build.sh check-format
