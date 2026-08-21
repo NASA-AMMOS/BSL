@@ -33,6 +33,7 @@
 #include <jansson.h>
 
 #include <errno.h>
+#include <fcntl.h>
 #include <strings.h>
 
 /** Read a text value as long integer.
@@ -715,15 +716,31 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
     return BSL_SUCCESS;
 }
 
-int BSLP_PolicyParser_FromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_t *policy)
+int BSLP_PolicyParser_LoadFile(const char *file_path, BSLP_PolicyProvider_t *policy)
 {
-    CHK_ARG_NONNULL(policy_cfg_path);
+    CHK_ARG_NONNULL(file_path);
     CHK_ARG_NONNULL(policy);
 
-    json_t      *root;
+    int infd = open(file_path, O_RDONLY);
+    if (infd < 0)
+    {
+        BSL_LOG_ERR("Failed to open input file %s", file_path);
+        return BSL_ERR_DECODING;
+    }
+    int retval = BSLP_PolicyParser_LoadFd(infd, policy);
+    close(infd);
+
+    return retval;
+}
+
+int BSLP_PolicyParser_LoadFd(int infd, BSLP_PolicyProvider_t *policy)
+{
+    CHK_ARG_EXPR(infd >= 0);
+    CHK_ARG_NONNULL(policy);
+
     json_error_t err;
 
-    root = json_load_file(policy_cfg_path, 0, &err);
+    json_t *root = json_loadfd(infd, 0, &err);
     if (!root)
     {
         BSL_LOG_ERR("JSON error: line %d: %s", err.line, err.text);

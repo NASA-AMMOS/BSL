@@ -162,4 +162,11 @@ if(BUILD_FUZZING)
   )
   target_link_libraries(fuzz_Crypto_KeyLoader_LoadCoseKeySet PUBLIC ${LIB_ORDERED})
 
+  add_fuzz_test(
+    SOURCE fuzz_PolicyParser_LoadFd.cpp
+    RUNS_COUNT 300000
+    EXTRA_ARGS "-dict=libfuzzer-json.dict"
+  )
+  target_link_libraries(fuzz_PolicyParser_LoadFd PUBLIC ${LIB_ORDERED})
+
 endif(BUILD_FUZZING)
