@@ -1,0 +1,22 @@
+{
+  "policyrule_set": [
+    {
+      "policyrule": {
+        "desc": "Confidentiality source rule",
+        "filter": {
+          "rule_id": "1",
+          "role": "a",
+          "tgt": 1,
+          "loc": "appin",
+          "sc_id": 3
+        },
+        "spec": {
+          "svc": "bcb",
+          "sc_id": 3,
+          "sc_parms": {}
+        },
+        "policy_action_on_fail": "delete_bundle"
+      }
+    }
+  ]
+}

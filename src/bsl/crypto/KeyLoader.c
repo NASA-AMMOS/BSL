@@ -77,13 +77,14 @@ int BSL_Crypto_KeyLoader_LoadFile(const char *file_path)
     return retval;
 }
 
-int BSL_Crypto_KeyLoader_LoadJwkSet(int fd)
+int BSL_Crypto_KeyLoader_LoadJwkSet(int infd)
 {
+    CHK_ARG_EXPR(infd >= 0);
     int retval = BSL_SUCCESS;
 
     json_error_t err;
 
-    json_t *root = json_loadfd(fd, 0, &err);
+    json_t *root = json_loadfd(infd, 0, &err);
     if (!root)
     {
         BSL_LOG_ERR("JSON error: line %d: %s", err.line, err.text);
@@ -287,6 +288,7 @@ static int BSL_Crypto_KeyLoader_LoadCoseKeySet_decode(QCBORDecodeContext *dec, c
 
 int BSL_Crypto_KeyLoader_LoadCoseKeySet(int infd)
 {
+    CHK_ARG_EXPR(infd >= 0);
     struct stat sb;
     if ((fstat(infd, &sb) < 0) || (sb.st_size == 0))
     {
