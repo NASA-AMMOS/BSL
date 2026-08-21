@@ -81,7 +81,9 @@ class _TestCase:
 
 
 @contextlib.contextmanager
-def sc_config_modifier(orig: str, modify: dict[str, Any]) -> Generator[str, None, None]:
+def sc_config_modifier(
+    orig: str, modify: Optional[dict[str, Any]] = None, role: Optional[str] = None
+) -> Generator[str, None, None]:
     """A context for modifying baseline configurations
 
     :param orig: The original file path, relative to this directory.
@@ -93,22 +95,28 @@ def sc_config_modifier(orig: str, modify: dict[str, Any]) -> Generator[str, None
         with open(orig, "r") as infile:
             poldata = json.load(infile)
 
-        params = poldata["policyrule_set"][0]["policyrule"]["spec"]["sc_parms"]
-        LOGGER.debug("Original params:\n%s", params)
-        if isinstance(params, dict):
-            params |= modify
-        elif isinstance(params, list):
-            # replace existing
-            for pair in params:
-                key = pair["id"]
-                if key in modify:
-                    pair["value"] = str(modify.pop(key))
-            # add remaining
-            for key, val in modify.items():
-                params.append({"id": key, "value": str(val)})
-        else:
-            raise TypeError(f"bad type {type(params)}")
-        LOGGER.debug("Modified params:\n%s", params)
+        rule = poldata["policyrule_set"][0]["policyrule"]
+
+        if role:
+            rule["filter"]["role"] = role
+
+        if modify:
+            params = rule["spec"]["sc_parms"]
+            LOGGER.debug("Original params:\n%s", params)
+            if isinstance(params, dict):
+                params |= modify
+            elif isinstance(params, list):
+                # replace existing
+                for pair in params:
+                    key = pair["id"]
+                    if key in modify:
+                        pair["value"] = str(modify.pop(key))
+                # add remaining
+                for key, val in modify.items():
+                    params.append({"id": key, "value": str(val)})
+            else:
+                raise TypeError(f"bad type {type(params)}")
+            LOGGER.debug("Modified params:\n%s", params)
 
         json.dump(poldata, polfile)
         polfile.flush()

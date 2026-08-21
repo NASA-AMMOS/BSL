@@ -23,7 +23,6 @@
 
 import logging
 import os
-import unittest
 
 from _test_util import BundleDestLoc, DataFormat, _TestCase, sc_config_modifier
 from test_bpa import TestAgent
@@ -99,7 +98,7 @@ class TestBibHmacSha(TestAgent):
             )
         )
 
-    def test_exampleA_1_acceptor_valid_match(self):
+    def test_exampleA_1_acceptor_valid_loose(self):
         self._single_test(
             _TestCase(
                 input_data=EXAMPLE_A_1_WITH_BIB,
@@ -112,6 +111,42 @@ class TestBibHmacSha(TestAgent):
                 expected_output_format=DataFormat.CBORDIAG,
             )
         )
+
+    def test_exampleA_1_acceptor_valid_nulls(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.1-accept.json"),
+            modify={"sha_variant": None, "scope_flags": None},
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_1_WITH_BIB,
+                    expected_output=EXAMPLE_A_NO_SEC,
+                    sec_src_eid="ipn:1.0",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/default-scs/keyset-1.json",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.CBORDIAG,
+                )
+            )
+
+    def test_exampleA_1_acceptor_valid_match(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.1-accept.json"),
+            modify={"sha_variant": 7, "scope_flags": 0},
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_1_WITH_BIB,
+                    expected_output=EXAMPLE_A_NO_SEC,
+                    sec_src_eid="ipn:1.0",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/default-scs/keyset-1.json",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.CBORDIAG,
+                )
+            )
 
     def test_exampleA_1_acceptor_failure_key_mismatch(self):
         with sc_config_modifier(
@@ -149,8 +184,7 @@ class TestBibHmacSha(TestAgent):
                 )
             )
 
-    @unittest.skip("the operation still proceeds after mismatch")
-    def test_exampleA_1_acceptor_failure_aad_mismatch(self):
+    def test_exampleA_1_acceptor_failure_scope_mismatch(self):
         with sc_config_modifier(
             orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.1-accept.json"),
             modify={"scope_flags": 0x1},
@@ -158,13 +192,32 @@ class TestBibHmacSha(TestAgent):
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_1_WITH_BIB,
-                    expected_output=".*<WARNING>.* IPPT Scope mismatch, needed 1 got 0",
+                    expected_output=".*<ERROR>.* IPPT scope mismatch, needed 1 got 0",
                     sec_src_eid="ipn:1.0",
                     policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/default-scs/keyset-1.json",
                     input_data_format=DataFormat.CBORDIAG,
                     expected_output_format=DataFormat.ERR,
+                )
+            )
+
+    def test_exampleA_1_verifier_valid_match(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.1-accept.json"),
+            modify={"sha_variant": 7, "scope_flags": 0},
+            role="v",
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_1_WITH_BIB,
+                    expected_output=EXAMPLE_A_1_WITH_BIB,
+                    sec_src_eid="ipn:1.0",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/default-scs/keyset-1.json",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.CBORDIAG,
                 )
             )
 
@@ -198,7 +251,7 @@ class TestBcbAesGcm(TestAgent):
             )
         )
 
-    def test_exampleA_2_acceptor_valid_match(self):
+    def test_exampleA_2_acceptor_valid_loose(self):
         self._single_test(
             _TestCase(
                 input_data=EXAMPLE_A_2_WITH_BCB,
@@ -211,6 +264,42 @@ class TestBcbAesGcm(TestAgent):
                 expected_output_format=DataFormat.CBORDIAG,
             )
         )
+
+    def test_exampleA_2_acceptor_valid_nulls(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.2-accept.json"),
+            modify={"aes_variant": None, "aad_scope": None},
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_2_WITH_BCB,
+                    expected_output=EXAMPLE_A_NO_SEC,
+                    sec_src_eid="ipn:1.0",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/default-scs/keyset-1.json",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.CBORDIAG,
+                )
+            )
+
+    def test_exampleA_2_acceptor_valid_match(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.2-accept.json"),
+            modify={"aes_variant": 1, "aad_scope": 0},
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_2_WITH_BCB,
+                    expected_output=EXAMPLE_A_NO_SEC,
+                    sec_src_eid="ipn:1.0",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/default-scs/keyset-1.json",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.CBORDIAG,
+                )
+            )
 
     def test_exampleA_2_acceptor_failure_key_mismatch(self):
         with sc_config_modifier(
@@ -248,8 +337,7 @@ class TestBcbAesGcm(TestAgent):
                 )
             )
 
-    @unittest.skip("the operation still proceeds after mismatch")
-    def test_exampleA_2_acceptor_failure_aad_mismatch(self):
+    def test_exampleA_2_acceptor_failure_scope_mismatch(self):
         with sc_config_modifier(
             orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.2-accept.json"),
             modify={"aad_scope": 0x1},
@@ -257,13 +345,32 @@ class TestBcbAesGcm(TestAgent):
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_2_WITH_BCB,
-                    expected_output=".*<WARNING>.* AAD Scope mismatch, needed 1 got 0",
+                    expected_output=".*<ERROR>.* AAD scope mismatch, needed 1 got 0",
                     sec_src_eid="ipn:1.0",
                     policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/default-scs/keyset-1.json",
                     input_data_format=DataFormat.CBORDIAG,
                     expected_output_format=DataFormat.ERR,
+                )
+            )
+
+    def test_exampleA_2_verifier_valid_match(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.2-accept.json"),
+            modify={"aes_variant": 1, "aad_scope": 0},
+            role="v",
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_2_WITH_BCB,
+                    expected_output=EXAMPLE_A_2_WITH_BCB,
+                    sec_src_eid="ipn:1.0",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/default-scs/keyset-1.json",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.CBORDIAG,
                 )
             )
 
