@@ -173,7 +173,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
     {
         if (!self->opt_sha_variant)
         {
-            BSL_LOG_ERR("BIB sha variant option is required");
+            BSL_LOG_ERR("BIB SHA variant option is required");
             return BSL_ERR_PROPERTY_CHECK_FAILED;
         }
         if (!self->opt_ippt_scope)
@@ -181,11 +181,11 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
             BSL_LOG_ERR("BIB IPPT scope option is required");
             return BSL_ERR_PROPERTY_CHECK_FAILED;
         }
-        if (!self->opt_keywrap)
-        {
-            BSL_LOG_ERR("BIB use keywrap option is required");
-            return BSL_ERR_PROPERTY_CHECK_FAILED;
-        }
+    }
+    if (!self->opt_keywrap)
+    {
+        BSL_LOG_ERR("BIB use keywrap option is required");
+        return BSL_ERR_PROPERTY_CHECK_FAILED;
     }
 
     // validate early
@@ -485,6 +485,8 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *
         BSL_LOG_DEBUG("using IPPT scope %" PRId64, ippt_scope);
         bib_context.ippt_scope = ippt_scope;
 
+        bool has_keywrap = false;
+        // actual parameter determines unwrapping
         param = BSL_SecOper_FindParam(sec_oper, RFC9173_BIB_PARAMID_WRAPPED_KEY);
         if (param)
         {
@@ -494,7 +496,14 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *
                 bib_context.err_count++;
             }
             BSL_LOG_DEBUG("Wrapped key parameter used");
+            has_keywrap = true;
         }
+        if (bib_context.opt_keywrap && (has_keywrap != bib_context.keywrap))
+        {
+            BSL_LOG_ERR("keywrap mismatch, needed %d got %d", bib_context.keywrap, has_keywrap);
+            bib_context.err_count++;
+        }
+        bib_context.keywrap = has_keywrap;
     }
     if (bib_context.err_count)
     {

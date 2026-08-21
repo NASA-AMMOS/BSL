@@ -71,6 +71,7 @@ typedef struct BSLX_BIB_s
     BSL_PrimaryBlock_t   primary_block;
     BSL_CanonicalBlock_t target_block;
     BSL_CanonicalBlock_t sec_block;
+
     /// True if #ippt_scope came from an option
     bool opt_ippt_scope;
     /// Required IPPT scope
@@ -81,7 +82,6 @@ typedef struct BSLX_BIB_s
     int64_t sha_variant;
     /// Converted #sha_variant into enum value
     BSL_Crypto_SHAVariant_e crypto_sha_variant;
-
     /// True if key wrap is enabled
     bool keywrap;
     /// True if #keywrap came from an option
@@ -123,6 +123,8 @@ typedef struct BSLX_BCB_s
     BSL_CipherMode_e crypto_mode;
     /// Required AES variant (external code point)
     int64_t aes_variant;
+    /// True if #aes_variant came from an option
+    bool opt_aes_variant;
     /// Internal enumeration for #aes_variant
     BSL_Crypto_AESVariant_e bsl_aes;
     /// Required key size for #aes_variant
@@ -132,14 +134,17 @@ typedef struct BSLX_BCB_s
     bool opt_aad_scope;
     /// Required AAD scope
     int64_t aad_scope;
+    /// True if key wrap is enabled
+    bool keywrap;
+    /// True if #keywrap came from an option
+    bool opt_keywrap;
 
     // Metadata about bundles and blocks
     BSL_PrimaryBlock_t   primary_block;
     BSL_CanonicalBlock_t sec_block;
     BSL_CanonicalBlock_t target_block;
 
-    int64_t keywrap;
-    bool    success;
+    bool success;
     /// True if this is a source or acceptor role and target BTSD is replaced
     bool overwrite_btsd;
 } BSLX_BCB_t;
