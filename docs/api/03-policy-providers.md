@@ -1,4 +1,4 @@
-@page policy-providers Policy Provider Topics
+@page policy-providers Policy Provider Authors
 <!--
 Copyright (c) 2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.

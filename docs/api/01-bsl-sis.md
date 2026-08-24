@@ -30,24 +30,21 @@ Bundle Protocol Security Library (BPSec Lib) Software Interface Specification (S
 **Change Log**
 | Revision | Submission Date | Affection Sections or Pages | Change Summary            |
 |----------|-----------------|-----------------------------|---------------------------|
-| Initial  | 10/2/2024       | All                         | Initial issue of document |
-| A        | 7/29/2026       | All                         | Updating copyright year and instances of "example policy provider" |
-
+| Initial  | 2 Oct. 2024     | All                         | Initial issue of document |
+| A        | 29 Jul. 2026    | All                         | Updating copyright year and instances of "example policy provider" |
+| B        | TBD 2026        | Secs. 1.1, 1.4, 2.3, 3.2, 3.3 | Updates for BSLv2.0, phrasing of "sample policy provider," and for the new COSE Context |
 
 
 # 1: Document Overview
 
 ## 1.1: Identification
 
-
-
-
 | Property                        | Value                               |
 |---------------------------------|-------------------------------------|
 | Configuration ID (CI)           | 681.2                               |
 | Element                         | Multi-Mission Control System (MMCS) |
 | Program Set                     | Bundle Protocol Security (BPSec)    |
-| Version                         | 1.0                                 |
+| Version                         | 2.0                                 |
 
 ## 1.2: Purpose
 
@@ -97,14 +94,15 @@ Finally, the BSL is open-source software whose design and implementation should 
 **Table 3: Other Applicable Documents**:
 | Title                                                            | Document Number                                               |
 |------------------------------------------------------------------|---------------------------------------------------------------|
-| Bundle Protocol Version 7                                        | IETF RFC 9171                                                 |
-| Bundle Protocol Security (BPSec)                                 | IETF RFC 9172                                                 |
-| Default Security Contexts for Bundle Protocol Security (BPSec)   | IETF RFC 9173                                                 |
+| Bundle Protocol Version 7                                        | [IETF RFC 9171](https://www.rfc-editor.org/info/rfc9171) |
+| Bundle Protocol Security (BPSec)                                 | [IETF RFC 9172](https://www.rfc-editor.org/info/rfc9172) |
+| Default Security Contexts for Bundle Protocol Security (BPSec)   | [IETF RFC 9173](https://www.rfc-editor.org/info/rfc9173) |
+| Bundle Protocol Security (BPSec) COSE Context                    | [draft-ietf-dtn-bpsec-cose](https://datatracker.ietf.org/doc/draft-ietf-dtn-bpsec-cose/) |
 | BSL GitHub Repository                                            | https://github.com/NASA-AMMOS/BSL-private                     |
 | BSL Online Documentation                                         | https://github.com/NASA-AMMOS/BSL-private/tree/main/docs      |
-| ISO C99 Specification                                            | https://www.iso.org/standard/74528.html                       |
-| POSIX 2008 Specification                                         | https://pubs.opengroup.org/onlinepubs/9699919799.2008edition/ |
-| NIST FIPS 140 Specification                                      | https://csrc.nist.gov/pubs/fips/140-3/final                   |
+| ISO C99 Specification                                            | [ISO/IEC 9899:2018](https://www.iso.org/standard/74528.html) |
+| POSIX 2008 Specification                                         | [IEEE Std 1003.1-2008](https://pubs.opengroup.org/onlinepubs/9699919799.2008edition/) |
+| NIST Security Requirements for Cryptographic Modules             | [NIST FIPS 140-3](https://csrc.nist.gov/pubs/fips/140-3/final) |
 | SE Linux Overview                                                | https://www.redhat.com/en/topics/linux/what-is-selinux        |
 
 # 2: Environment
@@ -154,29 +152,33 @@ Backends may be swapped out with another implementation that implements the fron
 
 ## 3.2: Instructions for Building Documentation
 
-The most up-to-date documentation will be found in the BSL’s GitHub page, and the details of any API function or data-structure will likewise be found in the documentation generated from annotations inside the source code (using doxygen). As such, this document will generally avoid API specifics since it these may become obsolete as BSL evolves in response to operational needs.
+The most up-to-date documentation will be found in the BSL’s GitHub page, and the details of any API function or data-structure will likewise be found in the documentation generated from annotations inside the source code (using doxygen).
+As such, this document will generally avoid API specifics since it these may become obsolete as BSL evolves in response to operational needs.
 
-Instructions to build the documentation using doxygen as HTML (and/or PDF, among other formats) may be found in the README.md file. Assuming a RHEL9 platform, the Linux tool xdg-open may be used to open the index.html found under build/default/docs/doxygen/html/index.html.
+Instructions to build the documentation using doxygen as HTML (and/or PDF, among other formats) may be found in the README.md file.
+Assuming a RHEL9 platform, the Linux tool @c xdg-open may be used to open the @c index.html found under @c build/default/docs/doxygen/html/index.html.
 
-The menu on the left-hand side includes this overview, as well as links to the top-level modules in the repository. These include the Frontend API, Dynamic Backend, the default security context, the Sample Security Policy Provider, and a “mock” BPA required to exercise the Frontend. Delving further into each of these shows the relevant files, functions, and data structures.
+The menu on the left-hand side includes this overview, as well as links to the top-level modules in the repository.
+These include the Frontend API, Dynamic Backend, the built-in example Security Contexts, the Sample Policy Provider, and a “mock” BPA required to exercise the Frontend. Delving further into each of these shows the relevant files, functions, and data structures.
 
 Links will be found in Table 3 above.
 
 
 ## 3.3: BSL Modules and Data Structures
 
-As indicated in the prior section, the BSL has four main components. The principal two are the Frontend API and the Dynamic backend. There are two others, being the security policy provider, and the security context.
+As indicated in the prior section, the BSL has the following main components.
+The principal two are the Frontend API and the Dynamic backend. There are two others, being the security policy provider, and the security context.
 
  * The **Frontend API** defines the software interface between host Bundle Protocol Agents and the underlying security operations implemented in a Dynamic Backend. The API remains an invariant regardless of which backend is selected.
  * The **Dynamic Backend** is an implementation of the BPSec security operations that adheres to the Frontend API. The BSL’s design and implementation facilitate “swapping” backend implementations tailored for mission-specific constraints. The BSL ships with a default backend, which may not be suitable for all operational environments.
- * The **Sample Security Policy Provider** is a library used internally by the BSL to query which security operations need to be applied to a given Bundle, and what those security parameters are (such as key, hash type, etc). The BSL provides a sample security provider exercising the policy provider interface.
- * The **Example Default Security Contexts** perform the actual cryptographic functionality. The Default Security Context is detailed in RFC 9173. The BSL implements this via the security context interface, and uses OpenSSL as the underlying cryptographic software.
+ * The **Sample Policy Provider** is a library used internally by the BSL to query which security operations need to be applied to a given Bundle, and what those security parameters are (such as key, hash type, etc). The BSL provides a sample security provider exercising the policy provider interface.
+ * The **Example Security Contexts** perform the actual cryptographic functionality. The Default Security Contexts are specified in RFC 9173 and the COSE Context in an internet draft. The BSL can register these via the security context callback interface (see @ref sc-callback-api), and uses OpenSSL as the underlying cryptographic software.
 
 ## 3.4: BSL Context Initialization
 
 The BSL requires the existence of a Security Policy Provider (commonly referred to as the “Policy Provider” throughout subsequent documentation), which governs what security actions should be performed upon a particular bundle, and a Security Context, which handles all cryptographic material and safely performs the cryptographic functionality.
 
-A sample Policy Provider is included in the repository, as well as an implementation of the Default Security Context (as specified in RFC 9173).
+A sample Policy Provider is included in the repository, as well as an implementation of the Default Security Contexts (as specified in RFC 9173).
 
 Refer to the doxygen-generated documentation in the repository for the relevant BSL initialization functions, that provision the library with the appropriate policy provider and security context.
 
@@ -191,12 +193,12 @@ The BPA then iterates through this list calling the relevant BSL functions to pe
 
 The BSL strives to avoid excessive reliance on third-party libraries and a long software supply chain. A few third-party libraries are required, however, to: provide dynamic data structures for this C codebase; provide a unit-test driver; provide a CODEC for CBOR-encoded Bundle blocks; and provide implementations of cryptographic algorithms. At the time of the Critical Design Review, these third-party open-source libraries respectively are MLib, Unity, QCBOR, and OpenSSL. 
 
-Note that specific library versions are detailed in Release Description Documents (RDD), which is produced with each release of BSL.
+Note that specific library versions are detailed in each Release Description Document (RDD) which accompanies a formal release of BSL.
 
 | Library Name | Repository Link                            |
 |--------------|--------------------------------------------|
-| MLIB         | MLib https://github.com/P-p-H-d/mlib       |
-| Unity        |  https://github.com/ThrowTheSwitch/Unity   |
-| QCBOR        | https://github.com/laurencelundblade/QCBOR |
+| Jansson      | https://github.com/akheron/jansson         |
+| MLIB         | https://github.com/P-p-H-d/mlib            |
 | OpenSSL      | https://github.com/openssl/openssl         |
-
+| QCBOR        | https://github.com/laurencelundblade/QCBOR |
+| Unity        | https://github.com/ThrowTheSwitch/Unity    |

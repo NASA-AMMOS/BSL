@@ -37,6 +37,7 @@ BPv
 bsl
 BSL
 BSLs
+BSLv
 BSLX
 bstr
 BTSD
@@ -127,6 +128,7 @@ IPN
 IPPT
 IsInt
 isspace
+Jansson
 JHU
 Josefsson
 JPL
@@ -209,6 +211,7 @@ structs
 Structs
 SWaP
 syslog
+TBD
 Todo
 TODO
 tstr
