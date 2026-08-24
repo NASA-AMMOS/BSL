@@ -15,6 +15,8 @@
           "sc_id": 1,
           "sc_parms": {
             "key_name": "ExampleA.1",
+            "sha_variant": 7,
+            "scope_flags": 0,
             "key_wrap": 0
           }
         },

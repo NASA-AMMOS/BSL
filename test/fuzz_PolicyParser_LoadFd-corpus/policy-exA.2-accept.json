@@ -2,20 +2,22 @@
   "policyrule_set": [
     {
       "policyrule": {
-        "desc": "Integrity accept rule",
+        "desc": "Confidentiality accept rule",
         "filter": {
           "rule_id": "1",
           "role": "a",
           "tgt": 1,
           "loc": "appout",
-          "sc_id": 1
+          "sc_id": 2
         },
         "spec": {
-          "svc": "bib",
-          "sc_id": 1,
+          "svc": "bcb",
+          "sc_id": 2,
           "sc_parms": {
-            "key_name": "ExampleA.1",
-            "key_wrap": 0
+            "key_name": "ExampleA.2",
+            "aes_variant": 1,
+            "aad_scope": 0,
+            "key_wrap": 1
           }
         },
         "policy_action_on_fail": "delete_bundle"

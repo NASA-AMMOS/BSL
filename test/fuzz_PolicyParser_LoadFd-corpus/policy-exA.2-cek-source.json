@@ -2,19 +2,21 @@
   "policyrule_set": [
     {
       "policyrule": {
-        "desc": "Integrity accept rule",
+        "desc": "Confidentiality source rule",
         "filter": {
           "rule_id": "1",
-          "role": "a",
+          "role": "s",
           "tgt": 1,
-          "loc": "appout",
-          "sc_id": 1
+          "loc": "appin",
+          "sc_id": 2
         },
         "spec": {
-          "svc": "bib",
-          "sc_id": 1,
+          "svc": "bcb",
+          "sc_id": 2,
           "sc_parms": {
-            "key_name": "ExampleA.1",
+            "key_name": "ExampleA.2-cek",
+            "aes_variant": 1,
+            "aad_scope": 0,
             "key_wrap": 0
           }
         },

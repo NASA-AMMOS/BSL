@@ -399,11 +399,17 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BCB_OPT_AES_VARIANT);
     if (param)
     {
-        res = BSL_Variant_GetAsInt64(param, &bcb_context->aes_variant);
+        int64_t as_int;
+        res = BSL_Variant_GetAsInt64(param, &as_int);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Invalid AES variant value");
             bcb_context->err_count++;
+        }
+        else
+        {
+            bcb_context->aes_variant     = as_int;
+            bcb_context->opt_aes_variant = true;
         }
         // later validation checks the actual int values
     }
@@ -450,17 +456,36 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
     param = BSL_SecOper_FindOption(sec_oper, BSLX_BCB_OPT_USE_KEY_WRAP);
     if (param)
     {
-        res = BSL_Variant_GetAsInt64(param, &bcb_context->keywrap);
+        int64_t as_int;
+        res = BSL_Variant_GetAsInt64(param, &as_int);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Invalid use key wrap value");
             bcb_context->err_count++;
         }
+        else
+        {
+            bcb_context->keywrap     = (as_int != 0);
+            bcb_context->opt_keywrap = true;
+        }
     }
 
-    if (bcb_context->keywrap < 0)
+    if (bcb_context->is_source)
     {
-        BSL_LOG_WARNING("BCB USE KEYWRAP param required.");
+        if (!bcb_context->opt_aes_variant)
+        {
+            BSL_LOG_ERR("BCB AES variant option is required");
+            return BSL_ERR_PROPERTY_CHECK_FAILED;
+        }
+        if (!bcb_context->opt_aad_scope)
+        {
+            BSL_LOG_ERR("BCB AAD scope option is required");
+            return BSL_ERR_PROPERTY_CHECK_FAILED;
+        }
+    }
+    if (!bcb_context->opt_keywrap)
+    {
+        BSL_LOG_ERR("BCB use keywrap option is required");
         return BSL_ERR_PROPERTY_CHECK_FAILED;
     }
 
@@ -567,41 +592,56 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecOper
             }
         }
 
+        int64_t aes_variant = -1;
+        // actual parameter or default
         param = BSL_SecOper_FindParam(sec_oper, RFC9173_BCB_SECPARAM_AESVARIANT);
         if (param)
         {
-            int64_t got;
-            if (BSL_SUCCESS != BSL_Variant_GetAsInt64(param, &got))
+            if (BSL_SUCCESS != BSL_Variant_GetAsInt64(param, &aes_variant))
             {
                 BSL_LOG_ERR("AES variant parameter is not valid");
                 bcb_context.err_count++;
             }
-            else if (got != bcb_context.aes_variant)
-            {
-                BSL_LOG_ERR("AES variant mismatch, needed %d got %d", bcb_context.aes_variant, got);
-                bcb_context.err_count++;
-            }
         }
+        else
+        {
+            // Default from RFC 9173
+            aes_variant = RFC9173_BCB_AES_VARIANT_A256GCM;
+        }
+        if (bcb_context.opt_aes_variant && (aes_variant != bcb_context.aes_variant))
+        {
+            BSL_LOG_ERR("AES variant mismatch, needed %d got %d", bcb_context.aes_variant, aes_variant);
+            bcb_context.err_count++;
+        }
+        BSL_LOG_DEBUG("using AES variant %" PRId64, aes_variant);
+        bcb_context.aes_variant = aes_variant;
 
+        int64_t aad_scope = -1;
+        // actual parameter or default
         param = BSL_SecOper_FindParam(sec_oper, RFC9173_BCB_SECPARAM_AADSCOPE);
         if (param)
         {
-            int64_t got;
-            if (BSL_SUCCESS != BSL_Variant_GetAsInt64(param, &got))
+            if (BSL_SUCCESS != BSL_Variant_GetAsInt64(param, &aad_scope))
             {
                 BSL_LOG_ERR("AAD scope parameter is not valid");
                 bcb_context.err_count++;
             }
-            else
-            {
-                if (bcb_context.opt_aad_scope && (got != bcb_context.aad_scope))
-                {
-                    BSL_LOG_WARNING("AAD Scope mismatch, needed %d got %d", bcb_context.aad_scope, got);
-                }
-                bcb_context.aad_scope = got;
-            }
         }
+        else
+        {
+            // Default from RFC 9173
+            aad_scope = 0x07;
+        }
+        if (bcb_context.opt_aad_scope && (aad_scope != bcb_context.aad_scope))
+        {
+            BSL_LOG_ERR("AAD scope mismatch, needed %d got %d", bcb_context.aad_scope, aad_scope);
+            bcb_context.err_count++;
+        }
+        BSL_LOG_DEBUG("using AAD scope %" PRId64, aad_scope);
+        bcb_context.aad_scope = aad_scope;
 
+        bool has_keywrap = false;
+        // actual parameter determines unwrapping
         param = BSL_SecOper_FindParam(sec_oper, RFC9173_BCB_SECPARAM_WRAPPEDKEY);
         if (param)
         {
@@ -612,7 +652,14 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecOper
                 bcb_context.err_count++;
             }
             BSL_LOG_DEBUG("Wrapped key parameter used");
+            has_keywrap = true;
         }
+        if (bcb_context.opt_keywrap && (has_keywrap != bcb_context.keywrap))
+        {
+            BSL_LOG_ERR("keywrap mismatch, needed %d got %d", bcb_context.keywrap, has_keywrap);
+            bcb_context.err_count++;
+        }
+        bcb_context.keywrap = has_keywrap;
 
         param = BSL_SecOper_FindResult(sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
         if (param)

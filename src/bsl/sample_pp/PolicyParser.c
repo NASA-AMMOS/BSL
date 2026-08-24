@@ -33,6 +33,7 @@
 #include <jansson.h>
 
 #include <errno.h>
+#include <fcntl.h>
 #include <strings.h>
 
 /** Read a text value as long integer.
@@ -127,6 +128,26 @@ static int BSLP_GetBoolean(const json_t *value, bool *as_bool)
     }
 }
 
+/** Add an option variant if a value is non-null or erase it if the value is null.
+ *
+ * @param[in] options The map to modify.
+ * @param key The option ID.
+ * @param value The config value.
+ * @return Non-NULL if value is to be set or NULL.
+ */
+static BSL_Variant_t *BSLP_OptionAddOrErase(BSLB_VariantPtrMap_t options, int64_t key, const json_t *value)
+{
+    if (json_is_null(value))
+    {
+        BSLB_VariantPtrMap_erase(options, key);
+        return NULL;
+    }
+    else
+    {
+        return BSLB_VariantPtrMap_add(options, key);
+    }
+}
+
 /// Type for individual option handling according to each SC
 typedef int (*BSLP_OptionHandler_f)(BSLB_VariantPtrMap_t options, const char *id_str, json_t *value);
 
@@ -137,41 +158,50 @@ static int BSLP_PolicyOptions_SC1(BSLB_VariantPtrMap_t options, const char *id_s
 {
     if (0 == strcmp(id_str, "key_name"))
     {
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_KEY_ID);
-        BSL_Variant_SetTextstr(opt, json_string_value(value));
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_BIB_OPT_KEY_ID, value);
+        if (opt)
+        {
+            BSL_Variant_SetTextstr(opt, json_string_value(value));
+        }
     }
     else if (0 == strcmp(id_str, "sha_variant"))
     {
-        int64_t as_int;
-        if (BSLP_GetNumberInt(value, &as_int))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_BIB_OPT_SHA_VARIANT, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            int64_t as_int;
+            if (BSLP_GetNumberInt(value, &as_int))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, as_int);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_SHA_VARIANT);
-        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcmp(id_str, "scope_flags"))
     {
-        int64_t as_int;
-        if (BSLP_GetNumberInt(value, &as_int))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_BIB_OPT_SCOPE, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            int64_t as_int;
+            if (BSLP_GetNumberInt(value, &as_int))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, as_int);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_SCOPE);
-        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcmp(id_str, "key_wrap"))
     {
-        bool as_bool;
-        if (BSLP_GetBoolean(value, &as_bool))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_BIB_OPT_USE_KEY_WRAP, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            bool as_bool;
+            if (BSLP_GetBoolean(value, &as_bool))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, (int64_t)as_bool);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BIB_OPT_USE_KEY_WRAP);
-        BSL_Variant_SetInt64(opt, (int64_t)as_bool);
     }
     else
     {
@@ -188,41 +218,50 @@ static int BSLP_PolicyOptions_SC2(BSLB_VariantPtrMap_t options, const char *id_s
 {
     if (0 == strcmp(id_str, "key_name"))
     {
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_KEY_ID);
-        BSL_Variant_SetTextstr(opt, json_string_value(value));
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_BCB_OPT_KEY_ID, value);
+        if (opt)
+        {
+            BSL_Variant_SetTextstr(opt, json_string_value(value));
+        }
     }
     else if (0 == strcmp(id_str, "aes_variant"))
     {
-        int64_t as_int;
-        if (BSLP_GetNumberInt(value, &as_int))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_BCB_OPT_AES_VARIANT, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            int64_t as_int;
+            if (BSLP_GetNumberInt(value, &as_int))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, as_int);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_AES_VARIANT);
-        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcmp(id_str, "aad_scope"))
     {
-        int64_t as_int;
-        if (BSLP_GetNumberInt(value, &as_int))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_BCB_OPT_SCOPE, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            int64_t as_int;
+            if (BSLP_GetNumberInt(value, &as_int))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, as_int);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_SCOPE);
-        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcmp(id_str, "key_wrap"))
     {
-        bool as_bool;
-        if (BSLP_GetBoolean(value, &as_bool))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_BCB_OPT_USE_KEY_WRAP, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            bool as_bool;
+            if (BSLP_GetBoolean(value, &as_bool))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, (int64_t)as_bool);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_BCB_OPT_USE_KEY_WRAP);
-        BSL_Variant_SetInt64(opt, (int64_t)as_bool);
     }
     else
     {
@@ -239,123 +278,140 @@ static int BSLP_PolicyOptions_SC3(BSLB_VariantPtrMap_t options, const char *id_s
 {
     if (0 == strcmp(id_str, "key_id"))
     {
-        const char *val_str = json_string_value(value);
-        if (!val_str)
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_COSESC_OPTION_KEY_ID, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            const char *val_str = json_string_value(value);
+            if (!val_str)
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Data_t as_bytes = BSL_DATA_INIT_VIEW_CSTR(val_str);
+            BSL_Variant_SetBytestr(opt, as_bytes);
         }
-        BSL_Data_t as_bytes = BSL_DATA_INIT_VIEW_CSTR(val_str);
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_KEY_ID);
-        BSL_Variant_SetBytestr(opt, as_bytes);
     }
     else if (0 == strcasecmp(id_str, "target_alg"))
     {
-        int64_t as_int;
-        if (BSLP_GetNumberInt(value, &as_int))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_COSESC_OPTION_TGT_ALG, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            int64_t as_int;
+            if (BSLP_GetNumberInt(value, &as_int))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, as_int);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_TGT_ALG);
-        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcasecmp(id_str, "aad_scope"))
     {
-        void *val_it = json_object_iter(value);
-        if (!val_it)
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_COSESC_OPTION_AAD_SCOPE, value);
+        if (opt)
         {
-            BSL_LOG_ERR("AAD Scope is not an object");
-            return BSL_ERR_POLICY_CONFIG;
-        }
-
-        const size_t                 scope_count = json_object_size(value);
-        BSLX_CoseSc_AadScope_Item_t *scope       = BSL_calloc(scope_count, sizeof(BSLX_CoseSc_AadScope_Item_t));
-        for (size_t item_ix = 0; val_it; ++item_ix)
-        {
-            int64_t blk_num;
-            if (BSLP_GetTextAsInt(&blk_num, json_object_iter_key(val_it), json_object_iter_key_len(val_it)))
+            void *val_it = json_object_iter(value);
+            if (!val_it)
             {
-                BSL_LOG_ERR("AAD Scope invalid map key");
-                BSL_free(scope);
-                return BSL_ERR_POLICY_CONFIG;
-            }
-            int64_t aad_flags;
-            if (BSLP_GetNumberInt(json_object_iter_value(val_it), &aad_flags))
-            {
-                BSL_LOG_ERR("AAD Scope invalid map value");
-                BSL_free(scope);
+                BSL_LOG_ERR("AAD Scope is not an object");
                 return BSL_ERR_POLICY_CONFIG;
             }
 
-            BSL_LOG_DEBUG("AAD Scope for block %" PRId64 " has flags 0x%" PRIx64, blk_num, aad_flags);
-            scope[item_ix] = (BSLX_CoseSc_AadScope_Item_t) { .key = blk_num, .flags = aad_flags };
+            const size_t                 scope_count = json_object_size(value);
+            BSLX_CoseSc_AadScope_Item_t *scope       = BSL_calloc(scope_count, sizeof(BSLX_CoseSc_AadScope_Item_t));
+            for (size_t item_ix = 0; val_it; ++item_ix)
+            {
+                int64_t blk_num;
+                if (BSLP_GetTextAsInt(&blk_num, json_object_iter_key(val_it), json_object_iter_key_len(val_it)))
+                {
+                    BSL_LOG_ERR("AAD Scope invalid map key");
+                    BSL_free(scope);
+                    return BSL_ERR_POLICY_CONFIG;
+                }
+                int64_t aad_flags;
+                if (BSLP_GetNumberInt(json_object_iter_value(val_it), &aad_flags))
+                {
+                    BSL_LOG_ERR("AAD Scope invalid map value");
+                    BSL_free(scope);
+                    return BSL_ERR_POLICY_CONFIG;
+                }
 
-            val_it = json_object_iter_next(value, val_it);
+                BSL_LOG_DEBUG("AAD Scope for block %" PRId64 " has flags 0x%" PRIx64, blk_num, aad_flags);
+                scope[item_ix] = (BSLX_CoseSc_AadScope_Item_t) { .key = blk_num, .flags = aad_flags };
+
+                val_it = json_object_iter_next(value, val_it);
+            }
+
+            BSLX_CoseSc_SetAadScope(opt, scope, scope_count);
+            BSL_free(scope);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_AAD_SCOPE);
-        BSLX_CoseSc_SetAadScope(opt, scope, scope_count);
-        BSL_free(scope);
     }
     else if (0 == strcasecmp(id_str, "iv_base"))
     {
-        BSL_Data_t as_bytes;
-        BSL_Data_Init(&as_bytes);
-        if (BSLP_GetBytesHex(value, &as_bytes))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_COSESC_OPTION_IV_BASE, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            BSL_Data_t as_bytes;
+            BSL_Data_Init(&as_bytes);
+            if (BSLP_GetBytesHex(value, &as_bytes))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetBytestr(opt, as_bytes);
+            BSL_Data_Deinit(&as_bytes);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_IV_BASE);
-        BSL_Variant_SetBytestr(opt, as_bytes);
-        BSL_Data_Deinit(&as_bytes);
     }
     else if (0 == strcasecmp(id_str, "iv_counter_offset"))
     {
-        int64_t as_int;
-        if (BSLP_GetNumberInt(value, &as_int))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            int64_t as_int;
+            if (BSLP_GetNumberInt(value, &as_int))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, as_int);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_IV_COUNTER_OFFSET);
-        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcasecmp(id_str, "salt_length"))
     {
-        int64_t as_int;
-        if (BSLP_GetNumberInt(value, &as_int))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_COSESC_OPTION_SALT_LENGTH, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            int64_t as_int;
+            if (BSLP_GetNumberInt(value, &as_int))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, as_int);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_SALT_LENGTH);
-        BSL_Variant_SetInt64(opt, as_int);
     }
     else if (0 == strcasecmp(id_str, "salt_base"))
     {
-        BSL_Data_t as_bytes;
-        BSL_Data_Init(&as_bytes);
-        if (BSLP_GetBytesHex(value, &as_bytes))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_COSESC_OPTION_SALT_BASE, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            BSL_Data_t as_bytes;
+            BSL_Data_Init(&as_bytes);
+            if (BSLP_GetBytesHex(value, &as_bytes))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetBytestr(opt, as_bytes);
+            BSL_Data_Deinit(&as_bytes);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_SALT_BASE);
-        BSL_Variant_SetBytestr(opt, as_bytes);
-        BSL_Data_Deinit(&as_bytes);
     }
     else if (0 == strcasecmp(id_str, "salt_counter_offset"))
     {
-        int64_t as_int;
-        if (BSLP_GetNumberInt(value, &as_int))
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_COSESC_OPTION_SALT_COUNTER_OFFSET, value);
+        if (opt)
         {
-            return BSL_ERR_POLICY_CONFIG;
+            int64_t as_int;
+            if (BSLP_GetNumberInt(value, &as_int))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, as_int);
         }
-
-        BSL_Variant_t *opt = BSLB_VariantPtrMap_add(options, BSLX_COSESC_OPTION_SALT_COUNTER_OFFSET);
-        BSL_Variant_SetInt64(opt, as_int);
     }
     else
     {
@@ -715,15 +771,31 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
     return BSL_SUCCESS;
 }
 
-int BSLP_PolicyParser_FromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_t *policy)
+int BSLP_PolicyParser_LoadFile(const char *file_path, BSLP_PolicyProvider_t *policy)
 {
-    CHK_ARG_NONNULL(policy_cfg_path);
+    CHK_ARG_NONNULL(file_path);
     CHK_ARG_NONNULL(policy);
 
-    json_t      *root;
+    int infd = open(file_path, O_RDONLY);
+    if (infd < 0)
+    {
+        BSL_LOG_ERR("Failed to open input file %s", file_path);
+        return BSL_ERR_DECODING;
+    }
+    int retval = BSLP_PolicyParser_LoadFd(infd, policy);
+    close(infd);
+
+    return retval;
+}
+
+int BSLP_PolicyParser_LoadFd(int infd, BSLP_PolicyProvider_t *policy)
+{
+    CHK_ARG_EXPR(infd >= 0);
+    CHK_ARG_NONNULL(policy);
+
     json_error_t err;
 
-    root = json_load_file(policy_cfg_path, 0, &err);
+    json_t *root = json_loadfd(infd, 0, &err);
     if (!root)
     {
         BSL_LOG_ERR("JSON error: line %d: %s", err.line, err.text);

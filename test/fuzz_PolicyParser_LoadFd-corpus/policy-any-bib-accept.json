@@ -8,15 +8,12 @@
           "role": "a",
           "tgt": 1,
           "loc": "appout",
-          "sc_id": 1
+          "sc_id": 3
         },
         "spec": {
-          "svc": "bib",
-          "sc_id": 1,
-          "sc_parms": {
-            "key_name": "ExampleA.1",
-            "key_wrap": 0
-          }
+          "svc": "bib-integrity",
+          "sc_id": 3,
+          "sc_parms": {}
         },
         "policy_action_on_fail": "delete_bundle"
       }

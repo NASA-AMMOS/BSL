@@ -124,6 +124,7 @@ void _setUp(void)
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_AES_VARIANT),
                          RFC9173_BCB_AES_VARIANT_A128GCM);
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_SCOPE), 0x7);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32a, &predicate_bsl_32a);
 
     BSLP_PolicyPredicate_t predicate_bsl_32b;
@@ -135,6 +136,7 @@ void _setUp(void)
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_AES_VARIANT),
                          RFC9173_BCB_AES_VARIANT_A128GCM);
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_SCOPE), 0x7);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32b, &predicate_bsl_32b);
 }
 

@@ -2,12 +2,12 @@
   "policyrule_set": [
     {
       "policyrule": {
-        "desc": "Confidentiality accept rule",
+        "desc": "Confidentiality source rule",
         "filter": {
           "rule_id": "1",
-          "role": "a",
+          "role": "s",
           "tgt": 1,
-          "loc": "appout",
+          "loc": "appin",
           "sc_id": 2
         },
         "spec": {
@@ -15,6 +15,8 @@
           "sc_id": 2,
           "sc_parms": {
             "key_name": "ExampleA.2",
+            "aes_variant": 1,
+            "aad_scope": 0,
             "key_wrap": 1
           }
         },
