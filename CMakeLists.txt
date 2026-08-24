@@ -217,6 +217,7 @@ if(BUILD_LIB)
     install(
         FILES ${PC_FILES}
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+        COMPONENT devel
     )
 
     # cmakeConfig for BSL targets
