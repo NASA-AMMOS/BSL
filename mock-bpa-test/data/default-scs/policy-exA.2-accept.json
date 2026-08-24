@@ -15,8 +15,6 @@
           "sc_id": 2,
           "sc_parms": {
             "key_name": "ExampleA.2",
-            "aes_variant": 1,
-            "aad_scope": 0,
             "key_wrap": 1
           }
         },

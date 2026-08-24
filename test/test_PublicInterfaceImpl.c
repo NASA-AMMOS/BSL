@@ -230,6 +230,7 @@ void setUp(void)
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_14, BSLX_BCB_OPT_AES_VARIANT),
                          RFC9173_BCB_AES_VARIANT_A128GCM);
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_14, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_14, BSLX_BCB_OPT_SCOPE), 0x7);
     BSLP_PolicyProvider_AddRule(policy, &rule_14, &predicate_14);
 
     // test bib & bcb sourcing with good key
@@ -256,6 +257,7 @@ void setUp(void)
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_15b, BSLX_BCB_OPT_AES_VARIANT),
                          RFC9173_BCB_AES_VARIANT_A256GCM);
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_15b, BSLX_BCB_OPT_USE_KEY_WRAP), 0);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_15b, BSLX_BCB_OPT_SCOPE), 0x7);
     BSLP_PolicyProvider_AddRule(policy, &rule_15b, &predicate_15b);
 
     // test bib verif with good key, bad key (drop bundle), bad key (drop block), bad key (nothing)
@@ -412,6 +414,7 @@ void setUp(void)
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_AES_VARIANT),
                          RFC9173_BCB_AES_VARIANT_A128GCM);
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32a, BSLX_BCB_OPT_SCOPE), 0x7);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32a, &predicate_bsl_32a);
 
     BSLP_PolicyPredicate_t predicate_bsl_32b;
@@ -423,6 +426,7 @@ void setUp(void)
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_AES_VARIANT),
                          RFC9173_BCB_AES_VARIANT_A128GCM);
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
+    BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_32b, BSLX_BCB_OPT_SCOPE), 0x7);
     BSLP_PolicyProvider_AddRule(policy, &rule_bsl_32b, &predicate_bsl_32b);
     BSL_Data_Deinit(&wrapkey_data);
 }
