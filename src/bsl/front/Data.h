@@ -74,6 +74,7 @@ typedef struct BSL_Data_s
     }
 
 /** Static initializer for a view on a static text string.
+ * @note The view does not include any null terminator.
  * @sa BSL_Data_InitView() BSL_Data_SetViewCstr()
  */
 #define BSL_DATA_INIT_VIEW_CSTR(cstr)                                                    \

@@ -167,6 +167,25 @@ class TestCoseScMac0(TestAgent):
             )
         )
 
+    def test_exampleA_1_source_with_keyid(self):
+        # use key_id (bytes) option instead of key_name (text)
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.1-source.json"),
+            modify={"key_name": None, "key_id": b"ExampleA.1".hex()},
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_NO_SEC,
+                    expected_output=EXAMPLE_A_1_WITH_BIB,
+                    sec_src_eid="dtn://src/",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/cose-sc/keyset-1.cbordiag",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.CBORDIAG,
+                )
+            )
+
     def test_exampleA_1_acceptor_valid_loose(self):
         self._single_test(
             _TestCase(
@@ -234,7 +253,7 @@ class TestCoseScMac0(TestAgent):
     def test_exampleA_1_acceptor_failure_key_disallow(self):
         with sc_config_modifier(
             orig=os.path.join(OWNPATH, "data/cose-sc/policy-any-bib-accept.json"),
-            modify={"key_id": "ExampleA.5"},
+            modify={"key_name": "ExampleA.5"},
         ) as polfile_path:
             self._single_test(
                 _TestCase(
@@ -419,7 +438,7 @@ class TestCoseScEncrypt0(TestAgent):
     def test_exampleA_4_acceptor_valid_strict_key_id(self):
         with sc_config_modifier(
             orig=os.path.join(OWNPATH, "data/cose-sc/policy-any-bcb-accept.json"),
-            modify={"key_id": "ExampleA.4"},
+            modify={"key_name": "ExampleA.4"},
         ) as polfile_path:
             self._single_test(
                 _TestCase(
