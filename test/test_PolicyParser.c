@@ -26,10 +26,11 @@
  */
 #include "DefaultScUtils.h"
 
-#include <bsl/BPSecLib_Private.h>
 #include <bsl/sample_pp/PolicyParser.h>
 #include <bsl/mock_bpa/MockBPA.h>
 
+#include <fcntl.h>
+#include <unistd.h>
 #include <unity.h>
 
 static BSL_TestContext_t      LocalTestCtx;
@@ -65,7 +66,11 @@ void tearDown(void)
 
 void test_PolicyParser_ReadConfigEmpty(void)
 {
-    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLP_PolicyParser_FromJSON("test_PolicyParser-data/empty.json", policy));
+    int infd = open("test_PolicyParser-data/empty.json", O_RDONLY);
+    TEST_ASSERT_GREATER_OR_EQUAL_INT(0, infd);
+    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLP_PolicyParser_LoadFd(infd, policy));
+    TEST_ASSERT_EQUAL_INT(0, close(infd));
+
     TEST_ASSERT_EQUAL_size_t(0, BSLP_PolicyRuleList_size(policy->rules));
     TEST_ASSERT_EQUAL_size_t(0, BSLP_PolicyPredicateList_size(policy->predicates));
 }
@@ -78,7 +83,10 @@ TEST_CASE("test_PolicyParser-data/validSC3-parms-short.json", 3)
  */
 void test_PolicyParser_ReadConfigValid(const char *filename, int context_id)
 {
-    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLP_PolicyParser_FromJSON(filename, policy));
+    int infd = open(filename, O_RDONLY);
+    TEST_ASSERT_GREATER_OR_EQUAL_INT(0, infd);
+    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLP_PolicyParser_LoadFd(infd, policy));
+    TEST_ASSERT_EQUAL_INT(0, close(infd));
 
     TEST_ASSERT_EQUAL_size_t(1, BSLP_PolicyRuleList_size(policy->rules));
     TEST_ASSERT_EQUAL_size_t(1, BSLP_PolicyPredicateList_size(policy->predicates));
@@ -90,7 +98,11 @@ void test_PolicyParser_ReadConfigValid(const char *filename, int context_id)
 TEST_CASE("test_PolicyParser-data/unknownSC-99.json")
 void test_PolicyParser_ReadConfigInvalid(const char *filename)
 {
-    TEST_ASSERT_NOT_EQUAL_INT(BSL_SUCCESS, BSLP_PolicyParser_FromJSON(filename, policy));
+    int infd = open(filename, O_RDONLY);
+    TEST_ASSERT_GREATER_OR_EQUAL_INT(0, infd);
+    TEST_ASSERT_NOT_EQUAL_INT(BSL_SUCCESS, BSLP_PolicyParser_LoadFd(infd, policy));
+    TEST_ASSERT_EQUAL_INT(0, close(infd));
+
     TEST_ASSERT_EQUAL_size_t(0, BSLP_PolicyRuleList_size(policy->rules));
     TEST_ASSERT_EQUAL_size_t(0, BSLP_PolicyPredicateList_size(policy->predicates));
 }

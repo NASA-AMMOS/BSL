@@ -207,7 +207,7 @@ int main(int argc, char **argv)
                 }
                 case 'j':
                 {
-                    retval = !!(BSLP_PolicyParser_FromJSON(optarg, policy));
+                    retval = !!(BSLP_PolicyParser_LoadFile(optarg, policy));
                     break;
                 }
                 case 'k':

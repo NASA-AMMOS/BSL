@@ -41,11 +41,17 @@ extern "C" {
 #endif
 
 /**
- * Initialize local policy provider from JSON file
- * @param[in] policy_cfg_path path to JSON file containing policy configuration
- * @param[in,out] policy policy provider to configure. Must be initialize/allocated
+ * Initialize local policy provider from JSON file.
+ * @param[in] file_path File path to open and read JSON containing policy configuration.
+ * @param[in,out] policy Policy provider to configure. Must be initialize/allocated before calling.
+ * @return BSL_SUCCESS if successful.
  */
-int BSLP_PolicyParser_FromJSON(const char *policy_cfg_path, BSLP_PolicyProvider_t *policy);
+int BSLP_PolicyParser_LoadFile(const char *file_path, BSLP_PolicyProvider_t *policy);
+
+/** Read policy from a file descriptor.
+ * @overload
+ */
+int BSLP_PolicyParser_LoadFd(int infd, BSLP_PolicyProvider_t *policy);
 
 /** Bitwise Diagram of the mock bpa config data structure:
  * @code{.unparsed}
