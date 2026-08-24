@@ -1,0 +1,364 @@
+{
+  "$id": "https://nasa-ammos.github.io/BSL/config-schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "This is the BSL Sample Policy Provider configuration syntax.",
+  "$defs": {
+    "PolicyRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "desc": {
+          "description": "A human description of the rule.",
+          "type": "string"
+        },
+        "filter": {
+          "description": "Filter options to match a specific bundle and target block at one of the BSL interaction points.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "rule_id": {
+              "description": "The unique ID number this rule.",
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "role": {
+              "description": "The role for the possible security operation. The values are the first letter of either: source, verifier, or acceptor.",
+              "type": "string",
+              "enum": [
+                "s",
+                "v",
+                "a"
+              ]
+            },
+            "loc": {
+              "description": "The interaction point location to match at.",
+              "type": "string",
+              "enum": [
+                "appin",
+                "appout",
+                "clin",
+                "clout"
+              ]
+            },
+            "src": {
+              "description": "An EID Pattern to match the Source Node ID of the bundle primary block. The default will match any source.",
+              "$ref": "#/$defs/BundleEidPattern",
+              "default": "*:**"
+            },
+            "dest": {
+              "description": "An EID Pattern to match the Destiantion EID of the bundle primary block. The default will match any destination.",
+              "$ref": "#/$defs/BundleEidPattern",
+              "default": "*:**"
+            },
+            "sec_src": {
+              "description": "When the role is verifier or acceptor, an EID Pattern to match the Security Source of an existing operation. The default will match any source of an existing operation.",
+              "$ref": "#/$defs/BundleEidPattern",
+              "default": "*:**"
+            },
+            "tgt": {
+              "description": "The target block _type_ to match on, which should be unique in the bundle, not the specific block _number_.",
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "sc_id": {
+              "description": "Formerly used to require an existing security operation for this Context ID.",
+              "deprecated": true,
+              "$ref": "#/$defs/IntegerOrText"
+            }
+          },
+          "required": [
+            "rule_id",
+            "loc",
+            "role",
+            "tgt"
+          ]
+        },
+        "spec": {
+          "description": "Specification of how to form a security operation for the target block when the filter matches.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "svc": {
+              "description": "The security service needing to be present. This matches only on text prefix of bib or bcb. For source role this will create the operation, for verifier or acceptor this will require the operation to exist and process it.",
+              "type": "string",
+              "pattern": "(bib|bcb)-?.*"
+            },
+            "sc_id": {
+              "description": "The security Context ID of the operation needing to be present. For source role this will create the operation, for verifier or acceptor this will require an operation with the context and process it.",
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "sc_parms": {
+              "description": "Options specific to the sibling sc_id value, encoded with a common structure of ID-value pairs.",
+              "$ref": "#/$defs/GenericOptions"
+            }
+          },
+          "required": [
+            "svc",
+            "sc_id",
+            "sc_parms"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "sc_id": {
+                    "const": 1
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "sc_parms": {
+                    "$ref": "#/$defs/SC1Options"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "sc_id": {
+                    "const": 2
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "sc_parms": {
+                    "$ref": "#/$defs/SC2Options"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "sc_id": {
+                    "const": 3
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "sc_parms": {
+                    "$ref": "#/$defs/SC3Options"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "policy_action_on_fail": {
+          "type": "string",
+          "enum": [
+            "delete_bundle"
+          ]
+        }
+      }
+    },
+    "IntegerOrText": {
+      "description": "A direct integer value or a text value which can be converted to integer as either base 10 or base 16.",
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string",
+          "pattern": "^-?([0-9]+|0x[0-9a-fA-F]+)$"
+        }
+      ]
+    },
+    "BooleanOrText": {
+      "description": "A true/false boolean value or an integer or text value interpreted as one. Value zero or text 0 is false and all others are true.",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "BytesAsHex": {
+      "description": "A byte string represented as hexadecimal encoding of each byte in sequence. The prefix marker 0x is optional and recommended.",
+      "type": "string",
+      "pattern": "(0x)?([0-9a-fA-F]{2})*"
+    },
+    "BundleEidPattern": {
+      "description": "An EID Pattern in text form which is not restricted by this schema.",
+      "type": "string"
+    },
+    "GenericOptions": {
+      "description": "The set of security operation options, which use option IDs specific to a each Context ID.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/OptionsArray"
+        },
+        {
+          "description": "A more compact object encoding of ID-value pairs as properties. The valid ID names are context-specific.",
+          "type": "object"
+        }
+      ]
+    },
+    "OptionsArray": {
+      "description": "An array of explicit ID-value pairs, where the ID must be unique across the array.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "The valid ID names are context-specific.",
+            "type": "string"
+          },
+          "value": {
+            "description": "The corresponding value types are context-specific."
+          }
+        },
+        "required": [
+          "id",
+          "value"
+        ]
+      }
+    },
+    "SC1Options": {
+      "description": "Named options for Context ID 1 (BIB-HMAC-SHA2).",
+      "anyOf": [
+        {
+          "description": "Fall-back to non-overloaded array.",
+          "$ref": "#/$defs/OptionsArray"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key_name": {
+              "type": "string"
+            },
+            "key_wrap": {
+              "$ref": "#/$defs/BooleanOrText"
+            },
+            "sha_variant": {
+              "$ref": "#/$defs/IntegerOrText",
+              "minimum": 5,
+              "maximum": 7
+            },
+            "scope_flags": {
+              "$ref": "#/$defs/IntegerOrText",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "key_name",
+            "key_wrap"
+          ]
+        }
+      ]
+    },
+    "SC2Options": {
+      "description": "Named options for Context ID 2 (BCB-AES-GCM).",
+      "anyOf": [
+        {
+          "description": "Fall-back to non-overloaded array.",
+          "$ref": "#/$defs/OptionsArray"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key_name": {
+              "description": "Arbitrary name for the key to use with the operation. This must match one of the keys in the key store for the operation to succeed.",
+              "type": "string"
+            },
+            "key_wrap": {
+              "description": "True if the key must be used to wrap a content key. For source role this is required and controls the operation, for verifier or acceptor this is optional and constrains valid operations.",
+              "$ref": "#/$defs/BooleanOrText"
+            },
+            "aes_variant": {
+              "$ref": "#/$defs/IntegerOrText",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "aad_scope": {
+              "$ref": "#/$defs/IntegerOrText",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "key_name",
+            "key_wrap"
+          ]
+        }
+      ]
+    },
+    "SC3Options": {
+      "description": "Named options for Context ID 3 (COSE).",
+      "anyOf": [
+        {
+          "description": "Fall-back to non-overloaded array.",
+          "$ref": "#/$defs/OptionsArray"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key_name": {
+              "type": "string"
+            },
+            "key_id": {
+              "$ref": "#/$defs/BytesAsHex"
+            },
+            "target_alg": {
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "aad_scope": {
+              "description": "An encoding of the native AAD Scope parameter with keys in integer-as-text form.",
+              "type": "object",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^-?[0-9]+$": {
+                  "type": "integer"
+                }
+              }
+            },
+            "iv_counter_offset": {
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "iv_base": {
+              "$ref": "#/$defs/BytesAsHex"
+            },
+            "salt_length": {
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "salt_counter_offset": {
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "salt_base": {
+              "$ref": "#/$defs/BytesAsHex"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "policyrule_set": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "policyrule": {
+            "$ref": "#/$defs/PolicyRule"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "policyrule_set"
+  ]
+}
