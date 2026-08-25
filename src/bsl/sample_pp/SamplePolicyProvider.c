@@ -486,8 +486,8 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
     return is_location_match && is_src_pattern_match && is_dst_pattern_match;
 }
 
-int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, int64_t rule_id, const char *desc, int64_t context_id, BSL_SecRole_e role,
-                             BSL_SecBlockType_e sec_block_type, uint64_t target_block_type,
+int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, int64_t rule_id, const char *desc, int64_t context_id,
+                             BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type, uint64_t target_block_type,
                              BSL_PolicyAction_e failure_action_code)
 {
     BSLP_PolicyRule_Init(self);

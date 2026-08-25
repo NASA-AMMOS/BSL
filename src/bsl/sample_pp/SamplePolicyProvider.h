@@ -173,8 +173,8 @@ typedef struct BSLP_PolicyRule_s
  *
  * @returns Zero on success
  */
-int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, int64_t rule_id, const char *desc, int64_t context_id, BSL_SecRole_e role,
-                             BSL_SecBlockType_e sec_block_type, uint64_t target_block_type,
+int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, int64_t rule_id, const char *desc, int64_t context_id,
+                             BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type, uint64_t target_block_type,
                              BSL_PolicyAction_e failure_action_code);
 
 /** Initialize policy rule

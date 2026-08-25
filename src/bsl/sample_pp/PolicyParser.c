@@ -97,7 +97,7 @@ static int BSLP_GetBytesHex(const json_t *value, BSL_Data_t *as_bytes)
         BSL_LOG_ERR("Invalid option value type, expected text");
         return BSL_ERR_POLICY_CONFIG;
     }
-    size_t      text_len = json_string_length(value);
+    size_t text_len = json_string_length(value);
     if (strncasecmp(text_ptr, "0x", 2) == 0)
     {
         text_ptr += 2;
@@ -483,11 +483,11 @@ static int BSLP_PolicyParser_GetLoc(BSL_PolicyLocation_e *loc, const char *text)
 
 static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const json_t *policy_rule_elm)
 {
-    int64_t rule_id_int = 0;
-    const char          *src_str = NULL;
-    const char          *dest_str = NULL;
+    int64_t              rule_id_int = 0;
+    const char          *src_str     = NULL;
+    const char          *dest_str    = NULL;
     const char          *sec_src_str = NULL;
-    const char *desc_text = NULL;
+    const char          *desc_text   = NULL;
     BSL_SecBlockType_e   sec_block_type;
     int64_t              sec_ctx_id;
     BSL_SecRole_e        sec_role;
@@ -532,7 +532,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
             BSL_LOG_ERR("Invalid rule_id attribute");
             return BSL_ERR_POLICY_CONFIG;
         }
-        BSL_LOG_DEBUG("     rule_id: %"PRId64, rule_id_int);
+        BSL_LOG_DEBUG("     rule_id: %" PRId64, rule_id_int);
 
         const json_t *desc = json_object_get(filter, "desc");
         // no validation of desc
@@ -732,7 +732,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         }
 
         // check sec ctx id
-        const json_t    *sc_id   = json_object_get(spec, "sc_id");
+        const json_t *sc_id = json_object_get(spec, "sc_id");
         if (!sc_id)
         {
             BSL_LOG_DEBUG("NO SEC CTX ID");
