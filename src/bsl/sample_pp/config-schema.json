@@ -21,6 +21,21 @@
         ]
       }
     },
+    "norule_action": {
+      "description": "Control behavior when none of the policyrule filters match a bundle at a specific interaction point. The default behavior when an interaction point (property) is not present is to do nothing.",
+      "propertyNames": {
+        "$ref": "#/$defs/InteractionPoint"
+      },
+      "patternProperties": {
+        ".+": {
+          "type": "string",
+          "enum": [
+            "delete_bundle",
+            "nothing"
+          ]
+        }
+      }
+    },
     "event_set": {
       "deprecated": true
     }
@@ -57,13 +72,7 @@
             },
             "loc": {
               "description": "The interaction point location to match at.",
-              "type": "string",
-              "enum": [
-                "appin",
-                "appout",
-                "clin",
-                "clout"
-              ]
+              "$ref": "#/$defs/InteractionPoint"
             },
             "src": {
               "description": "An EID Pattern to match the Source Node ID of the bundle primary block. The default will match any source.",
@@ -173,14 +182,25 @@
           ]
         },
         "policy_action_on_fail": {
+          "description": "The behavior if the associated security operation fails during processing (validation or execution). The default behavior is to do nothing.",
           "type": "string",
           "enum": [
             "delete_bundle",
             "drop_block",
-            "do_nothing"
+            "nothing"
           ]
         }
       }
+    },
+    "InteractionPoint": {
+      "description": "Identify one of the security processing interaction points within the BPA.",
+      "type": "string",
+      "enum": [
+        "appin",
+        "appout",
+        "clin",
+        "clout"
+      ]
     },
     "IntegerOrText": {
       "description": "A direct integer value or a text value which can be converted to integer as either base 10 or base 16.",

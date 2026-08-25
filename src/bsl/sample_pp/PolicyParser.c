@@ -911,6 +911,55 @@ int BSLP_PolicyParser_LoadFd(int infd, BSLP_PolicyProvider_t *policy)
         }
     }
 
+    json_t *norule_action = json_object_get(root, "norule_action");
+    if (norule_action)
+    {
+        if (!json_is_object(norule_action))
+        {
+            BSL_LOG_ERR("Invalid norule_action type");
+            ++failures;
+        }
+        else
+        {
+
+            for (void *val_it = json_object_iter(norule_action); val_it;
+                 val_it       = json_object_iter_next(norule_action, val_it))
+            {
+                const char   *loc_str = json_object_iter_key(val_it);
+                const json_t *value   = json_object_iter_value(val_it);
+
+                BSL_PolicyLocation_e policy_loc_enum;
+                if (BSL_SUCCESS != BSLP_PolicyParser_GetLoc(&policy_loc_enum, loc_str))
+                {
+                    BSL_LOG_ERR("Invalid norule_action key, expected location");
+                    return BSL_ERR_POLICY_CONFIG;
+                }
+
+                BSL_PolicyAction_e policy_action_enum;
+                const char        *policy_act_str = json_string_value(value);
+                if (!policy_act_str)
+                {
+                    BSL_LOG_ERR("Invalid norule_action value, expected text");
+                    return BSL_ERR_POLICY_CONFIG;
+                }
+                else if (0 == strcmp(policy_act_str, "delete_bundle"))
+                {
+                    policy_action_enum = BSL_POLICYACTION_DROP_BUNDLE;
+                }
+                else if (0 == strcmp(policy_act_str, "nothing"))
+                {
+                    policy_action_enum = BSL_POLICYACTION_NOTHING;
+                }
+                else
+                {
+                    BSL_LOG_ERR("INVALID POLICY ACTION ENUM %s", policy_act_str);
+                    return BSL_ERR_POLICY_CONFIG;
+                }
+                BSLP_PolicyProvider_SetNoRuleAction(policy, policy_loc_enum, policy_action_enum);
+            }
+        }
+    }
+
     // event set (currently parsed, but not utilized/initialized meaningfully)
     const json_t *event_set = json_object_get(root, "event_set");
     if (event_set && json_is_object(event_set))
