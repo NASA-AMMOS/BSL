@@ -410,7 +410,9 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
     {
         BSL_LOG_DEBUG("decoding canonical block (at %zd)...", QCBORDecode_Tell(dec));
 
-        MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_push_back_new(bundle->blocks);
+        MockBPA_CanonicalBlockPtr_t *blk_ptr = MockBPA_CanonicalBlockPtr_new();
+        MockBPA_CanonicalBlock_t    *blk     = MockBPA_CanonicalBlockPtr_ref(blk_ptr);
+        *MockBPA_BlockList_push_back_new(bundle->blocks) = blk_ptr;
 
         res = bsl_mock_decode_canonical(dec, blk);
         if (res || (QCBOR_SUCCESS != QCBORDecode_GetError(dec)))
@@ -437,7 +439,7 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
             return 3;
         }
 
-        MockBPA_BlockByNum_set_at(bundle->blocks_num, blk->blk_num, blk);
+        MockBPA_BlockByNum_set_at(bundle->blocks_num, blk->blk_num, blk_ptr);
     }
 
     if (MockBPA_BlockList_empty_p(bundle->blocks))
@@ -445,7 +447,8 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
         BSL_LOG_ERR("No canonical blocks present, at least a payload block must be present to be valid");
         return 3;
     }
-    const MockBPA_CanonicalBlock_t *last = MockBPA_BlockList_back(bundle->blocks);
+    MockBPA_CanonicalBlockPtr_t *const *last_ptr = MockBPA_BlockList_back(bundle->blocks);
+    const MockBPA_CanonicalBlock_t      *last    = MockBPA_CanonicalBlockPtr_cref(*last_ptr);
     if (last->blk_type != 1)
     {
         BSL_LOG_ERR("The payload block must be the last block to be valid, last block type is %" PRIu64,

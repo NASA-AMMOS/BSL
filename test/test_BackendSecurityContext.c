@@ -159,9 +159,9 @@ void test_SecurityContext_BIB_Source(void)
     TEST_ASSERT_EQUAL(
         0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, malloced_actionset));
 
-    MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 2);
+    MockBPA_CanonicalBlockPtr_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 2);
     TEST_ASSERT_NOT_NULL(target_ptr);
-    MockBPA_CanonicalBlock_t *target_block = *target_ptr;
+    MockBPA_CanonicalBlock_t *target_block = MockBPA_CanonicalBlockPtr_ref(*target_ptr);
     TEST_ASSERT_NOT_NULL(target_block);
 
     bool is_equal =

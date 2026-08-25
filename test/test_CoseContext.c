@@ -332,10 +332,9 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     }
     else if ((mismatch == OPT_MISMATCH_MODIFY_BLK_1) || (mismatch == OPT_MISMATCH_MODIFY_BLK_3))
     {
-        MockBPA_CanonicalBlock_t **found =
-            MockBPA_BlockByNum_get(LocalTestCtx.mock_bpa_ctr.bundle->blocks_num, OPT_MISMATCH_MODIFY_BLK_1 ? 1 : 3);
+        MockBPA_CanonicalBlockPtr_t **found = MockBPA_BlockByNum_get(LocalTestCtx.mock_bpa_ctr.bundle->blocks_num, OPT_MISMATCH_MODIFY_BLK_1 ? 1 : 3);
         TEST_ASSERT_NOT_NULL(found);
-        alter_blk = *found;
+        alter_blk = MockBPA_CanonicalBlockPtr_ref(*found);
         TEST_ASSERT_NOT_NULL(alter_blk);
 
         ((uint8_t *)alter_blk->btsd)[alter_blk->btsd_len - 1] += 1;
@@ -559,10 +558,10 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
     }
     else if ((mismatch == OPT_MISMATCH_MODIFY_BLK_1) || (mismatch == OPT_MISMATCH_MODIFY_BLK_3))
     {
-        MockBPA_CanonicalBlock_t **found =
+        MockBPA_CanonicalBlockPtr_t **found =
             MockBPA_BlockByNum_get(LocalTestCtx.mock_bpa_ctr.bundle->blocks_num, OPT_MISMATCH_MODIFY_BLK_1 ? 1 : 3);
         TEST_ASSERT_NOT_NULL(found);
-        alter_blk = *found;
+        alter_blk = MockBPA_CanonicalBlockPtr_ref(*found);
         TEST_ASSERT_NOT_NULL(alter_blk);
 
         ((uint8_t *)alter_blk->btsd)[alter_blk->btsd_len - 1] += 1;
@@ -786,10 +785,10 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     }
     else if ((mismatch == OPT_MISMATCH_MODIFY_BLK_1) || (mismatch == OPT_MISMATCH_MODIFY_BLK_3))
     {
-        MockBPA_CanonicalBlock_t **found =
+        MockBPA_CanonicalBlockPtr_t **found =
             MockBPA_BlockByNum_get(LocalTestCtx.mock_bpa_ctr.bundle->blocks_num, OPT_MISMATCH_MODIFY_BLK_1 ? 1 : 3);
         TEST_ASSERT_NOT_NULL(found);
-        alter_blk = *found;
+        alter_blk = MockBPA_CanonicalBlockPtr_ref(*found);
         TEST_ASSERT_NOT_NULL(alter_blk);
 
         ((uint8_t *)alter_blk->btsd)[alter_blk->btsd_len - 1] += 1;
@@ -1017,10 +1016,10 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     }
     else if ((mismatch == OPT_MISMATCH_MODIFY_BLK_1) || (mismatch == OPT_MISMATCH_MODIFY_BLK_3))
     {
-        MockBPA_CanonicalBlock_t **found =
+        MockBPA_CanonicalBlockPtr_t **found =
             MockBPA_BlockByNum_get(LocalTestCtx.mock_bpa_ctr.bundle->blocks_num, OPT_MISMATCH_MODIFY_BLK_1 ? 1 : 3);
         TEST_ASSERT_NOT_NULL(found);
-        alter_blk = *found;
+        alter_blk = MockBPA_CanonicalBlockPtr_ref(*found);
         TEST_ASSERT_NOT_NULL(alter_blk);
 
         ((uint8_t *)alter_blk->btsd)[alter_blk->btsd_len - 1] += 1;

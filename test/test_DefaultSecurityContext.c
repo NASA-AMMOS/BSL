@@ -172,9 +172,9 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
         BSL_Data_Deinit(&view);
     }
 
-    MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
+    MockBPA_CanonicalBlockPtr_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
     TEST_ASSERT_NOT_NULL(target_ptr);
-    MockBPA_CanonicalBlock_t *target_block = *target_ptr;
+    MockBPA_CanonicalBlock_t *target_block = MockBPA_CanonicalBlockPtr_ref(*target_ptr);
     TEST_ASSERT_NOT_NULL(target_block);
 
     BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
@@ -200,9 +200,9 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     TEST_ASSERT_EQUAL(BSL_SUCCESS, bcb_exec_result);
 
     /// Confirm that the target block is decrypted correctly.
-    MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
+    MockBPA_CanonicalBlockPtr_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
     TEST_ASSERT_NOT_NULL(target_ptr);
-    MockBPA_CanonicalBlock_t *target_block = *target_ptr;
+    MockBPA_CanonicalBlock_t *target_block = MockBPA_CanonicalBlockPtr_ref(*target_ptr);
     TEST_ASSERT_NOT_NULL(target_block);
 
     BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
@@ -352,9 +352,9 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     {
         const char *pt_data_hex = "15585e19f60c0978ede4105e529f9b0006c13c9804a9c75ab46d4ed46f1097cfa03967";
 
-        MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
+        MockBPA_CanonicalBlockPtr_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
         TEST_ASSERT_NOT_NULL(target_ptr);
-        MockBPA_CanonicalBlock_t *target_block = *target_ptr;
+        MockBPA_CanonicalBlock_t *target_block = MockBPA_CanonicalBlockPtr_ref(*target_ptr);
         TEST_ASSERT_NOT_NULL(target_block);
 
         BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
@@ -458,9 +458,9 @@ void test_sec_accept_keyunwrap(bool bib)
     {
         const char *pt_data_hex = "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164";
 
-        MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
+        MockBPA_CanonicalBlockPtr_t **target_ptr = MockBPA_BlockByNum_get(mock_bpa_ctr->bundle->blocks_num, 1);
         TEST_ASSERT_NOT_NULL(target_ptr);
-        MockBPA_CanonicalBlock_t *target_block = *target_ptr;
+        MockBPA_CanonicalBlock_t *target_block = MockBPA_CanonicalBlockPtr_ref(*target_ptr);
         TEST_ASSERT_NOT_NULL(target_block);
 
         BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);

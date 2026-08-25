@@ -138,13 +138,16 @@ void test_bsl_mock_encode_bundle(void)
     static const uint8_t dummy_btsd[] = { 0x01, 0x02, 0x03 };
     static const size_t  dummy_size   = sizeof(dummy_btsd) / sizeof(uint8_t);
     {
-        MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_push_front_new(bundle.blocks);
-        blk->blk_type                 = 10;
-        blk->blk_num                  = 45;
-        blk->flags                    = 0;
-        blk->crc_type                 = 0;
-        blk->btsd                     = BSL_calloc(1, dummy_size);
-        blk->btsd_len                 = dummy_size;
+        MockBPA_CanonicalBlockPtr_t *blk_ptr = MockBPA_CanonicalBlockPtr_new();
+        MockBPA_CanonicalBlock_t    *blk     = MockBPA_CanonicalBlockPtr_ref(blk_ptr);
+        *MockBPA_BlockList_push_front_new(bundle.blocks) = blk_ptr;
+
+        blk->blk_type = 10;
+        blk->blk_num  = 45;
+        blk->flags    = 0;
+        blk->crc_type = 0;
+        blk->btsd     = BSL_calloc(1, dummy_size);
+        blk->btsd_len = dummy_size;
         memcpy(blk->btsd, dummy_btsd, dummy_size);
     }
 
