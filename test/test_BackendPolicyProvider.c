@@ -113,7 +113,7 @@ void test_PolicyProvider_InspectSingleBIBRuleset(void)
     BSLP_PolicyPredicate_InitFrom(&predicate, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "*:**");
 
     BSLP_PolicyRule_t rule;
-    BSLP_PolicyRule_InitFrom(&rule, "Verify BIB on APPIN from anywhere", 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+    BSLP_PolicyRule_InitFrom(&rule, 1, "Verify BIB on APPIN from anywhere", 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
                              BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
 
     BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
@@ -143,7 +143,7 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
     BSLP_PolicyPredicate_InitFrom(&predicate, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "*:**");
 
     BSLP_PolicyRule_t rule;
-    BSLP_PolicyRule_InitFrom(&rule, "Verify BIB on APPIN from anywhere", 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+    BSLP_PolicyRule_InitFrom(&rule, 1, "Verify BIB on APPIN from anywhere", 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
                              BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
     BSL_TestUtils_GetRFC9173_A1Params(&rule, RFC9173_EXAMPLE_A1_KEY);
 
@@ -190,7 +190,7 @@ void test_MultiplePolicyProviders(void)
     BSLP_PolicyPredicate_InitFrom(&predicate, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "*:**");
 
     BSLP_PolicyRule_t rule;
-    BSLP_PolicyRule_InitFrom(&rule, "Source BIB over primary on APPIN from anywhere", 1, BSL_SECROLE_SOURCE,
+    BSLP_PolicyRule_InitFrom(&rule, 1, "Source BIB over primary on APPIN from anywhere", 1, BSL_SECROLE_SOURCE,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PRIMARY, BSL_POLICYACTION_DROP_BUNDLE);
     BSL_TestUtils_GetRFC9173_A1Params(&rule, RFC9173_EXAMPLE_A1_KEY);
     BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
@@ -199,7 +199,7 @@ void test_MultiplePolicyProviders(void)
     BSLP_PolicyPredicate_InitFrom(&predicate2, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "*:**");
 
     BSLP_PolicyRule_t rule2;
-    BSLP_PolicyRule_InitFrom(&rule2, "Source BIB over payload on APPIN from anywhere", 1, BSL_SECROLE_SOURCE,
+    BSLP_PolicyRule_InitFrom(&rule2, 2, "Source BIB over payload on APPIN from anywhere", 1, BSL_SECROLE_SOURCE,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
     BSL_TestUtils_GetRFC9173_A1Params(&rule2, RFC9173_EXAMPLE_A1_KEY);
     BSLP_PolicyProvider_AddRule(policy2, &rule2, &predicate2);

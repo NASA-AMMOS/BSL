@@ -90,7 +90,7 @@ void test_SamplePolicyProvider_WildcardPolicyRuleVerifiesBIB(void)
 
     // Create a rule to verify the bundle contains a BIB block covering the payload
     BSLP_PolicyRule_t rule;
-    BSLP_PolicyRule_InitFrom(&rule, "Confirm bundle has BIB protecting payload", 1, BSL_SECROLE_VERIFIER,
+    BSLP_PolicyRule_InitFrom(&rule, 1, "Confirm bundle has BIB protecting payload", 1, BSL_SECROLE_VERIFIER,
                              BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
 
     // Now evaluate the rule to get as a SecOper
