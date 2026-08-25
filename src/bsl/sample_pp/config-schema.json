@@ -1,7 +1,33 @@
 {
   "$id": "https://nasa-ammos.github.io/BSL/config-schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "This is the BSL Sample Policy Provider configuration syntax.",
+  "description": "This is the BSL Sample Policy Provider configuration syntax. Some parts of the structure are legacy and marked as deprecated in this schema.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "policyrule_set": {
+      "description": "Policy rules are assertions about what security operations must be present on specific filtered-in traffic.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "policyrule": {
+            "$ref": "#/$defs/PolicyRule"
+          }
+        },
+        "required": [
+          "policyrule"
+        ]
+      }
+    },
+    "event_set": {
+      "deprecated": true
+    }
+  },
+  "required": [
+    "policyrule_set"
+  ],
   "$defs": {
     "PolicyRule": {
       "type": "object",
@@ -149,7 +175,9 @@
         "policy_action_on_fail": {
           "type": "string",
           "enum": [
-            "delete_bundle"
+            "delete_bundle",
+            "drop_block",
+            "do_nothing"
           ]
         }
       }
@@ -283,6 +311,9 @@
             "aad_scope": {
               "$ref": "#/$defs/IntegerOrText",
               "minimum": 0
+            },
+            "iv": {
+              "deprecated": true
             }
           },
           "required": [
@@ -341,24 +372,5 @@
         }
       ]
     }
-  },
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "policyrule_set": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "policyrule": {
-            "$ref": "#/$defs/PolicyRule"
-          }
-        }
-      }
-    }
-  },
-  "required": [
-    "policyrule_set"
-  ]
+  }
 }
