@@ -27,7 +27,7 @@ int MockBPA_CanonicalBlock_cmp(const MockBPA_CanonicalBlock_t *block_a, const Mo
 }
 
 int MockBPA_BlockListPtr_cmp(MockBPA_CanonicalBlockPtr_t *const *block_a_ptr,
-                              MockBPA_CanonicalBlockPtr_t *const *block_b_ptr)
+                             MockBPA_CanonicalBlockPtr_t *const *block_b_ptr)
 {
     const MockBPA_CanonicalBlock_t *block_a = MockBPA_CanonicalBlockPtr_cref(*block_a_ptr);
     const MockBPA_CanonicalBlock_t *block_b = MockBPA_CanonicalBlockPtr_cref(*block_b_ptr);
@@ -66,7 +66,7 @@ int MockBPA_Bundle_Deinit(MockBPA_Bundle_t *bundle)
     for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
     {
         MockBPA_CanonicalBlockPtr_t **blk_ptr = MockBPA_BlockList_ref(bit);
-        MockBPA_CanonicalBlock_t    *blk      = MockBPA_CanonicalBlockPtr_ref(*blk_ptr);
+        MockBPA_CanonicalBlock_t     *blk     = MockBPA_CanonicalBlockPtr_ref(*blk_ptr);
         BSL_LOG_DEBUG("freeing block number %" PRIu64, blk->blk_num);
         BSL_free(blk->btsd);
     }

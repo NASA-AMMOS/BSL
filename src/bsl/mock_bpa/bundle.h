@@ -105,9 +105,12 @@ M_SHARED_PTR_DEF(MockBPA_CanonicalBlockPtr, MockBPA_CanonicalBlock_t, M_OPL_Mock
 
 /** Block ptr comparison which will order by block number in descending order
  */
-int MockBPA_BlockListPtr_cmp(MockBPA_CanonicalBlockPtr_t *const *block_a_ptr, MockBPA_CanonicalBlockPtr_t *const *block_b_ptr);
+int MockBPA_BlockListPtr_cmp(MockBPA_CanonicalBlockPtr_t *const *block_a_ptr,
+                             MockBPA_CanonicalBlockPtr_t *const *block_b_ptr);
 
-#define M_OPL_MockBPA_CanonicalBlockPtr_t() M_OPEXTEND(M_SHARED_PTR_OPLIST(MockBPA_CanonicalBlockPtr, M_OPL_MockBPA_CanonicalBlock_t()), CMP(API_6(MockBPA_BlockListPtr_cmp)))
+#define M_OPL_MockBPA_CanonicalBlockPtr_t()                                                      \
+    M_OPEXTEND(M_SHARED_PTR_OPLIST(MockBPA_CanonicalBlockPtr, M_OPL_MockBPA_CanonicalBlock_t()), \
+               CMP(API_6(MockBPA_BlockListPtr_cmp)))
 
 /** @struct MockBPA_BlockList_t
  * An ordered list of ::MockBPA_CanonicalBlock_t shared pointers
@@ -121,7 +124,8 @@ int MockBPA_BlockListPtr_cmp(MockBPA_CanonicalBlockPtr_t *const *block_a_ptr, Mo
 // GCOV_EXCL_START
 M_DEQUE_DEF(MockBPA_BlockList, MockBPA_CanonicalBlockPtr_t *, M_OPL_MockBPA_CanonicalBlockPtr_t())
 M_ALGO_DEF(MockBPA_BlockList, M_DEQUE_OPLIST(MockBPA_BlockList, M_OPL_MockBPA_CanonicalBlockPtr_t()))
-M_BPTREE_DEF2(MockBPA_BlockByNum, 4, uint64_t, M_BASIC_OPLIST, MockBPA_CanonicalBlockPtr_t *, M_OPL_MockBPA_CanonicalBlockPtr_t())
+M_BPTREE_DEF2(MockBPA_BlockByNum, 4, uint64_t, M_BASIC_OPLIST, MockBPA_CanonicalBlockPtr_t *,
+              M_OPL_MockBPA_CanonicalBlockPtr_t())
 // GCOV_EXCL_STOP
 /// @endcond
 

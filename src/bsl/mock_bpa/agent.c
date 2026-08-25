@@ -97,8 +97,8 @@ int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBloc
     for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
     {
         MockBPA_CanonicalBlockPtr_t *const *blk_ptr = MockBPA_BlockList_cref(bit);
-        const MockBPA_CanonicalBlock_t      *blk     = MockBPA_CanonicalBlockPtr_cref(*blk_ptr);
-        result_primary_block->block_numbers[ix++]    = blk->blk_num;
+        const MockBPA_CanonicalBlock_t     *blk     = MockBPA_CanonicalBlockPtr_cref(*blk_ptr);
+        result_primary_block->block_numbers[ix++]   = blk->blk_num;
     }
 
     return 0;
@@ -369,8 +369,8 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
         }
     }
 
-    MockBPA_CanonicalBlockPtr_t *new_block_ptr = MockBPA_CanonicalBlockPtr_new();
-    MockBPA_CanonicalBlock_t    *new_block     = MockBPA_CanonicalBlockPtr_ref(new_block_ptr);
+    MockBPA_CanonicalBlockPtr_t *new_block_ptr       = MockBPA_CanonicalBlockPtr_new();
+    MockBPA_CanonicalBlock_t    *new_block           = MockBPA_CanonicalBlockPtr_ref(new_block_ptr);
     *MockBPA_BlockList_push_back_new(bundle->blocks) = new_block_ptr;
 
     memset(new_block, 0, sizeof(*new_block));
@@ -403,7 +403,7 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
     for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
     {
         MockBPA_CanonicalBlockPtr_t **blk_ptr = MockBPA_BlockList_ref(bit);
-        MockBPA_CanonicalBlock_t    *blk      = MockBPA_CanonicalBlockPtr_ref(*blk_ptr);
+        MockBPA_CanonicalBlock_t     *blk     = MockBPA_CanonicalBlockPtr_ref(*blk_ptr);
 
         if (blk->blk_num == block_num)
         {
