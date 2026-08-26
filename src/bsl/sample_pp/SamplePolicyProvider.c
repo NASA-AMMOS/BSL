@@ -158,6 +158,27 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
     return target_block_num;
 }
 
+static bool has_conflicting_bcb_verifier(const BSL_SecOper_t *sec_oper, const BSLP_SecOperPtrList_t secops)
+{
+    if (!BSL_SecOper_IsBIB(sec_oper) || !BSL_SecOper_IsRoleVerifier(sec_oper))
+    {
+        return false;
+    }
+
+    const uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
+    for (size_t i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
+    {
+        const BSL_SecOper_t *comp = *BSLP_SecOperPtrList_cget(secops, i);
+        if (!BSL_SecOper_IsBIB(comp) && BSL_SecOper_IsRoleVerifier(comp)
+            && (BSL_SecOper_GetTargetBlockNum(comp) == target_block_num))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 /**
  * Note that criticality is HIGH
  */
@@ -291,6 +312,22 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
     pthread_mutex_unlock(&self->mutex);
 
     BSL_PrimaryBlock_deinit(&primary_block);
+
+    for (size_t i = 0; i < BSLP_SecOperPtrList_size(secops);)
+    {
+        BSL_SecOper_t *secop = *BSLP_SecOperPtrList_get(secops, i);
+        if (!has_conflicting_bcb_verifier(secop, secops))
+        {
+            i++;
+            continue;
+        }
+
+        BSL_LOG_INFO("Skipping BIB verifier targeting block %" PRIu64 " because a BCB verifier targets the same block",
+                     BSL_SecOper_GetTargetBlockNum(secop));
+        BSLP_SecOperPtrList_pop_at(&secop, secops, i);
+        BSL_SecOper_Deinit(secop);
+        BSL_free(secop);
+    }
 
     // TODO replace a lot of copying with moving
     for (size_t i = 0; i < BSLP_SecOperPtrList_size(secops); i++)

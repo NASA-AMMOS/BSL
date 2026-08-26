@@ -481,8 +481,8 @@ TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.7", NULL, BSL_SECROLE_VERIFIER,
           BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1) // PASS
 TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.8", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB,
           BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1) // PASS
-// TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.9", NULL, BSL_SECROLE_VERIFIER, 99, BSL_BLOCK_TYPE_PAYLOAD,
-// BSL_POLICYACTION_DROP_BLOCK, true, 2, 2) // FAIL
+TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.9", NULL, BSL_SECROLE_VERIFIER, 99, BSL_BLOCK_TYPE_PAYLOAD,
+          BSL_POLICYACTION_DROP_BLOCK, true, 2, 1) // PASS
 void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, const char *dest_eid,
                         const char *secsrc_eid, BSL_SecRole_e sec_role, int sec_block_type, uint8_t target_block,
                         BSL_PolicyAction_e policy_act, bool good_key, int sec_blks_ct, int expected_act_ct)
