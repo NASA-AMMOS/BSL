@@ -141,6 +141,7 @@ void test_bsl_mock_encode_bundle(void)
         MockBPA_CanonicalBlockPtr_t *blk_ptr = MockBPA_CanonicalBlockPtr_new();
         MockBPA_CanonicalBlock_t    *blk     = MockBPA_CanonicalBlockPtr_ref(blk_ptr);
         MockBPA_BlockList_push_front(bundle.blocks, blk_ptr);
+        MockBPA_CanonicalBlockPtr_release(blk_ptr);
 
         blk->blk_type = 10;
         blk->blk_num  = 45;
@@ -149,7 +150,6 @@ void test_bsl_mock_encode_bundle(void)
         blk->btsd     = BSL_calloc(1, dummy_size);
         blk->btsd_len = dummy_size;
         memcpy(blk->btsd, dummy_btsd, dummy_size);
-        MockBPA_CanonicalBlockPtr_release(blk_ptr);
     }
 
     BSL_Data_t encoded;
