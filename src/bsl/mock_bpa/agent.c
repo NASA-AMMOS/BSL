@@ -372,7 +372,6 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
     MockBPA_CanonicalBlockPtr_t *new_block_ptr = MockBPA_CanonicalBlockPtr_new();
     MockBPA_CanonicalBlock_t    *new_block     = MockBPA_CanonicalBlockPtr_ref(new_block_ptr);
     MockBPA_BlockList_push_back(bundle->blocks, new_block_ptr);
-    MockBPA_CanonicalBlockPtr_release(new_block_ptr);
 
     memset(new_block, 0, sizeof(*new_block));
     new_block->blk_num  = *block_num;
@@ -387,6 +386,7 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
     *block_num = new_block->blk_num;
     BSL_LOG_DEBUG("Created block %" PRIu64, new_block->blk_num);
 
+    MockBPA_CanonicalBlockPtr_release(new_block_ptr);
     return 0;
 }
 
