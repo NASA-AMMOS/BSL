@@ -99,7 +99,7 @@ int MockBPA_CanonicalBlock_cmp(const MockBPA_CanonicalBlock_t *block_a, const Mo
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_SHARED_PTR_DEF(MockBPA_CanonicalBlockPtr, MockBPA_CanonicalBlock_t, M_OPL_MockBPA_CanonicalBlock_t())
+M_SHARED_WEAK_PTR_DEF(MockBPA_CanonicalBlockPtr, MockBPA_CanonicalBlock_t, M_OPL_MockBPA_CanonicalBlock_t())
 // GCOV_EXCL_STOP
 /// @endcond
 
@@ -118,14 +118,13 @@ int MockBPA_BlockListPtr_cmp(MockBPA_CanonicalBlockPtr_t *const *block_a_ptr,
  * BTSD is not managed by this list, but by the BPA itself.
  */
 /** @struct MockBPA_BlockByNum_t
- * A lookup from unique block number to ::MockBPA_CanonicalBlock_t shared pointer.
+ * A non-owning lookup from unique block number to ::MockBPA_CanonicalBlock_t pointer.
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
 M_DEQUE_DEF(MockBPA_BlockList, MockBPA_CanonicalBlockPtr_t *, M_OPL_MockBPA_CanonicalBlockPtr_t())
 M_ALGO_DEF(MockBPA_BlockList, M_DEQUE_OPLIST(MockBPA_BlockList, M_OPL_MockBPA_CanonicalBlockPtr_t()))
-M_BPTREE_DEF2(MockBPA_BlockByNum, 4, uint64_t, M_BASIC_OPLIST, MockBPA_CanonicalBlockPtr_t *,
-              M_OPL_MockBPA_CanonicalBlockPtr_t())
+M_BPTREE_DEF2(MockBPA_BlockByNum, 4, uint64_t, M_BASIC_OPLIST, MockBPA_CanonicalBlock_t *, M_PTR_OPLIST)
 // GCOV_EXCL_STOP
 /// @endcond
 

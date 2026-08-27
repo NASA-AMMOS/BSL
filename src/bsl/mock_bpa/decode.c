@@ -410,9 +410,10 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
     {
         BSL_LOG_DEBUG("decoding canonical block (at %zd)...", QCBORDecode_Tell(dec));
 
-        MockBPA_CanonicalBlockPtr_t *blk_ptr             = MockBPA_CanonicalBlockPtr_new();
-        MockBPA_CanonicalBlock_t    *blk                 = MockBPA_CanonicalBlockPtr_ref(blk_ptr);
-        *MockBPA_BlockList_push_back_new(bundle->blocks) = blk_ptr;
+        MockBPA_CanonicalBlockPtr_t *blk_ptr = MockBPA_CanonicalBlockPtr_new();
+        MockBPA_CanonicalBlock_t    *blk     = MockBPA_CanonicalBlockPtr_ref(blk_ptr);
+        MockBPA_BlockList_push_back(bundle->blocks, blk_ptr);
+        MockBPA_CanonicalBlockPtr_release(blk_ptr);
 
         res = bsl_mock_decode_canonical(dec, blk);
         if (res || (QCBOR_SUCCESS != QCBORDecode_GetError(dec)))
@@ -439,7 +440,7 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
             return 3;
         }
 
-        MockBPA_BlockByNum_set_at(bundle->blocks_num, blk->blk_num, blk_ptr);
+        MockBPA_BlockByNum_set_at(bundle->blocks_num, blk->blk_num, blk);
     }
 
     if (MockBPA_BlockList_empty_p(bundle->blocks))
