@@ -43,7 +43,7 @@ A more full-featured draft PP maintained as part of the BSL source is based on t
 This PP parses an ION-Like JSON structure to configure policy rules within a running Mock BPA. See the _BSL User Guide_ @cite bsl_user_guide for details on specific JSON structure and attributes.
 This PP is registered and used by the @ref mock-bpa for many BSL testing cases.
 
-Sources related to this provider are associated with the @ref sample_pp group.
+Sources related to this provider are associated with the @ref sample_pp group, and a JSON Schema definition for the policy input is included in the file tree as the @c src/bsl/sample_pp/config-schema.json file.
 
 # Example Security Contexts {#example-scs}
 

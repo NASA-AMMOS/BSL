@@ -56,13 +56,20 @@ do
         exit $ERR
     fi
 done
+if which check-jsonschema >/dev/null
+then
+    check-jsonschema \
+        --schemafile src/bsl/sample_pp/config-schema.json -vv \
+        test/test_PolicyParser-data/*.json \
+        $(find . -name 'policy*.json')
+fi
 
 # Python test fixtures
 pushd mock-bpa-test/
 ANYERR=0
 ruff format || ANYERR=$((ANYERR + 1))
 ruff check --fix || ANYERR=$((ANYERR + 1))
-if which ty
+if which ty >/dev/null
 then
     ty check --fix || ANYERR=$((ANYERR + 1))
 fi

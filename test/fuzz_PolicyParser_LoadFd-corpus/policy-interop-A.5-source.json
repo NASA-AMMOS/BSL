@@ -14,7 +14,7 @@
           "svc": "bib-integrity",
           "sc_id": 3,
           "sc_parms": {
-            "key_id": "ExampleA.5",
+            "key_name": "ExampleA.5",
             "target_alg": 6,
             "aad_scope": {
               "0": 1,

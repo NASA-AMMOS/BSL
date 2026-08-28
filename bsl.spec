@@ -115,6 +115,7 @@ install -m644 -D testroot/usr/lib/pkgconfig/m-lib.pc %{buildroot}%{_datadir}/pkg
 %{_libdir}/libbsl_sample_pp.so.*
 %{_libdir}/libbsl_default_sc.so.*
 %{_libdir}/libbsl_cose_sc.so.*
+%{_datadir}/bsl/sample_pp/config-schema.json
 
 %files devel
 %license LICENSE

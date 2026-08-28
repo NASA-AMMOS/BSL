@@ -37,6 +37,7 @@ BPv
 bsl
 BSL
 BSLs
+BSLv
 BSLX
 bstr
 BTSD
@@ -121,12 +122,14 @@ IETF
 init
 Init
 initializer
+Integrators
 invariants
 ipn
 IPN
 IPPT
 IsInt
 isspace
+Jansson
 JHU
 Josefsson
 JPL
@@ -209,6 +212,7 @@ structs
 Structs
 SWaP
 syslog
+TBD
 Todo
 TODO
 tstr

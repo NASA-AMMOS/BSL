@@ -1,0 +1,382 @@
+{
+  "$id": "https://nasa-ammos.github.io/BSL/config-schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "This is the BSL Sample Policy Provider configuration syntax. Some parts of the structure are legacy and marked as deprecated in this schema.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "policyrule_set"
+  ],
+  "properties": {
+    "policyrule_set": {
+      "description": "Policy rules are assertions about what security operations must be present on specific filtered-in traffic.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "policyrule"
+        ],
+        "properties": {
+          "policyrule": {
+            "$ref": "#/$defs/PolicyRule"
+          }
+        }
+      }
+    },
+    "event_set": {
+      "deprecated": true
+    }
+  },
+  "$defs": {
+    "PolicyRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filter",
+        "spec",
+        "policy_action_on_fail"
+      ],
+      "properties": {
+        "desc": {
+          "description": "A human description of the rule.",
+          "type": "string"
+        },
+        "filter": {
+          "description": "Filter options to match a specific bundle and target block at one of the BSL interaction points.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rule_id",
+            "loc",
+            "role",
+            "tgt"
+          ],
+          "properties": {
+            "rule_id": {
+              "description": "The unique ID number for this rule.",
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "role": {
+              "description": "The role for the possible security operation. The single-letter values are the first letter of the full words.",
+              "type": "string",
+              "enum": [
+                "source",
+                "s",
+                "verifier",
+                "v",
+                "acceptor",
+                "a"
+              ]
+            },
+            "loc": {
+              "description": "The interaction point location to match at.",
+              "type": "string",
+              "enum": [
+                "appin",
+                "appout",
+                "clin",
+                "clout"
+              ]
+            },
+            "src": {
+              "description": "An EID Pattern to match the Source Node ID of the bundle primary block. The default will match any source.",
+              "$ref": "#/$defs/BundleEidPattern",
+              "default": "*:**"
+            },
+            "dest": {
+              "description": "An EID Pattern to match the Destiantion EID of the bundle primary block. The default will match any destination.",
+              "$ref": "#/$defs/BundleEidPattern",
+              "default": "*:**"
+            },
+            "sec_src": {
+              "description": "When the role is verifier or acceptor, an EID Pattern to match the Security Source of an existing operation. The default will match any source of an existing operation.",
+              "$ref": "#/$defs/BundleEidPattern",
+              "default": "*:**"
+            },
+            "tgt": {
+              "description": "The target block _type_ to match on, which should be unique in the bundle, not the specific block _number_.",
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "sc_id": {
+              "description": "Formerly used to require an existing security operation for this Context ID.",
+              "deprecated": true,
+              "$ref": "#/$defs/IntegerOrText"
+            }
+          }
+        },
+        "spec": {
+          "description": "Specification of how to form a security operation for the target block when the filter matches.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "svc",
+            "sc_id",
+            "sc_parms"
+          ],
+          "properties": {
+            "svc": {
+              "description": "The security service needing to be present. This matches only on text prefix of bib or bcb.",
+              "type": "string",
+              "pattern": "(bib|bcb)-?.*"
+            },
+            "sc_id": {
+              "description": "The security Context ID of the operation needing to be present.",
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "sc_parms": {
+              "description": "Options specific to the sibling sc_id value. Options use a logical structure of ID-value pairs. This generic structure is overridden by context-specific options in the allOf below.",
+              "$ref": "#/$defs/GenericOptions"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "sc_id": {
+                    "const": 1
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "sc_parms": {
+                    "$ref": "#/$defs/SC1Options"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "sc_id": {
+                    "const": 2
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "sc_parms": {
+                    "$ref": "#/$defs/SC2Options"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "sc_id": {
+                    "const": 3
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "sc_parms": {
+                    "$ref": "#/$defs/SC3Options"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "policy_action_on_fail": {
+          "type": "string",
+          "enum": [
+            "delete_bundle",
+            "drop_block",
+            "nothing"
+          ]
+        }
+      }
+    },
+    "IntegerOrText": {
+      "description": "A direct integer value or a text value which can be converted to integer as either base 10 or base 16.",
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string",
+          "pattern": "^-?([0-9]+|0x[0-9a-fA-F]+)$"
+        }
+      ]
+    },
+    "BooleanOrText": {
+      "description": "A true/false boolean value or an integer or text value interpreted as one. Value zero or text 0 is false and all others are true.",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "BytesAsHex": {
+      "description": "A byte string represented as hexadecimal encoding of each byte in sequence. The prefix marker 0x is optional and recommended.",
+      "type": "string",
+      "pattern": "(0x)?([0-9a-fA-F]{2})*"
+    },
+    "BundleEidPattern": {
+      "description": "An EID Pattern in text form which is not restricted by this schema.",
+      "type": "string"
+    },
+    "GenericOptions": {
+      "description": "The set of security operation options, which use option IDs specific to a each Context ID.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/OptionsArray"
+        },
+        {
+          "description": "A more compact object encoding of ID-value pairs as properties. The valid ID names are context-specific.",
+          "type": "object"
+        }
+      ]
+    },
+    "OptionsArray": {
+      "description": "An array of explicit ID-value pairs, where the ID must be unique across the array. This kind of structure is not easily refined using JSON schema so no attempt is made in this file.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "value"
+        ],
+        "properties": {
+          "id": {
+            "description": "The valid ID names are context-specific and not refined here.",
+            "type": "string"
+          },
+          "value": {
+            "description": "The corresponding value types are context-specific and not refined here."
+          }
+        }
+      }
+    },
+    "SC1Options": {
+      "description": "Named options for Context ID 1 (BIB-HMAC-SHA2).",
+      "anyOf": [
+        {
+          "description": "Allow array encoding but without JSON schema type constraints. See the object type below for option IDs and types.",
+          "$ref": "#/$defs/OptionsArray"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key_name",
+            "key_wrap"
+          ],
+          "properties": {
+            "key_name": {
+              "type": "string"
+            },
+            "key_wrap": {
+              "$ref": "#/$defs/BooleanOrText"
+            },
+            "sha_variant": {
+              "$ref": "#/$defs/IntegerOrText",
+              "minimum": 5,
+              "maximum": 7
+            },
+            "scope_flags": {
+              "$ref": "#/$defs/IntegerOrText",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "SC2Options": {
+      "description": "Named options for Context ID 2 (BCB-AES-GCM).",
+      "anyOf": [
+        {
+          "description": "Allow array encoding but without JSON schema type constraints. See the object type below for option IDs and types.",
+          "$ref": "#/$defs/OptionsArray"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key_name",
+            "key_wrap"
+          ],
+          "properties": {
+            "key_name": {
+              "type": "string"
+            },
+            "key_wrap": {
+              "$ref": "#/$defs/BooleanOrText"
+            },
+            "aes_variant": {
+              "$ref": "#/$defs/IntegerOrText",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "aad_scope": {
+              "$ref": "#/$defs/IntegerOrText",
+              "minimum": 0
+            },
+            "iv": {
+              "deprecated": true
+            }
+          }
+        }
+      ]
+    },
+    "SC3Options": {
+      "description": "Named options for Context ID 3 (COSE).",
+      "anyOf": [
+        {
+          "description": "Allow array encoding but without JSON schema type constraints. See the object type below for option IDs and types.",
+          "$ref": "#/$defs/OptionsArray"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key_name": {
+              "type": "string"
+            },
+            "key_id": {
+              "$ref": "#/$defs/BytesAsHex"
+            },
+            "target_alg": {
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "aad_scope": {
+              "description": "A JSON encoding of the AAD Scope parameter with keys in integer-as-text decimal-only form.",
+              "type": "object",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^-?[0-9]+$": {
+                  "$ref": "#/$defs/IntegerOrText"
+                }
+              }
+            },
+            "iv_counter_offset": {
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "iv_base": {
+              "$ref": "#/$defs/BytesAsHex"
+            },
+            "salt_length": {
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "salt_counter_offset": {
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "salt_base": {
+              "$ref": "#/$defs/BytesAsHex"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

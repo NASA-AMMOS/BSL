@@ -141,6 +141,8 @@ bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_Policy
  */
 typedef struct BSLP_PolicyRule_s
 {
+    /// Unique identifier
+    int64_t rule_id;
     /// Human-friendly text
     m_string_t description;
     /// Role for this operation
@@ -161,7 +163,8 @@ typedef struct BSLP_PolicyRule_s
  * @brief Initialize this policy rule from parameters
  *
  * @param[in] self This policy rule
- * @param[in] dest Description of this rule (C-string)
+ * @param rule_id The user ID number for this rule.
+ * @param[in] dest Description of this rule (C-string, may be NULL)
  * @param[in] context_id Security context ID
  * @param[in] role Such as source, acceptor, etc
  * @param[in] sec_block_type Block type (BIB or BCB)
@@ -170,8 +173,8 @@ typedef struct BSLP_PolicyRule_s
  *
  * @returns Zero on success
  */
-int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, const char *desc, int64_t context_id, BSL_SecRole_e role,
-                             BSL_SecBlockType_e sec_block_type, uint64_t target_block_type,
+int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, int64_t rule_id, const char *desc, int64_t context_id,
+                             BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type, uint64_t target_block_type,
                              BSL_PolicyAction_e failure_action_code);
 
 /** Initialize policy rule
@@ -197,6 +200,9 @@ void BSLP_PolicyRule_Move(BSLP_PolicyRule_t *self, BSLP_PolicyRule_t *src);
     (INIT(API_2(BSLP_PolicyRule_Init)), INIT_SET(0), SET(0), MOVE(API_6(BSLP_PolicyRule_Move)), \
      CLEAR(API_2(BSLP_PolicyRule_Deinit)))
 
+/** @struct BSLP_PolicyRulePtr_t
+ * A thread-unsafe shared pointer to a single ::BSLP_PolicyRule_t instance.
+ */
 /** @struct BSLP_PolicyRuleList_t
  * Defines list of policy rules (::BSLP_PolicyRule_t)
  */
@@ -222,10 +228,14 @@ BSL_Variant_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self, int64_t opt_id
 /// @brief Policy provider data. References shared among individual providers in BSL context
 typedef struct BSLP_PolicyProvider_s
 {
-    BSLP_PolicyRuleList_t      rules;      ///< Variable-length list of policy rules
-    BSLP_PolicyPredicateList_t predicates; ///< Variable-length list of policy predicates
-    pthread_mutex_t            mutex;      ///< Mutex for shared data
-    uint64_t                   pp_id;      ///< ID of policy provider
+    /// Variable-length list of policy rules
+    BSLP_PolicyRuleList_t rules;
+    /// Variable-length list of policy predicates
+    BSLP_PolicyPredicateList_t predicates;
+    /// ID of policy provider
+    uint64_t pp_id;
+    /// Mutex for all other shared data in this struct
+    pthread_mutex_t mutex;
 } BSLP_PolicyProvider_t;
 
 /** Initialize policy provider data

@@ -1,4 +1,4 @@
-@page bpa-integrators BPA Integrator Topics
+@page bpa-integrators BPA Integrators
 <!--
 Copyright (c) 2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.
