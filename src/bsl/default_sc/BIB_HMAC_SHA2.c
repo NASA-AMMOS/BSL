@@ -612,14 +612,14 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *
             }
             else
             {
-                BSL_LOG_ERR("Auth tag result is not valid");
+                BSL_LOG_ERR("bib hmac result is not valid");
                 BSLX_BIB_Deinit(&bib_context);
                 return BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
         }
         else
         {
-            BSL_LOG_ERR("Auth tag result is not present");
+            BSL_LOG_ERR("bib hmac result is not present");
             BSLX_BIB_Deinit(&bib_context);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
@@ -627,11 +627,11 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *
         if (!BSL_Crypto_Compare(bib_context.hmac_result_val.ptr, bib_context.hmac_result_val.len, got_hmac.ptr,
                                 got_hmac.len))
         {
-            BSL_LOG_ERR("Auth tag result mismatched");
+            BSL_LOG_ERR("bib hmac result mismatched");
             BSLX_BIB_Deinit(&bib_context);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
-        BSL_LOG_DEBUG("Auth tag verified equal");
+        BSL_LOG_DEBUG("bib hmac verified equal");
     }
 
     BSLX_BIB_Deinit(&bib_context);

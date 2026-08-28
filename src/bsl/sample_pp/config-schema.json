@@ -4,6 +4,9 @@
   "description": "This is the BSL Sample Policy Provider configuration syntax. Some parts of the structure are legacy and marked as deprecated in this schema.",
   "type": "object",
   "additionalProperties": true,
+  "required": [
+    "policyrule_set"
+  ],
   "properties": {
     "policyrule_set": {
       "description": "Policy rules are assertions about what security operations must be present on specific filtered-in traffic.",
@@ -11,27 +14,29 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "policyrule"
+        ],
         "properties": {
           "policyrule": {
             "$ref": "#/$defs/PolicyRule"
           }
-        },
-        "required": [
-          "policyrule"
-        ]
+        }
       }
     },
     "event_set": {
       "deprecated": true
     }
   },
-  "required": [
-    "policyrule_set"
-  ],
   "$defs": {
     "PolicyRule": {
       "type": "object",
       "additionalProperties": false,
+      "required": [
+        "filter",
+        "spec",
+        "policy_action_on_fail"
+      ],
       "properties": {
         "desc": {
           "description": "A human description of the rule.",
@@ -41,17 +46,26 @@
           "description": "Filter options to match a specific bundle and target block at one of the BSL interaction points.",
           "type": "object",
           "additionalProperties": false,
+          "required": [
+            "rule_id",
+            "loc",
+            "role",
+            "tgt"
+          ],
           "properties": {
             "rule_id": {
-              "description": "The unique ID number this rule.",
+              "description": "The unique ID number for this rule.",
               "$ref": "#/$defs/IntegerOrText"
             },
             "role": {
-              "description": "The role for the possible security operation. The values are the first letter of either: source, verifier, or acceptor.",
+              "description": "The role for the possible security operation. The single-letter values are the first letter of the full words.",
               "type": "string",
               "enum": [
+                "source",
                 "s",
+                "verifier",
                 "v",
+                "acceptor",
                 "a"
               ]
             },
@@ -89,38 +103,32 @@
               "deprecated": true,
               "$ref": "#/$defs/IntegerOrText"
             }
-          },
-          "required": [
-            "rule_id",
-            "loc",
-            "role",
-            "tgt"
-          ]
+          }
         },
         "spec": {
           "description": "Specification of how to form a security operation for the target block when the filter matches.",
           "type": "object",
           "additionalProperties": false,
-          "properties": {
-            "svc": {
-              "description": "The security service needing to be present. This matches only on text prefix of bib or bcb. For source role this will create the operation, for verifier or acceptor this will require the operation to exist and process it.",
-              "type": "string",
-              "pattern": "(bib|bcb)-?.*"
-            },
-            "sc_id": {
-              "description": "The security Context ID of the operation needing to be present. For source role this will create the operation, for verifier or acceptor this will require an operation with the context and process it.",
-              "$ref": "#/$defs/IntegerOrText"
-            },
-            "sc_parms": {
-              "description": "Options specific to the sibling sc_id value, encoded with a common structure of ID-value pairs.",
-              "$ref": "#/$defs/GenericOptions"
-            }
-          },
           "required": [
             "svc",
             "sc_id",
             "sc_parms"
           ],
+          "properties": {
+            "svc": {
+              "description": "The security service needing to be present. This matches only on text prefix of bib or bcb.",
+              "type": "string",
+              "pattern": "(bib|bcb)-?.*"
+            },
+            "sc_id": {
+              "description": "The security Context ID of the operation needing to be present.",
+              "$ref": "#/$defs/IntegerOrText"
+            },
+            "sc_parms": {
+              "description": "Options specific to the sibling sc_id value. Options use a logical structure of ID-value pairs. This generic structure is overridden by context-specific options in the allOf below.",
+              "$ref": "#/$defs/GenericOptions"
+            }
+          },
           "allOf": [
             {
               "if": {
@@ -177,7 +185,7 @@
           "enum": [
             "delete_bundle",
             "drop_block",
-            "do_nothing"
+            "nothing"
           ]
         }
       }
@@ -230,36 +238,40 @@
       ]
     },
     "OptionsArray": {
-      "description": "An array of explicit ID-value pairs, where the ID must be unique across the array.",
+      "description": "An array of explicit ID-value pairs, where the ID must be unique across the array. This kind of structure is not easily refined using JSON schema so no attempt is made in this file.",
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "properties": {
-          "id": {
-            "description": "The valid ID names are context-specific.",
-            "type": "string"
-          },
-          "value": {
-            "description": "The corresponding value types are context-specific."
-          }
-        },
         "required": [
           "id",
           "value"
-        ]
+        ],
+        "properties": {
+          "id": {
+            "description": "The valid ID names are context-specific and not refined here.",
+            "type": "string"
+          },
+          "value": {
+            "description": "The corresponding value types are context-specific and not refined here."
+          }
+        }
       }
     },
     "SC1Options": {
       "description": "Named options for Context ID 1 (BIB-HMAC-SHA2).",
       "anyOf": [
         {
-          "description": "Fall-back to non-overloaded array.",
+          "description": "Allow array encoding but without JSON schema type constraints. See the object type below for option IDs and types.",
           "$ref": "#/$defs/OptionsArray"
         },
         {
           "type": "object",
           "additionalProperties": false,
+          "required": [
+            "key_name",
+            "key_wrap"
+          ],
           "properties": {
             "key_name": {
               "type": "string"
@@ -276,11 +288,7 @@
               "$ref": "#/$defs/IntegerOrText",
               "minimum": 0
             }
-          },
-          "required": [
-            "key_name",
-            "key_wrap"
-          ]
+          }
         }
       ]
     },
@@ -288,19 +296,21 @@
       "description": "Named options for Context ID 2 (BCB-AES-GCM).",
       "anyOf": [
         {
-          "description": "Fall-back to non-overloaded array.",
+          "description": "Allow array encoding but without JSON schema type constraints. See the object type below for option IDs and types.",
           "$ref": "#/$defs/OptionsArray"
         },
         {
           "type": "object",
           "additionalProperties": false,
+          "required": [
+            "key_name",
+            "key_wrap"
+          ],
           "properties": {
             "key_name": {
-              "description": "Arbitrary name for the key to use with the operation. This must match one of the keys in the key store for the operation to succeed.",
               "type": "string"
             },
             "key_wrap": {
-              "description": "True if the key must be used to wrap a content key. For source role this is required and controls the operation, for verifier or acceptor this is optional and constrains valid operations.",
               "$ref": "#/$defs/BooleanOrText"
             },
             "aes_variant": {
@@ -315,11 +325,7 @@
             "iv": {
               "deprecated": true
             }
-          },
-          "required": [
-            "key_name",
-            "key_wrap"
-          ]
+          }
         }
       ]
     },
@@ -327,7 +333,7 @@
       "description": "Named options for Context ID 3 (COSE).",
       "anyOf": [
         {
-          "description": "Fall-back to non-overloaded array.",
+          "description": "Allow array encoding but without JSON schema type constraints. See the object type below for option IDs and types.",
           "$ref": "#/$defs/OptionsArray"
         },
         {
@@ -344,12 +350,12 @@
               "$ref": "#/$defs/IntegerOrText"
             },
             "aad_scope": {
-              "description": "An encoding of the native AAD Scope parameter with keys in integer-as-text form.",
+              "description": "A JSON encoding of the AAD Scope parameter with keys in integer-as-text decimal-only form.",
               "type": "object",
               "additionalProperties": false,
               "patternProperties": {
                 "^-?[0-9]+$": {
-                  "type": "integer"
+                  "$ref": "#/$defs/IntegerOrText"
                 }
               }
             },
