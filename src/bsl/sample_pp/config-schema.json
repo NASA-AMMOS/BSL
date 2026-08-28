@@ -4,6 +4,9 @@
   "description": "This is the BSL Sample Policy Provider configuration syntax. Some parts of the structure are legacy and marked as deprecated in this schema.",
   "type": "object",
   "additionalProperties": true,
+  "required": [
+    "policyrule_set"
+  ],
   "properties": {
     "policyrule_set": {
       "description": "Policy rules are assertions about what security operations must be present on specific filtered-in traffic.",
@@ -11,27 +14,29 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "policyrule"
+        ],
         "properties": {
           "policyrule": {
             "$ref": "#/$defs/PolicyRule"
           }
-        },
-        "required": [
-          "policyrule"
-        ]
+        }
       }
     },
     "event_set": {
       "deprecated": true
     }
   },
-  "required": [
-    "policyrule_set"
-  ],
   "$defs": {
     "PolicyRule": {
       "type": "object",
       "additionalProperties": false,
+      "required": [
+        "filter",
+        "spec",
+        "policy_action_on_fail"
+      ],
       "properties": {
         "desc": {
           "description": "A human description of the rule.",
@@ -41,6 +46,12 @@
           "description": "Filter options to match a specific bundle and target block at one of the BSL interaction points.",
           "type": "object",
           "additionalProperties": false,
+          "required": [
+            "rule_id",
+            "loc",
+            "role",
+            "tgt"
+          ],
           "properties": {
             "rule_id": {
               "description": "The unique ID number for this rule.",
@@ -92,18 +103,17 @@
               "deprecated": true,
               "$ref": "#/$defs/IntegerOrText"
             }
-          },
-          "required": [
-            "rule_id",
-            "loc",
-            "role",
-            "tgt"
-          ]
+          }
         },
         "spec": {
           "description": "Specification of how to form a security operation for the target block when the filter matches.",
           "type": "object",
           "additionalProperties": false,
+          "required": [
+            "svc",
+            "sc_id",
+            "sc_parms"
+          ],
           "properties": {
             "svc": {
               "description": "The security service needing to be present. This matches only on text prefix of bib or bcb.",
@@ -119,11 +129,6 @@
               "$ref": "#/$defs/GenericOptions"
             }
           },
-          "required": [
-            "svc",
-            "sc_id",
-            "sc_parms"
-          ],
           "allOf": [
             {
               "if": {
@@ -180,7 +185,7 @@
           "enum": [
             "delete_bundle",
             "drop_block",
-            "do_nothing"
+            "nothing"
           ]
         }
       }
@@ -238,6 +243,10 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
+        "required": [
+          "id",
+          "value"
+        ],
         "properties": {
           "id": {
             "description": "The valid ID names are context-specific and not refined here.",
@@ -246,11 +255,7 @@
           "value": {
             "description": "The corresponding value types are context-specific and not refined here."
           }
-        },
-        "required": [
-          "id",
-          "value"
-        ]
+        }
       }
     },
     "SC1Options": {
@@ -263,6 +268,10 @@
         {
           "type": "object",
           "additionalProperties": false,
+          "required": [
+            "key_name",
+            "key_wrap"
+          ],
           "properties": {
             "key_name": {
               "type": "string"
@@ -279,11 +288,7 @@
               "$ref": "#/$defs/IntegerOrText",
               "minimum": 0
             }
-          },
-          "required": [
-            "key_name",
-            "key_wrap"
-          ]
+          }
         }
       ]
     },
@@ -297,6 +302,10 @@
         {
           "type": "object",
           "additionalProperties": false,
+          "required": [
+            "key_name",
+            "key_wrap"
+          ],
           "properties": {
             "key_name": {
               "type": "string"
@@ -316,11 +325,7 @@
             "iv": {
               "deprecated": true
             }
-          },
-          "required": [
-            "key_name",
-            "key_wrap"
-          ]
+          }
         }
       ]
     },
@@ -345,12 +350,12 @@
               "$ref": "#/$defs/IntegerOrText"
             },
             "aad_scope": {
-              "description": "An encoding of the native AAD Scope parameter with keys in integer-as-text form.",
+              "description": "A JSON encoding of the AAD Scope parameter with keys in integer-as-text decimal-only form.",
               "type": "object",
               "additionalProperties": false,
               "patternProperties": {
                 "^-?[0-9]+$": {
-                  "type": "integer"
+                  "$ref": "#/$defs/IntegerOrText"
                 }
               }
             },
