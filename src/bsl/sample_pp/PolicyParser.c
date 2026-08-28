@@ -547,14 +547,14 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
             return BSL_ERR_POLICY_CONFIG;
         }
         const char *role_str = json_string_value(role);
-        BSL_LOG_DEBUG("     role   : %s", role_str);
         // check for valid sec role
         if (!role_str)
         {
             BSL_LOG_ERR("Invalid role type, expected text");
             return BSL_ERR_POLICY_CONFIG;
         }
-        else if (0 == strcmp(role_str, "s"))
+        BSL_LOG_DEBUG("     role   : %s", role_str);
+        if (0 == strcmp(role_str, "s"))
         {
             sec_role = BSL_SECROLE_SOURCE;
         }
@@ -576,7 +576,6 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         if (src)
         {
             src_str = json_string_value(src);
-            BSL_LOG_DEBUG("     src    : %s", src_str);
             if (!src_str)
             {
                 BSL_LOG_ERR("Invalid src type, expected text");
@@ -587,12 +586,12 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         {
             src_str = "*:**";
         }
+        BSL_LOG_DEBUG("     src    : %s", src_str);
 
         const json_t *dest = json_object_get(filter, "dest");
         if (dest)
         {
             dest_str = json_string_value(dest);
-            BSL_LOG_DEBUG("     dest    : %s", dest_str);
             if (!dest_str)
             {
                 BSL_LOG_ERR("Invalid dest type, expected text");
@@ -603,12 +602,12 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         {
             dest_str = "*:**";
         }
+        BSL_LOG_DEBUG("     dest    : %s", dest_str);
 
         const json_t *sec_src = json_object_get(filter, "sec_src");
         if (sec_src)
         {
             sec_src_str = json_string_value(sec_src);
-            BSL_LOG_DEBUG("     sec_src    : %s", sec_src_str);
             if (!sec_src_str)
             {
                 BSL_LOG_ERR("Invalid sec_src type, expected text");
@@ -619,6 +618,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         {
             sec_src_str = "*:**";
         }
+        BSL_LOG_DEBUG("     sec_src    : %s", sec_src_str);
 
         // check tgt (target block type)
         const json_t *tgt = json_object_get(filter, "tgt");
@@ -649,13 +649,12 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
             return BSL_ERR_POLICY_CONFIG;
         }
         const char *loc_str = json_string_value(loc);
-        BSL_LOG_DEBUG("     loc    : %s", loc_str);
-
         if (BSL_SUCCESS != BSLP_PolicyParser_GetLoc(&policy_loc_enum, loc_str))
         {
             BSL_LOG_ERR("INVALID POLICY LOCATION %s", loc_str);
             return BSL_ERR_POLICY_CONFIG;
         }
+        BSL_LOG_DEBUG("     loc    : %s", loc_str);
     }
 
     // es_ref
@@ -716,6 +715,11 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
 
         const json_t *svc     = json_object_get(spec, "svc");
         const char   *svc_str = json_string_value(svc);
+        if (!svc_str)
+        {
+            BSL_LOG_ERR("Invalid svc value type, expected text");
+            return BSL_ERR_POLICY_CONFIG;
+        }
         BSL_LOG_DEBUG("     svc: %s", svc_str);
         if ((strcmp(svc_str, "bib") == 0) || (strcmp(svc_str, "bib-integrity") == 0))
         {
@@ -942,6 +946,11 @@ int BSLP_PolicyParser_LoadFd(int infd, BSLP_PolicyProvider_t *policy)
                     return BSL_ERR_POLICY_CONFIG;
                 }
                 const char *event_id_str = json_string_value(event_id);
+                if (!event_id_str)
+                {
+                    BSL_LOG_ERR("Invalid event_id type, expected text");
+                    return BSL_ERR_POLICY_CONFIG;
+                }
                 BSL_LOG_DEBUG("EVENT ID FOUND: %s", event_id_str);
 
                 const json_t *actions = json_object_get(entry, "actions");
