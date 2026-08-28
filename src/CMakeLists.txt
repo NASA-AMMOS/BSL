@@ -171,6 +171,11 @@ target_link_libraries(bsl_sample_pp PUBLIC bsl_dynamic)
 target_link_libraries(bsl_sample_pp PRIVATE bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
 target_link_libraries(bsl_sample_pp PRIVATE Jansson::Jansson)
+install(
+    FILES bsl/sample_pp/config-schema.json
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/sample_pp/
+    COMPONENT devel
+)
 
 # Dynamic backend library
 add_library(bsl_dynamic)

@@ -276,7 +276,7 @@ static int BSLP_PolicyOptions_SC2(BSLB_VariantPtrMap_t options, const char *id_s
  */
 static int BSLP_PolicyOptions_SC3(BSLB_VariantPtrMap_t options, const char *id_str, json_t *value) // NOSONAR
 {
-    if (0 == strcmp(id_str, "key_id"))
+    if (0 == strcmp(id_str, "key_name"))
     {
         BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_COSESC_OPTION_KEY_ID, value);
         if (opt)
@@ -286,8 +286,24 @@ static int BSLP_PolicyOptions_SC3(BSLB_VariantPtrMap_t options, const char *id_s
             {
                 return BSL_ERR_POLICY_CONFIG;
             }
+            // Key ID as UTF-8 bytes excluding null terminator
             BSL_Data_t as_bytes = BSL_DATA_INIT_VIEW_CSTR(val_str);
             BSL_Variant_SetBytestr(opt, as_bytes);
+        }
+    }
+    else if (0 == strcasecmp(id_str, "key_id"))
+    {
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_COSESC_OPTION_KEY_ID, value);
+        if (opt)
+        {
+            BSL_Data_t as_bytes;
+            BSL_Data_Init(&as_bytes);
+            if (BSLP_GetBytesHex(value, &as_bytes))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetBytestr(opt, as_bytes);
+            BSL_Data_Deinit(&as_bytes);
         }
     }
     else if (0 == strcasecmp(id_str, "target_alg"))
@@ -480,15 +496,15 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         BSL_LOG_DEBUG("     role   : %s", role_str);
 
         // check for valid sec role
-        if (0 == strcmp(role_str, "s"))
+        if ((0 == strcmp(role_str, "s")) || (0 == strcmp(role_str, "source")))
         {
             sec_role = BSL_SECROLE_SOURCE;
         }
-        else if (0 == strcmp(role_str, "v"))
+        else if ((0 == strcmp(role_str, "v")) || (0 == strcmp(role_str, "verifier")))
         {
             sec_role = BSL_SECROLE_VERIFIER;
         }
-        else if (0 == strcmp(role_str, "a"))
+        else if ((0 == strcmp(role_str, "a")) || (0 == strcmp(role_str, "acceptor")))
         {
             sec_role = BSL_SECROLE_ACCEPTOR;
         }
