@@ -413,34 +413,38 @@ int bsl_mock_decode_bundle(QCBORDecodeContext *dec, MockBPA_Bundle_t *bundle)
         MockBPA_CanonicalBlockPtr_t *blk_ptr = MockBPA_CanonicalBlockPtr_new();
         MockBPA_CanonicalBlock_t    *blk     = MockBPA_CanonicalBlockPtr_ref(blk_ptr);
         MockBPA_BlockList_push_back(bundle->blocks, blk_ptr);
-        MockBPA_CanonicalBlockPtr_release(blk_ptr);
 
         res = bsl_mock_decode_canonical(dec, blk);
         if (res || (QCBOR_SUCCESS != QCBORDecode_GetError(dec)))
         {
             // block instance is already part of the bundle, so handle cleanup there
             BSL_LOG_ERR("failed decoding canonical block");
+            MockBPA_CanonicalBlockPtr_release(blk_ptr);
             return 3;
         }
 
         if (blk->blk_type == 0)
         {
             BSL_LOG_ERR("Invalid block type 0 on block number %" PRIu64, blk->blk_num);
+            MockBPA_CanonicalBlockPtr_release(blk_ptr);
             return 3;
         }
         if (blk->blk_num == 0)
         {
             BSL_LOG_ERR("Invalid block number 0 with block type %" PRIu64, blk->blk_type);
+            MockBPA_CanonicalBlockPtr_release(blk_ptr);
             return 3;
         }
         if (MockBPA_BlockByNum_cget(bundle->blocks_num, blk->blk_num))
         {
             BSL_LOG_ERR("Duplicate block number %" PRIu64 " present with block type %" PRIu64, blk->blk_num,
                         blk->blk_type);
+            MockBPA_CanonicalBlockPtr_release(blk_ptr);
             return 3;
         }
 
         MockBPA_BlockByNum_set_at(bundle->blocks_num, blk->blk_num, blk);
+        MockBPA_CanonicalBlockPtr_release(blk_ptr);
     }
 
     if (MockBPA_BlockList_empty_p(bundle->blocks))
