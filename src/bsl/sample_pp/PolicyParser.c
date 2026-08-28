@@ -496,15 +496,15 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         BSL_LOG_DEBUG("     role   : %s", role_str);
 
         // check for valid sec role
-        if (0 == strcmp(role_str, "s"))
+        if ((0 == strcmp(role_str, "s")) || (0 == strcmp(role_str, "source")))
         {
             sec_role = BSL_SECROLE_SOURCE;
         }
-        else if (0 == strcmp(role_str, "v"))
+        else if ((0 == strcmp(role_str, "v")) || (0 == strcmp(role_str, "verifier")))
         {
             sec_role = BSL_SECROLE_VERIFIER;
         }
-        else if (0 == strcmp(role_str, "a"))
+        else if ((0 == strcmp(role_str, "a")) || (0 == strcmp(role_str, "acceptor")))
         {
             sec_role = BSL_SECROLE_ACCEPTOR;
         }
