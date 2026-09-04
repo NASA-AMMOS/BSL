@@ -815,6 +815,12 @@ bool BSL_SecOper_IsRoleAcceptor(const BSL_SecOper_t *self);
  */
 bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self);
 
+/** Return true if this security operation is BCB
+ * @param[in] self This security operation
+ * @return boolean
+ */
+bool BSL_SecOper_IsBCB(const BSL_SecOper_t *self);
+
 /**
  * Retrieve the policy action of a security operation
  * @param[in] self The security operation
