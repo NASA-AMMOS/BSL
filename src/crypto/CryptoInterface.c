@@ -285,7 +285,6 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
 
 int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_key, void **wrapped_key_handle)
 {
-
     CHK_ARG_NONNULL(kek_handle);
     CHK_ARG_NONNULL(cek_handle);
     CHK_ARG_NONNULL(wrapped_key);
@@ -341,6 +340,14 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
             // GCOV_EXCL_STOP
     }
 
+    int res = BSL_Data_Resize(wrapped_key, cek->raw.len + BSL_CRYPTO_AESKW_BLOCK_SIZE);
+    // GCOV_EXCL_START
+    if (UNLIKELY(BSL_SUCCESS != res))
+    {
+        return res;
+    }
+    // GCOV_EXCL_STOP
+
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     // GCOV_EXCL_START
     if (UNLIKELY(ctx == NULL))
@@ -362,7 +369,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
 
     int len = (int)wrapped_key->len;
-    int res = EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek->raw.ptr, (int)cek->raw.len);
+    res     = EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek->raw.ptr, (int)cek->raw.len);
     // GCOV_EXCL_START
     if (!res)
     {
