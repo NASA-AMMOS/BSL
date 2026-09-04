@@ -73,15 +73,6 @@ EXAMPLE_A_4_WITH_BCB = """\
 """
 """ Bundle with BCB over target #1, adjusted sec block to #2 with flags 0x1"""
 
-EXAMPLE_A_4_WITH_BCB_ADDL_UHDR = """\
-[_
-    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
-    [12, 2, 1, 0, << [1], 3, 1, [1, "//src/"], [[4, <<{4: 'ExampleA.4'}>>], [5, {0: 1, -1: 1}]], [[[16, << [<< {1: 3} >>, {6: h'484A'}, null] >>]]] >>],
-    [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
-]
-"""
-""" Adapted to use additional unprotected headers parameter"""
-
 EXAMPLE_A_5_WITH_BCB = """\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
@@ -422,9 +413,17 @@ class TestCoseScEncrypt0(TestAgent):
         )
 
     def test_exampleA_4_acceptor_valid_addl_uhdr(self):
+        input_diag = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [12, 2, 1, 0, << [1], 3, 1, [1, "//src/"], [[4, <<{4: 'ExampleA.4'}>>], [5, {0: 1, -1: 1}]], [[[16, << [<< {1: 3} >>, {6: h'484A'}, null] >>]]] >>],
+    [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
+]
+"""
+        
         self._single_test(
             _TestCase(
-                input_data=EXAMPLE_A_4_WITH_BCB_ADDL_UHDR,
+                input_data=input_diag,
                 expected_output=EXAMPLE_A_NO_SEC,
                 sec_src_eid="dtn://dst/",
                 policy_config="data/cose-sc/policy-any-bcb-accept.json",
@@ -488,6 +487,94 @@ class TestCoseScEncrypt0(TestAgent):
                     expected_output_format=DataFormat.CBORDIAG,
                 )
             )
+
+    def test_exampleA_4_acceptor_valid_fulliv(self):
+        input_diag = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [12, 2, 1, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[16, << [<< {1: 3} >>, {4: 'ExampleA.4', 5: h'6f3093eba5d85143c3dc484a'}, null] >>]]] >>],
+    [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
+]
+"""
+        
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-any-bcb-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_exampleA_4_acceptor_valid_padded_partialiv(self):
+        input_diag = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [12, 2, 1, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[16, << [<< {1: 3} >>, {4: 'ExampleA.4', 6: h'00000000000000000000484A'}, null] >>]]] >>],
+    [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
+]
+"""
+        
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-any-bcb-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_exampleA_4_acceptor_invalid_missing_iv(self):
+        input_diag = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [12, 2, 1, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[16, << [<< {1: 3} >>, {4: 'ExampleA.4'}, null] >>]]] >>],
+    [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
+]
+"""
+        
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=".*<ERROR>.* No full or parital IV header present",
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-any-bcb-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ERR,
+            )
+        )
+
+    def test_exampleA_4_acceptor_invalid_excessive_iv(self):
+        input_diag = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [12, 2, 1, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[16, << [<< {1: 3} >>, {4: 'ExampleA.4', 6: h'0000000000000000000000484A'}, null] >>]]] >>],
+    [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
+]
+"""
+        
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=r".*<ERROR>.* Invalid Partial IV length, no more than 12 got 13",
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-any-bcb-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ERR,
+            )
+        )
 
 
 class TestCoseScEncrypt(TestAgent):
