@@ -269,12 +269,14 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
     CHK_PROPERTY(pctx != NULL);
     res = EVP_PKEY_keygen_init(pctx);
+    // GCOV_EXCL_START
     if (res != 1)
     {
         BSL_CryptoKey_Deinit(cek);
         BSL_free(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+    // GCOV_EXCL_STOP
 
     cek->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, cek->raw.ptr, (int)cek->raw.len);
     EVP_PKEY_CTX_free(pctx);
@@ -412,12 +414,14 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
             EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, (int)wrapped_key->len);
         BSL_Data_Init(&new_wrapped_key_handle->raw);
 
-        int ecode = 0;
-        if ((ecode = BSL_Data_CopyFrom(&new_wrapped_key_handle->raw, wrapped_key->len, wrapped_key->ptr)) < 0)
+        int ecode = BSL_Data_CopyFrom(&new_wrapped_key_handle->raw, wrapped_key->len, wrapped_key->ptr);
+        // GCOV_EXCL_START
+        if (ecode < 0)
         {
             BSL_LOG_ERR("Failed to copy key");
             return ecode;
         }
+        // GCOV_EXCL_STOP
 
         *wrapped_key_handle = new_wrapped_key_handle;
         EVP_PKEY_CTX_free(pctx);
