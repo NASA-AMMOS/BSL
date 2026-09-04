@@ -240,6 +240,12 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self)
     return self->_service_type == BSL_SECBLOCKTYPE_BIB;
 }
 
+bool BSL_SecOper_IsBCB(const BSL_SecOper_t *self)
+{
+    ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
+    return self->_service_type == BSL_SECBLOCKTYPE_BCB;
+}
+
 BSL_PolicyAction_e BSL_SecOper_GetPolicyAction(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
