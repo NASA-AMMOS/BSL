@@ -200,12 +200,14 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
      * wrapped key always 8 bytes greater than CEK @cite rfc3394
      */
     int res = BSL_Data_Resize(&cek->raw, wrapped_key->len - BSL_CRYPTO_AESKW_BLOCK_SIZE);
-    if (BSL_SUCCESS != res)
+    // GCOV_EXCL_START
+    if (UNLIKELY(BSL_SUCCESS != res))
     {
         BSL_CryptoKey_Deinit(cek);
         BSL_free(cek);
         return res;
     }
+    // GCOV_EXCL_STOP
 
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     if (dec_result != 1)
@@ -689,12 +691,15 @@ int BSL_Crypto_GenKey(size_t key_length, void **key_out)
     BSL_CryptoKey_Init(new_key);
 
     int res = BSL_Data_Resize(&new_key->raw, key_length);
-    if (BSL_SUCCESS != res)
+    // GCOV_EXCL_START
+    if (UNLIKELY(BSL_SUCCESS != res))
     {
         BSL_CryptoKey_Deinit(new_key);
         BSL_free(new_key);
         return res;
     }
+    // GCOV_EXCL_STOP
+
     if (rand_bytes_generator(new_key->raw.ptr, (int)new_key->raw.len) != 1)
     {
         return BSL_ERR_SECURITY_OPERATION_FAILED;
