@@ -183,24 +183,28 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
             cipher = EVP_aes_256_wrap();
             break;
         }
+        // GCOV_EXCL_START
         default:
-        {
             BSL_LOG_DEBUG("UNWRAP AES MODE INVALID");
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-        }
+            // GCOV_EXCL_STOP
     }
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    if (ctx == NULL)
+    // GCOV_EXCL_START
+    if (UNLIKELY(ctx == NULL))
     {
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+    // GCOV_EXCL_STOP
 
     BSL_CryptoKey_t *cek = BSL_malloc(sizeof(BSL_CryptoKey_t));
-    if (cek == NULL)
+    // GCOV_EXCL_START
+    if (UNLIKELY(cek == NULL))
     {
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+    // GCOV_EXCL_STOP
     BSL_CryptoKey_Init(cek);
 
     /*
@@ -216,19 +220,21 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     }
     // GCOV_EXCL_STOP
 
-    int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
-    if (dec_result != 1)
+    res = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
+    // GCOV_EXCL_START
+    if (res != 1)
     {
         BSL_CryptoKey_Deinit(cek);
         BSL_free(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+    // GCOV_EXCL_STOP
     EVP_CIPHER_CTX_set_padding(ctx, 0);
 
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
 
-    int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, (int *)&cek->raw.len, wrapped_key->ptr, (int)wrapped_key->len);
-    if (decrypt_res != 1)
+    res = EVP_DecryptUpdate(ctx, cek->raw.ptr, (int *)&cek->raw.len, wrapped_key->ptr, (int)wrapped_key->len);
+    if (res != 1)
     {
         BSL_LOG_ERR("EVP_DecryptUpdate: %s", ERR_error_string(ERR_get_error(), NULL));
         EVP_CIPHER_CTX_free(ctx);
@@ -241,8 +247,9 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int     final_len = 0;
-
+    // AES-KW auth tag is already applied above
     res = EVP_DecryptFinal_ex(ctx, buf, &final_len);
+    // GCOV_EXCL_START
     if (res != 1)
     {
         BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
@@ -251,16 +258,17 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         BSL_free(cek);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
-
     if (final_len > 0)
     {
         BSL_Data_AppendFrom(&cek->raw, final_len, buf);
     }
+    // GCOV_EXCL_STOP
 
     EVP_CIPHER_CTX_free(ctx);
 
     EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
-    res                = EVP_PKEY_keygen_init(pctx);
+    CHK_PROPERTY(pctx != NULL);
+    res = EVP_PKEY_keygen_init(pctx);
     if (res != 1)
     {
         BSL_CryptoKey_Deinit(cek);
@@ -326,63 +334,75 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
             cipher = EVP_aes_256_wrap();
             break;
         }
+        // GCOV_EXCL_START
         default:
-        {
             BSL_LOG_DEBUG("WRAP AES MODE INVALID");
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-        }
+            // GCOV_EXCL_STOP
     }
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    if (ctx == NULL)
+    // GCOV_EXCL_START
+    if (UNLIKELY(ctx == NULL))
     {
         BSL_LOG_ERR("Could not create cipher context");
         return -1;
     }
+    // GCOV_EXCL_STOP
 
     int enc_result = EVP_EncryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
+    // GCOV_EXCL_START
     if (!enc_result)
     {
         EVP_CIPHER_CTX_free(ctx);
         return -1;
     }
+    // GCOV_EXCL_STOP
 
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
 
     int len = (int)wrapped_key->len;
-    if (!EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek->raw.ptr, (int)cek->raw.len))
+    int res = EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek->raw.ptr, (int)cek->raw.len);
+    // GCOV_EXCL_START
+    if (!res)
     {
         EVP_CIPHER_CTX_free(ctx);
         return -2;
     }
+    // GCOV_EXCL_STOP
     wrapped_key->len = (size_t)len;
 
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED] += cek->raw.len;
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int     final_len = 0;
-    if (!EVP_EncryptFinal_ex(ctx, buf, &final_len))
+    // AES-KW auth tag is already applied above
+    res = EVP_EncryptFinal_ex(ctx, buf, &final_len);
+    // GCOV_EXCL_START
+    if (!res)
     {
         EVP_CIPHER_CTX_free(ctx);
         return -1;
     }
-
     if (final_len > 0)
     {
         BSL_Data_AppendFrom(&cek->raw, final_len, buf);
     }
+    // GCOV_EXCL_STOP
 
     EVP_CIPHER_CTX_free(ctx);
 
     if (wrapped_key_handle != NULL)
     {
         EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
-        int           res  = EVP_PKEY_keygen_init(pctx);
+        CHK_PROPERTY(pctx != NULL);
+        res = EVP_PKEY_keygen_init(pctx);
         CHK_PROPERTY(res == 1);
 
         BSL_CryptoKey_t *new_wrapped_key_handle = BSL_malloc(sizeof(BSL_CryptoKey_t));
         BSL_CryptoKey_Init(new_wrapped_key_handle);
-        new_wrapped_key_handle->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, (int)wrapped_key->len);
+        new_wrapped_key_handle->pkey =
+            EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, (int)wrapped_key->len);
         BSL_Data_Init(&new_wrapped_key_handle->raw);
 
         int ecode = 0;
