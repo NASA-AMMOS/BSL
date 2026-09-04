@@ -138,9 +138,25 @@ int BSL_Crypto_ClearGeneratedKeyHandle(void *keyhandle)
     return BSL_SUCCESS;
 }
 
+/**
+ * wrapped key always 8 bytes greater than CEK and always a multiple of 8 @cite rfc3394
+ */
+static const size_t BSL_CRYPTO_AESKW_BLOCK_SIZE = 8;
+
 int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_handle)
 {
     BSL_CryptoKey_t *kek = (BSL_CryptoKey_t *)kek_handle;
+
+    if (wrapped_key->len < 2 * BSL_CRYPTO_AESKW_BLOCK_SIZE)
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is too small to unwrap", wrapped_key->len);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    if (wrapped_key->len % BSL_CRYPTO_AESKW_BLOCK_SIZE != 0)
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is not a multiple of %zu", wrapped_key->len, BSL_CRYPTO_AESKW_BLOCK_SIZE);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
 
     const EVP_CIPHER *cipher;
     switch (kek->raw.len)
@@ -180,10 +196,16 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
     }
     BSL_CryptoKey_Init(cek);
 
-    /**
-     * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
+    /*
+     * wrapped key always 8 bytes greater than CEK @cite rfc3394
      */
-    BSL_Data_Resize(&cek->raw, wrapped_key->len - 8);
+    int res = BSL_Data_Resize(&cek->raw, wrapped_key->len - BSL_CRYPTO_AESKW_BLOCK_SIZE);
+    if (BSL_SUCCESS != res)
+    {
+        BSL_CryptoKey_Deinit(cek);
+        BSL_free(cek);
+        return res;
+    }
 
     int dec_result = EVP_DecryptInit_ex(ctx, cipher, NULL, kek->raw.ptr, NULL);
     if (dec_result != 1)
@@ -210,7 +232,8 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
 
     uint8_t buf[EVP_CIPHER_CTX_block_size(ctx)];
     int     final_len = 0;
-    int     res       = EVP_DecryptFinal_ex(ctx, buf, &final_len);
+
+    res = EVP_DecryptFinal_ex(ctx, buf, &final_len);
     if (res != 1)
     {
         BSL_LOG_ERR("Failed DecryptFinal: %s", ERR_error_string(ERR_get_error(), NULL));
@@ -256,6 +279,16 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
     if (cek->raw.len > kek->raw.len)
     {
         BSL_LOG_ERR("KEK size %zu too small to encrypt CEK size %zu", kek->raw.len, cek->raw.len);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    if (cek->raw.len < BSL_CRYPTO_AESKW_BLOCK_SIZE)
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is too small to wrap", cek->raw.len);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    if (cek->raw.len % BSL_CRYPTO_AESKW_BLOCK_SIZE != 0)
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is not a multiple of %zu", cek->raw.len, BSL_CRYPTO_AESKW_BLOCK_SIZE);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
@@ -655,15 +688,21 @@ int BSL_Crypto_GenKey(size_t key_length, void **key_out)
     CHK_PROPERTY(new_key);
     BSL_CryptoKey_Init(new_key);
 
-    BSL_Data_Resize(&new_key->raw, key_length);
+    int res = BSL_Data_Resize(&new_key->raw, key_length);
+    if (BSL_SUCCESS != res)
+    {
+        BSL_CryptoKey_Deinit(new_key);
+        BSL_free(new_key);
+        return res;
+    }
     if (rand_bytes_generator(new_key->raw.ptr, (int)new_key->raw.len) != 1)
     {
-        return -2;
+        return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
     EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HMAC, NULL);
     CHK_PROPERTY(ctx);
-    int res = EVP_PKEY_keygen_init(ctx);
+    res = EVP_PKEY_keygen_init(ctx);
     CHK_PROPERTY(res == 1);
 
     new_key->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, new_key->raw.ptr, (int)new_key->raw.len);
