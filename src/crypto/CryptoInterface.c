@@ -157,6 +157,13 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         BSL_LOG_ERR("Wrapped key size %zu is not a multiple of %zu", wrapped_key->len, BSL_CRYPTO_AESKW_BLOCK_SIZE);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+    // GCOV_EXCL_START
+    if (UNLIKELY(wrapped_key->len > INT_MAX))
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is too large to unwrap", wrapped_key->len);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    // GCOV_EXCL_STOP
 
     const EVP_CIPHER *cipher;
     switch (kek->raw.len)
@@ -220,7 +227,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
 
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
 
-    int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, (int *)&cek->raw.len, wrapped_key->ptr, wrapped_key->len);
+    int decrypt_res = EVP_DecryptUpdate(ctx, cek->raw.ptr, (int *)&cek->raw.len, wrapped_key->ptr, (int)wrapped_key->len);
     if (decrypt_res != 1)
     {
         BSL_LOG_ERR("EVP_DecryptUpdate: %s", ERR_error_string(ERR_get_error(), NULL));
@@ -261,7 +268,7 @@ int BSL_Crypto_UnwrapKey(void *kek_handle, BSL_Data_t *wrapped_key, void **cek_h
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
-    cek->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, cek->raw.ptr, cek->raw.len);
+    cek->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, cek->raw.ptr, (int)cek->raw.len);
     EVP_PKEY_CTX_free(pctx);
 
     *cek_handle = cek;
@@ -293,6 +300,13 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
         BSL_LOG_ERR("Wrapped key size %zu is not a multiple of %zu", cek->raw.len, BSL_CRYPTO_AESKW_BLOCK_SIZE);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+    // GCOV_EXCL_START
+    if (UNLIKELY(cek->raw.len > INT_MAX))
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is too large to wrap", cek->raw.len);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    // GCOV_EXCL_STOP
 
     const EVP_CIPHER *cipher;
     switch (kek->raw.len)
@@ -336,7 +350,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
     kek->stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]++;
 
     int len = (int)wrapped_key->len;
-    if (!EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek->raw.ptr, cek->raw.len))
+    if (!EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &len, cek->raw.ptr, (int)cek->raw.len))
     {
         EVP_CIPHER_CTX_free(ctx);
         return -2;
@@ -368,7 +382,7 @@ int BSL_Crypto_WrapKey(void *kek_handle, void *cek_handle, BSL_Data_t *wrapped_k
 
         BSL_CryptoKey_t *new_wrapped_key_handle = BSL_malloc(sizeof(BSL_CryptoKey_t));
         BSL_CryptoKey_Init(new_wrapped_key_handle);
-        new_wrapped_key_handle->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, wrapped_key->len);
+        new_wrapped_key_handle->pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, wrapped_key->ptr, (int)wrapped_key->len);
         BSL_Data_Init(&new_wrapped_key_handle->raw);
 
         int ecode = 0;
