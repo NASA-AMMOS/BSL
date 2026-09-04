@@ -49,6 +49,11 @@ void BSL_Crypto_SetRngGenerator(BSL_Crypto_RandBytesFn rand_gen_fn)
     rand_bytes_generator = rand_gen_fn;
 }
 
+/**
+ * wrapped key always 8 bytes greater than CEK and always a multiple of 8 @cite rfc3394
+ */
+static const size_t BSL_CRYPTO_AESKW_BLOCK_SIZE = 8;
+
 int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wrapped_key,
                          BSL_Crypto_KeyHandle_t *cek_handle)
 {
@@ -56,6 +61,24 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     ASSERT_ARG_NONNULL(wrapped_key);
     ASSERT_ARG_NONNULL(cek_handle);
     *cek_handle = NULL;
+
+    if (wrapped_key->len < 2 * BSL_CRYPTO_AESKW_BLOCK_SIZE)
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is too small to unwrap", wrapped_key->len);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    if (wrapped_key->len % BSL_CRYPTO_AESKW_BLOCK_SIZE != 0)
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is not a multiple of %zu", wrapped_key->len, BSL_CRYPTO_AESKW_BLOCK_SIZE);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    // GCOV_EXCL_START
+    if (UNLIKELY(wrapped_key->len > INT_MAX))
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is too large to unwrap", wrapped_key->len);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    // GCOV_EXCL_STOP
 
     int retval = BSL_SUCCESS;
     int res;
@@ -81,16 +104,16 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
             cipher = EVP_aes_256_wrap();
             break;
         }
+        // GCOV_EXCL_START
         default:
-        {
             BSL_LOG_DEBUG("UNWRAP AES MODE INVALID");
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-        }
+            // GCOV_EXCL_STOP
     }
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     // GCOV_EXCL_START
-    if (ctx == NULL)
+    if (UNLIKELY(ctx == NULL))
     {
         BSL_LOG_ERR("Could not create cipher context");
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -98,8 +121,7 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     // GCOV_EXCL_STOP
 
     BSL_Data_t cek_keymat;
-    // wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
-    res = BSL_Data_InitBuffer(&cek_keymat, wrapped_key->len - 8);
+    res = BSL_Data_InitBuffer(&cek_keymat, wrapped_key->len - BSL_CRYPTO_AESKW_BLOCK_SIZE);
     if (BSL_SUCCESS != res)
     {
         retval = res;
@@ -143,7 +165,8 @@ int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wr
     if (BSL_SUCCESS == retval)
     {
         out_len = 0;
-        res     = EVP_DecryptFinal_ex(ctx, NULL, &out_len);
+        // AES-KW auth tag is already applied above
+        res = EVP_DecryptFinal_ex(ctx, NULL, &out_len);
         // GCOV_EXCL_START
         if (res != 1)
         {
@@ -185,6 +208,24 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     BSL_Data_t cek_view;
     CHK_PRECONDITION(BSL_SUCCESS == BSL_KeyStore_State.get_keymat(cek_handle, &cek_view));
 
+    if (cek_view.len < BSL_CRYPTO_AESKW_BLOCK_SIZE)
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is too small to wrap", cek_view.len);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    if (cek_view.len % BSL_CRYPTO_AESKW_BLOCK_SIZE != 0)
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is not a multiple of %zu", cek_view.len, BSL_CRYPTO_AESKW_BLOCK_SIZE);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    // GCOV_EXCL_START
+    if (UNLIKELY(cek_view.len > INT_MAX))
+    {
+        BSL_LOG_ERR("Wrapped key size %zu is too large to wrap", cek_view.len);
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+    // GCOV_EXCL_STOP
+
     const EVP_CIPHER *cipher;
     switch (kek_view.len)
     {
@@ -212,15 +253,14 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     // GCOV_EXCL_START
-    if (ctx == NULL)
+    if (UNLIKELY(ctx == NULL))
     {
         BSL_LOG_ERR("Could not create cipher context");
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     // GCOV_EXCL_STOP
 
-    // wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
-    res = BSL_Data_Resize(wrapped_key, cek_view.len + 8);
+    res = BSL_Data_Resize(wrapped_key, cek_view.len + BSL_CRYPTO_AESKW_BLOCK_SIZE);
     if (BSL_SUCCESS != res)
     {
         retval = res;
@@ -246,10 +286,12 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
         out_len = (int)wrapped_key->len;
         BSL_LOG_PLAINTEXT_PTR("unwrapped key", cek_handle, cek_view.ptr, cek_view.len);
         res = EVP_EncryptUpdate(ctx, (unsigned char *)wrapped_key->ptr, &out_len, cek_view.ptr, (int)cek_view.len);
+        // GCOV_EXCL_START
         if (res != 1)
         {
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
         wrapped_key->len = (size_t)out_len;
     }
 
@@ -313,10 +355,12 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
 
     BSL_Data_t cek_keymat;
     res = BSL_Data_InitBuffer(&cek_keymat, keylen);
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
+    // GCOV_EXCL_STOP
 
     EVP_KDF *kdf = NULL;
     if (BSL_SUCCESS == retval)
@@ -336,7 +380,7 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
     {
         kctx = EVP_KDF_CTX_new(kdf);
         // GCOV_EXCL_START
-        if (!kctx)
+        if (UNLIKELY(kctx == NULL))
         {
             BSL_LOG_ERR("EVP_KDF_CTX_new: %s", ERR_error_string(ERR_get_error(), NULL));
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -506,14 +550,19 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *tag)
     size_t size = EVP_MAC_CTX_get_mac_size(hmac_ctx->libhandle);
     CHK_PROPERTY(size > 0);
     CHK_PROPERTY(size <= INT_MAX);
-    BSL_Data_Resize(tag, size);
 
-    int res = EVP_MAC_final(hmac_ctx->libhandle, tag->ptr, &size, tag->len);
+    int res = BSL_Data_Resize(tag, size);
+    if (BSL_SUCCESS != res)
+    {
+        return res;
+    }
+
+    res = EVP_MAC_final(hmac_ctx->libhandle, tag->ptr, &size, tag->len);
     BSL_LOG_DEBUG("EVP_MAC_final gave %zu bytes, return %d", size, res);
     CHK_PROPERTY(res == 1);
     BSL_LOG_PLAINTEXT_PTR("tag out", hmac_ctx, tag->ptr, size);
 
-    return 0;
+    return BSL_SUCCESS;
 }
 
 void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
@@ -553,7 +602,8 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
     BSL_Data_t key_view;
     CHK_PRECONDITION(BSL_SUCCESS == BSL_KeyStore_State.get_keymat(cipher_ctx->keyhandle, &key_view));
 
-    cipher_ctx->libhandle   = EVP_CIPHER_CTX_new();
+    cipher_ctx->libhandle = EVP_CIPHER_CTX_new();
+    CHK_PRECONDITION(cipher_ctx->libhandle != NULL);
     cipher_ctx->enc         = enc;
     cipher_ctx->AES_variant = aes_var;
 
@@ -712,9 +762,13 @@ int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag)
     ASSERT_ARG_NONNULL(cipher_ctx->libhandle);
     ASSERT_ARG_NONNULL(tag);
 
-    BSL_Data_Resize(tag, EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle));
+    int res = BSL_Data_Resize(tag, EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle));
+    if (BSL_SUCCESS != res)
+    {
+        return res;
+    }
 
-    int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, (int)(tag->len), tag->ptr);
+    res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, (int)(tag->len), tag->ptr);
     BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl len %zu, return %d", tag->len, res);
     BSL_LOG_PLAINTEXT_PTR("tag out", cipher_ctx, tag->ptr, tag->len);
     CHK_PROPERTY(res == 1);

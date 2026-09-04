@@ -319,6 +319,50 @@ class TestBcbAesGcm(TestAgent):
                 )
             )
 
+    def test_exampleA_2_acceptor_failure_wrapped_tooshort(self):
+        input_diag = """\
+[_
+    [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+    [12, 2, 1, 0, << [1], 2, 1, [2, [2, 1]], [[1, h'5477656C7665313231323132'], [2, 1], [3, h'69C411276FEC'], [4, 0]], [[[1, h'EFA4B5AC0108E3816C5606479801BC04']]] >>],
+    [1, 1, 0, 0, h'3A09C1E63FE23A7F66A59C7303837241E070B02619FC59C5214A22F08CD70795E73E9A']
+]
+"""
+
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=".*<ERROR>.* Wrapped key size 6 is too small to unwrap",
+                sec_src_eid="ipn:1.0",
+                policy_config="data/default-scs/policy-exA.2-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ERR,
+            )
+        )
+
+    def test_exampleA_2_acceptor_failure_wrapped_badlength(self):
+        input_diag = """\
+[_
+    [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+    [12, 2, 1, 0, << [1], 2, 1, [2, [2, 1]], [[1, h'5477656C7665313231323132'], [2, 1], [3, h'69C411276FECDDC4780DF42C8A2AF89296FABF34D7FAE70000'], [4, 0]], [[[1, h'EFA4B5AC0108E3816C5606479801BC04']]] >>],
+    [1, 1, 0, 0, h'3A09C1E63FE23A7F66A59C7303837241E070B02619FC59C5214A22F08CD70795E73E9A']
+]
+"""
+
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=".*<ERROR>.* Wrapped key size 25 is not a multiple of 8",
+                sec_src_eid="ipn:1.0",
+                policy_config="data/default-scs/policy-exA.2-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ERR,
+            )
+        )
+
     def test_exampleA_2_acceptor_failure_aes_variant(self):
         with sc_config_modifier(
             orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.2-accept.json"),
