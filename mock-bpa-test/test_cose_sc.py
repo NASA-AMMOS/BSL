@@ -420,7 +420,7 @@ class TestCoseScEncrypt0(TestAgent):
     [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
 ]
 """
-        
+
         self._single_test(
             _TestCase(
                 input_data=input_diag,
@@ -496,7 +496,7 @@ class TestCoseScEncrypt0(TestAgent):
     [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
 ]
 """
-        
+
         self._single_test(
             _TestCase(
                 input_data=input_diag,
@@ -518,7 +518,7 @@ class TestCoseScEncrypt0(TestAgent):
     [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
 ]
 """
-        
+
         self._single_test(
             _TestCase(
                 input_data=input_diag,
@@ -540,7 +540,7 @@ class TestCoseScEncrypt0(TestAgent):
     [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
 ]
 """
-        
+
         self._single_test(
             _TestCase(
                 input_data=input_diag,
@@ -562,7 +562,7 @@ class TestCoseScEncrypt0(TestAgent):
     [1, 1, 0, 2, h'1FD25F64A2EEE2FF1A1AB29812BA221874380974C13B', h'2086C017']
 ]
 """
-        
+
         self._single_test(
             _TestCase(
                 input_data=input_diag,
@@ -632,6 +632,28 @@ class TestCoseScEncrypt(TestAgent):
                 key_set="data/cose-sc/keyset-1.cbordiag",
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_exampleA_6_acceptor_invalid_missing_salt(self):
+        input_diag = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [12, 2, 1, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[96, << [<< {1: 3} >>, {5: h'6F3093EBA5D85143C3DC484A'}, null, [[<< {1: -11} >>, {4: 'ExampleA.6'}, '']]] >>]]] >>],
+    [1, 1, 0, 2, h'6D0664951176F40600518B5C32A2A2137871F1F045AD', h'D7042DE5']
+]
+"""
+
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=".*<ERROR>.* Missing required salt header",
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-any-bcb-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ERR,
             )
         )
 

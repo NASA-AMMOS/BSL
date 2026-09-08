@@ -1545,6 +1545,7 @@ static void BSLX_CoseSc_HkdfContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipien
     }
 
     BSL_Data_t salt;
+    BSL_Data_Init(&salt);
     if (ctx->is_source)
     {
         // override algorithm default length
@@ -1553,7 +1554,6 @@ static void BSLX_CoseSc_HkdfContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipien
             salt_len = ctx->salt_length;
         }
 
-        BSL_Data_Init(&salt);
         res = BSLX_CoseSc_GenerateNonce(ctx->keyhandle, &salt, NULL, &ctx->salt_base, ctx->opt_salt_offset,
                                         ctx->salt_offset, salt_len);
         if (BSL_SUCCESS != res)
@@ -1609,10 +1609,16 @@ static void BSLX_CoseSc_HkdfContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipien
         // GCOV_EXCL_STOP
     }
 
-    if (BSL_SUCCESS != BSL_Crypto_KDF(ctx->keyhandle, bsl_kdf, &salt, &kdf_ctx_enc, ctx->tgt_keylen, &ctx->cekhandle))
+    if (BSL_SUCCESS == ctx->status)
     {
-        BSL_LOG_ERR("Failed to derive content key");
-        ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        res = BSL_Crypto_KDF(ctx->keyhandle, bsl_kdf, &salt, &kdf_ctx_enc, ctx->tgt_keylen, &ctx->cekhandle);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to derive content key");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+        // GCOV_EXCL_STOP
     }
 
     BSL_Data_Deinit(&kdf_ctx_enc);
@@ -2087,9 +2093,8 @@ static void BSLX_CoseSc_GenerateIV(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *h
         return;
     }
 
-    int res =
-        BSLX_CoseSc_GenerateNonce(ctx->keyhandle, &ctx->full_iv, keyparam ? &ctx->partial_iv : NULL, &baseiv_view,
-                                  ctx->opt_iv_offset, ctx->iv_offset, BSLX_COSEMSG_AESGCM_IV_LEN);
+    int res = BSLX_CoseSc_GenerateNonce(ctx->keyhandle, &ctx->full_iv, keyparam ? &ctx->partial_iv : NULL, &baseiv_view,
+                                        ctx->opt_iv_offset, ctx->iv_offset, BSLX_COSEMSG_AESGCM_IV_LEN);
     if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to generate IV");
