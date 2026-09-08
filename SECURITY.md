@@ -29,19 +29,14 @@ updates.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 2.0.0   | :white_check_mark: |
+| 2.0.x   | :white_check_mark: |
 | 1.1.x   | :white_check_mark: |
 | < 1.1   | :x:                |
 
 ## Reporting a Vulnerability
 
-To report a vulnerability, create a new ticket under the Issues
-tab > New Issue button. Give the ticket a descriptive title and 
-put as much info as possible in ticket description like how to
-recreate the bug. You can tag specific members of the BSL 
-development team (using @) in either the ticket description or 
-as a comment on the ticket. The BSL repo is routinely monitored 
-for new tickets, and once your ticket is found, it will be triaged
-by a member of the BSL team, who assign it the "bug" label and an
-appropriate Criticality label (CRIT-1, CRIT-2, etc.) for the
-severity of issue. 
+To report a security vulnerability, please create a new [draft security advisory](https://github.com/NASA-AMMOS/BSL/security/advisories/new) under the [Security and Quality](https://github.com/NASA-AMMOS/BSL/security) section of this repository.
+Give the draft a descriptive title and put as much information as possible in the description description, specifically how to recreate the issue.
+You can tag specific members of the BSL development team (using @) in either the description or as a comment on the draft.
+The BSL repo is routinely monitored for new tickets, and once your ticket is found, it will be triaged by a member of the BSL team.
+If it is found to be valid, an issue ticket will be created and marked with appropriate labels according to the [Ticket Workflow](https://github.com/NASA-AMMOS/BSL/wiki/Ticket-Workflow).
