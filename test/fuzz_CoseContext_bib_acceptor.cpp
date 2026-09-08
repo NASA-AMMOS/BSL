@@ -21,7 +21,7 @@
  */
 /** @file
  * @ingroup fuzz_test
- * @brief Fuzz the COSE Context secop processing as a loose acceptor.
+ * @brief Fuzz the COSE Context operation processing as a loose acceptor.
  */
 #include "TestUtils.h"
 

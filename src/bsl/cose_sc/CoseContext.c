@@ -1938,8 +1938,8 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
     }
     BSLX_CoseSc_ChunkList_clear(chunklist);
 
-    size_t tag_len = 0;
-    size_t read_len = 0;
+    size_t tag_len   = 0;
+    size_t read_len  = 0;
     size_t write_len = 0;
     if (BSL_SUCCESS == ctx->status)
     {
