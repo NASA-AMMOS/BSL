@@ -196,7 +196,8 @@ int bsl_mock_encode_bundle(QCBOREncodeContext *enc, const MockBPA_Bundle_t *bund
     MockBPA_BlockList_it_t bit;
     for (MockBPA_BlockList_it(bit, bundle->blocks); !MockBPA_BlockList_end_p(bit); MockBPA_BlockList_next(bit))
     {
-        const MockBPA_CanonicalBlock_t *blk = MockBPA_BlockList_cref(bit);
+        MockBPA_CanonicalBlockPtr_t *const *blk_ptr = MockBPA_BlockList_cref(bit);
+        const MockBPA_CanonicalBlock_t     *blk     = MockBPA_CanonicalBlockPtr_cref(*blk_ptr);
         bsl_mock_encode_canonical(enc, blk);
     }
 

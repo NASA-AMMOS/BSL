@@ -156,7 +156,7 @@ class TestBibHmacSha(TestAgent):
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_1_WITH_BIB,
-                    expected_output=".*<ERROR>.* Auth tag result mismatched",
+                    expected_output=".*<ERROR>.*bib hmac result mismatched",
                     sec_src_eid="ipn:1.0",
                     policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,

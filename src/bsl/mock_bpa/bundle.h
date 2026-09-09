@@ -34,6 +34,7 @@
 #include <m-algo.h>
 #include <m-bptree.h>
 #include <m-deque.h>
+#include <m-shared-ptr.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,18 +94,36 @@ int MockBPA_CanonicalBlock_cmp(const MockBPA_CanonicalBlock_t *block_a, const Mo
 /// M*LIB OPLIST for ::MockBPA_CanonicalBlock_t
 #define M_OPL_MockBPA_CanonicalBlock_t() M_OPEXTEND(M_POD_OPLIST, CMP(API_6(MockBPA_CanonicalBlock_cmp)))
 
+/** @struct MockBPA_CanonicalBlockPtr_t
+ * Shared pointer to stable ::MockBPA_CanonicalBlock_t storage.
+ */
+/// @cond Doxygen_Suppress
+// GCOV_EXCL_START
+M_SHARED_WEAK_PTR_DEF(MockBPA_CanonicalBlockPtr, MockBPA_CanonicalBlock_t, M_OPL_MockBPA_CanonicalBlock_t())
+// GCOV_EXCL_STOP
+/// @endcond
+
+/** Block ptr comparison which will order by block number in descending order
+ */
+int MockBPA_BlockListPtr_cmp(MockBPA_CanonicalBlockPtr_t *const *block_a_ptr,
+                             MockBPA_CanonicalBlockPtr_t *const *block_b_ptr);
+
+#define M_OPL_MockBPA_CanonicalBlockPtr_t()                                                      \
+    M_OPEXTEND(M_SHARED_PTR_OPLIST(MockBPA_CanonicalBlockPtr, M_OPL_MockBPA_CanonicalBlock_t()), \
+               CMP(API_6(MockBPA_BlockListPtr_cmp)))
+
 /** @struct MockBPA_BlockList_t
- * An ordered list of ::MockBPA_CanonicalBlock_t storage
+ * An ordered list of ::MockBPA_CanonicalBlock_t shared pointers
  * with fast size access.
  * BTSD is not managed by this list, but by the BPA itself.
  */
 /** @struct MockBPA_BlockByNum_t
- * A lookup from unique block number to ::MockBPA_CanonicalBlock_t pointer.
+ * A non-owning lookup from unique block number to ::MockBPA_CanonicalBlock_t pointer.
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_DEQUE_DEF(MockBPA_BlockList, MockBPA_CanonicalBlock_t, M_OPL_MockBPA_CanonicalBlock_t())
-M_ALGO_DEF(MockBPA_BlockList, M_DEQUE_OPLIST(MockBPA_BlockList, M_OPL_MockBPA_CanonicalBlock_t()))
+M_DEQUE_DEF(MockBPA_BlockList, MockBPA_CanonicalBlockPtr_t *, M_OPL_MockBPA_CanonicalBlockPtr_t())
+M_ALGO_DEF(MockBPA_BlockList, M_DEQUE_OPLIST(MockBPA_BlockList, M_OPL_MockBPA_CanonicalBlockPtr_t()))
 M_BPTREE_DEF2(MockBPA_BlockByNum, 4, uint64_t, M_BASIC_OPLIST, MockBPA_CanonicalBlock_t *, M_PTR_OPLIST)
 // GCOV_EXCL_STOP
 /// @endcond
