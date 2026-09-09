@@ -160,8 +160,7 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
 
 static bool BSLP_SecOperHasConflict(const BSL_SecOper_t *sec_oper, const BSLP_SecOperPtrList_t secops)
 {
-    if (!BSL_SecOper_IsBIB(sec_oper)
-        || (!BSL_SecOper_IsRoleVerifier(sec_oper) && !BSL_SecOper_IsRoleAcceptor(sec_oper)))
+    if (!BSL_SecOper_IsBIB(sec_oper) || BSL_SecOper_IsRoleSource(sec_oper))
     {
         return false;
     }
