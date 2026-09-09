@@ -220,7 +220,8 @@ M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRulePtr_t *, M_OPL_BSLP_PolicyRulePt
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
 // GCOV_EXCL_START
-M_DICT_DEF2(BSLP_PolicyNoRuleActionMap, BSL_PolicyLocation_e, M_BASIC_OPLIST, BSL_PolicyAction_e, M_ENUM_OPLIST(BSL_PolicyAction_e, BSL_POLICYACTION_UNDEFINED))
+M_DICT_DEF2(BSLP_PolicyNoRuleActionMap, BSL_PolicyLocation_e, M_BASIC_OPLIST, BSL_PolicyAction_e,
+            M_ENUM_OPLIST(BSL_PolicyAction_e, BSL_POLICYACTION_UNDEFINED))
 // GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond
