@@ -40,7 +40,7 @@ void BSL_SecurityActionSet_Init(BSL_SecurityActionSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(BSL_SecurityActionSet_t));
-    self->immediate = BSL_POLICYACTION_NOTHING;
+    self->immediate        = BSL_POLICYACTION_NOTHING;
     self->immediate_reason = BSL_REASONCODE_NO_ADDITIONAL_INFO;
     BSL_SecActionList_init(self->actions);
 }
@@ -51,21 +51,22 @@ void BSL_SecurityActionSet_Deinit(BSL_SecurityActionSet_t *self)
     BSL_SecActionList_clear(self->actions);
 }
 
-void BSL_SecurityActionSet_SetImmediate(BSL_SecurityActionSet_t *self, BSL_PolicyAction_e immediate, BSL_ReasonCode_t reason)
+void BSL_SecurityActionSet_SetImmediate(BSL_SecurityActionSet_t *self, BSL_PolicyAction_e immediate,
+                                        BSL_ReasonCode_t reason)
 {
     ASSERT_ARG_NONNULL(self);
-    switch(immediate)
+    switch (immediate)
     {
-    case BSL_POLICYACTION_NOTHING:
-    case BSL_POLICYACTION_DROP_BUNDLE:
-        self->immediate = immediate;
-        self->immediate_reason = reason;
-        break;
-    case BSL_POLICYACTION_UNDEFINED:
-    case BSL_POLICYACTION_DROP_BLOCK:
-    default:
-        BSL_LOG_ERR("Ignoring invalid immediate code %d", immediate);
-        break;
+        case BSL_POLICYACTION_NOTHING:
+        case BSL_POLICYACTION_DROP_BUNDLE:
+            self->immediate        = immediate;
+            self->immediate_reason = reason;
+            break;
+        case BSL_POLICYACTION_UNDEFINED:
+        case BSL_POLICYACTION_DROP_BLOCK:
+        default:
+            BSL_LOG_ERR("Ignoring invalid immediate code %d", immediate);
+            break;
     }
 }
 

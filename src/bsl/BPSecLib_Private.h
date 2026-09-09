@@ -1005,7 +1005,8 @@ void BSL_SecurityActionSet_Deinit(BSL_SecurityActionSet_t *self);
  * @param immediate The immediate action to take.
  * This must be one of ::BSL_POLICYACTION_NOTHING (the default) or ::BSL_POLICYACTION_DROP_BUNDLE.
  */
-void BSL_SecurityActionSet_SetImmediate(BSL_SecurityActionSet_t *self, BSL_PolicyAction_e immediate, BSL_ReasonCode_t reason);
+void BSL_SecurityActionSet_SetImmediate(BSL_SecurityActionSet_t *self, BSL_PolicyAction_e immediate,
+                                        BSL_ReasonCode_t reason);
 
 /** @brief Append a security operation to the security action set
  *
