@@ -708,7 +708,7 @@ static void MockBPA_Agent_DumpTelemetry(MockBPA_Agent_t *agent)
 /** Process a single bundle at one of the interaction points.
  *
  * @param[in] agent The agent state, which is not locked for the work thread.
- * @param[in,out] bsl The specific BSL instance to process with.
+ * @param[in,out] ctx The specific BSL instance to process with.
  * @param loc The interaction point for policy use.
  * @param[in,out] bundle The bundle to process.
  * @return Zero if successful.
