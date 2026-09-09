@@ -40,6 +40,8 @@ void BSL_SecurityActionSet_Init(BSL_SecurityActionSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     memset(self, 0, sizeof(BSL_SecurityActionSet_t));
+    self->immediate = BSL_POLICYACTION_NOTHING;
+    self->immediate_reason = BSL_REASONCODE_NO_ADDITIONAL_INFO;
     BSL_SecActionList_init(self->actions);
 }
 
@@ -47,6 +49,24 @@ void BSL_SecurityActionSet_Deinit(BSL_SecurityActionSet_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     BSL_SecActionList_clear(self->actions);
+}
+
+void BSL_SecurityActionSet_SetImmediate(BSL_SecurityActionSet_t *self, BSL_PolicyAction_e immediate, BSL_ReasonCode_t reason)
+{
+    ASSERT_ARG_NONNULL(self);
+    switch(immediate)
+    {
+    case BSL_POLICYACTION_NOTHING:
+    case BSL_POLICYACTION_DROP_BUNDLE:
+        self->immediate = immediate;
+        self->immediate_reason = reason;
+        break;
+    case BSL_POLICYACTION_UNDEFINED:
+    case BSL_POLICYACTION_DROP_BLOCK:
+    default:
+        BSL_LOG_ERR("Ignoring invalid immediate code %d", immediate);
+        break;
+    }
 }
 
 int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_SecurityAction_t *action)
@@ -67,7 +87,8 @@ size_t BSL_SecurityActionSet_CountOperations(const BSL_SecurityActionSet_t *self
 {
     ASSERT_ARG_NONNULL(self);
 
-    size_t                 operation_count = 0;
+    size_t operation_count = 0;
+
     BSL_SecActionList_it_t actlist_it;
     for (BSL_SecActionList_it(actlist_it, self->actions); !BSL_SecActionList_end_p(actlist_it);
          BSL_SecActionList_next(actlist_it))

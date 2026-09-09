@@ -300,10 +300,17 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
 
     if (matched == 0)
     {
-
+        const BSL_PolicyAction_e *found = BSLP_PolicyNoRuleActionMap_cget(self->norule_action, location);
+        if (found && (*found == BSL_POLICYACTION_DROP_BUNDLE))
+        {
+            BSL_SecurityActionSet_SetImmediate(output_action_set, *found, BSL_REASONCODE_MISSING_SECOP);
+        }
+        else
+        {
+            BSL_LOG_DEBUG("No rules matched, doing nothing");
+        }
     }
 
-    // TODO replace a lot of copying with moving
     for (size_t i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
     {
         BSL_SecOper_t **secop = BSLP_SecOperPtrList_get(secops, i);
@@ -439,17 +446,6 @@ void BSLP_PolicyProvider_SetNoRuleAction(BSLP_PolicyProvider_t *self, BSL_Policy
             BSL_LOG_ERR("Invalid action %d", action);
             break;
     }
-}
-
-BSL_PolicyAction_e BSLP_PolicyProvider_GetNoRuleAction(const BSLP_PolicyProvider_t *self, BSL_PolicyLocation_e loc)
-{
-    ASSERT_ARG_NONNULL(self);
-    const BSL_PolicyAction_e *found = BSLP_PolicyNoRuleActionMap_cget(self->norule_action, loc);
-    if (!found)
-    {
-        return BSL_POLICYACTION_NOTHING;
-    }
-    return *found;
 }
 
 void BSLP_PolicyProvider_Destroy(BSLP_PolicyProvider_t *self)

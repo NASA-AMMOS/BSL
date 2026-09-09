@@ -273,14 +273,6 @@ int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *
 void BSLP_PolicyProvider_SetNoRuleAction(BSLP_PolicyProvider_t *self, BSL_PolicyLocation_e loc,
                                          BSL_PolicyAction_e action);
 
-/** Get the action to perform when no rules match a bundle.
- *
- * @param[in] self The policy storage to lookup.
- * @param loc The location for the action.
- * @return The fall-back action.
- */
-BSL_PolicyAction_e BSLP_PolicyProvider_GetNoRuleAction(const BSLP_PolicyProvider_t *self, BSL_PolicyLocation_e loc);
-
 /** Deinitialize policy provider data
  * References to this data will become invalid
  * @param self policy provider data to de-initialize

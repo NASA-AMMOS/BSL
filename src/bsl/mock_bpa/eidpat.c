@@ -440,8 +440,16 @@ int mock_bpa_eidpat_from_text(BSL_HostEIDPattern_t *pat, const char *text, void 
     const char *end  = curs + strlen(text);
     const char *pend;
 
+    BSL_LOG_DEBUG("EID pattern from %s", text);
     while (curs < end)
     {
+        // allow separator at start
+        if (*curs == '|')
+        {
+            ++curs;
+            continue;
+        }
+
         if (strncmp(curs, "*:**", 4) == 0)
         {
             // leave items empty and finish
@@ -451,17 +459,15 @@ int mock_bpa_eidpat_from_text(BSL_HostEIDPattern_t *pat, const char *text, void 
         else
         {
             bsl_mock_eidpat_item_t *item = bsl_mock_eidpat_item_list_push_back_new(obj->items);
+
+            pend = end;
             if (mock_bpa_eidpat_item_from_text(item, curs, &pend))
             {
                 bsl_mock_eidpat_item_list_reset(obj->items);
+                BSL_LOG_WARNING("EID pattern failed on item %.*s", pend - curs, curs);
                 return 3;
             }
             curs = pend;
-        }
-
-        if (*curs == '|')
-        {
-            ++curs;
         }
     }
 

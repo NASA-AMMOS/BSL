@@ -5,9 +5,11 @@
         "desc": "Integrity accept rule",
         "filter": {
           "rule_id": "1",
+          "loc": "appout",
+          "src": "ipn:0.2.1",
+          "dest": "ipn:0.1.2",
           "role": "a",
           "tgt": 1,
-          "loc": "appin",
           "sc_id": 1
         },
         "spec": {
@@ -40,9 +42,11 @@
         "desc": "Confidentiality accept rule",
         "filter": {
           "rule_id": "2",
+          "loc": "appout",
+          "src": "ipn:0.2.1",
+          "dest": "ipn:0.1.2",
           "role": "a",
           "tgt": 1,
-          "loc": "appin",
           "sc_id": 2
         },
         "spec": {
@@ -70,5 +74,8 @@
         "policy_action_on_fail": "delete_bundle"
       }
     }
-  ]
+  ],
+  "norule_action": {
+    "appout": "delete_bundle"
+  }
 }
