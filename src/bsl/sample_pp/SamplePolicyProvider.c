@@ -178,6 +178,9 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
     BSL_SecurityAction_t *action = BSL_calloc(1, BSL_SecurityAction_Sizeof());
     BSL_SecurityAction_Init(action);
 
+    // count of matched rules, regardless of action list size
+    size_t matched = 0;
+
     BSLP_SecOperPtrList_t secops;
     BSLP_SecOperPtrList_init(secops);
 
@@ -210,6 +213,9 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
             BSL_LOG_WARNING("Cannot find target block type = %" PRIu64, rule->target_block_type);
             continue;
         }
+
+        // above are conditions, below are actions
+        ++matched;
 
         BSL_SecOper_t *sec_oper = BSL_calloc(1, BSL_SecOper_Sizeof());
         BSL_SecOper_Init(sec_oper);
@@ -288,11 +294,23 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
         }
         BSL_LOG_INFO("Created sec operation for rule `%s`", m_string_get_cstr(rule->description));
     }
+
+    if (matched == 0)
+    {
+        const BSL_PolicyAction_e *found = BSLP_PolicyNoRuleActionMap_cget(self->norule_action, location);
+        if (found && (*found == BSL_POLICYACTION_DROP_BUNDLE))
+        {
+            BSL_SecurityActionSet_SetImmediate(output_action_set, *found, BSL_REASONCODE_MISSING_SECOP);
+        }
+        else
+        {
+            BSL_LOG_DEBUG("No rules matched, doing nothing");
+        }
+    }
     pthread_rwlock_unlock(&self->mutex);
 
     BSL_PrimaryBlock_deinit(&primary_block);
 
-    // TODO replace a lot of copying with moving
     for (size_t i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
     {
         BSL_SecOper_t **secop = BSLP_SecOperPtrList_get(secops, i);
@@ -382,6 +400,7 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id)
     pp->pp_id = pp_id;
     BSLP_PolicyRuleList_init(pp->rules);
     BSLP_PolicyPredicateList_init(pp->predicates);
+    BSLP_PolicyNoRuleActionMap_init(pp->norule_action);
     pthread_rwlock_init(&pp->mutex, NULL);
 
     return pp;
@@ -408,11 +427,38 @@ int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *
     return BSL_SUCCESS;
 }
 
+void BSLP_PolicyProvider_SetNoRuleAction(BSLP_PolicyProvider_t *self, BSL_PolicyLocation_e loc,
+                                         BSL_PolicyAction_e action)
+{
+    ASSERT_ARG_NONNULL(self);
+    pthread_rwlock_wrlock(&self->mutex);
+
+    switch (action)
+    {
+        case BSL_POLICYACTION_NOTHING:
+            BSLP_PolicyNoRuleActionMap_erase(self->norule_action, loc);
+            break;
+        case BSL_POLICYACTION_DROP_BUNDLE:
+            BSLP_PolicyNoRuleActionMap_set_at(self->norule_action, loc, action);
+            break;
+        case BSL_POLICYACTION_UNDEFINED:
+        case BSL_POLICYACTION_DROP_BLOCK:
+        default:
+            BSL_LOG_ERR("Invalid action %d", action);
+            break;
+    }
+
+    pthread_rwlock_unlock(&self->mutex);
+}
+
 void BSLP_PolicyProvider_Destroy(BSLP_PolicyProvider_t *self)
 {
+    ASSERT_ARG_NONNULL(self);
+
     pthread_rwlock_wrlock(&self->mutex);
     BSLP_PolicyRuleList_clear(self->rules);
     BSLP_PolicyPredicateList_clear(self->predicates);
+    BSLP_PolicyNoRuleActionMap_clear(self->norule_action);
     pthread_rwlock_unlock(&self->mutex);
 
     pthread_rwlock_destroy(&self->mutex);
