@@ -2,12 +2,14 @@
   "policyrule_set": [
     {
       "policyrule": {
-        "desc": "Integrity accept rule",
+        "desc": "Integrity verify rule",
         "filter": {
           "rule_id": "1",
+          "loc": "appin",
+          "src": "ipn:0.2.1",
+          "dest": "ipn:0.1.2",
           "role": "v",
           "tgt": 1,
-          "loc": "appin",
           "sc_id": 1
         },
         "spec": {
@@ -37,12 +39,14 @@
     },
     {
       "policyrule": {
-        "desc": "Confidentiality accept rule",
+        "desc": "Confidentiality verify rule",
         "filter": {
           "rule_id": "2",
+          "loc": "appin",
+          "src": "ipn:0.2.1",
+          "dest": "ipn:0.1.2",
           "role": "v",
           "tgt": 1,
-          "loc": "appin",
           "sc_id": 2
         },
         "spec": {

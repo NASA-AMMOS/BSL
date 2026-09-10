@@ -633,7 +633,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                 }
                 else if (policy_act == BSL_POLICYACTION_DROP_BUNDLE)
                 {
-                    TEST_ASSERT_EQUAL(false, ((MockBPA_Bundle_t *)LocalTestCtx.mock_bpa_ctr.bundle_ref.data)->retain);
+                    TEST_ASSERT_EQUAL(false, LocalTestCtx.mock_bpa_ctr.bundle->retain);
                 }
             }
             BSL_PrimaryBlock_deinit(&primary_block);
@@ -747,7 +747,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                 }
                 else if (policy_act == BSL_POLICYACTION_DROP_BUNDLE)
                 {
-                    TEST_ASSERT_EQUAL(false, ((MockBPA_Bundle_t *)LocalTestCtx.mock_bpa_ctr.bundle_ref.data)->retain);
+                    TEST_ASSERT_EQUAL(false, LocalTestCtx.mock_bpa_ctr.bundle->retain);
                 }
             }
 
@@ -830,7 +830,7 @@ void n_test_BSL_6(void)
     query_result = BSL_API_QuerySecurity(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                          BSL_POLICYLOCATION_CLOUT);
     TEST_ASSERT_EQUAL(0, query_result);
-    TEST_ASSERT_EQUAL(1, action_set.action_count);
+    TEST_ASSERT_EQUAL(1, BSL_SecActionList_size(action_set.actions));
     TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
 
     apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);

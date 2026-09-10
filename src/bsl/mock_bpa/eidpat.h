@@ -127,7 +127,7 @@ typedef struct
 
 int  bsl_mock_eidpat_item_init(bsl_mock_eidpat_item_t *obj);
 void bsl_mock_eidpat_item_deinit(bsl_mock_eidpat_item_t *obj);
-int  mock_bpa_eidpat_item_from_text(bsl_mock_eidpat_item_t *item, const char *text, const char **endptr);
+int  mock_bpa_eidpat_item_from_text(bsl_mock_eidpat_item_t *item, const char *text, size_t len);
 bool mock_bpa_eidpat_item_match(const bsl_mock_eidpat_item_t *item, const bsl_mock_eid_t *eid);
 
 #define M_OPL_bsl_mock_eidpat_item_t() \

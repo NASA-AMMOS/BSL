@@ -33,6 +33,7 @@
 #include "bsl/dynamic/Variant.h"
 
 #include <m-array.h>
+#include <m-dict.h>
 #include <m-shared-ptr.h>
 #include <m-string.h>
 
@@ -72,7 +73,7 @@ typedef struct
  * @param[in] self This predicate
  * @param[in] location The ::BSL_PolicyLocation_e location in the BPA
  * @param[in] src_eid_pattern c string pattern for SOURCE matching
- * @param[in] srcsrc_eid_pattern c string pattern for SECURITY SOURCE matching
+ * @param[in] secsrc_eid_pattern c string pattern for SECURITY SOURCE matching
  * @param[in] dst_eid_pattern c string pattern for DESTINATION matching
  *
  * @returns 0 on success
@@ -164,7 +165,7 @@ typedef struct BSLP_PolicyRule_s
  *
  * @param[in] self This policy rule
  * @param rule_id The user ID number for this rule.
- * @param[in] dest Description of this rule (C-string, may be NULL)
+ * @param[in] desc Description of this rule (C-string, may be NULL)
  * @param[in] context_id Security context ID
  * @param[in] role Such as source, acceptor, etc
  * @param[in] sec_block_type Block type (BIB or BCB)
@@ -216,6 +217,15 @@ M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRulePtr_t *, M_OPL_BSLP_PolicyRulePt
 // NOLINTEND
 /// @endcond
 
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
+M_DICT_DEF2(BSLP_PolicyNoRuleActionMap, BSL_PolicyLocation_e, M_BASIC_OPLIST, BSL_PolicyAction_e,
+            M_ENUM_OPLIST(BSL_PolicyAction_e, BSL_POLICYACTION_UNDEFINED))
+// GCOV_EXCL_STOP
+// NOLINTEND
+/// @endcond
+
 /**
  * @brief Include a BPSec option on this rule.
  *
@@ -232,6 +242,8 @@ typedef struct BSLP_PolicyProvider_s
     BSLP_PolicyRuleList_t rules;
     /// Variable-length list of policy predicates
     BSLP_PolicyPredicateList_t predicates;
+    /// Action when no rules match at an interaction point
+    BSLP_PolicyNoRuleActionMap_t norule_action;
     /// ID of policy provider
     uint64_t pp_id;
     /// Mutex for all other shared data in this struct
@@ -252,6 +264,15 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id);
  */
 int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule,
                                 BSLP_PolicyPredicate_t *predicate);
+
+/** Set the action to perform when no rules match a bundle.
+ *
+ * @param[in] self The policy storage to set.
+ * @param loc The location for the action.
+ * @param action The fall-back action.
+ */
+void BSLP_PolicyProvider_SetNoRuleAction(BSLP_PolicyProvider_t *self, BSL_PolicyLocation_e loc,
+                                         BSL_PolicyAction_e action);
 
 /** Deinitialize policy provider data
  * References to this data will become invalid

@@ -157,7 +157,7 @@ typedef enum
     BSL_POLICYACTION_UNDEFINED = 0, ///< Placeholder for zero - should never occur.
     BSL_POLICYACTION_NOTHING,       ///< Do nothing, keep the block even if it fails.
     BSL_POLICYACTION_DROP_BLOCK,    ///< Drop on the target block.
-    BSL_POLICYACTION_DROP_BUNDLE    ///< Drop the entire bundle.
+    BSL_POLICYACTION_DROP_BUNDLE    ///< Delete the entire bundle.
 } BSL_PolicyAction_e;
 
 /** Determine if a particular severity is being logged.
@@ -350,16 +350,10 @@ typedef enum
     /// @brief Primary block ID (a special case)
     BSL_BLOCK_TYPE_PRIMARY = 0,
     /// @brief Payload block
-    BSL_BLOCK_TYPE_PAYLOAD                 = 1,
-    BSL_BLOCK_TYPE_BUNDLE_AUTH             = 2,
-    BSL_BLOCK_TYPE_PAYLOAD_INTEGRITY       = 3,
-    BSL_BLOCK_TYPE_PAYLOAD_CONFIDENTIALITY = 4,
-    BSL_BLOCK_TYPE_PREVIOUS_HOP_INSERTION  = 5,
-    BSL_BLOCK_TYPE_PREVIOUS_NODE           = 6,
-    BSL_BLOCK_TYPE_BUNDLE_AGE              = 7,
-    BSL_BLOCK_TYPE_METADATA_EXT            = 8,
-    BSL_BLOCK_TYPE_EXT_SECURITY            = 9,
-    BSL_BLOCK_TYPE_HOP_COUNT               = 10,
+    BSL_BLOCK_TYPE_PAYLOAD       = 1,
+    BSL_BLOCK_TYPE_PREVIOUS_NODE = 6,
+    BSL_BLOCK_TYPE_BUNDLE_AGE    = 7,
+    BSL_BLOCK_TYPE_HOP_COUNT     = 10,
     /// @brief Block Integrity @cite iana:bundle
     BSL_BLOCK_TYPE_BIB = 11,
     /// @brief Block Confidentiality @cite iana:bundle
@@ -726,8 +720,8 @@ size_t BSL_SecOper_ResultCount(const BSL_SecOper_t *self);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
  *
- * @param[in] self This security operation
- * @param[in] index Index of security parameter list to retrieve from
+ * @param[in] self This security operation.
+ * @param[in] param_id Unique ID of security parameter list to retrieve.
  * @return Pointer to security result if found, otherwise NULL.
  */
 const BSL_Variant_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, int64_t param_id);
@@ -863,10 +857,9 @@ typedef struct BSL_AbsSecBlock_s BSL_AbsSecBlock_t;
 /// @return size of the struct
 size_t BSL_AbsSecBlock_Sizeof(void);
 
-/** Populate a pre-allocated Abstract Security Block
+/** Initialize an Abstract Security Block struct.
  *
  * @param[in,out] self This ASB
- * @param[in] sec_context_id Security Context ID
  */
 void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self);
 
@@ -1007,6 +1000,20 @@ void BSL_SecurityActionSet_Init(BSL_SecurityActionSet_t *self);
  */
 void BSL_SecurityActionSet_Deinit(BSL_SecurityActionSet_t *self);
 
+/** Set a specific immediate action to take after querying the policy.
+ * This allows a policy provider to determine that a bundle is invalid and
+ * delete it without attempting any security operations.
+ * @warning It is the obligation of a policy provider to set this or some
+ * security operations, but probably not both.
+ *
+ * @param[in] self The action set to modify.
+ * @param immediate The immediate action to take.
+ * This must be one of ::BSL_POLICYACTION_NOTHING (the default) or ::BSL_POLICYACTION_DROP_BUNDLE.
+ * @param reason When the action is to delete a bundle, provide a deletion reason.
+ */
+void BSL_SecurityActionSet_SetImmediate(BSL_SecurityActionSet_t *self, BSL_PolicyAction_e immediate,
+                                        BSL_ReasonCode_t reason);
+
 /** @brief Append a security operation to the security action set
  *
  * @param[in,out] self This security action set.
@@ -1080,7 +1087,6 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
  * @param[in] policy_actions A policy action set, which may contain error codes and other info. @preallocated
  * Caller-allocated, zeroed space for action set
  * @param[in,out] bundle Bundle seeking security operations
- * @param[in] location Where in the BPA lifecycle this query arises from
  * @return 0 if success
  */
 int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions,

@@ -143,15 +143,16 @@ int main(int argc, char **argv)
     int retval = 0;
     int res;
 
-    if (BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(&agent)))
+    if (BSL_SUCCESS != (res = BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(&agent))))
     {
+        BSL_LOG_CRIT("Failed to initialize host descriptors, error %d", res);
         return 2;
     }
     mock_bpa_LogOpen();
     MockBPA_KeyStore_Init();
-    if ((res = MockBPA_Agent_Init(&agent, &policy)))
+    if (BSL_SUCCESS != (res = MockBPA_Agent_Init(&agent, &policy)))
     {
-        BSL_LOG_ERR("Failed to initialize mock BPA, error %d", res);
+        BSL_LOG_CRIT("Failed to initialize mock BPA, error %d", res);
         retval = 2;
     }
     if (!retval)
