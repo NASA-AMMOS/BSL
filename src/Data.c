@@ -161,12 +161,14 @@ int BSL_Data_Resize(BSL_Data_t *data, size_t len)
         data->ptr = NULL;
     }
     BSL_DataPtr_t got = BSL_realloc(data->ptr, len);
+    // GCOV_EXCL_START
     if (UNLIKELY(!got))
     {
         bsl_data_int_reset(data);
         BSL_LOG_CRIT("Failed to realloc");
         return BSL_ERR_INSUFFICIENT_SPACE;
     }
+    // GCOV_EXCL_STOP
     if (need_cpy)
     {
         // copy old data only when it was a view

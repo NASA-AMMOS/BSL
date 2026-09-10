@@ -230,8 +230,11 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     }
 
     // close write after read
-    BSL_SeqReader_Destroy(btsd_read);
-    if (NULL != btsd_write)
+    if (btsd_read)
+    {
+        BSL_SeqReader_Destroy(btsd_read);
+    }
+    if (btsd_write)
     {
         BSL_SeqWriter_Destroy(btsd_write);
     }
@@ -304,10 +307,7 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
 
-        /**
-         * wrapped key always 8 bytes greater than CEK @cite rfc3394 (2.2.1)
-         */
-        if (BSL_SUCCESS != BSL_Data_InitBuffer(&bcb_context->wrapped_key, keysize + 8))
+        if (BSL_SUCCESS != BSL_Data_Init(&bcb_context->wrapped_key))
         {
             BSL_LOG_ERR("Failed to allocate wrapped key");
             BSL_Crypto_ClearGeneratedKeyHandle(cipher_key);
