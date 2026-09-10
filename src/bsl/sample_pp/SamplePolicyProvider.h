@@ -202,6 +202,7 @@ typedef struct BSLP_PolicyProvider_s BSLP_PolicyProvider_t;
  * Data owned by BPA, reference should be provided to BSL library context(s)
  * @param pp_id policy provider id (must be > 0)
  * @return valid pointer to dynamically allocated policy provider
+ * @since v2.0.0 renamed from _Init() for consistency
  */
 BSLP_PolicyProvider_t *BSLP_PolicyProvider_New(uint64_t pp_id);
 
@@ -217,6 +218,7 @@ int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *
  *
  * @param[in] self policy provider
  * @return The number of rules present.
+ * @since v2.0.0
  */
 size_t BSLP_PolicyProvider_RuleCount(BSLP_PolicyProvider_t *self);
 
