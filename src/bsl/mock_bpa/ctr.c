@@ -66,7 +66,7 @@ void mock_bpa_ctr_sort_blocks(mock_bpa_ctr_t *ctr)
 int mock_bpa_ctr_decode(mock_bpa_ctr_t *ctr)
 {
     BSL_CHKERR1(ctr);
-    MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
+    MockBPA_Bundle_t *bundle = ctr->bundle;
     BSL_CHKERR1(bundle);
 
     MockBPA_Bundle_Deinit(bundle);
@@ -78,7 +78,7 @@ int mock_bpa_ctr_decode(mock_bpa_ctr_t *ctr)
 int mock_bpa_ctr_encode(mock_bpa_ctr_t *ctr)
 {
     BSL_CHKERR1(ctr);
-    const MockBPA_Bundle_t *bundle = ctr->bundle_ref.data;
+    const MockBPA_Bundle_t *bundle = ctr->bundle;
     BSL_CHKERR1(bundle);
 
     return BSL_CBOR_Encode_Twopass(&ctr->encoded, (BSL_CBOR_Encode_f)&bsl_mock_encode_bundle, bundle);

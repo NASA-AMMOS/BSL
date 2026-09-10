@@ -84,6 +84,8 @@ M_BUFFER_DEF(MockBPA_data_queue, mock_bpa_ctr_ptr_t *, MOCKBPA_DATA_QUEUE_SIZE, 
  */
 typedef struct
 {
+    /// Interaction point enum value
+    BSL_PolicyLocation_e loc;
     /// Policy provider for the #bsl
     BSLP_PolicyProvider_t *policy;
     /// BSL context instance
@@ -195,6 +197,11 @@ int MockBPA_Agent_Exec(MockBPA_Agent_t *agent);
  * @sa MockBPA_Agent_Start()
  */
 int MockBPA_Agent_Join(MockBPA_Agent_t *agent);
+
+/** Process a single bundle item at a single interaction point.
+ * @warning This is an interface for testing only, it is used internally by agent workers.
+ */
+int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t *ctx, mock_bpa_ctr_t *item);
 
 #ifdef __cplusplus
 } // extern C
