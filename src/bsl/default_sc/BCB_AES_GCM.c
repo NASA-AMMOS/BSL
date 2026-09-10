@@ -379,8 +379,14 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
     }
 
     // close write after read
-    BSL_SeqReader_Destroy(btsd_read);
-    BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
+    if (btsd_read)
+    {
+        BSL_SeqReader_Destroy(btsd_read);
+    }
+    if (btsd_write)
+    {
+        BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
+    }
 
     BSL_Cipher_Deinit(&cipher);
 

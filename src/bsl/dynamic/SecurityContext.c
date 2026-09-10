@@ -217,6 +217,7 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, const BSL_BundleRe
     CHK_PROPERTY(BSL_SUCCESS == res);
 
     BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, sec_blk.block_num);
+    CHK_PROPERTY(btsd_read);
     BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
     BSL_SeqReader_Destroy(btsd_read);
 

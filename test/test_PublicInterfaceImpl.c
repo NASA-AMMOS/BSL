@@ -628,6 +628,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
 
             BSL_SeqReader_t *reader_before =
                 BSL_BundleCtx_ReadBTSD(&LocalTestCtx.mock_bpa_ctr.bundle_ref, target_block);
+            TEST_ASSERT_NOT_NULL(reader_before);
             BSL_SeqReader_Get(reader_before, btsd_buf_before, &buf_sz_before);
 
             query_result = BSL_API_QuerySecurity(&LocalTestCtx.bsl, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
@@ -666,6 +667,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
 
                     BSL_SeqReader_t *reader_after =
                         BSL_BundleCtx_ReadBTSD(&LocalTestCtx.mock_bpa_ctr.bundle_ref, target_block);
+                    TEST_ASSERT_NOT_NULL(reader_after);
                     BSL_SeqReader_Get(reader_after, btsd_buf_after, &buf_sz_after);
 
                     TEST_ASSERT_EQUAL(buf_sz_after, buf_sz_before);
