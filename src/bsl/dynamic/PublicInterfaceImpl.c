@@ -220,6 +220,14 @@ int BSL_API_ApplySecurity(BSL_LibCtx_t *bsl, BSL_BundleRef_t *bundle, const BSL_
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(policy_actions);
 
+    if (policy_actions->immediate == BSL_POLICYACTION_DROP_BUNDLE)
+    {
+        // short circuit for deletion
+        BSL_LOG_INFO("Immediate deletion: reason=%d", policy_actions->immediate_reason);
+        BSL_BundleCtx_DeleteBundle(bundle, policy_actions->immediate_reason);
+        return BSL_SUCCESS;
+    }
+
     int exec_code = BSL_SecCtx_ExecutePolicyActionSet(bsl, bundle, policy_actions);
     if (exec_code < BSL_SUCCESS)
     {

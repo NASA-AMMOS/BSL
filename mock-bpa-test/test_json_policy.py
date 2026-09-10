@@ -22,11 +22,11 @@
 from _test_util import BundleDestLoc, DataFormat, _TestCase
 from test_bpa import TestAgent
 
-# Test Cases utilizing JSON policy definitions with the Default contexts
 
+class TestSamplePolicy(TestAgent):
+    """Test Cases utilizing JSON policy definitions with the Default contexts"""
 
-class Test_ION_JSON_Policy(TestAgent):
-    def test_json_source_bib_bcb(self):
+    def test_source_bib_bcb(self):
         self._single_test(
             _TestCase(
                 # A bundle with just the **payload** block
@@ -82,8 +82,33 @@ class Test_ION_JSON_Policy(TestAgent):
             )
         )
 
+    def test_source_norule_delete(self):
+        self._single_test(
+            _TestCase(
+                input_data=[
+                    [7, 0, 0, [2, [3, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                    [
+                        1,
+                        1,
+                        0,
+                        0,
+                        bytes.fromhex(
+                            "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164"
+                        ),
+                    ],
+                ],
+                expected_output=r".*<INFO>.* Immediate deletion: reason=12",
+                policy_config="data/policy_provider_source_test.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/key_set_1.json",
+                input_data_format=DataFormat.BUNDLEARRAY,
+                expected_output_format=DataFormat.ERR,
+                use_bcb_rng=True,
+            )
+        )
+
     # failing pending #290
-    def _test_json_verify_bib_bcb(self):
+    def _test_verify_bib_bcb(self):
         self._single_test(
             _TestCase(
                 input_data=[
@@ -147,7 +172,7 @@ class Test_ION_JSON_Policy(TestAgent):
                     ],
                 ],
                 policy_config="data/policy_provider_verify_test.json",
-                bundle_dest_loc=BundleDestLoc.APPIN,
+                bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",
                 input_data_format=DataFormat.BUNDLEARRAY,
                 expected_output_format=DataFormat.BUNDLEARRAY,
@@ -155,7 +180,7 @@ class Test_ION_JSON_Policy(TestAgent):
             )
         )
 
-    def test_json_accept_bib_bcb(self):
+    def test_accept_bib_bcb(self):
         self._single_test(
             _TestCase(
                 input_data=[

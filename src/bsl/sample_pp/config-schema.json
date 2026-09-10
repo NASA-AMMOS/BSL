@@ -24,6 +24,21 @@
         }
       }
     },
+    "policy_action_no_rules": {
+      "description": "For each interaction point, the fall-back behavior when no rules match a bundle.",
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(appin|appout|clin|clout)$": {
+          "type": "string",
+          "enum": [
+            "delete_bundle",
+            "nothing"
+          ],
+          "default": "nothing"
+        }
+      }
+    },
     "event_set": {
       "deprecated": true
     }
@@ -34,8 +49,7 @@
       "additionalProperties": false,
       "required": [
         "filter",
-        "spec",
-        "policy_action_on_fail"
+        "spec"
       ],
       "properties": {
         "desc": {
@@ -181,12 +195,14 @@
           ]
         },
         "policy_action_on_fail": {
+          "description": "The finalize behavior if the operation fails to execute.",
           "type": "string",
           "enum": [
             "delete_bundle",
             "drop_block",
             "nothing"
-          ]
+          ],
+          "default": "nothing"
         }
       }
     },

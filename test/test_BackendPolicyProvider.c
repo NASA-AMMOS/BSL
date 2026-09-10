@@ -215,7 +215,7 @@ void test_MultiplePolicyProviders(void)
 
     TEST_ASSERT_EQUAL(2, BSL_SecurityActionSet_CountActions(&action_set));
 
-    for (size_t i = 0; i < action_set.action_count; i++)
+    for (size_t i = 0; i < BSL_SecActionList_size(action_set.actions); i++)
     {
         const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, i);
         TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(act));

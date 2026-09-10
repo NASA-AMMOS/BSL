@@ -51,11 +51,17 @@ M_ARRAY_DEF(BSL_SecActionList, BSL_SecurityAction_t,
 /// @note This is intended to be a write-once, read-only struct
 struct BSL_SecurityActionSet_s
 {
+    /// Immediate BPA behavior after query instead of #actions
+    BSL_PolicyAction_e immediate;
+    /// Reason code associated with non-nothing #immediate
+    BSL_ReasonCode_t immediate_reason;
+
+    /// Actions (sequences of operations) needed by policy
     BSL_SecActionList_t actions;
-    size_t              action_count;
-    size_t              err_count;
-    size_t              invalid_act_count;
-    size_t              operation_count;
+    /// Number of policy errors encountered during execution of #actions
+    size_t err_count;
+    /// Number of #actions which failed SC validity check
+    size_t invalid_act_count;
 };
 
 #ifdef __cplusplus
