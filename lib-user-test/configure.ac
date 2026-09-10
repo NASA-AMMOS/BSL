@@ -10,7 +10,7 @@ AM_SILENT_RULES([yes]) # less verbose make output
 AC_CONFIG_SRCDIR([main.c])
 
 AC_LANG([C]) # Use C not C++
-
+AC_USE_SYSTEM_EXTENSIONS # Use POSIX
 AC_PROG_CC # check for compiler
 AX_CHECK_COMPILE_FLAG([-std=c99], [CFLAGS="$CFLAGS -std=c99"])
 AC_PROG_INSTALL
