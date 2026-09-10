@@ -148,6 +148,28 @@ class TestBibHmacSha(TestAgent):
                 )
             )
 
+    def test_exampleA_1_acceptor_valid_unknown_param(self):
+        input_diag = """\
+[_
+    [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+    [11, 2, 0, 0, << [1], 1, 1, [2, [2, 1]], [[1, 7], [3, 0], [1001, h'31323334']], [[[1, h'3BDC69B3A34A2B5D3A8554368BD1E808F606219D2A10A846EAE3886AE4ECC83C4EE550FDFB1CC636B904E2F1A73E303DCD4B6CCECE003E95E8164DCC89A156E1']]] >>],
+    [1, 1, 0, 0, h'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
+]
+"""
+
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid="ipn:1.0",
+                policy_config="data/default-scs/policy-exA.1-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
     def test_exampleA_1_acceptor_failure_key_mismatch(self):
         with sc_config_modifier(
             orig=os.path.join(OWNPATH, "data/default-scs/policy-exA.1-accept.json"),
@@ -300,6 +322,28 @@ class TestBcbAesGcm(TestAgent):
                     expected_output_format=DataFormat.CBORDIAG,
                 )
             )
+
+    def test_exampleA_2_acceptor_valid_unknown_param(self):
+        input_diag = """\
+[_
+    [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+    [12, 2, 1, 0, << [1], 2, 1, [2, [2, 1]], [[1, h'5477656C7665313231323132'], [2, 1], [3, h'69C411276FECDDC4780DF42C8A2AF89296FABF34D7FAE700'], [4, 0], [1001, h'31323334']], [[[1, h'EFA4B5AC0108E3816C5606479801BC04']]] >>],
+    [1, 1, 0, 0, h'3A09C1E63FE23A7F66A59C7303837241E070B02619FC59C5214A22F08CD70795E73E9A']
+]
+"""
+
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid="ipn:1.0",
+                policy_config="data/default-scs/policy-exA.2-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
 
     def test_exampleA_2_acceptor_failure_key_mismatch(self):
         with sc_config_modifier(

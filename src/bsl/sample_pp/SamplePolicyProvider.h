@@ -73,7 +73,7 @@ typedef struct
  * @param[in] self This predicate
  * @param[in] location The ::BSL_PolicyLocation_e location in the BPA
  * @param[in] src_eid_pattern c string pattern for SOURCE matching
- * @param[in] srcsrc_eid_pattern c string pattern for SECURITY SOURCE matching
+ * @param[in] secsrc_eid_pattern c string pattern for SECURITY SOURCE matching
  * @param[in] dst_eid_pattern c string pattern for DESTINATION matching
  *
  * @returns 0 on success
@@ -165,7 +165,7 @@ typedef struct BSLP_PolicyRule_s
  *
  * @param[in] self This policy rule
  * @param rule_id The user ID number for this rule.
- * @param[in] dest Description of this rule (C-string, may be NULL)
+ * @param[in] desc Description of this rule (C-string, may be NULL)
  * @param[in] context_id Security context ID
  * @param[in] role Such as source, acceptor, etc
  * @param[in] sec_block_type Block type (BIB or BCB)

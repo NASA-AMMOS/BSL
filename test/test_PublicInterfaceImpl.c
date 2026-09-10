@@ -608,7 +608,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                 }
                 else if (policy_act == BSL_POLICYACTION_DROP_BUNDLE)
                 {
-                    TEST_ASSERT_EQUAL(false, ((MockBPA_Bundle_t *)LocalTestCtx.mock_bpa_ctr.bundle_ref.data)->retain);
+                    TEST_ASSERT_EQUAL(false, LocalTestCtx.mock_bpa_ctr.bundle->retain);
                 }
             }
             BSL_PrimaryBlock_deinit(&primary_block);
@@ -711,7 +711,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                 }
                 else if (policy_act == BSL_POLICYACTION_DROP_BUNDLE)
                 {
-                    TEST_ASSERT_EQUAL(false, ((MockBPA_Bundle_t *)LocalTestCtx.mock_bpa_ctr.bundle_ref.data)->retain);
+                    TEST_ASSERT_EQUAL(false, LocalTestCtx.mock_bpa_ctr.bundle->retain);
                 }
             }
 

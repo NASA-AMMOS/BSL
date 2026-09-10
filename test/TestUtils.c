@@ -106,7 +106,7 @@ int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cb
         return -1;
     }
 
-    MockBPA_Bundle_t *bundle = test_ctx->mock_bpa_ctr.bundle_ref.data;
+    MockBPA_Bundle_t *bundle = test_ctx->mock_bpa_ctr.bundle;
     assert(bundle != NULL);
 
     res = mock_bpa_ctr_decode(&(test_ctx->mock_bpa_ctr));

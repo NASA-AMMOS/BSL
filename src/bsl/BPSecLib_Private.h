@@ -720,8 +720,8 @@ size_t BSL_SecOper_ResultCount(const BSL_SecOper_t *self);
 
 /** Returns a pointer to the Security Parameter at a given index in the list of all parameters.
  *
- * @param[in] self This security operation
- * @param[in] index Index of security parameter list to retrieve from
+ * @param[in] self This security operation.
+ * @param[in] param_id Unique ID of security parameter list to retrieve.
  * @return Pointer to security result if found, otherwise NULL.
  */
 const BSL_Variant_t *BSL_SecOper_FindResult(const BSL_SecOper_t *self, int64_t param_id);
@@ -851,10 +851,9 @@ typedef struct BSL_AbsSecBlock_s BSL_AbsSecBlock_t;
 /// @return size of the struct
 size_t BSL_AbsSecBlock_Sizeof(void);
 
-/** Populate a pre-allocated Abstract Security Block
+/** Initialize an Abstract Security Block struct.
  *
  * @param[in,out] self This ASB
- * @param[in] sec_context_id Security Context ID
  */
 void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self);
 
@@ -1082,7 +1081,6 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
  * @param[in] policy_actions A policy action set, which may contain error codes and other info. @preallocated
  * Caller-allocated, zeroed space for action set
  * @param[in,out] bundle Bundle seeking security operations
- * @param[in] location Where in the BPA lifecycle this query arises from
  * @return 0 if success
  */
 int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions,

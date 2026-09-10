@@ -113,7 +113,6 @@ void BSL_Data_InitMove(BSL_Data_t *data, BSL_Data_t *src);
 /** De-initialize a data struct, freeing if necessary.
  *
  * @param[in,out] data The data to de-initialize, which must not be NULL.
- * @return Zero upon success.
  * @post The struct must be initialized before using again.
  */
 void BSL_Data_Deinit(BSL_Data_t *data);
@@ -149,7 +148,8 @@ int BSL_Data_AppendFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src);
 /** Set a data struct to be a view onto an existing external bytes.
  *
  * @param[in,out] data The data to create a view from, which must not be NULL.
- * @param[in] cstr The C string pointer to create a view on, which must not be NULL.
+ * @param len The length of data for the view, which must be no larger than the initialized @c src.
+ * @param[in] src The data pointer to create a view on, which must not be NULL.
  * @return Zero upon success.
  */
 int BSL_Data_SetView(BSL_Data_t *data, size_t len, BSL_DataPtr_t src);

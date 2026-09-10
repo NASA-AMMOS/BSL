@@ -215,6 +215,7 @@ void BSLX_BIB_Deinit(BSLX_BIB_t *self)
  * Computes the Integrity-Protected Plaintext (IPPT) according to
  * Section 3.7 of RFC 9173 @cite rfc9173.
  *
+ * @param[in] self The context to read from.
  * @param[in,out] ippt_space Storage for the output, or empty to calculate
  * the needed size.
  * @return A positive value to indicate the needed size, or negative for error.

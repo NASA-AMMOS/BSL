@@ -128,16 +128,17 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
  * Matches the ::BSL_CBOR_Encode_f signature.
  *
  * @param enc The encoder to write to.
- * @param[in,out] self The initialized ASB to populate.
+ * @param[in,out] obj The initialized ASB to populate.
+ * @return Zero if successful.
  */
 int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *obj);
 
 /** Decodes and populates this ASB from a CBOR string.
  * Matches the ::BSL_CBOR_Decode_f signature.
  *
+ * @param[in] dec The CBOR decoder to read from.
  * @param[in,out] self This allocated, but uninitialized ASB to populate.
- * @param[in] buf A buffer containing a CBOR string representing the ASB
- * @return Negative on error
+ * @return Zero if successful, negative on error
  */
 int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self);
 
