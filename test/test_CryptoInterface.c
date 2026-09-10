@@ -573,6 +573,11 @@ TEST_CASE("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
 TEST_CASE("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
           "00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F",
           "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21")
+// invalid CEK lengths
+TEST_CASE("000102030405060708090A0B0C0D0E0F", "00", NULL)
+TEST_CASE("000102030405060708090A0B0C0D0E0F", "00112233445566", NULL)
+TEST_CASE("000102030405060708090A0B0C0D0E0F", "001122334455667788", NULL)
+TEST_CASE("000102030405060708090A0B0C0D0E0F", "00112233445566778899AABBCCDDEE", NULL)
 void test_key_wrap(const char *kek, const char *cek, const char *expected)
 {
     // convert strings to bytedata
@@ -594,15 +599,32 @@ void test_key_wrap(const char *kek, const char *cek, const char *expected)
     TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_Crypto_GetRegistryKeyName("cek", &cek_handle));
 
     BSL_Data_t wrapped_key;
-    BSL_Data_InitBuffer(&wrapped_key, cek_data.len + 8);
-    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_Crypto_WrapKey(kek_handle, cek_handle, &wrapped_key));
+    BSL_Data_Init(&wrapped_key);
+    int res = BSL_Crypto_WrapKey(kek_handle, cek_handle, &wrapped_key);
 
-    TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(expected, wrapped_key));
+    if (expected)
+    {
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, res);
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(expected, wrapped_key));
+    }
+    else
+    {
+        TEST_ASSERT_NOT_EQUAL_INT(BSL_SUCCESS, res);
+        TEST_ASSERT_EQUAL_size_t(0, wrapped_key.len);
+    }
 
     BSL_Crypto_KeyStats_t stats;
     BSL_Crypto_GetKeyStatistics(kek_handle, &stats);
-    TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
-    TEST_ASSERT_EQUAL_size_t(cek_data.len, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+    if (expected)
+    {
+        TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+        TEST_ASSERT_EQUAL_size_t(cek_data.len, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+    }
+    else
+    {
+        TEST_ASSERT_EQUAL_size_t(0, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+        TEST_ASSERT_EQUAL_size_t(0, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+    }
 
     BSL_Crypto_ReleaseKeyHandle(cek_handle);
     BSL_Crypto_ReleaseKeyHandle(kek_handle);
@@ -628,6 +650,10 @@ TEST_CASE("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
 TEST_CASE("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F",
           "00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F",
           "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21")
+// invalid wrapped lengths
+TEST_CASE("000102030405060708090A0B0C0D0E0F", NULL, "00")
+TEST_CASE("000102030405060708090A0B0C0D0E0F", NULL, "00112233445566")
+TEST_CASE("000102030405060708090A0B0C0D0E0F", NULL, "001122334455667788")
 void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrapped_key)
 {
     // convert strings to bytedata
@@ -637,7 +663,10 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
 
     BSL_Data_t cek_data;
     BSL_Data_Init(&cek_data);
-    TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16_cstr(&cek_data, expected_cek), 0);
+    if (expected_cek)
+    {
+        TEST_ASSERT_EQUAL(BSL_TestUtils_DecodeBase16_cstr(&cek_data, expected_cek), 0);
+    }
 
     BSL_Data_t wrapped_key_data;
     BSL_Data_Init(&wrapped_key_data);
@@ -648,19 +677,38 @@ void test_key_unwrap(const char *kek, const char *expected_cek, const char *wrap
     BSL_Crypto_KeyHandle_t kek_handle;
     TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_Crypto_GetRegistryKeyName("kek", &kek_handle));
 
-    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_Crypto_AddRegistryKeyName("expect", cek_data.ptr, cek_data.len));
-    BSL_Crypto_KeyHandle_t expect_handle;
-    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_Crypto_GetRegistryKeyName("expect", &expect_handle));
+    BSL_Crypto_KeyHandle_t expect_handle = NULL;
+    if (expected_cek)
+    {
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_Crypto_AddRegistryKeyName("expect", cek_data.ptr, cek_data.len));
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_Crypto_GetRegistryKeyName("expect", &expect_handle));
+    }
 
     BSL_Crypto_KeyHandle_t cek_handle;
-    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_Crypto_UnwrapKey(kek_handle, &wrapped_key_data, &cek_handle));
+    int                    res = BSL_Crypto_UnwrapKey(kek_handle, &wrapped_key_data, &cek_handle);
 
-    TEST_ASSERT_TRUE(BSL_Crypto_CompareKeys(expect_handle, cek_handle));
+    if (expected_cek)
+    {
+        TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, res);
+        TEST_ASSERT_TRUE(BSL_Crypto_CompareKeys(expect_handle, cek_handle));
+    }
+    else
+    {
+        TEST_ASSERT_NOT_EQUAL_INT(BSL_SUCCESS, res);
+    }
 
     BSL_Crypto_KeyStats_t stats;
     BSL_Crypto_GetKeyStatistics(kek_handle, &stats);
-    TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
-    TEST_ASSERT_EQUAL_size_t(cek_data.len, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+    if (expected_cek)
+    {
+        TEST_ASSERT_EQUAL_size_t(1, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+        TEST_ASSERT_EQUAL_size_t(cek_data.len, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+    }
+    else
+    {
+        TEST_ASSERT_EQUAL_size_t(0, stats.stats[BSL_CRYPTO_KEYSTATS_TIMES_USED]);
+        TEST_ASSERT_EQUAL_size_t(0, stats.stats[BSL_CRYPTO_KEYSTATS_BYTES_PROCESSED]);
+    }
 
     BSL_Data_Deinit(&kek_data);
     BSL_Data_Deinit(&cek_data);

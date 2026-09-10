@@ -271,13 +271,17 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
                 BSL_LOG_ERR("Failed to open BTSD reader on block %" PRIu64, self->target_block.block_num);
                 retval = BSL_ERR_FAILURE;
             }
-            BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-            if (btsd_copy.len != self->target_block.btsd_len)
+            else
             {
-                BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", self->target_block.btsd_len, btsd_copy.len);
-                retval = BSL_ERR_FAILURE;
+                BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
+                if (btsd_copy.len != self->target_block.btsd_len)
+                {
+                    BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", self->target_block.btsd_len,
+                                btsd_copy.len);
+                    retval = BSL_ERR_FAILURE;
+                }
+                BSL_SeqReader_Destroy(btsd_read);
             }
-            BSL_SeqReader_Destroy(btsd_read);
             if (BSL_SUCCESS != retval)
             {
                 return retval;
