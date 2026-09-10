@@ -190,77 +190,108 @@ static int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_COUNT, 1);
     BSL_Data_Deinit(&btsd_copy);
 
-    CHK_PROPERTY(BSL_AbsSecBlock_IsConsistent(&abs_sec_block));
-
-    for (size_t i = 0; i < BSLB_SecParamList_size(abs_sec_block.params); i++)
+    int retval = BSL_SUCCESS;
+    if (!BSL_AbsSecBlock_IsConsistent(&abs_sec_block))
     {
-        const BSL_SecParam_t *param = BSLB_SecParamList_cget(abs_sec_block.params, i);
-        CHK_PROPERTY(BSL_SecParam_IsConsistent(param));
-        BSLB_SecParamList_push_back(sec_oper->_param_list, *param);
+        BSL_LOG_ERR("ASB is not consistent");
+        retval = BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
-    const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
-    if (sec_context_result != BSL_SUCCESS) // || outcome->is_success == false)
+    if (BSL_SUCCESS == retval)
     {
-        BSL_LOG_ERR("BIB Sec Ctx processing for verifier/acceptor failed!");
-        BSL_AbsSecBlock_Deinit(&abs_sec_block);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_SECURITY_OPERATION_FAILED;
+        for (size_t i = 0; i < BSLB_SecParamList_size(abs_sec_block.params); i++)
+        {
+            const BSL_SecParam_t *param = BSLB_SecParamList_cget(abs_sec_block.params, i);
+            if (!BSL_SecParam_IsConsistent(param))
+            {
+                BSL_LOG_ERR("ASB parameter is not consistent");
+                retval = BSL_ERR_SECURITY_OPERATION_FAILED;
+                break;
+            }
+            // these options cannot come from an ASB
+            if (param->param_id >= BSL_SECPARAM_TYPE_INT_STARTINDEX)
+            {
+                BSL_LOG_WARNING("Ignoring invalid ASB parameter ID: %" PRIu64, param->param_id);
+                continue;
+            }
+            BSLB_SecParamList_push_back(sec_oper->_param_list, *param);
+        }
     }
 
-    if (!BSL_SecOutcome_IsInAbsSecBlock(outcome, &abs_sec_block))
+    if (BSL_SUCCESS == retval)
     {
-        BSL_LOG_ERR("ASB Does not contain expeceted sec params and outcomes");
-        BSL_AbsSecBlock_Deinit(&abs_sec_block);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_SECURITY_OPERATION_FAILED;
+        const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
+        if (sec_context_result != BSL_SUCCESS) // || outcome->is_success == false)
+        {
+            BSL_LOG_ERR("BIB Sec Ctx processing for verifier/acceptor failed!");
+            retval = BSL_ERR_SECURITY_OPERATION_FAILED;
+        }
     }
 
+    if (BSL_SUCCESS == retval)
+    {
+        if (!BSL_SecOutcome_IsInAbsSecBlock(outcome, &abs_sec_block))
+        {
+            BSL_LOG_ERR("ASB Does not contain expeceted sec params and outcomes");
+            retval = BSL_ERR_SECURITY_OPERATION_FAILED;
+        }
+    }
+
+    BSL_TlmCounterIndex_e tlm_index;
     // If secop is to verify, processing is complete
     if (BSL_SecOper_IsRoleVerifier(sec_oper))
     {
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_VERIFIER_COUNT, 1);
-        BSL_AbsSecBlock_Deinit(&abs_sec_block);
-        return BSL_SUCCESS;
-    }
-
-    // TODO/FIXME - This logic seems to be correct, but should be refactored and simplified.
-    // There are too many branches/conditionals each with their own return statement.
-
-    // If secop is to accept, BIB must be removed from bundle
-    uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
-    int      status           = BSL_AbsSecBlock_StripResults(&abs_sec_block, target_block_num);
-    if (status < 0)
-    {
-        BSL_LOG_ERR("Failure to strip ASB of results");
-        BSL_AbsSecBlock_Deinit(&abs_sec_block);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_FAILURE;
-    }
-
-    if (BSL_AbsSecBlock_IsEmpty(&abs_sec_block))
-    {
-        if (BSL_BundleCtx_RemoveBlock(bundle, sec_blk.block_num) != BSL_SUCCESS)
-        {
-            BSL_LOG_ERR("Failed to remove block when ASB is empty");
-            BSL_AbsSecBlock_Deinit(&abs_sec_block);
-            BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-            return BSL_ERR_HOST_CALLBACK_FAILED;
-        }
+        tlm_index = BSL_TLM_SECOP_VERIFIER_COUNT;
     }
     else
     {
-        int res = Encode_ASB(lib, bundle, sec_blk.block_num, &abs_sec_block);
-        if (res != BSL_SUCCESS)
+        tlm_index = BSL_TLM_SECOP_ACCEPTOR_COUNT;
+
+        if (BSL_SUCCESS == retval)
         {
-            BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-            return res;
+            // If secop is to accept, BIB must be removed from bundle
+            uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
+            int      status           = BSL_AbsSecBlock_StripResults(&abs_sec_block, target_block_num);
+            if (status < 0)
+            {
+                BSL_LOG_ERR("Failure to strip ASB of results");
+                retval = BSL_ERR_FAILURE;
+            }
+        }
+
+        if (BSL_SUCCESS == retval)
+        {
+            if (BSL_AbsSecBlock_IsEmpty(&abs_sec_block))
+            {
+                if (BSL_BundleCtx_RemoveBlock(bundle, sec_blk.block_num) != BSL_SUCCESS)
+                {
+                    BSL_LOG_ERR("Failed to remove block when ASB is empty");
+                    retval = BSL_ERR_HOST_CALLBACK_FAILED;
+                }
+            }
+            else
+            {
+                int res = Encode_ASB(lib, bundle, sec_blk.block_num, &abs_sec_block);
+                if (res != BSL_SUCCESS)
+                {
+                    retval = res;
+                }
+            }
         }
     }
-    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_ACCEPTOR_COUNT, 1);
+
+    // cleanup
+    if (BSL_SUCCESS == retval)
+    {
+        BSL_TlmCounters_IncrementCounter(lib, tlm_index, 1);
+    }
+    else
+    {
+        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
+    }
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
 
-    return BSL_SUCCESS;
+    return retval;
 }
 
 static int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
@@ -301,82 +332,118 @@ static int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_COUNT, 1);
     BSL_Data_Deinit(&btsd_copy);
 
-    CHK_PROPERTY(BSL_AbsSecBlock_IsConsistent(&abs_sec_block));
-
-    for (size_t i = 0; i < BSLB_SecParamList_size(abs_sec_block.params); i++)
+    int retval = BSL_SUCCESS;
+    if (!BSL_AbsSecBlock_IsConsistent(&abs_sec_block))
     {
-        const BSL_SecParam_t *param = BSLB_SecParamList_cget(abs_sec_block.params, i);
-        CHK_PROPERTY(BSL_SecParam_IsConsistent(param));
-        BSLB_SecParamList_push_back(sec_oper->_param_list, *param);
+        BSL_LOG_ERR("ASB is not consistent");
+        retval = BSL_ERR_SECURITY_OPERATION_FAILED;
     }
 
-    const size_t   result_count = BSLB_SecResultList_size(abs_sec_block.results);
-    BSL_SecParam_t results_as_params[result_count];
-    for (size_t i = 0; i < result_count; i++)
+    if (BSL_SUCCESS == retval)
     {
-        const BSL_SecResult_t *result = BSLB_SecResultList_get(abs_sec_block.results, i);
-        if (result->target_block_num == sec_oper->target_block_num)
+        for (size_t i = 0; i < BSLB_SecParamList_size(abs_sec_block.params); i++)
         {
-            BSL_Data_t as_data;
-            BSL_SecResult_GetAsBytestr(result, &as_data);
-
-            BSL_SecParam_t *result_param = &results_as_params[i];
-            BSL_SecParam_InitBytestr(result_param, BSL_SECPARAM_TYPE_AUTH_TAG, as_data);
-            BSLB_SecParamList_push_move(sec_oper->_param_list, result_param);
+            const BSL_SecParam_t *param = BSLB_SecParamList_cget(abs_sec_block.params, i);
+            if (!BSL_SecParam_IsConsistent(param))
+            {
+                BSL_LOG_ERR("ASB parameter is not consistent");
+                retval = BSL_ERR_SECURITY_OPERATION_FAILED;
+                break;
+            }
+            // these options cannot come from an ASB
+            if (param->param_id >= BSL_SECPARAM_TYPE_INT_STARTINDEX)
+            {
+                BSL_LOG_WARNING("Ignoring invalid ASB parameter ID: %" PRIu64, param->param_id);
+                continue;
+            }
+            BSLB_SecParamList_push_back(sec_oper->_param_list, *param);
         }
     }
 
-    const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
-    if (sec_context_result != BSL_SUCCESS)
+    if (BSL_SUCCESS == retval)
     {
-        BSL_LOG_ERR("BCB Sec Ctx processing for verifier/acceptor failed!");
-        BSL_AbsSecBlock_Deinit(&abs_sec_block);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_SECURITY_OPERATION_FAILED;
+        const size_t   result_count = BSLB_SecResultList_size(abs_sec_block.results);
+        BSL_SecParam_t results_as_params[result_count];
+        for (size_t i = 0; i < result_count; i++)
+        {
+            const BSL_SecResult_t *result = BSLB_SecResultList_get(abs_sec_block.results, i);
+            if (result->target_block_num == sec_oper->target_block_num)
+            {
+                BSL_Data_t as_data;
+                BSL_SecResult_GetAsBytestr(result, &as_data);
+
+                BSL_SecParam_t *result_param = &results_as_params[i];
+                BSL_SecParam_InitBytestr(result_param, BSL_SECPARAM_TYPE_AUTH_TAG, as_data);
+                BSLB_SecParamList_push_move(sec_oper->_param_list, result_param);
+            }
+        }
     }
 
+    if (BSL_SUCCESS == retval)
+    {
+        const int sec_context_result = (*sec_context_fn)(lib, bundle, sec_oper, outcome);
+        if (sec_context_result != BSL_SUCCESS)
+        {
+            BSL_LOG_ERR("BCB Sec Ctx processing for verifier/acceptor failed!");
+            retval = BSL_ERR_SECURITY_OPERATION_FAILED;
+        }
+    }
+
+    BSL_TlmCounterIndex_e tlm_index;
     // If secop is to verify, processing is complete
     if (BSL_SecOper_IsRoleVerifier(sec_oper))
     {
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_VERIFIER_COUNT, 1);
-        BSL_AbsSecBlock_Deinit(&abs_sec_block);
-        return BSL_SUCCESS;
-    }
-
-    // If secop is to accept, BCB must be removed from bundle
-    uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
-    int      status           = BSL_AbsSecBlock_StripResults(&abs_sec_block, target_block_num);
-    if (status < 0)
-    {
-        BSL_LOG_ERR("Failure to strip ASB of results");
-        BSL_AbsSecBlock_Deinit(&abs_sec_block);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_FAILURE;
-    }
-
-    if (BSL_AbsSecBlock_IsEmpty(&abs_sec_block))
-    {
-        if (BSL_BundleCtx_RemoveBlock(bundle, sec_blk.block_num) != BSL_SUCCESS)
-        {
-            BSL_LOG_ERR("Failed to remove block when ASB is empty");
-            BSL_AbsSecBlock_Deinit(&abs_sec_block);
-            BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-            return BSL_ERR_HOST_CALLBACK_FAILED;
-        }
+        tlm_index = BSL_TLM_SECOP_VERIFIER_COUNT;
     }
     else
     {
-        int res = Encode_ASB(lib, bundle, sec_blk.block_num, &abs_sec_block);
-        if (res != BSL_SUCCESS)
+        tlm_index = BSL_TLM_SECOP_ACCEPTOR_COUNT;
+
+        if (BSL_SUCCESS == retval)
         {
-            BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-            return res;
+            // If secop is to accept, BCB must be removed from bundle
+            uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
+            int      status           = BSL_AbsSecBlock_StripResults(&abs_sec_block, target_block_num);
+            if (status < 0)
+            {
+                BSL_LOG_ERR("Failure to strip ASB of results");
+                retval = BSL_ERR_FAILURE;
+            }
+        }
+
+        if (BSL_SUCCESS == retval)
+        {
+            if (BSL_AbsSecBlock_IsEmpty(&abs_sec_block))
+            {
+                if (BSL_BundleCtx_RemoveBlock(bundle, sec_blk.block_num) != BSL_SUCCESS)
+                {
+                    BSL_LOG_ERR("Failed to remove block when ASB is empty");
+                    retval = BSL_ERR_HOST_CALLBACK_FAILED;
+                }
+            }
+            else
+            {
+                int res = Encode_ASB(lib, bundle, sec_blk.block_num, &abs_sec_block);
+                if (res != BSL_SUCCESS)
+                {
+                    retval = res;
+                }
+            }
         }
     }
-    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_ACCEPTOR_COUNT, 1);
+
+    // cleanup
+    if (BSL_SUCCESS == retval)
+    {
+        BSL_TlmCounters_IncrementCounter(lib, tlm_index, 1);
+    }
+    else
+    {
+        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
+    }
     BSL_AbsSecBlock_Deinit(&abs_sec_block);
 
-    return BSL_SUCCESS;
+    return retval;
 }
 
 static int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
@@ -489,9 +556,14 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_SecurityResponseSet
             int errcode = -1;
             if (BSL_SecOper_IsBIB(sec_oper))
             {
-                errcode = BSL_SecOper_IsRoleSource(sec_oper) == true
-                              ? BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome)
-                              : BSL_ExecBIBVerifierAcceptor(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                if (BSL_SecOper_IsRoleSource(sec_oper))
+                {
+                    errcode = BSL_ExecBIBSource(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                }
+                else
+                {
+                    errcode = BSL_ExecBIBVerifierAcceptor(sec_ctx->execute, lib, bundle, sec_oper, outcome);
+                }
             }
             else
             {

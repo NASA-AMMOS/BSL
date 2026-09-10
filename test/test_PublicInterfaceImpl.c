@@ -690,7 +690,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                     }
                 }
 
-                TEST_ASSERT(fail_ct > 0);
+                TEST_ASSERT_GREATER_THAN(0, fail_ct);
 
                 if (policy_act == BSL_POLICYACTION_DROP_BLOCK)
                 {
@@ -789,7 +789,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                     }
                 }
 
-                TEST_ASSERT(fail_ct > 0);
+                TEST_ASSERT_GREATER_THAN(0, fail_ct);
 
                 if (policy_act == BSL_POLICYACTION_DROP_BLOCK)
                 {
