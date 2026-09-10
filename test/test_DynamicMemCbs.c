@@ -100,7 +100,7 @@ void _setUp(void)
 
     BSL_SecurityActionSet_Init(&action_set);
 
-    policy_provider = BSLP_PolicyProvider_Init(1);
+    policy_provider = BSLP_PolicyProvider_New(1);
 
     /// Register the policy provider with some rules
     BSL_PolicyDesc_t policy_desc = {

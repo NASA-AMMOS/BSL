@@ -60,7 +60,7 @@ void setUp(void)
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
 
-    policy_provider = BSLP_PolicyProvider_Init(BSL_SAMPLE_PP_ID);
+    policy_provider = BSLP_PolicyProvider_New(BSL_SAMPLE_PP_ID);
 
     BSL_PolicyDesc_t policy_desc = {
         .user_data   = policy_provider,
@@ -173,7 +173,7 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
  */
 void test_MultiplePolicyProviders(void)
 {
-    BSLP_PolicyProvider_t *policy_provider2 = BSLP_PolicyProvider_Init(BSL_SAMPLE_PP_ID_2);
+    BSLP_PolicyProvider_t *policy_provider2 = BSLP_PolicyProvider_New(BSL_SAMPLE_PP_ID_2);
 
     BSL_PolicyDesc_t policy_desc_2 = {
         .user_data   = policy_provider2,

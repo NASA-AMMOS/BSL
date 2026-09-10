@@ -550,7 +550,7 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent, BSLP_PolicyProvider_t **policy)
         }
     }
 
-    *policy              = BSLP_PolicyProvider_Init(1);
+    *policy              = BSLP_PolicyProvider_New(1);
     agent->appin.policy  = *policy;
     agent->appout.policy = *policy;
     agent->clin.policy   = *policy;

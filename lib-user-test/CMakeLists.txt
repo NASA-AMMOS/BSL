@@ -23,6 +23,10 @@ cmake_minimum_required(VERSION 3.23)
 
 project(lib-user-test VERSION 0.0.0 LANGUAGES C)
 
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+
 set(PKG_CONFIG_ARGN "--define-prefix")
 find_package(PkgConfig REQUIRED)
 include(CMakePrintHelpers)

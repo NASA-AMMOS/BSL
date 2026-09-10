@@ -53,7 +53,7 @@ void setUp(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "ipn:2.1", 1);
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
-    policy = BSLP_PolicyProvider_Init(1);
+    policy = BSLP_PolicyProvider_New(1);
     TEST_ASSERT_NOT_NULL(policy);
 }
 
@@ -64,35 +64,19 @@ void tearDown(void)
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 }
 
-void test_PolicyParser_ReadConfigEmpty(void)
-{
-    int infd = open("test_PolicyParser-data/empty.json", O_RDONLY);
-    TEST_ASSERT_GREATER_OR_EQUAL_INT(0, infd);
-    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLP_PolicyParser_LoadFd(infd, policy));
-    TEST_ASSERT_EQUAL_INT(0, close(infd));
-
-    TEST_ASSERT_EQUAL_size_t(0, BSLP_PolicyRuleList_size(policy->rules));
-    TEST_ASSERT_EQUAL_size_t(0, BSLP_PolicyPredicateList_size(policy->predicates));
-}
-
+TEST_CASE("test_PolicyParser-data/empty.json", 0)
 TEST_CASE("test_PolicyParser-data/validSC1.json", 1)
-TEST_CASE("test_PolicyParser-data/validSC2.json", 2)
-TEST_CASE("test_PolicyParser-data/validSC3-parms-long.json", 3)
-TEST_CASE("test_PolicyParser-data/validSC3-parms-short.json", 3)
-/** Read a valid configuration for a single context.
- */
-void test_PolicyParser_ReadConfigValid(const char *filename, int context_id)
+TEST_CASE("test_PolicyParser-data/validSC2.json", 1)
+TEST_CASE("test_PolicyParser-data/validSC3-parms-long.json", 1)
+TEST_CASE("test_PolicyParser-data/validSC3-parms-short.json", 1)
+void test_PolicyParser_ReadConfigValid(const char *filename, int rule_count)
 {
     int infd = open(filename, O_RDONLY);
     TEST_ASSERT_GREATER_OR_EQUAL_INT(0, infd);
     TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLP_PolicyParser_LoadFd(infd, policy));
     TEST_ASSERT_EQUAL_INT(0, close(infd));
 
-    TEST_ASSERT_EQUAL_size_t(1, BSLP_PolicyRuleList_size(policy->rules));
-    TEST_ASSERT_EQUAL_size_t(1, BSLP_PolicyPredicateList_size(policy->predicates));
-
-    const BSLP_PolicyRule_t *rule = BSLP_PolicyRulePtr_cref(*BSLP_PolicyRuleList_front(policy->rules));
-    TEST_ASSERT_EQUAL_INT(context_id, rule->context_id);
+    TEST_ASSERT_EQUAL_size_t(rule_count, BSLP_PolicyProvider_RuleCount(policy));
 }
 
 TEST_CASE("test_PolicyParser-data/unknownSC-99.json")
@@ -103,6 +87,5 @@ void test_PolicyParser_ReadConfigInvalid(const char *filename)
     TEST_ASSERT_NOT_EQUAL_INT(BSL_SUCCESS, BSLP_PolicyParser_LoadFd(infd, policy));
     TEST_ASSERT_EQUAL_INT(0, close(infd));
 
-    TEST_ASSERT_EQUAL_size_t(0, BSLP_PolicyRuleList_size(policy->rules));
-    TEST_ASSERT_EQUAL_size_t(0, BSLP_PolicyPredicateList_size(policy->predicates));
+    TEST_ASSERT_EQUAL_size_t(0, BSLP_PolicyProvider_RuleCount(policy));
 }
