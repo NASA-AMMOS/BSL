@@ -294,9 +294,6 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
         }
         BSL_LOG_INFO("Created sec operation for rule `%s`", m_string_get_cstr(rule->description));
     }
-    pthread_mutex_unlock(&self->mutex);
-
-    BSL_PrimaryBlock_deinit(&primary_block);
 
     if (matched == 0)
     {
@@ -310,6 +307,9 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
             BSL_LOG_DEBUG("No rules matched, doing nothing");
         }
     }
+    pthread_mutex_unlock(&self->mutex);
+
+    BSL_PrimaryBlock_deinit(&primary_block);
 
     for (size_t i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
     {
@@ -431,6 +431,7 @@ void BSLP_PolicyProvider_SetNoRuleAction(BSLP_PolicyProvider_t *self, BSL_Policy
                                          BSL_PolicyAction_e action)
 {
     ASSERT_ARG_NONNULL(self);
+    pthread_mutex_lock(&self->mutex);
 
     switch (action)
     {
@@ -446,6 +447,8 @@ void BSLP_PolicyProvider_SetNoRuleAction(BSLP_PolicyProvider_t *self, BSL_Policy
             BSL_LOG_ERR("Invalid action %d", action);
             break;
     }
+
+    pthread_mutex_unlock(&self->mutex);
 }
 
 void BSLP_PolicyProvider_Destroy(BSLP_PolicyProvider_t *self)
