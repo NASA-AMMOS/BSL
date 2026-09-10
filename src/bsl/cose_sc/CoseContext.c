@@ -690,18 +690,15 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
                     *total += BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, aad_block.btsd_len);
                 }
                 {
-                    BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-                    BSLX_CoseSc_ChunkItem_move_seq(*item, NULL);
-                    BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
-
-                    *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, blk_num);
-                    // GCOV_EXCL_START
-                    if (!*seq)
+                    BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, blk_num);
+                    if (!seq)
                     {
                         BSL_LOG_ERR("Failed to construct reader");
                         return BSL_ERR_ENCODING;
                     }
-                    // GCOV_EXCL_STOP
+                    BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+                    BSLX_CoseSc_ChunkItem_move_seq(*item, seq);
+
                     *total += aad_block.btsd_len;
                 }
             }
@@ -796,19 +793,17 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
         BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->target_block.btsd_len);
     }
     { // the target BTSD as payload
-        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-        BSLX_CoseSc_ChunkItem_move_seq(*item, NULL);
-        BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
-
-        *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
+        BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
         // GCOV_EXCL_START
-        if (!*seq)
+        if (!seq)
         {
             BSL_LOG_ERR("Failed to construct reader");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             return;
         }
         // GCOV_EXCL_STOP
+        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+        BSLX_CoseSc_ChunkItem_move_seq(*item, seq);
     }
 
     if (BSL_SUCCESS == ctx->status)
@@ -967,7 +962,7 @@ static void BSLX_CoseSc_GetAndValidateTarget(BSLX_CoseSc_t *self, const BSLX_Cos
             self->tgt_keylen = 64;
             break;
         default:
-            BSL_LOG_CRIT("Unhandled content alg %" PRId64, self->tgt_alg);
+            BSL_LOG_ERR("Unhandled content alg %" PRId64, self->tgt_alg);
             self->tgt_keylen = 0;
             break;
     }
@@ -1943,19 +1938,24 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
     }
     BSLX_CoseSc_ChunkList_clear(chunklist);
 
-    const size_t tag_len = BSL_Cipher_TagLen(ctx->enc_ctx);
-    BSL_LOG_DEBUG("using authentication tag length %zu", tag_len);
-    // ciphertext has tag appended to it
-    size_t read_len, write_len;
-    if (mode == BSL_CRYPTO_ENCRYPT)
+    size_t tag_len   = 0;
+    size_t read_len  = 0;
+    size_t write_len = 0;
+    if (BSL_SUCCESS == ctx->status)
     {
-        read_len  = ctx->target_block.btsd_len;
-        write_len = read_len + tag_len;
-    }
-    else
-    {
-        read_len  = ctx->target_block.btsd_len - tag_len;
-        write_len = read_len;
+        tag_len = BSL_Cipher_TagLen(ctx->enc_ctx);
+        BSL_LOG_DEBUG("using authentication tag length %zu", tag_len);
+        // ciphertext has tag appended to it
+        if (mode == BSL_CRYPTO_ENCRYPT)
+        {
+            read_len  = ctx->target_block.btsd_len;
+            write_len = read_len + tag_len;
+        }
+        else
+        {
+            read_len  = ctx->target_block.btsd_len - tag_len;
+            write_len = read_len;
+        }
     }
 
     // Process the plaintext
@@ -2053,7 +2053,10 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
     }
 
     // close write after read
-    BSL_SeqReader_Destroy(btsd_read);
+    if (btsd_read)
+    {
+        BSL_SeqReader_Destroy(btsd_read);
+    }
     if (btsd_write)
     {
         BSL_SeqWriter_Destroy(btsd_write, ctx->status == BSL_SUCCESS);

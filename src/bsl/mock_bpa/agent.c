@@ -503,6 +503,10 @@ int MockBPA_Agent_Init(MockBPA_Agent_t *agent, BSLP_PolicyProvider_t **policy)
         agent->tx_notify_w = fds[1];
     }
 
+    agent->appin.loc  = BSL_POLICYLOCATION_APPIN;
+    agent->appout.loc = BSL_POLICYLOCATION_APPOUT;
+    agent->clin.loc   = BSL_POLICYLOCATION_CLIN;
+    agent->clout.loc  = BSL_POLICYLOCATION_CLOUT;
     // All BSL contexts get the same config
     MockBPA_Agent_BSL_Ctx_t *ctxs[] = {
         &agent->appin,
@@ -708,13 +712,12 @@ static void MockBPA_Agent_DumpTelemetry(MockBPA_Agent_t *agent)
 /** Process a single bundle at one of the interaction points.
  *
  * @param[in] agent The agent state, which is not locked for the work thread.
- * @param[in,out] ctx The specific BSL instance to process with.
- * @param loc The interaction point for policy use.
- * @param[in,out] bundle The bundle to process.
+ * @param[in,out] ctx The specific BSL context instance to process with, which
+ * includes the interaction point identifier.
+ * @param[in,out] item The bundle item to process.
  * @return Zero if successful.
  */
-static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t *ctx, BSL_PolicyLocation_e loc,
-                                 MockBPA_Bundle_t *bundle)
+int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t *ctx, mock_bpa_ctr_t *item)
 {
     int returncode = 0;
     BSL_LOG_INFO("starting");
@@ -728,9 +731,8 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
     BSL_SecurityActionSet_t *action_set = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
     BSL_SecurityActionSet_Init(action_set);
 
-    BSL_BundleRef_t bundle_ref = { .data = bundle };
     BSL_LOG_INFO("calling BSL_API_QuerySecurity");
-    returncode = BSL_API_QuerySecurity(ctx->bsl, action_set, &bundle_ref, loc);
+    returncode = BSL_API_QuerySecurity(ctx->bsl, action_set, &(item->bundle_ref), ctx->loc);
     if (returncode != 0)
     {
         BSL_LOG_ERR("Failed to query security: code=%d", returncode);
@@ -739,7 +741,7 @@ static int MockBPA_Agent_process(MockBPA_Agent_t *agent, MockBPA_Agent_BSL_Ctx_t
     if (!returncode)
     {
         BSL_LOG_INFO("calling BSL_API_ApplySecurity");
-        returncode = BSL_API_ApplySecurity(ctx->bsl, &bundle_ref, action_set);
+        returncode = BSL_API_ApplySecurity(ctx->bsl, &(item->bundle_ref), action_set);
         if (returncode < 0)
         {
             BSL_LOG_ERR("Failed to apply security: code=%d", returncode);
@@ -775,16 +777,20 @@ static void *MockBPA_Agent_work_over_rx(void *arg)
         }
 
         BSL_LOG_INFO("over_rx item");
-        mock_bpa_ctr_decode(item);
+        if (BSL_SUCCESS != mock_bpa_ctr_decode(item))
+        {
+            BSL_LOG_ERR("failed to decode bundle");
+            mock_bpa_ctr_ptr_release(item_ptr);
+            continue;
+        }
 
-        MockBPA_Bundle_t *bundle = item->bundle_ref.data;
-        if (MockBPA_Agent_process(agent, &agent->appin, BSL_POLICYLOCATION_APPIN, bundle))
+        if (MockBPA_Agent_process(agent, &agent->appin, item))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_ptr_release(item_ptr);
             continue;
         }
-        if (!bundle->retain)
+        if (!item->bundle->retain)
         {
             BSL_LOG_ERR("bundle was marked to delete by BSL");
             mock_bpa_ctr_ptr_release(item_ptr);
@@ -815,21 +821,20 @@ static void *MockBPA_Agent_work_under_rx(void *arg)
         }
 
         BSL_LOG_INFO("under_rx item");
-        if (mock_bpa_ctr_decode(item))
+        if (BSL_SUCCESS != mock_bpa_ctr_decode(item))
         {
             BSL_LOG_ERR("failed to decode bundle");
             mock_bpa_ctr_ptr_release(item_ptr);
             continue;
         }
 
-        MockBPA_Bundle_t *bundle = item->bundle_ref.data;
-        if (MockBPA_Agent_process(agent, &agent->clin, BSL_POLICYLOCATION_CLIN, bundle))
+        if (MockBPA_Agent_process(agent, &agent->clin, item))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_ptr_release(item_ptr);
             continue;
         }
-        if (!bundle->retain)
+        if (!item->bundle->retain)
         {
             BSL_LOG_ERR("bundle was marked to delete by BSL");
             mock_bpa_ctr_ptr_release(item_ptr);
@@ -860,14 +865,13 @@ static void *MockBPA_Agent_work_deliver(void *arg)
         }
 
         BSL_LOG_INFO("deliver item");
-        MockBPA_Bundle_t *bundle = item->bundle_ref.data;
-        if (MockBPA_Agent_process(agent, &agent->appout, BSL_POLICYLOCATION_APPOUT, bundle))
+        if (MockBPA_Agent_process(agent, &agent->appout, item))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_ptr_release(item_ptr);
             continue;
         }
-        if (!bundle->retain)
+        if (!item->bundle->retain)
         {
             BSL_LOG_ERR("bundle was marked to delete by BSL");
             mock_bpa_ctr_ptr_release(item_ptr);
@@ -908,14 +912,13 @@ static void *MockBPA_Agent_work_forward(void *arg)
         }
 
         BSL_LOG_INFO("forward item");
-        MockBPA_Bundle_t *bundle = item->bundle_ref.data;
-        if (MockBPA_Agent_process(agent, &agent->clout, BSL_POLICYLOCATION_CLOUT, bundle))
+        if (MockBPA_Agent_process(agent, &agent->clout, item))
         {
             BSL_LOG_ERR("failed security processing");
             mock_bpa_ctr_ptr_release(item_ptr);
             continue;
         }
-        if (!bundle->retain)
+        if (!item->bundle->retain)
         {
             BSL_LOG_ERR("bundle was marked to delete by BSL");
             mock_bpa_ctr_ptr_release(item_ptr);

@@ -149,6 +149,12 @@ if(BUILD_FUZZING)
   add_fuzz_test(SOURCE fuzz_CoseMsg_Encrypt_cbor.cpp RUNS_COUNT 500000)
   target_link_libraries(fuzz_CoseMsg_Encrypt_cbor PUBLIC ${LIB_ORDERED})
 
+  add_fuzz_test(SOURCE fuzz_CoseContext_bib_acceptor.cpp RUNS_COUNT 500000)
+  target_link_libraries(fuzz_CoseContext_bib_acceptor PUBLIC ${LIB_ORDERED})
+
+  add_fuzz_test(SOURCE fuzz_CoseContext_bcb_acceptor.cpp RUNS_COUNT 200000)
+  target_link_libraries(fuzz_CoseContext_bcb_acceptor PUBLIC ${LIB_ORDERED})
+
   add_fuzz_test(
     SOURCE fuzz_Crypto_KeyLoader_LoadJwkSet.cpp
     RUNS_COUNT 300000
