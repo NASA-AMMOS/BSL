@@ -629,7 +629,11 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
 
     {
         const size_t need_len = (size_t)EVP_CIPHER_CTX_get_key_length(cipher_ctx->libhandle);
-        CHK_PROPERTY(key_view.len == need_len);
+        if (need_len != key_view.len)
+        {
+            BSL_LOG_ERR("Cipher key size needed %zu got %zu", need_len, key_view.len);
+            return BSL_ERR_FAILURE;
+        }
     }
 
     cipher_ctx->block_size = (size_t)EVP_CIPHER_CTX_get_block_size(cipher_ctx->libhandle);
@@ -642,8 +646,8 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
     // GCOV_EXCL_START
     if (cipher_ctx->block_size == 0)
     {
-        cipher_ctx->block_size = 1024;
         BSL_LOG_ERR("invalid block size zero, assuming %zu", cipher_ctx->block_size);
+        cipher_ctx->block_size = 1024;
     }
     // GCOV_EXCL_STOP
 
