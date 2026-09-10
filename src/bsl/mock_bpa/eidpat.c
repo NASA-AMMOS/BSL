@@ -282,12 +282,72 @@ void bsl_mock_eidpat_item_deinit(bsl_mock_eidpat_item_t *obj)
     memset(obj, 0, sizeof(bsl_mock_eidpat_item_t));
 }
 
-int mock_bpa_eidpat_item_from_text(bsl_mock_eidpat_item_t *item, const char *text, const char **endptr)
+/// Handle the SSP for ipn scheme
+static int mock_bpa_eidpat_ipn_ssp_from_text(bsl_mock_eidpat_item_t *item, const char *ssp, size_t ssp_len)
+{
+    item->scheme = BSL_MOCK_EID_IPN;
+
+    const char *curs = ssp;
+    if (strncmp(curs, "**", 2) == 0)
+    {
+        item->any_ssp = true;
+        curs += 2;
+    }
+    else
+    {
+        bsl_eidpat_ipn_ssp_t *ipn_ssp = &(item->ssp.as_ipn);
+        bsl_eidpat_ipn_ssp_init(ipn_ssp);
+
+        const char *pend;
+        if (bsl_eidpat_numcomp_from_text(&ipn_ssp->auth, curs, &pend))
+        {
+            bsl_eidpat_ipn_ssp_deinit(ipn_ssp);
+            return 4;
+        }
+        curs = pend;
+        if (*curs != '.')
+        {
+            bsl_eidpat_ipn_ssp_deinit(ipn_ssp);
+            return 4;
+        }
+        ++curs;
+
+        if (bsl_eidpat_numcomp_from_text(&ipn_ssp->node, curs, &pend))
+        {
+            bsl_eidpat_ipn_ssp_deinit(ipn_ssp);
+            return 4;
+        }
+        curs = pend;
+        if (*curs != '.')
+        {
+            bsl_eidpat_ipn_ssp_deinit(ipn_ssp);
+            return 4;
+        }
+        ++curs;
+
+        if (bsl_eidpat_numcomp_from_text(&ipn_ssp->svc, curs, &pend))
+        {
+            bsl_eidpat_ipn_ssp_deinit(ipn_ssp);
+            return 4;
+        }
+        curs = pend;
+    }
+
+    if (curs != ssp + ssp_len)
+    {
+        // not all was consumed
+        return 4;
+    }
+
+    return 0;
+}
+
+int mock_bpa_eidpat_item_from_text(bsl_mock_eidpat_item_t *item, const char *text, size_t len)
 {
     // GCOV_EXCL_START
     BSL_CHKERR1(item);
     BSL_CHKERR1(text);
-    BSL_CHKERR1(endptr);
+    BSL_CHKERR1(len > 0);
     // GCOV_EXCL_STOP
 
     // clean up if necessary
@@ -295,69 +355,26 @@ int mock_bpa_eidpat_item_from_text(bsl_mock_eidpat_item_t *item, const char *tex
 
     const char *curs = text;
     const char *pend = strchr(text, ':');
-    if (pend == NULL)
+    // need at least one SSP character
+    if ((pend == NULL) || (pend >= curs + len))
     {
         return 2;
     }
     size_t scheme_len = pend - text;
-    curs              = pend + 1;
+    // cursor on SSP
+    curs = pend + 1;
+    // remaining length
+    size_t ssp_len = len - scheme_len - 1;
 
     if (strncasecmp(text, "ipn", scheme_len) == 0)
     {
-        item->scheme = BSL_MOCK_EID_IPN;
-
-        if (strncmp(curs, "**", 2) == 0)
-        {
-            item->any_ssp = true;
-            curs += 2;
-        }
-        else
-        {
-            bsl_eidpat_ipn_ssp_t *ipn_ssp = &(item->ssp.as_ipn);
-            bsl_eidpat_ipn_ssp_init(ipn_ssp);
-
-            if (bsl_eidpat_numcomp_from_text(&ipn_ssp->auth, curs, &pend))
-            {
-                bsl_eidpat_ipn_ssp_deinit(ipn_ssp);
-                return 4;
-            }
-            curs = pend;
-            if (*curs != '.')
-            {
-                bsl_eidpat_ipn_ssp_deinit(ipn_ssp);
-                return 4;
-            }
-            ++curs;
-
-            if (bsl_eidpat_numcomp_from_text(&ipn_ssp->node, curs, &pend))
-            {
-                bsl_eidpat_ipn_ssp_deinit(ipn_ssp);
-                return 4;
-            }
-            curs = pend;
-            if (*curs != '.')
-            {
-                bsl_eidpat_ipn_ssp_deinit(ipn_ssp);
-                return 4;
-            }
-            ++curs;
-
-            if (bsl_eidpat_numcomp_from_text(&ipn_ssp->svc, curs, &pend))
-            {
-                bsl_eidpat_ipn_ssp_deinit(ipn_ssp);
-                return 4;
-            }
-            curs = pend;
-        }
+        return mock_bpa_eidpat_ipn_ssp_from_text(item, curs, ssp_len);
     }
     else
     {
         // unhandled scheme
         return 3;
     }
-
-    *endptr = curs;
-    return 0;
 }
 
 bool mock_bpa_eidpat_item_match(const bsl_mock_eidpat_item_t *item, const bsl_mock_eid_t *eid)
@@ -438,7 +455,6 @@ int mock_bpa_eidpat_from_text(BSL_HostEIDPattern_t *pat, const char *text, void 
 
     const char *curs = text;
     const char *end  = curs + strlen(text);
-    const char *pend;
 
     BSL_LOG_DEBUG("EID pattern from %s", text);
     while (curs < end)
@@ -449,6 +465,8 @@ int mock_bpa_eidpat_from_text(BSL_HostEIDPattern_t *pat, const char *text, void 
             ++curs;
             continue;
         }
+        // item extends to separator or EOS
+        size_t ilen = strcspn(curs, "|");
 
         if (strncmp(curs, "*:**", 4) == 0)
         {
@@ -460,14 +478,13 @@ int mock_bpa_eidpat_from_text(BSL_HostEIDPattern_t *pat, const char *text, void 
         {
             bsl_mock_eidpat_item_t *item = bsl_mock_eidpat_item_list_push_back_new(obj->items);
 
-            pend = end;
-            if (mock_bpa_eidpat_item_from_text(item, curs, &pend))
+            if (mock_bpa_eidpat_item_from_text(item, curs, ilen))
             {
                 bsl_mock_eidpat_item_list_reset(obj->items);
-                BSL_LOG_WARNING("EID pattern failed on item %.*s", pend - curs, curs);
+                BSL_LOG_WARNING("EID pattern failed on item %.*s", (int)ilen, curs);
                 return 3;
             }
-            curs = pend;
+            curs += ilen;
         }
     }
 
