@@ -561,12 +561,29 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_CryptoCi
         EVP_CipherInit_ex(cipher_ctx->libhandle, cipher, NULL, NULL, NULL, (cipher_ctx->enc == BSL_CRYPTO_ENCRYPT));
     CHK_PROPERTY(res == 1);
 
-    cipher_ctx->block_size = (size_t)EVP_CIPHER_get_block_size(cipher_ctx->libhandle);
+    {
+        const size_t need_len = (size_t)EVP_CIPHER_CTX_get_key_length(cipher_ctx->libhandle);
+        if (need_len != key->raw.len)
+        {
+            BSL_LOG_ERR("Cipher key size needed %zu got %zu", need_len, key->raw.len);
+            return BSL_ERR_FAILURE;
+        }
+    }
+
+    cipher_ctx->block_size = (size_t)EVP_CIPHER_CTX_get_block_size(cipher_ctx->libhandle);
+    if (cipher_ctx->block_size == 1)
+    {
+        // Choose a reasonable chunk size
+        cipher_ctx->block_size = 1024;
+    }
+    BSL_LOG_DEBUG("Cipher block size %zu", cipher_ctx->block_size);
+    // GCOV_EXCL_START
     if (cipher_ctx->block_size == 0)
     {
-        cipher_ctx->block_size = 1024;
         BSL_LOG_ERR("invalid block size zero, assuming %zu", cipher_ctx->block_size);
+        cipher_ctx->block_size = 1024;
     }
+    // GCOV_EXCL_STOP
 
     res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_IVLEN, iv_len, NULL);
     CHK_PROPERTY(res == 1);

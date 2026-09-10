@@ -230,8 +230,11 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     }
 
     // close write after read
-    BSL_SeqReader_Destroy(btsd_read);
-    if (NULL != btsd_write)
+    if (btsd_read)
+    {
+        BSL_SeqReader_Destroy(btsd_read);
+    }
+    if (btsd_write)
     {
         BSL_SeqWriter_Destroy(btsd_write);
     }
