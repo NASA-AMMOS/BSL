@@ -151,8 +151,8 @@ typedef struct BSL_TlmCounters_s
 
 /** @brief Retrieve copy of the telemetry counters to accumulate in BPA.
  *
- * @param[in] lib           Pointer to BSL context.
- * @param[out] sec_ctx_id       Pointer to the output telemetry structure
+ * @param[in] lib Pointer to BSL context.
+ * @param[out] tlm Pointer to the output telemetry structure to populate.
  * @returns 0 on success, negative on error.
  */
 int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t *tlm);
@@ -520,8 +520,9 @@ int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_
 /** @brief Register a Policy Provider module with the BSL.
  * @note The Policy Provider interface is defined by the policy provider descriptor.
  *
- * @param[in,out] lib   Pointer to BSL context.
- * @param[in]     desc  Policy Provider callbacks.
+ * @param[in,out] lib Pointer to BSL context.
+ * @param pp_id The unique policy provider ID number.
+ * @param desc  Policy Provider callbacks.
  */
 BSL_REQUIRE_CHECK
 int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_PolicyDesc_t desc);
