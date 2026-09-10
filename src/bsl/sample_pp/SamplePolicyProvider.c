@@ -181,7 +181,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
     BSLP_SecOperPtrList_t secops;
     BSLP_SecOperPtrList_init(secops);
 
-    pthread_mutex_lock(&self->mutex);
+    pthread_rwlock_rdlock(&self->mutex);
     BSLP_PolicyRuleList_it_t      rule_it;
     BSLP_PolicyPredicateList_it_t pred_it;
     for (BSLP_PolicyRuleList_it(rule_it, self->rules), BSLP_PolicyPredicateList_it(pred_it, self->predicates);
@@ -288,7 +288,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
         }
         BSL_LOG_INFO("Created sec operation for rule `%s`", m_string_get_cstr(rule->description));
     }
-    pthread_mutex_unlock(&self->mutex);
+    pthread_rwlock_unlock(&self->mutex);
 
     BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -318,9 +318,9 @@ int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *outp
     {
         const BSL_SecurityAction_t *action = BSL_SecurityActionSet_GetActionAtIndex(output_action_set, i);
 
-        pthread_mutex_lock(&self->mutex);
+        pthread_rwlock_rdlock(&self->mutex);
         uint64_t pp_id = self->pp_id;
-        pthread_mutex_unlock(&self->mutex);
+        pthread_rwlock_unlock(&self->mutex);
 
         if (BSL_SecurityAction_GetPPID(action) != pp_id)
         {
@@ -382,7 +382,7 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id)
     pp->pp_id = pp_id;
     BSLP_PolicyRuleList_init(pp->rules);
     BSLP_PolicyPredicateList_init(pp->predicates);
-    pthread_mutex_init(&pp->mutex, NULL);
+    pthread_rwlock_init(&pp->mutex, NULL);
 
     return pp;
 }
@@ -400,22 +400,22 @@ int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *
     BSLP_PolicyPredicatePtr_t *pred_ptr = BSLP_PolicyPredicatePtr_new();
     BSLP_PolicyPredicate_Move(BSLP_PolicyPredicatePtr_ref(pred_ptr), predicate);
 
-    pthread_mutex_lock(&self->mutex);
+    pthread_rwlock_wrlock(&self->mutex);
     BSLP_PolicyRuleList_push_move(self->rules, &rule_ptr);
     BSLP_PolicyPredicateList_push_move(self->predicates, &pred_ptr);
-    pthread_mutex_unlock(&self->mutex);
+    pthread_rwlock_unlock(&self->mutex);
 
     return BSL_SUCCESS;
 }
 
 void BSLP_PolicyProvider_Destroy(BSLP_PolicyProvider_t *self)
 {
-    pthread_mutex_lock(&self->mutex);
+    pthread_rwlock_wrlock(&self->mutex);
     BSLP_PolicyRuleList_clear(self->rules);
     BSLP_PolicyPredicateList_clear(self->predicates);
-    pthread_mutex_unlock(&self->mutex);
+    pthread_rwlock_unlock(&self->mutex);
 
-    pthread_mutex_destroy(&self->mutex);
+    pthread_rwlock_destroy(&self->mutex);
     BSL_free(self);
 }
 

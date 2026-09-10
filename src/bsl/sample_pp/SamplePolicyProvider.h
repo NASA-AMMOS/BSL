@@ -235,7 +235,7 @@ typedef struct BSLP_PolicyProvider_s
     /// ID of policy provider
     uint64_t pp_id;
     /// Mutex for all other shared data in this struct
-    pthread_mutex_t mutex;
+    pthread_rwlock_t mutex;
 } BSLP_PolicyProvider_t;
 
 /** Initialize policy provider data
