@@ -75,7 +75,7 @@
       }
     }
   ],
-  "norule_action": {
+  "policy_action_no_rules": {
     "appout": "delete_bundle"
   }
 }

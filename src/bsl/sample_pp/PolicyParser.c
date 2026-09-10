@@ -666,9 +666,9 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
 
     // policy_action_on_fail
     const json_t *policy_action_on_fail = json_object_get(policyrule, "policy_action_on_fail");
-    if (!policy_action_on_fail || !json_is_string(policy_action_on_fail))
+    if (!policy_action_on_fail)
     {
-        BSL_LOG_WARNING("No policy_action_on_fail, default to: nothing");
+        BSL_LOG_INFO("No policy_action_on_fail, default to: nothing");
         policy_action_enum = BSL_POLICYACTION_NOTHING;
     }
     else
@@ -916,17 +916,16 @@ int BSLP_PolicyParser_LoadFd(int infd, BSLP_PolicyProvider_t *policy)
         }
     }
 
-    json_t *norule_action = json_object_get(root, "norule_action");
+    json_t *norule_action = json_object_get(root, "policy_action_no_rules");
     if (norule_action)
     {
         if (!json_is_object(norule_action))
         {
-            BSL_LOG_ERR("Invalid norule_action type");
+            BSL_LOG_ERR("Invalid policy_action_no_rules type, expected object");
             ++failures;
         }
         else
         {
-
             for (void *val_it = json_object_iter(norule_action); val_it;
                  val_it       = json_object_iter_next(norule_action, val_it))
             {
