@@ -41,8 +41,8 @@ extern "C" {
 
 /** Callback to actually perform the encoding.
  *
- * @param enc Non-null pointer to the encoder to use.
- * @param obj Pointer to the user data to encode.
+ * @param[in] enc Non-null pointer to the encoder to use.
+ * @param[in] obj Pointer to the user data to encode.
  * @return BSL_SUCCESS if successful.
  */
 typedef int (*BSL_CBOR_Encode_f)(QCBOREncodeContext *enc, const void *obj);
@@ -67,8 +67,8 @@ int BSL_CBOR_Encode_Twopass(BSL_Data_t *buf, BSL_CBOR_Encode_f func, const void 
 
 /** Callback to actually perform the decoding.
  *
- * @param enc Non-null pointer to the decoder to use.
- * @param obj Pointer to the user data to decode into.
+ * @param[in] dec Non-null pointer to the decoder to use.
+ * @param[out] obj Pointer to the user data to decode into.
  */
 typedef int (*BSL_CBOR_Decode_f)(QCBORDecodeContext *dec, const void *obj);
 

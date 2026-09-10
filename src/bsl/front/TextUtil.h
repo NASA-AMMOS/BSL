@@ -86,7 +86,7 @@ int BSL_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len);
  * ::BSL_LOG_PLAINTEXT_ENABLE is non-zero.
  *
  * @param title The static C string title.
- * @param ctc A correlating context pointer to log.
+ * @param ctx A correlating context pointer to log.
  * @param in_ptr The data start pointer.
  * @param in_len The data length.
  */
