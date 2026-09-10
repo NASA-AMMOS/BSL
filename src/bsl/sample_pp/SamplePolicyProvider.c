@@ -31,11 +31,19 @@
 #include "bsl/dynamic/MLibConfig.h"
 
 #include <m-array.h>
+#include <m-dict.h>
+#include <m-shared-ptr.h>
 
+#include <pthread.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+
+void BSLP_Deinit(void *user_data)
+{
+    (void)user_data;
+}
 
 /** @struct BSLP_SecOperPtrList_t
  * Defines a basic list of ::BSL_SecOper_s pointers.
@@ -44,6 +52,47 @@
 // NOLINTBEGIN
 // GCOV_EXCL_START
 M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t *, M_PTR_OPLIST)
+// GCOV_EXCL_STOP
+// NOLINTEND
+/// @endcond
+
+/** @struct BSLP_PolicyPredicatePtr_t
+ * Thread-unsafe shared pointer to ::BSLP_PolicyPredicate_t.
+ */
+/** @struct BSLP_PolicyPredicateList_t
+ * Defines list of policy predicates (::BSLP_PolicyPredicate_t)
+ */
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
+M_SHARED_WEAK_PTR_DEF(BSLP_PolicyPredicatePtr, BSLP_PolicyPredicate_t, M_OPL_BSLP_PolicyPredicate_t())
+#define M_OPL_BSLP_PolicyPredicatePtr_t() M_SHARED_PTR_OPLIST(BSLP_PolicyPredicatePtr, M_OPL_BSLP_PolicyPredicate_t())
+M_ARRAY_DEF(BSLP_PolicyPredicateList, BSLP_PolicyPredicatePtr_t *, M_OPL_BSLP_PolicyPredicatePtr_t())
+// GCOV_EXCL_STOP
+// NOLINTEND
+/// @endcond
+
+/** @struct BSLP_PolicyRulePtr_t
+ * A thread-unsafe shared pointer to a single ::BSLP_PolicyRule_t instance.
+ */
+/** @struct BSLP_PolicyRuleList_t
+ * Defines list of policy rules (::BSLP_PolicyRule_t)
+ */
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
+M_SHARED_WEAK_PTR_DEF(BSLP_PolicyRulePtr, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t())
+#define M_OPL_BSLP_PolicyRulePtr_t() M_SHARED_PTR_OPLIST(BSLP_PolicyRulePtr, M_OPL_BSLP_PolicyRule_t())
+M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRulePtr_t *, M_OPL_BSLP_PolicyRulePtr_t())
+// GCOV_EXCL_STOP
+// NOLINTEND
+/// @endcond
+
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
+M_DICT_DEF2(BSLP_PolicyNoRuleActionMap, BSL_PolicyLocation_e, M_BASIC_OPLIST, BSL_PolicyAction_e,
+            M_ENUM_OPLIST(BSL_PolicyAction_e, BSL_POLICYACTION_UNDEFINED))
 // GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond
@@ -158,9 +207,20 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
     return target_block_num;
 }
 
-/**
- * Note that criticality is HIGH
- */
+struct BSLP_PolicyProvider_s
+{
+    /// Variable-length list of policy rules
+    BSLP_PolicyRuleList_t rules;
+    /// Variable-length list of policy predicates
+    BSLP_PolicyPredicateList_t predicates;
+    /// Action when no rules match at an interaction point
+    BSLP_PolicyNoRuleActionMap_t norule_action;
+    /// ID of policy provider
+    uint64_t pp_id;
+    /// Mutex for all other shared data in this struct
+    pthread_rwlock_t mutex;
+};
+
 int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set, const BSL_BundleRef_t *bundle,
                      BSL_PolicyLocation_e location)
 {
@@ -385,12 +445,7 @@ int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *outp
     return error_ret;
 }
 
-void BSLP_Deinit(void *user_data)
-{
-    (void)user_data;
-}
-
-BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id)
+BSLP_PolicyProvider_t *BSLP_PolicyProvider_New(uint64_t pp_id)
 {
     ASSERT_ARG_EXPR(pp_id > 0);
 
@@ -408,6 +463,7 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id)
 
 int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule, BSLP_PolicyPredicate_t *predicate)
 {
+    ASSERT_ARG_NONNULL(self);
     if (!BSLP_PolicyRule_IsConsistent(rule) || !BSLP_PolicyPredicate_IsConsistent(predicate))
     {
         return BSL_ERR_ARG_INVALID;
@@ -425,6 +481,17 @@ int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *
     pthread_rwlock_unlock(&self->mutex);
 
     return BSL_SUCCESS;
+}
+
+size_t BSLP_PolicyProvider_RuleCount(BSLP_PolicyProvider_t *self)
+{
+    ASSERT_ARG_NONNULL(self);
+
+    pthread_rwlock_rdlock(&self->mutex);
+    size_t count = BSLP_PolicyRuleList_size(self->rules);
+    pthread_rwlock_unlock(&self->mutex);
+
+    return count;
 }
 
 void BSLP_PolicyProvider_SetNoRuleAction(BSLP_PolicyProvider_t *self, BSL_PolicyLocation_e loc,
