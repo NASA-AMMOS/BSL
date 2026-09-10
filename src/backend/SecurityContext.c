@@ -274,7 +274,7 @@ static int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_
                 int res = Encode_ASB(lib, bundle, sec_blk.block_num, &abs_sec_block);
                 if (res != BSL_SUCCESS)
                 {
-                    retval = BSL_ERR_FAILURE;
+                    retval = res;
                 }
             }
         }
