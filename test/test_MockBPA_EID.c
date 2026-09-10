@@ -108,6 +108,11 @@ TEST_CASE("ipn:**", 1)
 TEST_CASE("ipn:*.*.10", 1)
 TEST_CASE("ipn:*.[1-3,5].10", 1)
 TEST_CASE("ipn:*.[5,1-3].10", 1)
+TEST_CASE("ipn:1.1.1", 1)
+// valid initial separator
+TEST_CASE("|ipn:1.1.1", 1)
+// not quite valid per ABNF but acceptable
+TEST_CASE("||ipn:1.1.1|", 1)
 TEST_CASE("ipn:1.1.1|ipn:2.2.2", 2)
 void test_BSL_HostEIDPattern_DecodeFromText_valid(const char *text, size_t count)
 {
