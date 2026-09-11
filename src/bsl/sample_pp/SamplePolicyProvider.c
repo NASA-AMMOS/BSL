@@ -332,6 +332,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
 
     BSL_PrimaryBlock_deinit(&primary_block);
 
+    size_t conflict_count = 0;
     for (size_t i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
     {
         BSL_SecOper_t *secop = *BSLP_SecOperPtrList_get(secops, i);
@@ -339,17 +340,21 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
         {
             BSL_LOG_ERR("Invalid action: conflicting BIB and BCB operations target block %" PRIu64,
                         BSL_SecOper_GetTargetBlockNum(secop));
-            for (size_t j = 0; j < BSLP_SecOperPtrList_size(secops); j++)
-            {
-                BSL_SecOper_t *discarded_secop = *BSLP_SecOperPtrList_get(secops, j);
-                BSL_SecOper_Deinit(discarded_secop);
-                BSL_free(discarded_secop);
-            }
-            BSLP_SecOperPtrList_clear(secops);
-            BSL_SecurityAction_Deinit(action);
-            BSL_free(action);
-            return BSL_ERR_POLICY_QUERY;
+            conflict_count++;
         }
+    }
+    if (conflict_count > 0)
+    {
+        for (size_t i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
+        {
+            BSL_SecOper_t *discarded_secop = *BSLP_SecOperPtrList_get(secops, i);
+            BSL_SecOper_Deinit(discarded_secop);
+            BSL_free(discarded_secop);
+        }
+        BSLP_SecOperPtrList_clear(secops);
+        BSL_SecurityAction_Deinit(action);
+        BSL_free(action);
+        return BSL_ERR_POLICY_QUERY;
     }
 
     for (size_t i = 0; i < BSLP_SecOperPtrList_size(secops); i++)
