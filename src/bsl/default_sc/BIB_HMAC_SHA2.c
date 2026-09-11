@@ -214,43 +214,34 @@ void BSLX_BIB_Deinit(BSLX_BIB_t *self)
 /**
  * Computes the Integrity-Protected Plaintext (IPPT) according to
  * Section 3.7 of RFC 9173 @cite rfc9173.
+ * Matches ::BSL_CBOR_Encode_f signature.
  *
+ * @param[in] enc Non-null pointer to the encoder to use.
  * @param[in] self The context to read from.
- * @param[in,out] ippt_space Storage for the output, or empty to calculate
- * the needed size.
- * @return A positive value to indicate the needed size, or negative for error.
+ * @return BSL_SUCCESS if successful.
  */
-int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
+static int BSLX_BIB_GenIPPT(QCBOREncodeContext *enc, const BSLX_BIB_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    CHK_ARG_NONNULL(ippt_space);
 
-    QCBORError cbor_err = QCBOR_ERR_UNSUPPORTED;
-
-    UsefulBuf result_ub =
-        ippt_space->ptr ? (UsefulBuf) { .ptr = ippt_space->ptr, ippt_space->len } : SizeCalculateUsefulBuf;
-
-    QCBOREncodeContext encoder;
-    QCBOREncode_Init(&encoder, result_ub);
-
-    QCBOREncode_AddInt64(&encoder, self->ippt_scope);
+    QCBOREncode_AddInt64(enc, self->ippt_scope);
 
     if (self->target_block.block_num > 0)
     {
         // Now begin process of computing IPPT
         if (self->ippt_scope & RFC9173_BIB_INTEGSCOPEFLAG_INC_PRIM)
         {
-            QCBOREncode_AddEncoded(&encoder, UsefulBufC_FROM_BSL_Data(*(self->primary_block.encoded)));
+            QCBOREncode_AddEncoded(enc, UsefulBufC_FROM_BSL_Data(*(self->primary_block.encoded)));
         }
         if (self->ippt_scope & RFC9173_BIB_INTEGSCOPEFLAG_INC_TARGET_HDR)
         {
-            BSLX_EncodeHeader(&self->target_block, &encoder);
+            BSLX_EncodeHeader(&self->target_block, enc);
         }
     }
 
     if (self->ippt_scope & RFC9173_BIB_INTEGSCOPEFLAG_INC_SEC_HDR)
     {
-        BSLX_EncodeHeader(&self->sec_block, &encoder);
+        BSLX_EncodeHeader(&self->sec_block, enc);
     }
 
     if (self->target_block.block_num > 0)
@@ -261,45 +252,33 @@ int BSLX_BIB_GenIPPT(const BSLX_BIB_t *self, BSL_Data_t *ippt_space)
         CHK_PROPERTY(BSL_SUCCESS == res);
 
         // only copy data if the destination is real, not just size calculation
-        if (ippt_space->ptr)
+        if (!QCBOREncode_IsBufferNULL(enc))
         {
-            int retval = BSL_SUCCESS;
-
             BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(self->bundle, self->target_block.block_num);
             if (!btsd_read)
             {
                 BSL_LOG_ERR("Failed to open BTSD reader on block %" PRIu64, self->target_block.block_num);
-                retval = BSL_ERR_FAILURE;
+                return BSL_ERR_FAILURE;
             }
             BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
+            BSL_SeqReader_Destroy(btsd_read);
+            // GCOV_EXCL_START
             if (btsd_copy.len != self->target_block.btsd_len)
             {
                 BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", self->target_block.btsd_len, btsd_copy.len);
-                retval = BSL_ERR_FAILURE;
+                return BSL_ERR_FAILURE;
             }
-            BSL_SeqReader_Destroy(btsd_read);
-            if (BSL_SUCCESS != retval)
-            {
-                return retval;
-            }
+            // GCOV_EXCL_STOP
         }
 
-        QCBOREncode_AddBytes(&encoder, UsefulBufC_FROM_BSL_Data(btsd_copy));
+        QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(btsd_copy));
         BSL_Data_Deinit(&btsd_copy);
     }
     else
     {
-        QCBOREncode_AddBytes(&encoder, UsefulBufC_FROM_BSL_Data(*(self->primary_block.encoded)));
+        QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(*(self->primary_block.encoded)));
     }
-
-    UsefulBufC ippt_result;
-    cbor_err = QCBOREncode_Finish(&encoder, &ippt_result);
-    if (cbor_err != QCBOR_SUCCESS)
-    {
-        BSL_LOG_ERR("CBOR encoding IPPT failed, code=%" PRIu32 " (%s)", cbor_err, qcbor_err_to_str(cbor_err));
-        return BSL_ERR_ENCODING;
-    }
-    return (int)(ippt_result.len);
+    return BSL_SUCCESS;
 }
 
 /**
@@ -542,26 +521,17 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *
     }
 
     BSL_Data_t ippt_space = BSL_DATA_INIT_NULL;
-    // first determine the size needed, then encode actual IPPT
-    int ippt_len = BSLX_BIB_GenIPPT(&bib_context, &ippt_space);
-    if (ippt_len <= 0)
+    // IPPT to be MAC'd
+    int res = BSL_CBOR_Encode_Twopass(&ippt_space, (BSL_CBOR_Encode_f)&BSLX_BIB_GenIPPT, &bib_context);
+    // GCOV_EXCL_START
+    if (BSL_SUCCESS != res)
     {
-        BSL_LOG_ERR("GenIPPT returned %d", ippt_len);
+        BSL_LOG_ERR("Failed to generate IPPT data %d", res);
         BSLX_BIB_Deinit(&bib_context);
         BSL_Data_Deinit(&ippt_space);
         return BSL_ERR_SECURITY_CONTEXT_FAILED;
     }
-    int res = BSL_Data_InitBuffer(&ippt_space, ippt_len);
-    CHK_PROPERTY(BSL_SUCCESS == res);
-
-    ippt_len = BSLX_BIB_GenIPPT(&bib_context, &ippt_space);
-    if (ippt_len <= 0)
-    {
-        BSL_LOG_ERR("GenIPPT returned %d", ippt_len);
-        BSLX_BIB_Deinit(&bib_context);
-        BSL_Data_Deinit(&ippt_space);
-        return BSL_ERR_SECURITY_CONTEXT_FAILED;
-    }
+    // GCOV_EXCL_STOP
 
     const int hmac_status = BSLX_BIB_GenHMAC(&bib_context, &ippt_space);
     if (hmac_status != BSL_SUCCESS)
