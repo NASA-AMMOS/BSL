@@ -178,8 +178,16 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
                 CHK_PROPERTY(BSL_SUCCESS == res);
 
                 BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, block.block_num);
+                CHK_PROPERTY(NULL != btsd_read);
                 BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
                 BSL_SeqReader_Destroy(btsd_read);
+                // GCOV_EXCL_START
+                if (block.btsd_len != btsd_copy.len)
+                {
+                    BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", block.btsd_len, btsd_copy.len);
+                    return BSL_ERR_FAILURE;
+                }
+                // GCOV_EXCL_STOP
 
                 BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
                 BSL_AbsSecBlock_Init(asb);
