@@ -400,6 +400,24 @@ void setUp(void)
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_25b, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
     BSLP_PolicyProvider_AddRule(policy, &rule_25b, &predicate_25b);
 
+    // APPIN, DEST=ipn:1.10, ACCEPTOR, BIB, PAYLOAD, DROP BLOCK
+    // APPIN, DEST=ipn:1.10, VERIF, BCB, PAYLOAD, DROP BLOCK
+    BSLP_PolicyPredicate_t predicate_26a;
+    BSLP_PolicyPredicate_InitFrom(&predicate_26a, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "ipn:*.1.10");
+    BSLP_PolicyRule_t rule_26a;
+    BSLP_PolicyRule_InitFrom(&rule_26a, 26, "ACCEPT BIB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.10)", 1,
+                             BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD,
+                             BSL_POLICYACTION_DROP_BLOCK);
+    BSLP_PolicyProvider_AddRule(policy, &rule_26a, &predicate_26a);
+
+    BSLP_PolicyPredicate_t predicate_26b;
+    BSLP_PolicyPredicate_InitFrom(&predicate_26b, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "ipn:*.1.10");
+    BSLP_PolicyRule_t rule_26b;
+    BSLP_PolicyRule_InitFrom(&rule_26b, 126, "VERIFY BCB OVER PAYLOAD AT APPIN FILTER(DEST=ipn:1.10)", 2,
+                             BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB, BSL_BLOCK_TYPE_PAYLOAD,
+                             BSL_POLICYACTION_DROP_BLOCK);
+    BSLP_PolicyProvider_AddRule(policy, &rule_26b, &predicate_26b);
+
     // BSL 6
     BSLP_PolicyPredicate_t predicate_bsl_6;
     BSLP_PolicyPredicate_InitFrom(&predicate_bsl_6, BSL_POLICYLOCATION_CLOUT, "*:**", "*:**", "ipn:*.0.6");
@@ -449,7 +467,8 @@ void tearDown(void)
     BSL_SecurityActionSet_Deinit(&action_set);
 }
 
-#define TEST_BOTH_BIB_BCB 99
+#define TEST_BIB_ACCEPTOR_BCB_VERIFIER 98
+#define TEST_BOTH_BIB_BCB              99
 
 TEST_CASE(BSL_POLICYLOCATION_CLIN, "ipn:1.1", NULL, NULL, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BIB,
           BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, true, 1, 1) // PASS
@@ -491,14 +510,20 @@ TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.7", NULL, BSL_SECROLE_VERIFIER,
           BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK, false, 1, 1) // PASS
 TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.8", NULL, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB,
           BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_NOTHING, false, 1, 1) // PASS
-// TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.9", NULL, BSL_SECROLE_VERIFIER, 99, BSL_BLOCK_TYPE_PAYLOAD,
-// BSL_POLICYACTION_DROP_BLOCK, true, 2, 2) // FAIL
+TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.9", NULL, BSL_SECROLE_VERIFIER, 99, BSL_BLOCK_TYPE_PAYLOAD,
+          BSL_POLICYACTION_DROP_BLOCK, true, 2, 0) // PASS
+TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.10", NULL, BSL_SECROLE_VERIFIER, 98, BSL_BLOCK_TYPE_PAYLOAD,
+          BSL_POLICYACTION_DROP_BLOCK, true, 2, 0) // PASS
 void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, const char *dest_eid,
                         const char *secsrc_eid, BSL_SecRole_e sec_role, int sec_block_type, uint8_t target_block,
                         BSL_PolicyAction_e policy_act, bool good_key, int sec_blks_ct, int expected_act_ct)
 {
     BSL_PrimaryBlock_t primary_block;
     BSL_TlmCounters_t  tlm = BSL_TLM_COUNTERS_ZERO;
+
+    const bool uses_bib_bcb_bundle =
+        (sec_block_type == TEST_BOTH_BIB_BCB) || (sec_block_type == TEST_BIB_ACCEPTOR_BCB_VERIFIER);
+    const bool expect_blocked_action = (sec_role == BSL_SECROLE_VERIFIER) && uses_bib_bcb_bundle;
 
     int query_result = -1;
     int apply_result = -1;
@@ -529,7 +554,7 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                 0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.hex_bundle_bcb));
         }
     }
-    else if (sec_block_type == TEST_BOTH_BIB_BCB)
+    else if (uses_bib_bcb_bundle)
     {
         if (sec_role == BSL_SECROLE_SOURCE)
         {
@@ -634,6 +659,10 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                                                  policy_loc);
             TEST_ASSERT_EQUAL(0, query_result);
             TEST_ASSERT_EQUAL(expected_act_ct, BSL_SecurityActionSet_CountOperations(&action_set));
+            if (expect_blocked_action)
+            {
+                TEST_ASSERT_EQUAL(0, BSL_SecurityActionSet_CountActions(&action_set));
+            }
 
             apply_result = BSL_API_ApplySecurity(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &action_set);
             TEST_ASSERT_EQUAL(0, apply_result);
@@ -655,8 +684,8 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                     }
                 }
 
-                // Verify BCB verification did not modify target BTSD
-                if (sec_block_type == BSL_SECBLOCKTYPE_BCB)
+                // Verify target BTSD was not modified
+                if ((sec_block_type == BSL_SECBLOCKTYPE_BCB) || expect_blocked_action)
                 {
                     BSL_CanonicalBlock_t blk_after;
                     TEST_ASSERT_EQUAL(0, BSL_BundleCtx_GetBlockMetadata(&LocalTestCtx.mock_bpa_ctr.bundle_ref,
@@ -672,7 +701,14 @@ void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, co
                     TEST_ASSERT_EQUAL_HEX8_ARRAY(btsd_buf_after, btsd_buf_before, buf_sz_after);
 
                     TEST_ASSERT_EQUAL(0, BSL_LibCtx_AccumulateTlmCounters(&LocalTestCtx.bsl, &tlm));
-                    TEST_ASSERT_NOT_EQUAL(0, tlm.counters[BSL_TLM_SECOP_VERIFIER_COUNT]);
+                    if (expect_blocked_action)
+                    {
+                        TEST_ASSERT_EQUAL(0, tlm.counters[BSL_TLM_SECOP_VERIFIER_COUNT]);
+                    }
+                    else
+                    {
+                        TEST_ASSERT_NOT_EQUAL(0, tlm.counters[BSL_TLM_SECOP_VERIFIER_COUNT]);
+                    }
 
                     BSL_SeqReader_Destroy(reader_after);
                 }
