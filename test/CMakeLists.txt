@@ -62,7 +62,10 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
 
   add_unity_test(SOURCE test_qcbor.c)
   target_link_libraries(test_qcbor PUBLIC ${LIB_ORDERED})
-  
+
+  add_unity_test(SOURCE test_openssl.c)
+  target_link_libraries(test_openssl PUBLIC ${LIB_ORDERED} OpenSSL::Crypto)
+
   add_unity_test(SOURCE test_TextUtil.c)
   target_link_libraries(test_TextUtil PUBLIC ${LIB_ORDERED})
   
