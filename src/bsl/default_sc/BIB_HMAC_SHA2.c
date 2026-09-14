@@ -251,28 +251,40 @@ static int BSLX_BIB_GenIPPT(QCBOREncodeContext *enc, const BSLX_BIB_t *self)
         int res = BSL_Data_InitBuffer(&btsd_copy, self->target_block.btsd_len);
         CHK_PROPERTY(BSL_SUCCESS == res);
 
+        int retval = BSL_SUCCESS;
         // only copy data if the destination is real, not just size calculation
         if (!QCBOREncode_IsBufferNULL(enc))
         {
             BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(self->bundle, self->target_block.block_num);
+            // GCOV_EXCL_START
             if (!btsd_read)
             {
                 BSL_LOG_ERR("Failed to open BTSD reader on block %" PRIu64, self->target_block.block_num);
-                return BSL_ERR_FAILURE;
+                retval = BSL_ERR_FAILURE;
             }
-            BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-            BSL_SeqReader_Destroy(btsd_read);
-            // GCOV_EXCL_START
-            if (btsd_copy.len != self->target_block.btsd_len)
+            // GCOV_EXCL_STOP
+            else
             {
-                BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", self->target_block.btsd_len, btsd_copy.len);
-                return BSL_ERR_FAILURE;
+                BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
+                // GCOV_EXCL_START
+                if (btsd_copy.len != self->target_block.btsd_len)
+                {
+                    BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", self->target_block.btsd_len,
+                                btsd_copy.len);
+                    retval = BSL_ERR_FAILURE;
+                }
+                // GCOV_EXCL_STOP
+                BSL_SeqReader_Destroy(btsd_read);
             }
             // GCOV_EXCL_STOP
         }
 
         QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(btsd_copy));
         BSL_Data_Deinit(&btsd_copy);
+        if (BSL_SUCCESS != retval)
+        {
+            return retval;
+        }
     }
     else
     {

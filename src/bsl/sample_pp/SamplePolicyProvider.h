@@ -32,12 +32,8 @@
 #include "bsl/dynamic/MLibConfig.h"
 #include "bsl/dynamic/Variant.h"
 
-#include <m-array.h>
-#include <m-dict.h>
-#include <m-shared-ptr.h>
 #include <m-string.h>
 
-#include <pthread.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -102,19 +98,6 @@ void BSLP_PolicyPredicate_Move(BSLP_PolicyPredicate_t *self, BSLP_PolicyPredicat
 #define M_OPL_BSLP_PolicyPredicate_t()                                                                    \
     (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(0), SET(0), MOVE(API_6(BSLP_PolicyPredicate_Move)), \
      CLEAR(API_2(BSLP_PolicyPredicate_Deinit)))
-
-/** @struct BSLP_PolicyPredicateList_t
- * Defines list of policy predicates (::BSLP_PolicyPredicate_t)
- */
-/// @cond Doxygen_Suppress
-// NOLINTBEGIN
-// GCOV_EXCL_START
-M_SHARED_WEAK_PTR_DEF(BSLP_PolicyPredicatePtr, BSLP_PolicyPredicate_t, M_OPL_BSLP_PolicyPredicate_t())
-#define M_OPL_BSLP_PolicyPredicatePtr_t() M_SHARED_PTR_OPLIST(BSLP_PolicyPredicatePtr, M_OPL_BSLP_PolicyPredicate_t())
-M_ARRAY_DEF(BSLP_PolicyPredicateList, BSLP_PolicyPredicatePtr_t *, M_OPL_BSLP_PolicyPredicatePtr_t())
-// GCOV_EXCL_STOP
-// NOLINTEND
-/// @endcond
 
 /**
  * @brief Returns true if the given predicate matches the arguments
@@ -201,31 +184,6 @@ void BSLP_PolicyRule_Move(BSLP_PolicyRule_t *self, BSLP_PolicyRule_t *src);
     (INIT(API_2(BSLP_PolicyRule_Init)), INIT_SET(0), SET(0), MOVE(API_6(BSLP_PolicyRule_Move)), \
      CLEAR(API_2(BSLP_PolicyRule_Deinit)))
 
-/** @struct BSLP_PolicyRulePtr_t
- * A thread-unsafe shared pointer to a single ::BSLP_PolicyRule_t instance.
- */
-/** @struct BSLP_PolicyRuleList_t
- * Defines list of policy rules (::BSLP_PolicyRule_t)
- */
-/// @cond Doxygen_Suppress
-// NOLINTBEGIN
-// GCOV_EXCL_START
-M_SHARED_WEAK_PTR_DEF(BSLP_PolicyRulePtr, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t())
-#define M_OPL_BSLP_PolicyRulePtr_t() M_SHARED_PTR_OPLIST(BSLP_PolicyRulePtr, M_OPL_BSLP_PolicyRule_t())
-M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRulePtr_t *, M_OPL_BSLP_PolicyRulePtr_t())
-// GCOV_EXCL_STOP
-// NOLINTEND
-/// @endcond
-
-/// @cond Doxygen_Suppress
-// NOLINTBEGIN
-// GCOV_EXCL_START
-M_DICT_DEF2(BSLP_PolicyNoRuleActionMap, BSL_PolicyLocation_e, M_BASIC_OPLIST, BSL_PolicyAction_e,
-            M_ENUM_OPLIST(BSL_PolicyAction_e, BSL_POLICYACTION_UNDEFINED))
-// GCOV_EXCL_STOP
-// NOLINTEND
-/// @endcond
-
 /**
  * @brief Include a BPSec option on this rule.
  *
@@ -235,35 +193,34 @@ M_DICT_DEF2(BSLP_PolicyNoRuleActionMap, BSL_PolicyLocation_e, M_BASIC_OPLIST, BS
  */
 BSL_Variant_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self, int64_t opt_id);
 
-/// @brief Policy provider data. References shared among individual providers in BSL context
-typedef struct BSLP_PolicyProvider_s
-{
-    /// Variable-length list of policy rules
-    BSLP_PolicyRuleList_t rules;
-    /// Variable-length list of policy predicates
-    BSLP_PolicyPredicateList_t predicates;
-    /// Action when no rules match at an interaction point
-    BSLP_PolicyNoRuleActionMap_t norule_action;
-    /// ID of policy provider
-    uint64_t pp_id;
-    /// Mutex for all other shared data in this struct
-    pthread_mutex_t mutex;
-} BSLP_PolicyProvider_t;
+/** @brief Policy provider data.
+ * References are shared among individual providers in BSL context.
+ */
+typedef struct BSLP_PolicyProvider_s BSLP_PolicyProvider_t;
 
-/** Initialize policy provider data
+/** Allocate and initialize policy provider data
  * Data owned by BPA, reference should be provided to BSL library context(s)
  * @param pp_id policy provider id (must be > 0)
  * @return valid pointer to dynamically allocated policy provider
+ * @since v2.0.0 renamed from _Init() for consistency
  */
-BSLP_PolicyProvider_t *BSLP_PolicyProvider_Init(uint64_t pp_id);
+BSLP_PolicyProvider_t *BSLP_PolicyProvider_New(uint64_t pp_id);
 
 /** Add rule and corresponding predicate to policy provider
- * @param self policy provider
- * @param rule policy rule to add
- * @param predicate predicate to be associated with policy rule
+ * @param[in] self policy provider
+ * @param[in] rule policy rule to add and move from.
+ * @param[in] predicate predicate to be associated with policy rule to move from.
  */
 int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule,
                                 BSLP_PolicyPredicate_t *predicate);
+
+/** Get the number of rules in a provider state.
+ *
+ * @param[in] self policy provider
+ * @return The number of rules present.
+ * @since v2.0.0
+ */
+size_t BSLP_PolicyProvider_RuleCount(BSLP_PolicyProvider_t *self);
 
 /** Set the action to perform when no rules match a bundle.
  *
