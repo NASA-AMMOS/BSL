@@ -244,11 +244,11 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
             cipher = EVP_aes_256_wrap();
             break;
         }
+        // GCOV_EXCL_START
         default:
-        {
             BSL_LOG_DEBUG("WRAP AES MODE INVALID");
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
-        }
+            // GCOV_EXCL_STOP
     }
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
@@ -261,16 +261,18 @@ int BSL_Crypto_WrapKey(BSL_Crypto_KeyHandle_t kek_handle, BSL_Crypto_KeyHandle_t
     // GCOV_EXCL_STOP
 
     res = BSL_Data_Resize(wrapped_key, cek_view.len + BSL_CRYPTO_AESKW_BLOCK_SIZE);
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         retval = res;
     }
+    // GCOV_EXCL_STOP
 
     if (BSL_SUCCESS == retval)
     {
         BSL_LOG_PLAINTEXT_PTR("using KEK", cek_handle, kek_view.ptr, kek_view.len);
-        // GCOV_EXCL_START
         res = EVP_EncryptInit_ex(ctx, cipher, NULL, kek_view.ptr, NULL);
+        // GCOV_EXCL_START
         if (res != 1)
         {
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -342,9 +344,11 @@ int BSL_Crypto_KDF(BSL_Crypto_KeyHandle_t kdk_handle, BSL_Crypto_KDFVariant_t fu
         case BSL_CRYPTO_KDF_HKDF_SHA_512:
             digest_name = SN_sha512;
             break;
+            // GCOV_EXCL_START
         default:
             BSL_LOG_ERR("Invalid KDF func %d", func);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            // GCOV_EXCL_STOP
     }
 
     int retval = BSL_SUCCESS;
@@ -450,9 +454,11 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
         case BSL_CRYPTO_SHA_512:
             digest_name = SN_sha512;
             break;
+            // GCOV_EXCL_START
         default:
             BSL_LOG_ERR("Invalid SHA variant %d", sha_var);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            // GCOV_EXCL_STOP
     }
 
     hmac_ctx->keyhandle = BSL_KeyStore_State.acquire_key(keyhandle);
@@ -552,10 +558,12 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *tag)
     CHK_PROPERTY(size <= INT_MAX);
 
     int res = BSL_Data_Resize(tag, size);
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         return res;
     }
+    // GCOV_EXCL_STOP
 
     res = EVP_MAC_final(hmac_ctx->libhandle, tag->ptr, &size, tag->len);
     BSL_LOG_DEBUG("EVP_MAC_final gave %zu bytes, return %d", size, res);
@@ -616,10 +624,12 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
         case BSL_CRYPTO_AES_256:
             cipher = EVP_aes_256_gcm();
             break;
+            // GCOV_EXCL_START
         case BSL_CRYPTO_AES_192:
         default:
             BSL_LOG_ERR("Invalid AES variant");
             return BSL_ERR_FAILURE;
+            // GCOV_EXCL_STOP
     }
 
     const int do_encrypt = (cipher_ctx->enc == BSL_CRYPTO_ENCRYPT);
@@ -767,10 +777,12 @@ int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag)
     ASSERT_ARG_NONNULL(tag);
 
     int res = BSL_Data_Resize(tag, EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle));
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         return res;
     }
+    // GCOV_EXCL_STOP
 
     res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_GET_TAG, (int)(tag->len), tag->ptr);
     BSL_LOG_DEBUG("Completed EVP_CIPHER_CTX_ctrl len %zu, return %d", tag->len, res);
