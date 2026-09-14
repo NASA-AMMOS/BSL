@@ -2000,11 +2000,13 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
         // decryption pops off the auth tag
         size_t block_size = tag_len;
         BSL_SeqReader_Get(btsd_read, ctx->enc_ctx->in_buf.ptr, &block_size);
+        // GCOV_EXCL_START
         if (block_size < tag_len)
         {
             BSL_LOG_ERR("Failed reading ciphertext tag");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
         }
+        // GCOV_EXCL_STOP
         ctx->enc_ctx->in_buf.len = block_size;
 
         res = BSL_Cipher_SetTag(ctx->enc_ctx, &ctx->enc_ctx->in_buf);
