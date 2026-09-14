@@ -266,6 +266,7 @@ static int BSLX_BIB_GenIPPT(QCBOREncodeContext *enc, const BSLX_BIB_t *self)
             else
             {
                 BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
+                BSL_SeqReader_Destroy(btsd_read);
                 // GCOV_EXCL_START
                 if (btsd_copy.len != self->target_block.btsd_len)
                 {
@@ -274,7 +275,6 @@ static int BSLX_BIB_GenIPPT(QCBOREncodeContext *enc, const BSLX_BIB_t *self)
                     retval = BSL_ERR_FAILURE;
                 }
                 // GCOV_EXCL_STOP
-                BSL_SeqReader_Destroy(btsd_read);
             }
             // GCOV_EXCL_STOP
         }

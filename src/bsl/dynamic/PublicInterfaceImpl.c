@@ -185,6 +185,7 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
                 if (block.btsd_len != btsd_copy.len)
                 {
                     BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", block.btsd_len, btsd_copy.len);
+                    BSL_Data_Deinit(&btsd_copy);
                     return BSL_ERR_FAILURE;
                 }
                 // GCOV_EXCL_STOP

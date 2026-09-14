@@ -224,11 +224,14 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, const BSL_BundleRe
     if (sec_blk.btsd_len != btsd_copy.len)
     {
         BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", sec_blk.btsd_len, btsd_copy.len);
+        BSL_Data_Deinit(&btsd_copy);
+        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_FAILURE;
     }
     // GCOV_EXCL_STOP
 
-    if (BSL_CBOR_Decode(&btsd_copy, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb) != BSL_SUCCESS)
+    res = BSL_CBOR_Decode(&btsd_copy, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb);
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to parse ASB CBOR");
         BSL_Data_Deinit(&btsd_copy);
