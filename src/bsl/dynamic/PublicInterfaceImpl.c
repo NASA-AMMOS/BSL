@@ -178,11 +178,13 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
                 CHK_PROPERTY(BSL_SUCCESS == res);
 
                 BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, block.block_num);
+                // GCOV_EXCL_START
                 if (!btsd_read)
                 {
                     BSL_Data_Deinit(&btsd_copy);
                     return BSL_ERR_FAILURE;
                 }
+                // GCOV_EXCL_STOP
                 BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
                 BSL_SeqReader_Destroy(btsd_read);
                 // GCOV_EXCL_START
