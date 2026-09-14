@@ -217,7 +217,12 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, const BSL_BundleRe
     CHK_PROPERTY(BSL_SUCCESS == res);
 
     BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, sec_blk.block_num);
-    CHK_PROPERTY(NULL != btsd_read);
+    if (!btsd_read)
+    {
+        BSL_Data_Deinit(&btsd_copy);
+        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
+        return BSL_ERR_FAILURE;
+    }
     BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
     BSL_SeqReader_Destroy(btsd_read);
     // GCOV_EXCL_START
