@@ -71,6 +71,7 @@ typedef struct
 /** The set of callback function pointers which actually implement
  * a key store.
  * When registering, all of the functions need to be non-NULL.
+ * @since v2.0.0
  */
 typedef struct
 {

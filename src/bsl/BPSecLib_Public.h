@@ -289,6 +289,7 @@ typedef struct BSL_CanonicalBlock_s
  *
  * These are meant to be used as part of ::BSL_HostDescriptors_t for
  * registering host callbacks.
+ * @since v1.1.0
  */
 typedef struct
 {

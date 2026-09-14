@@ -59,7 +59,7 @@ void setUp(void)
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Init(&LocalTestCtx));
     BSL_TestUtils_SetupDefaultSecurityContext(&LocalTestCtx.bsl);
     BSL_SecurityActionSet_Init(&action_set);
-    policy_provider = BSLP_PolicyProvider_Init(1);
+    policy_provider = BSLP_PolicyProvider_New(1);
 
     /// Register the policy provider with some rules
     BSL_PolicyDesc_t policy_desc = {

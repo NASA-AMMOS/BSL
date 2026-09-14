@@ -62,7 +62,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     if (!retval)
     {
-        BSLP_PolicyProvider_t *policy = BSLP_PolicyProvider_Init(1);
+        BSLP_PolicyProvider_t *policy = BSLP_PolicyProvider_New(1);
 
         int infd = fileno(tmp);
         if (BSL_SUCCESS != BSLP_PolicyParser_LoadFd(infd, policy))
