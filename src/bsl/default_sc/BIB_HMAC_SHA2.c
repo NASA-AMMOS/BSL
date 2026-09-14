@@ -276,7 +276,6 @@ static int BSLX_BIB_GenIPPT(QCBOREncodeContext *enc, const BSLX_BIB_t *self)
                 }
                 // GCOV_EXCL_STOP
             }
-            // GCOV_EXCL_STOP
         }
 
         QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(btsd_copy));
