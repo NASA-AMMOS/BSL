@@ -191,7 +191,7 @@ typedef struct BSL_BundleRef_s
     /** Internal state for BSL backend use.
      * This structure is not visible to or needed by the BPA.
      */
-    struct BSLB_BundleRefState_s *bsl_data;
+    struct BSL_BundleRefState_s *bsl_data;
 } BSL_BundleRef_t;
 
 /** Initialize an empty reference state.

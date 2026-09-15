@@ -23,8 +23,8 @@
  * @ingroup backend_dyn
  * @brief Declaration of BSL state within bundle references.
  */
-#ifndef BSLB_BUNDLEREF_STATE_H_
-#define BSLB_BUNDLEREF_STATE_H_
+#ifndef BSLB_BUNDLEREFSTATE_H_
+#define BSLB_BUNDLEREFSTATE_H_
 
 #include "AbsSecBlock.h"
 
@@ -35,24 +35,24 @@
 extern "C" {
 #endif
 
-typedef struct BSLB_BundleRefState_s
+typedef struct BSL_BundleRefState_s
 {
     /// unused placeholder state
     int _placeholder;
-} BSLB_BundleRefState_t;
+} BSL_BundleRefState_t;
 
 /** Initialize an empty reference state.
  * @param[out] obj The struct to initialize.
  */
-void BSLB_BundleRefState_Init(BSLB_BundleRefState_t *obj);
+void BSL_BundleRefState_Init(BSL_BundleRefState_t *obj);
 
 /** De-initialize an empty reference state.
  * @param[in] obj The struct to de-initialize.
  */
-void BSLB_BundleRefState_Deinit(BSLB_BundleRefState_t *obj);
+void BSL_BundleRefState_Deinit(BSL_BundleRefState_t *obj);
 
 #ifdef __cplusplus
 } // extern C
 #endif
 
-#endif /* BSLB_BUNDLEREF_STATE_H_ */
+#endif /* BSLB_BUNDLEREFSTATE_H_ */

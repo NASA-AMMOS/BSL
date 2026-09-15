@@ -27,7 +27,7 @@
 
 #include "bsl/BPSecLib_Private.h"
 
-void BSLB_BundleRefState_Init(BSLB_BundleRefState_t *obj)
+void BSL_BundleRefState_Init(BSL_BundleRefState_t *obj)
 {
     // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(obj);
@@ -35,7 +35,7 @@ void BSLB_BundleRefState_Init(BSLB_BundleRefState_t *obj)
     obj->_placeholder = 1;
 }
 
-void BSLB_BundleRefState_Deinit(BSLB_BundleRefState_t *obj)
+void BSL_BundleRefState_Deinit(BSL_BundleRefState_t *obj)
 {
     // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(obj);
