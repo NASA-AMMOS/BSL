@@ -36,10 +36,10 @@ extern "C" {
 #endif
 
 /** @struct BSLB_AsbPtrMap_t
- * Map from security block number (uint64_t) to shared pointer to ::BSL_AbsSecBlock_t for its content.
+ * Map from security block number (uint64_t) to shared pointer to ::BSL_AbsSecBlock_s for its content.
  */
 /** @struct BSLB_AsbPtrListMap_t
- * Map from target block number (uint64_t) to array of shared pointer to ::BSL_AbsSecBlock_t for security ops on the
+ * Map from target block number (uint64_t) to array of shared pointer to ::BSL_AbsSecBlock_s for security ops on the
  * target.
  */
 /// @cond Doxygen_Suppress
