@@ -40,4 +40,5 @@ void BSL_BundleRefState_Deinit(BSL_BundleRefState_t *obj)
     // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(obj);
     // GCOV_EXCL_STOP
+    obj->_placeholder = 0;
 }
