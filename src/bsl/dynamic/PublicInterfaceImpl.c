@@ -142,6 +142,90 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
     return BSL_SUCCESS;
 }
 
+static int BSL_API_CacheASB(BSL_BundleRef_t *bundle, const BSL_CanonicalBlock_t *block)
+{
+
+    BSLB_AsbPtrMap_t     *asbmap;
+    BSLB_AsbPtrListMap_t *tgtmap;
+    switch (block->type_code)
+    {
+        case BSL_SECBLOCKTYPE_BIB:
+            asbmap = &bundle->bsl_data->bibs;
+            tgtmap = &bundle->bsl_data->bib_tgts;
+            break;
+        case BSL_SECBLOCKTYPE_BCB:
+            asbmap = &bundle->bsl_data->bcbs;
+            tgtmap = &bundle->bsl_data->bcb_tgts;
+            break;
+        default:
+            // only handle security here
+            return BSL_SUCCESS;
+    }
+
+    BSL_Data_t btsd_copy;
+    // ASB decoder needs the whole BTSD now
+    int res = BSL_Data_InitBuffer(&btsd_copy, block->btsd_len);
+    if (BSL_SUCCESS != res)
+    {
+        return BSL_ERR_FAILURE;
+    }
+    // GCOV_EXCL_STOP
+
+    BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, block->block_num);
+    // GCOV_EXCL_START
+    if (!btsd_read)
+    {
+        BSL_Data_Deinit(&btsd_copy);
+        return BSL_ERR_FAILURE;
+    }
+    // GCOV_EXCL_STOP
+    BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
+    BSL_SeqReader_Destroy(btsd_read);
+    // GCOV_EXCL_START
+    if (block->btsd_len != btsd_copy.len)
+    {
+        BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", block->btsd_len, btsd_copy.len);
+        BSL_Data_Deinit(&btsd_copy);
+        return BSL_ERR_FAILURE;
+    }
+    // GCOV_EXCL_STOP
+
+    BSL_AbsSecBlockPtr_t *asb_ptr = BSL_AbsSecBlockPtr_new();
+    // valid as long as the shared pointer
+    BSL_AbsSecBlock_t *asb = BSL_AbsSecBlockPtr_ref(asb_ptr);
+    // record this state
+    asb->sec_block_num = block->block_num;
+
+    int retval = BSL_SUCCESS;
+
+    res = BSL_CBOR_Decode(&btsd_copy, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb);
+    if (BSL_SUCCESS != res)
+    {
+        BSL_LOG_ERR("Failed to parse ASB from BTSD");
+        retval = BSL_ERR_FAILURE;
+    }
+    else
+    {
+        BSLB_AsbPtrMap_set_at(*asbmap, block->block_num, asb_ptr);
+
+        // index all targets
+        BSL_AbsSecBlock_TargetList_it_t tgt_iter;
+        for (BSL_AbsSecBlock_TargetList_it(tgt_iter, asb->target_results); !BSL_AbsSecBlock_TargetList_end_p(tgt_iter);
+             BSL_AbsSecBlock_TargetList_next(tgt_iter))
+        {
+            const BSL_AbsSecBlock_Target_t *tgt =
+                BSL_AbsSecBlock_TargetPtr_cref(*BSL_AbsSecBlock_TargetList_ref(tgt_iter));
+
+            BSLB_AsbPtrList_t *list = BSLB_AsbPtrListMap_safe_get(*tgtmap, tgt->target_block_num);
+            BSLB_AsbPtrList_push_back(*list, asb_ptr);
+        }
+    }
+    BSL_AbsSecBlockPtr_release(asb_ptr);
+
+    BSL_Data_Deinit(&btsd_copy);
+    return retval;
+}
+
 int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle,
                           BSL_PolicyLocation_e location)
 {
@@ -164,88 +248,19 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
-            BSL_LOG_WARNING("Failed to get block number %" PRIu64, primary_block.block_numbers[ix]);
+            BSL_LOG_ERR("Failed to get block number %" PRIu64, primary_block.block_numbers[ix]);
             continue;
         }
         // GCOV_EXCL_STOP
 
-        BSLB_AsbPtrMap_t *asbmap;
-        BSLB_AsbPtrListMap_t *tgtmap;
-        switch (block.type_code)
-        {
-        case BSL_SECBLOCKTYPE_BIB:
-            asbmap = &bundle->bsl_data->bibs;
-            tgtmap = &bundle->bsl_data->bib_tgts;
-            break;
-        case BSL_SECBLOCKTYPE_BCB:
-            asbmap = &bundle->bsl_data->bcbs;
-            tgtmap = &bundle->bsl_data->bcb_tgts;
-            break;
-        default:
-            // only security here
-            continue;
-        }
-
-        BSL_Data_t btsd_copy;
-        // ASB decoder needs the whole BTSD now
-                res = BSL_Data_InitBuffer(&btsd_copy, block.btsd_len);
+        res = BSL_API_CacheASB(bundle, &block);
         if (BSL_SUCCESS != res)
         {
+            BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, primary_block.block_numbers[ix]);
+            BSL_SecurityActionSet_SetImmediate(output_action_set, BSL_POLICYACTION_DROP_BUNDLE,
+                                               BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
             return BSL_ERR_FAILURE;
         }
-        // GCOV_EXCL_STOP
-
-        BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, block.block_num);
-        // GCOV_EXCL_START
-        if (!btsd_read)
-        {
-            BSL_Data_Deinit(&btsd_copy);
-            return BSL_ERR_FAILURE;
-        }
-        // GCOV_EXCL_STOP
-        BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-        BSL_SeqReader_Destroy(btsd_read);
-        // GCOV_EXCL_START
-        if (block.btsd_len != btsd_copy.len)
-        {
-            BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", block.btsd_len, btsd_copy.len);
-            BSL_Data_Deinit(&btsd_copy);
-            return BSL_ERR_FAILURE;
-        }
-        // GCOV_EXCL_STOP
-
-        BSL_AbsSecBlockPtr_t *asb_ptr = BSL_AbsSecBlockPtr_new();
-        // valid as long as the shared pointer
-        BSL_AbsSecBlock_t *asb = BSL_AbsSecBlockPtr_ref(asb_ptr);
-        // record this state
-        asb->sec_block_num = block.block_num;
-
-        res = BSL_CBOR_Decode(&btsd_copy, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb);
-        if (BSL_SUCCESS != res)
-        {
-            BSL_LOG_ERR("Failed to parse ASB from BTSD");
-            BSL_Data_Deinit(&btsd_copy);
-            BSL_SecurityActionSet_SetImmediate(output_action_set, BSL_POLICYACTION_DROP_BUNDLE, BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
-            return BSL_ERR_FAILURE;
-        }
-        else
-        {
-            BSLB_AsbPtrMap_set_at(*asbmap, block.block_num, asb_ptr);
-
-            // index all targets
-            BSL_AbsSecBlock_TargetList_it_t tgt_iter;
-            for (BSL_AbsSecBlock_TargetList_it(tgt_iter, asb->target_results); !BSL_AbsSecBlock_TargetList_end_p(tgt_iter);
-                 BSL_AbsSecBlock_TargetList_next(tgt_iter))
-            {
-                const BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_TargetPtr_cref(*BSL_AbsSecBlock_TargetList_ref(tgt_iter));
-
-                BSLB_AsbPtrList_t *list = BSLB_AsbPtrListMap_safe_get(*tgtmap, tgt->target_block_num);
-                BSLB_AsbPtrList_push_back(*list, asb_ptr);
-            }
-        }
-        BSL_AbsSecBlockPtr_release(asb_ptr);
-
-        BSL_Data_Deinit(&btsd_copy);
     }
     BSL_PrimaryBlock_deinit(&primary_block);
 
@@ -278,32 +293,33 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
             BSLB_AsbPtrListMap_t *tgtmap;
             switch (sec_oper->_service_type)
             {
-            case BSL_SECBLOCKTYPE_BIB:
-                tgtmap = &bundle->bsl_data->bib_tgts;
-                break;
-            case BSL_SECBLOCKTYPE_BCB:
-                tgtmap = &bundle->bsl_data->bcb_tgts;
-                break;
+                case BSL_SECBLOCKTYPE_BIB:
+                    tgtmap = &bundle->bsl_data->bib_tgts;
+                    break;
+                case BSL_SECBLOCKTYPE_BCB:
+                    tgtmap = &bundle->bsl_data->bcb_tgts;
+                    break;
 
-                // GCOV_EXCL_START
-            default:
-                // only security here
-                BSL_LOG_ERR("Invalid secop service");
-                continue;
-                // GCOV_EXCL_STOP
+                    // GCOV_EXCL_START
+                default:
+                    // only security here
+                    BSL_LOG_ERR("Invalid secop service");
+                    continue;
+                    // GCOV_EXCL_STOP
             }
 
             const BSLB_AsbPtrList_t *found_list = BSLB_AsbPtrListMap_cget(*tgtmap, sec_oper->target_block_num);
             if (!found_list)
             {
-                BSL_LOG_ERR("No secop found targeting block number %"PRIu64, sec_oper->target_block_num);
+                BSL_LOG_ERR("No secop found targeting block number %" PRIu64, sec_oper->target_block_num);
             }
             else
             {
                 const BSL_AbsSecBlock_t *found_asb = NULL;
 
                 BSLB_AsbPtrList_it_t list_it;
-                for (BSLB_AsbPtrList_it(list_it, *found_list); !BSLB_AsbPtrList_end_p(list_it); BSLB_AsbPtrList_next(list_it))
+                for (BSLB_AsbPtrList_it(list_it, *found_list); !BSLB_AsbPtrList_end_p(list_it);
+                     BSLB_AsbPtrList_next(list_it))
                 {
                     BSL_AbsSecBlockPtr_t *const *asb_ptr = BSLB_AsbPtrList_cref(list_it);
                     // ASB itself
@@ -322,7 +338,8 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
                 }
                 else
                 {
-                    BSL_LOG_ERR("No secop found targeting block number %"PRIu64 " with context %"PRId64, sec_oper->target_block_num, sec_oper->context_id);
+                    BSL_LOG_ERR("No secop found targeting block number %" PRIu64 " with context %" PRId64,
+                                sec_oper->target_block_num, sec_oper->context_id);
                 }
             }
         }
