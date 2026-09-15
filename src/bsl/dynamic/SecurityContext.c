@@ -26,6 +26,7 @@
  *
  */
 #include "AbsSecBlock.h"
+#include "BundleRefState.h"
 #include "CBOR.h"
 #include "PublicInterfaceImpl.h"
 #include "SecOperation.h"
@@ -199,56 +200,10 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
 /** Common handling of binding to existing ASB content from an operation.
  */
-static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib, const BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper,
-                                           const BSL_AbsSecBlock_t *asb)
+static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib _U_, const BSL_BundleRef_t *bundle _U_,
+                                           BSL_SecOper_t *sec_oper, BSL_AbsSecBlock_t *asb)
 {
-    BSL_CanonicalBlock_t sec_blk;
-
-    int res = BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk);
-    if (res != BSL_SUCCESS)
-    {
-        BSL_LOG_ERR("Could not get block metadata for security block number %" PRIu64, sec_oper->sec_block_num);
-        return BSL_ERR_HOST_CALLBACK_FAILED;
-    }
-
-    // ASB decoder needs the whole BTSD now
-    BSL_Data_t btsd_copy;
-    res = BSL_Data_InitBuffer(&btsd_copy, sec_blk.btsd_len);
-    CHK_PROPERTY(BSL_SUCCESS == res);
-
-    BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, sec_blk.block_num);
-    // GCOV_EXCL_START
-    if (!btsd_read)
-    {
-        BSL_Data_Deinit(&btsd_copy);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_FAILURE;
-    }
-    // GCOV_EXCL_STOP
-    BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-    BSL_SeqReader_Destroy(btsd_read);
-    // GCOV_EXCL_START
-    if (sec_blk.btsd_len != btsd_copy.len)
-    {
-        BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", sec_blk.btsd_len, btsd_copy.len);
-        BSL_Data_Deinit(&btsd_copy);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_FAILURE;
-    }
-    // GCOV_EXCL_STOP
-
-    res = BSL_CBOR_Decode(&btsd_copy, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb);
-    if (BSL_SUCCESS != res)
-    {
-        BSL_LOG_ERR("Failed to parse ASB CBOR");
-        BSL_Data_Deinit(&btsd_copy);
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_DECODING;
-    }
-    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_BYTES, sec_blk.btsd_len);
-    BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_ASB_DECODE_COUNT, 1);
-    BSL_Data_Deinit(&btsd_copy);
-
+    CHK_ARG_NONNULL(asb);
     CHK_PROPERTY(BSL_AbsSecBlock_IsConsistent(asb));
 
     // reference to persistent instance
@@ -300,13 +255,14 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
     CHK_ARG_NONNULL(bundle);
     CHK_PRECONDITION(BSL_SecOper_IsConsistent(sec_oper));
 
-    BSL_AbsSecBlock_t asb;
-    BSL_AbsSecBlock_Init(&asb);
-    int res = BSL_ExecAnyVerifierAcceptor_Pre(lib, bundle, sec_oper, &asb);
+    BSL_AbsSecBlockPtr_t **found_asb = BSLB_AsbPtrMap_get(bundle->bsl_data->bibs, sec_oper->sec_block_num);
+    CHK_PRECONDITION(found_asb);
+    BSL_AbsSecBlock_t *asb = BSL_AbsSecBlockPtr_ref(*found_asb);
+
+    int res = BSL_ExecAnyVerifierAcceptor_Pre(lib, bundle, sec_oper, asb);
     if (res != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get existing ASB information");
-        BSL_AbsSecBlock_Deinit(&asb);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return res;
     }
@@ -315,7 +271,6 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
     if (sec_context_result != BSL_SUCCESS)
     {
         BSL_LOG_ERR("BIB Sec Ctx processing for verifier/acceptor failed!");
-        BSL_AbsSecBlock_Deinit(&asb);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
@@ -327,7 +282,6 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
     if (BSL_SecOper_IsRoleVerifier(sec_oper))
     {
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_VERIFIER_COUNT, 1);
-        BSL_AbsSecBlock_Deinit(&asb);
         return BSL_SUCCESS;
     }
 
@@ -336,28 +290,26 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
 
     // If secop is to accept, BIB must be removed from bundle
     uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
-    int      status           = BSL_AbsSecBlock_StripResults(&asb, target_block_num);
+    int      status           = BSL_AbsSecBlock_StripResults(asb, target_block_num);
     if (status <= 0)
     {
         BSL_LOG_ERR("Failure to strip ASB of results");
-        BSL_AbsSecBlock_Deinit(&asb);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_FAILURE;
     }
 
-    if (BSL_AbsSecBlock_IsEmpty(&asb))
+    if (BSL_AbsSecBlock_IsEmpty(asb))
     {
         if (BSL_BundleCtx_RemoveBlock(bundle, sec_oper->sec_block_num) != BSL_SUCCESS)
         {
             BSL_LOG_ERR("Failed to remove block when ASB is empty");
-            BSL_AbsSecBlock_Deinit(&asb);
             BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
             return BSL_ERR_HOST_CALLBACK_FAILED;
         }
     }
     else
     {
-        res = Encode_ASB(lib, bundle, sec_oper->sec_block_num, &asb);
+        res = Encode_ASB(lib, bundle, sec_oper->sec_block_num, asb);
         if (res != BSL_SUCCESS)
         {
             BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
@@ -365,7 +317,6 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
         }
     }
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_ACCEPTOR_COUNT, 1);
-    BSL_AbsSecBlock_Deinit(&asb);
 
     return BSL_SUCCESS;
 }
@@ -377,13 +328,14 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
 
-    BSL_AbsSecBlock_t asb;
-    BSL_AbsSecBlock_Init(&asb);
-    int res = BSL_ExecAnyVerifierAcceptor_Pre(lib, bundle, sec_oper, &asb);
+    BSL_AbsSecBlockPtr_t **found_asb = BSLB_AsbPtrMap_get(bundle->bsl_data->bcbs, sec_oper->sec_block_num);
+    CHK_PRECONDITION(found_asb);
+    BSL_AbsSecBlock_t *asb = BSL_AbsSecBlockPtr_ref(*found_asb);
+
+    int res = BSL_ExecAnyVerifierAcceptor_Pre(lib, bundle, sec_oper, asb);
     if (res != BSL_SUCCESS)
     {
         BSL_LOG_ERR("Could not get existing ASB information");
-        BSL_AbsSecBlock_Deinit(&asb);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return res;
     }
@@ -392,7 +344,6 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
     if (sec_context_result != BSL_SUCCESS)
     {
         BSL_LOG_ERR("BCB Sec Ctx processing for verifier/acceptor failed!");
-        BSL_AbsSecBlock_Deinit(&asb);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_SECURITY_OPERATION_FAILED;
     }
@@ -401,34 +352,31 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
     if (BSL_SecOper_IsRoleVerifier(sec_oper))
     {
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_VERIFIER_COUNT, 1);
-        BSL_AbsSecBlock_Deinit(&asb);
         return BSL_SUCCESS;
     }
 
     // If secop is to accept, BCB must be removed from bundle
     uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
-    int      status           = BSL_AbsSecBlock_StripResults(&asb, target_block_num);
+    int      status           = BSL_AbsSecBlock_StripResults(asb, target_block_num);
     if (status <= 0)
     {
         BSL_LOG_ERR("Failure to strip ASB of results");
-        BSL_AbsSecBlock_Deinit(&asb);
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
         return BSL_ERR_FAILURE;
     }
 
-    if (BSL_AbsSecBlock_IsEmpty(&asb))
+    if (BSL_AbsSecBlock_IsEmpty(asb))
     {
         if (BSL_BundleCtx_RemoveBlock(bundle, sec_oper->sec_block_num) != BSL_SUCCESS)
         {
             BSL_LOG_ERR("Failed to remove block when ASB is empty");
-            BSL_AbsSecBlock_Deinit(&asb);
             BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
             return BSL_ERR_HOST_CALLBACK_FAILED;
         }
     }
     else
     {
-        res = Encode_ASB(lib, bundle, sec_oper->sec_block_num, &asb);
+        res = Encode_ASB(lib, bundle, sec_oper->sec_block_num, asb);
         if (res != BSL_SUCCESS)
         {
             BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
@@ -436,7 +384,6 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
         }
     }
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_ACCEPTOR_COUNT, 1);
-    BSL_AbsSecBlock_Deinit(&asb);
 
     return BSL_SUCCESS;
 }

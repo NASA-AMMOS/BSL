@@ -32,7 +32,10 @@ void BSL_BundleRefState_Init(BSL_BundleRefState_t *obj)
     // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(obj);
     // GCOV_EXCL_STOP
-    obj->_placeholder = 1;
+    BSLB_AsbPtrMap_init(obj->bibs);
+    BSLB_AsbPtrMap_init(obj->bcbs);
+    BSLB_AsbPtrListMap_init(obj->bib_tgts);
+    BSLB_AsbPtrListMap_init(obj->bcb_tgts);
 }
 
 void BSL_BundleRefState_Deinit(BSL_BundleRefState_t *obj)
@@ -40,5 +43,8 @@ void BSL_BundleRefState_Deinit(BSL_BundleRefState_t *obj)
     // GCOV_EXCL_START
     ASSERT_ARG_NONNULL(obj);
     // GCOV_EXCL_STOP
-    obj->_placeholder = 0;
+    BSLB_AsbPtrListMap_clear(obj->bcb_tgts);
+    BSLB_AsbPtrListMap_clear(obj->bib_tgts);
+    BSLB_AsbPtrMap_clear(obj->bcbs);
+    BSLB_AsbPtrMap_clear(obj->bibs);
 }

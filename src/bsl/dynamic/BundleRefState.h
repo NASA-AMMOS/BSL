@@ -35,10 +35,41 @@
 extern "C" {
 #endif
 
+/** @struct BSLB_AsbPtrMap_t
+ * Map from security block number (uint64_t) to shared pointer to ::BSL_AbsSecBlock_t for its content.
+ */
+/** @struct BSLB_AsbPtrListMap_t
+ * Map from target block number (uint64_t) to array of shared pointer to ::BSL_AbsSecBlock_t for security ops on the
+ * target.
+ */
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
+#define M_OPL_BSL_AbsSecBlock_t() \
+    (INIT(API_2(BSL_AbsSecBlock_Init)), CLEAR(API_2(BSL_AbsSecBlock_Deinit)), INIT_SET(0), SET(0))
+M_SHARED_WEAK_PTR_DEF(BSL_AbsSecBlockPtr, BSL_AbsSecBlock_t, M_OPL_BSL_AbsSecBlock_t())
+#define M_OPL_BSL_AbsSecBlockPtr_t() M_SHARED_PTR_OPLIST(BSL_AbsSecBlockPtr, M_OPL_BSL_AbsSecBlock_t())
+
+M_DICT_DEF2(BSLB_AsbPtrMap, uint64_t, M_BASIC_OPLIST, BSL_AbsSecBlockPtr_t *, M_OPL_BSL_AbsSecBlockPtr_t())
+
+M_ARRAY_DEF(BSLB_AsbPtrList, BSL_AbsSecBlockPtr_t *, M_OPL_BSL_AbsSecBlockPtr_t())
+#define M_OPL_BSLB_AsbPtrList_t() M_ARRAY_OPLIST(BSLB_AsbPtrList, M_OPL_BSL_AbsSecBlockPtr_t())
+M_DICT_DEF2(BSLB_AsbPtrListMap, uint64_t, M_BASIC_OPLIST, BSLB_AsbPtrList_t, M_OPL_BSLB_AsbPtrList_t())
+// GCOV_EXCL_STOP
+// NOLINTEND
+/// @endcond
+
 typedef struct BSL_BundleRefState_s
 {
-    /// unused placeholder state
-    int _placeholder;
+    /// Cache of decoded BIB content for policy query and secop use
+    BSLB_AsbPtrMap_t bibs;
+    /// Cache of decoded BCB content
+    BSLB_AsbPtrMap_t bcbs;
+
+    /// Map from target block number to associated BIB ASB
+    BSLB_AsbPtrListMap_t bib_tgts;
+    /// Map from target block number to associated BCB ASB
+    BSLB_AsbPtrListMap_t bcb_tgts;
 } BSL_BundleRefState_t;
 
 /** Initialize an empty reference state.
