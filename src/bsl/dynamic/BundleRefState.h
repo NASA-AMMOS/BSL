@@ -39,7 +39,8 @@ extern "C" {
  * Map from security block number (uint64_t) to shared pointer to ::BSL_AbsSecBlock_t for its content.
  */
 /** @struct BSLB_AsbPtrListMap_t
- * Map from target block number (uint64_t) to array of shared pointer to ::BSL_AbsSecBlock_t for security ops on the target.
+ * Map from target block number (uint64_t) to array of shared pointer to ::BSL_AbsSecBlock_t for security ops on the
+ * target.
  */
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN

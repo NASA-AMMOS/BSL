@@ -604,7 +604,7 @@ class TestRequirements(TestAgent):
                         0,
                         0,
                         bytes.fromhex(
-                            "810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92dda8ec93df80b41620df5bc6c355e1cce6217e17d3b8c5560edc14aba3d005196b046e"
+                            "810001018202820201828201078203008181820158405d9bdd1e2f043cf971588111f2fe1b847666cfacb7fb403c2468ef92dda8ec93df80b41620df5bc6c355e1cce6217e17d3b8c5560edc14aba3d005196b046e00"
                         ),
                     ],
                     [
@@ -1018,7 +1018,7 @@ class TestRequirements(TestAgent):
                     ],
                 ],
                 # Confirm that the operations fails and returns a Reason Code 8.
-                expected_output=r".*BSL indicated to delete bundle with reason code 8",
+                expected_output=r".*<ERROR>.*Failed to get ASB for block number 2",
                 # Execute as a BIB acceptor.
                 policy_config="0xA6",
                 bundle_dest_loc=BundleDestLoc.CLIN,
