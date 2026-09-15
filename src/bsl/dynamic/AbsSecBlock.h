@@ -92,6 +92,9 @@ enum BSL_AbsSecBlock_Flags_e
  */
 struct BSL_AbsSecBlock_s
 {
+    /// Containing extension block number, or zero if not yet defined
+    uint64_t sec_block_num;
+
     /// @brief Security context id
     int64_t sec_context_id;
 

@@ -163,25 +163,46 @@ int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t 
  */
 typedef struct BSL_HostEID_s
 {
-    void *handle; ///< Opaque pointer for BPA backend to use
+    /** Opaque pointer for the BPA to use.
+     * This is not used by the BSL and initialized to NULL.
+     */
+    void *handle;
 } BSL_HostEID_t;
 
 /** @brief Reference to a EID pattern owned and stored in the BPA.
- *
  */
 typedef struct BSL_HostEIDPattern_s
 {
-    void *handle; ///< Opaque pointer for BPA backend to use
+    /** Opaque pointer for the BPA to use.
+     * This is not used by the BSL and initialized to NULL.
+     */
+    void *handle;
 } BSL_HostEIDPattern_t;
 
-/** @brief Reference to a Bundle owned and stored in the host BPA
- *
- * @note The BSL internally never attempts to dereference the opaque pointer contained here.
+/** @brief Reference to a Bundle owned and stored in the host BPA.
+ * The BSL keeps separate internal state about the bundle being processed.
  */
 typedef struct BSL_BundleRef_s
 {
-    void *data; ///< Opaque pointer, not used by the BSL.
+    /** Opaque pointer for the BPA to use.
+     * This is not used by the BSL and initialized to NULL.
+     */
+    void *handle;
+    /** Internal state for BSL backend use.
+     * This structure is not visible to or needed by the BPA.
+     */
+    struct BSLB_BundleRefState_s *bsl_data;
 } BSL_BundleRef_t;
+
+/** Initialize an empty reference state.
+ * @param[out] obj The struct to initialize.
+ */
+void BSL_BundleRef_Init(BSL_BundleRef_t *obj);
+
+/** De-initialize an empty reference state.
+ * @param[in] obj The struct to de-initialize.
+ */
+void BSL_BundleRef_Deinit(BSL_BundleRef_t *obj);
 
 /// @brief IANA "Bundle Status Report Reason Codes" registry @cite rfc9171 @cite rfc9172
 typedef enum BSL_ReasonCode_e

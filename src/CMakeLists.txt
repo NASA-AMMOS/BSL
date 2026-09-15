@@ -185,6 +185,7 @@ target_sources(bsl_dynamic
             TYPE HEADERS
             FILES
                 bsl/dynamic/AbsSecBlock.h
+                bsl/dynamic/BundleRefState.h
                 bsl/dynamic/CBOR.h
                 bsl/dynamic/MLibConfig.h
                 bsl/dynamic/SecOperation.h
@@ -199,6 +200,7 @@ target_sources(bsl_dynamic
                 bsl/dynamic/PublicInterfaceImpl.h
     PRIVATE
         bsl/dynamic/AbsSecBlock.c
+        bsl/dynamic/BundleRefState.c
         bsl/dynamic/CBOR.c
         bsl/dynamic/HostInterface.c
         bsl/dynamic/Variant.c
