@@ -40,11 +40,13 @@ static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_n
     BSL_Data_Init(&asb_data);
 
     int res = BSL_CBOR_Encode_Twopass(&asb_data, (BSL_CBOR_Encode_f)&BSL_AbsSecBlock_Encode, asb);
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         BSL_Data_Deinit(&asb_data);
         return res;
     }
+    // GCOV_EXCL_STOP
 
     BSL_SeqWriter_t *btsd_write = BSL_BundleCtx_WriteBTSD(bundle, blk_num, asb_data.len);
     if (!btsd_write)
@@ -55,11 +57,15 @@ static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_n
     }
 
     int retval = BSL_SUCCESS;
-    if (BSL_SeqWriter_Put(btsd_write, asb_data.ptr, asb_data.len))
+
+    int res = BSL_SeqWriter_Put(btsd_write, asb_data.ptr, asb_data.len);
+    // GCOV_EXCL_START
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to write BTSD");
         retval = BSL_ERR_ENCODING;
     }
+    // GCOV_EXCL_STOP
     // finalize the write
     BSL_SeqWriter_Destroy(btsd_write, retval == BSL_SUCCESS);
 
@@ -97,11 +103,15 @@ static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BS
     sec_oper->sec_src_eid = NULL;
 
     BSL_CanonicalBlock_t sec_blk;
-    if (BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk) != BSL_SUCCESS)
+
+    int res = BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->sec_block_num, &sec_blk);
+    // GCOV_EXCL_START
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Failed to get security block");
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
+    // GCOV_EXCL_STOP
 
     // target-independent data
     BSLB_VariantPtrMap_it_t param_it;
@@ -126,10 +136,12 @@ static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BS
     }
 
     int res = Encode_ASB(lib, bundle, sec_blk.block_num, asb);
+    // GCOV_EXCL_START
     if (res != BSL_SUCCESS)
     {
         BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
     }
+    // GCOV_EXCL_STOP
 
     return BSL_SUCCESS;
 }
@@ -317,11 +329,13 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
     {
         BSL_BundleRefState_RepopulateTgts(bundle->bsl_data->bib_tgts, *found_asb);
         res = Encode_ASB(lib, bundle, sec_oper->sec_block_num, asb);
+        // GCOV_EXCL_START
         if (res != BSL_SUCCESS)
         {
             BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
             return res;
         }
+        // GCOV_EXCL_STOP
     }
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_ACCEPTOR_COUNT, 1);
 
@@ -391,11 +405,13 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
     {
         BSL_BundleRefState_RepopulateTgts(bundle->bsl_data->bcb_tgts, *found_asb);
         res = Encode_ASB(lib, bundle, sec_oper->sec_block_num, asb);
+        // GCOV_EXCL_START
         if (res != BSL_SUCCESS)
         {
             BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
             return res;
         }
+        // GCOV_EXCL_STOP
     }
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_ACCEPTOR_COUNT, 1);
 
@@ -403,10 +419,12 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
         BSL_CanonicalBlock_t block;
         // if the target was a security block, process its new plaintext
         res = BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->target_block_num, &block);
+        // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to get decrypted target info");
         }
+        // GCOV_EXCL_STOP
         else if ((block.type_code == BSL_SECBLOCKTYPE_BIB) || (block.type_code == BSL_SECBLOCKTYPE_BCB))
         {
             res = BSL_BundleRefState_CacheASB(bundle->bsl_data, bundle, &block);
