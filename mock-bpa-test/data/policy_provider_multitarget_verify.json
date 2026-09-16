@@ -1,0 +1,84 @@
+{
+  "policyrule_set": [
+    {
+      "policyrule": {
+        "desc": " Confidentiality verify rule payload",
+        "filter": {
+          "desc": "verify bcb payload",
+          "rule_id": "5",
+          "loc": "appin",
+          "src": "ipn:0.2.1",
+          "dest": "ipn:0.1.2",
+          "role": "v",
+          "tgt": 1,
+          "sc_id": 2
+        },
+        "spec": {
+          "svc": "bcb-confidentiality",
+          "sc_id": 2,
+          "sc_parms": [
+            {
+              "id": "key_name",
+              "value": "9102"
+            },
+            {
+              "id": "aes_variant",
+              "value": "1"
+            },
+            {
+              "id": "aad_scope",
+              "value": "0"
+            },
+            {
+              "id": "key_wrap",
+              "value": "0"
+            }
+          ]
+        },
+        "policy_action_on_fail": "delete_bundle"
+      }
+    },
+    {
+      "policyrule": {
+        "desc": "Confidentiality verify rule bae",
+        "filter": {
+          "desc": "verify bcb bae",
+          "rule_id": "6",
+          "loc": "appin",
+          "src": "ipn:0.2.1",
+          "dest": "ipn:0.1.2",
+          "role": "v",
+          "tgt": 7,
+          "sc_id": 2
+        },
+        "spec": {
+          "svc": "bcb-confidentiality",
+          "sc_id": 2,
+          "sc_parms": [
+            {
+              "id": "key_name",
+              "value": "9102"
+            },
+            {
+              "id": "aes_variant",
+              "value": "1"
+            },
+            {
+              "id": "aad_scope",
+              "value": "0"
+            },
+            {
+              "id": "key_wrap",
+              "value": "0"
+            }
+          ]
+        },
+        "policy_action_on_fail": "delete_bundle"
+      }
+    }
+  ],
+  "policy_action_no_rules": {
+    "appin": "delete_bundle",
+    "clin": "delete_bundle"
+  }
+}
