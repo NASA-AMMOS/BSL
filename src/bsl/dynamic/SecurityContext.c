@@ -201,7 +201,7 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 /** Common handling of binding to existing ASB content from an operation.
  */
 static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib _U_, const BSL_BundleRef_t *bundle _U_,
-                                           BSL_SecOper_t *sec_oper, BSL_AbsSecBlock_t *asb)
+                                           BSL_SecOper_t *sec_oper, const BSL_AbsSecBlock_t *asb)
 {
     CHK_ARG_NONNULL(asb);
     CHK_PROPERTY(BSL_AbsSecBlock_IsConsistent(asb));

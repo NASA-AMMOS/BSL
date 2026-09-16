@@ -49,7 +49,8 @@ void BSL_BundleRefState_Deinit(BSL_BundleRefState_t *obj)
     BSLB_AsbPtrMap_clear(obj->bibs);
 }
 
-int BSL_BundleRefState_CacheASB(BSL_BundleRefState_t *obj, struct BSL_BundleRef_s *bundle, const BSL_CanonicalBlock_t *block)
+int BSL_BundleRefState_CacheASB(BSL_BundleRefState_t *obj, const struct BSL_BundleRef_s *bundle,
+                                const BSL_CanonicalBlock_t *block)
 {
     BSLB_AsbPtrMap_t    *asbmap;
     BSLB_AsbPtrSetMap_t *tgtmap;

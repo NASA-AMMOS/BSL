@@ -65,7 +65,7 @@ M_DICT_DEF2(BSLB_AsbPtrSetMap, uint64_t, M_BASIC_OPLIST, BSLB_AsbPtrSet_t, M_OPL
 
 typedef struct BSL_BundleRefState_s
 {
-    /// Cache of decoded BIB content for policy query and secop use
+    /// Cache of decoded BIB content for policy query and operation execution
     BSLB_AsbPtrMap_t bibs;
     /// Cache of decoded BCB content
     BSLB_AsbPtrMap_t bcbs;
@@ -92,7 +92,8 @@ void BSL_BundleRefState_Deinit(BSL_BundleRefState_t *obj);
  * @param[in] bundle The BTSD reading context..
  * @param[in] block The block info to read from.
  */
-int BSL_BundleRefState_CacheASB(BSL_BundleRefState_t *obj, struct BSL_BundleRef_s *bundle, const BSL_CanonicalBlock_t *block);
+int BSL_BundleRefState_CacheASB(BSL_BundleRefState_t *obj, const struct BSL_BundleRef_s *bundle,
+                                const BSL_CanonicalBlock_t *block);
 
 /** Re-populate a target map for an existing ASB.
  */
