@@ -161,11 +161,13 @@ static int BSL_API_CacheAllSecurity(BSL_BundleRef_t *bundle)
     int retval = BSL_SUCCESS;
     for (size_t ix = 0; ix < primary_block.block_count; ix++)
     {
-        res = BSL_BundleCtx_GetBlockMetadata(bundle, primary_block.block_numbers[ix], &block);
+        const uint64_t blk_num = primary_block.block_numbers[ix];
+
+        res = BSL_BundleCtx_GetBlockMetadata(bundle, blk_num, &block);
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
-            BSL_LOG_ERR("Failed to get block number %" PRIu64, primary_block.block_numbers[ix]);
+            BSL_LOG_ERR("Failed to get block number %" PRIu64, blk_num);
             continue;
         }
         // GCOV_EXCL_STOP
@@ -177,18 +179,20 @@ static int BSL_API_CacheAllSecurity(BSL_BundleRef_t *bundle)
         res = BSL_BundleRefState_CacheASB(bundle->bsl_data, bundle, &block);
         if (BSL_SUCCESS != res)
         {
-            BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, primary_block.block_numbers[ix]);
+            BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, blk_num);
             retval = BSL_ERR_FAILURE;
             // allow other ASBs to log errors
         }
     }
     for (size_t ix = 0; ix < primary_block.block_count; ix++)
     {
-        res = BSL_BundleCtx_GetBlockMetadata(bundle, primary_block.block_numbers[ix], &block);
+        const uint64_t blk_num = primary_block.block_numbers[ix];
+
+        res = BSL_BundleCtx_GetBlockMetadata(bundle, blk_num, &block);
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
-            BSL_LOG_ERR("Failed to get block number %" PRIu64, primary_block.block_numbers[ix]);
+            BSL_LOG_ERR("Failed to get block number %" PRIu64, blk_num);
             continue;
         }
         // GCOV_EXCL_STOP
@@ -198,14 +202,14 @@ static int BSL_API_CacheAllSecurity(BSL_BundleRef_t *bundle)
         }
         if (BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bcb_tgts, block.block_num))
         {
-            BSL_LOG_DEBUG("Ignoring block number %" PRIu64 " as a BCB target");
+            BSL_LOG_DEBUG("Ignoring block number %" PRIu64 " as a BCB target", blk_num);
             continue;
         }
 
         res = BSL_BundleRefState_CacheASB(bundle->bsl_data, bundle, &block);
         if (BSL_SUCCESS != res)
         {
-            BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, primary_block.block_numbers[ix]);
+            BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, blk_num);
             retval = BSL_ERR_FAILURE;
         }
     }
