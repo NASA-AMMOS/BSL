@@ -1054,13 +1054,6 @@ size_t BSL_SecurityActionSet_CountActions(const BSL_SecurityActionSet_t *self);
  */
 const BSL_SecurityAction_t *BSL_SecurityActionSet_GetActionAtIndex(const BSL_SecurityActionSet_t *self, size_t index);
 
-/** @brief Returns count of failures after processing this action set
- *
- * @param[in] self Pointer to this security action set.
- * @return Count of errors.
- */
-size_t BSL_SecurityActionSet_CountErrors(const BSL_SecurityActionSet_t *self);
-
 /** Queries the policy provider for any security operations to take on the bundle.
  *
  * @note The caller is obligated to allocate space for the policy_action_set output.
