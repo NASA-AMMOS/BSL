@@ -134,6 +134,21 @@ int BSL_TestUtils_EncodeBundleToCBOR(BSL_TestContext_t *test_ctx)
     return res;
 }
 
+int BSL_TestUutils_QueryEmptyPolicy(BSL_TestContext_t *test_ctx, BSL_PolicyLocation_e location)
+{
+    // caching without actual policy registration
+    BSL_SecurityActionSet_t *action_set = BSL_calloc(1, BSL_SecurityActionSet_Sizeof());
+    BSL_SecurityActionSet_Init(action_set);
+
+    int res = BSL_API_QuerySecurity(&test_ctx->bsl, action_set, &(test_ctx->mock_bpa_ctr.bundle_ref), location);
+    assert(BSL_SecurityActionSet_CountOperations(action_set) == 0);
+
+    BSL_SecurityActionSet_Deinit(action_set);
+    BSL_free(action_set);
+
+    return res;
+}
+
 BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text)
 {
     BSL_HostEIDPattern_t pat;

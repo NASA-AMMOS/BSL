@@ -251,12 +251,17 @@ static int BSL_ExecAnyVerifierAcceptor_Pre(BSL_LibCtx_t *lib _U_, const BSL_Bund
 int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle,
                                 BSL_SecOper_t *sec_oper)
 {
+    CHK_ARG_NONNULL(sec_context_fn);
     CHK_ARG_NONNULL(lib);
     CHK_ARG_NONNULL(bundle);
     CHK_PRECONDITION(BSL_SecOper_IsConsistent(sec_oper));
 
     BSL_AbsSecBlockPtr_t **found_asb = BSLB_AsbPtrMap_get(bundle->bsl_data->bibs, sec_oper->sec_block_num);
-    CHK_PRECONDITION(found_asb);
+    if (!found_asb)
+    {
+        BSL_LOG_ERR("Sec oper references unknown BIB block number %" PRIu64, sec_oper->sec_block_num);
+        return BSL_ERR_FAILURE;
+    }
     BSL_AbsSecBlock_t *asb = BSL_AbsSecBlockPtr_ref(*found_asb);
 
     int res = BSL_ExecAnyVerifierAcceptor_Pre(lib, bundle, sec_oper, asb);
@@ -325,11 +330,16 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
                                 BSL_SecOper_t *sec_oper)
 {
     CHK_ARG_NONNULL(sec_context_fn);
+    CHK_ARG_NONNULL(lib);
     CHK_ARG_NONNULL(bundle);
-    CHK_ARG_NONNULL(sec_oper);
+    CHK_PRECONDITION(BSL_SecOper_IsConsistent(sec_oper));
 
     BSL_AbsSecBlockPtr_t **found_asb = BSLB_AsbPtrMap_get(bundle->bsl_data->bcbs, sec_oper->sec_block_num);
-    CHK_PRECONDITION(found_asb);
+    if (!found_asb)
+    {
+        BSL_LOG_ERR("Sec oper references unknown BCB block number %" PRIu64, sec_oper->sec_block_num);
+        return BSL_ERR_FAILURE;
+    }
     BSL_AbsSecBlock_t *asb = BSL_AbsSecBlockPtr_ref(*found_asb);
 
     int res = BSL_ExecAnyVerifierAcceptor_Pre(lib, bundle, sec_oper, asb);
@@ -547,9 +557,73 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
         for (BSL_SecOperList_it(secoplist_it, action->sec_op_list); !BSL_SecOperList_end_p(secoplist_it);
              BSL_SecOperList_next(secoplist_it))
         {
-            BSL_SecOper_t          *sec_oper = BSL_SecOperList_ref(secoplist_it);
-            const BSL_SecCtxDesc_t *sec_ctx  = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
+            BSL_SecOper_t *sec_oper = BSL_SecOperList_ref(secoplist_it);
 
+            // general operation consistency
+            if (sec_oper->_role != BSL_SECROLE_SOURCE)
+            {
+                // existing target lookup
+                BSLB_AsbPtrListMap_t *tgtmap;
+                switch (sec_oper->_service_type)
+                {
+                    case BSL_SECBLOCKTYPE_BIB:
+                        tgtmap = &bundle->bsl_data->bib_tgts;
+                        break;
+                    case BSL_SECBLOCKTYPE_BCB:
+                        tgtmap = &bundle->bsl_data->bcb_tgts;
+                        break;
+
+                        // GCOV_EXCL_START
+                    default:
+                        // only security here
+                        BSL_LOG_ERR("Invalid secop service");
+                        continue;
+                        // GCOV_EXCL_STOP
+                }
+
+                const BSLB_AsbPtrList_t *found_list = BSLB_AsbPtrListMap_cget(*tgtmap, sec_oper->target_block_num);
+                if (!found_list)
+                {
+                    BSL_LOG_ERR("No secop found targeting block number %" PRIu64, sec_oper->target_block_num);
+                    secop_invalid_count++;
+                    continue;
+                }
+                else
+                {
+                    const BSL_AbsSecBlock_t *found_asb = NULL;
+
+                    BSLB_AsbPtrList_it_t list_it;
+                    for (BSLB_AsbPtrList_it(list_it, *found_list); !BSLB_AsbPtrList_end_p(list_it);
+                         BSLB_AsbPtrList_next(list_it))
+                    {
+                        BSL_AbsSecBlockPtr_t *const *asb_ptr = BSLB_AsbPtrList_cref(list_it);
+                        // ASB itself
+                        const BSL_AbsSecBlock_t *asb = BSL_AbsSecBlockPtr_cref(*asb_ptr);
+
+                        if (asb->sec_context_id == sec_oper->context_id)
+                        {
+                            found_asb = asb;
+                            break;
+                        }
+                    }
+
+                    if (found_asb)
+                    {
+                        BSL_LOG_DEBUG("Found secop in block number %" PRIu64, found_asb->sec_block_num);
+                        sec_oper->sec_block_num = found_asb->sec_block_num;
+                    }
+                    else
+                    {
+                        BSL_LOG_ERR("No secop found targeting block number %" PRIu64 " with context %" PRId64,
+                                    sec_oper->target_block_num, sec_oper->context_id);
+                        secop_invalid_count++;
+                        continue;
+                    }
+                }
+            }
+
+            // context-specific validation
+            const BSL_SecCtxDesc_t *sec_ctx = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
             if (sec_ctx == NULL)
             {
                 BSL_LOG_ERR("No security context validator registered for context ID %" PRId64, sec_oper->context_id);

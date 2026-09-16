@@ -48,7 +48,7 @@ void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
     mock_bpa_LogOpen();
-    mock_bpa_LogSetLeastSeverity(LOG_ERR);
+    mock_bpa_LogSetLeastSeverity(LOG_DEBUG);
 }
 
 int suiteTearDown(int failures)
@@ -89,7 +89,8 @@ static const char *exA_nosec = "9f890700028201692f2f6473742f7376638201692f2f7372
 void test_CoseSc_InvalidOptions_Source(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "dtn://src/", 1);
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
@@ -114,7 +115,8 @@ void test_CoseSc_InvalidOptions_Source(void)
 void test_CoseSc_InvalidOptions_Verifier(void)
 {
     setenv("BSL_TEST_LOCAL_IPN_EID", "dtn://dst/", 1);
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
@@ -226,7 +228,8 @@ void test_AppendixA_Example1_BIB_Source(void)
         TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
@@ -321,7 +324,8 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_1_mac0));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_1_mac0));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
     MockBPA_CanonicalBlock_t *alter_blk = NULL;
     if (mismatch == OPT_MISMATCH_MODIFY_BLK_0)
@@ -464,7 +468,8 @@ void test_CCSDS_Example_Mac_Source(void)
         TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, ccsds_mac_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, ccsds_mac_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
@@ -548,7 +553,8 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
         TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, ccsds_mac_bib));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, ccsds_mac_bib));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
     MockBPA_CanonicalBlock_t *alter_blk = NULL;
     if (mismatch == OPT_MISMATCH_MODIFY_BLK_0)
@@ -607,8 +613,8 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
     const int expect_status = ((mismatch == OPT_MISMATCH_NONE) || (mismatch == OPT_MISMATCH_NO_AAD_SCOPE))
                                   ? BSL_SUCCESS
                                   : BSL_ERR_SECURITY_OPERATION_FAILED;
-    // Confirm running operation as source executes without error
-    int exec_status = BSL_ExecBCBVerifierAcceptor(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl,
+    // Confirm operation executes without error
+    int exec_status = BSL_ExecBIBVerifierAcceptor(&BSLX_CoseSc_Execute, &LocalTestCtx.bsl,
                                                   &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL_INT(expect_status, exec_status);
 
@@ -680,7 +686,8 @@ void test_AppendixA_Example4_BCB_Source(void)
         TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
@@ -775,7 +782,8 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_4_enc0));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_4_enc0));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
     MockBPA_CanonicalBlock_t *alter_blk = NULL;
     if (mismatch == OPT_MISMATCH_MODIFY_BLK_0)
@@ -923,7 +931,8 @@ void test_AppendixA_Example5_BCB_Source(void)
         TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
@@ -1006,7 +1015,8 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         TEST_ASSERT_EQUAL_INT(0, MockBPA_KeyStore_AddKey(&keyid, keyhandle));
     }
 
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_5_enc));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_5_enc));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
     MockBPA_CanonicalBlock_t *alter_blk = NULL;
     if (mismatch == OPT_MISMATCH_MODIFY_BLK_0)
@@ -1151,7 +1161,8 @@ void test_AppendixA_Example6_BCB_Source(void)
         MockBPA_KeyStore_AddKey(&keyid, keyhandle);
     }
 
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_nosec));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);

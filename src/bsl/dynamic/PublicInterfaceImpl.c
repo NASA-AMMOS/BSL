@@ -144,7 +144,6 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
 
 static int BSL_API_CacheASB(BSL_BundleRef_t *bundle, const BSL_CanonicalBlock_t *block)
 {
-
     BSLB_AsbPtrMap_t     *asbmap;
     BSLB_AsbPtrListMap_t *tgtmap;
     switch (block->type_code)
@@ -206,6 +205,8 @@ static int BSL_API_CacheASB(BSL_BundleRef_t *bundle, const BSL_CanonicalBlock_t 
     }
     else
     {
+        BSL_LOG_DEBUG("Caching ASB for block number %" PRIu64 " with block type %" PRIu64, block->block_num,
+                      block->type_code);
         BSLB_AsbPtrMap_set_at(*asbmap, block->block_num, asb_ptr);
 
         // index all targets
@@ -232,19 +233,22 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
     CHK_ARG_NONNULL(bsl);
     CHK_ARG_NONNULL(output_action_set);
     CHK_ARG_NONNULL(bundle);
+    int res;
 
     // pre-cache existing ASBs
     BSL_PrimaryBlock_t primary_block;
-    if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
+    res = BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block);
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Cannot get bundle primary block");
         return BSL_ERR_HOST_CALLBACK_FAILED;
     }
+    int retval = BSL_SUCCESS;
     for (size_t ix = 0; ix < primary_block.block_count; ix++)
     {
         BSL_CanonicalBlock_t block;
 
-        int res = BSL_BundleCtx_GetBlockMetadata(bundle, primary_block.block_numbers[ix], &block);
+        res = BSL_BundleCtx_GetBlockMetadata(bundle, primary_block.block_numbers[ix], &block);
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
@@ -257,12 +261,16 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, primary_block.block_numbers[ix]);
-            BSL_SecurityActionSet_SetImmediate(output_action_set, BSL_POLICYACTION_DROP_BUNDLE,
-                                               BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
-            return BSL_ERR_FAILURE;
+            retval = BSL_ERR_FAILURE;
         }
     }
     BSL_PrimaryBlock_deinit(&primary_block);
+    if (BSL_SUCCESS != retval)
+    {
+        BSL_SecurityActionSet_SetImmediate(output_action_set, BSL_POLICYACTION_DROP_BUNDLE,
+                                           BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
+        return retval;
+    }
 
     BSL_LOG_INFO("Querying policy provider for security actions...");
     int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
@@ -270,82 +278,8 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
 
     BSL_TlmCounters_IncrementCounter(bsl, BSL_TLM_BUNDLE_INSPECTED_COUNT, 1);
 
-    // Explanation:
-    // This segment of code finds the block number of the security block
-    // that targets (protects) a block whose ID is `target_block_num`
-    //
-    // I.e., "Get me the security block whose target contains `target_block_num`"
-    BSL_SecActionList_it_t act_it;
-    for (BSL_SecActionList_it(act_it, output_action_set->actions); !BSL_SecActionList_end_p(act_it);
-         BSL_SecActionList_next(act_it))
-    {
-        BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
-        for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j++)
-        {
-            BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, j);
-            if (sec_oper->_role == BSL_SECROLE_SOURCE)
-            {
-                // will produce a new secop
-                continue;
-            }
-
-            // target lookup
-            BSLB_AsbPtrListMap_t *tgtmap;
-            switch (sec_oper->_service_type)
-            {
-                case BSL_SECBLOCKTYPE_BIB:
-                    tgtmap = &bundle->bsl_data->bib_tgts;
-                    break;
-                case BSL_SECBLOCKTYPE_BCB:
-                    tgtmap = &bundle->bsl_data->bcb_tgts;
-                    break;
-
-                    // GCOV_EXCL_START
-                default:
-                    // only security here
-                    BSL_LOG_ERR("Invalid secop service");
-                    continue;
-                    // GCOV_EXCL_STOP
-            }
-
-            const BSLB_AsbPtrList_t *found_list = BSLB_AsbPtrListMap_cget(*tgtmap, sec_oper->target_block_num);
-            if (!found_list)
-            {
-                BSL_LOG_ERR("No secop found targeting block number %" PRIu64, sec_oper->target_block_num);
-            }
-            else
-            {
-                const BSL_AbsSecBlock_t *found_asb = NULL;
-
-                BSLB_AsbPtrList_it_t list_it;
-                for (BSLB_AsbPtrList_it(list_it, *found_list); !BSLB_AsbPtrList_end_p(list_it);
-                     BSLB_AsbPtrList_next(list_it))
-                {
-                    BSL_AbsSecBlockPtr_t *const *asb_ptr = BSLB_AsbPtrList_cref(list_it);
-                    // ASB itself
-                    const BSL_AbsSecBlock_t *asb = BSL_AbsSecBlockPtr_cref(*asb_ptr);
-
-                    if (asb->sec_context_id == sec_oper->context_id)
-                    {
-                        found_asb = asb;
-                        break;
-                    }
-                }
-
-                if (found_asb)
-                {
-                    sec_oper->sec_block_num = found_asb->sec_block_num;
-                }
-                else
-                {
-                    BSL_LOG_ERR("No secop found targeting block number %" PRIu64 " with context %" PRId64,
-                                sec_oper->target_block_num, sec_oper->context_id);
-                }
-            }
-        }
-    }
-
-    if (BSL_SUCCESS != BSL_SecCtx_ValidatePolicyActionSet(bsl, bundle, output_action_set))
+    res = BSL_SecCtx_ValidatePolicyActionSet(bsl, bundle, output_action_set);
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Error while validating action set");
         return BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;

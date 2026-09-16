@@ -57,6 +57,7 @@ int BSL_TestContext_Deinit(BSL_TestContext_t *ctx);
  *
  * @param[in,out] test_ctx The context to copy and decode into.
  * @param[in] cborhex The input bundle in base16.
+ * @return BSL_SUCCESS if successful.
  */
 int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cborhex);
 
@@ -65,6 +66,11 @@ int BSL_TestUtils_LoadBundleFromCBOR(BSL_TestContext_t *test_ctx, const char *cb
  * @param[in,out] test_ctx The context to encode.
  */
 int BSL_TestUtils_EncodeBundleToCBOR(BSL_TestContext_t *test_ctx);
+
+/** Query an empty policy provider, which will pre-cache bundle data.
+ * @return BSL_SUCCESS if successful.
+ */
+int BSL_TestUutils_QueryEmptyPolicy(BSL_TestContext_t *test_ctx, BSL_PolicyLocation_e location);
 
 BSL_HostEIDPattern_t BSL_TestUtils_GetEidPatternFromText(const char *text);
 
