@@ -20,12 +20,13 @@
 # subcontract 1700763.
 #
 
-import cbor2
 import json
 import logging
-from pathlib import Path
-import pytest
 import tempfile
+from pathlib import Path
+
+import cbor2
+import pytest
 import yaml
 
 from _test_util import BundleDestLoc, DataFormat, _TestCase
@@ -38,6 +39,7 @@ _TEMP_DIR = Path(_tempdir.name)
 
 LOGGER = logging.getLogger(__name__)
 """ Logger for this module. """
+
 
 def load_ccsds(cls: type[TestAgent]):
     """Add test functions based on configuration file."""
@@ -155,7 +157,8 @@ def load_ccsds(cls: type[TestAgent]):
                         "spec": {
                             "sc_id": sec_ctx,
                             "sc_parms": params,
-                            "svc": ("bib-integrity" if sec_ctx == 1 else "bcb-confidentiality")},
+                            "svc": ("bib-integrity" if sec_ctx == 1 else "bcb-confidentiality"),
+                        },
                         "policy_action_on_fail": "delete_bundle",
                     }
                 }
@@ -199,6 +202,7 @@ def load_ccsds(cls: type[TestAgent]):
         setattr(cls, f"test_{id}", _make_test(test_case))
 
     return cls
+
 
 @load_ccsds
 class TestCCSDS(TestAgent):
