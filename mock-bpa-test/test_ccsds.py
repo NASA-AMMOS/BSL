@@ -20,13 +20,12 @@
 # subcontract 1700763.
 #
 
+import cbor2
 import json
 import logging
-import tempfile
 from pathlib import Path
-
-import cbor2
 import pytest
+import tempfile
 import yaml
 
 from _test_util import BundleDestLoc, DataFormat, _TestCase
