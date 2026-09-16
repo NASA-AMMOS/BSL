@@ -58,7 +58,7 @@ static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_n
 
     int retval = BSL_SUCCESS;
 
-    int res = BSL_SeqWriter_Put(btsd_write, asb_data.ptr, asb_data.len);
+    res = BSL_SeqWriter_Put(btsd_write, asb_data.ptr, asb_data.len);
     // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
@@ -135,7 +135,7 @@ static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BS
         BSLB_VariantPtrMap_set_at(tgt->results, *(pair->key_ptr), *(pair->value_ptr));
     }
 
-    int res = Encode_ASB(lib, bundle, sec_blk.block_num, asb);
+    res = Encode_ASB(lib, bundle, sec_blk.block_num, asb);
     // GCOV_EXCL_START
     if (res != BSL_SUCCESS)
     {
