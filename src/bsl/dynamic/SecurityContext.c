@@ -302,32 +302,25 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
         return BSL_SUCCESS;
     }
 
-    // TODO/FIXME - This logic seems to be correct, but should be refactored and simplified.
-    // There are too many branches/conditionals each with their own return statement.
-
-    // If secop is to accept, BIB must be removed from bundle
     uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
-    int      status           = BSL_AbsSecBlock_StripResults(asb, target_block_num);
-    if (status <= 0)
-    {
-        BSL_LOG_ERR("Failure to strip ASB of results");
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_FAILURE;
-    }
-
+    // If secop is to accept, the operation (target) must be removed from bundle
+    BSL_AbsSecBlock_StripResults(asb, target_block_num);
+    BSL_BundleRefState_RepopulateTgts(bundle->bsl_data->bib_tgts, *found_asb);
     if (BSL_AbsSecBlock_IsEmpty(asb))
     {
         BSLB_AsbPtrMap_erase(bundle->bsl_data->bibs, sec_oper->sec_block_num);
-        if (BSL_BundleCtx_RemoveBlock(bundle, sec_oper->sec_block_num) != BSL_SUCCESS)
+        res = BSL_BundleCtx_RemoveBlock(bundle, sec_oper->sec_block_num);
+        // GCOV_EXCL_START
+        if (res != BSL_SUCCESS)
         {
             BSL_LOG_ERR("Failed to remove block when ASB is empty");
             BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
             return BSL_ERR_HOST_CALLBACK_FAILED;
         }
+        // GCOV_EXCL_STOP
     }
     else
     {
-        BSL_BundleRefState_RepopulateTgts(bundle->bsl_data->bib_tgts, *found_asb);
         res = Encode_ASB(lib, bundle, sec_oper->sec_block_num, asb);
         // GCOV_EXCL_START
         if (res != BSL_SUCCESS)
@@ -381,29 +374,25 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
         return BSL_SUCCESS;
     }
 
-    // If secop is to accept, BCB must be removed from bundle
     uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
-    int      status           = BSL_AbsSecBlock_StripResults(asb, target_block_num);
-    if (status <= 0)
-    {
-        BSL_LOG_ERR("Failure to strip ASB of results");
-        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
-        return BSL_ERR_FAILURE;
-    }
-
+    // If secop is to accept, the operation (target) must be removed from bundle
+    BSL_AbsSecBlock_StripResults(asb, target_block_num);
+    BSL_BundleRefState_RepopulateTgts(bundle->bsl_data->bcb_tgts, *found_asb);
     if (BSL_AbsSecBlock_IsEmpty(asb))
     {
         BSLB_AsbPtrMap_erase(bundle->bsl_data->bcbs, sec_oper->sec_block_num);
-        if (BSL_BundleCtx_RemoveBlock(bundle, sec_oper->sec_block_num) != BSL_SUCCESS)
+        res = BSL_BundleCtx_RemoveBlock(bundle, sec_oper->sec_block_num);
+        // GCOV_EXCL_START
+        if (res != BSL_SUCCESS)
         {
             BSL_LOG_ERR("Failed to remove block when ASB is empty");
             BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
             return BSL_ERR_HOST_CALLBACK_FAILED;
         }
+        // GCOV_EXCL_STOP
     }
     else
     {
-        BSL_BundleRefState_RepopulateTgts(bundle->bsl_data->bcb_tgts, *found_asb);
         res = Encode_ASB(lib, bundle, sec_oper->sec_block_num, asb);
         // GCOV_EXCL_START
         if (res != BSL_SUCCESS)
