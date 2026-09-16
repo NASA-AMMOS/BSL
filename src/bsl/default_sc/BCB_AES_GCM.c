@@ -215,6 +215,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         // Last step is to compute the authentication tag, with is produced
         // as an output parameter to this cipher suite.
+
+        const BSL_Data_t *authtag_data_ptr = &bcb_context->authtag;
         if (!bcb_context->authtag_result_present)
         {
             size_t block_size = BSL_Cipher_TagLen(&cipher);
@@ -229,9 +231,10 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
             }
             // GCOV_EXCL_STOP
             cipher.in_buf.len = block_size;
+            authtag_data_ptr = &cipher.in_buf;
         }
 
-        if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, &cipher.in_buf))
+        if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, authtag_data_ptr))
         {
             BSL_LOG_ERR("Failed to set auth tag");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;

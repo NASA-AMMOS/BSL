@@ -466,3 +466,58 @@ class TestSamplePolicy(TestAgent):
                 expected_output_format=DataFormat.BUNDLEARRAY,
             )
         )
+
+    def test_multitarget_verify_bcb_concat_authtag(self):
+        self._single_test(
+            _TestCase(
+                input_data=[
+                    [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                    [7, 2, 0, 0, bytes.fromhex("11A0E4EC411F330F06A1E8594160C0267902CC")],
+                    [
+                        12,
+                        3,
+                        0,
+                        0,
+                        bytes.fromhex(
+                            "820102020182028203018382014C0C565B2389529A9D91D704D1820201820400828080"
+                        ),
+                    ],
+                    [
+                        1,
+                        1,
+                        0,
+                        0,
+                        bytes.fromhex(
+                            "5AC4A915F715206DAA44FDEF717A3BF0669F2AA068AB1D9EE52215F4BBFB6F94D92F2E2147BB883460EBFDB38BB08D70993594"
+                        ),
+                    ],
+                ],
+                expected_output=[
+                    [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                    [
+                        12,
+                        3,
+                        0,
+                        0,
+                        bytes.fromhex(
+                            "820102020182028203018382014C0C565B2389529A9D91D704D1820201820400828080"
+                        ),
+                    ],
+                    [7, 2, 0, 0, bytes.fromhex("11A0E4EC411F330F06A1E8594160C0267902CC")],
+                    [
+                        1,
+                        1,
+                        0,
+                        0,
+                        bytes.fromhex(
+                            "5AC4A915F715206DAA44FDEF717A3BF0669F2AA068AB1D9EE52215F4BBFB6F94D92F2E2147BB883460EBFDB38BB08D70993594"
+                        ),
+                    ],
+                ],
+                policy_config="data/policy_provider_multitarget_verify.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/key_set_1.json",
+                input_data_format=DataFormat.BUNDLEARRAY,
+                expected_output_format=DataFormat.BUNDLEARRAY,
+            )
+        )
