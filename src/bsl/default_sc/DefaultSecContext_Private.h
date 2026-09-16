@@ -116,6 +116,8 @@ typedef struct BSLX_BCB_s
     // Data wrappers and containers for borrowed and owned/allocated buffers
     // These will ALL be deinitialized at the end, so _Deinit MUST be called.
     BSL_Data_t authtag;
+    bool authtag_result_present; // true if authtag is present in BCB results on accept/verify
+
     BSL_Data_t iv;
     BSL_Data_t wrapped_key;
     BSL_Data_t aad;
