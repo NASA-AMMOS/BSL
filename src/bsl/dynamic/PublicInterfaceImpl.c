@@ -28,6 +28,7 @@
 #include "PublicInterfaceImpl.h"
 
 #include "AbsSecBlock.h"
+#include "BundleRefState.h"
 #include "CBOR.h"
 #include "SecurityActionSet.h"
 
@@ -89,8 +90,25 @@ int BSL_LibCtx_AccumulateTlmCounters(const BSL_LibCtx_t *lib, BSL_TlmCounters_t 
     return BSL_SUCCESS;
 }
 
+void BSL_BundleRef_Init(BSL_BundleRef_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    obj->handle   = NULL;
+    obj->bsl_data = BSL_calloc(1, sizeof(struct BSL_BundleRefState_s));
+    BSL_BundleRefState_Init(obj->bsl_data);
+}
+
+void BSL_BundleRef_Deinit(BSL_BundleRef_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    BSL_BundleRefState_Deinit(obj->bsl_data);
+    BSL_free(obj->bsl_data);
+    memset(obj, 0, sizeof(*obj));
+}
+
 void BSL_PrimaryBlock_Init(BSL_PrimaryBlock_t *obj)
 {
+    ASSERT_ARG_NONNULL(obj);
     memset(obj, 0, sizeof(*obj));
 }
 
