@@ -19,9 +19,10 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
+import pytest
+
 from _test_util import BundleDestLoc, DataFormat, _TestCase
 from test_bpa import TestAgent
-import pytest
 
 
 class TestSamplePolicy(TestAgent):
@@ -261,7 +262,7 @@ class TestSamplePolicy(TestAgent):
                         0,
                         bytes.fromhex(
                             "82010201018202820301828201078203008281820158403BDC69B3A34A2B5D3A8554368BD1E808F606219D2A10A846EAE3886AE4ECC83C4EE550FDFB1CC636B904E2F1A73E303DCD4B6CCECE003E95E8164DCC89A156E181820158406A8B78889ABB36F06A2272B88F7FCEAB74FE69B35B4C5F7B737634FF478D9FD800F0797E2CE6AC0F0D413B34C2196E1E777A180CB63FFC33D2761E386177FA78"
-                        )
+                        ),
                     ],
                     [
                         1,
@@ -308,7 +309,7 @@ class TestSamplePolicy(TestAgent):
                         0,
                         bytes.fromhex(
                             "82010201018202820301828201078203008281820158403BDC69B3A34A2B5D3A8554368BD1E808F606219D2A10A846EAE3886AE4ECC83C4EE550FDFB1CC636B904E2F1A73E303DCD4B6CCECE003E95E8164DCC89A156E181820158406A8B78889ABB36F06A2272B88F7FCEAB74FE69B35B4C5F7B737634FF478D9FD800F0797E2CE6AC0F0D413B34C2196E1E777A180CB63FFC33D2761E386177FA78"
-                        )
+                        ),
                     ],
                     [
                         1,
@@ -341,7 +342,7 @@ class TestSamplePolicy(TestAgent):
                         0,
                         bytes.fromhex(
                             "82010201018202820301828201078203008281820158403BDC69B3A34A2B5D3A8554368BD1E808F606219D2A10A846EAE3886AE4ECC83C4EE550FDFB1CC636B904E2F1A73E303DCD4B6CCECE003E95E8164DCC89A156E181820158406A8B78889ABB36F06A2272B88F7FCEAB74FE69B35B4C5F7B737634FF478D9FD800F0797E2CE6AC0F0D413B34C2196E1E777A180CB63FFC33D2761E386177FA78"
-                        )
+                        ),
                     ],
                     [
                         1,
@@ -387,7 +388,7 @@ class TestSamplePolicy(TestAgent):
                         0,
                         bytes.fromhex(
                             "820102020182028203018382014C0C565B2389529A9D91D704D182020182040082818201502147BB883460EBFDB38BB08D7099359481820150EC411F330F06A1E8594160C0267902CC"
-                        )
+                        ),
                     ],
                     [
                         1,
@@ -433,7 +434,7 @@ class TestSamplePolicy(TestAgent):
                         0,
                         bytes.fromhex(
                             "820102020182028203018382014C0C565B2389529A9D91D704D1820201820400828080"
-                        )
+                        ),
                     ],
                     [
                         1,
