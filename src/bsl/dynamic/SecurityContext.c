@@ -305,6 +305,7 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
 
     if (BSL_AbsSecBlock_IsEmpty(asb))
     {
+        BSLB_AsbPtrMap_erase(bundle->bsl_data->bibs, sec_oper->sec_block_num);
         if (BSL_BundleCtx_RemoveBlock(bundle, sec_oper->sec_block_num) != BSL_SUCCESS)
         {
             BSL_LOG_ERR("Failed to remove block when ASB is empty");
@@ -314,6 +315,7 @@ int BSL_ExecBIBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
     }
     else
     {
+        BSL_BundleRefState_RepopulateTgts(bundle->bsl_data->bib_tgts, *found_asb);
         res = Encode_ASB(lib, bundle, sec_oper->sec_block_num, asb);
         if (res != BSL_SUCCESS)
         {
@@ -377,6 +379,7 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
 
     if (BSL_AbsSecBlock_IsEmpty(asb))
     {
+        BSLB_AsbPtrMap_erase(bundle->bsl_data->bcbs, sec_oper->sec_block_num);
         if (BSL_BundleCtx_RemoveBlock(bundle, sec_oper->sec_block_num) != BSL_SUCCESS)
         {
             BSL_LOG_ERR("Failed to remove block when ASB is empty");
@@ -386,6 +389,7 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
     }
     else
     {
+        BSL_BundleRefState_RepopulateTgts(bundle->bsl_data->bcb_tgts, *found_asb);
         res = Encode_ASB(lib, bundle, sec_oper->sec_block_num, asb);
         if (res != BSL_SUCCESS)
         {
@@ -394,6 +398,25 @@ int BSL_ExecBCBVerifierAcceptor(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_
         }
     }
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_ACCEPTOR_COUNT, 1);
+
+    {
+        BSL_CanonicalBlock_t block;
+        // if the target was a security block, process its new plaintext
+        res = BSL_BundleCtx_GetBlockMetadata(bundle, sec_oper->target_block_num, &block);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to get decrypted target info");
+        }
+        else if ((block.type_code == BSL_SECBLOCKTYPE_BIB) || (block.type_code == BSL_SECBLOCKTYPE_BCB))
+        {
+            res = BSL_BundleRefState_CacheASB(bundle->bsl_data, bundle, &block);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, sec_oper->target_block_num);
+                // still treat the secop as success
+            }
+        }
+    }
 
     return BSL_SUCCESS;
 }
@@ -563,7 +586,7 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
             if (sec_oper->_role != BSL_SECROLE_SOURCE)
             {
                 // existing target lookup
-                BSLB_AsbPtrListMap_t *tgtmap;
+                BSLB_AsbPtrSetMap_t *tgtmap;
                 switch (sec_oper->_service_type)
                 {
                     case BSL_SECBLOCKTYPE_BIB:
@@ -581,7 +604,7 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                         // GCOV_EXCL_STOP
                 }
 
-                const BSLB_AsbPtrList_t *found_list = BSLB_AsbPtrListMap_cget(*tgtmap, sec_oper->target_block_num);
+                const BSLB_AsbPtrSet_t *found_list = BSLB_AsbPtrSetMap_cget(*tgtmap, sec_oper->target_block_num);
                 if (!found_list)
                 {
                     BSL_LOG_ERR("No secop found targeting block number %" PRIu64, sec_oper->target_block_num);
@@ -592,11 +615,11 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                 {
                     const BSL_AbsSecBlock_t *found_asb = NULL;
 
-                    BSLB_AsbPtrList_it_t list_it;
-                    for (BSLB_AsbPtrList_it(list_it, *found_list); !BSLB_AsbPtrList_end_p(list_it);
-                         BSLB_AsbPtrList_next(list_it))
+                    BSLB_AsbPtrSet_it_t list_it;
+                    for (BSLB_AsbPtrSet_it(list_it, *found_list); !BSLB_AsbPtrSet_end_p(list_it);
+                         BSLB_AsbPtrSet_next(list_it))
                     {
-                        BSL_AbsSecBlockPtr_t *const *asb_ptr = BSLB_AsbPtrList_cref(list_it);
+                        BSL_AbsSecBlockPtr_t *const *asb_ptr = BSLB_AsbPtrSet_cref(list_it);
                         // ASB itself
                         const BSL_AbsSecBlock_t *asb = BSL_AbsSecBlockPtr_cref(*asb_ptr);
 

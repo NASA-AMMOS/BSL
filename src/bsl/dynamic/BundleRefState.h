@@ -29,6 +29,7 @@
 #include "AbsSecBlock.h"
 
 #include <m-dict.h>
+#include <m-rbtree.h>
 #include <m-shared-ptr.h>
 
 #ifdef __cplusplus
@@ -38,9 +39,12 @@ extern "C" {
 /** @struct BSLB_AsbPtrMap_t
  * Map from security block number (uint64_t) to shared pointer to ::BSL_AbsSecBlock_s for its content.
  */
-/** @struct BSLB_AsbPtrListMap_t
- * Map from target block number (uint64_t) to array of shared pointer to ::BSL_AbsSecBlock_s for security ops on the
+/** @struct BSLB_AsbPtrSetMap_t
+ * Map from target block number (uint64_t) to set of shared pointer to ::BSL_AbsSecBlock_s for security ops on the
  * target.
+ */
+/** @struct BSLB_AsbPtrSet_t
+ * Set of shared pointers to ::BSL_AbsSecBlock_s instances.
  */
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
@@ -52,9 +56,9 @@ M_SHARED_WEAK_PTR_DEF(BSL_AbsSecBlockPtr, BSL_AbsSecBlock_t, M_OPL_BSL_AbsSecBlo
 
 M_DICT_DEF2(BSLB_AsbPtrMap, uint64_t, M_BASIC_OPLIST, BSL_AbsSecBlockPtr_t *, M_OPL_BSL_AbsSecBlockPtr_t())
 
-M_ARRAY_DEF(BSLB_AsbPtrList, BSL_AbsSecBlockPtr_t *, M_OPL_BSL_AbsSecBlockPtr_t())
-#define M_OPL_BSLB_AsbPtrList_t() M_ARRAY_OPLIST(BSLB_AsbPtrList, M_OPL_BSL_AbsSecBlockPtr_t())
-M_DICT_DEF2(BSLB_AsbPtrListMap, uint64_t, M_BASIC_OPLIST, BSLB_AsbPtrList_t, M_OPL_BSLB_AsbPtrList_t())
+M_RBTREE_DEF(BSLB_AsbPtrSet, BSL_AbsSecBlockPtr_t *, M_OPL_BSL_AbsSecBlockPtr_t())
+#define M_OPL_BSLB_AsbPtrSet_t() M_ARRAY_OPLIST(BSLB_AsbPtrSet, M_OPL_BSL_AbsSecBlockPtr_t())
+M_DICT_DEF2(BSLB_AsbPtrSetMap, uint64_t, M_BASIC_OPLIST, BSLB_AsbPtrSet_t, M_OPL_BSLB_AsbPtrSet_t())
 // GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond
@@ -67,9 +71,9 @@ typedef struct BSL_BundleRefState_s
     BSLB_AsbPtrMap_t bcbs;
 
     /// Map from target block number to associated BIB ASB
-    BSLB_AsbPtrListMap_t bib_tgts;
+    BSLB_AsbPtrSetMap_t bib_tgts;
     /// Map from target block number to associated BCB ASB
-    BSLB_AsbPtrListMap_t bcb_tgts;
+    BSLB_AsbPtrSetMap_t bcb_tgts;
 } BSL_BundleRefState_t;
 
 /** Initialize an empty reference state.
@@ -81,6 +85,18 @@ void BSL_BundleRefState_Init(BSL_BundleRefState_t *obj);
  * @param[in] obj The struct to de-initialize.
  */
 void BSL_BundleRefState_Deinit(BSL_BundleRefState_t *obj);
+
+/** Decode and cache an existing ASB.
+ *
+ * @param[in] obj The state to cache into.
+ * @param[in] bundle The BTSD reading context..
+ * @param[in] block The block info to read from.
+ */
+int BSL_BundleRefState_CacheASB(BSL_BundleRefState_t *obj, struct BSL_BundleRef_s *bundle, const BSL_CanonicalBlock_t *block);
+
+/** Re-populate a target map for an existing ASB.
+ */
+void BSL_BundleRefState_RepopulateTgts(BSLB_AsbPtrSetMap_t map, BSL_AbsSecBlockPtr_t *asb_ptr);
 
 #ifdef __cplusplus
 } // extern C

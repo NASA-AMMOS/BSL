@@ -453,7 +453,6 @@ void test_RFC9173_AppendixA_Example3_Source(void)
 
 void test_RFC9173_AppendixA_Example4_Acceptor(void)
 {
-    TEST_IGNORE_MESSAGE("need to deal with this gracefully");
     // See: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.4.5
     const char *final_bundle = ("9f88070000820282010282028202018202820201820018281a000f4240850b0300"
                                 "005846438ed6208eb1c1ffb94d952175167df0902902064a2983910c4fb2340790bf"
