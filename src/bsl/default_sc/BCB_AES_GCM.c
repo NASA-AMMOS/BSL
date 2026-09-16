@@ -231,7 +231,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
             }
             // GCOV_EXCL_STOP
             cipher.in_buf.len = block_size;
-            authtag_data_ptr = &cipher.in_buf;
+            authtag_data_ptr  = &cipher.in_buf;
         }
 
         if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, authtag_data_ptr))
