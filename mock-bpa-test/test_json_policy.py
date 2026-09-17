@@ -19,7 +19,7 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
-import pytest
+import unittest
 
 from _test_util import BundleDestLoc, DataFormat, _TestCase
 from test_bpa import TestAgent
@@ -235,7 +235,7 @@ class TestSamplePolicy(TestAgent):
             )
         )
 
-    @pytest.mark.skip(reason="policy not configured")
+    @unittest.expectedFailure
     def test_multitarget_source_bib(self):
         self._single_test(
             _TestCase(
@@ -282,7 +282,7 @@ class TestSamplePolicy(TestAgent):
             )
         )
 
-    @pytest.mark.skip(reason="policy not configured")
+    @unittest.expectedFailure
     def test_multitarget_source_bcb(self):
         self._single_test(
             _TestCase(
