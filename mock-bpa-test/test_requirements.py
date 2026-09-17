@@ -991,7 +991,7 @@ class TestRequirements(TestAgent):
     # BSL_33
     # Reason Code 8
     # The purpose of this test case is to verify that the BSL has the ability to inform the BPA that a block is unintelligible using Reason Code 8 as defined in RFC 9171.
-    def test_BSL_33(self):
+    def test_BSL_33a(self):
         self._single_test(
             _TestCase(
                 # Using the Bundle from RFC 9173 Appendix A1.4, change the bytes of the BIB header to be be all zeros (thus not a valid CBOR array).
@@ -1001,7 +1001,7 @@ class TestRequirements(TestAgent):
                     [
                         11,
                         2,
-                        0,
+                        0x04, # delete if cannot process
                         0,
                         bytes.fromhex(
                             "000000000000000000000000000000008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1"
@@ -1017,8 +1017,44 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                # Confirm that the operations fails and returns a Reason Code 8.
-                expected_output=r".*<ERROR>.*Failed to get ASB for block number 2",
+                # Confirm that the query fails and deletes with Reason Code 8
+                expected_output=r".*<ERROR>.*Failed to cache security, not querying policy",
+                # Execute as a BIB acceptor.
+                policy_config="0xA6",
+                bundle_dest_loc=BundleDestLoc.CLIN,
+                key_set="data/key_set_1.json",
+                input_data_format=DataFormat.BUNDLEARRAY,
+                expected_output_format=DataFormat.ERR,
+            )
+        )
+    def test_BSL_33b(self):
+        self._single_test(
+            _TestCase(
+                # Using the Bundle from RFC 9173 Appendix A1.4, change the bytes of the BIB header to be be all zeros (thus not a valid CBOR array).
+                # 81010101820282020182820107820300 -> 00000000000000000000000000000000
+                input_data=[
+                    [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                    [
+                        11,
+                        2,
+                        0x10, # discard block if cannot process
+                        0,
+                        bytes.fromhex(
+                            "000000000000000000000000000000008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1"
+                        ),
+                    ],
+                    [
+                        1,
+                        1,
+                        0,
+                        0,
+                        bytes.fromhex(
+                            "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164"
+                        ),
+                    ],
+                ],
+                # Confirm that the operations fails
+                expected_output=r".*<ERROR>.*No secop found targeting block number 1",
                 # Execute as a BIB acceptor.
                 policy_config="0xA6",
                 bundle_dest_loc=BundleDestLoc.CLIN,

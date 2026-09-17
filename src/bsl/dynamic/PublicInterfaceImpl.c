@@ -142,6 +142,24 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
     return BSL_SUCCESS;
 }
 
+static int BSL_API_HandleBadSecBlock(BSL_BundleRef_t *bundle, const BSL_CanonicalBlock_t *block)
+{
+    BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, block->block_num);
+
+    if (block->flags & BSL_BLOCKFLAGS_DELETE_BUNDLE_IF_CANNOT_PROCESS)
+    {
+        BSL_BundleCtx_DeleteBundle(bundle, BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
+        // Fatal error in bundle, no policy query
+        return BSL_ERR_FAILURE;
+    }
+    else if (block->flags & BSL_BLOCKFLAGS_DISCARD_BLOCK_IF_CANNOT_PROCESS)
+    {
+        BSL_BundleCtx_RemoveBlock(bundle, block->block_num);
+        // continue with others
+    }
+    return BSL_SUCCESS;
+}
+
 /** Cache existing security blocks, starting with BCB to determine
  * if any other blocks' BTSD are ciphertext.
  */
@@ -179,8 +197,12 @@ static int BSL_API_CacheAllSecurity(BSL_BundleRef_t *bundle)
         res = BSL_BundleRefState_CacheASB(bundle->bsl_data, bundle, &block);
         if (BSL_SUCCESS != res)
         {
-            BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, blk_num);
-            retval = BSL_ERR_FAILURE;
+            res = BSL_API_HandleBadSecBlock(bundle, &block);
+            if (BSL_SUCCESS != res)
+            {
+                // fatal error
+                retval = res;
+            }
             // allow other ASBs to log errors
         }
     }
@@ -209,8 +231,13 @@ static int BSL_API_CacheAllSecurity(BSL_BundleRef_t *bundle)
         res = BSL_BundleRefState_CacheASB(bundle->bsl_data, bundle, &block);
         if (BSL_SUCCESS != res)
         {
-            BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, blk_num);
-            retval = BSL_ERR_FAILURE;
+            res = BSL_API_HandleBadSecBlock(bundle, &block);
+            if (BSL_SUCCESS != res)
+            {
+                // fatal error
+                retval = res;
+            }
+            // allow other ASBs to log errors
         }
     }
 
@@ -229,8 +256,7 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
     if (BSL_SUCCESS != res)
     {
         // failure before any policy provider
-        BSL_SecurityActionSet_SetImmediate(output_action_set, BSL_POLICYACTION_DROP_BUNDLE,
-                                           BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
+        BSL_LOG_ERR("Failed to cache security, not querying policy");
         return res;
     }
 
