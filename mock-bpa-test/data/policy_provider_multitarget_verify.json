@@ -4,7 +4,6 @@
       "policyrule": {
         "desc": " Confidentiality verify rule payload",
         "filter": {
-          "desc": "verify bcb payload",
           "rule_id": "5",
           "loc": "appin",
           "src": "ipn:0.2.1",
@@ -42,7 +41,6 @@
       "policyrule": {
         "desc": "Confidentiality verify rule bae",
         "filter": {
-          "desc": "verify bcb bae",
           "rule_id": "6",
           "loc": "appin",
           "src": "ipn:0.2.1",
