@@ -301,14 +301,14 @@ class TestSamplePolicy(TestAgent):
                 ],
                 expected_output=[
                     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                    [7, 2, 0, 0, bytes.fromhex("19012C")],
+                    [7, 2, 0, 0, bytes.fromhex("11A0E4")],
                     [
-                        11,
+                        12,
                         3,
                         0,
                         0,
                         bytes.fromhex(
-                            "82010201018202820301828201078203008281820158403BDC69B3A34A2B5D3A8554368BD1E808F606219D2A10A846EAE3886AE4ECC83C4EE550FDFB1CC636B904E2F1A73E303DCD4B6CCECE003E95E8164DCC89A156E181820158406A8B78889ABB36F06A2272B88F7FCEAB74FE69B35B4C5F7B737634FF478D9FD800F0797E2CE6AC0F0D413B34C2196E1E777A180CB63FFC33D2761E386177FA78"
+                            "820102020182028203018382014C0C565B2389529A9D91D704D182020182040082818201502147BB883460EBFDB38BB08D7099359481820150EC411F330F06A1E8594160C0267902CC"
                         ),
                     ],
                     [
@@ -317,7 +317,7 @@ class TestSamplePolicy(TestAgent):
                         0,
                         0,
                         bytes.fromhex(
-                            "526561647920746F2067656E657261746520612033322D62797465207061796C6F6164"
+                            "5AC4A915F715206DAA44FDEF717A3BF0669F2AA068AB1D9EE52215F4BBFB6F94D92F2E"
                         ),
                     ],
                 ],
