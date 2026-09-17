@@ -79,6 +79,9 @@ class _TestCase:
     use_bcb_rng: bool = False
     """ If true, test will use custom rng callback for BCB testing """
 
+    is_working: bool = True
+    """ If false, test will be marked to skip at dynamic test function injection"""
+
 
 @contextlib.contextmanager
 def sc_config_modifier(
