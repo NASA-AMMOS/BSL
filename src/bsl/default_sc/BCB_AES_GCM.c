@@ -220,9 +220,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         if (!bcb_context->authtag_result_present)
         {
             size_t block_size = BSL_Cipher_TagLen(&cipher);
-            BSL_LOG_INFO("blk size: bef %d", block_size);
             BSL_SeqReader_Get(btsd_read, cipher.in_buf.ptr, &block_size);
-            BSL_LOG_INFO("blk size: after %d", block_size);
             // GCOV_EXCL_START
             if (block_size < BSL_Cipher_TagLen(&cipher))
             {
