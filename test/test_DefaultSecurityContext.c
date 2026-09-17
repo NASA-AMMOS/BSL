@@ -96,8 +96,9 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
 {
     BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a1);
 
-    TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(
+                                       &LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
@@ -146,8 +147,9 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
 {
     BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a2_cek);
     // Loads the bundle
-    TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(
+                                       &LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BCBTestContext bcb_test_context;
@@ -186,8 +188,9 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
 
 void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
 {
-    TEST_ASSERT_EQUAL(0,
+    TEST_ASSERT_EQUAL(BSL_SUCCESS,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.hex_bundle_bcb));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPOUT));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BCBTestContext bcb_test_context;
@@ -254,8 +257,9 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         result_data_hex = "F6DC43C2EE046C7AE713F0531B2BCB48";
     }
 
-    TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(
+                                       &LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     const BSL_Variant_t *result;
@@ -408,12 +412,13 @@ void test_sec_accept_keyunwrap(bool bib)
 
     if (bib)
     {
-        TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_bib));
+        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_bib));
     }
     else
     {
-        TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_bcb));
+        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_bcb));
     }
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPOUT));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bibcontext;

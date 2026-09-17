@@ -123,9 +123,8 @@ BSL_AbsSecBlock_Target_t *BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uin
  *
  * @param[in,out] self This ASB
  * @param[in] target_block_num Block number of the target to remove
- * @return Negative on error, otherwise count of things removed.
  */
-int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_num);
+void BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_num);
 
 /** Encodes this ASB into a CBOR string into the space pre-allocated indicated by the argument.
  * Matches the ::BSL_CBOR_Encode_f signature.

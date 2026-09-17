@@ -142,6 +142,109 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
     return BSL_SUCCESS;
 }
 
+static int BSL_API_HandleBadSecBlock(BSL_BundleRef_t *bundle, const BSL_CanonicalBlock_t *block)
+{
+    BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, block->block_num);
+
+    if (block->flags & BSL_BLOCKFLAGS_DELETE_BUNDLE_IF_CANNOT_PROCESS)
+    {
+        BSL_BundleCtx_DeleteBundle(bundle, BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
+        // Fatal error in bundle, no policy query
+        return BSL_ERR_FAILURE;
+    }
+    else if (block->flags & BSL_BLOCKFLAGS_DISCARD_BLOCK_IF_CANNOT_PROCESS)
+    {
+        BSL_BundleCtx_RemoveBlock(bundle, block->block_num);
+        // continue with others
+    }
+    return BSL_SUCCESS;
+}
+
+/** Cache existing security blocks, starting with BCB to determine
+ * if any other blocks' BTSD are ciphertext.
+ */
+static int BSL_API_CacheAllSecurity(BSL_BundleRef_t *bundle)
+{
+    BSL_PrimaryBlock_t   primary_block;
+    BSL_CanonicalBlock_t block;
+
+    // pre-cache existing ASBs
+    int res = BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block);
+    if (BSL_SUCCESS != res)
+    {
+        BSL_LOG_ERR("Cannot get bundle primary block");
+        return BSL_ERR_HOST_CALLBACK_FAILED;
+    }
+
+    int retval = BSL_SUCCESS;
+    for (size_t ix = 0; ix < primary_block.block_count; ix++)
+    {
+        const uint64_t blk_num = primary_block.block_numbers[ix];
+
+        res = BSL_BundleCtx_GetBlockMetadata(bundle, blk_num, &block);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to get block number %" PRIu64, blk_num);
+            continue;
+        }
+        // GCOV_EXCL_STOP
+        if (block.type_code != BSL_SECBLOCKTYPE_BCB)
+        {
+            continue;
+        }
+
+        res = BSL_BundleRefState_CacheASB(bundle->bsl_data, bundle, &block);
+        if (BSL_SUCCESS != res)
+        {
+            res = BSL_API_HandleBadSecBlock(bundle, &block);
+            if (BSL_SUCCESS != res)
+            {
+                // fatal error
+                retval = res;
+            }
+            // allow other ASBs to log errors
+        }
+    }
+    for (size_t ix = 0; ix < primary_block.block_count; ix++)
+    {
+        const uint64_t blk_num = primary_block.block_numbers[ix];
+
+        res = BSL_BundleCtx_GetBlockMetadata(bundle, blk_num, &block);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to get block number %" PRIu64, blk_num);
+            continue;
+        }
+        // GCOV_EXCL_STOP
+        if (block.type_code != BSL_SECBLOCKTYPE_BIB)
+        {
+            continue;
+        }
+        if (BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bcb_tgts, block.block_num))
+        {
+            BSL_LOG_DEBUG("Ignoring block number %" PRIu64 " as a BCB target", blk_num);
+            continue;
+        }
+
+        res = BSL_BundleRefState_CacheASB(bundle->bsl_data, bundle, &block);
+        if (BSL_SUCCESS != res)
+        {
+            res = BSL_API_HandleBadSecBlock(bundle, &block);
+            if (BSL_SUCCESS != res)
+            {
+                // fatal error
+                retval = res;
+            }
+            // allow other ASBs to log errors
+        }
+    }
+
+    BSL_PrimaryBlock_deinit(&primary_block);
+    return retval;
+}
+
 int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle,
                           BSL_PolicyLocation_e location)
 {
@@ -149,96 +252,22 @@ int BSL_API_QuerySecurity(BSL_LibCtx_t *bsl, BSL_SecurityActionSet_t *output_act
     CHK_ARG_NONNULL(output_action_set);
     CHK_ARG_NONNULL(bundle);
 
+    int res = BSL_API_CacheAllSecurity(bundle);
+    if (BSL_SUCCESS != res)
+    {
+        // failure before any policy provider
+        BSL_LOG_ERR("Failed to cache security, not querying policy");
+        return res;
+    }
+
     BSL_LOG_INFO("Querying policy provider for security actions...");
-    int query_status = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
-    BSL_LOG_INFO("Completed query: status=%d", query_status);
+    res = BSL_PolicyRegistry_InspectActions(bsl, output_action_set, bundle, location);
+    BSL_LOG_INFO("Completed query: status=%d", res);
 
     BSL_TlmCounters_IncrementCounter(bsl, BSL_TLM_BUNDLE_INSPECTED_COUNT, 1);
 
-    // Here - find the sec block numbers for all ASBs
-
-    // Explanation:
-    // This segment of code finds the block number of the security block
-    // that targets (protects) a block whose ID is `target_block_num`
-    //
-    // I.e., "Get me the security block whose target contains `target_block_num`"
-    BSL_PrimaryBlock_t primary_block;
-    if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
-    {
-        BSL_LOG_ERR("Cannot get bundle primary block");
-        return BSL_ERR_HOST_CALLBACK_FAILED;
-    }
-
-    for (size_t ix = 0; ix < primary_block.block_count; ix++)
-    {
-        BSL_CanonicalBlock_t block;
-        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, primary_block.block_numbers[ix], &block))
-        {
-            BSL_LOG_WARNING("Failed to get block number %" PRIu64, primary_block.block_numbers[ix]);
-            continue;
-        }
-        BSL_SecActionList_it_t act_it;
-        for (BSL_SecActionList_it(act_it, output_action_set->actions); !BSL_SecActionList_end_p(act_it);
-             BSL_SecActionList_next(act_it))
-        {
-            BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
-            for (size_t j = 0; j < BSL_SecurityAction_CountSecOpers(act); j++)
-            {
-                BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, j);
-                if (block.type_code != sec_oper->_service_type)
-                {
-                    continue;
-                }
-
-                // ASB decoder needs the whole BTSD now
-                BSL_Data_t btsd_copy;
-                int        res = BSL_Data_InitBuffer(&btsd_copy, block.btsd_len);
-                CHK_PROPERTY(BSL_SUCCESS == res);
-
-                BSL_SeqReader_t *btsd_read = BSL_BundleCtx_ReadBTSD(bundle, block.block_num);
-                // GCOV_EXCL_START
-                if (!btsd_read)
-                {
-                    BSL_Data_Deinit(&btsd_copy);
-                    return BSL_ERR_FAILURE;
-                }
-                // GCOV_EXCL_STOP
-                BSL_SeqReader_Get(btsd_read, btsd_copy.ptr, &btsd_copy.len);
-                BSL_SeqReader_Destroy(btsd_read);
-                // GCOV_EXCL_START
-                if (block.btsd_len != btsd_copy.len)
-                {
-                    BSL_LOG_ERR("Failed to read all %zu BTSD, got only %zu", block.btsd_len, btsd_copy.len);
-                    BSL_Data_Deinit(&btsd_copy);
-                    return BSL_ERR_FAILURE;
-                }
-                // GCOV_EXCL_STOP
-
-                BSL_AbsSecBlock_t *asb = BSL_calloc(1, BSL_AbsSecBlock_Sizeof());
-                BSL_AbsSecBlock_Init(asb);
-                res = BSL_CBOR_Decode(&btsd_copy, (BSL_CBOR_Decode_f)&BSL_AbsSecBlock_Decode, asb);
-                if (BSL_SUCCESS == res)
-                {
-                    if (BSL_AbsSecBlock_ContainsTarget(asb, sec_oper->target_block_num))
-                    {
-                        sec_oper->sec_block_num = block.block_num;
-                    }
-                }
-                else
-                {
-                    BSL_LOG_WARNING("Failed to parse ASB from BTSD");
-                    BSL_SecOper_SetReasonCode(sec_oper, BSL_REASONCODE_BLOCK_UNINTELLIGIBLE);
-                }
-                BSL_AbsSecBlock_Deinit(asb);
-                BSL_free(asb);
-
-                BSL_Data_Deinit(&btsd_copy);
-            }
-        }
-    }
-    BSL_PrimaryBlock_deinit(&primary_block);
-
-    if (BSL_SUCCESS != BSL_SecCtx_ValidatePolicyActionSet(bsl, bundle, output_action_set))
+    res = BSL_SecCtx_ValidatePolicyActionSet(bsl, bundle, output_action_set);
+    if (BSL_SUCCESS != res)
     {
         BSL_LOG_ERR("Error while validating action set");
         return BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
