@@ -45,8 +45,12 @@ def load_ccsds(cls: type[TestAgent]):
     cases = {}
 
     requirements = None
-    with open(ccsds_spec_file) as infile:
-        requirements = yaml.safe_load(infile)["requirements"]
+    try:
+        with open(ccsds_spec_file) as infile:
+            requirements = yaml.safe_load(infile)["requirements"]
+    except FileNotFoundError:
+        LOGGER.warning(f"Could not find {ccsds_spec_file}")
+        return
 
     if requirements is None:
         return
