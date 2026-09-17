@@ -120,6 +120,9 @@ typedef struct BSLX_BCB_s
     BSL_Data_t wrapped_key;
     BSL_Data_t aad;
 
+    /// True if authtag is present in BCB results on accept/verify
+    bool authtag_result_present;
+
     /// Cipher mode variants
     BSL_CipherMode_e crypto_mode;
     /// Required AES variant (external code point)

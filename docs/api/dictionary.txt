@@ -16,6 +16,7 @@ appout
 arg
 ASB
 auth
+authtag
 backend
 Backend
 backends

@@ -113,8 +113,8 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     CHK_PRECONDITION(bcb_context->key_id.ptr != NULL);
 
     // Must have an auth tag for us to verify
-    CHK_PRECONDITION(bcb_context->authtag.ptr != NULL);
-    CHK_PRECONDITION(bcb_context->authtag.len > 0);
+    CHK_PRECONDITION(!bcb_context->authtag_result_present || bcb_context->authtag.ptr != NULL);
+    CHK_PRECONDITION(!bcb_context->authtag_result_present || bcb_context->authtag.len > 0);
 
     // Init Vector must come in from the block params
     CHK_PRECONDITION(bcb_context->iv.ptr != NULL);
@@ -173,6 +173,12 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         }
     }
 
+    size_t btsd_len = bcb_context->target_block.btsd_len;
+    if (!bcb_context->authtag_result_present)
+    {
+        btsd_len -= BSL_Cipher_TagLen(&cipher);
+    }
+
     BSL_SeqReader_t *btsd_read  = NULL;
     BSL_SeqWriter_t *btsd_write = NULL;
     if (retval == BSL_SUCCESS)
@@ -186,8 +192,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
         if (bcb_context->overwrite_btsd)
         {
-            btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
-                                                 bcb_context->target_block.btsd_len);
+            btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num, btsd_len);
             if (!btsd_write)
             {
                 BSL_LOG_ERR("Failed to construct writer");
@@ -198,8 +203,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
 
     if (retval == BSL_SUCCESS)
     {
-        // entire block is ciphertext
-        res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, bcb_context->target_block.btsd_len);
+        res = BSL_Cipher_AddSeq(&cipher, btsd_read, btsd_write, btsd_len);
         if (BSL_SUCCESS != res)
         {
             BSL_LOG_ERR("Decrypting BTSD ciphertext failed");
@@ -211,7 +215,24 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     {
         // Last step is to compute the authentication tag, with is produced
         // as an output parameter to this cipher suite.
-        if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, &bcb_context->authtag))
+
+        const BSL_Data_t *authtag_data_ptr = &bcb_context->authtag;
+        if (!bcb_context->authtag_result_present)
+        {
+            size_t block_size = BSL_Cipher_TagLen(&cipher);
+            BSL_SeqReader_Get(btsd_read, cipher.in_buf.ptr, &block_size);
+            // GCOV_EXCL_START
+            if (block_size < BSL_Cipher_TagLen(&cipher))
+            {
+                BSL_LOG_ERR("Failed reading ciphertext tag");
+                retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            }
+            // GCOV_EXCL_STOP
+            cipher.in_buf.len = block_size;
+            authtag_data_ptr  = &cipher.in_buf;
+        }
+
+        if (BSL_SUCCESS != BSL_Cipher_SetTag(&cipher, authtag_data_ptr))
         {
             BSL_LOG_ERR("Failed to set auth tag");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
@@ -679,11 +700,13 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecOper
                 BSL_LOG_ERR("Auth tag result is not valid");
                 bcb_context.err_count++;
             }
+            bcb_context.authtag_result_present = true;
         }
         else
         {
-            BSL_LOG_ERR("Auth tag result is not present");
-            bcb_context.err_count++;
+            // Auth tag concat to end of target BTSD
+            BSL_LOG_DEBUG("Auth tag result is not present, assuming concatenated to end of target BTSD");
+            bcb_context.authtag_result_present = false;
         }
     }
     if (bcb_context.err_count)
