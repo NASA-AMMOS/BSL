@@ -124,6 +124,8 @@ jobs:
         os:
           - name: 'ubuntu-24.04'
             image: null
+          - name: 'ubuntu-26.04'
+            image: null
           - name: 'centos-9'
             image: 'quay.io/centos/centos:stream9'
         compiler: ['gcc']
