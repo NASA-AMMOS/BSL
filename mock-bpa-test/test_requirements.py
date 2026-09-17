@@ -1001,7 +1001,7 @@ class TestRequirements(TestAgent):
                     [
                         11,
                         2,
-                        0x04, # delete if cannot process
+                        0x04,  # delete if cannot process
                         0,
                         bytes.fromhex(
                             "000000000000000000000000000000008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1"
@@ -1027,6 +1027,7 @@ class TestRequirements(TestAgent):
                 expected_output_format=DataFormat.ERR,
             )
         )
+
     def test_BSL_33b(self):
         self._single_test(
             _TestCase(
@@ -1037,7 +1038,7 @@ class TestRequirements(TestAgent):
                     [
                         11,
                         2,
-                        0x10, # discard block if cannot process
+                        0x10,  # discard block if cannot process
                         0,
                         bytes.fromhex(
                             "000000000000000000000000000000008181820158403bdc69b3a34a2b5d3a8554368bd1e808f606219d2a10a846eae3886ae4ecc83c4ee550fdfb1cc636b904e2f1a73e303dcd4b6ccece003e95e8164dcc89a156e1"
