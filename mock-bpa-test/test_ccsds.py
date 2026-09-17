@@ -23,10 +23,10 @@
 import json
 import logging
 import tempfile
+import unittest
 from pathlib import Path
 
 import cbor2
-import pytest
 import yaml
 
 from _test_util import BundleDestLoc, DataFormat, _TestCase
@@ -198,7 +198,7 @@ def load_ccsds(cls: type[TestAgent]):
             self._single_test(case)
 
         if not case.is_working:
-            _test = pytest.mark.skip(reason="Test known to fail")(_test)
+            _test = unittest.expectedFailure(_test)
 
         return _test
 
