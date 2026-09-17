@@ -19,14 +19,23 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
+
 import json
 import logging
+import tempfile
+import unittest
+from pathlib import Path
 
 import cbor2
 import yaml
 
 from _test_util import BundleDestLoc, DataFormat, _TestCase
 from test_bpa import TestAgent
+
+ccsds_spec_file = "mock-bpa-test/ccsds_bpsec_redbook_requirements_modified.yaml"
+
+_tempdir = tempfile.TemporaryDirectory(prefix="ccsds_json_")
+_TEMP_DIR = Path(_tempdir.name)
 
 LOGGER = logging.getLogger(__name__)
 """ Logger for this module. """
@@ -36,14 +45,15 @@ def load_ccsds(cls: type[TestAgent]):
     """Add test functions based on configuration file."""
     cases = {}
 
-    ccsds_test_dir = "mock-bpa-test/ccsds_json/"
-    ccsds_spec_file = "mock-bpa-test/ccsds_bpsec_redbook_requirements_modified.yaml"
-
+    requirements = None
     try:
         with open(ccsds_spec_file) as infile:
             requirements = yaml.safe_load(infile)["requirements"]
     except FileNotFoundError:
         LOGGER.warning(f"Could not find {ccsds_spec_file}")
+        return
+
+    if requirements is None:
         return
 
     for item in requirements:
@@ -52,9 +62,6 @@ def load_ccsds(cls: type[TestAgent]):
             continue
 
         for t in item["tests"]:
-            if not t["working"]:
-                continue
-
             outcome = t["outcome"].split(" ")[0] == "SUCCESS."
             if outcome:
                 input = t["incoming_bundle"]["hex"][2:].replace(" ", "")[:-1]
@@ -151,7 +158,11 @@ def load_ccsds(cls: type[TestAgent]):
                             "loc": "appin",
                             "sc_id": sec_ctx,
                         },
-                        "spec": {"sc_id": sec_ctx, "sc_parms": params},
+                        "spec": {
+                            "sc_id": sec_ctx,
+                            "sc_parms": params,
+                            "svc": ("bib-integrity" if sec_ctx == 1 else "bcb-confidentiality"),
+                        },
                         "policy_action_on_fail": "delete_bundle",
                     }
                 }
@@ -163,7 +174,7 @@ def load_ccsds(cls: type[TestAgent]):
 
             final_json = json.dumps({"policyrule_set": policyrules})
             LOGGER.info(f"Final rule set {final_json}")
-            finame = ccsds_test_dir + f"{t['test']}.json"
+            finame = _TEMP_DIR / f"{t['test']}.json"
             with open(finame, "w") as f:
                 f.write(final_json)
 
@@ -173,11 +184,12 @@ def load_ccsds(cls: type[TestAgent]):
                 expected_output=output
                 if (output_format == DataFormat.BUNDLEARRAY)
                 else r".*Delete bundle due to failed security operation",
-                policy_config=finame,
+                policy_config=str(finame),
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/key_set_1.json",
                 input_data_format=input_format,
                 expected_output_format=output_format,
+                is_working=t["working"],
             )
             LOGGER.info(f"CCSDS | Test {t['test']}: Appending case.")
 
@@ -185,10 +197,15 @@ def load_ccsds(cls: type[TestAgent]):
         def _test(self):
             self._single_test(case)
 
+        if not case.is_working:
+            _test = unittest.expectedFailure(_test)
+
         return _test
 
     for id, test_case in cases.items():
         setattr(cls, f"test_{id}", _make_test(test_case))
+
+    return cls
 
 
 @load_ccsds
