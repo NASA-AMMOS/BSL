@@ -4,7 +4,6 @@
       "policyrule": {
         "desc": "Integrity accept rule payload",
         "filter": {
-          "desc": "accept bib payload",
           "rule_id": "1",
           "loc": "appin",
           "src": "ipn:0.2.1",
@@ -42,7 +41,6 @@
       "policyrule": {
         "desc": "Integrity accept rule bae",
         "filter": {
-          "desc": "accept bib bae",
           "rule_id": "2",
           "loc": "appin",
           "src": "ipn:0.2.1",
@@ -80,7 +78,6 @@
       "policyrule": {
         "desc": " Confidentiality accept rule payload",
         "filter": {
-          "desc": "accept bcb payload",
           "rule_id": "3",
           "loc": "clin",
           "src": "ipn:0.2.1",
@@ -118,7 +115,6 @@
       "policyrule": {
         "desc": "Confidentiality accept rule bae",
         "filter": {
-          "desc": "accept bcb bae",
           "rule_id": "4",
           "loc": "clin",
           "src": "ipn:0.2.1",
