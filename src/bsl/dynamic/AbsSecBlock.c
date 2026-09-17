@@ -139,6 +139,7 @@ void BSL_AbsSecBlock_Init(BSL_AbsSecBlock_t *self)
 
     memset(self, 0, sizeof(*self));
 
+    self->sec_block_num  = 0;
     self->sec_context_id = 0;
     BSL_HostEID_Init(&self->source_eid);
     BSLB_VariantPtrMap_init(self->params);

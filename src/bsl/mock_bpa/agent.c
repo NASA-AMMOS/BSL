@@ -64,12 +64,12 @@ static int MockBPA_GetEid(void *user_data, BSL_HostEID_t *result_eid)
 
 int MockBPA_GetBundleMetadata(const BSL_BundleRef_t *bundle_ref, BSL_PrimaryBlock_t *result_primary_block)
 {
-    if (!bundle_ref || !result_primary_block || !bundle_ref->data)
+    if (!bundle_ref || !result_primary_block || !bundle_ref->handle)
     {
         return -1;
     }
 
-    const MockBPA_Bundle_t *bundle = bundle_ref->data;
+    const MockBPA_Bundle_t *bundle = bundle_ref->handle;
 
     BSL_PrimaryBlock_Init(result_primary_block);
     result_primary_block->field_version              = bundle->primary_block.version;
@@ -108,12 +108,12 @@ int MockBPA_GetBlockMetadata(const BSL_BundleRef_t *bundle_ref, uint64_t block_n
                              BSL_CanonicalBlock_t *result_canonical_block)
 {
     CHK_ARG_NONNULL(bundle_ref);
-    CHK_ARG_NONNULL(bundle_ref->data);
+    CHK_ARG_NONNULL(bundle_ref->handle);
     CHK_ARG_NONNULL(result_canonical_block);
 
     memset(result_canonical_block, 0, sizeof(*result_canonical_block));
 
-    const MockBPA_Bundle_t *bundle = bundle_ref->data;
+    const MockBPA_Bundle_t *bundle = bundle_ref->handle;
 
     MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
     if (found_ptr == NULL)
@@ -134,12 +134,12 @@ int MockBPA_GetBlockMetadata(const BSL_BundleRef_t *bundle_ref, uint64_t block_n
 
 int MockBPA_ReallocBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t btsd_size)
 {
-    if (!bundle_ref || !bundle_ref->data || block_num == 0 || btsd_size == 0)
+    if (!bundle_ref || !bundle_ref->handle || block_num == 0 || btsd_size == 0)
     {
         return -1;
     }
 
-    MockBPA_Bundle_t *bundle = bundle_ref->data;
+    MockBPA_Bundle_t *bundle = bundle_ref->handle;
 
     MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
     if (found_ptr == NULL)
@@ -212,7 +212,7 @@ static void MockBPA_ReadBTSD_Deinit(void *user_data)
 
 static struct BSL_SeqReader_s *MockBPA_ReadBTSD(const BSL_BundleRef_t *bundle_ref, uint64_t block_num)
 {
-    MockBPA_Bundle_t          *bundle    = bundle_ref->data;
+    MockBPA_Bundle_t          *bundle    = bundle_ref->handle;
     MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
     if (found_ptr == NULL)
     {
@@ -300,7 +300,7 @@ static void MockBPA_WriteBTSD_Deinit(void *user_data, bool success)
 
 static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, uint64_t block_num, size_t btsd_size)
 {
-    MockBPA_Bundle_t          *bundle    = bundle_ref->data;
+    MockBPA_Bundle_t          *bundle    = bundle_ref->handle;
     MockBPA_CanonicalBlock_t **found_ptr = MockBPA_BlockByNum_get(bundle->blocks_num, block_num);
     if (found_ptr == NULL)
     {
@@ -339,12 +339,12 @@ static struct BSL_SeqWriter_s *MockBPA_WriteBTSD(BSL_BundleRef_t *bundle_ref, ui
 
 int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, uint64_t *block_num)
 {
-    if (!bundle_ref || !bundle_ref->data || !block_num)
+    if (!bundle_ref || !bundle_ref->handle || !block_num)
     {
         return -1;
     }
 
-    MockBPA_Bundle_t *bundle = bundle_ref->data;
+    MockBPA_Bundle_t *bundle = bundle_ref->handle;
 
     if (*block_num == 0)
     {
@@ -392,12 +392,12 @@ int MockBPA_CreateBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_type_code, u
 
 int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
 {
-    if (!bundle_ref || !bundle_ref->data)
+    if (!bundle_ref || !bundle_ref->handle)
     {
         return -1;
     }
 
-    MockBPA_Bundle_t         *bundle      = bundle_ref->data;
+    MockBPA_Bundle_t         *bundle      = bundle_ref->handle;
     MockBPA_CanonicalBlock_t *found_block = NULL;
 
     MockBPA_BlockList_it_t bit;
@@ -432,12 +432,12 @@ int MockBPA_RemoveBlock(BSL_BundleRef_t *bundle_ref, uint64_t block_num)
 
 int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason)
 {
-    if (!bundle_ref || !bundle_ref->data)
+    if (!bundle_ref || !bundle_ref->handle)
     {
         return -1;
     }
 
-    MockBPA_Bundle_t *bundle = bundle_ref->data;
+    MockBPA_Bundle_t *bundle = bundle_ref->handle;
 
     // Mark the bundle for deletion
     bundle->retain = false;
