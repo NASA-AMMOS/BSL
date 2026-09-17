@@ -58,8 +58,6 @@ struct BSL_SecurityActionSet_s
 
     /// Actions (sequences of operations) needed by policy
     BSL_SecActionList_t actions;
-    /// Number of policy errors encountered during execution of #actions
-    size_t err_count;
     /// Number of #actions which failed SC validity check
     size_t invalid_act_count;
 };
