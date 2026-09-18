@@ -188,7 +188,7 @@ typedef struct BSL_BundleRef_s
      * This is not used by the BSL and initialized to NULL.
      */
     void *handle;
-    /** Internal state for BSL backend use.
+    /** Internal state for BSL backend use as ::BSL_BundleRefState_t.
      * This structure is not visible to or needed by the BPA.
      */
     struct BSL_BundleRefState_s *bsl_data;

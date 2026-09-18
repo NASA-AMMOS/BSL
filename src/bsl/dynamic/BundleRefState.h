@@ -98,7 +98,7 @@ void BSL_BundleRefState_Deinit(BSL_BundleRefState_t *obj);
  * @param[in] bundle The BTSD reading context..
  * @param[in] block The block info to read from.
  */
-int BSL_BundleRefState_CacheASB(BSL_BundleRefState_t *obj, const struct BSL_BundleRef_s *bundle,
+int BSL_BundleRefState_CacheASB(BSL_BundleRefState_t *obj, const BSL_BundleRef_t *bundle,
                                 const BSL_CanonicalBlock_t *block);
 
 /** Re-populate a target map for an existing ASB.
