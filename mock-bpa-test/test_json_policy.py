@@ -326,7 +326,7 @@ class TestSamplePolicy(TestAgent):
                     [1, 1, 0, 0, h'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
                 ]
                 """,
-                expected_output=r".*SecOper uses correlation ID 1, but has unexpected parameters",
+                expected_output=r".*SecOper uses correlation ID 1, but has mismatched parameters",
                 policy_config="data/multitarget_config/policy_provider_multitarget_source_correlation_mismatch.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/key_set_1.json",
