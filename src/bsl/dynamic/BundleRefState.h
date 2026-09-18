@@ -36,6 +36,9 @@
 extern "C" {
 #endif
 
+/** @struct BSL_AbsSecBlockPtr_t
+ * Shared pointer to ::BSL_AbsSecBlock_s instance.
+ */
 /** @struct BSLB_AsbPtrMap_t
  * Map from number (uint64_t) to shared pointer to ::BSL_AbsSecBlock_s for its content.
  * Used to map security block numbers and correlation IDs to ASBs
@@ -64,6 +67,9 @@ M_DICT_DEF2(BSLB_AsbPtrSetMap, uint64_t, M_BASIC_OPLIST, BSLB_AsbPtrSet_t, M_OPL
 // NOLINTEND
 /// @endcond
 
+/** Internal BSL state associated with each bundle at each
+ * interaction point.
+ */
 typedef struct BSL_BundleRefState_s
 {
     /// Cache of decoded BIB content for policy query and operation execution
