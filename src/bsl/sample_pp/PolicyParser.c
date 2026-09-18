@@ -288,6 +288,48 @@ static int BSLP_PolicyOptions_SC2(BSLB_VariantPtrMap_t options, const char *id_s
     return BSL_SUCCESS;
 }
 
+/**
+ * Check that all rules with the same correlation ID have the same parameters / spec
+ */
+static int BSLP_CheckCorrelationSpec(json_t *correlation_specs, int64_t correlation_id, int64_t rule_id, const json_t *spec)
+{
+    if (correlation_id == 0)
+    {
+        return BSL_SUCCESS;
+    }
+
+    // json object keys must be strings; max number of digits in 64-bit int is 20 + \0
+    char correlation_key[21];
+    snprintf(correlation_key, sizeof(correlation_key), "%" PRId64, correlation_id);
+
+    const json_t *first_spec = json_object_get(correlation_specs, correlation_key);
+    if (!first_spec)
+    {
+        json_t *spec_copy = json_deep_copy(spec);
+        if (!spec_copy)
+        {
+            BSL_LOG_ERR("Failed to copy spec for correlation id %" PRId64, correlation_id);
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
+        const int set_result = json_object_set(correlation_specs, correlation_key, spec_copy);
+        json_decref(spec_copy);
+
+        if (set_result != 0)
+        {
+            BSL_LOG_ERR("Failed to record specification for correlation id %" PRId64, correlation_id);
+            return BSL_ERR_POLICY_CONFIG;
+        }
+    }
+    else if (!json_equal(first_spec, spec))
+    {
+        BSL_LOG_ERR("Policy rule %" PRId64 " uses correlation id %" PRId64", but has unexpected parameters / spec", rule_id, correlation_id);
+        return BSL_ERR_POLICY_CONFIG;
+    }
+
+    return BSL_SUCCESS;
+}
+
 /** Handle options for Security context ID 3.
  * Matches ::BSLP_OptionHandler_f signature.
  */
@@ -482,7 +524,7 @@ static int BSLP_PolicyParser_GetLoc(BSL_PolicyLocation_e *loc, const char *text)
     return BSL_SUCCESS;
 }
 
-static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const json_t *policy_rule_elm)
+static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const json_t *policy_rule_elm, json_t *correlation_specs)
 {
     int64_t              rule_id_int      = 0;
     int64_t              rule_correlation = 0;
@@ -702,7 +744,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
     const json_t *correlation_id = json_object_get(policyrule, "correlation");
     if (!correlation_id)
     {
-        BSL_LOG_INFO("NO correlator ID, default to no correlation");
+        BSL_LOG_DEBUG("No correlator ID, default to no correlation");
         rule_correlation = 0;
     }
     else
@@ -720,7 +762,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
 
     // spec attr
     const json_t *spec = json_object_get(policyrule, "spec");
-    if (!spec && !json_is_object(spec))
+    if (!spec || !json_is_object(spec))
     {
         BSL_LOG_ERR("Invalid spec attribute");
         BSLB_VariantPtrMap_clear(options);
@@ -854,6 +896,16 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         }
     }
 
+    if (rule_correlation > 0)
+    {
+        int res = BSLP_CheckCorrelationSpec(correlation_specs, rule_correlation, rule_id_int, spec);
+        if (res != BSL_SUCCESS)
+        {
+            BSLB_VariantPtrMap_clear(options);
+            return res;
+        }
+    }
+
     BSLP_PolicyPredicate_t predicate;
     BSLP_PolicyPredicate_InitFrom(&predicate, policy_loc_enum, src_str, sec_src_str, dest_str);
 
@@ -924,18 +976,28 @@ int BSLP_PolicyParser_LoadFd(int infd, BSLP_PolicyProvider_t *policy)
     }
     else
     {
+        // Keep map of correlation ID to spec JSON objects to compare as we parse
+        json_t *correlation_specs = json_object();
+        if (!correlation_specs)
+        {
+            json_decref(root);
+            return BSL_ERR_POLICY_CONFIG;
+        }
+
         const size_t policy_rule_ct = json_array_size(policyrule_set);
         BSL_LOG_DEBUG(" got (%zu) policyrules:", policy_rule_ct);
         for (size_t policy_rule_idx = 0; policy_rule_idx < policy_rule_ct; ++policy_rule_idx)
         {
             const json_t *policy_rule_elm = json_array_get(policyrule_set, policy_rule_idx);
 
-            int res = BSLP_PolicyParser_ReadOneRule(policy, policy_rule_elm);
+            int res = BSLP_PolicyParser_ReadOneRule(policy, policy_rule_elm, correlation_specs);
             if (BSL_SUCCESS != res)
             {
                 ++failures;
             }
         }
+
+        json_decref(correlation_specs);
     }
 
     json_t *norule_action = json_object_get(root, "policy_action_no_rules");
