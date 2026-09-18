@@ -291,7 +291,8 @@ static int BSLP_PolicyOptions_SC2(BSLB_VariantPtrMap_t options, const char *id_s
 /**
  * Check that all rules with the same correlation ID have the same parameters / spec
  */
-static int BSLP_CheckCorrelationSpec(json_t *correlation_specs, int64_t correlation_id, int64_t rule_id, const json_t *spec)
+static int BSLP_CheckCorrelationSpec(json_t *correlation_specs, int64_t correlation_id, int64_t rule_id,
+                                     const json_t *spec)
 {
     if (correlation_id == 0)
     {
@@ -323,7 +324,8 @@ static int BSLP_CheckCorrelationSpec(json_t *correlation_specs, int64_t correlat
     }
     else if (!json_equal(first_spec, spec))
     {
-        BSL_LOG_ERR("Policy rule %" PRId64 " uses correlation id %" PRId64", but has unexpected parameters / spec", rule_id, correlation_id);
+        BSL_LOG_ERR("Policy rule %" PRId64 " uses correlation id %" PRId64 ", but has unexpected parameters / spec",
+                    rule_id, correlation_id);
         return BSL_ERR_POLICY_CONFIG;
     }
 
@@ -524,7 +526,8 @@ static int BSLP_PolicyParser_GetLoc(BSL_PolicyLocation_e *loc, const char *text)
     return BSL_SUCCESS;
 }
 
-static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const json_t *policy_rule_elm, json_t *correlation_specs)
+static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const json_t *policy_rule_elm,
+                                         json_t *correlation_specs)
 {
     int64_t              rule_id_int      = 0;
     int64_t              rule_correlation = 0;
