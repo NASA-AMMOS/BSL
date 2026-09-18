@@ -95,7 +95,7 @@ void test_CoseSc_InvalidOptions_Source(void)
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
     BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_DROP_BUNDLE);
+                         BSL_POLICYACTION_DROP_BUNDLE, 0);
 
     // valid starting point
     set_CoseSc_InvalidOptions_Source_baseline(&sec_oper);
@@ -121,7 +121,7 @@ void test_CoseSc_InvalidOptions_Verifier(void)
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
     BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_VERIFIER,
-                         BSL_POLICYACTION_DROP_BUNDLE);
+                         BSL_POLICYACTION_DROP_BUNDLE, 0);
 
     // no options is a valid start
     TEST_ASSERT_TRUE(BSLX_CoseSc_Validate(&LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper));
@@ -234,7 +234,7 @@ void test_AppendixA_Example1_BIB_Source(void)
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
     BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_DROP_BUNDLE);
+                         BSL_POLICYACTION_DROP_BUNDLE, 0);
 
     {
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_1_kid);
@@ -347,7 +347,8 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BUNDLE);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BUNDLE,
+                         0);
 
     const char *opt_key_id = (mismatch == OPT_MISMATCH_BAD_KEY_ID) ? "other" : exA_1_kid;
     {
@@ -474,7 +475,7 @@ void test_CCSDS_Example_Mac_Source(void)
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
     BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 5, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_DROP_BUNDLE);
+                         BSL_POLICYACTION_DROP_BUNDLE, 0);
 
     {
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(ccsds_mac_kid);
@@ -576,7 +577,8 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 5, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BUNDLE);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 5, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BUNDLE,
+                         0);
 
     const char *opt_key_id = (mismatch == OPT_MISMATCH_BAD_KEY_ID) ? "other" : ccsds_mac_kid;
     {
@@ -692,7 +694,7 @@ void test_AppendixA_Example4_BCB_Source(void)
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
     BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_DROP_BUNDLE);
+                         BSL_POLICYACTION_DROP_BUNDLE, 0);
 
     {
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_4_kid);
@@ -805,7 +807,8 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_DROP_BUNDLE);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_DROP_BUNDLE,
+                         0);
 
     const char *opt_key_id = (mismatch == OPT_MISMATCH_BAD_KEY_ID) ? "other" : exA_4_kid;
     {
@@ -937,7 +940,7 @@ void test_AppendixA_Example5_BCB_Source(void)
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
     BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_DROP_BUNDLE);
+                         BSL_POLICYACTION_DROP_BUNDLE, 0);
 
     {
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_5_kid);
@@ -1038,7 +1041,8 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_DROP_BUNDLE);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_DROP_BUNDLE,
+                         0);
 
     const char *opt_key_id = (mismatch == OPT_MISMATCH_BAD_KEY_ID) ? "other" : exA_5_kid;
     {
@@ -1167,7 +1171,7 @@ void test_AppendixA_Example6_BCB_Source(void)
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
     BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_DROP_BUNDLE);
+                         BSL_POLICYACTION_DROP_BUNDLE, 0);
 
     {
         BSL_Data_t keyid = BSL_DATA_INIT_VIEW_CSTR(exA_6_kid);

@@ -203,6 +203,11 @@
             "nothing"
           ],
           "default": "nothing"
+        },
+        "correlation": {
+          "description": "Optional correlation ID to associate security operations, indicating they should be coalesced into a single security block if possible. The default is to not coalesce any operations.",
+          "$ref": "#/$defs/IntegerOrText",
+          "minimum": 1
         }
       }
     },

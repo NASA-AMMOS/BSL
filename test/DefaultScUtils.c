@@ -64,7 +64,7 @@ void BCBTestContext_Deinit(BCBTestContext *obj)
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id)
 {
     BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BIB_HMAC_SHA2, 1, 2, BSL_SECBLOCKTYPE_BIB, role,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
 
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&context->sec_oper, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&context->sec_oper, BSLX_BIB_OPT_SCOPE), 0);
@@ -75,7 +75,7 @@ void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e rol
 void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role)
 {
     BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BCB_AES_GCM, 1, 2, BSL_SECBLOCKTYPE_BCB, role,
-                         BSL_POLICYACTION_NOTHING);
+                         BSL_POLICYACTION_NOTHING, 0);
 
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&context->sec_oper, BSLX_BCB_OPT_AES_VARIANT),
                          RFC9173_BCB_AES_VARIANT_A128GCM);
