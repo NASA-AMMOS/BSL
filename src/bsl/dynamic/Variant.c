@@ -168,21 +168,6 @@ bool BSL_Variant_Equal(const BSL_Variant_t *left, const BSL_Variant_t *right)
     return false;
 }
 
-bool BSLB_VariantPtr_ValueEqual(BSLB_VariantPtr_t *left, BSLB_VariantPtr_t *right)
-{
-    if (left == right)
-    {
-        return true;
-    }
-
-    if (!left || !right)
-    {
-        return false;
-    }
-
-    return BSL_Variant_Equal(BSLB_VariantPtr_cref(left), BSLB_VariantPtr_cref(right));
-}
-
 void BSL_Variant_SetTextstr(BSL_Variant_t *self, const char *value)
 {
     ASSERT_ARG_NONNULL(self);

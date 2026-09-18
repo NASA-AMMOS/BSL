@@ -130,7 +130,20 @@ M_SHARED_PTR_DEF(BSLB_VariantPtr, BSL_Variant_t, M_OPL_BSL_Variant_t())
 /// @endcond
 // NOLINTEND
 
-bool BSLB_VariantPtr_ValueEqual(BSLB_VariantPtr_t *left, BSLB_VariantPtr_t *right);
+static inline bool BSLB_VariantPtr_ValueEqual(BSLB_VariantPtr_t *left, BSLB_VariantPtr_t *right)
+{
+    if (left == right)
+    {
+        return true;
+    }
+
+    if (!left || !right)
+    {
+        return false;
+    }
+
+    return BSL_Variant_Equal(BSLB_VariantPtr_cref(left), BSLB_VariantPtr_cref(right));
+}
 
 /** @struct BSLB_VariantPtrMap_t
  * Defines an internal lookup dictionary for ::BSLB_VariantPtr_t pointers
