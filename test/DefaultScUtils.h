@@ -113,10 +113,10 @@ extern const struct RFC9173_TestVectors_AppendixA1
     uint64_t bib_asb_sec_target;
     int64_t  bib_asb_context_id;
     uint64_t bib_asb_context_flags;
-    uint64_t bib_asb_sha_variant_key;
-    uint64_t bib_asb_sha_variant_value;
-    uint64_t bib_asb_scope_flags_key;
-    uint64_t bib_asb_scope_flags_value;
+    int64_t  bib_asb_sha_variant_key;
+    int64_t  bib_asb_sha_variant_value;
+    int64_t  bib_asb_scope_flags_key;
+    int64_t  bib_asb_scope_flags_value;
 
     const char *hex_bundle_original;
     const char *hex_bundle_bib;
