@@ -506,7 +506,6 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     {
         asb     = BSL_AbsSecBlockPtr_new();
         asb_ptr = BSL_AbsSecBlockPtr_ref(asb);
-        BSL_AbsSecBlock_Init(asb_ptr);
 
         // policy may request a block number
         res = BSL_BundleCtx_CreateBlock(bundle, BSL_SECBLOCKTYPE_BCB, &sec_oper->sec_block_num);
