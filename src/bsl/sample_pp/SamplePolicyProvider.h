@@ -141,7 +141,7 @@ typedef struct BSLP_PolicyRule_s
     BSLB_VariantPtrMap_t options;
     /// How to handle failure in finalize stage
     BSL_PolicyAction_e failure_action_code;
-    /// Correlation ID
+    /// Correlation ID to associate rules for combined ASBs, if possible. 0 indicates no correlation
     uint64_t correlation_id;
 } BSLP_PolicyRule_t;
 

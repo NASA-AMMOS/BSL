@@ -567,7 +567,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *
             BSL_Variant_SetInt64(scope_flag_param, bib_context.ippt_scope);
         }
         {
-            BSL_LOG_DEBUG("Appending BIB wrapped key param");
+            BSL_LOG_DEBUG("Appending BIB HMAC result param");
             BSL_Variant_t *bib_result = BSL_SecOper_AddResult(sec_oper, RFC9173_BIB_RESULTID_HMAC);
             BSL_Variant_SetBytestr(bib_result, bib_context.hmac_result_val);
         }

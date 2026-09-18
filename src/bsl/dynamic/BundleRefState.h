@@ -77,7 +77,7 @@ typedef struct BSL_BundleRefState_s
     BSLB_AsbPtrSetMap_t bcb_tgts;
 
     /// Map from correlator ID to associated ASB
-    BSLB_AsbPtrMap_t correlation;
+    BSLB_AsbPtrMap_t correlations;
 } BSL_BundleRefState_t;
 
 /** Initialize an empty reference state.
