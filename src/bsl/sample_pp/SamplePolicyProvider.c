@@ -670,6 +670,18 @@ int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, int64_t rule_id, const cha
     return BSL_SUCCESS;
 }
 
+int BSLP_PolicyRule_SetCorrelation(BSLP_PolicyRule_t *self, uint64_t correlation_id)
+{
+    ASSERT_ARG_NONNULL(self);
+    if (correlation_id <= 0)
+    {
+        return BSL_ERR_PROPERTY_CHECK_FAILED;
+    }
+
+    self->correlation_id = correlation_id;
+    return BSL_SUCCESS;
+}
+
 void BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_NONNULL(self);
@@ -736,7 +748,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
 
     // It's found, so populate the security operation from the rule and bundle.
     BSL_SecOper_Populate(sec_oper, self->context_id, target_block_num, 0, self->sec_block_type, self->role,
-                         self->failure_action_code);
+                         self->failure_action_code, self->correlation_id);
 
     // Next, append all the options from the matched rule.
     BSLB_VariantPtrMap_it_t pit;

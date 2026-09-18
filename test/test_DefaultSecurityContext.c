@@ -270,7 +270,7 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     if (bib)
     {
         BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
-                             BSL_POLICYACTION_DROP_BLOCK);
+                             BSL_POLICYACTION_DROP_BLOCK, 0);
 
         if (wrap)
         {
@@ -300,7 +300,7 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     {
         BSL_Crypto_SetRngGenerator(rfc3394_cek);
         BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
-                             BSL_POLICYACTION_DROP_BLOCK);
+                             BSL_POLICYACTION_DROP_BLOCK, 0);
         if (wrap)
         {
             TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKeyName("kek_wrap", kek_data.ptr, kek_data.len));
@@ -429,7 +429,7 @@ void test_sec_accept_keyunwrap(bool bib)
     {
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKeyName("kek_wrap", kek_data.ptr, kek_data.len));
         BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
-                             BSL_POLICYACTION_DROP_BLOCK);
+                             BSL_POLICYACTION_DROP_BLOCK, 0);
         BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bibcontext.sec_oper, BSLX_BIB_OPT_KEY_ID), "kek_wrap");
         BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bibcontext.sec_oper, BSLX_BIB_OPT_USE_KEY_WRAP), 1);
         BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bibcontext.sec_oper, BSLX_BIB_OPT_SCOPE), 0);
@@ -446,7 +446,7 @@ void test_sec_accept_keyunwrap(bool bib)
 
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKeyName("kek_wrap", kek_data.ptr, kek_data.len));
         BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
-                             BSL_POLICYACTION_DROP_BLOCK);
+                             BSL_POLICYACTION_DROP_BLOCK, 0);
         BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcbcontext.sec_oper, BSLX_BCB_OPT_KEY_ID), "kek_wrap");
         BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcbcontext.sec_oper, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
         BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcbcontext.sec_oper, BSLX_BCB_OPT_SCOPE),
