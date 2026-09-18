@@ -34,6 +34,7 @@
 #include <policy_provider/SamplePolicyProvider.h>
 
 #include <m-atomic.h>
+#include <m-shared-ptr.h>
 #include <m-buffer.h>
 #include <m-string.h>
 
@@ -59,14 +60,20 @@ int MockBPA_DeleteBundle(BSL_BundleRef_t *bundle_ref, BSL_ReasonCode_t reason);
 #define MOCKBPA_DATA_QUEUE_SIZE 100
 
 /**
+ * @struct mock_bpa_ctr_ptr_t
+ * @brief Safe shared pointer to ::mock_bpa_ctr_t
+ * @cite lib:mlib.
+ */
+/**
  * @struct MockBPA_data_queue_t
- * @brief Container for a thread-safe circular queue of ::mock_bpa_ctr_t
+ * @brief Container for a thread-safe circular queue of ::mock_bpa_ctr_ptr_t
  * @cite lib:mlib.
  */
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_BUFFER_DEF(MockBPA_data_queue, mock_bpa_ctr_t, MOCKBPA_DATA_QUEUE_SIZE,
+M_SHARED_WEAK_PTR_DEF(mock_bpa_ctr_ptr, mock_bpa_ctr_t)
+M_BUFFER_DEF(MockBPA_data_queue, mock_bpa_ctr_ptr_t *, MOCKBPA_DATA_QUEUE_SIZE,
              BUFFER_QUEUE | BUFFER_THREAD_SAFE | BUFFER_PUSH_INIT_POP_MOVE | BUFFER_BLOCKING)
 // GCOV_EXCL_STOP
 /// @endcond
