@@ -94,7 +94,7 @@ static int BSL_ExecAnySource_Pre(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle 
     return BSL_SUCCESS;
 }
 
-static void BSL_ExecAnySource_Post_TargetIndependent(BSL_SecOper_t *sec_oper, BSL_AbsSecBlock_t *asb)
+static void BSL_ExecAnySource_Post_TargetIndependent(const BSL_SecOper_t *sec_oper, BSL_AbsSecBlock_t *asb)
 {
     // target-independent data
     BSLB_VariantPtrMap_it_t param_it;
@@ -107,7 +107,7 @@ static void BSL_ExecAnySource_Post_TargetIndependent(BSL_SecOper_t *sec_oper, BS
     }
 }
 
-static void BSL_ExecAnySource_Post_TargetSpecific(BSL_SecOper_t *sec_oper, BSL_AbsSecBlock_t *asb)
+static void BSL_ExecAnySource_Post_TargetSpecific(const BSL_SecOper_t *sec_oper, BSL_AbsSecBlock_t *asb)
 {
     // target-specific data
     BSL_AbsSecBlock_Target_t *tgt = BSL_AbsSecBlock_AddTarget(asb, sec_oper->target_block_num);
@@ -180,8 +180,8 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
         if (found_asb)
         {
             BSL_LOG_DEBUG("Correlation ID indicates to add this SecOp to an existing ASB");
-            asb_ptr                 = *found_asb;
-            asb                     = BSL_AbsSecBlockPtr_ref(*found_asb);
+            asb_ptr                 = BSL_AbsSecBlockPtr_acquire(*found_asb);
+            asb                     = BSL_AbsSecBlockPtr_ref(asb_ptr);
             sec_oper->sec_block_num = asb->sec_block_num;
             asb_alredy_exists       = true;
         }
@@ -249,10 +249,7 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     }
 
     BSL_BundleRefState_RepopulateTgts(bundle->bsl_data->bib_tgts, asb_ptr);
-    if (asb_alredy_exists)
-    {
-        BSL_AbsSecBlockPtr_release(asb_ptr);
-    }
+    BSL_AbsSecBlockPtr_release(asb_ptr);
 
     return retval;
 }
@@ -496,8 +493,8 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
         if (found_asb)
         {
             BSL_LOG_DEBUG("Correlation ID indicates to add this SecOp to an existing ASB");
-            asb_ptr                 = *found_asb;
-            asb                     = BSL_AbsSecBlockPtr_ref(*found_asb);
+            asb_ptr                 = BSL_AbsSecBlockPtr_acquire(*found_asb);
+            asb                     = BSL_AbsSecBlockPtr_ref(asb_ptr);
             sec_oper->sec_block_num = asb->sec_block_num;
             asb_alredy_exists       = true;
         }
@@ -569,10 +566,7 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
     }
 
     BSL_BundleRefState_RepopulateTgts(bundle->bsl_data->bcb_tgts, asb_ptr);
-    if (asb_alredy_exists)
-    {
-        BSL_AbsSecBlockPtr_release(asb_ptr);
-    }
+    BSL_AbsSecBlockPtr_release(asb_ptr);
 
     return retval;
 }
