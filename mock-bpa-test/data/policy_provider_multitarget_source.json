@@ -3,6 +3,7 @@
     {
       "policyrule": {
         "desc": "Integrity source rule payload",
+        "correlation": 1,
         "filter": {
           "rule_id": "1",
           "loc": "appin",
@@ -34,13 +35,13 @@
             }
           ]
         },
-        "policy_action_on_fail": "delete_bundle",
-        "correlation": 1
+        "policy_action_on_fail": "delete_bundle"
       }
     },
     {
       "policyrule": {
         "desc": "Integrity source rule bae",
+        "correlation": 1,
         "filter": {
           "rule_id": "2",
           "loc": "appin",
@@ -72,13 +73,13 @@
             }
           ]
         },
-        "policy_action_on_fail": "delete_bundle",
-        "correlation": 1
+        "policy_action_on_fail": "delete_bundle"
       }
     },
     {
       "policyrule": {
         "desc": "Confidentiality source rule payload",
+        "correlation": 2,
         "filter": {
           "rule_id": "3",
           "loc": "clin",
@@ -110,13 +111,13 @@
             }
           ]
         },
-        "policy_action_on_fail": "delete_bundle",
-        "correlation": 2
+        "policy_action_on_fail": "delete_bundle"
       }
     },
     {
       "policyrule": {
         "desc": "Confidentiality source rule bae",
+        "correlation": 2,
         "filter": {
           "rule_id": "4",
           "loc": "clin",
@@ -148,8 +149,7 @@
             }
           ]
         },
-        "policy_action_on_fail": "delete_bundle",
-        "correlation": 2
+        "policy_action_on_fail": "delete_bundle"
       }
     }
   ],
