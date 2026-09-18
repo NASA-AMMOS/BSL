@@ -68,6 +68,7 @@ typedef enum
     BSL_ERR_BUNDLE_OPERATION_FAILED   = -10, ///< Bundle manipulation failed (add/remove or change BTSD)
     BSL_ERR_SECURITY_OPERATION_FAILED = -11, ///< Security operation failed (e.g., BIB did not have enough parameters)
     BSL_ERR_HOST_CALLBACK_FAILED      = -12, ///< Callback to the host BPA returned a non-zero code.
+    BSL_ERR_CORRELATION_MISMATCH      = -13, ///< Correlated security operations do not have matching parameters
 
     /// Policy Errors start at 100
     BSL_ERR_POLICY_FAILED = -100, ///< General error code for errors arising from a Policy Provider
@@ -677,7 +678,7 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src);
  * @param[in] sec_type Member of ::BSL_SecBlockType_e enum indicating BIB or BCB
  * @param[in] sec_role Member of ::BSL_SecRole_e enum indicating role.
  * @param[in] policy_action Member of ::BSL_PolicyAction_e enum indicating failure policy
- * @param[in] correlation_id Correlation ID for this secop; 0 indicates no correlation
+ * @param[in] correlation_id Correlation ID for this operation; 0 indicates no correlation
  */
 void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
                           BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action,

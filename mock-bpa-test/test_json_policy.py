@@ -268,7 +268,7 @@ class TestSamplePolicy(TestAgent):
                     [7, 2, 0, 0, << 300 >>],
                     [1, 1, 0, 0, h'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
                 ]""",
-                policy_config="data/policy_provider_multitarget_source.json",
+                policy_config="data/multitarget_config/policy_provider_multitarget_source.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/key_set_1.json",
                 input_data_format=DataFormat.CBORDIAG,
@@ -307,12 +307,31 @@ class TestSamplePolicy(TestAgent):
                     [7, 2, 0, 0, h'716D8C'],
                     [1, 1, 0, 0, h'3A09C1E63FE23A7F66A59C7303837241E070B02619FC59C5214A22F08CD70795E73E9A']
                 ]""",
-                policy_config="data/policy_provider_multitarget_source.json",
+                policy_config="data/multitarget_config/policy_provider_multitarget_source.json",
                 bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.CBORDIAG,
                 use_bcb_rng=True,
+            )
+        )
+
+    def test_multitarget_source_bib_correlation_mismatch(self):
+        self._single_test(
+            _TestCase(
+                input_data="""
+                [_
+                    [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                    [7, 2, 0, 0, << 300 >>],
+                    [1, 1, 0, 0, h'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
+                ]
+                """,
+                expected_output=r".*SecOper uses correlation ID 1, but has unexpected parameters",
+                policy_config="data/multitarget_config/policy_provider_multitarget_source_correlation_mismatch.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/key_set_1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ERR,
             )
         )
 
@@ -354,7 +373,7 @@ class TestSamplePolicy(TestAgent):
                         ),
                     ],
                 ],
-                policy_config="data/policy_provider_multitarget_accept.json",
+                policy_config="data/multitarget_config/policy_provider_multitarget_accept.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/key_set_1.json",
                 input_data_format=DataFormat.BUNDLEARRAY,
@@ -400,7 +419,7 @@ class TestSamplePolicy(TestAgent):
                         ),
                     ],
                 ],
-                policy_config="data/policy_provider_multitarget_accept.json",
+                policy_config="data/multitarget_config/policy_provider_multitarget_accept.json",
                 bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",
                 input_data_format=DataFormat.BUNDLEARRAY,
@@ -446,7 +465,7 @@ class TestSamplePolicy(TestAgent):
                         ),
                     ],
                 ],
-                policy_config="data/policy_provider_multitarget_accept.json",
+                policy_config="data/multitarget_config/policy_provider_multitarget_accept.json",
                 bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",
                 input_data_format=DataFormat.BUNDLEARRAY,
@@ -501,7 +520,7 @@ class TestSamplePolicy(TestAgent):
                         ),
                     ],
                 ],
-                policy_config="data/policy_provider_multitarget_verify.json",
+                policy_config="data/multitarget_config/policy_provider_multitarget_verify.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/key_set_1.json",
                 input_data_format=DataFormat.BUNDLEARRAY,

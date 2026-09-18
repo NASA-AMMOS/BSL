@@ -135,6 +135,54 @@ void BSL_Variant_Move(BSL_Variant_t *self, BSL_Variant_t *src)
     src->_type = BSLB_VARIANT_TYPE_UNKNOWN;
 }
 
+bool BSL_Variant_Equal(const BSL_Variant_t *left, const BSL_Variant_t *right)
+{
+    if (left == right)
+    {
+        return true;
+    }
+
+    if (!left || !right)
+    {
+        return false;
+    }
+
+    if (left->_type != right->_type)
+    {
+        return false;
+    }
+
+    switch (left->_type)
+    {
+        case BSLB_VARIANT_TYPE_INT64:
+            return left->_val.as_int == right->_val.as_int;
+        case BSLB_VARIANT_TYPE_BYTESTR:
+        case BSLB_VARIANT_TYPE_TEXTSTR:
+        case BSLB_VARIANT_TYPE_RAW:
+            return m_bstring_equal_p(left->_val.as_bytes, right->_val.as_bytes);
+        case BSLB_VARIANT_TYPE_UNKNOWN:
+        default:
+            break;
+    }
+
+    return false;
+}
+
+bool BSLB_VariantPtr_ValueEqual(BSLB_VariantPtr_t *left, BSLB_VariantPtr_t *right)
+{
+    if (left == right)
+    {
+        return true;
+    }
+
+    if (!left || !right)
+    {
+        return false;
+    }
+
+    return BSL_Variant_Equal(BSLB_VariantPtr_cref(left), BSLB_VariantPtr_cref(right));
+}
+
 void BSL_Variant_SetTextstr(BSL_Variant_t *self, const char *value)
 {
     ASSERT_ARG_NONNULL(self);

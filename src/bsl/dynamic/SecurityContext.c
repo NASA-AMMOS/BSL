@@ -94,9 +94,21 @@ static int BSL_ExecAnySource_Pre(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle 
     return BSL_SUCCESS;
 }
 
-static void BSL_ExecAnySource_Post_TargetIndependent(const BSL_SecOper_t *sec_oper, BSL_AbsSecBlock_t *asb)
+static int BSL_ExecAnySource_Post_TargetIndependent(const BSL_SecOper_t *sec_oper, BSL_AbsSecBlock_t *asb)
 {
     // target-independent data
+
+    // If ASB already has params, verify our "new" params are the same
+    if (BSLB_VariantPtrMap_size(asb->params) > 0)
+    {
+        BSL_LOG_DEBUG("ASB already contains params, verifying new params are identical");
+        if (!BSLB_VariantPtrMap_equal_p(asb->params, sec_oper->_params))
+        {
+            BSL_LOG_ERR("SecOper uses correlation ID %" PRId64", but has unexpected parameters", sec_oper->correlation_id);
+            return BSL_ERR_CORRELATION_MISMATCH;
+        }
+    }
+
     BSLB_VariantPtrMap_it_t param_it;
     for (BSLB_VariantPtrMap_it(param_it, sec_oper->_params); !BSLB_VariantPtrMap_end_p(param_it);
          BSLB_VariantPtrMap_next(param_it))
@@ -105,6 +117,8 @@ static void BSL_ExecAnySource_Post_TargetIndependent(const BSL_SecOper_t *sec_op
         // copy shared ptr
         BSLB_VariantPtrMap_set_at(asb->params, *(pair->key_ptr), *(pair->value_ptr));
     }
+
+    return BSL_SUCCESS;
 }
 
 static void BSL_ExecAnySource_Post_TargetSpecific(const BSL_SecOper_t *sec_oper, BSL_AbsSecBlock_t *asb)
@@ -125,7 +139,7 @@ static void BSL_ExecAnySource_Post_TargetSpecific(const BSL_SecOper_t *sec_oper,
 /** Common handling of informing new ASB content after an operation.
  */
 static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper,
-                                  BSL_AbsSecBlock_t *asb, bool target_specific_only)
+                                  BSL_AbsSecBlock_t *asb)
 {
     // un-reference outside of execution
     sec_oper->sec_src_eid = NULL;
@@ -141,11 +155,12 @@ static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BS
     }
     // GCOV_EXCL_STOP
 
-    if (!target_specific_only)
+    res = BSL_ExecAnySource_Post_TargetIndependent(sec_oper, asb);
+    if (res != BSL_SUCCESS)
     {
-        BSL_ExecAnySource_Post_TargetIndependent(sec_oper, asb);
+        BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_FAIL_COUNT, 1);
+        return res;
     }
-
     BSL_ExecAnySource_Post_TargetSpecific(sec_oper, asb);
 
     res = Encode_ASB(lib, bundle, sec_blk.block_num, asb);
@@ -235,7 +250,7 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
     if (BSL_SUCCESS == retval)
     {
-        res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, asb, asb_alredy_exists);
+        res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, asb);
         if (BSL_SUCCESS != res)
         {
             retval = BSL_ERR_SECURITY_OPERATION_FAILED;
@@ -552,7 +567,7 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
     if (BSL_SUCCESS == retval)
     {
-        res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, asb, asb_alredy_exists);
+        res = BSL_ExecAnySource_Post(lib, bundle, sec_oper, asb);
         if (BSL_SUCCESS != res)
         {
             retval = BSL_ERR_SECURITY_OPERATION_FAILED;
