@@ -223,7 +223,6 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
         }
     }
 
-    BSL_LOG_INFO("my really cool block number is = %d", sec_oper->sec_block_num);
     if (BSL_SUCCESS == retval)
     {
         res = (*sec_context_fn)(lib, bundle, sec_oper);
@@ -233,7 +232,6 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
             retval = BSL_ERR_SECURITY_OPERATION_FAILED;
         }
     }
-    BSL_LOG_INFO("my really cool block number is now ! = %d", sec_oper->sec_block_num);
 
 
     if (BSL_SUCCESS == retval)
