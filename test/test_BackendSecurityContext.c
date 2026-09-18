@@ -102,7 +102,7 @@ void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64
     TestSecCtxValidateCallCount = 0;
     TestSecCtxValidatedTarget   = 0;
 
-    const uint64_t   TEST_SC_ID = 99;
+    const int64_t    TEST_SC_ID = -99;
     BSL_SecCtxDesc_t sec_ctx_desc;
     sec_ctx_desc.validate = BSL_TestSecCtx_Validate;
     sec_ctx_desc.execute  = BSL_TestSecCtx_Execute;

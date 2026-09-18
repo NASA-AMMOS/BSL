@@ -1123,10 +1123,10 @@ int BSLP_PolicyParser_LoadFd(int infd, BSLP_PolicyProvider_t *policy)
     return BSL_SUCCESS;
 }
 
-static void BSLP_RegisterPolicyFromBitstring(const BSLP_PolicyParser_BitstringConfig_t policy_bits,
-                                             BSLP_PolicyProvider_t *policy, BSLB_VariantPtrMap_t options)
+static void BSLP_RegisterPolicyFromBitstring(const uint64_t policy_bits, BSLP_PolicyProvider_t *policy,
+                                             BSLB_VariantPtrMap_t options)
 {
-    BSL_LOG_DEBUG("Interpreting policy: 0x%X", policy_bits);
+    BSL_LOG_DEBUG("Interpreting policy: 0x%" PRIx64, policy_bits);
 
     uint32_t sec_block_type     = policy_bits & 0x01;
     uint32_t policy_loc         = (policy_bits >> 1) & 0x01;
@@ -1196,25 +1196,25 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_PolicyParser_BitstringCo
     {
         sec_block_enum = BSL_SECBLOCKTYPE_BCB;
         sec_context    = 2;
-        BSL_LOG_DEBUG("Policy: 0x%X - BSL Security Block Type: BCB", policy_bits);
+        BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - BSL Security Block Type: BCB", policy_bits);
     }
     else
     {
         sec_block_enum = BSL_SECBLOCKTYPE_BIB;
         sec_context    = 1;
-        BSL_LOG_DEBUG("Policy: 0x%X - BSL Security Block Type: BIB", policy_bits);
+        BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - BSL Security Block Type: BIB", policy_bits);
     }
 
     BSL_PolicyLocation_e policy_loc_enum;
     if (policy_loc == 1)
     {
         policy_loc_enum = BSL_POLICYLOCATION_CLIN;
-        BSL_LOG_DEBUG("Policy: 0x%X - Policy Location: CLIN", policy_bits);
+        BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Policy Location: CLIN", policy_bits);
     }
     else
     {
         policy_loc_enum = BSL_POLICYLOCATION_CLOUT;
-        BSL_LOG_DEBUG("Policy: 0x%X - Policy Location: CLOUT", policy_bits);
+        BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Policy Location: CLOUT", policy_bits);
     }
 
     BSL_BundleBlockTypeCode_e bundle_block_enum;
@@ -1222,19 +1222,19 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_PolicyParser_BitstringCo
     {
         case 0:
             bundle_block_enum = BSL_BLOCK_TYPE_PRIMARY;
-            BSL_LOG_DEBUG("Policy: 0x%X - Bundle Block Type: PRIMARY", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Bundle Block Type: PRIMARY", policy_bits);
             break;
         case 1:
             bundle_block_enum = BSL_BLOCK_TYPE_PAYLOAD;
-            BSL_LOG_DEBUG("Policy: 0x%X - Bundle Block Type: PAYLOAD", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Bundle Block Type: PAYLOAD", policy_bits);
             break;
         case 2:
             bundle_block_enum = 192;
-            BSL_LOG_DEBUG("Policy: 0x%X - Bundle Block Type: PRIVATE (192)", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Bundle Block Type: PRIVATE (192)", policy_bits);
             break;
         case 3:
             bundle_block_enum = BSL_BLOCK_TYPE_BUNDLE_AGE;
-            BSL_LOG_DEBUG("Policy: 0x%X - Bundle Block Type: BUNDLE AGE", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Bundle Block Type: BUNDLE AGE", policy_bits);
             break;
         default:
             return;
@@ -1245,19 +1245,19 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_PolicyParser_BitstringCo
     {
         case 0:
             policy_action_enum = BSL_POLICYACTION_NOTHING;
-            BSL_LOG_DEBUG("Policy: 0x%X - Policy Acion: DO NOTHING", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Policy Acion: DO NOTHING", policy_bits);
             break;
         case 1:
             policy_action_enum = BSL_POLICYACTION_DROP_BLOCK;
-            BSL_LOG_DEBUG("Policy: 0x%X - Policy Acion: DROP BLOCK", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Policy Acion: DROP BLOCK", policy_bits);
             break;
         case 2:
             policy_action_enum = BSL_POLICYACTION_DROP_BUNDLE;
-            BSL_LOG_DEBUG("Policy: 0x%X - Policy Acion: DROP BUNDLE", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Policy Acion: DROP BUNDLE", policy_bits);
             break;
         default:
             policy_action_enum = BSL_POLICYACTION_NOTHING;
-            BSL_LOG_DEBUG("Policy: 0x%X - Policy Acion: DO NOTHING", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Policy Acion: DO NOTHING", policy_bits);
             break;
     }
 
@@ -1266,19 +1266,19 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_PolicyParser_BitstringCo
     {
         case 0:
             sec_role_enum = BSL_SECROLE_SOURCE;
-            BSL_LOG_DEBUG("Policy: 0x%X - Security Role: SOURCE", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Security Role: SOURCE", policy_bits);
             break;
         case 1:
             sec_role_enum = BSL_SECROLE_VERIFIER;
-            BSL_LOG_DEBUG("Policy: 0x%X - Security Role: VERIFIER", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Security Role: VERIFIER", policy_bits);
             break;
         case 2:
             sec_role_enum = BSL_SECROLE_ACCEPTOR;
-            BSL_LOG_DEBUG("Policy: 0x%X - Security Role: ACCEPTOR", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Security Role: ACCEPTOR", policy_bits);
             break;
         default:
             sec_role_enum = BSL_SECROLE_VERIFIER;
-            BSL_LOG_DEBUG("Policy: 0x%X - Security Role: VERIFIER", policy_bits);
+            BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Security Role: VERIFIER", policy_bits);
             break;
     }
 
@@ -1295,7 +1295,7 @@ static void BSLP_RegisterPolicyFromBitstring(const BSLP_PolicyParser_BitstringCo
 
     // Create a rule to verify security block at APP/CLA Ingress
     char policybits_str[100];
-    snprintf(policybits_str, 100, "Policy: %x", policy_bits);
+    snprintf(policybits_str, 100, "Policy: %" PRIx64, policy_bits);
 
     BSLP_PolicyPredicate_t predicate_all_in;
     BSLP_PolicyPredicate_InitFrom(&predicate_all_in, policy_loc_enum, eid_src_pat_str, "*:**", "*:**");
@@ -1336,7 +1336,7 @@ int BSLP_PolicyParser_FromBitstringList(const char *policies, BSLP_PolicyProvide
             BSL_LOG_ERR("Failed to decode policy integer at: %s", curs);
         }
         curs = pend;
-        BSLP_RegisterPolicyFromBitstring((int)val, policy, options);
+        BSLP_RegisterPolicyFromBitstring(val, policy, options);
         BSLB_VariantPtrMap_clear(options);
 
         if (*curs == '\0')

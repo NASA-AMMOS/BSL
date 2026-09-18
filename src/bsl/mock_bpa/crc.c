@@ -69,11 +69,11 @@ static void mock_bpa_crc_crc16_finalize(void *state, uint8_t out[MOCK_BPA_CRC_CR
 {
     uint16_t *crc = state;
 
-    *crc = ~*crc;
+    *crc = (uint16_t) ~*crc;
 
     // Network byte order
-    out[0] = (*crc >> 8) & 0xFF;
-    out[1] = *crc & 0xFF;
+    out[0] = (uint8_t)((*crc >> 8) & 0xFF);
+    out[1] = (uint8_t)(*crc & 0xFF);
 }
 
 static void mock_bpa_crc_crc32c_init(void *state)
@@ -118,10 +118,10 @@ static void mock_bpa_crc_crc32c_finalize(void *state, uint8_t out[MOCK_BPA_CRC_C
     *crc = ~*crc;
 
     // Network byte order
-    out[0] = (*crc >> 24) & 0xFF;
-    out[1] = (*crc >> 16) & 0xFF;
-    out[2] = (*crc >> 8) & 0xFF;
-    out[3] = *crc & 0xFF;
+    out[0] = (uint8_t)((*crc >> 24) & 0xFF);
+    out[1] = (uint8_t)((*crc >> 16) & 0xFF);
+    out[2] = (uint8_t)((*crc >> 8) & 0xFF);
+    out[3] = (uint8_t)(*crc & 0xFF);
 }
 
 typedef struct

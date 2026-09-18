@@ -117,12 +117,13 @@ static bool BSLP_PolicyRule_IsConsistent(const BSLP_PolicyRule_t *self)
     return true;
 }
 
-static uint64_t BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+static int BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
 {
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
 
-    uint64_t           error_ret          = BSL_SUCCESS;
+    int error_ret = BSL_SUCCESS;
+
     uint64_t           block_num          = BSL_SecOper_GetTargetBlockNum(sec_oper);
     BSL_PolicyAction_e fail_policy_action = BSL_SecOper_GetPolicyAction(sec_oper);
 

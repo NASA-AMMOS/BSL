@@ -557,7 +557,7 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *bsl);
  * @param[in] desc              Descriptor struct containing callbacks.
  */
 BSL_REQUIRE_CHECK
-int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_SecCtxDesc_t desc);
+int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, int64_t sec_ctx_id, BSL_SecCtxDesc_t desc);
 
 /** @brief Register a Policy Provider module with the BSL.
  * @note The Policy Provider interface is defined by the policy provider descriptor.

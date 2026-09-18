@@ -44,7 +44,7 @@ extern "C" {
 /**
  * Function pointer def for random bytestring generator
  * @param buf buffer to fill with random bytes
- * @param len size of random buffer
+ * @param len size of random buffer, which must be non-negative.
  * @return 1 if success, 0 if failure
  */
 typedef int (*BSL_Crypto_RandBytesFn)(unsigned char *buf, int len);

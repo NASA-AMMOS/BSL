@@ -133,7 +133,7 @@ static int mock_bpa_rfc9173_bcb_cek(unsigned char *buf, int len)
     {
         uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
                                     0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
-        memcpy(buf, rfc9173A3_key, len);
+        memcpy(buf, rfc9173A3_key, (size_t)len);
     }
     return 1;
 }

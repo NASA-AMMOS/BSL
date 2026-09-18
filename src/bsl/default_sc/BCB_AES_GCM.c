@@ -50,6 +50,7 @@ int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
 {
     CHK_ARG_NONNULL(bcb_context);
 
+    CHK_PRECONDITION(bcb_context->aad_scope >= 0);
     // AAD buffer should be unallocated (this function allocates it)
     CHK_PRECONDITION(bcb_context->aad.len == 0);
     CHK_PRECONDITION(bcb_context->aad.ptr == NULL);
@@ -68,7 +69,7 @@ int BSLX_BCB_ComputeAAD(BSLX_BCB_t *bcb_context)
 
     QCBOREncodeContext aad_enc;
     QCBOREncode_Init(&aad_enc, (UsefulBuf) { .ptr = bcb_context->aad.ptr, .len = bcb_context->aad.len });
-    QCBOREncode_AddUInt64(&aad_enc, bcb_context->aad_scope);
+    QCBOREncode_AddInt64(&aad_enc, bcb_context->aad_scope);
 
     if (bcb_context->aad_scope & RFC9173_BCB_AADSCOPEFLAGID_INC_PRIM_BLOCK)
     {
