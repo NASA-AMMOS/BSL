@@ -484,12 +484,12 @@ static int BSLP_PolicyParser_GetLoc(BSL_PolicyLocation_e *loc, const char *text)
 
 static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const json_t *policy_rule_elm)
 {
-    int64_t              rule_id_int = 0;
+    int64_t              rule_id_int      = 0;
     int64_t              rule_correlation = 0;
-    const char          *src_str     = NULL;
-    const char          *dest_str    = NULL;
-    const char          *sec_src_str = NULL;
-    const char          *desc_text   = NULL;
+    const char          *src_str          = NULL;
+    const char          *dest_str         = NULL;
+    const char          *sec_src_str      = NULL;
+    const char          *desc_text        = NULL;
     BSL_SecBlockType_e   sec_block_type;
     int64_t              sec_ctx_id;
     BSL_SecRole_e        sec_role;
@@ -863,7 +863,7 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
 
     if (rule_correlation > 0)
     {
-        BSLP_PolicyRule_SetCorrelation(&rule, (uint64_t) rule_correlation);
+        BSLP_PolicyRule_SetCorrelation(&rule, (uint64_t)rule_correlation);
     }
 
     // move options into rule

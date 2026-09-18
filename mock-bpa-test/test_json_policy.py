@@ -19,7 +19,6 @@
 # the prime contract 80NM0018D0004 between the Caltech and NASA under
 # subcontract 1700763.
 #
-import unittest
 
 from _test_util import BundleDestLoc, DataFormat, _TestCase
 from test_bpa import TestAgent
@@ -313,7 +312,7 @@ class TestSamplePolicy(TestAgent):
                 key_set="data/key_set_1.json",
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.CBORDIAG,
-                use_bcb_rng=True
+                use_bcb_rng=True,
             )
         )
 

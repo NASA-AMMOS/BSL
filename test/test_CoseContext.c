@@ -347,7 +347,8 @@ void test_AppendixA_Example1_BIB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BUNDLE, 0);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BUNDLE,
+                         0);
 
     const char *opt_key_id = (mismatch == OPT_MISMATCH_BAD_KEY_ID) ? "other" : exA_1_kid;
     {
@@ -576,7 +577,8 @@ void test_CCSDS_Example_Mac_VerifyAccept(BSL_SecRole_e role, int mismatch)
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 5, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BUNDLE, 0);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 5, BSL_SECBLOCKTYPE_BIB, role, BSL_POLICYACTION_DROP_BUNDLE,
+                         0);
 
     const char *opt_key_id = (mismatch == OPT_MISMATCH_BAD_KEY_ID) ? "other" : ccsds_mac_kid;
     {
@@ -805,7 +807,8 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_DROP_BUNDLE, 0);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_DROP_BUNDLE,
+                         0);
 
     const char *opt_key_id = (mismatch == OPT_MISMATCH_BAD_KEY_ID) ? "other" : exA_4_kid;
     {
@@ -1038,7 +1041,8 @@ void test_AppendixA_Example5_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
-    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_DROP_BUNDLE, 0);
+    BSL_SecOper_Populate(&sec_oper, BSLX_COSESC_CTX_ID, 1, 3, BSL_SECBLOCKTYPE_BCB, role, BSL_POLICYACTION_DROP_BUNDLE,
+                         0);
 
     const char *opt_key_id = (mismatch == OPT_MISMATCH_BAD_KEY_ID) ? "other" : exA_5_kid;
     {

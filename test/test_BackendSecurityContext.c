@@ -356,7 +356,8 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
 
     BSL_SecOper_t bcb_oper;
     BSL_SecOper_Init(&bcb_oper);
-    BSL_SecOper_Populate(&bcb_oper, 2, 1, 4, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR, BSL_POLICYACTION_DROP_BLOCK, 0);
+    BSL_SecOper_Populate(&bcb_oper, 2, 1, 4, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR, BSL_POLICYACTION_DROP_BLOCK,
+                         0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_oper, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A3_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_oper, BSLX_BCB_OPT_USE_KEY_WRAP), 0);
 

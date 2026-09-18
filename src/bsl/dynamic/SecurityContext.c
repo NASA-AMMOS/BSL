@@ -124,7 +124,8 @@ static void BSL_ExecAnySource_Post_TargetSpecific(BSL_SecOper_t *sec_oper, BSL_A
 
 /** Common handling of informing new ASB content after an operation.
  */
-static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper, BSL_AbsSecBlock_t *asb, bool target_specific_only)
+static int BSL_ExecAnySource_Post(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper,
+                                  BSL_AbsSecBlock_t *asb, bool target_specific_only)
 {
     // un-reference outside of execution
     sec_oper->sec_src_eid = NULL;
@@ -170,9 +171,9 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_SOURCE_COUNT, 1);
 
-    BSL_AbsSecBlockPtr_t *asb = NULL;
-    BSL_AbsSecBlock_t *asb_ptr = NULL;
-    bool asb_exists = false;
+    BSL_AbsSecBlockPtr_t *asb        = NULL;
+    BSL_AbsSecBlock_t    *asb_ptr    = NULL;
+    bool                  asb_exists = false;
     if (sec_oper->correlation_id > 0)
     {
         BSL_LOG_INFO("Correlation ID non-zero = %" PRIu64, sec_oper->correlation_id);
@@ -180,16 +181,16 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
         if (found_asb)
         {
             BSL_LOG_DEBUG("Correlation ID indicates to add this SecOp to an existing ASB");
-            asb_ptr = BSL_AbsSecBlockPtr_ref(*found_asb);
+            asb_ptr                 = BSL_AbsSecBlockPtr_ref(*found_asb);
             sec_oper->sec_block_num = asb_ptr->sec_block_num;
-            asb_exists = true;
+            asb_exists              = true;
         }
     }
 
     int res;
     if (!asb_exists)
     {
-        asb = BSL_AbsSecBlockPtr_new();
+        asb     = BSL_AbsSecBlockPtr_new();
         asb_ptr = BSL_AbsSecBlockPtr_ref(asb);
         BSL_AbsSecBlock_Init(asb_ptr);
 
@@ -232,7 +233,6 @@ int BSL_ExecBIBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
             retval = BSL_ERR_SECURITY_OPERATION_FAILED;
         }
     }
-
 
     if (BSL_SUCCESS == retval)
     {
@@ -486,9 +486,9 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
 
     BSL_TlmCounters_IncrementCounter(lib, BSL_TLM_SECOP_SOURCE_COUNT, 1);
 
-    BSL_AbsSecBlockPtr_t *asb = NULL;
-    BSL_AbsSecBlock_t *asb_ptr = NULL;
-    bool asb_exists = false;
+    BSL_AbsSecBlockPtr_t *asb        = NULL;
+    BSL_AbsSecBlock_t    *asb_ptr    = NULL;
+    bool                  asb_exists = false;
     if (sec_oper->correlation_id > 0)
     {
         BSL_LOG_INFO("Correlation ID non-zero = %" PRIu64, sec_oper->correlation_id);
@@ -496,16 +496,16 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
         if (found_asb)
         {
             BSL_LOG_DEBUG("Correlation ID indicates to add this SecOp to an existing ASB");
-            asb_ptr = BSL_AbsSecBlockPtr_ref(*found_asb);
+            asb_ptr                 = BSL_AbsSecBlockPtr_ref(*found_asb);
             sec_oper->sec_block_num = asb_ptr->sec_block_num;
-            asb_exists = true;
+            asb_exists              = true;
         }
     }
 
     int res;
     if (!asb_exists)
     {
-        asb = BSL_AbsSecBlockPtr_new();
+        asb     = BSL_AbsSecBlockPtr_new();
         asb_ptr = BSL_AbsSecBlockPtr_ref(asb);
         BSL_AbsSecBlock_Init(asb_ptr);
 
@@ -538,7 +538,6 @@ int BSL_ExecBCBSource(BSL_SecCtx_Execute_f sec_context_fn, BSL_LibCtx_t *lib, BS
             }
         }
     }
-
 
     if (BSL_SUCCESS == retval)
     {
