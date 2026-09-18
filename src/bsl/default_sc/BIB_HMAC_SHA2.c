@@ -56,28 +56,27 @@ bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t
  * Provides the mapping from the security-context-specific ID defined in RFC9173
  * to the local ID of the SHA variant used by the crypto engine (OpenSSL).
  */
-static BSL_Crypto_SHAVariant_e map_rfc9173_sha_variant_to_crypto(uint64_t rfc9173_sha_variant)
+static int map_rfc9173_sha_variant_to_crypto(BSL_Crypto_SHAVariant_e *bsl_sha, int64_t rfc9173_sha_variant)
 {
-    BSL_Crypto_SHAVariant_e crypto_sha_variant;
+    int retval = BSL_SUCCESS;
     if (rfc9173_sha_variant == RFC9173_BIB_SHA_HMAC512)
     {
-        crypto_sha_variant = BSL_CRYPTO_SHA_512;
+        *bsl_sha = BSL_CRYPTO_SHA_512;
     }
     else if (rfc9173_sha_variant == RFC9173_BIB_SHA_HMAC384)
     {
-        crypto_sha_variant = BSL_CRYPTO_SHA_384;
+        *bsl_sha = BSL_CRYPTO_SHA_384;
     }
     else if (rfc9173_sha_variant == RFC9173_BIB_SHA_HMAC256)
     {
-        crypto_sha_variant = BSL_CRYPTO_SHA_256;
+        *bsl_sha = BSL_CRYPTO_SHA_256;
     }
     else
     {
         BSL_LOG_ERR("Unknown RFC9173 SHA variant index: %zu", rfc9173_sha_variant);
-        crypto_sha_variant = -1;
+        retval = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
     }
-    BSL_LOG_DEBUG("Mapping RFC9173 SHA Variant %zu -> %d", rfc9173_sha_variant, crypto_sha_variant);
-    return crypto_sha_variant;
+    return retval;
 }
 
 /**
@@ -191,8 +190,7 @@ int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, co
     // validate early
     if (self->opt_sha_variant)
     {
-        self->crypto_sha_variant = map_rfc9173_sha_variant_to_crypto(self->sha_variant);
-        if (self->crypto_sha_variant < 0)
+        if (BSL_SUCCESS != map_rfc9173_sha_variant_to_crypto(&self->crypto_sha_variant, self->sha_variant))
         {
             BSL_LOG_WARNING("BIB SHA variant invalid %" PRId64, self->sha_variant);
             return BSL_ERR_PROPERTY_CHECK_FAILED;
@@ -437,8 +435,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *
             BSL_LOG_DEBUG("No SHA Variant set, defaulting to SHA_HMAC384");
             sha_variant = RFC9173_BIB_SHA_HMAC384;
         }
-        bib_context.crypto_sha_variant = map_rfc9173_sha_variant_to_crypto(sha_variant);
-        if (bib_context.crypto_sha_variant < 0)
+        if (BSL_SUCCESS != map_rfc9173_sha_variant_to_crypto(&bib_context.crypto_sha_variant, sha_variant))
         {
             BSL_LOG_ERR("BIB SHA variant invalid %" PRId64, sha_variant);
             bib_context.err_count++;
@@ -567,7 +564,7 @@ int BSLX_BIB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *
             BSL_Variant_SetInt64(scope_flag_param, bib_context.ippt_scope);
         }
         {
-            BSL_LOG_DEBUG("Appending BIB wrapped key param");
+            BSL_LOG_DEBUG("Appending BIB HMAC result param");
             BSL_Variant_t *bib_result = BSL_SecOper_AddResult(sec_oper, RFC9173_BIB_RESULTID_HMAC);
             BSL_Variant_SetBytestr(bib_result, bib_context.hmac_result_val);
         }

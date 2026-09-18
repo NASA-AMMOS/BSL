@@ -47,8 +47,8 @@ extern "C" {
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_BPTREE_DEF2(BSLX_CoseSc_AadScope, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(API_6(BSL_CBOR_Compare_Int64))),
-              uint64_t, M_BASIC_OPLIST)
+M_BPTREE_DEF2(BSLX_CoseSc_AadScope, 4, int64_t, M_OPEXTEND(M_BASIC_OPLIST, CMP(API_6(BSL_CBOR_Compare_Int64))), int64_t,
+              M_BASIC_OPLIST)
 // GCOV_EXCL_STOP
 /// @endcond
 // NOLINTEND

@@ -884,7 +884,7 @@ static void *MockBPA_Agent_work_deliver(void *arg)
 
         {
             uint8_t buf    = 0;
-            int     nbytes = write(agent->tx_notify_w, &buf, sizeof(buf));
+            ssize_t nbytes = write(agent->tx_notify_w, &buf, sizeof(buf));
             if (nbytes < 0)
             {
                 BSL_LOG_ERR("Failed to write: %ld", nbytes);
@@ -931,7 +931,7 @@ static void *MockBPA_Agent_work_forward(void *arg)
 
         {
             uint8_t buf    = 0;
-            int     nbytes = write(agent->tx_notify_w, &buf, sizeof(uint8_t));
+            ssize_t nbytes = write(agent->tx_notify_w, &buf, sizeof(uint8_t));
             if (nbytes < 0)
             {
                 BSL_LOG_ERR("Failed to write, got %ld", nbytes);
@@ -969,7 +969,7 @@ void MockBPA_Agent_Stop(MockBPA_Agent_t *agent)
     atomic_store(&agent->stop_state, true);
 
     uint8_t buf    = 0;
-    int     nbytes = write(agent->tx_notify_w, &buf, sizeof(buf));
+    ssize_t nbytes = write(agent->tx_notify_w, &buf, sizeof(buf));
     if (nbytes < 0)
     {
         BSL_LOG_ERR("Failed to write: %ld", nbytes);
@@ -1030,7 +1030,7 @@ int MockBPA_Agent_Exec(MockBPA_Agent_t *agent)
         {
             // no actual data, just clear the pipe
             uint8_t buf;
-            int     nbytes = read(agent->tx_notify_r, &buf, sizeof(uint8_t));
+            ssize_t nbytes = read(agent->tx_notify_r, &buf, sizeof(uint8_t));
             if (nbytes < 0)
             {
                 BSL_LOG_ERR("Cannot read: %ld", nbytes);
@@ -1055,7 +1055,7 @@ int MockBPA_Agent_Exec(MockBPA_Agent_t *agent)
                 mock_bpa_ctr_ptr_t *item_ptr = mock_bpa_ctr_ptr_new();
                 {
                     mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
-                    BSL_Data_AppendFrom(&item->encoded, got, buf);
+                    BSL_Data_AppendFrom(&item->encoded, (size_t)got, buf);
                 }
                 MockBPA_data_queue_push_move(agent->over_rx, &item_ptr);
             }
@@ -1106,7 +1106,7 @@ int MockBPA_Agent_Exec(MockBPA_Agent_t *agent)
                 assert(item_ptr);
                 {
                     mock_bpa_ctr_t *item = mock_bpa_ctr_ptr_ref(item_ptr);
-                    BSL_Data_AppendFrom(&item->encoded, got, buf);
+                    BSL_Data_AppendFrom(&item->encoded, (size_t)got, buf);
                 }
                 MockBPA_data_queue_push_move(agent->under_rx, &item_ptr);
             }

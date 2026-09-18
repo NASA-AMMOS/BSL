@@ -68,6 +68,7 @@ typedef enum
     BSL_ERR_BUNDLE_OPERATION_FAILED   = -10, ///< Bundle manipulation failed (add/remove or change BTSD)
     BSL_ERR_SECURITY_OPERATION_FAILED = -11, ///< Security operation failed (e.g., BIB did not have enough parameters)
     BSL_ERR_HOST_CALLBACK_FAILED      = -12, ///< Callback to the host BPA returned a non-zero code.
+    BSL_ERR_CORRELATION_MISMATCH      = -13, ///< Correlated security operations do not have matching parameters
 
     /// Policy Errors start at 100
     BSL_ERR_POLICY_FAILED = -100, ///< General error code for errors arising from a Policy Provider
@@ -677,9 +678,11 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src);
  * @param[in] sec_type Member of ::BSL_SecBlockType_e enum indicating BIB or BCB
  * @param[in] sec_role Member of ::BSL_SecRole_e enum indicating role.
  * @param[in] policy_action Member of ::BSL_PolicyAction_e enum indicating failure policy
+ * @param[in] correlation_id Correlation ID for this operation; 0 indicates no correlation
  */
 void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
-                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action);
+                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action,
+                          uint64_t correlation_id);
 
 /** Returns true if internal consistency and sanity checks pass
  *
@@ -1054,13 +1057,6 @@ size_t BSL_SecurityActionSet_CountActions(const BSL_SecurityActionSet_t *self);
  */
 const BSL_SecurityAction_t *BSL_SecurityActionSet_GetActionAtIndex(const BSL_SecurityActionSet_t *self, size_t index);
 
-/** @brief Returns count of failures after processing this action set
- *
- * @param[in] self Pointer to this security action set.
- * @return Count of errors.
- */
-size_t BSL_SecurityActionSet_CountErrors(const BSL_SecurityActionSet_t *self);
-
 /** Queries the policy provider for any security operations to take on the bundle.
  *
  * @note The caller is obligated to allocate space for the policy_action_set output.
@@ -1092,25 +1088,49 @@ int BSL_PolicyRegistry_InspectActions(const BSL_LibCtx_t *bsl, BSL_SecurityActio
 int BSL_PolicyRegistry_FinalizeActions(const BSL_LibCtx_t *bsl, const BSL_SecurityActionSet_t *policy_actions,
                                        BSL_BundleRef_t *bundle);
 
-/// @brief Callback interface to query policy provider to populate the action set
+/** @brief Callback interface to query policy provider to populate the action set.
+ *
+ * @param[in] user_data The pointer registered by BSL_PolicyDesc_s::user_data.
+ * @param[in,out] output_action_set The action set already initialized to store the query result.
+ * @param[in] bundle The bundle to inspect.
+ * @param location The interaction point of this query.
+ * @return BSL_SUCCESS if successful.
+ */
 typedef int (*BSL_PolicyInspect_f)(void *user_data, BSL_SecurityActionSet_t *output_action_set,
                                    const BSL_BundleRef_t *bundle, BSL_PolicyLocation_e location);
 
-/// @brief Callback interface to finalize policy provider over the action set. Finalize should ignore actions from
-/// different policy providers
+/** @brief Callback interface to finalize policy provider over the action set.
+ * Finalize should ignore actions from different policy providers.
+ *
+ * @param[in] user_data The pointer registered by BSL_PolicyDesc_s::user_data.
+ * @param[in,out] output_action_set The action set which was executed with outcomes in each
+ * contained operation.
+ * @return BSL_SUCCESS if successful.
+ */
 typedef int (*BSL_PolicyFinalize_f)(void *user_data, const BSL_SecurityActionSet_t *output_action_set,
                                     BSL_BundleRef_t *bundle);
 
-/// @brief Callback interface for policy provider to shut down and release any resources
+/** @brief Callback interface for policy provider to shut down and release any resources
+ *
+ * @param[in] user_data The pointer registered by BSL_PolicyDesc_s::user_data.
+ */
 typedef void (*BSL_PolicyDeinit_f)(void *user_data);
 
 /// @brief Descriptor of opaque data and callbacks for Policy Provider.
 struct BSL_PolicyDesc_s
 {
-    void                *user_data;   ///< Reference to policy provider -specific data
-    BSL_PolicyInspect_f  query_fn;    ///< Function pointer to query policy
-    BSL_PolicyFinalize_f finalize_fn; ///< Function pointer to finalize policy
-    BSL_PolicyDeinit_f   deinit_fn;   ///< Function to deinit the policy provider at termination of BSL context
+    /** Reference to policy provider-specific context data.
+     * This pointer may be NULL.
+     */
+    void *user_data;
+    /// Function pointer to query policy and get actions/operations
+    BSL_PolicyInspect_f query_fn;
+    /// Function pointer to finalize policy after actions/operations
+    BSL_PolicyFinalize_f finalize_fn;
+    /** Function to deinit the policy provider at termination of BSL context.
+     * This pointer may be NULL.
+     */
+    BSL_PolicyDeinit_f deinit_fn;
 };
 
 /** Call the underlying security context to perform the given action set

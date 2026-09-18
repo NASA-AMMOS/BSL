@@ -46,7 +46,7 @@ extern "C" {
  */
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-M_DICT_DEF2(BSL_SecCtxDict, uint64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
+M_DICT_DEF2(BSL_SecCtxDict, int64_t, M_BASIC_OPLIST, BSL_SecCtxDesc_t, M_POD_OPLIST)
 // GCOV_EXCL_STOP
 /// @endcond
 

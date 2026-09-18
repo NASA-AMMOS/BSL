@@ -290,13 +290,13 @@ int BSL_Crypto_KeyLoader_LoadCoseKeySet(int infd)
 {
     CHK_ARG_EXPR(infd >= 0);
     struct stat sb;
-    if ((fstat(infd, &sb) < 0) || (sb.st_size == 0))
+    if ((fstat(infd, &sb) < 0) || (sb.st_size <= 0))
     {
         BSL_LOG_ERR("Error getting file size");
         return BSL_ERR_DECODING;
     }
 
-    void *data = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, infd, 0);
+    void *data = mmap(NULL, (size_t)sb.st_size, PROT_READ, MAP_PRIVATE, infd, 0);
     if (!data)
     {
         BSL_LOG_ERR("Error in mmap");
@@ -304,11 +304,11 @@ int BSL_Crypto_KeyLoader_LoadCoseKeySet(int infd)
     }
 
     BSL_Data_t view;
-    BSL_Data_InitView(&view, sb.st_size, (BSL_DataPtr_t)data);
+    BSL_Data_InitView(&view, (size_t)sb.st_size, (BSL_DataPtr_t)data);
 
     int retval = BSL_CBOR_Decode(&view, &BSL_Crypto_KeyLoader_LoadCoseKeySet_decode, NULL);
 
-    if (munmap(data, sb.st_size) < 0)
+    if (munmap(data, (size_t)sb.st_size) < 0)
     {
         BSL_LOG_ERR("Error in munmap");
     }

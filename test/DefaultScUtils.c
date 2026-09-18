@@ -64,7 +64,7 @@ void BCBTestContext_Deinit(BCBTestContext *obj)
 void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e role, const char *key_id)
 {
     BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BIB_HMAC_SHA2, 1, 2, BSL_SECBLOCKTYPE_BIB, role,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
 
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&context->sec_oper, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&context->sec_oper, BSLX_BIB_OPT_SCOPE), 0);
@@ -75,7 +75,7 @@ void BSL_TestUtils_InitBIB_AppendixA1(BIBTestContext *context, BSL_SecRole_e rol
 void BSL_TestUtils_InitBCB_Appendix2(BCBTestContext *context, BSL_SecRole_e role)
 {
     BSL_SecOper_Populate(&context->sec_oper, RFC9173_CONTEXTID_BCB_AES_GCM, 1, 2, BSL_SECBLOCKTYPE_BCB, role,
-                         BSL_POLICYACTION_NOTHING);
+                         BSL_POLICYACTION_NOTHING, 0);
 
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&context->sec_oper, BSLX_BCB_OPT_AES_VARIANT),
                          RFC9173_BCB_AES_VARIANT_A128GCM);
@@ -216,65 +216,65 @@ BSL_SecurityActionSet_t *BSL_TestUtils_InitMallocBIBActionSet(BIBTestContext *bi
 
 int rfc9173_byte_gen_fn_a1(unsigned char *buf, int len)
 {
-    if (len == 12) // IV
+    static const uint8_t iv[]            = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+    static const uint8_t rfc9173A1_key[] = { 0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b,
+                                             0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b };
+    if (len == sizeof(iv)) // IV
     {
-        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
-        memcpy(buf, iv, 12);
+        memcpy(buf, iv, sizeof(iv));
     }
-    else // A1 KEY
+    else if (len == sizeof(rfc9173A1_key)) // A1 KEY
     {
-        uint8_t rfc9173A1_key[] = { 0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b,
-                                    0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b, 0x1a, 0x2b };
-        memcpy(buf, rfc9173A1_key, len);
+        memcpy(buf, rfc9173A1_key, sizeof(rfc9173A1_key));
     }
     return 1;
 }
 
 int rfc9173_byte_gen_fn_a2_kek(unsigned char *buf, int len)
 {
-    if (len == 12) // IV
+    static const uint8_t iv[]            = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+    static const uint8_t rfc9173A2_key[] = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+                                             0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70 };
+    if (len == sizeof(iv)) // IV
     {
-        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
-        memcpy(buf, iv, 12);
+        memcpy(buf, iv, sizeof(iv));
     }
-    else // A2 KEY
+    else if (len == sizeof(rfc9173A2_key)) // A2 KEY
     {
-        uint8_t rfc9173A2_key[] = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
-                                    0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70 };
-        memcpy(buf, rfc9173A2_key, len);
+        memcpy(buf, rfc9173A2_key, sizeof(rfc9173A2_key));
     }
     return 1;
 }
 
 int rfc9173_byte_gen_fn_a2_cek(unsigned char *buf, int len)
 {
-    if (len == 12) // IV
+    static const uint8_t iv[]            = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+    static const uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
+                                             0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
+    if (len == sizeof(iv)) // IV
     {
-        static const uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
-        memcpy(buf, iv, 12);
+        memcpy(buf, iv, sizeof(iv));
     }
-    else // A3 KEY
+    else if (len == sizeof(rfc9173A3_key)) // A3 KEY
     {
-        static const uint8_t rfc9173A3_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69,
-                                                 0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
-        memcpy(buf, rfc9173A3_key, len);
+        memcpy(buf, rfc9173A3_key, sizeof(rfc9173A3_key));
     }
     return 1;
 }
 
 int rfc9173_byte_gen_fn_a4(unsigned char *buf, int len)
 {
-    if (len == 12) // IV
+    static const uint8_t iv[]            = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+    static const uint8_t rfc9173A4_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69, 0x6f, 0x70, 0x61,
+                                             0x73, 0x64, 0x66, 0x67, 0x68, 0x71, 0x77, 0x65, 0x72, 0x74, 0x79,
+                                             0x75, 0x69, 0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
+    if (len == sizeof(iv)) // IV
     {
-        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
-        memcpy(buf, iv, 12);
+        memcpy(buf, iv, sizeof(iv));
     }
-    else // A4 KEY
+    else if (len == sizeof(rfc9173A4_key)) // A4 KEY
     {
-        uint8_t rfc9173A4_key[] = { 0x71, 0x77, 0x65, 0x72, 0x74, 0x79, 0x75, 0x69, 0x6f, 0x70, 0x61,
-                                    0x73, 0x64, 0x66, 0x67, 0x68, 0x71, 0x77, 0x65, 0x72, 0x74, 0x79,
-                                    0x75, 0x69, 0x6f, 0x70, 0x61, 0x73, 0x64, 0x66, 0x67, 0x68 };
-        memcpy(buf, rfc9173A4_key, len);
+        memcpy(buf, rfc9173A4_key, sizeof(rfc9173A4_key));
     }
     return 1;
 }

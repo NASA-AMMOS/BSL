@@ -3,6 +3,7 @@
     {
       "policyrule": {
         "desc": "Integrity source rule payload",
+        "correlation": 1,
         "filter": {
           "rule_id": "1",
           "loc": "appin",
@@ -40,6 +41,7 @@
     {
       "policyrule": {
         "desc": "Integrity source rule bae",
+        "correlation": 1,
         "filter": {
           "rule_id": "2",
           "loc": "appin",
@@ -77,6 +79,7 @@
     {
       "policyrule": {
         "desc": "Confidentiality source rule payload",
+        "correlation": 2,
         "filter": {
           "rule_id": "3",
           "loc": "clin",
@@ -114,6 +117,7 @@
     {
       "policyrule": {
         "desc": "Confidentiality source rule bae",
+        "correlation": 2,
         "filter": {
           "rule_id": "4",
           "loc": "clin",

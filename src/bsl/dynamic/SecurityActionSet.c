@@ -122,9 +122,3 @@ const BSL_SecurityAction_t *BSL_SecurityActionSet_GetActionAtIndex(const BSL_Sec
     ASSERT_ARG_NONNULL(self);
     return BSL_SecActionList_cget(self->actions, index);
 }
-
-size_t BSL_SecurityActionSet_CountErrors(const BSL_SecurityActionSet_t *self)
-{
-    ASSERT_ARG_NONNULL(self);
-    return self->err_count;
-}

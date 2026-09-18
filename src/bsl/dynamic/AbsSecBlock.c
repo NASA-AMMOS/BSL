@@ -218,13 +218,14 @@ BSL_AbsSecBlock_Target_t *BSL_AbsSecBlock_AddTarget(BSL_AbsSecBlock_t *self, uin
     return tgt;
 }
 
-int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_num)
+void BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_num)
 {
     // GCOV_EXCL_START
-    CHK_PRECONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    if (!BSL_AbsSecBlock_IsConsistent(self))
+    {
+        return;
+    }
     // GCOV_EXCL_STOP
-
-    size_t things_removed = 0;
 
     // Remove target and its results
     BSL_AbsSecBlock_TargetList_it_t iter;
@@ -234,7 +235,6 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
 
         if (tgt->target_block_num == target_block_num)
         {
-            things_removed += 1 + BSLB_VariantPtrMap_size(tgt->results);
             BSL_AbsSecBlock_TargetList_remove(self->target_results, iter);
         }
         else
@@ -242,9 +242,6 @@ int BSL_AbsSecBlock_StripResults(BSL_AbsSecBlock_t *self, uint64_t target_block_
             BSL_AbsSecBlock_TargetList_next(iter);
         }
     }
-
-    CHK_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
-    return (int)things_removed;
 }
 
 int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb)
@@ -432,7 +429,7 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
 
             int64_t item_id = 0;
             QCBORDecode_GetInt64(dec, &item_id);
-            res = QCBORDecode_GetError(dec);
+            res = (int)QCBORDecode_GetError(dec);
             if (QCBOR_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed getting an int ID: code %d", res);
@@ -484,7 +481,7 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
 
             int64_t item_id = 0;
             QCBORDecode_GetInt64(dec, &item_id);
-            res = QCBORDecode_GetError(dec);
+            res = (int)QCBORDecode_GetError(dec);
             if (QCBOR_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed getting an int ID: code %d", res);

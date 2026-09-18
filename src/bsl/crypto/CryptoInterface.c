@@ -715,12 +715,12 @@ int BSL_Cipher_AddAadSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader)
 
         int block_size_int = (int)block_size;
 
-        BSL_LOG_PLAINTEXT_PTR("AAD in", cipher_ctx, cipher_ctx->in_buf.ptr, block_size_int);
+        BSL_LOG_PLAINTEXT_PTR("AAD in", cipher_ctx, cipher_ctx->in_buf.ptr, (size_t)block_size_int);
         int res =
             EVP_CipherUpdate(cipher_ctx->libhandle, NULL, &block_size_int, cipher_ctx->in_buf.ptr, block_size_int);
         CHK_PROPERTY(res == 1);
 
-        BSL_KeyStore_State.update_stats(cipher_ctx->keyhandle, 0, block_size_int);
+        BSL_KeyStore_State.update_stats(cipher_ctx->keyhandle, 0, (size_t)block_size_int);
     }
 
     return 0;
@@ -744,14 +744,14 @@ int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_Seq
         limit -= block_size;
         int block_size_int = (int)block_size;
 
-        BSL_LOG_PLAINTEXT_PTR("cipher in", cipher_ctx, cipher_ctx->in_buf.ptr, block_size_int);
+        BSL_LOG_PLAINTEXT_PTR("cipher in", cipher_ctx, cipher_ctx->in_buf.ptr, (size_t)block_size_int);
         int res = EVP_CipherUpdate(cipher_ctx->libhandle, cipher_ctx->out_buf.ptr, &block_size_int,
                                    cipher_ctx->in_buf.ptr, block_size_int);
         BSL_LOG_DEBUG("EVP_CipherUpdate took %zu bytes, gave %d bytes, return %d", block_size, block_size_int, res);
-        BSL_LOG_PLAINTEXT_PTR("cipher out", cipher_ctx, cipher_ctx->out_buf.ptr, block_size_int);
+        BSL_LOG_PLAINTEXT_PTR("cipher out", cipher_ctx, cipher_ctx->out_buf.ptr, (size_t)block_size_int);
         CHK_PROPERTY(res == 1);
 
-        BSL_KeyStore_State.update_stats(cipher_ctx->keyhandle, 0, block_size_int);
+        BSL_KeyStore_State.update_stats(cipher_ctx->keyhandle, 0, (size_t)block_size_int);
 
         if ((block_size_int > 0) && writer)
         {
@@ -767,7 +767,7 @@ size_t BSL_Cipher_TagLen(const BSL_Cipher_t *cipher_ctx)
 {
     ASSERT_ARG_NONNULL(cipher_ctx);
     ASSERT_ARG_NONNULL(cipher_ctx->libhandle);
-    return EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle);
+    return (size_t)EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle);
 }
 
 int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag)
@@ -776,7 +776,7 @@ int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag)
     ASSERT_ARG_NONNULL(cipher_ctx->libhandle);
     ASSERT_ARG_NONNULL(tag);
 
-    int res = BSL_Data_Resize(tag, EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle));
+    int res = BSL_Data_Resize(tag, (size_t)EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle));
     // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
@@ -850,6 +850,6 @@ int BSL_Crypto_GenIV(BSL_Data_t *buf)
     CHK_ARG_NONNULL(buf);
 
     memset(buf->ptr, 0, buf->len);
-    CHK_PROPERTY(rand_bytes_generator((unsigned char *)(buf->ptr), buf->len) == 1);
+    CHK_PROPERTY(rand_bytes_generator((unsigned char *)(buf->ptr), (int)(buf->len)) == 1);
     return BSL_SUCCESS;
 }

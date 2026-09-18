@@ -141,13 +141,15 @@ typedef struct BSLP_PolicyRule_s
     BSLB_VariantPtrMap_t options;
     /// How to handle failure in finalize stage
     BSL_PolicyAction_e failure_action_code;
+    /// Correlation ID to associate rules for combined ASBs, if possible. 0 indicates no correlation
+    uint64_t correlation_id;
 } BSLP_PolicyRule_t;
 
 /**
  * @brief Initialize this policy rule from parameters
  *
- * @param[in] self This policy rule
- * @param rule_id The user ID number for this rule.
+ * @param[in,out] self This policy rule
+ * @param[in] rule_id The user ID number for this rule.
  * @param[in] desc Description of this rule (C-string, may be NULL)
  * @param[in] context_id Security context ID
  * @param[in] role Such as source, acceptor, etc
@@ -160,6 +162,14 @@ typedef struct BSLP_PolicyRule_s
 int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, int64_t rule_id, const char *desc, int64_t context_id,
                              BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type, uint64_t target_block_type,
                              BSL_PolicyAction_e failure_action_code);
+
+/**
+ * @brief Set correlation ID of a policy rule
+ *
+ * @param[in,out] self This policy rule
+ * @param[in] correlation_id correlation ID to associate with this rule
+ */
+int BSLP_PolicyRule_SetCorrelation(BSLP_PolicyRule_t *self, uint64_t correlation_id);
 
 /** Initialize policy rule
  * @param self policy rule

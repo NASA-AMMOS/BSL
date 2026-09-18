@@ -71,6 +71,7 @@ void suiteSetUp(void)
 {
     TEST_ASSERT_EQUAL_INT(0, BSL_HostDescriptors_Set(MockBPA_Agent_Descriptors(NULL)));
     mock_bpa_LogOpen();
+    mock_bpa_LogSetLeastSeverity(LOG_DEBUG);
 }
 
 int suiteTearDown(int failures)
@@ -101,7 +102,7 @@ void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64
     TestSecCtxValidateCallCount = 0;
     TestSecCtxValidatedTarget   = 0;
 
-    const uint64_t   TEST_SC_ID = 99;
+    const int64_t    TEST_SC_ID = -99;
     BSL_SecCtxDesc_t sec_ctx_desc;
     sec_ctx_desc.validate = BSL_TestSecCtx_Validate;
     sec_ctx_desc.execute  = BSL_TestSecCtx_Execute;
@@ -110,7 +111,7 @@ void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64
     BSL_SecOper_t sec_oper;
     BSL_SecOper_Init(&sec_oper);
     BSL_SecOper_Populate(&sec_oper, TEST_SC_ID, sec_target, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_NOTHING);
+                         BSL_POLICYACTION_NOTHING, 0);
 
     BSL_SecurityAction_t action;
     BSL_SecurityAction_Init(&action);
@@ -146,8 +147,9 @@ void test_SecurityContext_ValidatePolicyActionSet_UsesRegisteredValidator(uint64
  */
 void test_SecurityContext_BIB_Source(void)
 {
-    TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(
+                                       &LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
@@ -196,6 +198,7 @@ void test_SecurityContext_BIB_Verifier(void)
 {
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPOUT));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
@@ -235,6 +238,7 @@ void test_SecurityContext_BIB_Verifier_Failure(void)
     // TODO(bvb) Note that this is basically identical to above except different key, they should be consolidated
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPOUT));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
@@ -273,6 +277,7 @@ void test_SecurityContext_BIB_Acceptor(void)
 {
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPOUT));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
@@ -327,7 +332,8 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
                                 "0150efa4b5ac0108e3816c5606479801bc0485070200004319012c85010100005823"
                                 "3a09c1e63fe23a7f66a59c7303837241e070b02619fc59c5214a22f08cd70795e73e"
                                 "9aff");
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, final_bundle));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, final_bundle));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPOUT));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BSL_PrimaryBlock_t primary_block;
@@ -337,20 +343,21 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
     BSL_SecOper_t bib_oper_primary;
     BSL_SecOper_Init(&bib_oper_primary);
     BSL_SecOper_Populate(&bib_oper_primary, 1, 0, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bib_oper_primary, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_primary, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
 
     BSL_SecOper_t bib_oper_ext_block;
     BSL_SecOper_Init(&bib_oper_ext_block);
     BSL_SecOper_Populate(&bib_oper_ext_block, 1, 2, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_USE_KEY_WRAP), 0);
 
     BSL_SecOper_t bcb_oper;
     BSL_SecOper_Init(&bcb_oper);
-    BSL_SecOper_Populate(&bcb_oper, 2, 1, 4, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR, BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_Populate(&bcb_oper, 2, 1, 4, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR, BSL_POLICYACTION_DROP_BLOCK,
+                         0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_oper, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A3_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_oper, BSLX_BCB_OPT_USE_KEY_WRAP), 0);
 
@@ -382,7 +389,8 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     const char *plain_bundle = ("9f88070000820282010282028202018202820201820018281a000f424085070200"
                                 "004319012c85010100005823526561647920746f2067656e65726174652061203332"
                                 "2d62797465207061796c6f6164ff");
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, plain_bundle));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, plain_bundle));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     // Confirm the bundle has two canonical blocks, the payload and bundle age block
@@ -393,7 +401,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecOper_t bib_oper_primary;
     BSL_SecOper_Init(&bib_oper_primary);
     BSL_SecOper_Populate(&bib_oper_primary, 1, 0, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bib_oper_primary, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_primary, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC256);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_primary, BSLX_BIB_OPT_SCOPE), 0);
@@ -402,7 +410,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
     BSL_SecOper_t bib_oper_ext_block;
     BSL_SecOper_Init(&bib_oper_ext_block);
     BSL_SecOper_Populate(&bib_oper_ext_block, 1, 2, 4, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC256);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_ext_block, BSLX_BIB_OPT_SCOPE), 0);
@@ -410,7 +418,7 @@ void test_RFC9173_AppendixA_Example3_Source(void)
 
     BSL_SecOper_t bcb_oper;
     BSL_SecOper_Init(&bcb_oper);
-    BSL_SecOper_Populate(&bcb_oper, 2, 1, 5, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK);
+    BSL_SecOper_Populate(&bcb_oper, 2, 1, 5, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE, BSL_POLICYACTION_DROP_BLOCK, 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_oper, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A3_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_oper, BSLX_BCB_OPT_SCOPE), 0);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_oper, BSLX_BCB_OPT_AES_VARIANT), 1);
@@ -446,7 +454,6 @@ void test_RFC9173_AppendixA_Example3_Source(void)
 
 void test_RFC9173_AppendixA_Example4_Acceptor(void)
 {
-    BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a4);
     // See: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.4.5
     const char *final_bundle = ("9f88070000820282010282028202018202820201820018281a000f4240850b0300"
                                 "005846438ed6208eb1c1ffb94d952175167df0902902064a2983910c4fb2340790bf"
@@ -455,7 +462,8 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
                                 "313231328202038204078281820150220ffc45c8a901999ecc60991dd78b29818201"
                                 "50d2c51cb2481792dae8b21d848cede99b8501010000582390eab6457593379298a8"
                                 "724e16e61f837488e127212b59ac91f8a86287b7d07630a122ff");
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, final_bundle));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, final_bundle));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPOUT));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     // Confirm the bundle has 3 canonical blocks: payload, BIB, and BCB
@@ -473,7 +481,7 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_SecOper_t bcb_op_tgt_payload;
     BSL_SecOper_Init(&bcb_op_tgt_payload);
     BSL_SecOper_Populate(&bcb_op_tgt_payload, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A4_BCB_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_SCOPE), 0x07);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_AES_VARIANT),
@@ -483,7 +491,7 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_SecOper_t bcb_op_tgt_bib;
     BSL_SecOper_Init(&bcb_op_tgt_bib);
     BSL_SecOper_Populate(&bcb_op_tgt_bib, 2, 3, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A4_BCB_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_SCOPE), 0x07);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_AES_VARIANT),
@@ -493,7 +501,7 @@ void test_RFC9173_AppendixA_Example4_Acceptor(void)
     BSL_SecOper_t bib_oper_payload;
     BSL_SecOper_Init(&bib_oper_payload);
     BSL_SecOper_Populate(&bib_oper_payload, 1, 1, 3, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC384);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_SCOPE), 0x07);
@@ -535,7 +543,8 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     const char *original_bundle = ("9f88070000820282010282028202018202820201820018281a000f424085010100"
                                    "005823526561647920746f2067656e657261746520612033322d6279746520706179"
                                    "6c6f6164ff");
-    TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, original_bundle));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, original_bundle));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BSL_PrimaryBlock_t primary_block;
@@ -545,7 +554,7 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecOper_t bib_oper_payload;
     BSL_SecOper_Init(&bib_oper_payload);
     BSL_SecOper_Populate(&bib_oper_payload, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_KEY_ID), RFC9173_EXAMPLE_A1_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC384);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bib_oper_payload, BSLX_BIB_OPT_SCOPE), 0x07);
@@ -554,7 +563,7 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecOper_t bcb_op_tgt_payload;
     BSL_SecOper_Init(&bcb_op_tgt_payload);
     BSL_SecOper_Populate(&bcb_op_tgt_payload, 2, 1, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A4_BCB_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_SCOPE), 0x07);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_payload, BSLX_BCB_OPT_AES_VARIANT),
@@ -564,7 +573,7 @@ void test_RFC9173_AppendixA_Example4_Source(void)
     BSL_SecOper_t bcb_op_tgt_bib;
     BSL_SecOper_Init(&bcb_op_tgt_bib);
     BSL_SecOper_Populate(&bcb_op_tgt_bib, 2, 2, 3, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
-                         BSL_POLICYACTION_DROP_BLOCK);
+                         BSL_POLICYACTION_DROP_BLOCK, 0);
     BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_KEY_ID), RFC9173_EXAMPLE_A4_BCB_KEY);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_SCOPE), 0x07);
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_op_tgt_bib, BSLX_BCB_OPT_AES_VARIANT),

@@ -117,12 +117,13 @@ static bool BSLP_PolicyRule_IsConsistent(const BSLP_PolicyRule_t *self)
     return true;
 }
 
-static uint64_t BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+static int BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
 {
     CHK_ARG_NONNULL(bundle);
     CHK_ARG_NONNULL(sec_oper);
 
-    uint64_t           error_ret          = BSL_SUCCESS;
+    int error_ret = BSL_SUCCESS;
+
     uint64_t           block_num          = BSL_SecOper_GetTargetBlockNum(sec_oper);
     BSL_PolicyAction_e fail_policy_action = BSL_SecOper_GetPolicyAction(sec_oper);
 
@@ -430,7 +431,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
     BSL_free(action);
 
     CHK_POSTCONDITION(BSL_SecurityActionSet_IsConsistent(output_action_set));
-    return (int)BSL_SecurityActionSet_CountErrors(output_action_set);
+    return BSL_SUCCESS;
 }
 
 int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *output_action_set, BSL_BundleRef_t *bundle)
@@ -670,6 +671,18 @@ int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, int64_t rule_id, const cha
     return BSL_SUCCESS;
 }
 
+int BSLP_PolicyRule_SetCorrelation(BSLP_PolicyRule_t *self, uint64_t correlation_id)
+{
+    ASSERT_ARG_NONNULL(self);
+    if (correlation_id <= 0)
+    {
+        return BSL_ERR_PROPERTY_CHECK_FAILED;
+    }
+
+    self->correlation_id = correlation_id;
+    return BSL_SUCCESS;
+}
+
 void BSLP_PolicyRule_Init(BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_NONNULL(self);
@@ -736,7 +749,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
 
     // It's found, so populate the security operation from the rule and bundle.
     BSL_SecOper_Populate(sec_oper, self->context_id, target_block_num, 0, self->sec_block_type, self->role,
-                         self->failure_action_code);
+                         self->failure_action_code, self->correlation_id);
 
     // Next, append all the options from the matched rule.
     BSLB_VariantPtrMap_it_t pit;

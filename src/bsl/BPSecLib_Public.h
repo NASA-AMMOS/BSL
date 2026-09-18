@@ -293,17 +293,37 @@ void BSL_PrimaryBlock_Init(BSL_PrimaryBlock_t *obj);
  */
 void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj);
 
+/** Block flags from Section 4.2.4 of RFC 9171 @cite rfc9171
+ * which are pertinent to BPSec.
+ */
+enum BSL_CanonicalBlockFlags_e
+{
+    /// Transmit status report if block can't be processed
+    BSL_BLOCKFLAGS_SEND_STATUS_IF_CANNOT_PROCESS = 0x02,
+    /// Delete bundle if block can't be processed
+    BSL_BLOCKFLAGS_DELETE_BUNDLE_IF_CANNOT_PROCESS = 0x04,
+    /// Discard block if it can't be processed
+    BSL_BLOCKFLAGS_DISCARD_BLOCK_IF_CANNOT_PROCESS = 0x10,
+};
+
 /** @brief Structure containing parsed Canonical Block fields.
  *
  *  @note This contains a *snapshot* of the fields at the time it was queried. It is not a pointer.
  */
 typedef struct BSL_CanonicalBlock_s
 {
-    uint64_t block_num; ///< CBOR-decoded block number (should always be > 0)
-    uint64_t type_code; ///< CBOR-decoded block type code (should be > 0)
-    uint64_t flags;     ///< CBOR-decoded flags field
-    uint64_t crc_type;  ///< CBOR-decoded block CRC Type
-    size_t   btsd_len;  ///< Length in bytes of the BTSD accessible through sequential APIs
+    /// Unique block number (should always be > 0)
+    uint64_t block_num;
+    /// Block type code (should be > 0)
+    uint64_t type_code;
+    /// Block flags (bit masks in ::BSL_CanonicalBlockFlags_e)
+    uint64_t flags;
+    /// Block CRC Type
+    uint64_t crc_type;
+    /** Length in bytes of the BTSD accessible through sequential APIs.
+     * @sa BSL_BundleCtx_ReadBTSD(), BSL_BundleCtx_WriteBTSD()
+     */
+    size_t btsd_len;
 } BSL_CanonicalBlock_t;
 
 /** Dynamic memory callback descriptors used by Dynamic BPA descriptor.
@@ -537,7 +557,7 @@ int BSL_API_DeinitLib(BSL_LibCtx_t *bsl);
  * @param[in] desc              Descriptor struct containing callbacks.
  */
 BSL_REQUIRE_CHECK
-int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_SecCtxDesc_t desc);
+int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, int64_t sec_ctx_id, BSL_SecCtxDesc_t desc);
 
 /** @brief Register a Policy Provider module with the BSL.
  * @note The Policy Provider interface is defined by the policy provider descriptor.

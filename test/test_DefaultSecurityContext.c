@@ -96,8 +96,9 @@ void test_RFC9173_AppendixA_Example1_BIB_Source(void)
 {
     BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a1);
 
-    TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(
+                                       &LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bib_test_context;
@@ -146,8 +147,9 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
 {
     BSL_Crypto_SetRngGenerator(rfc9173_byte_gen_fn_a2_cek);
     // Loads the bundle
-    TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(
+                                       &LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BCBTestContext bcb_test_context;
@@ -186,8 +188,9 @@ void test_RFC9173_AppendixA_Example2_BCB_Source(void)
 
 void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
 {
-    TEST_ASSERT_EQUAL(0,
+    TEST_ASSERT_EQUAL(BSL_SUCCESS,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.hex_bundle_bcb));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPOUT));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BCBTestContext bcb_test_context;
@@ -214,16 +217,16 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
 
 int rfc3394_cek(unsigned char *buf, int len)
 {
-    if (len == 12) // IV
+    static const uint8_t iv[]      = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
+    static const uint8_t cek_buf[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+                                       0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+    if (len == sizeof(iv)) // IV
     {
-        uint8_t iv[] = { 0x54, 0x77, 0x65, 0x6c, 0x76, 0x65, 0x31, 0x32, 0x31, 0x32, 0x31, 0x32 };
-        memcpy(buf, iv, len);
+        memcpy(buf, iv, sizeof(iv));
     }
-    else
+    else if (len == sizeof(cek_buf))
     {
-        uint8_t cek_buf[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                              0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-        memcpy(buf, cek_buf, len);
+        memcpy(buf, cek_buf, sizeof(cek_buf));
     }
     return 1;
 }
@@ -254,8 +257,9 @@ void test_sec_source_keywrap(bool wrap, bool bib)
         result_data_hex = "F6DC43C2EE046C7AE713F0531B2BCB48";
     }
 
-    TEST_ASSERT_EQUAL(
-        0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(
+                                       &LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     const BSL_Variant_t *result;
@@ -266,7 +270,7 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     if (bib)
     {
         BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_SOURCE,
-                             BSL_POLICYACTION_DROP_BLOCK);
+                             BSL_POLICYACTION_DROP_BLOCK, 0);
 
         if (wrap)
         {
@@ -296,7 +300,7 @@ void test_sec_source_keywrap(bool wrap, bool bib)
     {
         BSL_Crypto_SetRngGenerator(rfc3394_cek);
         BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_SOURCE,
-                             BSL_POLICYACTION_DROP_BLOCK);
+                             BSL_POLICYACTION_DROP_BLOCK, 0);
         if (wrap)
         {
             TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKeyName("kek_wrap", kek_data.ptr, kek_data.len));
@@ -408,12 +412,13 @@ void test_sec_accept_keyunwrap(bool bib)
 
     if (bib)
     {
-        TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_bib));
+        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_bib));
     }
     else
     {
-        TEST_ASSERT_EQUAL(0, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_bcb));
+        TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, bundle_bcb));
     }
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPOUT));
     mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
 
     BIBTestContext bibcontext;
@@ -424,7 +429,7 @@ void test_sec_accept_keyunwrap(bool bib)
     {
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKeyName("kek_wrap", kek_data.ptr, kek_data.len));
         BSL_SecOper_Populate(&bibcontext.sec_oper, 1, 1, 2, BSL_SECBLOCKTYPE_BIB, BSL_SECROLE_ACCEPTOR,
-                             BSL_POLICYACTION_DROP_BLOCK);
+                             BSL_POLICYACTION_DROP_BLOCK, 0);
         BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bibcontext.sec_oper, BSLX_BIB_OPT_KEY_ID), "kek_wrap");
         BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bibcontext.sec_oper, BSLX_BIB_OPT_USE_KEY_WRAP), 1);
         BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bibcontext.sec_oper, BSLX_BIB_OPT_SCOPE), 0);
@@ -441,7 +446,7 @@ void test_sec_accept_keyunwrap(bool bib)
 
         TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKeyName("kek_wrap", kek_data.ptr, kek_data.len));
         BSL_SecOper_Populate(&bcbcontext.sec_oper, 2, 1, 2, BSL_SECBLOCKTYPE_BCB, BSL_SECROLE_ACCEPTOR,
-                             BSL_POLICYACTION_DROP_BLOCK);
+                             BSL_POLICYACTION_DROP_BLOCK, 0);
         BSL_Variant_SetTextstr(BSL_SecOper_AddOption(&bcbcontext.sec_oper, BSLX_BCB_OPT_KEY_ID), "kek_wrap");
         BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcbcontext.sec_oper, BSLX_BCB_OPT_USE_KEY_WRAP), 1);
         BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcbcontext.sec_oper, BSLX_BCB_OPT_SCOPE),

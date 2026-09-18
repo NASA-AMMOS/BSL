@@ -407,8 +407,9 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     res = BSL_Crypto_GenIV(&iv);
     TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, res);
 
-    size_t           pt_size = strlen(plaintext_in);
-    BSL_SeqReader_t *reader  = BSL_TestUtils_FlatReader((const void *)plaintext_in, pt_size);
+    size_t pt_size = strlen(plaintext_in);
+    TEST_ASSERT_GREATER_OR_EQUAL(0, pt_size);
+    BSL_SeqReader_t *reader = BSL_TestUtils_FlatReader((const void *)plaintext_in, pt_size);
     TEST_ASSERT_NOT_NULL(reader);
 
     uint8_t         *ciphertext;
@@ -416,7 +417,7 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
     BSL_SeqWriter_t *writer = BSL_TestUtils_FlatWriter((void *)&ciphertext, &ct_size);
     TEST_ASSERT_NOT_NULL(writer);
 
-    int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
+    BSL_Crypto_AESVariant_e aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
     BSL_Crypto_KeyHandle_t ekey;
     TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_Crypto_GetRegistryKeyName(keyid, &ekey));
@@ -449,8 +450,9 @@ void test_encrypt(const char *plaintext_in, const char *keyid)
 
     bool              is_key8 = (0 == strcmp(keyid, "Key8"));
     const EVP_CIPHER *cipher  = (is_key8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
-    res                       = gcm_decrypt(cipher, ciphertext, ct_size, aad, 2, (unsigned char *)tag.ptr,
-                                            (unsigned char *)((is_key8) ? test_256 : test_128), iv.ptr, iv.len, plaintext, &plaintext_len);
+    res =
+        gcm_decrypt(cipher, ciphertext, (int)ct_size, aad, 2, (unsigned char *)tag.ptr,
+                    (unsigned char *)((is_key8) ? test_256 : test_128), iv.ptr, (int)iv.len, plaintext, &plaintext_len);
     TEST_ASSERT_EQUAL(0, res);
     BSL_Data_Deinit(&tag);
 
@@ -477,6 +479,9 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
 {
     int res;
 
+    size_t pt_size = strlen(plaintext_in);
+    TEST_ASSERT_GREATER_OR_EQUAL(0, pt_size);
+
     BSL_Data_t iv;
     res = BSL_Data_InitBuffer(&iv, 16);
     TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, res);
@@ -494,19 +499,18 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
 
     bool              is_key8 = (0 == strcmp(keyid, "Key8"));
     const EVP_CIPHER *cipher  = (is_key8) ? EVP_aes_256_gcm() : EVP_aes_128_gcm();
-    res                       = gcm_encrypt(cipher, (unsigned char *)plaintext_in, strlen(plaintext_in), aad, 2,
-                                            (unsigned char *)((is_key8) ? test_256 : test_128), iv.ptr, iv.len, ciphertext, &ciphertext_len,
-                                            tag.ptr);
+    res                       = gcm_encrypt(cipher, (unsigned char *)plaintext_in, (int)pt_size, aad, 2,
+                                            (unsigned char *)((is_key8) ? test_256 : test_128), iv.ptr, (int)iv.len, ciphertext,
+                                            &ciphertext_len, tag.ptr);
     TEST_ASSERT_EQUAL(0, res);
     TEST_ASSERT_GREATER_OR_EQUAL_INT(0, ciphertext_len);
 
-    BSL_SeqReader_t *reader = BSL_TestUtils_FlatReader((const void *)ciphertext, ciphertext_len);
+    BSL_SeqReader_t *reader = BSL_TestUtils_FlatReader((const void *)ciphertext, (size_t)ciphertext_len);
 
     uint8_t         *plaintext;
-    size_t           pt_size;
     BSL_SeqWriter_t *writer = BSL_TestUtils_FlatWriter((void *)&plaintext, &pt_size);
 
-    int aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
+    BSL_Crypto_AESVariant_e aes_var = (0 == strcmp(keyid, "Key8")) ? BSL_CRYPTO_AES_256 : BSL_CRYPTO_AES_128;
 
     BSL_Crypto_KeyHandle_t ckey;
     TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSL_Crypto_GetRegistryKeyName(keyid, &ckey));
@@ -517,7 +521,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
     res = BSL_Cipher_AddAadBuffer(&ctx, aad, 2);
     TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, res);
 
-    res = BSL_Cipher_AddSeq(&ctx, reader, writer, ciphertext_len);
+    res = BSL_Cipher_AddSeq(&ctx, reader, writer, (size_t)ciphertext_len);
     TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, res);
 
     res = BSL_Cipher_SetTag(&ctx, &tag);
@@ -545,7 +549,7 @@ void test_decrypt(const char *plaintext_in, const char *keyid)
 }
 
 TEST_RANGE(<6, 18, 1>)
-void test_crypto_generate_iv(int iv_len)
+void test_crypto_generate_iv(size_t iv_len)
 {
     BSL_Data_t buf;
 
@@ -726,8 +730,8 @@ TEST_CASE("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b", BSL_CRYPTO_KDF_HKDF_SH
           "3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865")
 TEST_CASE("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b", BSL_CRYPTO_KDF_HKDF_SHA_256, "", "", 42,
           "8da4e775a563c18f715f802a063c5a31b8a11f5c5ee1879ec3454e5f3c738d2d9d201395faa4b61a96c8")
-void test_kdf(const char *kdk_hex, int func, const char *salt_hex, const char *info_hex, size_t keylen,
-              const char *expect_hex)
+void test_kdf(const char *kdk_hex, BSL_Crypto_KDFVariant_t func, const char *salt_hex, const char *info_hex,
+              size_t keylen, const char *expect_hex)
 {
     BSL_Data_t kdk_data;
     BSL_Data_Init(&kdk_data);
