@@ -104,7 +104,8 @@ static int BSL_ExecAnySource_Post_TargetIndependent(const BSL_SecOper_t *sec_ope
         BSL_LOG_DEBUG("ASB already contains params, verifying new params are identical");
         if (!BSLB_VariantPtrMap_equal_p(asb->params, sec_oper->_params))
         {
-            BSL_LOG_ERR("SecOper uses correlation ID %" PRId64", but has unexpected parameters", sec_oper->correlation_id);
+            BSL_LOG_ERR("SecOper uses correlation ID %" PRId64 ", but has unexpected parameters",
+                        sec_oper->correlation_id);
             return BSL_ERR_CORRELATION_MISMATCH;
         }
     }

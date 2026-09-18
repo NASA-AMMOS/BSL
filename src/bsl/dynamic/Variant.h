@@ -103,9 +103,10 @@ struct BSL_Variant_s
 bool BSL_Variant_Equal(const BSL_Variant_t *left, const BSL_Variant_t *right);
 
 /// OPLIST for ::BSL_Variant_s
-#define M_OPL_BSL_Variant_t()                                                           \
-    (INIT(API_2(BSL_Variant_Init)), INIT_SET(API_6(BSL_Variant_InitSet)), INIT_MOVE(0), \
-        CLEAR(API_2(BSL_Variant_Deinit)), SET(API_6(BSL_Variant_Set)), MOVE(API_6(BSL_Variant_Move)), EQUAL(API_6(BSL_Variant_Equal)))
+#define M_OPL_BSL_Variant_t()                                                                      \
+    (INIT(API_2(BSL_Variant_Init)), INIT_SET(API_6(BSL_Variant_InitSet)), INIT_MOVE(0),            \
+     CLEAR(API_2(BSL_Variant_Deinit)), SET(API_6(BSL_Variant_Set)), MOVE(API_6(BSL_Variant_Move)), \
+     EQUAL(API_6(BSL_Variant_Equal)))
 
 /** Decode from CBOR, as a pair of items either in an array or from
  * a map key-value.
@@ -138,7 +139,8 @@ bool BSLB_VariantPtr_ValueEqual(BSLB_VariantPtr_t *left, BSLB_VariantPtr_t *righ
 // NOLINTBEGIN
 /// @cond Doxygen_Suppress
 // GCOV_EXCL_START
-#define M_OPL_BSLB_VariantPtr_t() M_OPEXTEND(M_SHARED_PTR_OPLIST(BSLB_VariantPtr, M_OPL_BSL_Variant_t()), EQUAL(BSLB_VariantPtr_ValueEqual))
+#define M_OPL_BSLB_VariantPtr_t() \
+    M_OPEXTEND(M_SHARED_PTR_OPLIST(BSLB_VariantPtr, M_OPL_BSL_Variant_t()), EQUAL(BSLB_VariantPtr_ValueEqual))
 M_BPTREE_DEF2(BSLB_VariantPtrMap, 4, int64_t, M_BASIC_OPLIST, BSLB_VariantPtr_t *, M_OPL_BSLB_VariantPtr_t())
 // GCOV_EXCL_STOP
 /// @endcond
