@@ -96,7 +96,7 @@ add_compile_options(
     -Wformat=2
     -fno-strict-aliasing -Werror=format-security -fno-common
     -Wstrict-aliasing=2
-    # -Wconversion
+    -Wconversion
     -ffunction-sections
     -fdata-sections
     -fno-omit-frame-pointer

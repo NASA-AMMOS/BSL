@@ -32,7 +32,7 @@ int BSLX_CoseSc_AadScope_Encode(QCBOREncodeContext *enc, const BSLX_CoseSc_AadSc
     {
         const BSLX_CoseSc_AadScope_subtype_ct *aads_pair = BSLX_CoseSc_AadScope_cref(aads_it);
         QCBOREncode_AddInt64(enc, *(aads_pair->key_ptr));
-        QCBOREncode_AddUInt64(enc, *(aads_pair->value_ptr));
+        QCBOREncode_AddInt64(enc, *(aads_pair->value_ptr));
     }
 
     QCBOREncode_CloseMap(enc);
@@ -56,9 +56,9 @@ int BSLX_CoseSc_AadScope_Decode(QCBORDecodeContext *dec, BSLX_CoseSc_AadScope_t 
             break;
         }
 
-        uint64_t aad_flags;
-        QCBORDecode_GetUInt64(dec, &aad_flags);
-        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+        int64_t aad_flags;
+        QCBORDecode_GetInt64(dec, &aad_flags);
+        if ((QCBOR_SUCCESS != QCBORDecode_GetError(dec)) || (aad_flags < 0))
         {
             BSL_LOG_ERR("Invalid AAD Scope map value");
             break;

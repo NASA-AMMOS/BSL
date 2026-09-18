@@ -360,7 +360,7 @@ int mock_bpa_eidpat_item_from_text(bsl_mock_eidpat_item_t *item, const char *tex
     {
         return 2;
     }
-    size_t scheme_len = pend - text;
+    size_t scheme_len = (size_t)(pend - text);
     // cursor on SSP
     curs = pend + 1;
     // remaining length

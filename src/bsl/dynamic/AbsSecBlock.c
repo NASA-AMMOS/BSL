@@ -429,7 +429,7 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
 
             int64_t item_id = 0;
             QCBORDecode_GetInt64(dec, &item_id);
-            res = QCBORDecode_GetError(dec);
+            res = (int)QCBORDecode_GetError(dec);
             if (QCBOR_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed getting an int ID: code %d", res);
@@ -481,7 +481,7 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
 
             int64_t item_id = 0;
             QCBORDecode_GetInt64(dec, &item_id);
-            res = QCBORDecode_GetError(dec);
+            res = (int)QCBORDecode_GetError(dec);
             if (QCBOR_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed getting an int ID: code %d", res);

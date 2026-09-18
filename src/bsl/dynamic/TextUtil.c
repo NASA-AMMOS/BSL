@@ -105,8 +105,8 @@ int BSL_TextUtil_Base16_Decode(BSL_Data_t *out, const char *ptr, size_t len)
     int retval = 0;
     while (curs < end)
     {
-        const int high = base16_decode_char(*(curs++));
-        const int low  = base16_decode_char(*(curs++));
+        const int high = base16_decode_char((uint8_t) * (curs++));
+        const int low  = base16_decode_char((uint8_t) * (curs++));
         if ((high < 0) || (low < 0))
         {
             retval = 3;
@@ -153,7 +153,7 @@ int BSL_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useur
         uint8_t byte = (curs[0] >> 2) & 0x3F;
         char    chr  = abet[byte];
         // append
-        *(out_curs++) = chr;
+        *(out_curs++) = (uint8_t)chr;
         --in_len;
         if (--out_len == 1)
         {
@@ -163,7 +163,7 @@ int BSL_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useur
         byte = ((curs[0] << 4) | (in_len ? curs[1] >> 4 : 0)) & 0x3F;
         chr  = abet[byte];
         // append
-        *(out_curs++) = chr;
+        *(out_curs++) = (uint8_t)chr;
         if (--out_len == 1)
         {
             break;
@@ -182,7 +182,7 @@ int BSL_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useur
         if (usepad || (chr != '='))
         {
             // append
-            *(out_curs++) = chr;
+            *(out_curs++) = (uint8_t)chr;
         }
         if (--out_len == 1)
         {
@@ -202,7 +202,7 @@ int BSL_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useur
         if (usepad || (chr != '='))
         {
             // append
-            *(out_curs++) = chr;
+            *(out_curs++) = (uint8_t)chr;
         }
         if (--out_len == 1)
         {
@@ -268,8 +268,8 @@ int BSL_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len)
             break;
         }
 
-        const int seg0 = base64_decode_char(curs[0]);
-        const int seg1 = base64_decode_char(curs[1]);
+        const int seg0 = base64_decode_char((uint8_t)curs[0]);
+        const int seg1 = base64_decode_char((uint8_t)curs[1]);
         if ((seg0 < 0) || (seg1 < 0))
         {
             retval = 3;
@@ -303,7 +303,7 @@ int BSL_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len)
         }
         else
         {
-            const int seg2 = base64_decode_char(curs[2]);
+            const int seg2 = base64_decode_char((uint8_t)curs[2]);
             if (seg2 < 0)
             {
                 retval = 3;
@@ -333,7 +333,7 @@ int BSL_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len)
             }
             else
             {
-                const int seg3 = base64_decode_char(curs[3]);
+                const int seg3 = base64_decode_char((uint8_t)curs[3]);
                 if (seg3 < 0)
                 {
                     retval = 3;

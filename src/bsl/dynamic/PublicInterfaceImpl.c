@@ -122,7 +122,7 @@ void BSL_PrimaryBlock_deinit(BSL_PrimaryBlock_t *obj)
     memset(obj, 0, sizeof(*obj));
 }
 
-int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, uint64_t sec_ctx_id, BSL_SecCtxDesc_t desc)
+int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, int64_t sec_ctx_id, BSL_SecCtxDesc_t desc)
 {
     CHK_ARG_NONNULL(lib);
     CHK_ARG_EXPR(desc.validate != NULL);

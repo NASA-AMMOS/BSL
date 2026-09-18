@@ -307,7 +307,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     {
         BSL_Data_t kid_view;
         BSL_Data_Init(&kid_view);
-        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(opt, &kid_view))
+        if ((BSL_SUCCESS != BSL_Variant_GetAsBytestr(opt, &kid_view)) || (kid_view.len == 0))
         {
             BSL_LOG_ERR("Invalid key ID value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -375,7 +375,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_IV_BASE);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(opt, &self->iv_base))
+        if ((BSL_SUCCESS != BSL_Variant_GetAsBytestr(opt, &self->iv_base)) || (self->iv_base.len == 0))
         {
             BSL_LOG_ERR("Invalid IV base value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -403,7 +403,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_SALT_LENGTH);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_Variant_GetAsInt64(opt, &self->salt_length))
+        if ((BSL_SUCCESS != BSL_Variant_GetAsInt64(opt, &self->salt_length)) || (self->salt_length <= 0))
         {
             BSL_LOG_ERR("Invalid salt length value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -417,7 +417,7 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
     opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_SALT_BASE);
     if (opt)
     {
-        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(opt, &self->salt_base))
+        if ((BSL_SUCCESS != BSL_Variant_GetAsBytestr(opt, &self->salt_base)) || (self->salt_base.len == 0))
         {
             BSL_LOG_ERR("Invalid salt base value");
             self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
@@ -664,7 +664,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
             // canonical block
             if (!special_key)
             {
-                res = BSL_BundleCtx_GetBlockMetadata(ctx->bundle, blk_num, &aad_block);
+                res = BSL_BundleCtx_GetBlockMetadata(ctx->bundle, (uint64_t)blk_num, &aad_block);
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to get AAD block data");
@@ -690,7 +690,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
                     *total += BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, aad_block.btsd_len);
                 }
                 {
-                    BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, blk_num);
+                    BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, aad_block.block_num);
                     if (!seq)
                     {
                         BSL_LOG_ERR("Failed to construct reader");
@@ -1546,7 +1546,8 @@ static void BSLX_CoseSc_HkdfContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipien
         // override algorithm default length
         if (ctx->opt_salt_length)
         {
-            salt_len = ctx->salt_length;
+            // validated as positive during option read
+            salt_len = (size_t)(ctx->salt_length);
         }
 
         res = BSLX_CoseSc_GenerateNonce(ctx->keyhandle, &salt, NULL, &ctx->salt_base, ctx->opt_salt_offset,
