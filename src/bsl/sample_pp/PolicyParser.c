@@ -485,6 +485,7 @@ static int BSLP_PolicyParser_GetLoc(BSL_PolicyLocation_e *loc, const char *text)
 static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const json_t *policy_rule_elm)
 {
     int64_t              rule_id_int = 0;
+    int64_t              rule_correlation = 0;
     const char          *src_str     = NULL;
     const char          *dest_str    = NULL;
     const char          *sec_src_str = NULL;
@@ -698,6 +699,22 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         }
     }
 
+    const json_t *correlation_id = json_object_get(policyrule, "correlation");
+    if (!correlation_id)
+    {
+        BSL_LOG_INFO("NO correlator ID, default to no correlation");
+        rule_correlation = 0;
+    }
+    else
+    {
+        if (BSLP_GetNumberInt(correlation_id, &rule_correlation) || rule_correlation <= 0)
+        {
+            BSL_LOG_ERR("Invalid rule correlation attribute");
+            return BSL_ERR_POLICY_CONFIG;
+        }
+        BSL_LOG_DEBUG("rule_correlation: %" PRId64, rule_correlation);
+    }
+
     BSLB_VariantPtrMap_t options;
     BSLB_VariantPtrMap_init(options);
 
@@ -843,6 +860,11 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
     BSLP_PolicyRule_t rule;
     BSLP_PolicyRule_InitFrom(&rule, rule_id_int, desc_text, sec_ctx_id, sec_role, sec_block_type, target_block_type,
                              policy_action_enum);
+
+    if (rule_correlation > 0)
+    {
+        BSLP_PolicyRule_SetCorrelation(&rule, (uint64_t) rule_correlation);
+    }
 
     // move options into rule
     BSLB_VariantPtrMap_it_t opt_it;

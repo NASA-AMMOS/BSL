@@ -58,6 +58,7 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->reason_code      = src->reason_code;
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
+    self->correlation_id = src->correlation_id;
     BSLB_VariantPtrMap_init_set(self->_options, src->_options);
     BSLB_VariantPtrMap_init_set(self->_params, src->_params);
     BSLB_VariantPtrMap_init_set(self->_results, src->_results);
@@ -86,6 +87,7 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->reason_code      = src->reason_code;
     self->_role            = src->_role;
     self->_service_type    = src->_service_type;
+    self->correlation_id = src->correlation_id;
     BSLB_VariantPtrMap_set(self->_options, src->_options);
     BSLB_VariantPtrMap_set(self->_params, src->_params);
     BSLB_VariantPtrMap_set(self->_results, src->_results);
@@ -94,7 +96,7 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
 }
 
 void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
-                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action)
+                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action, uint64_t correlation_id)
 {
     ASSERT_ARG_NONNULL(self);
     self->context_id       = context_id;
@@ -103,6 +105,7 @@ void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t targ
     self->policy_action    = policy_action;
     self->_service_type    = sec_type;
     self->_role            = sec_role;
+    self->correlation_id = correlation_id;
     self->conclusion       = BSL_SECOP_CONCLUSION_PENDING;
     self->reason_code      = BSL_REASONCODE_NO_ADDITIONAL_INFO;
 

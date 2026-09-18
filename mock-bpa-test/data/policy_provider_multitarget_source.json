@@ -34,7 +34,8 @@
             }
           ]
         },
-        "policy_action_on_fail": "delete_bundle"
+        "policy_action_on_fail": "delete_bundle",
+        "correlation": 1
       }
     },
     {
@@ -71,7 +72,8 @@
             }
           ]
         },
-        "policy_action_on_fail": "delete_bundle"
+        "policy_action_on_fail": "delete_bundle",
+        "correlation": 1
       }
     },
     {
@@ -108,7 +110,8 @@
             }
           ]
         },
-        "policy_action_on_fail": "delete_bundle"
+        "policy_action_on_fail": "delete_bundle",
+        "correlation": 2
       }
     },
     {
@@ -145,7 +148,8 @@
             }
           ]
         },
-        "policy_action_on_fail": "delete_bundle"
+        "policy_action_on_fail": "delete_bundle",
+        "correlation": 2
       }
     }
   ],

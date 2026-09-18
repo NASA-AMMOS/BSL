@@ -141,6 +141,8 @@ typedef struct BSLP_PolicyRule_s
     BSLB_VariantPtrMap_t options;
     /// How to handle failure in finalize stage
     BSL_PolicyAction_e failure_action_code;
+    /// Correlation ID
+    uint64_t correlation_id;
 } BSLP_PolicyRule_t;
 
 /**
@@ -160,6 +162,8 @@ typedef struct BSLP_PolicyRule_s
 int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, int64_t rule_id, const char *desc, int64_t context_id,
                              BSL_SecRole_e role, BSL_SecBlockType_e sec_block_type, uint64_t target_block_type,
                              BSL_PolicyAction_e failure_action_code);
+
+int BSLP_PolicyRule_SetCorrelation(BSLP_PolicyRule_t *self, uint64_t correlation_id);
 
 /** Initialize policy rule
  * @param self policy rule

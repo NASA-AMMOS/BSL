@@ -203,6 +203,11 @@
             "nothing"
           ],
           "default": "nothing"
+        },
+        "correlation": {
+          "description": "Optional correlation ID to associate policy rules, indicating they should be condensed into a single sec block, if possible",
+          "$ref": "#/$defs/IntegerOrText",
+          "minimum": 1
         }
       }
     },

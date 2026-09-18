@@ -77,6 +77,8 @@ struct BSL_SecOper_s
      */
     size_t _target_index;
 
+    uint64_t correlation_id;
+
     /// @brief Security parameters used or produced by this operation.
     BSLB_VariantPtrMap_t _params;
 

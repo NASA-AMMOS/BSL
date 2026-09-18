@@ -37,7 +37,8 @@ extern "C" {
 #endif
 
 /** @struct BSLB_AsbPtrMap_t
- * Map from security block number (uint64_t) to shared pointer to ::BSL_AbsSecBlock_s for its content.
+ * Map from number (uint64_t) to shared pointer to ::BSL_AbsSecBlock_s for its content.
+ * Used to map security block numbers and correlator IDs to ASBs
  */
 /** @struct BSLB_AsbPtrSetMap_t
  * Map from target block number (uint64_t) to set of shared pointer to ::BSL_AbsSecBlock_s for security ops on the
@@ -74,6 +75,9 @@ typedef struct BSL_BundleRefState_s
     BSLB_AsbPtrSetMap_t bib_tgts;
     /// Map from target block number to associated BCB ASB
     BSLB_AsbPtrSetMap_t bcb_tgts;
+
+    /// Map from correlator ID to associated ASB
+    BSLB_AsbPtrMap_t correlation;
 } BSL_BundleRefState_t;
 
 /** Initialize an empty reference state.

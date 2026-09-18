@@ -36,6 +36,7 @@ void BSL_BundleRefState_Init(BSL_BundleRefState_t *obj)
     BSLB_AsbPtrMap_init(obj->bcbs);
     BSLB_AsbPtrSetMap_init(obj->bib_tgts);
     BSLB_AsbPtrSetMap_init(obj->bcb_tgts);
+    BSLB_AsbPtrMap_init(obj->correlation);
 }
 
 void BSL_BundleRefState_Deinit(BSL_BundleRefState_t *obj)
@@ -47,6 +48,7 @@ void BSL_BundleRefState_Deinit(BSL_BundleRefState_t *obj)
     BSLB_AsbPtrSetMap_clear(obj->bib_tgts);
     BSLB_AsbPtrMap_clear(obj->bcbs);
     BSLB_AsbPtrMap_clear(obj->bibs);
+    BSLB_AsbPtrMap_clear(obj->correlation);
 }
 
 int BSL_BundleRefState_CacheASB(BSL_BundleRefState_t *obj, const struct BSL_BundleRef_s *bundle,
