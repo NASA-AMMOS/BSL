@@ -69,7 +69,7 @@ static void mock_bpa_crc_crc16_finalize(void *state, uint8_t out[MOCK_BPA_CRC_CR
 {
     uint16_t *crc = state;
 
-    *crc = ~*crc;
+    *crc = (uint16_t) ~*crc;
 
     // Network byte order
     out[0] = (uint8_t)((*crc >> 8) & 0xFF);
