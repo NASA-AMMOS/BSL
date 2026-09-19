@@ -750,9 +750,8 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
             else // role == BSL_SECROLE_SOURCE
             {
                 // Cannot add BIB if BIB already targets
-                const BSLB_AsbPtrSet_t *found_list_bib =
-                    BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bib_tgts, sec_oper->target_block_num);
-                if (found_list_bib && sec_oper->_service_type == BSL_SECBLOCKTYPE_BIB)
+                if (sec_oper->_service_type == BSL_SECBLOCKTYPE_BIB
+                        && BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bib_tgts, sec_oper->target_block_num))
                 {
                     BSL_LOG_ERR("Cannot add BIB to target that is already targeted by an existing BCB %" PRIu64,
                                 sec_oper->target_block_num);
@@ -761,9 +760,7 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                 }
 
                 // Cannot add BIB or BCB if BCB alredy targets
-                const BSLB_AsbPtrSet_t *found_list_bcb =
-                    BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bcb_tgts, sec_oper->target_block_num);
-                if (found_list_bcb)
+                if (BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bcb_tgts, sec_oper->target_block_num))
                 {
                     BSL_LOG_ERR("Existing BCB found with target block number %" PRIu64, sec_oper->target_block_num);
                     secop_invalid_count++;
