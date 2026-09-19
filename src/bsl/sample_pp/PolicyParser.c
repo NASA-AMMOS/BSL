@@ -909,6 +909,12 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
 
     if (rule_correlation > 0)
     {
+        if (sec_role != BSL_SECROLE_SOURCE)
+        {
+            BSL_LOG_WARNING(
+                "WARNING: Correlation non-zero for non-source role policy rule; Will have no effect on processing.");
+        }
+
         int res = BSLP_CheckCorrelation(correlation_map, rule_correlation, rule_id_int, sec_ctx_id, sec_block_type);
         if (res != BSL_SUCCESS)
         {

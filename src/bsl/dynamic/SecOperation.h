@@ -77,7 +77,10 @@ struct BSL_SecOper_s
      */
     size_t _target_index;
 
-    /// @brief correlation ID to associate sec ops for combined ASBs. 0 indicates no correlation
+    /**
+     * @brief correlation ID to associate sec ops for combined ASBs. 0 indicates no correlation.
+     * Used only by source role security operations; will have no effect on verify/accept operations.
+     */
     uint64_t correlation_id;
 
     /// @brief Security parameters used or produced by this operation.
