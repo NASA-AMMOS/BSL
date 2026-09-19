@@ -608,6 +608,12 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle
          BSL_SecActionList_next(act_it))
     {
         BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
+        if (!act->validated)
+        {
+            BSL_LOG_WARNING("Skipping security action due to previous BSL validation failure");
+            continue;
+        }
+
         for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i++)
         {
             BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
@@ -683,7 +689,6 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
             // general operation consistency
             if (sec_oper->_role != BSL_SECROLE_SOURCE)
             {
-                // existing target lookup
                 BSLB_AsbPtrSetMap_t *tgtmap;
                 switch (sec_oper->_service_type)
                 {
@@ -740,6 +745,43 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                         secop_invalid_count++;
                         continue;
                     }
+                }
+            }
+            else // role == BSL_SECROLE_SOURCE
+            {
+                // Cannot add BIB if BIB already targets
+                const BSLB_AsbPtrSet_t *found_list_bib =
+                    BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bib_tgts, sec_oper->target_block_num);
+                if (found_list_bib && sec_oper->_service_type == BSL_SECBLOCKTYPE_BIB)
+                {
+                    BSL_LOG_ERR("Cannot add BIB to target that is already targeted by an existing BCB %" PRIu64,
+                                sec_oper->target_block_num);
+                    secop_invalid_count++;
+                    continue;
+                }
+
+                // Cannot add BIB or BCB if BCB alredy targets
+                const BSLB_AsbPtrSet_t *found_list_bcb =
+                    BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bcb_tgts, sec_oper->target_block_num);
+                if (found_list_bcb)
+                {
+                    BSL_LOG_ERR("Existing BCB found with target block number %" PRIu64, sec_oper->target_block_num);
+                    secop_invalid_count++;
+                    continue;
+                }
+
+                // Cannot add BIB or BCB to fragmented bundle
+                BSL_PrimaryBlock_t primary_block;
+                if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
+                {
+                    BSL_LOG_ERR("Cannot get bundle primary block");
+                    return BSL_ERR_HOST_CALLBACK_FAILED;
+                }
+
+                if ((primary_block.field_flags & 0x1) == 0x1)
+                {
+                    BSL_LOG_ERR("Cannot add BIB or BCB to fragmented bundle");
+                    secop_invalid_count++;
                 }
             }
 
