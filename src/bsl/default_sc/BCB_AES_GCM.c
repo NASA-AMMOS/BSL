@@ -44,44 +44,36 @@ bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t
     ASSERT_ARG_NONNULL(bundle);
     ASSERT_ARG_NONNULL(sec_oper);
 
-    uint64_t tgt_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
-    if (BSL_BLOCK_TYPE_PRIMARY == tgt_num)
+    if (BSL_SecOper_IsRoleSource(sec_oper))
     {
-        BSL_LOG_ERR("Invalid SecOp: BCB Cannot target primary block");
-        return false;
+        uint64_t tgt_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
+        if (BSL_BLOCK_TYPE_PRIMARY == tgt_num)
+        {
+            BSL_LOG_ERR("Invalid SecOp: BCB Cannot target primary block");
+            return false;
+        }
+
+        BSL_CanonicalBlock_t tgt_block;
+        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &tgt_block))
+        {
+            BSL_LOG_ERR("Error getting target metadata on SecOp validation");
+            return false;
+        }
+
+        if (tgt_block.type_code == BSL_BLOCK_TYPE_BCB)
+        {
+            BSL_LOG_ERR("Invalid SecOp: BCB Cannot target another BCB");
+            return false;
+        }
+
+        // @TODO check that BCB(BIB) has corresponding SecOp target to BIB's target
+        if (tgt_block.type_code == BSL_BLOCK_TYPE_BIB)
+        {
+        // iterate BIB tgt map
+        // if BIB sec blk num == BCB tgt num, get BIB tgt num
+        // Check if BIB tgt num in BCB tgt map
+        }
     }
-
-    BSL_CanonicalBlock_t tgt_block;
-    if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &tgt_block))
-    {
-        BSL_LOG_ERR("Error getting target metadata on SecOp validation");
-        return false;
-    }
-
-    if (tgt_block.type_code == BSL_BLOCK_TYPE_BCB)
-    {
-        BSL_LOG_ERR("Invalid SecOp: BCB Cannot target another BCB");
-        return false;
-    }
-
-    // @TODO check that BCB(BIB) has corresponding SecOp target to BIB's target
-    // if (tgt_block.type_code == BSL_BLOCK_TYPE_BIB)
-    // {
-    //     if (correlation_id <= 0)
-    //     {
-    //         BSL_LOG_ERR("Invalid SecOp: BCB targeting BIB, but there are no correlated SecOps to target BIB target");
-    //         return false;
-    //     }
-
-    //     const BSLB_AsbPtrSet_t *found_list = BSLB_AsbPtrSetMap_cget(bundle->bsl_data->correlations, sec_oper->correlation_id);
-    //     if (!found_list)
-    //     {
-    //         BSL_LOG_ERR("Invalid SecOp: BCB targeting BIB, but there are no correlated SecOps to target BIB target");
-    //         return false;
-    //     }
-
-    //     return false;
-    // }
 
     return true;
 }
