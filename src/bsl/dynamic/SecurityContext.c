@@ -751,7 +751,7 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
             {
                 // Cannot add BIB if BIB already targets
                 if (sec_oper->_service_type == BSL_SECBLOCKTYPE_BIB
-                        && BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bib_tgts, sec_oper->target_block_num))
+                    && BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bib_tgts, sec_oper->target_block_num))
                 {
                     BSL_LOG_ERR("Cannot add BIB to target that is already targeted by an existing BCB %" PRIu64,
                                 sec_oper->target_block_num);
