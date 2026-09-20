@@ -753,8 +753,7 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                 if (sec_oper->_service_type == BSL_SECBLOCKTYPE_BIB
                     && BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bib_tgts, sec_oper->target_block_num))
                 {
-                    BSL_LOG_ERR("Cannot add BIB to target that is already targeted by an existing BCB %" PRIu64,
-                                sec_oper->target_block_num);
+                    BSL_LOG_ERR("Cannot add BIB to target %"PRIu64" that is already targeted by an existing BIB", sec_oper->target_block_num);
                     secop_invalid_count++;
                     continue;
                 }
@@ -762,7 +761,7 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                 // Cannot add BIB or BCB if BCB alredy targets
                 if (BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bcb_tgts, sec_oper->target_block_num))
                 {
-                    BSL_LOG_ERR("Existing BCB found with target block number %" PRIu64, sec_oper->target_block_num);
+                    BSL_LOG_ERR("Cannot add service to target %"PRIu64" that is already targeted by an existing BCB", sec_oper->target_block_num);
                     secop_invalid_count++;
                     continue;
                 }
