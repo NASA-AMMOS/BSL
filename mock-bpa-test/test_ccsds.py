@@ -111,7 +111,7 @@ def load_ccsds(cls: type[TestAgent]):
                 #          v      v      v  v  v
                 #       b[i|c]b_[a|s|v]_\d_\d_\d
                 policy_desc = r["description"].split("_")
-                if not len(policy_desc) in (4, 5):
+                if len(policy_desc) not in (4, 5):
                     LOGGER.error(f"CCSDS | Test {t['test']}: Policyrule {i} misconfigured.")
                     success = False
                     break
