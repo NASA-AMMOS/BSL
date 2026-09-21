@@ -608,7 +608,7 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle
          BSL_SecActionList_next(act_it))
     {
         BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
-        if (BSL_ACTION_VALIDATION_SUCCESS != act->validation_state)
+        if (BSL_ACTION_VALIDATION_FAILURE == act->validation_state)
         {
             BSL_LOG_WARNING("Skipping security action due to previous BSL validation failure");
             continue;
