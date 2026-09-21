@@ -195,7 +195,7 @@ def load_ccsds(cls: type[TestAgent]):
                 input_data_format=input_format,
                 expected_output_format=output_format,
                 is_working=t["working"],
-                use_bcb_rng=True
+                use_bcb_rng=True,
             )
             LOGGER.info(f"CCSDS | Test {t['test']}: Appending case.")
 
