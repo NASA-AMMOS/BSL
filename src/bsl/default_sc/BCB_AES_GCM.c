@@ -65,12 +65,6 @@ bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t
             BSL_LOG_ERR("Invalid SecOp: BCB Cannot target another BCB");
             return false;
         }
-
-        // Check that BCB(BIB) has corresponding SecOp target to BIB's target
-        if (tgt_block.type_code == BSL_BLOCK_TYPE_BIB)
-        {
-            
-        }
     }
 
     return true;
