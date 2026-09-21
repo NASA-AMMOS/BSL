@@ -753,10 +753,8 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                 if (sec_oper->_service_type == BSL_SECBLOCKTYPE_BIB
                     && BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bib_tgts, sec_oper->target_block_num))
                 {
-                    BSL_LOG_ERR("Cannot add BIB to target %" PRIu64 " that is already targeted by an existing BIB",
-                                sec_oper->target_block_num);
-                    secop_invalid_count++;
-                    continue;
+                    // Non-blocking warning, for now
+                    BSL_LOG_WARNING("Cannot add BIB to target %" PRIu64 " that is already targeted by an existing BIB", sec_oper->target_block_num);
                 }
 
                 // Cannot add BIB or BCB if BCB alredy targets
@@ -775,13 +773,13 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                     BSL_LOG_ERR("Cannot get bundle primary block");
                     return BSL_ERR_HOST_CALLBACK_FAILED;
                 }
-
-                if ((primary_block.field_flags & 0x1) == 0x1)
+                if (0 != (primary_block.field_flags & BSL_BUNDLE_IS_FRAGMENT))
                 {
                     BSL_LOG_ERR("Cannot add BIB or BCB to fragmented bundle");
                     secop_invalid_count++;
                     continue;
                 }
+                BSL_PrimaryBlock_deinit(&primary_block);
             }
 
             // context-specific validation
