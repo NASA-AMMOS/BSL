@@ -40,12 +40,12 @@ This document functions as the AMMOS MiMTAR required interface specification.
 
 ### 1.1: Identification
 
-| Property                        | Value                               |
-|---------------------------------|-------------------------------------|
-| Configuration ID (CI)           | 681.2                               |
-| Element                         | Multi-Mission Control System (MMCS) |
-| Program Set                     | Bundle Protocol Security (BPSec)    |
-| Version                         | 2.0                                 |
+| Property                        | Value                                  |
+|---------------------------------|----------------------------------------|
+| Configuration ID (CI)           | 681.2                                  |
+| Element                         | Multi-Mission Control System (MMCS)    |
+| Program Set                     | Bundle Protocol Security Library (BSL) |
+| Version                         | 2.0                                    |
 
 ### 1.2: Purpose
 
