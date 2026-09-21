@@ -683,6 +683,11 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
             // general operation consistency
             if (sec_oper->_role != BSL_SECROLE_SOURCE)
             {
+                if (sec_oper->correlation_id > 0)
+                {
+                    BSL_LOG_WARNING("WARNING: Correlation non-zero for non-source role security operation; Will have "
+                                    "no effect on processing.");
+                }
                 // existing target lookup
                 BSLB_AsbPtrSetMap_t *tgtmap;
                 switch (sec_oper->_service_type)
