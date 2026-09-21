@@ -39,8 +39,6 @@ jobs:
             image: null
           - name: 'centos-9'
             image: 'quay.io/centos/centos:stream9'
-          - name: 'centos-10'
-            image: 'quay.io/centos/centos:stream10'
         compiler: ['gcc', 'clang']
     name: Unit Test (${{matrix.os.name}} ${{matrix.compiler}})
     runs-on: ${{ matrix.os.image != null && 'ubuntu-latest' || matrix.os.name }}
@@ -129,6 +127,8 @@ jobs:
       matrix:
         os:
           - name: 'ubuntu-24.04'
+            image: null
+          - name: 'ubuntu-26.04'
             image: null
           - name: 'centos-9'
             image: 'quay.io/centos/centos:stream9'
