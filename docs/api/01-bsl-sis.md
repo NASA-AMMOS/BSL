@@ -22,31 +22,32 @@ subcontract 1700763.
 -->
 This document functions as the AMMOS MiMTAR required interface specification.
 
-Bundle Protocol Security Library (BPSec Lib) Software Interface Specification (SIS)
-=============================================================================
+# Bundle Protocol Security Library (BSL) Software Interface Specification (SIS)
+
+***NASA AMMOS DOC-005835***
 
 ***Prepared By: The Johns Hopkins University Applied Physics Laboratory (JHU/APL)***
 
-**Change Log**
+### Change Log
 | Revision | Submission Date | Affection Sections or Pages | Change Summary            |
 |----------|-----------------|-----------------------------|---------------------------|
 | Initial  | 2 Oct. 2024     | All                         | Initial issue of document |
 | A        | 29 Jul. 2026    | All                         | Updating copyright year and instances of "example policy provider" |
-| B        | TBD 2026        | Secs. 1.1, 1.4, 2.3, 3.2, 3.3 | Updates for BSLv2.0, phrasing of "sample policy provider," and for the new COSE Context |
+| B        | 8 October 2026  | Secs. 1.1, 1.4, 2.3, 3.2, 3.3 | Updates for BSLv2.0, phrasing of "sample policy provider," and for the new COSE Context |
 
 
-# 1: Document Overview
+## 1: Document Overview
 
-## 1.1: Identification
+### 1.1: Identification
 
-| Property                        | Value                               |
-|---------------------------------|-------------------------------------|
-| Configuration ID (CI)           | 681.2                               |
-| Element                         | Multi-Mission Control System (MMCS) |
-| Program Set                     | Bundle Protocol Security (BPSec)    |
-| Version                         | 2.0                                 |
+| Property                        | Value                                  |
+|---------------------------------|----------------------------------------|
+| Configuration ID (CI)           | 681.2                                  |
+| Element                         | Multi-Mission Control System (MMCS)    |
+| Program Set                     | Bundle Protocol Security Library (BSL) |
+| Version                         | 2.0                                    |
 
-## 1.2: Purpose
+### 1.2: Purpose
 
 This document describes the software interfaces and APIs necessary to use the BPSec Library (BSL), an implementation of Bundle Protocol Security (BPSec), as specified in the IETF RFC 9172. It is intended for application programmers who plan to use the BSL with their software. The purpose of this document is to enable the reader to access the detailed API documentation, but not to serve as the detailed documentation itself. Therefore, this document is not expected to change between major version updates.
 
@@ -58,8 +59,7 @@ Section 3 provides an overview of the BSL API, which application programmers sho
 
 Finally, the BSL is open-source software whose design and implementation should be expected to evolve in response to operational feedback. As such, this and related documentation may become out-of-date relative to the leading-edge of the BSL code repository. In general, the documentation (including the READMEs, auto-generated API spec, code examples, etc) found in the open-source GitHub repository should be considered the ground source of truth when information appears inconsistent. 
 
-## 1.3: Terminology and Notation
-
+### 1.3: Terminology and Notation
 
 | Term                                | Description |
 |-------------------------------------|-------------|
@@ -78,7 +78,7 @@ Finally, the BSL is open-source software whose design and implementation should 
 | QCBOR                               | QCBOR is a third-party open source library that implements CBOR in the C programming language.|
 | Unity                               | In this context Unity is a third-party open-source framework to run unit tests over C and C++ code. Be advised that Unity is a name for a popular graphics programming library, which is unrelated to Unity as referenced here.
 
-## 1.4: References
+### 1.4: References
 
 **Table 1: Applicable JPL Rules Documents**
 | Title                | DocID |
@@ -105,9 +105,9 @@ Finally, the BSL is open-source software whose design and implementation should 
 | NIST Security Requirements for Cryptographic Modules             | [NIST FIPS 140-3](https://csrc.nist.gov/pubs/fips/140-3/final) |
 | SE Linux Overview                                                | https://www.redhat.com/en/topics/linux/what-is-selinux        |
 
-# 2: Environment
+## 2: Environment
 
-## 2.1: Hardware Characteristics and Limitations
+### 2.1: Hardware Characteristics and Limitations
 
 The BSL is regression-tested and targeted primarily toward a RHEL-9 platform on an x86-64 processor. The BSL is written in strict ISO C99 and intentionally developed in a way to maximize cross-platform suitability for many POSIX-consistent targets and speciality hardware, such as VxWorks and RTEMS.
 
@@ -116,14 +116,14 @@ The BSL defines a software interface written in C to maximize suitability for ho
 The BSL is expected to operate on a host with FIPS 140-mode enabled and SE Linux enforcing. Developers must test in this environment otherwise undefined behavior may occur.
 
 
-## 2.2: Interface Medium and Characteristics
+### 2.2: Interface Medium and Characteristics
 
 The BSL is a software library that compiles to a Linux shared or static object, which must be linked to a host binary in order to execute. The BSL does not itself produce and run any independent threads of execution.
 
 Host applications must link to the BSL object files during their build process, according to the instructions and examples located in the BSL wiki page on GitHub. Host applications will call C functions directly to execute BPSec subroutines. If the host application is not programmed in C or C++, then a suitable Foreign Function Interface (FFI) for that specific programming language should be used. Note, the authors of the BSL cannot guarantee the correctness when using BSL with an FFI.
 
 
-## 2.3: Standards and Protocols
+### 2.3: Standards and Protocols
 
 The BSL implements the specifications for Bundle Protocol Security and its default security context, as detailed in RFC 9172 and RFC 9173, respectively.
 
@@ -133,13 +133,13 @@ The BSL assumes it is building for a POSIX 2008-consistent operating system.
 References for each of these are found in Section 1 of this document.
 
 
-## 2.4: Software Initialization
+### 2.4: Software Initialization
 
 There is no specific runtime initialization for the BSL. However, software developers using the BSL in their applications must call certain initialization functions before invoking BSL security operations. Specifically, the host interface must provide function callbacks and registries of security Policy Providers and Security Contexts. However, the BSL does not contain any other specific runtime configuration items required by the host.
 
-# 3: Additional Software Interface Details
+## 3: Additional Software Interface Details
 
-## 3.1: Frontend vs Backend
+### 3.1: Frontend vs Backend
 
 The BSL implementation has two central notional components: The “Frontend API” and the “Dynamic Backend”. This distinction permits the existence of multiple backends that implement BPSec functionality, each potentially tailored to operational settings, to be accessed via a common interface. For example, a Bundle Protocol Agent running in SWaP-constrained hardware may need an implementation using strict memory-management that fits in a small memory footprint, whereas a BPA serving as a Bundle Protocol Router on conventional hardware may choose to use a backend leveraging hardware acceleration and greater access to computing resources. The BSL ships with a default backend, written in C99 with some dynamic data structures, which balances suitability for constrained systems and overall flexibility. 
 
@@ -150,7 +150,7 @@ The “Dynamic Backend” is the default implementation of a backend implementin
 Backends may be swapped out with another implementation that implements the front-end API. Since BPSec may be deployed in many types of systems with different resources and different operational environments, there is unlikely to be a one-size-fits-all backend implementation. The backend provided here should be understood as an example and reference for more tailored mission-specific implementations.
 
 
-## 3.2: Instructions for Building Documentation
+### 3.2: Instructions for Building Documentation
 
 The most up-to-date documentation will be found in the BSL’s GitHub page, and the details of any API function or data-structure will likewise be found in the documentation generated from annotations inside the source code (using doxygen).
 As such, this document will generally avoid API specifics since it these may become obsolete as BSL evolves in response to operational needs.
@@ -164,7 +164,7 @@ These include the Frontend API, Dynamic Backend, the built-in example Security C
 Links will be found in Table 3 above.
 
 
-## 3.3: BSL Modules and Data Structures
+### 3.3: BSL Modules and Data Structures
 
 As indicated in the prior section, the BSL has the following main components.
 The principal two are the Frontend API and the Dynamic backend. There are two others, being the security policy provider, and the security context.
@@ -174,7 +174,7 @@ The principal two are the Frontend API and the Dynamic backend. There are two ot
  * The **Sample Policy Provider** is a library used internally by the BSL to query which security operations need to be applied to a given Bundle, and what those security parameters are (such as key, hash type, etc). The BSL provides a sample security provider exercising the policy provider interface.
  * The **Example Security Contexts** perform the actual cryptographic functionality. The Default Security Contexts are specified in RFC 9173 and the COSE Context in an internet draft. The BSL can register these via the security context callback interface (see @ref sc-callback-api), and uses OpenSSL as the underlying cryptographic software.
 
-## 3.4: BSL Context Initialization
+### 3.4: BSL Context Initialization
 
 The BSL requires the existence of a Security Policy Provider (commonly referred to as the “Policy Provider” throughout subsequent documentation), which governs what security actions should be performed upon a particular bundle, and a Security Context, which handles all cryptographic material and safely performs the cryptographic functionality.
 
@@ -183,13 +183,13 @@ A sample Policy Provider is included in the repository, as well as an implementa
 Refer to the doxygen-generated documentation in the repository for the relevant BSL initialization functions, that provision the library with the appropriate policy provider and security context.
 
 
-## 3.5:  BSL Bundle Lifecycles and Workflows
+### 3.5:  BSL Bundle Lifecycles and Workflows
 
 At each of the four points of contact between the BPA and BSL, the BPA invokes the BSL, which goes on to query the security policy provider, and returns an ordered list of security operations to be performed on the bundle according to local security policy.
 
 The BPA then iterates through this list calling the relevant BSL functions to perform the given security operation. These operations are of two types. The first simply verifies a given security result indicating whether it is successful or a failure reason code, and does not manipulate the Bundle in any way. The second type, indicated by “finalize” in the relevant API function names, either apply a new security Block to the bundle, modify a Block in the bundle, or strip a security block from a Bundle (following its successful verification).
 
-## 3.6: Software Dependencies
+### 3.6: Software Dependencies
 
 The BSL strives to avoid excessive reliance on third-party libraries and a long software supply chain. A few third-party libraries are required, however, to: provide dynamic data structures for this C codebase; provide a unit-test driver; provide a CODEC for CBOR-encoded Bundle blocks; and provide implementations of cryptographic algorithms. At the time of the Critical Design Review, these third-party open-source libraries respectively are MLib, Unity, QCBOR, and OpenSSL. 
 
