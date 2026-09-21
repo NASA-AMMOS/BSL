@@ -754,7 +754,8 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                     && BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bib_tgts, sec_oper->target_block_num))
                 {
                     // Non-blocking warning, for now
-                    BSL_LOG_WARNING("Cannot add BIB to target %" PRIu64 " that is already targeted by an existing BIB", sec_oper->target_block_num);
+                    BSL_LOG_WARNING("Cannot add BIB to target %" PRIu64 " that is already targeted by an existing BIB",
+                                    sec_oper->target_block_num);
                 }
 
                 // Cannot add BIB or BCB if BCB alredy targets
