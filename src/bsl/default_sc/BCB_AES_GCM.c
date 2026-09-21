@@ -66,12 +66,10 @@ bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t
             return false;
         }
 
-        // @TODO check that BCB(BIB) has corresponding SecOp target to BIB's target
+        // Check that BCB(BIB) has corresponding SecOp target to BIB's target
         if (tgt_block.type_code == BSL_BLOCK_TYPE_BIB)
         {
-        // iterate BIB tgt map
-        // if BIB sec blk num == BCB tgt num, get BIB tgt num
-        // Check if BIB tgt num in BCB tgt map
+            
         }
     }
 
