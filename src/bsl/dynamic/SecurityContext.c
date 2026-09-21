@@ -608,6 +608,12 @@ int BSL_SecCtx_ExecutePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle
          BSL_SecActionList_next(act_it))
     {
         BSL_SecurityAction_t *act = BSL_SecActionList_ref(act_it);
+        if (BSL_ACTION_VALIDATION_FAILURE == act->validation_state)
+        {
+            BSL_LOG_WARNING("Skipping security action due to previous BSL validation failure");
+            continue;
+        }
+
         for (size_t i = 0; i < BSL_SecurityAction_CountSecOpers(act); i++)
         {
             BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, i);
@@ -747,6 +753,41 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                     }
                 }
             }
+            else // role == BSL_SECROLE_SOURCE
+            {
+                // Cannot add BIB if BIB already targets
+                if (sec_oper->_service_type == BSL_SECBLOCKTYPE_BIB
+                    && BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bib_tgts, sec_oper->target_block_num))
+                {
+                    // Non-blocking warning, for now
+                    BSL_LOG_WARNING("Cannot add BIB to target %" PRIu64 " that is already targeted by an existing BIB",
+                                    sec_oper->target_block_num);
+                }
+
+                // Cannot add BIB or BCB if BCB alredy targets
+                if (BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bcb_tgts, sec_oper->target_block_num))
+                {
+                    BSL_LOG_ERR("Cannot add service to target %" PRIu64 " that is already targeted by an existing BCB",
+                                sec_oper->target_block_num);
+                    secop_invalid_count++;
+                    continue;
+                }
+
+                // Cannot add BIB or BCB to fragmented bundle
+                BSL_PrimaryBlock_t primary_block;
+                if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
+                {
+                    BSL_LOG_ERR("Cannot get bundle primary block");
+                    return BSL_ERR_HOST_CALLBACK_FAILED;
+                }
+                if (0 != (primary_block.field_flags & BSL_BUNDLE_IS_FRAGMENT))
+                {
+                    BSL_LOG_ERR("Cannot add BIB or BCB to fragmented bundle");
+                    secop_invalid_count++;
+                    continue;
+                }
+                BSL_PrimaryBlock_deinit(&primary_block);
+            }
 
             // context-specific validation
             const BSL_SecCtxDesc_t *sec_ctx = BSL_SecCtxDict_cget(lib->sc_reg, sec_oper->context_id);
@@ -763,7 +804,8 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
             }
         }
 
-        action->validated = (0 == secop_invalid_count);
+        action->validation_state =
+            (0 == secop_invalid_count) ? BSL_ACTION_VALIDATION_SUCCESS : BSL_ACTION_VALIDATION_FAILURE;
     }
 
     // Diagnostics about validated operations
@@ -777,7 +819,7 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
         {
             const BSL_SecurityAction_t *act = BSL_SecActionList_cref(act_it);
             BSL_LOG_DEBUG("  Action from policy provider ID: % " PRIu64, act->pp_id);
-            BSL_LOG_DEBUG("    Fully validated: %d", act->validated);
+            BSL_LOG_DEBUG("    Fully validated: %d", BSL_SecurityAction_Validated(act));
             BSL_LOG_DEBUG("    Operations count: %zu", BSL_SecOperList_size(act->sec_op_list));
 
             BSL_SecOperList_it_t op_it;

@@ -106,11 +106,12 @@ def load_ccsds(cls: type[TestAgent]):
                 #          |   sec role
                 #          |      |     tgt blk type
                 #          |      |      |  good key?
-                #          |      |      |  |
-                #          v      v      v  v
-                #       b[i|c]b_[a|s|v]_\d_\d
+                #          |      |      |  |  corr. id
+                #          |      |      |  |  |
+                #          v      v      v  v  v
+                #       b[i|c]b_[a|s|v]_\d_\d_\d
                 policy_desc = r["description"].split("_")
-                if len(policy_desc) != 4:
+                if len(policy_desc) not in (4, 5):
                     LOGGER.error(f"CCSDS | Test {t['test']}: Policyrule {i} misconfigured.")
                     success = False
                     break
@@ -166,6 +167,10 @@ def load_ccsds(cls: type[TestAgent]):
                         "policy_action_on_fail": "delete_bundle",
                     }
                 }
+
+                if len(policy_desc) == 5:
+                    pr["policyrule"]["correlation"] = policy_desc[4]
+
                 LOGGER.info(f"Appending new Policy Rule {pr}")
                 policyrules.append(pr)
 
@@ -190,6 +195,7 @@ def load_ccsds(cls: type[TestAgent]):
                 input_data_format=input_format,
                 expected_output_format=output_format,
                 is_working=t["working"],
+                use_bcb_rng=True,
             )
             LOGGER.info(f"CCSDS | Test {t['test']}: Appending case.")
 

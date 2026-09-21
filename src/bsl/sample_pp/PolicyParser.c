@@ -173,6 +173,7 @@ static int BSLP_PolicyOptions_SC1(BSLB_VariantPtrMap_t options, const char *id_s
                 return BSL_ERR_POLICY_CONFIG;
             }
             BSL_Variant_SetTextstr(opt, text_ptr);
+            BSL_LOG_DEBUG("     %s: %s", id_str, text_ptr);
         }
     }
     else if (0 == strcmp(id_str, "sha_variant"))
@@ -186,6 +187,7 @@ static int BSLP_PolicyOptions_SC1(BSLB_VariantPtrMap_t options, const char *id_s
                 return BSL_ERR_POLICY_CONFIG;
             }
             BSL_Variant_SetInt64(opt, as_int);
+            BSL_LOG_DEBUG("     %s: %" PRId64, id_str, as_int);
         }
     }
     else if (0 == strcmp(id_str, "scope_flags"))
@@ -199,6 +201,7 @@ static int BSLP_PolicyOptions_SC1(BSLB_VariantPtrMap_t options, const char *id_s
                 return BSL_ERR_POLICY_CONFIG;
             }
             BSL_Variant_SetInt64(opt, as_int);
+            BSL_LOG_DEBUG("     %s: %" PRId64, id_str, as_int);
         }
     }
     else if (0 == strcmp(id_str, "key_wrap"))
@@ -212,6 +215,7 @@ static int BSLP_PolicyOptions_SC1(BSLB_VariantPtrMap_t options, const char *id_s
                 return BSL_ERR_POLICY_CONFIG;
             }
             BSL_Variant_SetInt64(opt, (int64_t)as_bool);
+            BSL_LOG_DEBUG("     %s: %" PRId64, id_str, (int64_t)as_bool);
         }
     }
     else
@@ -239,6 +243,7 @@ static int BSLP_PolicyOptions_SC2(BSLB_VariantPtrMap_t options, const char *id_s
                 return BSL_ERR_POLICY_CONFIG;
             }
             BSL_Variant_SetTextstr(opt, text_ptr);
+            BSL_LOG_DEBUG("     %s: %s", id_str, text_ptr);
         }
     }
     else if (0 == strcmp(id_str, "aes_variant"))
@@ -252,6 +257,7 @@ static int BSLP_PolicyOptions_SC2(BSLB_VariantPtrMap_t options, const char *id_s
                 return BSL_ERR_POLICY_CONFIG;
             }
             BSL_Variant_SetInt64(opt, as_int);
+            BSL_LOG_DEBUG("     %s: %" PRId64, id_str, as_int);
         }
     }
     else if (0 == strcmp(id_str, "aad_scope"))
@@ -265,6 +271,7 @@ static int BSLP_PolicyOptions_SC2(BSLB_VariantPtrMap_t options, const char *id_s
                 return BSL_ERR_POLICY_CONFIG;
             }
             BSL_Variant_SetInt64(opt, as_int);
+            BSL_LOG_DEBUG("     %s: %" PRId64, id_str, as_int);
         }
     }
     else if (0 == strcmp(id_str, "key_wrap"))
@@ -278,6 +285,7 @@ static int BSLP_PolicyOptions_SC2(BSLB_VariantPtrMap_t options, const char *id_s
                 return BSL_ERR_POLICY_CONFIG;
             }
             BSL_Variant_SetInt64(opt, (int64_t)as_bool);
+            BSL_LOG_DEBUG("     %s: %" PRId64, id_str, (int64_t)as_bool);
         }
     }
     else

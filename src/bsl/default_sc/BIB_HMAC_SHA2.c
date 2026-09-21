@@ -49,6 +49,23 @@ bool BSLX_BIB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t
     ASSERT_ARG_NONNULL(lib);
     ASSERT_ARG_NONNULL(bundle);
     ASSERT_ARG_NONNULL(sec_oper);
+
+    if (BSL_SecOper_IsRoleSource(sec_oper))
+    {
+        BSL_CanonicalBlock_t tgt_block;
+        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &tgt_block))
+        {
+            BSL_LOG_ERR("Error getting target metadata on SecOp validation");
+            return false;
+        }
+
+        if (tgt_block.type_code == BSL_BLOCK_TYPE_BIB || tgt_block.type_code == BSL_BLOCK_TYPE_BCB)
+        {
+            BSL_LOG_ERR("Invalid SecOp: BIB Cannot target another BIB/BCB");
+            return false;
+        }
+    }
+
     return true;
 }
 
