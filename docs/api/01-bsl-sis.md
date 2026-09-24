@@ -1,4 +1,4 @@
-@page bsl-sis BSL Interface Specification (SIS)
+@page bsl-sis Software Interface Specification (SIS)
 <!--
 Copyright (c) 2026 The Johns Hopkins University Applied Physics
 Laboratory LLC.
@@ -33,7 +33,7 @@ This document functions as the AMMOS MiMTAR required interface specification.
 |----------|-----------------|-----------------------------|---------------------------|
 | Initial  | 2 Oct. 2024     | All                         | Initial issue of document |
 | A        | 29 Jul. 2026    | All                         | Updating copyright year and instances of "example policy provider" |
-| B        | 8 October 2026  | Secs. 1.1, 1.4, 2.3, 3.2, 3.3 | Updates for BSLv2.0, phrasing of "sample policy provider," and for the new COSE Context |
+| B        | 1 October 2026  | Secs. 1.1, 1.4, 2.3, 3.2, 3.3 | Updates for BSLv2.0, phrasing of "sample policy provider," and for the new COSE Context |
 
 
 ## 1: Document Overview
