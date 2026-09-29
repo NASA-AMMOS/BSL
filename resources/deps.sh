@@ -86,3 +86,24 @@ then
   rm -rf ${BUILDDIR}/unity
   popd
 fi
+
+# Rust sample_pp uses bindgen at crate build time and cheadergen to emit a C header
+# from the exported Rust FFI surface. cargo/rustc are supplied by the host toolchain;
+# cheadergen_cli is installed into CARGO_HOME by this dependency step.
+CHEADERGEN_CLI_VERSION=${CHEADERGEN_CLI_VERSION:-0.3.2}
+if ! command -v cargo >/dev/null 2>&1
+then
+  echo "cargo not found. Install rustup with stable rustc/cargo before running deps."
+  exit 1
+fi
+
+if ! command -v cheadergen >/dev/null 2>&1
+then
+  echo "Installing cheadergen_cli ${CHEADERGEN_CLI_VERSION}..."
+  cargo install cheadergen_cli --version "${CHEADERGEN_CLI_VERSION}" --locked
+fi
+
+if command -v rustup >/dev/null 2>&1
+then
+  rustup toolchain install nightly --component rust-docs-json
+fi

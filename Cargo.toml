@@ -1,0 +1,3 @@
+[workspace]
+members = ["src/bsl/sample_pp/rust"]
+resolver = "3"

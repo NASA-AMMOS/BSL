@@ -1,0 +1,35 @@
+autogen_warning = "/* WARNING: this file is auto-generated from src/bsl/sample_pp/rust. Do not edit it manually. */"
+pragma_once = false
+usize_is_size_t = true
+includes = [
+    "bsl/BPSecLib_Private.h",
+    "bsl/dynamic/MLibConfig.h",
+    "bsl/dynamic/SecOperation.h",
+    "bsl/dynamic/SecurityActionSet.h",
+    "bsl/dynamic/Variant.h",
+    "bsl/default_sc/rfc9173.h",
+    "<m-string.h>",
+]
+after_includes = '''
+typedef struct BSLP_PolicyProvider_s BSLP_PolicyProvider_t;
+'''
+trailer = '''
+#define M_OPL_BSLP_PolicyPredicate_t()                                                                    \
+    (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(0), SET(0), MOVE(API_6(BSLP_PolicyPredicate_Move)), \
+     CLEAR(API_2(BSLP_PolicyPredicate_Deinit)))
+
+#define M_OPL_BSLP_PolicyRule_t()                                                               \
+    (INIT(API_2(BSLP_PolicyRule_Init)), INIT_SET(0), SET(0), MOVE(API_6(BSLP_PolicyRule_Move)), \
+     CLEAR(API_2(BSLP_PolicyRule_Deinit)))
+'''
+
+[c]
+style = "both"
+cpp_compat = true
+
+[package."bsl-sample-pp-rust"]
+header_name = "SamplePolicyProvider"
+
+[header.SamplePolicyProvider]
+include_guard = "BSLP_SAMPLE_POLICY_PROVIDER_H"
+documentation_style = "doxy"

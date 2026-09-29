@@ -38,3 +38,10 @@ then
     export LD_LIBRARY_PATH
     export PATH=${PATH}:${DESTDIR}${PREFIX}/bin
 fi
+
+# Rust-based sample_pp installs cheadergen_cli through cargo during deps.
+CARGO_HOME=${CARGO_HOME:-${HOME}/.cargo}
+if [[ -d "${CARGO_HOME}/bin" ]]
+then
+    export PATH=${PATH}:${CARGO_HOME}/bin
+fi

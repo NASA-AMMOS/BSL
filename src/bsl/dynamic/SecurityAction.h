@@ -19,6 +19,9 @@
  * the prime contract 80NM0018D0004 between the Caltech and NASA under
  * subcontract 1700763.
  */
+#ifndef BSLB_SECACTION_H_
+#define BSLB_SECACTION_H_
+
 #include "MLibConfig.h"
 #include "SecOperation.h"
 
@@ -70,3 +73,5 @@ struct BSL_SecurityAction_s
 #ifdef __cplusplus
 } // extern C
 #endif
+
+#endif /* BSLB_SECACTION_H_ */

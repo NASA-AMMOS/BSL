@@ -12,6 +12,9 @@ BuildRequires: rsync
 BuildRequires: cmake
 BuildRequires: gcc
 BuildRequires: gcc-c++
+BuildRequires: rust
+BuildRequires: cargo
+BuildRequires: clang-devel
 BuildRequires: openssl-devel
 BuildRequires: jansson-devel
 BuildRequires: asciidoctor

@@ -147,6 +147,94 @@ target_link_libraries(bsl_cose_sc PRIVATE MLIB::mlib)
 target_link_libraries(bsl_cose_sc PRIVATE qcbor::qcbor)
 
 # Sample Policy Provider library
+find_program(CARGO_EXECUTABLE cargo REQUIRED)
+find_program(CHEADERGEN_EXECUTABLE cheadergen REQUIRED)
+
+set(BSL_SAMPLE_PP_RUST_CRATE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/bsl/sample_pp/rust)
+set(BSL_SAMPLE_PP_RUST_TARGET_DIR ${CMAKE_CURRENT_BINARY_DIR}/sample_pp/cargo)
+set(BSL_SAMPLE_PP_CHEADERGEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/bsl/sample_pp/generated)
+set(BSL_SAMPLE_PP_CHEADERGEN_STAMP ${CMAKE_CURRENT_BINARY_DIR}/sample_pp/cheadergen.stamp)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(BSL_SAMPLE_PP_CARGO_PROFILE debug)
+    set(BSL_SAMPLE_PP_CARGO_ARGS)
+else()
+    set(BSL_SAMPLE_PP_CARGO_PROFILE release)
+    set(BSL_SAMPLE_PP_CARGO_ARGS --release)
+endif()
+
+set(BSL_SAMPLE_PP_RUST_ARCHIVE
+    ${BSL_SAMPLE_PP_RUST_TARGET_DIR}/${BSL_SAMPLE_PP_CARGO_PROFILE}/libbsl_sample_pp_rust.a
+)
+set(BSL_SAMPLE_PP_RUSTFLAGS "$ENV{RUSTFLAGS} -C relocation-model=pic")
+get_target_property(BSL_SAMPLE_PP_MLIB_INCLUDE_DIRS MLIB::mlib INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(BSL_SAMPLE_PP_QCBOR_INCLUDE_DIRS qcbor::qcbor INTERFACE_INCLUDE_DIRECTORIES)
+set(BSL_SAMPLE_PP_BINDGEN_INCLUDE_DIRS
+    ${BSL_SAMPLE_PP_MLIB_INCLUDE_DIRS}
+    ${BSL_SAMPLE_PP_QCBOR_INCLUDE_DIRS}
+)
+list(FILTER BSL_SAMPLE_PP_BINDGEN_INCLUDE_DIRS EXCLUDE REGEX "NOTFOUND$")
+list(REMOVE_DUPLICATES BSL_SAMPLE_PP_BINDGEN_INCLUDE_DIRS)
+list(JOIN BSL_SAMPLE_PP_BINDGEN_INCLUDE_DIRS ":" BSL_SAMPLE_PP_BINDGEN_INCLUDE_DIRS_ENV)
+
+file(GLOB_RECURSE BSL_SAMPLE_PP_RUST_SOURCES CONFIGURE_DEPENDS
+    ${BSL_SAMPLE_PP_RUST_CRATE_DIR}/Cargo.toml
+    ${BSL_SAMPLE_PP_RUST_CRATE_DIR}/cheadergen.toml
+    ${BSL_SAMPLE_PP_RUST_CRATE_DIR}/build.rs
+    ${BSL_SAMPLE_PP_RUST_CRATE_DIR}/wrapper.h
+    ${BSL_SAMPLE_PP_RUST_CRATE_DIR}/src/*.rs
+)
+
+add_custom_command(
+    OUTPUT ${BSL_SAMPLE_PP_CHEADERGEN_STAMP}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${BSL_SAMPLE_PP_CHEADERGEN_DIR}
+    COMMAND ${CMAKE_COMMAND} -E env
+            BSL_PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+            BSL_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+            BSL_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            BSL_BINDGEN_INCLUDE_DIRS=${BSL_SAMPLE_PP_BINDGEN_INCLUDE_DIRS_ENV}
+            CARGO_TARGET_DIR=${BSL_SAMPLE_PP_RUST_TARGET_DIR}/cheadergen
+            RUSTFLAGS=${BSL_SAMPLE_PP_RUSTFLAGS}
+            ${CHEADERGEN_EXECUTABLE} generate --config ${BSL_SAMPLE_PP_RUST_CRATE_DIR}/cheadergen.toml --output-dir ${BSL_SAMPLE_PP_CHEADERGEN_DIR} --prune-orphans
+    COMMAND ${CMAKE_COMMAND} -E touch ${BSL_SAMPLE_PP_CHEADERGEN_STAMP}
+    WORKING_DIRECTORY ${BSL_SAMPLE_PP_RUST_CRATE_DIR}
+    DEPENDS
+        ${BSL_SAMPLE_PP_RUST_SOURCES}
+        ${CMAKE_CURRENT_BINARY_DIR}/bsl/BSLConfig.h
+    COMMENT "Generating sample_pp Rust C header with cheadergen"
+    VERBATIM
+)
+add_custom_target(bsl_sample_pp_cheadergen DEPENDS ${BSL_SAMPLE_PP_CHEADERGEN_STAMP})
+
+add_custom_command(
+    OUTPUT ${BSL_SAMPLE_PP_RUST_ARCHIVE}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${BSL_SAMPLE_PP_RUST_TARGET_DIR}
+    COMMAND ${CMAKE_COMMAND} -E env
+            BSL_PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+            BSL_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+            BSL_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+            BSL_BINDGEN_INCLUDE_DIRS=${BSL_SAMPLE_PP_BINDGEN_INCLUDE_DIRS_ENV}
+            CARGO_TARGET_DIR=${BSL_SAMPLE_PP_RUST_TARGET_DIR}
+            RUSTFLAGS=${BSL_SAMPLE_PP_RUSTFLAGS}
+            ${CARGO_EXECUTABLE} build --manifest-path ${BSL_SAMPLE_PP_RUST_CRATE_DIR}/Cargo.toml
+            --target-dir ${BSL_SAMPLE_PP_RUST_TARGET_DIR} ${BSL_SAMPLE_PP_CARGO_ARGS}
+    WORKING_DIRECTORY ${BSL_SAMPLE_PP_RUST_CRATE_DIR}
+    DEPENDS
+        ${BSL_SAMPLE_PP_RUST_SOURCES}
+        ${CMAKE_CURRENT_BINARY_DIR}/bsl/BSLConfig.h
+        bsl/sample_pp/sample_pp_ffi.h
+    COMMENT "Building sample_pp Rust crate with Cargo"
+    VERBATIM
+)
+add_custom_target(bsl_sample_pp_rust_archive DEPENDS ${BSL_SAMPLE_PP_RUST_ARCHIVE})
+add_dependencies(bsl_sample_pp_rust_archive bsl_sample_pp_cheadergen)
+add_library(bsl_sample_pp_rust STATIC IMPORTED GLOBAL)
+set_target_properties(bsl_sample_pp_rust
+    PROPERTIES
+        IMPORTED_LOCATION ${BSL_SAMPLE_PP_RUST_ARCHIVE}
+)
+add_dependencies(bsl_sample_pp_rust bsl_sample_pp_rust_archive)
+
 add_library(bsl_sample_pp)
 target_sources(bsl_sample_pp
     PUBLIC
@@ -156,8 +244,8 @@ target_sources(bsl_sample_pp
                 bsl/sample_pp/PolicyParser.h
                 bsl/sample_pp/SamplePolicyProvider.h
     PRIVATE
-        bsl/sample_pp/PolicyParser.c
-        bsl/sample_pp/SamplePolicyProvider.c
+        bsl/sample_pp/sample_pp_ffi.c
+        bsl/sample_pp/sample_pp_ffi.h
 )
 set_target_properties(bsl_sample_pp
     PROPERTIES
@@ -170,11 +258,21 @@ target_link_libraries(bsl_sample_pp PUBLIC bsl_dynamic)
 # contexts linked-to for config options
 target_link_libraries(bsl_sample_pp PRIVATE bsl_default_sc bsl_cose_sc)
 target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
-target_link_libraries(bsl_sample_pp PRIVATE Jansson::Jansson)
+target_link_libraries(bsl_sample_pp PRIVATE
+    -Wl,--whole-archive bsl_sample_pp_rust -Wl,--no-whole-archive
+    Threads::Threads ${CMAKE_DL_LIBS} m
+)
+add_dependencies(bsl_sample_pp bsl_sample_pp_rust_archive)
 install(
     FILES bsl/sample_pp/config-schema.json
     DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/sample_pp/
     COMPONENT devel
+)
+install(
+    DIRECTORY ${BSL_SAMPLE_PP_CHEADERGEN_DIR}/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/bsl/sample_pp/generated
+    COMPONENT devel
+    FILES_MATCHING PATTERN "*.h"
 )
 
 # Dynamic backend library
