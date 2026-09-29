@@ -23,6 +23,22 @@
 use std::env;
 use std::path::PathBuf;
 
+const BINDGEN_WRAPPER: &str = r#"
+#include "bsl/BSLConfig.h"
+#include "bsl/BPSecLib_Private.h"
+#include "bsl/cose_sc/CoseContext.h"
+#include "bsl/default_sc/DefaultSecContext.h"
+#include "bsl/default_sc/rfc9173.h"
+#include "bsl/dynamic/MLibConfig.h"
+#include "bsl/dynamic/SecOperation.h"
+#include "bsl/dynamic/SecurityActionSet.h"
+#include "bsl/dynamic/Variant.h"
+#include "bsl/front/Data.h"
+#include "bsl/front/BSLMemory.h"
+
+#include <stdint.h>
+"#;
+
 fn main() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
     let project_source_dir = PathBuf::from(env::var("BSL_PROJECT_SOURCE_DIR").unwrap_or_else(|_| {
@@ -49,7 +65,6 @@ fn main() {
     println!("cargo:rerun-if-env-changed=BSL_SOURCE_DIR");
     println!("cargo:rerun-if-env-changed=BSL_BINARY_DIR");
     println!("cargo:rerun-if-env-changed=BSL_BINDGEN_INCLUDE_DIRS");
-    println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-changed={}", binary_dir.join("bsl/BSLConfig.h").display());
     println!(
         "cargo:rerun-if-changed={}",
@@ -86,7 +101,7 @@ fn main() {
 
     let out_path = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR"));
     let bindings = bindgen::Builder::default()
-        .header("wrapper.h")
+        .header_contents("bsl_sample_pp_bindgen_wrapper.h", BINDGEN_WRAPPER)
         .clang_arg(format!("-I{}", source_dir.display()))
         .clang_arg(format!("-I{}", binary_dir.display()))
         .clang_arg(format!("-I{}", binary_dir.join("bsl").display()))
