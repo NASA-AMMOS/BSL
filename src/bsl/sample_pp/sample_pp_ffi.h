@@ -24,8 +24,7 @@
  * Linkable C helpers used by the Rust implementation of sample_pp.
  *
  * The sample policy provider itself uses Rust-native storage. This shim only
- * exposes tiny C helpers for operations that are still macro/static-inline-only
- * in the C side, plus BSL memory allocation callbacks.
+ * exposes tiny C helpers that are easier to express at the C boundary.
  */
 #ifndef BSL_SAMPLE_PP_FFI_H_
 #define BSL_SAMPLE_PP_FFI_H_
@@ -39,8 +38,6 @@
 extern "C" {
 #endif
 
-void *BSLP_Rust_calloc(size_t nmemb, size_t size);
-void BSLP_Rust_free(void *ptr);
 void BSLP_Rust_Data_InitViewConst(BSL_Data_t *data, const uint8_t *ptr, size_t len);
 
 #ifdef __cplusplus

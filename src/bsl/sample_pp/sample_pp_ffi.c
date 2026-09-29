@@ -26,17 +26,7 @@
 
 #include "sample_pp_ffi.h"
 
-#include "bsl/front/BSLMemory.h"
 
-void *BSLP_Rust_calloc(size_t nmemb, size_t size)
-{
-    return BSL_calloc(nmemb, size);
-}
-
-void BSLP_Rust_free(void *ptr)
-{
-    BSL_free(ptr);
-}
 
 void BSLP_Rust_Data_InitViewConst(BSL_Data_t *data, const uint8_t *ptr, size_t len)
 {

@@ -29,7 +29,7 @@ use crate::util::{
 };
 use libc::c_int;
 use std::collections::HashMap;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::mem::MaybeUninit;
 use std::ptr;
 use std::sync::RwLock;
@@ -334,7 +334,7 @@ struct OwnedSecOper {
 impl OwnedSecOper {
     unsafe fn new() -> BslResult<Self> {
         let size = ffi::BSL_SecOper_Sizeof();
-        let ptr = ffi::BSLP_Rust_calloc(1, size) as *mut ffi::BSL_SecOper_t;
+        let ptr = ffi::BSL_calloc(1, size) as *mut ffi::BSL_SecOper_t;
         if ptr.is_null() {
             return failure_err();
         }
@@ -354,7 +354,7 @@ impl OwnedSecOper {
     unsafe fn free_after_move(mut self) {
         let ptr = self.ptr;
         self.ptr = ptr::null_mut();
-        ffi::BSLP_Rust_free(ptr.cast());
+        ffi::BSL_free(ptr.cast());
     }
 }
 
@@ -363,7 +363,7 @@ impl Drop for OwnedSecOper {
         unsafe {
             if !self.ptr.is_null() {
                 ffi::BSL_SecOper_Deinit(self.ptr);
-                ffi::BSLP_Rust_free(self.ptr.cast());
+                ffi::BSL_free(self.ptr.cast());
             }
         }
     }
@@ -376,7 +376,7 @@ struct OwnedSecurityAction {
 impl OwnedSecurityAction {
     unsafe fn new() -> BslResult<Self> {
         let size = ffi::BSL_SecurityAction_Sizeof();
-        let ptr = ffi::BSLP_Rust_calloc(1, size) as *mut ffi::BSL_SecurityAction_t;
+        let ptr = ffi::BSL_calloc(1, size) as *mut ffi::BSL_SecurityAction_t;
         if ptr.is_null() {
             return failure_err();
         }
@@ -395,7 +395,7 @@ impl Drop for OwnedSecurityAction {
         unsafe {
             if !self.ptr.is_null() {
                 ffi::BSL_SecurityAction_Deinit(self.ptr);
-                ffi::BSLP_Rust_free(self.ptr.cast());
+                ffi::BSL_free(self.ptr.cast());
             }
         }
     }
@@ -889,17 +889,63 @@ pub unsafe extern "C" fn BSLP_QueryPolicy(
     result_to_c_int(query_policy(user_data, output_action_set, bundle, location))
 }
 
+unsafe fn log_policy_warning(line: u32, message: &'static [u8]) {
+    ffi::BSL_LogEvent(
+        libc::LOG_WARNING,
+        b"sample_pp/rust/src/provider.rs\0".as_ptr().cast(),
+        line as c_int,
+        b"handle_failures\0".as_ptr().cast(),
+        message.as_ptr().cast(),
+    );
+}
+
+unsafe fn log_policy_warning_text(line: u32, message: String) {
+    let Ok(message) = CString::new(message) else {
+        return;
+    };
+    ffi::BSL_LogEvent(
+        libc::LOG_WARNING,
+        b"sample_pp/rust/src/provider.rs\0".as_ptr().cast(),
+        line as c_int,
+        b"handle_failures\0".as_ptr().cast(),
+        message.as_ptr(),
+    );
+}
+
 unsafe fn handle_failures(bundle: *mut api::BSL_BundleRef_t, sec_oper: *mut api::BSL_SecOper_t) -> BslResult {
     match ffi::BSL_SecOper_GetPolicyAction(sec_oper) {
-        action if action == ffi::BSL_POLICYACTION_NOTHING => Ok(()),
-        action if action == ffi::BSL_POLICYACTION_DROP_BLOCK => check_success(ffi::BSL_BundleCtx_RemoveBlock(
-            bundle,
-            ffi::BSL_SecOper_GetTargetBlockNum(sec_oper),
-        )),
-        action if action == ffi::BSL_POLICYACTION_DROP_BUNDLE => check_success(ffi::BSL_BundleCtx_DeleteBundle(
-            bundle,
-            ffi::BSL_SecOper_GetReasonCode(sec_oper),
-        )),
+        action if action == ffi::BSL_POLICYACTION_NOTHING => {
+            log_policy_warning(
+                line!(),
+                b"Instructed to do nothing for failed security operation\0",
+            );
+            Ok(())
+        }
+        action if action == ffi::BSL_POLICYACTION_DROP_BLOCK => {
+            log_policy_warning(
+                line!(),
+                b"***** Dropping block over which security operation failed *******\0",
+            );
+            check_success(ffi::BSL_BundleCtx_RemoveBlock(
+                bundle,
+                ffi::BSL_SecOper_GetTargetBlockNum(sec_oper),
+            ))
+        }
+        action if action == ffi::BSL_POLICYACTION_DROP_BUNDLE => {
+            let block_num = ffi::BSL_SecOper_GetTargetBlockNum(sec_oper);
+            log_policy_warning_text(
+                line!(),
+                format!("Deleting bundle due to block target num {} security failure", block_num),
+            );
+            log_policy_warning(
+                line!(),
+                b"***** Delete bundle due to failed security operation *******\0",
+            );
+            check_success(ffi::BSL_BundleCtx_DeleteBundle(
+                bundle,
+                ffi::BSL_SecOper_GetReasonCode(sec_oper),
+            ))
+        }
         _ => policy_failed_err(),
     }
 }

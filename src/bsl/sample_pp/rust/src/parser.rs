@@ -295,12 +295,39 @@ unsafe fn parse_option(options: &mut TempOptions, context_id: i64, key: &str, va
     }
 }
 
+unsafe fn parse_sc3_object(options: &mut TempOptions, object: &Map<String, Value>) -> BslResult {
+    /*
+     * COSE accepts both the legacy text key_name and the explicit key_id
+     * alias for the same BSLX_COSESC_OPTION_KEY_ID option. serde_json's
+     * default object map is key-sorted, so a policy object containing
+     * {"key_name": null, "key_id": "..."} would otherwise add key_id
+     * first and then erase it when key_name is visited. Process key_name
+     * first and let the explicit key_id field win when both are present.
+     */
+    if let Some(key_name) = object.get("key_name") {
+        parse_sc3_option(options, "key_name", key_name)?;
+    }
+
+    for (key, entry_value) in object.iter() {
+        if key == "key_name" {
+            continue;
+        }
+        parse_sc3_option(options, key, entry_value)?;
+    }
+
+    Ok(())
+}
+
 unsafe fn parse_sc_parms(options: &mut TempOptions, context_id: i64, value: &Value) -> BslResult {
     if let Some(object) = value.as_object() {
-        for (key, entry_value) in object.iter() {
-            parse_option(options, context_id, key, entry_value)?;
+        if context_id == ffi::BSLX_COSESC_CTX_ID as i64 {
+            parse_sc3_object(options, object)
+        } else {
+            for (key, entry_value) in object.iter() {
+                parse_option(options, context_id, key, entry_value)?;
+            }
+            Ok(())
         }
-        Ok(())
     } else if let Some(array) = value.as_array() {
         for entry in array.iter() {
             let entry_object = value_object(entry)?;

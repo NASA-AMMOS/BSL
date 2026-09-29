@@ -75,6 +75,10 @@ fn main() {
         "cargo:rerun-if-changed={}",
         source_dir.join("bsl/dynamic/Variant.h").display()
     );
+    println!(
+        "cargo:rerun-if-changed={}",
+        source_dir.join("bsl/front/BSLMemory.h").display()
+    );
 
     let out_path = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR"));
     let bindings = bindgen::Builder::default()
