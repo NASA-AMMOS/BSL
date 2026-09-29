@@ -250,11 +250,10 @@ set_target_properties(bsl_sample_pp
         LINKER_LANGUAGE C
 )
 target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
-# dynamic used for Variant containers
+# dynamic used for BSL SecurityAction/SecOper APIs
 target_link_libraries(bsl_sample_pp PUBLIC bsl_dynamic)
 # contexts linked-to for config options
 target_link_libraries(bsl_sample_pp PRIVATE bsl_default_sc bsl_cose_sc)
-target_link_libraries(bsl_sample_pp PUBLIC MLIB::mlib)
 target_link_libraries(bsl_sample_pp PRIVATE
     -Wl,--whole-archive bsl_sample_pp_rust -Wl,--no-whole-archive
     Threads::Threads ${CMAKE_DL_LIBS} m

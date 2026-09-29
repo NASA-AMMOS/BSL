@@ -3,7 +3,6 @@ pragma_once = false
 usize_is_size_t = true
 includes = [
     "bsl/BPSecLib_Private.h",
-    "bsl/dynamic/MLibConfig.h",
     "bsl/dynamic/SecOperation.h",
     "bsl/dynamic/SecurityActionSet.h",
     "bsl/dynamic/Variant.h",
@@ -11,15 +10,6 @@ includes = [
 ]
 after_includes = '''
 typedef struct BSLP_PolicyProvider_s BSLP_PolicyProvider_t;
-'''
-trailer = '''
-#define M_OPL_BSLP_PolicyPredicate_t()                                                                    \
-    (INIT(API_2(BSLP_PolicyPredicate_Init)), INIT_SET(0), SET(0), MOVE(API_6(BSLP_PolicyPredicate_Move)), \
-     CLEAR(API_2(BSLP_PolicyPredicate_Deinit)))
-
-#define M_OPL_BSLP_PolicyRule_t()                                                               \
-    (INIT(API_2(BSLP_PolicyRule_Init)), INIT_SET(0), SET(0), MOVE(API_6(BSLP_PolicyRule_Move)), \
-     CLEAR(API_2(BSLP_PolicyRule_Deinit)))
 '''
 
 [c]
