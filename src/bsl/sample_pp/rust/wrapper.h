@@ -11,7 +11,6 @@
 #include "bsl/dynamic/SecurityActionSet.h"
 #include "bsl/dynamic/Variant.h"
 
-#include <m-string.h>
 #include <stdint.h>
 
 #endif /* BSL_SAMPLE_PP_RUST_WRAPPER_H_ */

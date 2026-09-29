@@ -8,7 +8,6 @@ includes = [
     "bsl/dynamic/SecurityActionSet.h",
     "bsl/dynamic/Variant.h",
     "bsl/default_sc/rfc9173.h",
-    "<m-string.h>",
 ]
 after_includes = '''
 typedef struct BSLP_PolicyProvider_s BSLP_PolicyProvider_t;

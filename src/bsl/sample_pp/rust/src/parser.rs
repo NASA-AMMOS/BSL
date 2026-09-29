@@ -25,9 +25,9 @@ use crate::ffi;
 use crate::provider;
 use crate::provider::{init_predicate_from_rust, init_rule_from_rust, move_options_into_rule};
 use crate::util::{
-    arg_null_err, check_success, cstr_to_string, decode_hex, failure_action_from_text, location_from_text,
-    parse_boolish, parse_i64_text, parse_i64_value, parse_u64_value, policy_config_err, result_to_c_int,
-    role_from_text, service_from_text, set_variant_bytes, set_variant_int, set_variant_text, BslResult,
+    add_policy_option, arg_null_err, check_success, cstr_to_string, decode_hex, failure_action_from_text,
+    location_from_text, parse_boolish, parse_i64_text, parse_i64_value, parse_u64_value, policy_config_err,
+    result_to_c_int, role_from_text, service_from_text, BslResult, OwnedVariant, PolicyOptions,
 };
 use libc::c_int;
 use serde_json::{Map, Value};
@@ -42,29 +42,18 @@ use std::path::Path;
 use std::ptr;
 
 struct TempOptions {
-    ptr: *mut ffi::BSLP_RustVariantMap_t,
+    options: PolicyOptions,
 }
 
 impl TempOptions {
-    unsafe fn new() -> BslResult<Self> {
-        let ptr = ffi::BSLP_Rust_VariantMap_New();
-        if ptr.is_null() {
-            Err(ffi::BSL_ERR_FAILURE as c_int)
-        } else {
-            Ok(Self { ptr })
+    fn new() -> Self {
+        Self {
+            options: PolicyOptions::new(),
         }
     }
 
-    fn as_ptr(&self) -> *mut ffi::BSLP_RustVariantMap_t {
-        self.ptr
-    }
-}
-
-impl Drop for TempOptions {
-    fn drop(&mut self) {
-        unsafe {
-            ffi::BSLP_Rust_VariantMap_Destroy(self.ptr);
-        }
+    fn into_inner(self) -> PolicyOptions {
+        self.options
     }
 }
 
@@ -178,64 +167,59 @@ fn member_str<'a>(object: &'a Map<String, Value>, key: &str) -> BslResult<&'a st
         .ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)
 }
 
-unsafe fn option_add_or_erase(
-    options: &TempOptions,
+unsafe fn option_add_or_erase<'a>(
+    options: &'a mut TempOptions,
     opt_id: i64,
     value: &Value,
-) -> BslResult<Option<*mut ffi::BSL_Variant_t>> {
+) -> BslResult<Option<&'a mut OwnedVariant>> {
     if value.is_null() {
-        ffi::BSLP_Rust_VariantMap_Erase(options.as_ptr(), opt_id);
+        options.options.remove(&opt_id);
         Ok(None)
     } else {
-        let option = ffi::BSLP_Rust_VariantMap_Add(options.as_ptr(), opt_id);
-        if option.is_null() {
-            Err(ffi::BSL_ERR_FAILURE as c_int)
-        } else {
-            Ok(Some(option))
-        }
+        Ok(Some(add_policy_option(&mut options.options, opt_id)))
     }
 }
 
-unsafe fn option_text(options: &TempOptions, opt_id: i64, value: &Value) -> BslResult {
+unsafe fn option_text(options: &mut TempOptions, opt_id: i64, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, opt_id, value)? else {
         return Ok(());
     };
     let text = value.as_str().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
-    set_variant_text(option, text)
+    option.set_text(text)
 }
 
-unsafe fn option_int(options: &TempOptions, opt_id: i64, value: &Value) -> BslResult {
+unsafe fn option_int(options: &mut TempOptions, opt_id: i64, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, opt_id, value)? else {
         return Ok(());
     };
-    set_variant_int(option, parse_i64_value(value)?)
+    option.set_int(parse_i64_value(value)?)
 }
 
-unsafe fn option_bool(options: &TempOptions, opt_id: i64, value: &Value) -> BslResult {
+unsafe fn option_bool(options: &mut TempOptions, opt_id: i64, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, opt_id, value)? else {
         return Ok(());
     };
-    set_variant_int(option, if parse_boolish(value)? { 1 } else { 0 })
+    option.set_int(if parse_boolish(value)? { 1 } else { 0 })
 }
 
-unsafe fn option_hex_bytes(options: &TempOptions, opt_id: i64, value: &Value) -> BslResult {
+unsafe fn option_hex_bytes(options: &mut TempOptions, opt_id: i64, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, opt_id, value)? else {
         return Ok(());
     };
     let text = value.as_str().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
     let bytes = decode_hex(text)?;
-    set_variant_bytes(option, &bytes)
+    option.set_bytes(&bytes)
 }
 
-unsafe fn option_text_as_bytes(options: &TempOptions, opt_id: i64, value: &Value) -> BslResult {
+unsafe fn option_text_as_bytes(options: &mut TempOptions, opt_id: i64, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, opt_id, value)? else {
         return Ok(());
     };
     let text = value.as_str().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
-    set_variant_bytes(option, text.as_bytes())
+    option.set_bytes(text.as_bytes())
 }
 
-unsafe fn option_cose_aad_scope(options: &TempOptions, value: &Value) -> BslResult {
+unsafe fn option_cose_aad_scope(options: &mut TempOptions, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, ffi::BSLX_COSESC_OPTION_AAD_SCOPE as i64, value)? else {
         return Ok(());
     };
@@ -250,10 +234,10 @@ unsafe fn option_cose_aad_scope(options: &TempOptions, value: &Value) -> BslResu
     }
 
     let ptr = if items.is_empty() { ptr::null() } else { items.as_ptr() };
-    check_success(ffi::BSLX_CoseSc_SetAadScope(option, ptr, items.len()))
+    check_success(ffi::BSLX_CoseSc_SetAadScope(option.as_mut_ptr(), ptr, items.len()))
 }
 
-unsafe fn parse_sc1_option(options: &TempOptions, key: &str, value: &Value) -> BslResult {
+unsafe fn parse_sc1_option(options: &mut TempOptions, key: &str, value: &Value) -> BslResult {
     match key {
         "key_name" => option_text(options, ffi::BSLX_BIB_OPT_KEY_ID as i64, value),
         "sha_variant" => option_int(options, ffi::BSLX_BIB_OPT_SHA_VARIANT as i64, value),
@@ -263,7 +247,7 @@ unsafe fn parse_sc1_option(options: &TempOptions, key: &str, value: &Value) -> B
     }
 }
 
-unsafe fn parse_sc2_option(options: &TempOptions, key: &str, value: &Value) -> BslResult {
+unsafe fn parse_sc2_option(options: &mut TempOptions, key: &str, value: &Value) -> BslResult {
     match key {
         "key_name" => option_text(options, ffi::BSLX_BCB_OPT_KEY_ID as i64, value),
         "aes_variant" => option_int(options, ffi::BSLX_BCB_OPT_AES_VARIANT as i64, value),
@@ -273,7 +257,7 @@ unsafe fn parse_sc2_option(options: &TempOptions, key: &str, value: &Value) -> B
     }
 }
 
-unsafe fn parse_sc3_option(options: &TempOptions, key: &str, value: &Value) -> BslResult {
+unsafe fn parse_sc3_option(options: &mut TempOptions, key: &str, value: &Value) -> BslResult {
     if key == "key_name" {
         return option_text_as_bytes(options, ffi::BSLX_COSESC_OPTION_KEY_ID as i64, value);
     }
@@ -299,7 +283,7 @@ unsafe fn parse_sc3_option(options: &TempOptions, key: &str, value: &Value) -> B
     }
 }
 
-unsafe fn parse_option(options: &TempOptions, context_id: i64, key: &str, value: &Value) -> BslResult {
+unsafe fn parse_option(options: &mut TempOptions, context_id: i64, key: &str, value: &Value) -> BslResult {
     if context_id == ffi::RFC9173_CONTEXTID_BIB_HMAC_SHA2 as i64 {
         parse_sc1_option(options, key, value)
     } else if context_id == ffi::RFC9173_CONTEXTID_BCB_AES_GCM as i64 {
@@ -311,7 +295,7 @@ unsafe fn parse_option(options: &TempOptions, context_id: i64, key: &str, value:
     }
 }
 
-unsafe fn parse_sc_parms(options: &TempOptions, context_id: i64, value: &Value) -> BslResult {
+unsafe fn parse_sc_parms(options: &mut TempOptions, context_id: i64, value: &Value) -> BslResult {
     if let Some(object) = value.as_object() {
         for (key, entry_value) in object.iter() {
             parse_option(options, context_id, key, entry_value)?;
@@ -389,8 +373,8 @@ unsafe fn parse_one_rule(
         }
     }
 
-    let options = TempOptions::new()?;
-    parse_sc_parms(&options, context_id, member(spec, "sc_parms")?)?;
+    let mut options = TempOptions::new();
+    parse_sc_parms(&mut options, context_id, member(spec, "sc_parms")?)?;
 
     let mut predicate = StagedPredicate::new(location, src, secsrc, dst)?;
     let mut rule = StagedRule::new(
@@ -407,7 +391,7 @@ unsafe fn parse_one_rule(
         check_success(provider::BSLP_PolicyRule_SetCorrelation(rule.as_mut_ptr(), correlation))?;
     }
 
-    move_options_into_rule(rule.as_mut_ptr(), options.as_ptr())?;
+    move_options_into_rule(rule.as_mut_ptr(), options.into_inner())?;
     check_success(provider::BSLP_PolicyProvider_AddRule(
         policy,
         rule.as_mut_ptr(),
@@ -539,23 +523,15 @@ pub unsafe extern "C" fn BSLP_PolicyParser_LoadFd(
 }
 
 unsafe fn add_bitstring_option_text(
-    options: &TempOptions,
+    options: &mut TempOptions,
     opt_id: i64,
     text: &str,
 ) -> BslResult {
-    let option = ffi::BSLP_Rust_VariantMap_Add(options.as_ptr(), opt_id);
-    if option.is_null() {
-        return Err(ffi::BSL_ERR_FAILURE as c_int);
-    }
-    set_variant_text(option, text)
+    add_policy_option(&mut options.options, opt_id).set_text(text)
 }
 
-unsafe fn add_bitstring_option_int(options: &TempOptions, opt_id: i64, value: i64) -> BslResult {
-    let option = ffi::BSLP_Rust_VariantMap_Add(options.as_ptr(), opt_id);
-    if option.is_null() {
-        return Err(ffi::BSL_ERR_FAILURE as c_int);
-    }
-    set_variant_int(option, value)
+unsafe fn add_bitstring_option_int(options: &mut TempOptions, opt_id: i64, value: i64) -> BslResult {
+    add_policy_option(&mut options.options, opt_id).set_int(value)
 }
 
 unsafe fn register_policy_from_bitstring(policy_bits: u64, policy: *mut api::BSLP_PolicyProvider_t) -> BslResult {
@@ -572,35 +548,35 @@ unsafe fn register_policy_from_bitstring(policy_bits: u64, policy: *mut api::BSL
     let use_wrapped_key = (policy_bits >> 8) & 0x01;
     let policy_ignore = (policy_bits >> 9) & 0x01;
 
-    let options = TempOptions::new()?;
+    let mut options = TempOptions::new();
     let (sec_block_enum, context_id) = if sec_block_type == 1 {
         add_bitstring_option_int(
-            &options,
+            &mut options,
             ffi::BSLX_BCB_OPT_SCOPE as i64,
             ffi::RFC9173_BCB_AADSCOPEFLAGID_INC_NONE as i64,
         )?;
         add_bitstring_option_int(
-            &options,
+            &mut options,
             ffi::BSLX_BCB_OPT_AES_VARIANT as i64,
             ffi::RFC9173_BCB_AES_VARIANT_A128GCM as i64,
         )?;
         if use_wrapped_key == 1 {
-            add_bitstring_option_text(&options, ffi::BSLX_BCB_OPT_KEY_ID as i64, "9103")?;
-            add_bitstring_option_int(&options, ffi::BSLX_BCB_OPT_USE_KEY_WRAP as i64, 1)?;
+            add_bitstring_option_text(&mut options, ffi::BSLX_BCB_OPT_KEY_ID as i64, "9103")?;
+            add_bitstring_option_int(&mut options, ffi::BSLX_BCB_OPT_USE_KEY_WRAP as i64, 1)?;
         } else {
-            add_bitstring_option_text(&options, ffi::BSLX_BCB_OPT_KEY_ID as i64, "9102")?;
-            add_bitstring_option_int(&options, ffi::BSLX_BCB_OPT_USE_KEY_WRAP as i64, 0)?;
+            add_bitstring_option_text(&mut options, ffi::BSLX_BCB_OPT_KEY_ID as i64, "9102")?;
+            add_bitstring_option_int(&mut options, ffi::BSLX_BCB_OPT_USE_KEY_WRAP as i64, 0)?;
         }
         (ffi::BSL_SECBLOCKTYPE_BCB, ffi::RFC9173_CONTEXTID_BCB_AES_GCM as i64)
     } else {
-        add_bitstring_option_int(&options, ffi::BSLX_BIB_OPT_SCOPE as i64, 0)?;
+        add_bitstring_option_int(&mut options, ffi::BSLX_BIB_OPT_SCOPE as i64, 0)?;
         add_bitstring_option_int(
-            &options,
+            &mut options,
             ffi::BSLX_BIB_OPT_SHA_VARIANT as i64,
             ffi::RFC9173_BIB_SHA_HMAC512 as i64,
         )?;
-        add_bitstring_option_text(&options, ffi::BSLX_BIB_OPT_KEY_ID as i64, "9100")?;
-        add_bitstring_option_int(&options, ffi::BSLX_BIB_OPT_USE_KEY_WRAP as i64, 0)?;
+        add_bitstring_option_text(&mut options, ffi::BSLX_BIB_OPT_KEY_ID as i64, "9100")?;
+        add_bitstring_option_int(&mut options, ffi::BSLX_BIB_OPT_USE_KEY_WRAP as i64, 0)?;
         (ffi::BSL_SECBLOCKTYPE_BIB, ffi::RFC9173_CONTEXTID_BIB_HMAC_SHA2 as i64)
     };
 
@@ -646,7 +622,7 @@ unsafe fn register_policy_from_bitstring(policy_bits: u64, policy: *mut api::BSL
         failure_action,
     )?;
 
-    move_options_into_rule(rule.as_mut_ptr(), options.as_ptr())?;
+    move_options_into_rule(rule.as_mut_ptr(), options.into_inner())?;
     check_success(provider::BSLP_PolicyProvider_AddRule(
         policy,
         rule.as_mut_ptr(),

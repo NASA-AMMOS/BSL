@@ -25,8 +25,14 @@
 //! These definitions are the source of truth for the public sample_pp C
 //! header. `cheadergen` reads this module and emits the public declarations;
 //! `bindgen` is used only for the C modules that Rust consumes.
+//!
+//! The public rule and predicate structs are intentionally small handles. Their
+//! backing data lives in Rust-owned `PolicyRule` and `PolicyPredicate` values in
+//! `provider.rs`, which keeps policy metadata, descriptions, and option maps out
+//! of m*lib containers.
 
 use crate::ffi;
+use libc::c_void;
 
 #[allow(non_camel_case_types)]
 #[cheadergen::config(skip)]
@@ -34,15 +40,7 @@ pub type BSL_PolicyLocation_e = ffi::BSL_PolicyLocation_e;
 
 #[allow(non_camel_case_types)]
 #[cheadergen::config(skip)]
-pub type BSL_HostEIDPattern_t = ffi::BSL_HostEIDPattern_t;
-
-#[allow(non_camel_case_types)]
-#[cheadergen::config(skip)]
 pub type BSL_HostEID_t = ffi::BSL_HostEID_t;
-
-#[allow(non_camel_case_types)]
-#[cheadergen::config(skip)]
-pub type m_string_t = ffi::m_string_t;
 
 #[allow(non_camel_case_types)]
 #[cheadergen::config(skip)]
@@ -51,10 +49,6 @@ pub type BSL_SecRole_e = ffi::BSL_SecRole_e;
 #[allow(non_camel_case_types)]
 #[cheadergen::config(skip)]
 pub type BSL_SecBlockType_e = ffi::BSL_SecBlockType_e;
-
-#[allow(non_camel_case_types)]
-#[cheadergen::config(skip)]
-pub type BSLB_VariantPtrMap_t = ffi::BSLB_VariantPtrMap_t;
 
 #[allow(non_camel_case_types)]
 #[cheadergen::config(skip)]
@@ -87,28 +81,16 @@ pub struct BSLP_PolicyProvider_t {
     _private: [u8; 0],
 }
 
-/// A way to match whether a rule applies to a bundle.
+/// A stack-allocatable C handle to a Rust-owned policy predicate.
 #[cheadergen::config(export)]
 #[repr(C)]
 pub struct BSLP_PolicyPredicate_t {
-    pub location: BSL_PolicyLocation_e,
-    pub src_eid_pattern: BSL_HostEIDPattern_t,
-    pub secsrc_eid_pattern: BSL_HostEIDPattern_t,
-    pub dst_eid_pattern: BSL_HostEIDPattern_t,
+    pub _private: *mut c_void,
 }
 
-/// A policy rule containing the metadata and options needed to create a
-/// security operation for a matching bundle.
+/// A stack-allocatable C handle to a Rust-owned policy rule.
 #[cheadergen::config(export)]
 #[repr(C)]
 pub struct BSLP_PolicyRule_t {
-    pub rule_id: i64,
-    pub description: m_string_t,
-    pub role: BSL_SecRole_e,
-    pub target_block_type: u64,
-    pub sec_block_type: BSL_SecBlockType_e,
-    pub context_id: i64,
-    pub options: BSLB_VariantPtrMap_t,
-    pub failure_action_code: BSL_PolicyAction_e,
-    pub correlation_id: u64,
+    pub _private: *mut c_void,
 }

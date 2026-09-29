@@ -22,6 +22,7 @@
 
 use crate::ffi;
 use libc::{c_char, c_int};
+use std::collections::BTreeMap;
 use std::ffi::{CStr, CString};
 use std::ptr;
 
@@ -223,6 +224,78 @@ pub unsafe fn set_variant_bytes(option: *mut ffi::BSL_Variant_t, bytes: &[u8]) -
     ffi::BSLP_Rust_Data_InitViewConst(&mut data, ptr, bytes.len());
     ffi::BSL_Variant_SetBytestr(option, data);
     Ok(())
+}
+
+
+/// Stable, Rust-owned storage for a C `BSL_Variant_t`.
+///
+/// The variant itself is still the BSL C variant type because downstream BSL
+/// security contexts consume `BSL_Variant_t` values. The ownership and lookup
+/// container are Rust-native: rules store these in deterministic `BTreeMap`s
+/// instead of `BSLB_VariantPtrMap_t` m*lib maps.
+pub struct OwnedVariant {
+    inner: ffi::BSL_Variant_t,
+}
+
+impl OwnedVariant {
+    pub unsafe fn new() -> Self {
+        let mut inner = std::mem::MaybeUninit::<ffi::BSL_Variant_t>::zeroed().assume_init();
+        ffi::BSL_Variant_Init(&mut inner);
+        Self { inner }
+    }
+
+    pub fn as_ptr(&self) -> *const ffi::BSL_Variant_t {
+        &self.inner
+    }
+
+    pub fn as_mut_ptr(&mut self) -> *mut ffi::BSL_Variant_t {
+        &mut self.inner
+    }
+
+    pub unsafe fn set_from(&mut self, src: *const ffi::BSL_Variant_t) -> BslResult {
+        if src.is_null() {
+            return arg_null_err();
+        }
+        ffi::BSL_Variant_Set(self.as_mut_ptr(), src);
+        Ok(())
+    }
+
+    pub unsafe fn set_text(&mut self, text: &str) -> BslResult {
+        set_variant_text(self.as_mut_ptr(), text)
+    }
+
+    pub unsafe fn set_int(&mut self, value: i64) -> BslResult {
+        set_variant_int(self.as_mut_ptr(), value)
+    }
+
+    pub unsafe fn set_bytes(&mut self, bytes: &[u8]) -> BslResult {
+        set_variant_bytes(self.as_mut_ptr(), bytes)
+    }
+
+    pub unsafe fn copy_to(&self, dest: *mut ffi::BSL_Variant_t) -> BslResult {
+        if dest.is_null() {
+            return arg_null_err();
+        }
+        ffi::BSL_Variant_Set(dest, self.as_ptr());
+        Ok(())
+    }
+}
+
+impl Drop for OwnedVariant {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::BSL_Variant_Deinit(&mut self.inner);
+        }
+    }
+}
+
+pub type PolicyOptions = BTreeMap<i64, Box<OwnedVariant>>;
+
+pub unsafe fn add_policy_option(options: &mut PolicyOptions, opt_id: i64) -> &mut OwnedVariant {
+    options
+        .entry(opt_id)
+        .or_insert_with(|| Box::new(OwnedVariant::new()))
+        .as_mut()
 }
 
 pub fn role_from_text(text: &str) -> BslResult<ffi::BSL_SecRole_e> {

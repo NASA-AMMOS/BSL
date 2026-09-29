@@ -23,27 +23,20 @@
 use crate::api;
 use crate::ffi;
 use crate::util::{
-    arg_null_err, check_success, check_success_as, failure_err, make_cstring, ok, policy_failed_err,
-    policy_query_err, property_check_err, result_to_c_int, security_context_err, BslResult,
+    add_policy_option, arg_null_err, check_success, check_success_as, failure_err, make_cstring,
+    ok, policy_failed_err, policy_query_err, property_check_err, result_to_c_int, security_context_err, BslResult,
+    PolicyOptions,
 };
 use libc::c_int;
 use std::collections::HashMap;
-use std::mem::{self, MaybeUninit};
+use std::ffi::CStr;
+use std::mem::MaybeUninit;
 use std::ptr;
 use std::sync::RwLock;
 
 struct RuleEntry {
-    rule: Box<api::BSLP_PolicyRule_t>,
-    predicate: Box<api::BSLP_PolicyPredicate_t>,
-}
-
-impl Drop for RuleEntry {
-    fn drop(&mut self) {
-        unsafe {
-            BSLP_PolicyRule_Deinit(&mut *self.rule);
-            BSLP_PolicyPredicate_Deinit(&mut *self.predicate);
-        }
-    }
+    rule: Box<PolicyRule>,
+    predicate: Box<PolicyPredicate>,
 }
 
 struct PolicyProvider {
@@ -52,12 +45,248 @@ struct PolicyProvider {
     no_rule_actions: RwLock<HashMap<ffi::BSL_PolicyLocation_e, ffi::BSL_PolicyAction_e>>,
 }
 
+struct PolicyPredicate {
+    location: ffi::BSL_PolicyLocation_e,
+    src_eid_pattern: ffi::BSL_HostEIDPattern_t,
+    secsrc_eid_pattern: ffi::BSL_HostEIDPattern_t,
+    dst_eid_pattern: ffi::BSL_HostEIDPattern_t,
+}
+
+impl PolicyPredicate {
+    unsafe fn blank() -> Self {
+        let mut predicate = Self {
+            location: 0,
+            src_eid_pattern: MaybeUninit::<ffi::BSL_HostEIDPattern_t>::zeroed().assume_init(),
+            secsrc_eid_pattern: MaybeUninit::<ffi::BSL_HostEIDPattern_t>::zeroed().assume_init(),
+            dst_eid_pattern: MaybeUninit::<ffi::BSL_HostEIDPattern_t>::zeroed().assume_init(),
+        };
+        ffi::BSL_HostEIDPattern_Init(&mut predicate.src_eid_pattern);
+        ffi::BSL_HostEIDPattern_Init(&mut predicate.secsrc_eid_pattern);
+        ffi::BSL_HostEIDPattern_Init(&mut predicate.dst_eid_pattern);
+        predicate
+    }
+
+    unsafe fn from_cstr(
+        location: ffi::BSL_PolicyLocation_e,
+        src_eid_pattern: *const libc::c_char,
+        secsrc_eid_pattern: *const libc::c_char,
+        dst_eid_pattern: *const libc::c_char,
+    ) -> BslResult<Self> {
+        if src_eid_pattern.is_null() || secsrc_eid_pattern.is_null() || dst_eid_pattern.is_null() {
+            return arg_null_err();
+        }
+
+        let mut predicate = Self::blank();
+        predicate.location = location;
+        check_success_as(
+            ffi::BSL_HostEIDPattern_DecodeFromText(&mut predicate.src_eid_pattern, src_eid_pattern)
+                | ffi::BSL_HostEIDPattern_DecodeFromText(&mut predicate.secsrc_eid_pattern, secsrc_eid_pattern)
+                | ffi::BSL_HostEIDPattern_DecodeFromText(&mut predicate.dst_eid_pattern, dst_eid_pattern),
+            ffi::BSL_ERR_HOST_CALLBACK_FAILED as c_int,
+        )?;
+
+        if predicate.is_consistent() {
+            Ok(predicate)
+        } else {
+            property_check_err()
+        }
+    }
+
+    fn is_consistent(&self) -> bool {
+        (self.location >= ffi::BSL_POLICYLOCATION_APPIN)
+            && (self.location <= ffi::BSL_POLICYLOCATION_CLOUT)
+            && !self.src_eid_pattern.handle.is_null()
+            && !self.secsrc_eid_pattern.handle.is_null()
+            && !self.dst_eid_pattern.handle.is_null()
+    }
+
+    unsafe fn matches(
+        &self,
+        location: ffi::BSL_PolicyLocation_e,
+        src_eid: *const ffi::BSL_HostEID_t,
+        dst_eid: *const ffi::BSL_HostEID_t,
+    ) -> bool {
+        (self.location == location)
+            && ffi::BSL_HostEIDPattern_IsMatch(&self.src_eid_pattern, src_eid)
+            && ffi::BSL_HostEIDPattern_IsMatch(&self.dst_eid_pattern, dst_eid)
+    }
+}
+
+impl Drop for PolicyPredicate {
+    fn drop(&mut self) {
+        unsafe {
+            ffi::BSL_HostEIDPattern_Deinit(&mut self.dst_eid_pattern);
+            ffi::BSL_HostEIDPattern_Deinit(&mut self.secsrc_eid_pattern);
+            ffi::BSL_HostEIDPattern_Deinit(&mut self.src_eid_pattern);
+        }
+    }
+}
+
+#[allow(dead_code)]
+struct PolicyRule {
+    rule_id: i64,
+    description: String,
+    role: ffi::BSL_SecRole_e,
+    target_block_type: u64,
+    sec_block_type: ffi::BSL_SecBlockType_e,
+    context_id: i64,
+    options: PolicyOptions,
+    failure_action_code: ffi::BSL_PolicyAction_e,
+    correlation_id: u64,
+}
+
+impl PolicyRule {
+    fn blank() -> Self {
+        Self {
+            rule_id: 0,
+            description: String::new(),
+            role: 0,
+            target_block_type: 0,
+            sec_block_type: 0,
+            context_id: 0,
+            options: PolicyOptions::new(),
+            failure_action_code: ffi::BSL_POLICYACTION_UNDEFINED,
+            correlation_id: 0,
+        }
+    }
+
+    unsafe fn from_cstr(
+        rule_id: i64,
+        description: *const libc::c_char,
+        context_id: i64,
+        role: ffi::BSL_SecRole_e,
+        sec_block_type: ffi::BSL_SecBlockType_e,
+        target_block_type: u64,
+        failure_action_code: ffi::BSL_PolicyAction_e,
+    ) -> BslResult<Self> {
+        let mut rule = Self::blank();
+        rule.rule_id = rule_id;
+        rule.description = if description.is_null() {
+            String::new()
+        } else {
+            CStr::from_ptr(description).to_string_lossy().into_owned()
+        };
+        rule.context_id = context_id;
+        rule.role = role;
+        rule.sec_block_type = sec_block_type;
+        rule.target_block_type = target_block_type;
+        rule.failure_action_code = failure_action_code;
+
+        if rule.is_consistent() {
+            Ok(rule)
+        } else {
+            property_check_err()
+        }
+    }
+
+    fn is_consistent(&self) -> bool {
+        (self.role >= ffi::BSL_SECROLE_SOURCE)
+            && (self.role <= ffi::BSL_SECROLE_ACCEPTOR)
+            && (self.sec_block_type >= ffi::BSL_SECBLOCKTYPE_BIB)
+            && (self.sec_block_type <= ffi::BSL_SECBLOCKTYPE_BCB)
+            && (self.context_id > 0)
+            && (self.failure_action_code != ffi::BSL_POLICYACTION_UNDEFINED)
+    }
+
+    unsafe fn add_option(&mut self, opt_id: i64) -> *mut ffi::BSL_Variant_t {
+        add_policy_option(&mut self.options, opt_id).as_mut_ptr()
+    }
+
+    unsafe fn copy_options_to_sec_oper(&self, sec_oper: *mut ffi::BSL_SecOper_t) -> BslResult {
+        if sec_oper.is_null() {
+            return arg_null_err();
+        }
+
+        for (opt_id, option) in &self.options {
+            let dest = ffi::BSL_SecOper_AddOption(sec_oper, *opt_id);
+            option.copy_to(dest)?;
+        }
+        Ok(())
+    }
+
+    unsafe fn evaluate_as_sec_oper(
+        &self,
+        predicate: &PolicyPredicate,
+        sec_oper: *mut ffi::BSL_SecOper_t,
+        bundle: *const ffi::BSL_BundleRef_t,
+        location: ffi::BSL_PolicyLocation_e,
+    ) -> BslResult {
+        if sec_oper.is_null() || bundle.is_null() {
+            return arg_null_err();
+        }
+
+        let primary = PrimaryBlock::from_bundle(bundle)?;
+        if !predicate.matches(
+            location,
+            primary.inner.field_src_node_id,
+            primary.inner.field_dest_eid,
+        ) {
+            return property_check_err();
+        }
+
+        let target_block_num = get_target_block_id(bundle, self.target_block_type)?;
+        ffi::BSL_SecOper_Populate(
+            sec_oper,
+            self.context_id,
+            target_block_num,
+            0,
+            self.sec_block_type,
+            self.role,
+            self.failure_action_code,
+            self.correlation_id,
+        );
+        self.copy_options_to_sec_oper(sec_oper)
+    }
+}
+
 unsafe fn provider_ref<'a>(ptr: *const api::BSLP_PolicyProvider_t) -> Option<&'a PolicyProvider> {
     (ptr as *const PolicyProvider).as_ref()
 }
 
 unsafe fn provider_mut<'a>(ptr: *mut api::BSLP_PolicyProvider_t) -> Option<&'a mut PolicyProvider> {
     (ptr as *mut PolicyProvider).as_mut()
+}
+
+unsafe fn predicate_ref<'a>(ptr: *const api::BSLP_PolicyPredicate_t) -> Option<&'a PolicyPredicate> {
+    if ptr.is_null() || (*ptr)._private.is_null() {
+        None
+    } else {
+        ((*ptr)._private as *const PolicyPredicate).as_ref()
+    }
+}
+
+unsafe fn rule_ref<'a>(ptr: *const api::BSLP_PolicyRule_t) -> Option<&'a PolicyRule> {
+    if ptr.is_null() || (*ptr)._private.is_null() {
+        None
+    } else {
+        ((*ptr)._private as *const PolicyRule).as_ref()
+    }
+}
+
+unsafe fn rule_mut<'a>(ptr: *mut api::BSLP_PolicyRule_t) -> Option<&'a mut PolicyRule> {
+    if ptr.is_null() || (*ptr)._private.is_null() {
+        None
+    } else {
+        ((*ptr)._private as *mut PolicyRule).as_mut()
+    }
+}
+
+unsafe fn take_predicate(ptr: *mut api::BSLP_PolicyPredicate_t) -> BslResult<Box<PolicyPredicate>> {
+    if ptr.is_null() || (*ptr)._private.is_null() {
+        return arg_null_err();
+    }
+    let handle = (*ptr)._private as *mut PolicyPredicate;
+    (*ptr)._private = ptr::null_mut();
+    Ok(Box::from_raw(handle))
+}
+
+unsafe fn take_rule(ptr: *mut api::BSLP_PolicyRule_t) -> BslResult<Box<PolicyRule>> {
+    if ptr.is_null() || (*ptr)._private.is_null() {
+        return arg_null_err();
+    }
+    let handle = (*ptr)._private as *mut PolicyRule;
+    (*ptr)._private = ptr::null_mut();
+    Ok(Box::from_raw(handle))
 }
 
 struct PrimaryBlock {
@@ -79,10 +308,6 @@ impl PrimaryBlock {
             ffi::BSL_ERR_HOST_CALLBACK_FAILED as c_int,
         )?;
         Ok(primary)
-    }
-
-    fn as_ptr(&self) -> *const ffi::BSL_PrimaryBlock_t {
-        &self.inner
     }
 
     fn block_numbers(&self) -> &[u64] {
@@ -191,22 +416,6 @@ unsafe fn get_target_block_id(bundle: *const api::BSL_BundleRef_t, target_block_
     }
 
     security_context_err()
-}
-
-unsafe fn predicate_match_bundle(
-    predicate: *const api::BSLP_PolicyPredicate_t,
-    location: api::BSL_PolicyLocation_e,
-    primary: *const ffi::BSL_PrimaryBlock_t,
-) -> bool {
-    if predicate.is_null() || primary.is_null() {
-        return false;
-    }
-    BSLP_PolicyPredicate_IsMatch(
-        predicate,
-        location,
-        (*primary).field_src_node_id,
-        (*primary).field_dest_eid,
-    )
 }
 
 unsafe fn sec_oper_has_conflict(new_sec_oper: *const ffi::BSL_SecOper_t, secops: &[OwnedSecOper]) -> bool {
@@ -335,23 +544,19 @@ unsafe fn policy_provider_add_rule(
     let Some(provider) = provider_mut(self_) else {
         return arg_null_err();
     };
-    if rule.is_null() || predicate.is_null() {
+    let Some(rule_ref) = rule_ref(rule) else {
         return arg_null_err();
-    }
-    if !ffi::BSLP_Rust_PolicyRule_IsConsistent(rule) || !ffi::BSLP_Rust_PolicyPredicate_IsConsistent(predicate) {
+    };
+    let Some(predicate_ref) = predicate_ref(predicate) else {
+        return arg_null_err();
+    };
+    if !rule_ref.is_consistent() || !predicate_ref.is_consistent() {
         return property_check_err();
     }
 
     let mut rules = provider.rules.write().map_err(|_| ffi::BSL_ERR_FAILURE as c_int)?;
-
-    let mut rule_box = Box::<api::BSLP_PolicyRule_t>::new(mem::zeroed());
-    BSLP_PolicyRule_Init(&mut *rule_box);
-    BSLP_PolicyRule_Move(&mut *rule_box, rule);
-
-    let mut predicate_box = Box::<api::BSLP_PolicyPredicate_t>::new(mem::zeroed());
-    BSLP_PolicyPredicate_Init(&mut *predicate_box);
-    BSLP_PolicyPredicate_Move(&mut *predicate_box, predicate);
-
+    let rule_box = take_rule(rule)?;
+    let predicate_box = take_predicate(predicate)?;
     rules.push(RuleEntry {
         rule: rule_box,
         predicate: predicate_box,
@@ -374,10 +579,8 @@ pub unsafe extern "C" fn BSLP_PolicyPredicate_Init(self_: *mut api::BSLP_PolicyP
         return;
     }
 
-    ptr::write_bytes(self_, 0, 1);
-    ffi::BSL_HostEIDPattern_Init(&mut (*self_).src_eid_pattern);
-    ffi::BSL_HostEIDPattern_Init(&mut (*self_).secsrc_eid_pattern);
-    ffi::BSL_HostEIDPattern_Init(&mut (*self_).dst_eid_pattern);
+    let predicate = Box::new(PolicyPredicate::blank());
+    (*self_)._private = Box::into_raw(predicate).cast();
 }
 
 unsafe fn policy_predicate_init_from(
@@ -387,25 +590,14 @@ unsafe fn policy_predicate_init_from(
     secsrc_eid_pattern: *const libc::c_char,
     dst_eid_pattern: *const libc::c_char,
 ) -> BslResult {
-    if self_.is_null() || src_eid_pattern.is_null() || secsrc_eid_pattern.is_null() || dst_eid_pattern.is_null() {
+    if self_.is_null() {
         return arg_null_err();
     }
+    (*self_)._private = ptr::null_mut();
 
-    BSLP_PolicyPredicate_Init(self_);
-    (*self_).location = location;
-
-    check_success_as(
-        ffi::BSL_HostEIDPattern_DecodeFromText(&mut (*self_).src_eid_pattern, src_eid_pattern)
-            | ffi::BSL_HostEIDPattern_DecodeFromText(&mut (*self_).secsrc_eid_pattern, secsrc_eid_pattern)
-            | ffi::BSL_HostEIDPattern_DecodeFromText(&mut (*self_).dst_eid_pattern, dst_eid_pattern),
-        ffi::BSL_ERR_HOST_CALLBACK_FAILED as c_int,
-    )?;
-
-    if ffi::BSLP_Rust_PolicyPredicate_IsConsistent(self_) {
-        Ok(())
-    } else {
-        property_check_err()
-    }
+    let predicate = PolicyPredicate::from_cstr(location, src_eid_pattern, secsrc_eid_pattern, dst_eid_pattern)?;
+    (*self_)._private = Box::into_raw(Box::new(predicate)).cast();
+    Ok(())
 }
 
 #[unsafe(no_mangle)]
@@ -427,13 +619,11 @@ pub unsafe extern "C" fn BSLP_PolicyPredicate_InitFrom(
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn BSLP_PolicyPredicate_Deinit(self_: *mut api::BSLP_PolicyPredicate_t) {
-    if self_.is_null() {
+    if self_.is_null() || (*self_)._private.is_null() {
         return;
     }
-    ffi::BSL_HostEIDPattern_Deinit(&mut (*self_).dst_eid_pattern);
-    ffi::BSL_HostEIDPattern_Deinit(&mut (*self_).secsrc_eid_pattern);
-    ffi::BSL_HostEIDPattern_Deinit(&mut (*self_).src_eid_pattern);
-    ptr::write_bytes(self_, 0, 1);
+    drop(Box::from_raw((*self_)._private as *mut PolicyPredicate));
+    (*self_)._private = ptr::null_mut();
 }
 
 #[unsafe(no_mangle)]
@@ -445,8 +635,8 @@ pub unsafe extern "C" fn BSLP_PolicyPredicate_Move(
         return;
     }
     BSLP_PolicyPredicate_Deinit(self_);
-    ptr::copy_nonoverlapping(src, self_, 1);
-    ptr::write_bytes(src, 0, 1);
+    (*self_)._private = (*src)._private;
+    (*src)._private = ptr::null_mut();
 }
 
 #[unsafe(no_mangle)]
@@ -456,13 +646,10 @@ pub unsafe extern "C" fn BSLP_PolicyPredicate_IsMatch(
     src_eid: *const api::BSL_HostEID_t,
     dst_eid: *const api::BSL_HostEID_t,
 ) -> bool {
-    if self_.is_null() {
+    let Some(predicate) = predicate_ref(self_) else {
         return false;
-    }
-
-    ((*self_).location == location)
-        && ffi::BSL_HostEIDPattern_IsMatch(&(*self_).src_eid_pattern, src_eid)
-        && ffi::BSL_HostEIDPattern_IsMatch(&(*self_).dst_eid_pattern, dst_eid)
+    };
+    predicate.matches(location, src_eid, dst_eid)
 }
 
 #[unsafe(no_mangle)]
@@ -471,9 +658,8 @@ pub unsafe extern "C" fn BSLP_PolicyRule_Init(self_: *mut api::BSLP_PolicyRule_t
         return;
     }
 
-    ptr::write_bytes(self_, 0, 1);
-    ffi::BSLP_Rust_PolicyRule_DescriptionInit(self_);
-    ffi::BSLP_Rust_PolicyRule_OptionsInit(self_);
+    let rule = Box::new(PolicyRule::blank());
+    (*self_)._private = Box::into_raw(rule).cast();
 }
 
 unsafe fn policy_rule_init_from(
@@ -489,23 +675,19 @@ unsafe fn policy_rule_init_from(
     if self_.is_null() {
         return arg_null_err();
     }
+    (*self_)._private = ptr::null_mut();
 
-    BSLP_PolicyRule_Init(self_);
-    (*self_).rule_id = rule_id;
-    if !description.is_null() {
-        ffi::BSLP_Rust_PolicyRule_DescriptionSetCstr(self_, description);
-    }
-    (*self_).context_id = context_id;
-    (*self_).role = role;
-    (*self_).sec_block_type = sec_block_type;
-    (*self_).target_block_type = target_block_type;
-    (*self_).failure_action_code = failure_action_code;
-
-    if ffi::BSLP_Rust_PolicyRule_IsConsistent(self_) {
-        Ok(())
-    } else {
-        property_check_err()
-    }
+    let rule = PolicyRule::from_cstr(
+        rule_id,
+        description,
+        context_id,
+        role,
+        sec_block_type,
+        target_block_type,
+        failure_action_code,
+    )?;
+    (*self_)._private = Box::into_raw(Box::new(rule)).cast();
+    Ok(())
 }
 
 #[unsafe(no_mangle)]
@@ -532,13 +714,13 @@ pub unsafe extern "C" fn BSLP_PolicyRule_InitFrom(
 }
 
 unsafe fn policy_rule_set_correlation(self_: *mut api::BSLP_PolicyRule_t, corr_id: u64) -> BslResult {
-    if self_.is_null() {
+    let Some(rule) = rule_mut(self_) else {
         return arg_null_err();
-    }
+    };
     if corr_id == 0 {
         return property_check_err();
     }
-    (*self_).correlation_id = corr_id;
+    rule.correlation_id = corr_id;
     Ok(())
 }
 
@@ -552,11 +734,11 @@ pub unsafe extern "C" fn BSLP_PolicyRule_SetCorrelation(
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn BSLP_PolicyRule_Deinit(self_: *mut api::BSLP_PolicyRule_t) {
-    if self_.is_null() {
+    if self_.is_null() || (*self_)._private.is_null() {
         return;
     }
-    ffi::BSLP_Rust_PolicyRule_DescriptionClear(self_);
-    ffi::BSLP_Rust_PolicyRule_OptionsClear(self_);
+    drop(Box::from_raw((*self_)._private as *mut PolicyRule));
+    (*self_)._private = ptr::null_mut();
 }
 
 #[unsafe(no_mangle)]
@@ -568,8 +750,8 @@ pub unsafe extern "C" fn BSLP_PolicyRule_Move(
         return;
     }
     BSLP_PolicyRule_Deinit(self_);
-    ptr::copy_nonoverlapping(src, self_, 1);
-    ptr::write_bytes(src, 0, 1);
+    (*self_)._private = (*src)._private;
+    (*src)._private = ptr::null_mut();
 }
 
 #[unsafe(no_mangle)]
@@ -577,10 +759,10 @@ pub unsafe extern "C" fn BSLP_PolicyRule_AddOption(
     self_: *mut api::BSLP_PolicyRule_t,
     opt_id: i64,
 ) -> *mut api::BSL_Variant_t {
-    if self_.is_null() {
+    let Some(rule) = rule_mut(self_) else {
         return ptr::null_mut();
-    }
-    ffi::BSLP_Rust_PolicyRule_AddOption(self_, opt_id)
+    };
+    rule.add_option(opt_id)
 }
 
 unsafe fn policy_rule_evaluate_as_sec_oper(
@@ -590,28 +772,13 @@ unsafe fn policy_rule_evaluate_as_sec_oper(
     bundle: *const api::BSL_BundleRef_t,
     location: api::BSL_PolicyLocation_e,
 ) -> BslResult {
-    if self_.is_null() || predicate.is_null() || sec_oper.is_null() || bundle.is_null() {
+    let Some(rule) = rule_ref(self_) else {
         return arg_null_err();
-    }
-
-    let primary = PrimaryBlock::from_bundle(bundle)?;
-    if !predicate_match_bundle(predicate, location, primary.as_ptr()) {
-        return property_check_err();
-    }
-
-    let target_block_num = get_target_block_id(bundle, (*self_).target_block_type)?;
-    ffi::BSL_SecOper_Populate(
-        sec_oper,
-        (*self_).context_id,
-        target_block_num,
-        0,
-        (*self_).sec_block_type,
-        (*self_).role,
-        (*self_).failure_action_code,
-        (*self_).correlation_id,
-    );
-    ffi::BSLP_Rust_PolicyRule_CopyOptionsToSecOper(self_, sec_oper);
-    Ok(())
+    };
+    let Some(predicate) = predicate_ref(predicate) else {
+        return arg_null_err();
+    };
+    rule.evaluate_as_sec_oper(predicate, sec_oper, bundle, location)
 }
 
 #[unsafe(no_mangle)]
@@ -647,13 +814,16 @@ unsafe fn query_policy(
 
     let rules_guard = provider.rules.read().map_err(|_| ffi::BSL_ERR_FAILURE as c_int)?;
     for entry in rules_guard.iter() {
-        let rule = &*entry.rule as *const api::BSLP_PolicyRule_t;
-        let predicate = &*entry.predicate as *const api::BSLP_PolicyPredicate_t;
-
-        if !ffi::BSLP_Rust_PolicyRule_IsConsistent(rule) || !predicate_match_bundle(predicate, location, primary.as_ptr()) {
+        if !entry.rule.is_consistent()
+            || !entry.predicate.matches(
+                location,
+                primary.inner.field_src_node_id,
+                primary.inner.field_dest_eid,
+            )
+        {
             continue;
         }
-        if get_target_block_id(bundle, (*rule).target_block_type).is_err() {
+        if get_target_block_id(bundle, entry.rule.target_block_type).is_err() {
             continue;
         }
 
@@ -666,7 +836,11 @@ unsafe fn query_policy(
             }
         };
 
-        if policy_rule_evaluate_as_sec_oper(rule, predicate, sec_oper.as_mut_ptr(), bundle, location).is_err() {
+        if entry
+            .rule
+            .evaluate_as_sec_oper(&entry.predicate, sec_oper.as_mut_ptr(), bundle, location)
+            .is_err()
+        {
             ffi::BSL_SecurityAction_IncrError(action.as_mut_ptr());
             continue;
         }
@@ -771,11 +945,12 @@ pub unsafe extern "C" fn BSLP_FinalizePolicy(
     result_to_c_int(finalize_policy(user_data, action_set, bundle))
 }
 
-pub unsafe fn move_options_into_rule(
-    rule: *mut api::BSLP_PolicyRule_t,
-    options: *mut ffi::BSLP_RustVariantMap_t,
-) -> BslResult {
-    check_success(ffi::BSLP_Rust_PolicyRule_MoveOptionsFromRustMap(rule, options))
+pub unsafe fn move_options_into_rule(rule: *mut api::BSLP_PolicyRule_t, options: PolicyOptions) -> BslResult {
+    let Some(rule) = rule_mut(rule) else {
+        return arg_null_err();
+    };
+    rule.options = options;
+    Ok(())
 }
 
 pub unsafe fn init_rule_from_rust(
@@ -793,7 +968,7 @@ pub unsafe fn init_rule_from_rust(
         None => None,
     };
     let description_ptr = description_c.as_ref().map_or(ptr::null(), |value| value.as_ptr());
-    check_success(BSLP_PolicyRule_InitFrom(
+    policy_rule_init_from(
         rule,
         rule_id,
         description_ptr,
@@ -802,7 +977,7 @@ pub unsafe fn init_rule_from_rust(
         sec_block_type,
         target_block_type,
         failure_action_code,
-    ))
+    )
 }
 
 pub unsafe fn init_predicate_from_rust(
@@ -815,11 +990,5 @@ pub unsafe fn init_predicate_from_rust(
     let src_c = make_cstring(src)?;
     let secsrc_c = make_cstring(secsrc)?;
     let dst_c = make_cstring(dst)?;
-    check_success(BSLP_PolicyPredicate_InitFrom(
-        predicate,
-        location,
-        src_c.as_ptr(),
-        secsrc_c.as_ptr(),
-        dst_c.as_ptr(),
-    ))
+    policy_predicate_init_from(predicate, location, src_c.as_ptr(), secsrc_c.as_ptr(), dst_c.as_ptr())
 }
