@@ -30,6 +30,7 @@ use crate::util::{
     result_to_c_int, role_from_text, service_from_text, BslResult, OwnedVariant, PolicyOptions,
 };
 use libc::c_int;
+use serde::Deserialize;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 use std::ffi::CStr;
@@ -41,19 +42,85 @@ use std::os::unix::io::FromRawFd;
 use std::path::Path;
 use std::ptr;
 
-struct TempOptions {
-    options: PolicyOptions,
+fn default_eid_pattern() -> String {
+    "*:**".to_owned()
 }
 
-impl TempOptions {
-    fn new() -> Self {
-        Self {
-            options: PolicyOptions::new(),
+#[derive(Deserialize)]
+struct PolicyDocument {
+    policyrule_set: Vec<Value>,
+}
+
+#[derive(Deserialize)]
+struct RuleSetItemJson {
+    policyrule: PolicyRuleJson,
+}
+
+#[derive(Deserialize)]
+struct PolicyRuleJson {
+    filter: RuleFilterJson,
+    spec: RuleSpecJson,
+}
+
+#[derive(Deserialize)]
+struct RuleFilterJson {
+    rule_id: Value,
+    role: String,
+
+    #[serde(default = "default_eid_pattern")]
+    src: String,
+
+    #[serde(rename = "dest", default = "default_eid_pattern")]
+    dst: String,
+
+    #[serde(rename = "sec_src", default = "default_eid_pattern")]
+    secsrc: String,
+
+    tgt: Value,
+    loc: String,
+}
+
+#[derive(Deserialize)]
+struct RuleSpecJson {
+    svc: String,
+    sc_id: Value,
+    sc_parms: Value,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum SecurityContext {
+    BibHmacSha2,
+    BcbAesGcm,
+    Cose,
+}
+
+impl SecurityContext {
+    fn from_context_id(context_id: i64) -> BslResult<Self> {
+        match context_id {
+            id if id == ffi::RFC9173_CONTEXTID_BIB_HMAC_SHA2 as i64 => Ok(Self::BibHmacSha2),
+            id if id == ffi::RFC9173_CONTEXTID_BCB_AES_GCM as i64 => Ok(Self::BcbAesGcm),
+            id if id == ffi::BSLX_COSESC_CTX_ID as i64 => Ok(Self::Cose),
+            _ => policy_config_err(),
         }
     }
 
-    fn into_inner(self) -> PolicyOptions {
-        self.options
+    unsafe fn parse_option(self, options: &mut PolicyOptions, key: &str, value: &Value) -> BslResult {
+        match self {
+            Self::BibHmacSha2 => parse_bib_option(options, key, value),
+            Self::BcbAesGcm => parse_bcb_option(options, key, value),
+            Self::Cose => parse_cose_option(options, key, value),
+        }
+    }
+
+    unsafe fn parse_object(self, options: &mut PolicyOptions, object: &Map<String, Value>) -> BslResult {
+        if self == Self::Cose {
+            return parse_cose_object(options, object);
+        }
+
+        for (key, entry_value) in object {
+            self.parse_option(options, key, entry_value)?;
+        }
+        Ok(())
     }
 }
 
@@ -153,6 +220,102 @@ struct CorrelationSpec {
     sec_block_type: ffi::BSL_SecBlockType_e,
 }
 
+struct ParsedRule {
+    rule_id: i64,
+    description: Option<String>,
+    role: api::BSL_SecRole_e,
+    src: String,
+    secsrc: String,
+    dst: String,
+    target_block_type: u64,
+    location: api::BSL_PolicyLocation_e,
+    failure_action: api::BSL_PolicyAction_e,
+    correlation: Option<u64>,
+    sec_block_type: api::BSL_SecBlockType_e,
+    context_id: i64,
+    security_context: SecurityContext,
+    sc_parms: Value,
+}
+
+impl ParsedRule {
+    fn from_json(value: &Value) -> BslResult<Self> {
+        let item_object = value_object(value)?;
+        let policy_rule_value = member(item_object, "policyrule")?;
+        let policy_rule_object = value_object(policy_rule_value)?;
+        let item: RuleSetItemJson =
+            serde_json::from_value(value.clone()).map_err(|_| ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
+
+        let policy_rule = item.policyrule;
+        let filter = policy_rule.filter;
+        let spec = policy_rule.spec;
+
+        let context_id = parse_i64_value(&spec.sc_id)?;
+        let security_context = SecurityContext::from_context_id(context_id)?;
+        let correlation = parse_correlation(policy_rule_object.get("correlation"))?;
+
+        Ok(Self {
+            rule_id: parse_i64_value(&filter.rule_id)?,
+            description: policy_rule_object
+                .get("desc")
+                .and_then(Value::as_str)
+                .map(ToOwned::to_owned),
+            role: role_from_text(&filter.role)?,
+            src: filter.src,
+            secsrc: filter.secsrc,
+            dst: filter.dst,
+            target_block_type: parse_u64_value(&filter.tgt)?,
+            location: location_from_text(&filter.loc)?,
+            failure_action: parse_failure_action(policy_rule_object.get("policy_action_on_fail"))?,
+            correlation,
+            sec_block_type: service_from_text(&spec.svc)?,
+            context_id,
+            security_context,
+            sc_parms: spec.sc_parms,
+        })
+    }
+
+    fn record_correlation(&self, correlations: &mut HashMap<u64, CorrelationSpec>) -> BslResult {
+        let Some(correlation) = self.correlation else {
+            return Ok(());
+        };
+
+        let spec = CorrelationSpec {
+            context_id: self.context_id,
+            sec_block_type: self.sec_block_type,
+        };
+
+        if let Some(prev) = correlations.get(&correlation) {
+            if *prev != spec {
+                return Err(ffi::BSL_ERR_CORRELATION_MISMATCH as c_int);
+            }
+        } else {
+            correlations.insert(correlation, spec);
+        }
+
+        Ok(())
+    }
+}
+
+fn parse_failure_action(value: Option<&Value>) -> BslResult<api::BSL_PolicyAction_e> {
+    match value {
+        Some(value) => failure_action_from_text(value.as_str().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)?),
+        None => Ok(ffi::BSL_POLICYACTION_NOTHING),
+    }
+}
+
+fn parse_correlation(value: Option<&Value>) -> BslResult<Option<u64>> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+
+    let correlation = parse_u64_value(value)?;
+    if correlation == 0 {
+        policy_config_err()
+    } else {
+        Ok(Some(correlation))
+    }
+}
+
 fn value_object<'a>(value: &'a Value) -> BslResult<&'a Map<String, Value>> {
     value.as_object().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)
 }
@@ -168,19 +331,19 @@ fn member_str<'a>(object: &'a Map<String, Value>, key: &str) -> BslResult<&'a st
 }
 
 unsafe fn option_add_or_erase<'a>(
-    options: &'a mut TempOptions,
+    options: &'a mut PolicyOptions,
     opt_id: i64,
     value: &Value,
 ) -> BslResult<Option<&'a mut OwnedVariant>> {
     if value.is_null() {
-        options.options.remove(&opt_id);
+        options.remove(&opt_id);
         Ok(None)
     } else {
-        Ok(Some(add_policy_option(&mut options.options, opt_id)))
+        Ok(Some(add_policy_option(options, opt_id)))
     }
 }
 
-unsafe fn option_text(options: &mut TempOptions, opt_id: i64, value: &Value) -> BslResult {
+unsafe fn option_text(options: &mut PolicyOptions, opt_id: i64, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, opt_id, value)? else {
         return Ok(());
     };
@@ -188,21 +351,21 @@ unsafe fn option_text(options: &mut TempOptions, opt_id: i64, value: &Value) -> 
     option.set_text(text)
 }
 
-unsafe fn option_int(options: &mut TempOptions, opt_id: i64, value: &Value) -> BslResult {
+unsafe fn option_int(options: &mut PolicyOptions, opt_id: i64, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, opt_id, value)? else {
         return Ok(());
     };
     option.set_int(parse_i64_value(value)?)
 }
 
-unsafe fn option_bool(options: &mut TempOptions, opt_id: i64, value: &Value) -> BslResult {
+unsafe fn option_bool(options: &mut PolicyOptions, opt_id: i64, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, opt_id, value)? else {
         return Ok(());
     };
     option.set_int(if parse_boolish(value)? { 1 } else { 0 })
 }
 
-unsafe fn option_hex_bytes(options: &mut TempOptions, opt_id: i64, value: &Value) -> BslResult {
+unsafe fn option_hex_bytes(options: &mut PolicyOptions, opt_id: i64, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, opt_id, value)? else {
         return Ok(());
     };
@@ -211,7 +374,7 @@ unsafe fn option_hex_bytes(options: &mut TempOptions, opt_id: i64, value: &Value
     option.set_bytes(&bytes)
 }
 
-unsafe fn option_text_as_bytes(options: &mut TempOptions, opt_id: i64, value: &Value) -> BslResult {
+unsafe fn option_text_as_bytes(options: &mut PolicyOptions, opt_id: i64, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, opt_id, value)? else {
         return Ok(());
     };
@@ -219,14 +382,14 @@ unsafe fn option_text_as_bytes(options: &mut TempOptions, opt_id: i64, value: &V
     option.set_bytes(text.as_bytes())
 }
 
-unsafe fn option_cose_aad_scope(options: &mut TempOptions, value: &Value) -> BslResult {
+unsafe fn option_cose_aad_scope(options: &mut PolicyOptions, value: &Value) -> BslResult {
     let Some(option) = option_add_or_erase(options, ffi::BSLX_COSESC_OPTION_AAD_SCOPE as i64, value)? else {
         return Ok(());
     };
 
     let object = value_object(value)?;
     let mut items = Vec::<ffi::BSLX_CoseSc_AadScope_Item_t>::with_capacity(object.len());
-    for (key, flags_value) in object.iter() {
+    for (key, flags_value) in object {
         items.push(ffi::BSLX_CoseSc_AadScope_Item_t {
             key: parse_i64_text(key)?,
             flags: parse_i64_value(flags_value)?,
@@ -237,7 +400,7 @@ unsafe fn option_cose_aad_scope(options: &mut TempOptions, value: &Value) -> Bsl
     check_success(ffi::BSLX_CoseSc_SetAadScope(option.as_mut_ptr(), ptr, items.len()))
 }
 
-unsafe fn parse_sc1_option(options: &mut TempOptions, key: &str, value: &Value) -> BslResult {
+unsafe fn parse_bib_option(options: &mut PolicyOptions, key: &str, value: &Value) -> BslResult {
     match key {
         "key_name" => option_text(options, ffi::BSLX_BIB_OPT_KEY_ID as i64, value),
         "sha_variant" => option_int(options, ffi::BSLX_BIB_OPT_SHA_VARIANT as i64, value),
@@ -247,7 +410,7 @@ unsafe fn parse_sc1_option(options: &mut TempOptions, key: &str, value: &Value) 
     }
 }
 
-unsafe fn parse_sc2_option(options: &mut TempOptions, key: &str, value: &Value) -> BslResult {
+unsafe fn parse_bcb_option(options: &mut PolicyOptions, key: &str, value: &Value) -> BslResult {
     match key {
         "key_name" => option_text(options, ffi::BSLX_BCB_OPT_KEY_ID as i64, value),
         "aes_variant" => option_int(options, ffi::BSLX_BCB_OPT_AES_VARIANT as i64, value),
@@ -257,7 +420,7 @@ unsafe fn parse_sc2_option(options: &mut TempOptions, key: &str, value: &Value) 
     }
 }
 
-unsafe fn parse_sc3_option(options: &mut TempOptions, key: &str, value: &Value) -> BslResult {
+unsafe fn parse_cose_option(options: &mut PolicyOptions, key: &str, value: &Value) -> BslResult {
     if key == "key_name" {
         return option_text_as_bytes(options, ffi::BSLX_COSESC_OPTION_KEY_ID as i64, value);
     }
@@ -283,19 +446,7 @@ unsafe fn parse_sc3_option(options: &mut TempOptions, key: &str, value: &Value) 
     }
 }
 
-unsafe fn parse_option(options: &mut TempOptions, context_id: i64, key: &str, value: &Value) -> BslResult {
-    if context_id == ffi::RFC9173_CONTEXTID_BIB_HMAC_SHA2 as i64 {
-        parse_sc1_option(options, key, value)
-    } else if context_id == ffi::RFC9173_CONTEXTID_BCB_AES_GCM as i64 {
-        parse_sc2_option(options, key, value)
-    } else if context_id == ffi::BSLX_COSESC_CTX_ID as i64 {
-        parse_sc3_option(options, key, value)
-    } else {
-        policy_config_err()
-    }
-}
-
-unsafe fn parse_sc3_object(options: &mut TempOptions, object: &Map<String, Value>) -> BslResult {
+unsafe fn parse_cose_object(options: &mut PolicyOptions, object: &Map<String, Value>) -> BslResult {
     /*
      * COSE accepts both the legacy text key_name and the explicit key_id
      * alias for the same BSLX_COSESC_OPTION_KEY_ID option. serde_json's
@@ -305,40 +456,36 @@ unsafe fn parse_sc3_object(options: &mut TempOptions, object: &Map<String, Value
      * first and let the explicit key_id field win when both are present.
      */
     if let Some(key_name) = object.get("key_name") {
-        parse_sc3_option(options, "key_name", key_name)?;
+        parse_cose_option(options, "key_name", key_name)?;
     }
 
-    for (key, entry_value) in object.iter() {
+    for (key, entry_value) in object {
         if key == "key_name" {
             continue;
         }
-        parse_sc3_option(options, key, entry_value)?;
+        parse_cose_option(options, key, entry_value)?;
     }
 
     Ok(())
 }
 
-unsafe fn parse_sc_parms(options: &mut TempOptions, context_id: i64, value: &Value) -> BslResult {
+unsafe fn parse_sc_parms(context: SecurityContext, value: &Value) -> BslResult<PolicyOptions> {
+    let mut options = PolicyOptions::new();
+
     if let Some(object) = value.as_object() {
-        if context_id == ffi::BSLX_COSESC_CTX_ID as i64 {
-            parse_sc3_object(options, object)
-        } else {
-            for (key, entry_value) in object.iter() {
-                parse_option(options, context_id, key, entry_value)?;
-            }
-            Ok(())
-        }
+        context.parse_object(&mut options, object)?;
     } else if let Some(array) = value.as_array() {
-        for entry in array.iter() {
+        for entry in array {
             let entry_object = value_object(entry)?;
             let key = member_str(entry_object, "id")?;
             let entry_value = member(entry_object, "value")?;
-            parse_option(options, context_id, key, entry_value)?;
+            context.parse_option(&mut options, key, entry_value)?;
         }
-        Ok(())
     } else {
-        policy_config_err()
+        return policy_config_err();
     }
+
+    Ok(options)
 }
 
 unsafe fn parse_one_rule(
@@ -346,79 +493,26 @@ unsafe fn parse_one_rule(
     policy: *mut api::BSLP_PolicyProvider_t,
     correlations: &mut HashMap<u64, CorrelationSpec>,
 ) -> BslResult {
-    let item_object = value_object(rule_set_item)?;
-    let policy_rule = value_object(member(item_object, "policyrule")?)?;
-    let filter = value_object(member(policy_rule, "filter")?)?;
-    let spec = value_object(member(policy_rule, "spec")?)?;
+    let parsed = ParsedRule::from_json(rule_set_item)?;
+    parsed.record_correlation(correlations)?;
 
-    let rule_id = parse_i64_value(member(filter, "rule_id")?)?;
-    let description = policy_rule.get("desc").and_then(Value::as_str);
-    let role = role_from_text(member_str(filter, "role")?)?;
-    let src = filter.get("src").map_or(Ok("*:**"), |value| value.as_str().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int))?;
-    let dst = filter
-        .get("dest")
-        .map_or(Ok("*:**"), |value| value.as_str().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int))?;
-    let secsrc = filter
-        .get("sec_src")
-        .map_or(Ok("*:**"), |value| value.as_str().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int))?;
-    let target_block_type = parse_u64_value(member(filter, "tgt")?)?;
-    let location = location_from_text(member_str(filter, "loc")?)?;
-
-    let failure_action = match policy_rule.get("policy_action_on_fail") {
-        Some(value) => failure_action_from_text(value.as_str().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)?)?,
-        None => ffi::BSL_POLICYACTION_NOTHING,
-    };
-
-    let correlation = match policy_rule.get("correlation") {
-        Some(value) => parse_u64_value(value)?,
-        None => 0,
-    };
-    if policy_rule.contains_key("correlation") && correlation == 0 {
-        return policy_config_err();
-    }
-
-    let sec_block_type = service_from_text(member_str(spec, "svc")?)?;
-    let context_id = parse_i64_value(member(spec, "sc_id")?)?;
-    if context_id != ffi::RFC9173_CONTEXTID_BIB_HMAC_SHA2 as i64
-        && context_id != ffi::RFC9173_CONTEXTID_BCB_AES_GCM as i64
-        && context_id != ffi::BSLX_COSESC_CTX_ID as i64
-    {
-        return policy_config_err();
-    }
-
-    if correlation > 0 {
-        let spec = CorrelationSpec {
-            context_id,
-            sec_block_type,
-        };
-        if let Some(prev) = correlations.get(&correlation) {
-            if *prev != spec {
-                return Err(ffi::BSL_ERR_CORRELATION_MISMATCH as c_int);
-            }
-        } else {
-            correlations.insert(correlation, spec);
-        }
-    }
-
-    let mut options = TempOptions::new();
-    parse_sc_parms(&mut options, context_id, member(spec, "sc_parms")?)?;
-
-    let mut predicate = StagedPredicate::new(location, src, secsrc, dst)?;
+    let options = parse_sc_parms(parsed.security_context, &parsed.sc_parms)?;
+    let mut predicate = StagedPredicate::new(parsed.location, &parsed.src, &parsed.secsrc, &parsed.dst)?;
     let mut rule = StagedRule::new(
-        rule_id,
-        description,
-        context_id,
-        role,
-        sec_block_type,
-        target_block_type,
-        failure_action,
+        parsed.rule_id,
+        parsed.description.as_deref(),
+        parsed.context_id,
+        parsed.role,
+        parsed.sec_block_type,
+        parsed.target_block_type,
+        parsed.failure_action,
     )?;
 
-    if correlation > 0 {
+    if let Some(correlation) = parsed.correlation {
         check_success(provider::BSLP_PolicyRule_SetCorrelation(rule.as_mut_ptr(), correlation))?;
     }
 
-    move_options_into_rule(rule.as_mut_ptr(), options.into_inner())?;
+    move_options_into_rule(rule.as_mut_ptr(), options)?;
     check_success(provider::BSLP_PolicyProvider_AddRule(
         policy,
         rule.as_mut_ptr(),
@@ -430,12 +524,13 @@ unsafe fn parse_one_rule(
     Ok(())
 }
 
-unsafe fn parse_no_rule_actions(root: &Map<String, Value>, policy: *mut api::BSLP_PolicyProvider_t) -> BslResult {
-    let Some(no_rules) = root.get("policy_action_no_rules") else {
+unsafe fn parse_no_rule_actions(no_rules: Option<&Value>, policy: *mut api::BSLP_PolicyProvider_t) -> BslResult {
+    let Some(no_rules) = no_rules else {
         return Ok(());
     };
+
     let object = value_object(no_rules)?;
-    for (key, value) in object.iter() {
+    for (key, value) in object {
         let location = location_from_text(key)?;
         let action = failure_action_from_text(value.as_str().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)?)?;
         if action == ffi::BSL_POLICYACTION_DROP_BLOCK {
@@ -446,24 +541,25 @@ unsafe fn parse_no_rule_actions(root: &Map<String, Value>, policy: *mut api::BSL
     Ok(())
 }
 
-fn validate_event_set(root: &Map<String, Value>) -> BslResult {
-    let Some(event_set) = root.get("event_set") else {
+fn validate_event_set(event_set: Option<&Value>) -> BslResult {
+    let Some(event_set) = event_set else {
         return Ok(());
     };
+
     let Some(event_object) = event_set.as_object() else {
         return Ok(());
     };
 
-    for (_key, events) in event_object.iter() {
+    for events in event_object.values() {
         let Some(array) = events.as_array() else {
             continue;
         };
-        for event in array.iter() {
+        for event in array {
             let event = value_object(event)?;
             member_str(event, "event_id")?;
             if let Some(actions) = event.get("actions") {
                 let actions = actions.as_array().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
-                for action in actions.iter() {
+                for action in actions {
                     if action.as_str().is_none() {
                         return policy_config_err();
                     }
@@ -480,20 +576,18 @@ unsafe fn parse_root_text(text: &str, policy: *mut api::BSLP_PolicyProvider_t) -
     }
 
     let root: Value = serde_json::from_str(text).map_err(|_| ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
-    let root_object = root.as_object().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
+    let root_object = value_object(&root)?;
+    let document: PolicyDocument =
+        serde_json::from_value(root.clone()).map_err(|_| ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
 
-    validate_event_set(root_object)?;
-    parse_no_rule_actions(root_object, policy)?;
-
-    let rules = root_object
-        .get("policyrule_set")
-        .and_then(Value::as_array)
-        .ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
+    validate_event_set(root_object.get("event_set"))?;
+    parse_no_rule_actions(root_object.get("policy_action_no_rules"), policy)?;
 
     let mut correlations = HashMap::<u64, CorrelationSpec>::new();
-    let failures = rules
+    let failures = document
+        .policyrule_set
         .iter()
-        .filter(|rule| parse_one_rule(*rule, policy, &mut correlations).is_err())
+        .filter(|rule| parse_one_rule(rule, policy, &mut correlations).is_err())
         .count();
 
     if failures == 0 {
@@ -549,107 +643,144 @@ pub unsafe extern "C" fn BSLP_PolicyParser_LoadFd(
     result_to_c_int(load_fd(infd, policy))
 }
 
-unsafe fn add_bitstring_option_text(
-    options: &mut TempOptions,
-    opt_id: i64,
-    text: &str,
-) -> BslResult {
-    add_policy_option(&mut options.options, opt_id).set_text(text)
+unsafe fn add_bitstring_option_text(options: &mut PolicyOptions, opt_id: i64, text: &str) -> BslResult {
+    add_policy_option(options, opt_id).set_text(text)
 }
 
-unsafe fn add_bitstring_option_int(options: &mut TempOptions, opt_id: i64, value: i64) -> BslResult {
-    add_policy_option(&mut options.options, opt_id).set_int(value)
+unsafe fn add_bitstring_option_int(options: &mut PolicyOptions, opt_id: i64, value: i64) -> BslResult {
+    add_policy_option(options, opt_id).set_int(value)
+}
+
+#[derive(Clone, Copy, Debug)]
+struct BitstringPolicy {
+    sec_block_type: u64,
+    policy_loc: u64,
+    bundle_block_type: u64,
+    policy_action_type: u64,
+    sec_role: u64,
+    use_wrapped_key: bool,
+    policy_ignore: bool,
+}
+
+impl BitstringPolicy {
+    const BUNDLE_BLOCK_TYPE_PRIMARY: u64 = 0;
+    const BUNDLE_BLOCK_TYPE_PAYLOAD: u64 = 1;
+    const BUNDLE_BLOCK_TYPE_BLOCK_192: u64 = 2;
+    const BUNDLE_BLOCK_TYPE_BUNDLE_AGE: u64 = 3;
+
+    fn decode(policy_bits: u64) -> Self {
+        Self {
+            sec_block_type: policy_bits & 0x01,
+            policy_loc: (policy_bits >> 1) & 0x01,
+            bundle_block_type: (policy_bits >> 2) & 0x03,
+            policy_action_type: (policy_bits >> 4) & 0x03,
+            sec_role: (policy_bits >> 6) & 0x03,
+            use_wrapped_key: ((policy_bits >> 8) & 0x01) == 1,
+            policy_ignore: ((policy_bits >> 9) & 0x01) == 1,
+        }
+    }
+
+    unsafe fn sec_block_and_context(self, options: &mut PolicyOptions) -> BslResult<(ffi::BSL_SecBlockType_e, i64)> {
+        if self.sec_block_type == 1 {
+            add_bitstring_option_int(
+                options,
+                ffi::BSLX_BCB_OPT_SCOPE as i64,
+                ffi::RFC9173_BCB_AADSCOPEFLAGID_INC_NONE as i64,
+            )?;
+            add_bitstring_option_int(
+                options,
+                ffi::BSLX_BCB_OPT_AES_VARIANT as i64,
+                ffi::RFC9173_BCB_AES_VARIANT_A128GCM as i64,
+            )?;
+            if self.use_wrapped_key {
+                add_bitstring_option_text(options, ffi::BSLX_BCB_OPT_KEY_ID as i64, "9103")?;
+                add_bitstring_option_int(options, ffi::BSLX_BCB_OPT_USE_KEY_WRAP as i64, 1)?;
+            } else {
+                add_bitstring_option_text(options, ffi::BSLX_BCB_OPT_KEY_ID as i64, "9102")?;
+                add_bitstring_option_int(options, ffi::BSLX_BCB_OPT_USE_KEY_WRAP as i64, 0)?;
+            }
+            Ok((ffi::BSL_SECBLOCKTYPE_BCB, ffi::RFC9173_CONTEXTID_BCB_AES_GCM as i64))
+        } else {
+            add_bitstring_option_int(options, ffi::BSLX_BIB_OPT_SCOPE as i64, 0)?;
+            add_bitstring_option_int(
+                options,
+                ffi::BSLX_BIB_OPT_SHA_VARIANT as i64,
+                ffi::RFC9173_BIB_SHA_HMAC512 as i64,
+            )?;
+            add_bitstring_option_text(options, ffi::BSLX_BIB_OPT_KEY_ID as i64, "9100")?;
+            add_bitstring_option_int(options, ffi::BSLX_BIB_OPT_USE_KEY_WRAP as i64, 0)?;
+            Ok((ffi::BSL_SECBLOCKTYPE_BIB, ffi::RFC9173_CONTEXTID_BIB_HMAC_SHA2 as i64))
+        }
+    }
+
+    fn location(self) -> ffi::BSL_PolicyLocation_e {
+        if self.policy_loc == 1 {
+            ffi::BSL_POLICYLOCATION_CLIN
+        } else {
+            ffi::BSL_POLICYLOCATION_CLOUT
+        }
+    }
+
+    fn target_block_type(self) -> u64 {
+        match self.bundle_block_type {
+            Self::BUNDLE_BLOCK_TYPE_PRIMARY => ffi::BSL_BLOCK_TYPE_PRIMARY as u64,
+            Self::BUNDLE_BLOCK_TYPE_PAYLOAD => ffi::BSL_BLOCK_TYPE_PAYLOAD as u64,
+            Self::BUNDLE_BLOCK_TYPE_BLOCK_192 => 192,
+            Self::BUNDLE_BLOCK_TYPE_BUNDLE_AGE => ffi::BSL_BLOCK_TYPE_BUNDLE_AGE as u64,
+            _ => ffi::BSL_BLOCK_TYPE_PRIMARY as u64,
+        }
+    }
+
+    fn failure_action(self) -> ffi::BSL_PolicyAction_e {
+        match self.policy_action_type {
+            0 => ffi::BSL_POLICYACTION_NOTHING,
+            1 => ffi::BSL_POLICYACTION_DROP_BLOCK,
+            2 => ffi::BSL_POLICYACTION_DROP_BUNDLE,
+            _ => ffi::BSL_POLICYACTION_NOTHING,
+        }
+    }
+
+    fn role(self) -> ffi::BSL_SecRole_e {
+        match self.sec_role {
+            0 => ffi::BSL_SECROLE_SOURCE,
+            1 => ffi::BSL_SECROLE_VERIFIER,
+            2 => ffi::BSL_SECROLE_ACCEPTOR,
+            _ => ffi::BSL_SECROLE_VERIFIER,
+        }
+    }
+
+    fn source_pattern(self) -> &'static str {
+        if self.policy_ignore {
+            ""
+        } else {
+            "*:**"
+        }
+    }
 }
 
 unsafe fn register_policy_from_bitstring(policy_bits: u64, policy: *mut api::BSLP_PolicyProvider_t) -> BslResult {
-    const BSLP_BITSTR_BUNDLE_BLOCK_TYPE_PRIMARY: u64 = 0;
-    const BSLP_BITSTR_BUNDLE_BLOCK_TYPE_PAYLOAD: u64 = 1;
-    const BSLP_BITSTR_BUNDLE_BLOCK_TYPE_BLOCK_192: u64 = 2;
-    const BSLP_BITSTR_BUNDLE_BLOCK_TYPE_BUNDLE_AGE: u64 = 3;
-
-    let sec_block_type = policy_bits & 0x01;
-    let policy_loc = (policy_bits >> 1) & 0x01;
-    let bundle_block_type = (policy_bits >> 2) & 0x03;
-    let policy_action_type = (policy_bits >> 4) & 0x03;
-    let sec_role = (policy_bits >> 6) & 0x03;
-    let use_wrapped_key = (policy_bits >> 8) & 0x01;
-    let policy_ignore = (policy_bits >> 9) & 0x01;
-
-    let mut options = TempOptions::new();
-    let (sec_block_enum, context_id) = if sec_block_type == 1 {
-        add_bitstring_option_int(
-            &mut options,
-            ffi::BSLX_BCB_OPT_SCOPE as i64,
-            ffi::RFC9173_BCB_AADSCOPEFLAGID_INC_NONE as i64,
-        )?;
-        add_bitstring_option_int(
-            &mut options,
-            ffi::BSLX_BCB_OPT_AES_VARIANT as i64,
-            ffi::RFC9173_BCB_AES_VARIANT_A128GCM as i64,
-        )?;
-        if use_wrapped_key == 1 {
-            add_bitstring_option_text(&mut options, ffi::BSLX_BCB_OPT_KEY_ID as i64, "9103")?;
-            add_bitstring_option_int(&mut options, ffi::BSLX_BCB_OPT_USE_KEY_WRAP as i64, 1)?;
-        } else {
-            add_bitstring_option_text(&mut options, ffi::BSLX_BCB_OPT_KEY_ID as i64, "9102")?;
-            add_bitstring_option_int(&mut options, ffi::BSLX_BCB_OPT_USE_KEY_WRAP as i64, 0)?;
-        }
-        (ffi::BSL_SECBLOCKTYPE_BCB, ffi::RFC9173_CONTEXTID_BCB_AES_GCM as i64)
-    } else {
-        add_bitstring_option_int(&mut options, ffi::BSLX_BIB_OPT_SCOPE as i64, 0)?;
-        add_bitstring_option_int(
-            &mut options,
-            ffi::BSLX_BIB_OPT_SHA_VARIANT as i64,
-            ffi::RFC9173_BIB_SHA_HMAC512 as i64,
-        )?;
-        add_bitstring_option_text(&mut options, ffi::BSLX_BIB_OPT_KEY_ID as i64, "9100")?;
-        add_bitstring_option_int(&mut options, ffi::BSLX_BIB_OPT_USE_KEY_WRAP as i64, 0)?;
-        (ffi::BSL_SECBLOCKTYPE_BIB, ffi::RFC9173_CONTEXTID_BIB_HMAC_SHA2 as i64)
-    };
-
-    let location = if policy_loc == 1 {
-        ffi::BSL_POLICYLOCATION_CLIN
-    } else {
-        ffi::BSL_POLICYLOCATION_CLOUT
-    };
-
-    let target_block_type = match bundle_block_type {
-        BSLP_BITSTR_BUNDLE_BLOCK_TYPE_PRIMARY => ffi::BSL_BLOCK_TYPE_PRIMARY as u64,
-        BSLP_BITSTR_BUNDLE_BLOCK_TYPE_PAYLOAD => ffi::BSL_BLOCK_TYPE_PAYLOAD as u64,
-        BSLP_BITSTR_BUNDLE_BLOCK_TYPE_BLOCK_192 => 192,
-        BSLP_BITSTR_BUNDLE_BLOCK_TYPE_BUNDLE_AGE => ffi::BSL_BLOCK_TYPE_BUNDLE_AGE as u64,
-        _ => ffi::BSL_BLOCK_TYPE_PRIMARY as u64,
-    };
-
-    let failure_action = match policy_action_type {
-        0 => ffi::BSL_POLICYACTION_NOTHING,
-        1 => ffi::BSL_POLICYACTION_DROP_BLOCK,
-        2 => ffi::BSL_POLICYACTION_DROP_BUNDLE,
-        _ => ffi::BSL_POLICYACTION_NOTHING,
-    };
-
-    let role = match sec_role {
-        0 => ffi::BSL_SECROLE_SOURCE,
-        1 => ffi::BSL_SECROLE_VERIFIER,
-        2 => ffi::BSL_SECROLE_ACCEPTOR,
-        _ => ffi::BSL_SECROLE_VERIFIER,
-    };
-
-    let src_pat = if policy_ignore == 1 { "" } else { "*:**" };
+    let policy_config = BitstringPolicy::decode(policy_bits);
+    let mut options = PolicyOptions::new();
+    let (sec_block_type, context_id) = policy_config.sec_block_and_context(&mut options)?;
     let description = format!("Policy: {:x}", policy_bits);
 
-    let mut predicate = StagedPredicate::new(location, src_pat, "*:**", "*:**")?;
+    let mut predicate = StagedPredicate::new(
+        policy_config.location(),
+        policy_config.source_pattern(),
+        "*:**",
+        "*:**",
+    )?;
     let mut rule = StagedRule::new(
         0,
         Some(&description),
         context_id,
-        role,
-        sec_block_enum,
-        target_block_type,
-        failure_action,
+        policy_config.role(),
+        sec_block_type,
+        policy_config.target_block_type(),
+        policy_config.failure_action(),
     )?;
 
-    move_options_into_rule(rule.as_mut_ptr(), options.into_inner())?;
+    move_options_into_rule(rule.as_mut_ptr(), options)?;
     check_success(provider::BSLP_PolicyProvider_AddRule(
         policy,
         rule.as_mut_ptr(),
@@ -670,12 +801,8 @@ unsafe fn parse_bitstring_list(policies: *const libc::c_char, policy: *mut api::
         return arg_null_err();
     };
 
-    for token in policy_text.split(',') {
-        let trimmed = token.trim();
-        if trimmed.is_empty() {
-            continue;
-        }
-        let Ok(bits) = parse_i64_text(trimmed) else {
+    for token in policy_text.split(',').map(str::trim).filter(|token| !token.is_empty()) {
+        let Ok(bits) = parse_i64_text(token) else {
             continue;
         };
         if bits < 0 || bits > i32::MAX as i64 {
