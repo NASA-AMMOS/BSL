@@ -77,6 +77,10 @@ fn main() {
     );
     println!(
         "cargo:rerun-if-changed={}",
+        source_dir.join("bsl/front/Data.h").display()
+    );
+    println!(
+        "cargo:rerun-if-changed={}",
         source_dir.join("bsl/front/BSLMemory.h").display()
     );
 

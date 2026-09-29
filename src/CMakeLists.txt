@@ -222,7 +222,6 @@ add_custom_command(
     DEPENDS
         ${BSL_SAMPLE_PP_RUST_SOURCES}
         ${CMAKE_CURRENT_BINARY_DIR}/bsl/BSLConfig.h
-        bsl/sample_pp/sample_pp_ffi.h
     COMMENT "Building sample_pp Rust crate with Cargo"
     VERBATIM
 )
@@ -244,13 +243,12 @@ target_sources(bsl_sample_pp
                 bsl/sample_pp/PolicyParser.h
                 bsl/sample_pp/SamplePolicyProvider.h
     PRIVATE
-        bsl/sample_pp/sample_pp_ffi.c
-        bsl/sample_pp/sample_pp_ffi.h
 )
 set_target_properties(bsl_sample_pp
     PROPERTIES
         VERSION ${CMAKE_PROJECT_VERSION}
         SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+        LINKER_LANGUAGE C
 )
 target_link_libraries(bsl_sample_pp PUBLIC bsl_front)
 # dynamic used for Variant containers

@@ -220,8 +220,12 @@ pub unsafe fn set_variant_bytes(option: *mut ffi::BSL_Variant_t, bytes: &[u8]) -
     }
 
     let mut data = std::mem::MaybeUninit::<ffi::BSL_Data_t>::zeroed().assume_init();
-    let ptr = if bytes.is_empty() { ptr::null() } else { bytes.as_ptr() };
-    ffi::BSLP_Rust_Data_InitViewConst(&mut data, ptr, bytes.len());
+    let ptr = if bytes.is_empty() {
+        ptr::null_mut()
+    } else {
+        bytes.as_ptr() as *mut u8
+    };
+    ffi::BSL_Data_InitView(&mut data, bytes.len(), ptr);
     ffi::BSL_Variant_SetBytestr(option, data);
     Ok(())
 }

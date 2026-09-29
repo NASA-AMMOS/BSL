@@ -10,6 +10,7 @@
 #include "bsl/dynamic/SecOperation.h"
 #include "bsl/dynamic/SecurityActionSet.h"
 #include "bsl/dynamic/Variant.h"
+#include "bsl/front/Data.h"
 #include "bsl/front/BSLMemory.h"
 
 #include <stdint.h>
