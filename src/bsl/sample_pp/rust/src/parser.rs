@@ -25,9 +25,9 @@ use crate::ffi;
 use crate::provider;
 use crate::provider::{init_predicate_from_rust, init_rule_from_rust, move_options_into_rule};
 use crate::util::{
-    cstr_to_string, decode_hex, failure_action_from_text, location_from_text, ok, parse_boolish, parse_i64_text,
-    parse_i64_value, parse_u64_value, policy_config_err, role_from_text, service_from_text, set_variant_bytes,
-    set_variant_int, set_variant_text, BslResult,
+    arg_null_err, check_success, cstr_to_string, decode_hex, failure_action_from_text, location_from_text,
+    parse_boolish, parse_i64_text, parse_i64_value, parse_u64_value, policy_config_err, result_to_c_int,
+    role_from_text, service_from_text, set_variant_bytes, set_variant_int, set_variant_text, BslResult,
 };
 use libc::c_int;
 use serde_json::{Map, Value};
@@ -35,7 +35,7 @@ use std::collections::HashMap;
 use std::ffi::CStr;
 use std::fs::File;
 use std::io::Read;
-use std::mem::{self, MaybeUninit};
+use std::mem::MaybeUninit;
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::FromRawFd;
 use std::path::Path;
@@ -64,6 +64,96 @@ impl Drop for TempOptions {
     fn drop(&mut self) {
         unsafe {
             ffi::BSLP_Rust_VariantMap_Destroy(self.ptr);
+        }
+    }
+}
+
+struct StagedPredicate {
+    inner: api::BSLP_PolicyPredicate_t,
+    initialized: bool,
+}
+
+impl StagedPredicate {
+    unsafe fn new(
+        location: api::BSL_PolicyLocation_e,
+        src: &str,
+        secsrc: &str,
+        dst: &str,
+    ) -> BslResult<Self> {
+        let mut inner = MaybeUninit::<api::BSLP_PolicyPredicate_t>::zeroed().assume_init();
+        init_predicate_from_rust(&mut inner, location, src, secsrc, dst)?;
+        Ok(Self {
+            inner,
+            initialized: true,
+        })
+    }
+
+    fn as_mut_ptr(&mut self) -> *mut api::BSLP_PolicyPredicate_t {
+        &mut self.inner
+    }
+
+    fn disarm(&mut self) {
+        self.initialized = false;
+    }
+}
+
+impl Drop for StagedPredicate {
+    fn drop(&mut self) {
+        unsafe {
+            if self.initialized {
+                provider::BSLP_PolicyPredicate_Deinit(&mut self.inner);
+            }
+        }
+    }
+}
+
+struct StagedRule {
+    inner: api::BSLP_PolicyRule_t,
+    initialized: bool,
+}
+
+impl StagedRule {
+    unsafe fn new(
+        rule_id: i64,
+        description: Option<&str>,
+        context_id: i64,
+        role: api::BSL_SecRole_e,
+        sec_block_type: api::BSL_SecBlockType_e,
+        target_block_type: u64,
+        failure_action_code: api::BSL_PolicyAction_e,
+    ) -> BslResult<Self> {
+        let mut inner = MaybeUninit::<api::BSLP_PolicyRule_t>::zeroed().assume_init();
+        init_rule_from_rust(
+            &mut inner,
+            rule_id,
+            description,
+            context_id,
+            role,
+            sec_block_type,
+            target_block_type,
+            failure_action_code,
+        )?;
+        Ok(Self {
+            inner,
+            initialized: true,
+        })
+    }
+
+    fn as_mut_ptr(&mut self) -> *mut api::BSLP_PolicyRule_t {
+        &mut self.inner
+    }
+
+    fn disarm(&mut self) {
+        self.initialized = false;
+    }
+}
+
+impl Drop for StagedRule {
+    fn drop(&mut self) {
+        unsafe {
+            if self.initialized {
+                provider::BSLP_PolicyRule_Deinit(&mut self.inner);
+            }
         }
     }
 }
@@ -160,12 +250,7 @@ unsafe fn option_cose_aad_scope(options: &TempOptions, value: &Value) -> BslResu
     }
 
     let ptr = if items.is_empty() { ptr::null() } else { items.as_ptr() };
-    let err = ffi::BSLX_CoseSc_SetAadScope(option, ptr, items.len());
-    if err == ok() {
-        Ok(())
-    } else {
-        Err(err)
-    }
+    check_success(ffi::BSLX_CoseSc_SetAadScope(option, ptr, items.len()))
 }
 
 unsafe fn parse_sc1_option(options: &TempOptions, key: &str, value: &Value) -> BslResult {
@@ -307,55 +392,31 @@ unsafe fn parse_one_rule(
     let options = TempOptions::new()?;
     parse_sc_parms(&options, context_id, member(spec, "sc_parms")?)?;
 
-    let mut predicate = MaybeUninit::<api::BSLP_PolicyPredicate_t>::zeroed().assume_init();
-    let mut rule = MaybeUninit::<api::BSLP_PolicyRule_t>::zeroed().assume_init();
-    let mut predicate_initialized = false;
-    let mut rule_initialized = false;
+    let mut predicate = StagedPredicate::new(location, src, secsrc, dst)?;
+    let mut rule = StagedRule::new(
+        rule_id,
+        description,
+        context_id,
+        role,
+        sec_block_type,
+        target_block_type,
+        failure_action,
+    )?;
 
-    let result = (|| -> BslResult {
-        init_predicate_from_rust(&mut predicate, location, src, secsrc, dst)?;
-        predicate_initialized = true;
-        init_rule_from_rust(
-            &mut rule,
-            rule_id,
-            description,
-            context_id,
-            role,
-            sec_block_type,
-            target_block_type,
-            failure_action,
-        )?;
-        rule_initialized = true;
-
-        if correlation > 0 {
-            let err = provider::BSLP_PolicyRule_SetCorrelation(&mut rule, correlation);
-            if err != ok() {
-                return Err(err);
-            }
-        }
-
-        let err = move_options_into_rule(&mut rule, options.as_ptr());
-        if err != ok() {
-            return Err(err);
-        }
-
-        let err = provider::BSLP_PolicyProvider_AddRule(policy, &mut rule, &mut predicate);
-        if err != ok() {
-            return Err(err);
-        }
-        rule_initialized = false;
-        predicate_initialized = false;
-        Ok(())
-    })();
-
-    if rule_initialized {
-        provider::BSLP_PolicyRule_Deinit(&mut rule);
-    }
-    if predicate_initialized {
-        provider::BSLP_PolicyPredicate_Deinit(&mut predicate);
+    if correlation > 0 {
+        check_success(provider::BSLP_PolicyRule_SetCorrelation(rule.as_mut_ptr(), correlation))?;
     }
 
-    result
+    move_options_into_rule(rule.as_mut_ptr(), options.as_ptr())?;
+    check_success(provider::BSLP_PolicyProvider_AddRule(
+        policy,
+        rule.as_mut_ptr(),
+        predicate.as_mut_ptr(),
+    ))?;
+
+    rule.disarm();
+    predicate.disarm();
+    Ok(())
 }
 
 unsafe fn parse_no_rule_actions(root: &Map<String, Value>, policy: *mut api::BSLP_PolicyProvider_t) -> BslResult {
@@ -402,45 +463,46 @@ fn validate_event_set(root: &Map<String, Value>) -> BslResult {
     Ok(())
 }
 
-unsafe fn parse_root_text(text: &str, policy: *mut api::BSLP_PolicyProvider_t) -> c_int {
+unsafe fn parse_root_text(text: &str, policy: *mut api::BSLP_PolicyProvider_t) -> BslResult {
     if policy.is_null() {
-        return ffi::BSL_ERR_ARG_NULL as c_int;
+        return arg_null_err();
     }
 
-    let root: Value = match serde_json::from_str(text) {
-        Ok(value) => value,
-        Err(_) => return ffi::BSL_ERR_POLICY_CONFIG as c_int,
-    };
-    let root_object = match root.as_object() {
-        Some(object) => object,
-        None => return ffi::BSL_ERR_POLICY_CONFIG as c_int,
-    };
+    let root: Value = serde_json::from_str(text).map_err(|_| ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
+    let root_object = root.as_object().ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
 
-    if validate_event_set(root_object).is_err() {
-        return ffi::BSL_ERR_POLICY_CONFIG as c_int;
-    }
+    validate_event_set(root_object)?;
+    parse_no_rule_actions(root_object, policy)?;
 
-    if parse_no_rule_actions(root_object, policy).is_err() {
-        return ffi::BSL_ERR_POLICY_CONFIG as c_int;
-    }
-
-    let Some(rules) = root_object.get("policyrule_set").and_then(Value::as_array) else {
-        return ffi::BSL_ERR_POLICY_CONFIG as c_int;
-    };
+    let rules = root_object
+        .get("policyrule_set")
+        .and_then(Value::as_array)
+        .ok_or(ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
 
     let mut correlations = HashMap::<u64, CorrelationSpec>::new();
-    let mut failures = 0usize;
-    for rule in rules.iter() {
-        if parse_one_rule(rule, policy, &mut correlations).is_err() {
-            failures += 1;
-        }
-    }
+    let failures = rules
+        .iter()
+        .filter(|rule| parse_one_rule(*rule, policy, &mut correlations).is_err())
+        .count();
 
     if failures == 0 {
-        ok()
+        Ok(())
     } else {
-        ffi::BSL_ERR_POLICY_CONFIG as c_int
+        policy_config_err()
     }
+}
+
+unsafe fn load_file(file_path: *const libc::c_char, policy: *mut api::BSLP_PolicyProvider_t) -> BslResult {
+    if file_path.is_null() || policy.is_null() {
+        return arg_null_err();
+    }
+
+    let path = Path::new(std::ffi::OsStr::from_bytes(CStr::from_ptr(file_path).to_bytes()));
+    let mut file = File::open(path).map_err(|_| ffi::BSL_ERR_FAILURE as c_int)?;
+    let mut text = String::new();
+    file.read_to_string(&mut text)
+        .map_err(|_| ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
+    parse_root_text(&text, policy)
 }
 
 #[unsafe(no_mangle)]
@@ -448,20 +510,23 @@ pub unsafe extern "C" fn BSLP_PolicyParser_LoadFile(
     file_path: *const libc::c_char,
     policy: *mut api::BSLP_PolicyProvider_t,
 ) -> c_int {
-    if file_path.is_null() || policy.is_null() {
-        return ffi::BSL_ERR_ARG_NULL as c_int;
+    result_to_c_int(load_file(file_path, policy))
+}
+
+unsafe fn load_fd(infd: c_int, policy: *mut api::BSLP_PolicyProvider_t) -> BslResult {
+    if policy.is_null() {
+        return arg_null_err();
     }
 
-    let path = Path::new(std::ffi::OsStr::from_bytes(CStr::from_ptr(file_path).to_bytes()));
-    let mut file = match File::open(path) {
-        Ok(file) => file,
-        Err(_) => return ffi::BSL_ERR_FAILURE as c_int,
-    };
+    let dup_fd = libc::dup(infd);
+    if dup_fd < 0 {
+        return Err(ffi::BSL_ERR_FAILURE as c_int);
+    }
 
+    let mut file = File::from_raw_fd(dup_fd);
     let mut text = String::new();
-    if file.read_to_string(&mut text).is_err() {
-        return ffi::BSL_ERR_POLICY_CONFIG as c_int;
-    }
+    file.read_to_string(&mut text)
+        .map_err(|_| ffi::BSL_ERR_POLICY_CONFIG as c_int)?;
     parse_root_text(&text, policy)
 }
 
@@ -470,20 +535,7 @@ pub unsafe extern "C" fn BSLP_PolicyParser_LoadFd(
     infd: c_int,
     policy: *mut api::BSLP_PolicyProvider_t,
 ) -> c_int {
-    if policy.is_null() {
-        return ffi::BSL_ERR_ARG_NULL as c_int;
-    }
-
-    let dup_fd = libc::dup(infd);
-    if dup_fd < 0 {
-        return ffi::BSL_ERR_FAILURE as c_int;
-    }
-    let mut file = File::from_raw_fd(dup_fd);
-    let mut text = String::new();
-    if file.read_to_string(&mut text).is_err() {
-        return ffi::BSL_ERR_POLICY_CONFIG as c_int;
-    }
-    parse_root_text(&text, policy)
+    result_to_c_int(load_fd(infd, policy))
 }
 
 unsafe fn add_bitstring_option_text(
@@ -583,58 +635,36 @@ unsafe fn register_policy_from_bitstring(policy_bits: u64, policy: *mut api::BSL
     let src_pat = if policy_ignore == 1 { "" } else { "*:**" };
     let description = format!("Policy: {:x}", policy_bits);
 
-    let mut predicate = MaybeUninit::<api::BSLP_PolicyPredicate_t>::zeroed().assume_init();
-    let mut rule = MaybeUninit::<api::BSLP_PolicyRule_t>::zeroed().assume_init();
-    let mut predicate_initialized = false;
-    let mut rule_initialized = false;
+    let mut predicate = StagedPredicate::new(location, src_pat, "*:**", "*:**")?;
+    let mut rule = StagedRule::new(
+        0,
+        Some(&description),
+        context_id,
+        role,
+        sec_block_enum,
+        target_block_type,
+        failure_action,
+    )?;
 
-    let result = (|| -> BslResult {
-        init_predicate_from_rust(&mut predicate, location, src_pat, "*:**", "*:**")?;
-        predicate_initialized = true;
-        init_rule_from_rust(
-            &mut rule,
-            0,
-            Some(&description),
-            context_id,
-            role,
-            sec_block_enum,
-            target_block_type,
-            failure_action,
-        )?;
-        rule_initialized = true;
-        let err = move_options_into_rule(&mut rule, options.as_ptr());
-        if err != ok() {
-            return Err(err);
-        }
-        let err = provider::BSLP_PolicyProvider_AddRule(policy, &mut rule, &mut predicate);
-        if err != ok() {
-            return Err(err);
-        }
-        rule_initialized = false;
-        predicate_initialized = false;
-        Ok(())
-    })();
+    move_options_into_rule(rule.as_mut_ptr(), options.as_ptr())?;
+    check_success(provider::BSLP_PolicyProvider_AddRule(
+        policy,
+        rule.as_mut_ptr(),
+        predicate.as_mut_ptr(),
+    ))?;
 
-    if rule_initialized {
-        provider::BSLP_PolicyRule_Deinit(&mut rule);
-    }
-    if predicate_initialized {
-        provider::BSLP_PolicyPredicate_Deinit(&mut predicate);
-    }
-    result
+    rule.disarm();
+    predicate.disarm();
+    Ok(())
 }
 
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn BSLP_PolicyParser_FromBitstringList(
-    policies: *const libc::c_char,
-    policy: *mut api::BSLP_PolicyProvider_t,
-) -> c_int {
+unsafe fn parse_bitstring_list(policies: *const libc::c_char, policy: *mut api::BSLP_PolicyProvider_t) -> BslResult {
     if policies.is_null() || policy.is_null() {
-        return ffi::BSL_ERR_ARG_NULL as c_int;
+        return arg_null_err();
     }
 
     let Some(policy_text) = cstr_to_string(policies) else {
-        return ffi::BSL_ERR_ARG_NULL as c_int;
+        return arg_null_err();
     };
 
     for token in policy_text.split(',') {
@@ -650,5 +680,13 @@ pub unsafe extern "C" fn BSLP_PolicyParser_FromBitstringList(
         }
         let _ = register_policy_from_bitstring(bits as u64, policy);
     }
-    ok()
+    Ok(())
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn BSLP_PolicyParser_FromBitstringList(
+    policies: *const libc::c_char,
+    policy: *mut api::BSLP_PolicyProvider_t,
+) -> c_int {
+    result_to_c_int(parse_bitstring_list(policies, policy))
 }

@@ -31,8 +31,63 @@ pub fn ok() -> c_int {
     ffi::BSL_SUCCESS as c_int
 }
 
+pub fn result_to_c_int(result: BslResult) -> c_int {
+    match result {
+        Ok(()) => ok(),
+        Err(err) => err,
+    }
+}
+
+pub fn check_success(err: c_int) -> BslResult {
+    if err == ok() {
+        Ok(())
+    } else {
+        Err(err)
+    }
+}
+
+pub fn check_success_as(err: c_int, mapped_err: c_int) -> BslResult {
+    if err == ok() {
+        Ok(())
+    } else {
+        Err(mapped_err)
+    }
+}
+
+pub fn bsl_err<T>(err: c_int) -> BslResult<T> {
+    Err(err)
+}
+
+pub fn arg_null_err<T>() -> BslResult<T> {
+    bsl_err(ffi::BSL_ERR_ARG_NULL as c_int)
+}
+
+pub fn failure_err<T>() -> BslResult<T> {
+    bsl_err(ffi::BSL_ERR_FAILURE as c_int)
+}
+
+pub fn host_callback_err<T>() -> BslResult<T> {
+    bsl_err(ffi::BSL_ERR_HOST_CALLBACK_FAILED as c_int)
+}
+
 pub fn policy_config_err<T>() -> BslResult<T> {
-    Err(ffi::BSL_ERR_POLICY_CONFIG as c_int)
+    bsl_err(ffi::BSL_ERR_POLICY_CONFIG as c_int)
+}
+
+pub fn policy_failed_err<T>() -> BslResult<T> {
+    bsl_err(ffi::BSL_ERR_POLICY_FAILED as c_int)
+}
+
+pub fn policy_query_err<T>() -> BslResult<T> {
+    bsl_err(ffi::BSL_ERR_POLICY_QUERY as c_int)
+}
+
+pub fn property_check_err<T>() -> BslResult<T> {
+    bsl_err(ffi::BSL_ERR_PROPERTY_CHECK_FAILED as c_int)
+}
+
+pub fn security_context_err<T>() -> BslResult<T> {
+    bsl_err(ffi::BSL_ERR_SECURITY_CONTEXT_FAILED as c_int)
 }
 
 pub fn cstr_to_string(ptr: *const c_char) -> Option<String> {
@@ -143,7 +198,7 @@ fn hex_val(ch: u8) -> BslResult<u8> {
 
 pub unsafe fn set_variant_text(option: *mut ffi::BSL_Variant_t, text: &str) -> BslResult {
     if option.is_null() {
-        return Err(ffi::BSL_ERR_ARG_NULL as c_int);
+        return arg_null_err();
     }
     let c_text = make_cstring(text)?;
     ffi::BSL_Variant_SetTextstr(option, c_text.as_ptr());
@@ -152,7 +207,7 @@ pub unsafe fn set_variant_text(option: *mut ffi::BSL_Variant_t, text: &str) -> B
 
 pub unsafe fn set_variant_int(option: *mut ffi::BSL_Variant_t, value: i64) -> BslResult {
     if option.is_null() {
-        return Err(ffi::BSL_ERR_ARG_NULL as c_int);
+        return arg_null_err();
     }
     ffi::BSL_Variant_SetInt64(option, value);
     Ok(())
@@ -160,7 +215,7 @@ pub unsafe fn set_variant_int(option: *mut ffi::BSL_Variant_t, value: i64) -> Bs
 
 pub unsafe fn set_variant_bytes(option: *mut ffi::BSL_Variant_t, bytes: &[u8]) -> BslResult {
     if option.is_null() {
-        return Err(ffi::BSL_ERR_ARG_NULL as c_int);
+        return arg_null_err();
     }
 
     let mut data = std::mem::MaybeUninit::<ffi::BSL_Data_t>::zeroed().assume_init();
