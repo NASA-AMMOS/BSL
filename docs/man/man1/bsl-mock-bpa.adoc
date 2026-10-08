@@ -32,7 +32,7 @@ Because the Mock BPA uses UDP transport for both underlayer and overlayer, and u
 == Options
 
 These options can appear in any order in the command line.
-If present multiple times the last use supersedes any preceeding use.
+If present multiple times the last use supersedes any preceding use.
 All option processing uses the POSIX `getopt()` function for consistency.
 
 *-h*::
