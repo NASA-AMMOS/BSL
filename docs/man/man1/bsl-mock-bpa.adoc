@@ -1,11 +1,12 @@
 = bsl-mock-bpa(1)
-The Johns Hopkins University Applied Physics Laboratory LLC.
+The Johns Hopkins University Applied Physics Laboratory LLC
 // uses external revnumber
 :doctype: manpage
 :manmanual: BSL Mock BP Agent
 :manname: bsl-mock-bpa
 :mansource: BSL {revnumber}
 :man-linkstyle: pass:[blue R < >]
+:idprefix: {manname}_
 
 == Name
 
@@ -26,39 +27,68 @@ The Mock BPA implements only the minimum amount of encoding/decoding behavior sp
 The Mock BPA operates by communicating with its "underlayer" network and its "overlayer" application both through lock UDP transport.
 When the Mock BPA starts up it binds to two specific local UDP/IP endpoints and always sends to the same two corresponding "other side" UDP/IP endpoints.
 
-Because the Mock BPA uses UDP transport for both underlayer and overlayer, and uses BPv7 PDUs as its payload, it is compatible with off-the-shelf diagnostic tools such as Wireshark with appropriate UDP port numbers mapped using "Decode As..." to the "UDPCL" protocol dissector.
+Because the Mock BPA uses UDP transport for both underlayer and overlayer, and uses BPv7 PDUs as its payload, it is compatible with off-the-shelf diagnostic tools such as Wireshark with appropriate UDP port numbers mapped using "Decode As..." to the "Bundle" protocol dissector.
 
 == Options
+
+These options can appear in any order in the command line.
+If present multiple times the last use supersedes any preceeding use.
+All option processing uses the POSIX `getopt()` function for consistency.
 
 *-h*::
 Get command help information and exit.
 
-*-o* _ADDRESS:PORT_::
+*-o* _ADDRESS{:PORT}_::
 Choose the overlayer local address-and-port to bind to.
 
-*-a* _ADDRESS:PORT_::
+*-a* _ADDRESS{:PORT}_::
 Choose the overlayer application address-and-port to send to and receive from.
 
-*-u* _ADDRESS:PORT_::
+*-u* _ADDRESS{:PORT}_::
 Choose the underlayer local address-and-port to bind to.
 
-*-r* _ADDRESS:PORT_::
+*-r* _ADDRESS{:PORT}_::
 Choose the underlayer router address-and-port to send to and receive from.
 
-*-e* _EID-URI_::
+*-e* _<EID-URI>_::
 The endpoint ID of the local application which is registered.
+Bundles transmitted from this node must have this EID as the Source Node ID.
+Bundles received by this node which have a Destination EID matching this EID are delivered to the application by encoding the BP PDU and sending to the application address controlled by the *-a* option.
 
-*-s* _EID-URI_::
+*-s* _<EID-URI>_::
 The endpoint ID of the local security source used to handle BPSec.
+Any security operations for which this node is the source will be given this Security Source EID in their security block.
 
-*-p* _POLICY-BITS_::
+*-p* _<POLICY-BITS>_::
 The comma-separated bit fields representing policies to initialize Mock BPA with.
 
-*-j* _POLICY-JSON_::
-The path to a ION-Like Policy JSON-encoded policy structure file containing policies to initialize Mock BPA with.
+*-j* _<POLICY-FILE>_::
+The path to a ION-heritage, JSON-encoded policy structure file containing rules used to initialize Mock BPA policy provider.
+The file must conform to the JSON Schema file `config-schema.json` installed with the Mock BPA.
+Any failure to open the file or to handle its content is treated as a initializing failure.
 
-*-k* _POLICY-KEYS_::
-The path to a JSON Web Key (JWK) formatted file containing keys to register with the Mock BPA's Cryptographic Library instance.
+*-k* _<KEY-FILE>_::
+The path to a file containing keys to load into the Mock BPA key store.
+If the file name ends with ".json" it is handled as a JSON Web Key (JWK) Set file.
+If it ends with ".cbor" it is handled as a COSE Key Set file.
+All other extensions are invalid.
+Any failure to open the file or to handle its content is treated as an initializing failure.
+
+=== Address-and-Port Options
+
+The options with an argument which represents an IP address and UDP port number interpret the address as either a direct IPv4 address or a DNS name which is resolved to an IPv4 address.
+All address resolution processing uses the POSIX `getaddrinfo()` function for consistency.
+
+When not provided, the default port number 4556 (assigned to the UDPCL) is used for binding or sending.
+
+=== BP Endpoint ID Options
+
+The options with an argument which represents a BP Endpoint ID (EID) are handled as a text URI and decoded using the EID functions of the Mock BPA.
+This version of the Mock BPA does not handle these options as EID Patterns.
+
+=== File Path Options
+
+The options with an argument which represents a file path are interpreted relative to the working directory in which the daemon is executed.
 
 == Exit Status
 
@@ -71,11 +101,30 @@ Failure processing command options.
 *2*::
 Failure initializing the agent.
 
+== Environment
+
+The Mock BPA uses the following environment variables directly or indirectly.
+
+`BSL_TEST_LOCAL_IPN_EID`::
+This variable is used as a default when the *-s* option is not provided.
+
+== Files
+
+The Mock BPA does not use any data files during its normal operation.
+The following are files related to the configuration of the BPA.
+
+`/usr/share/bsl/sample_pp/config-schema.json`::
+The Sample Policy Provider JSON Schema is not used to validate policy inputs; it is for user reference only.
+
 == Resources
 
-Project source and issues are managed in the repository <https://github.com/NASA-AMMOS/BSL>.
+Project source and issues are managed in the repository <https://github.com/NASA-AMMOS/BSL>, out-of-source documentation is managed in the repository <https://github.com/NASA-AMMOS/BSL-docs>.
 
-== Copying
+== Copyright
 
-Copyright (C) 2024 {author}. +
+Copyright (C) 2024 {author}.
 Free use of this software is granted under the terms of the Apache-2.0 license.
+
+== See Also
+
+`getopt(3)`, `getaddrinfo(3)`, `wireshark(1)`
