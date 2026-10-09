@@ -1,7 +1,7 @@
 %bcond_with apidoc
 
 Name: bsl
-Version: 1.1.1
+Version: 2.0.0
 Release: 1%{?dist}
 Summary: The Bundle Protocol Security Library (BSL)
 URL: https://github.com/NASA-AMMOS/BSL
@@ -168,6 +168,10 @@ install -m644 -D testroot/usr/lib/pkgconfig/m-lib.pc %{buildroot}%{_datadir}/pkg
 
 
 %changelog
+* Fri Oct 09 2026 Brian Sipos <brian.sipos@jhuapl.edu> 2.0.0-1
+- Major version update to BSL API
+- Added COSE Context with symmetric algorithms
+- Including CMake and pkg-config control files
 * Thu Jun 04 2026 Brian Sipos <brian.sipos@jhuapl.edu> 1.1.1-1
 - Build RPM in release mode and fix uses of assert (#196)
 - This resolves bug #197 for BCB decrypt.
