@@ -1,7 +1,7 @@
 %bcond_with apidoc
 
 Name: bsl
-Version: 1.1.1
+Version: 1.1.2
 Release: 1%{?dist}
 Summary: The Bundle Protocol Security Library (BSL)
 URL: https://github.com/NASA-AMMOS/BSL
@@ -156,6 +156,10 @@ popd
 
 
 %changelog
+* Fri Oct 09 2026 Brian Sipos <brian.sipos@jhuapl.edu> 1.1.2-1
+- Fix vulnerability GHSA-5w4g-59g2-p7f5 and GHSA-9xjx-rm9v-636m
+- Fix M*LIB compatibility issue on non-RHEL OS.
+
 * Thu Jun 04 2026 Brian Sipos <brian.sipos@jhuapl.edu> 1.1.1-1
 - Build RPM in release mode and fix uses of assert (#196)
 - This resolves bug #197 for BCB decrypt.
