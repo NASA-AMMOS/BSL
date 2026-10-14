@@ -201,7 +201,15 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
     size_t btsd_len = bcb_context->target_block.btsd_len;
     if (!bcb_context->authtag_result_present)
     {
-        btsd_len -= BSL_Cipher_TagLen(&cipher);
+        size_t tag_len = BSL_Cipher_TagLen(&cipher);
+
+        if (btsd_len < tag_len)
+        {
+            BSL_LOG_ERR("Target ciphertext length shorter than auth tag length");
+            return BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+
+        btsd_len -= tag_len;
     }
 
     BSL_SeqReader_t *btsd_read  = NULL;

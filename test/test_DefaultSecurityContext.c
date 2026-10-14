@@ -48,6 +48,14 @@ static const char *ApxA2_Ciphertext  = "3a09c1e63fe23a7f66a59c7303837241e070b026
 static const char *ApxA2_PayloadData = "526561647920746f2067656e657261746520612033322d62797465207061796c6f6164";
 
 static BSL_TestContext_t LocalTestCtx;
+// static int               CapturedBcbStatus;
+
+// static int execute_bcb_without_auth_tag(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
+// {
+//     BSLB_VariantPtrMap_erase(sec_oper->_results, RFC9173_BCB_RESULTID_AUTHTAG);
+//     CapturedBcbStatus = BSLX_BCB_Execute(lib, bundle, sec_oper);
+//     return CapturedBcbStatus;
+// }
 
 void suiteSetUp(void)
 {
@@ -211,6 +219,34 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     BSL_Data_t btsd_view = BSL_DATA_INIT_VIEW(target_block->btsd, target_block->btsd_len);
     TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(ApxA2_PayloadData, btsd_view));
     BSL_Data_Deinit(&btsd_view);
+
+    BCBTestContext_Deinit(&bcb_test_context);
+}
+
+void test_BCB_Verifier_RejectsTargetShorterThanAppendedTag(void)
+{
+    TEST_ASSERT_EQUAL(BSL_SUCCESS,
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA2.hex_bundle_bcb));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPOUT));
+
+    MockBPA_CanonicalBlock_t **target_ptr = MockBPA_BlockByNum_get(LocalTestCtx.mock_bpa_ctr.bundle->blocks_num, 1);
+    TEST_ASSERT_NOT_NULL(target_ptr);
+    TEST_ASSERT_NOT_NULL(*target_ptr);
+
+    const size_t original_len = (*target_ptr)->btsd_len;
+    (*target_ptr)->btsd_len   = 15;
+
+    BCBTestContext bcb_test_context;
+    BCBTestContext_Init(&bcb_test_context);
+    BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_VERIFIER);
+
+    // Remove authtag result to force check for AEAD tag
+    BSLB_VariantPtrMap_erase(bcb_test_context.sec_oper._results, RFC9173_BCB_RESULTID_AUTHTAG);
+    int result = BSL_ExecBCBVerifierAcceptor(BSLX_BCB_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
+                                             &bcb_test_context.sec_oper);
+
+    (*target_ptr)->btsd_len = original_len;
+    TEST_ASSERT_EQUAL(BSL_ERR_SECURITY_OPERATION_FAILED, result);
 
     BCBTestContext_Deinit(&bcb_test_context);
 }
