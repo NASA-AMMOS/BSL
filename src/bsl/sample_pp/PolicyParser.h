@@ -22,7 +22,7 @@
 /**
  * @file
  * @ingroup sample_pp
- * Configuration parsers for the sample policy provider of the BSL.
+ * Configuration file readers for the sample policy provider of the BSL.
  */
 #ifndef BSLP_POLICY_PARSER_H_
 #define BSLP_POLICY_PARSER_H_
