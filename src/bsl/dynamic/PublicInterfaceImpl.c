@@ -142,6 +142,24 @@ int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_Policy
     return BSL_SUCCESS;
 }
 
+int BSL_API_DeregisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id)
+{
+    CHK_ARG_NONNULL(lib);
+
+    const BSL_PolicyDesc_t *policy = BSL_PolicyDict_get(lib->policy_reg, pp_id);
+    if (policy != NULL && policy->deinit_fn != NULL)
+    {
+        policy->deinit_fn(policy->user_data);
+    }
+
+    if (!BSL_PolicyDict_erase(lib->policy_reg, pp_id))
+    {
+        BSL_LOG_WARNING("Failed to remove policy provider with ID %" PRIu64, pp_id);
+    }
+    
+    return BSL_SUCCESS;
+}
+
 static int BSL_API_HandleBadSecBlock(BSL_BundleRef_t *bundle, const BSL_CanonicalBlock_t *block)
 {
     BSL_LOG_ERR("Failed to get ASB for block number %" PRIu64, block->block_num);
