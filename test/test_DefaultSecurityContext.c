@@ -48,14 +48,6 @@ static const char *ApxA2_Ciphertext  = "3a09c1e63fe23a7f66a59c7303837241e070b026
 static const char *ApxA2_PayloadData = "526561647920746f2067656e657261746520612033322d62797465207061796c6f6164";
 
 static BSL_TestContext_t LocalTestCtx;
-// static int               CapturedBcbStatus;
-
-// static int execute_bcb_without_auth_tag(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
-// {
-//     BSLB_VariantPtrMap_erase(sec_oper->_results, RFC9173_BCB_RESULTID_AUTHTAG);
-//     CapturedBcbStatus = BSLX_BCB_Execute(lib, bundle, sec_oper);
-//     return CapturedBcbStatus;
-// }
 
 void suiteSetUp(void)
 {
