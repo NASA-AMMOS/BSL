@@ -734,7 +734,8 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
         BSL_PrimaryBlock_t primary_block;
         BSL_PrimaryBlock_Init(&primary_block);
         BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block);
-        bool ruleMatchesBundle = BSLP_PolicyPredicate_IsMatch(predicate, location, primary_block.field_src_node_id, primary_block.field_dest_eid);
+        bool ruleMatchesBundle = BSLP_PolicyPredicate_IsMatch(predicate, location, primary_block.field_src_node_id,
+                                                              primary_block.field_dest_eid);
         BSL_PrimaryBlock_deinit(&primary_block);
         CHK_PRECONDITION(ruleMatchesBundle);
     }
