@@ -17,7 +17,7 @@
             "key_name": "ExampleA.2-cek",
             "aes_variant": 1,
             "aad_scope": 0,
-            "key_wrap": 0
+            "key_wrap": false
           }
         },
         "policy_action_on_fail": "delete_bundle"
