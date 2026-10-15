@@ -186,6 +186,7 @@ void test_ecdsa_load_verify(void)
         OSSL_PARAM_BLD *param_bld = OSSL_PARAM_BLD_new();
         TEST_ASSERT_NOT_NULL(param_bld);
         TEST_ASSERT_EQUAL_INT(1, OSSL_PARAM_BLD_push_utf8_string(param_bld, OSSL_PKEY_PARAM_GROUP_NAME, "P-384", 0));
+
         // SEC1 point buffer 0x04 || X || Y
         BSL_Data_t pubdata;
         BSL_Data_InitBuffer(&pubdata, 1 + key_x.len + key_y.len);
@@ -203,7 +204,7 @@ void test_ecdsa_load_verify(void)
         EVP_PKEY_CTX *keyctx = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
         TEST_ASSERT_NOT_NULL(keyctx);
         TEST_ASSERT_EQUAL_INT(1, EVP_PKEY_fromdata_init(keyctx));
-        TEST_ASSERT_EQUAL_INT(1, EVP_PKEY_fromdata(keyctx, &key, EVP_PKEY_PUBLIC_KEY, params));
+        TEST_ASSERT_EQUAL_INT(1, EVP_PKEY_fromdata(keyctx, &key, EVP_PKEY_KEYPAIR, params));
         TEST_ASSERT_NOT_NULL(key);
 
         EVP_PKEY_CTX_free(keyctx);
