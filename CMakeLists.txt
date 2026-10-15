@@ -91,16 +91,23 @@ add_compile_options(
     $<$<COMPILE_LANGUAGE:C>:-Wpedantic>
     $<$<COMPILE_LANGUAGE:C>:-Werror>
     $<$<COMPILE_LANGUAGE:C>:-Wformat>
-    -Wshadow -Wpointer-arith -Wstrict-prototypes
-    -Wmissing-prototypes -Wredundant-decls -Wcast-align
+    $<$<COMPILE_LANGUAGE:C>:-Wswitch-enum>
+    -Wno-error=overlength-strings
+    -Wshadow
+    -Wpointer-arith
+    -Wstrict-prototypes
+    -Wmissing-prototypes
+    -Wredundant-decls
+    -Wcast-align
     -Wformat=2
-    -fno-strict-aliasing -Werror=format-security -fno-common
+    -fno-strict-aliasing
+    -Werror=format-security
+    -fno-common
     -Wstrict-aliasing=2
     -Wconversion
     -ffunction-sections
     -fdata-sections
     -fno-omit-frame-pointer
-    $<$<COMPILE_LANGUAGE:C>:-Wswitch-enum>
 )
 if(CMAKE_C_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
@@ -152,6 +159,7 @@ if(BUILD_UNITTEST)
       "--tool=memcheck"
       "--trace-children=yes"
       "--track-origins=yes"
+      "--num-callers=30"
       "--leak-check=full" "--show-leak-kinds=all"
       "--suppressions=${CMAKE_CURRENT_SOURCE_DIR}/resources/memcheck.supp"
       "--gen-suppressions=all"
