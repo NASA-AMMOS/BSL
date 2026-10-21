@@ -206,6 +206,7 @@ static int BSLX_BCB_Decrypt(BSLX_BCB_t *bcb_context)
         if (btsd_len < tag_len)
         {
             BSL_LOG_ERR("Target ciphertext length shorter than auth tag length");
+            BSL_Cipher_Deinit(&cipher);
             return BSL_ERR_SECURITY_CONTEXT_FAILED;
         }
 

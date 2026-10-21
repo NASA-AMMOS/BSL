@@ -215,6 +215,12 @@ void test_RFC9173_AppendixA_Example2_BCB_Acceptor(void)
     BCBTestContext_Deinit(&bcb_test_context);
 }
 
+static int Dummy_BCB_Execute(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper)
+{
+    TEST_ASSERT_EQUAL(true, BSLB_VariantPtrMap_erase(sec_oper->_results, RFC9173_BCB_RESULTID_AUTHTAG));
+    return BSLX_BCB_Execute(lib, bundle, sec_oper);
+}
+
 void test_BCB_Verifier_RejectsTargetShorterThanAppendedTag(void)
 {
     TEST_ASSERT_EQUAL(BSL_SUCCESS,
@@ -233,8 +239,7 @@ void test_BCB_Verifier_RejectsTargetShorterThanAppendedTag(void)
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_VERIFIER);
 
     // Remove authtag result to force check for AEAD tag
-    BSLB_VariantPtrMap_erase(bcb_test_context.sec_oper._results, RFC9173_BCB_RESULTID_AUTHTAG);
-    int result = BSL_ExecBCBVerifierAcceptor(BSLX_BCB_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
+    int result = BSL_ExecBCBVerifierAcceptor(Dummy_BCB_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                              &bcb_test_context.sec_oper);
 
     (*target_ptr)->btsd_len = original_len;
