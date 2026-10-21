@@ -256,7 +256,7 @@ class TestBibHmacSha(TestAgent):
                 expected_output_format=DataFormat.CBORDIAG,
             )
         )
-        
+
     def test_BIB_source_primary_block(self):
         self._single_test(
             _TestCase(
@@ -276,7 +276,7 @@ class TestBibHmacSha(TestAgent):
                 expected_output_format=DataFormat.CBORDIAG,
             )
         )
-    
+
     def test_BIB_verify_primary_block(self):
         self._single_test(
             _TestCase(
@@ -302,7 +302,7 @@ class TestBibHmacSha(TestAgent):
                 expected_output_format=DataFormat.CBORDIAG,
             )
         )
-        
+
     def test_BIB_accept_primary_block(self):
         self._single_test(
             _TestCase(
