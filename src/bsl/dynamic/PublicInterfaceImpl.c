@@ -156,7 +156,7 @@ int BSL_API_DeregisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id)
     {
         BSL_LOG_WARNING("Failed to remove policy provider with ID %" PRIu64, pp_id);
     }
-    
+
     return BSL_SUCCESS;
 }
 
