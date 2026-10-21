@@ -239,8 +239,8 @@ void test_BCB_Verifier_RejectsTargetShorterThanAppendedTag(void)
     BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_VERIFIER);
 
     // Remove authtag result to force check for AEAD tag
-    int result = BSL_ExecBCBVerifierAcceptor(Dummy_BCB_Execute, &LocalTestCtx.bsl, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
-                                             &bcb_test_context.sec_oper);
+    int result = BSL_ExecBCBVerifierAcceptor(Dummy_BCB_Execute, &LocalTestCtx.bsl,
+                                             &LocalTestCtx.mock_bpa_ctr.bundle_ref, &bcb_test_context.sec_oper);
 
     (*target_ptr)->btsd_len = original_len;
     TEST_ASSERT_EQUAL(BSL_ERR_SECURITY_OPERATION_FAILED, result);
