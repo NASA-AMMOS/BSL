@@ -171,6 +171,235 @@ int BSL_Crypto_KeyLoader_LoadJwkSet(int infd)
     return retval;
 }
 
+static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
+{
+    bool       has_kty = false;
+    int64_t    kty     = 0;
+    bool       has_alg = false;
+    int64_t    alg     = 0;
+    UsefulBufC kid     = NULLUsefulBufC;
+    UsefulBufC baseiv  = NULLUsefulBufC;
+    // type-specific options
+    UsefulBufC k_data  = NULLUsefulBufC;
+    bool       has_crv = false;
+    int64_t    ec_crv  = 0;
+    UsefulBufC x_data  = NULLUsefulBufC;
+    UsefulBufC y_data  = NULLUsefulBufC;
+    UsefulBufC d_data  = NULLUsefulBufC;
+
+    QCBORItem item;
+    while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
+    {
+        int64_t label;
+        QCBORDecode_GetInt64(dec, &label);
+        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+        {
+            BSL_LOG_ERR("Unable to get key label");
+            return;
+        }
+        BSL_LOG_DEBUG("got label %" PRId64, label);
+
+        if (label >= 0)
+        {
+            switch (label)
+            {
+                case BSLX_COSEMSG_KEY_PARAM_KTY:
+                    QCBORDecode_GetInt64(dec, &kty);
+                    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+                    {
+                        BSL_LOG_ERR("Invalid kty value");
+                        return;
+                    }
+                    has_kty = true;
+                    BSL_LOG_DEBUG("got kty %" PRId64, kty);
+                    break;
+                case BSLX_COSEMSG_KEY_PARAM_KID:
+                    QCBORDecode_GetByteString(dec, &kid);
+                    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+                    {
+                        BSL_LOG_ERR("Invalid kid value");
+                        return;
+                    }
+                    break;
+                case BSLX_COSEMSG_KEY_PARAM_ALG:
+                    QCBORDecode_GetInt64(dec, &alg);
+                    if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+                    {
+                        BSL_LOG_ERR("Invalid alg value");
+                        return;
+                    }
+                    has_alg = true;
+                    break;
+                case BSLX_COSEMSG_KEY_PARAM_BASEIV:
+                    QCBORDecode_GetByteString(dec, &baseiv);
+                    break;
+                default:
+                    // consume but ignore
+                    QCBORDecode_VGetNextConsume(dec, &item);
+                    break;
+            }
+        }
+        else if (has_kty)
+        {
+            if (kty == BSLX_COSEMSG_KEY_TYPE_SYMMETRIC)
+            {
+                switch (label)
+                {
+                    case -1:
+                        QCBORDecode_GetByteString(dec, &k_data);
+                        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+                        {
+                            BSL_LOG_ERR("Invalid k value");
+                            return;
+                        }
+                        break;
+                    default:
+                        // key is invalid
+                        BSL_LOG_WARNING("Invalid key label %" PRId64, label);
+                        return;
+                }
+            }
+            else if (kty == BSLX_COSEMSG_KEY_TYPE_EC2)
+            {
+                switch (label)
+                {
+                    case BSLX_COSEMSG_KEY_PARAM_EC2_CRV:
+                        QCBORDecode_GetInt64(dec, &ec_crv);
+                        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+                        {
+                            BSL_LOG_ERR("Invalid crv value");
+                            return;
+                        }
+                        has_crv = true;
+                        break;
+                    case BSLX_COSEMSG_KEY_PARAM_EC2_X:
+                        QCBORDecode_GetByteString(dec, &x_data);
+                        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+                        {
+                            BSL_LOG_ERR("Invalid x value");
+                            return;
+                        }
+                        break;
+                    case BSLX_COSEMSG_KEY_PARAM_EC2_Y:
+                        QCBORDecode_GetByteString(dec, &y_data);
+                        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+                        {
+                            BSL_LOG_ERR("Invalid y value");
+                            return;
+                        }
+                        break;
+                    case BSLX_COSEMSG_KEY_PARAM_EC2_D:
+                        QCBORDecode_GetByteString(dec, &d_data);
+                        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+                        {
+                            BSL_LOG_ERR("Invalid d value");
+                            return;
+                        }
+                        break;
+                    default:
+                        // key is invalid
+                        BSL_LOG_WARNING("Invalid key label %" PRId64, label);
+                        return;
+                }
+            }
+        }
+    }
+
+    // If valid enough to store
+    if (!has_kty || !kid.ptr)
+    {
+        return;
+    }
+    if (kty == BSLX_COSEMSG_KEY_TYPE_SYMMETRIC)
+    {
+        if (k_data.len == 0)
+        {
+            BSL_LOG_WARNING("Ignoring symmetric key without k");
+            return;
+        }
+    }
+    else if (kty == BSLX_COSEMSG_KEY_TYPE_EC2)
+    {
+        if (!has_crv || (x_data.len == 0) || (y_data.len == 0))
+        {
+            BSL_LOG_WARNING("Ignoring EC2 key without x or y");
+            return;
+        }
+    }
+    else
+    {
+        BSL_LOG_WARNING("Ignoring unhandled key type %" PRId64, kty);
+        return;
+    }
+
+    BSL_Crypto_KeyHandle_t keyhandle;
+    // empty key object
+    int res = BSL_KeyStore_State.new_key(&keyhandle);
+    if (BSL_SUCCESS != res)
+    {
+        BSL_LOG_ERR("Unable to create key");
+        return;
+    }
+    BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_KTY), kty);
+
+    if (has_alg)
+    {
+        BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG), alg);
+    }
+    else
+    {
+        BSL_LOG_WARNING("COSE Key without an alg parameter");
+    }
+    if (baseiv.len > 0)
+    {
+        BSL_Data_t view = BSL_DATA_INIT_VIEW(baseiv.ptr, baseiv.len);
+        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV), view);
+    }
+
+    if (k_data.len > 0)
+    {
+        BSL_Data_t view = BSL_DATA_INIT_VIEW(k_data.ptr, k_data.len);
+
+        res = BSL_KeyStore_State.set_keymat(keyhandle, &view);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to set new key material");
+            return;
+        }
+    }
+    if (has_crv)
+    {
+        BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_EC2_CRV), ec_crv);
+    }
+    if (x_data.len > 0)
+    {
+        BSL_Data_t view = BSL_DATA_INIT_VIEW(x_data.ptr, x_data.len);
+        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_EC2_X), view);
+    }
+    if (y_data.len > 0)
+    {
+        BSL_Data_t view = BSL_DATA_INIT_VIEW(y_data.ptr, y_data.len);
+        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_EC2_Y), view);
+    }
+    if (d_data.len > 0)
+    {
+        BSL_Data_t view = BSL_DATA_INIT_VIEW(d_data.ptr, d_data.len);
+        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_EC2_D), view);
+    }
+
+    {
+        BSL_Data_t view = BSL_DATA_INIT_VIEW(kid.ptr, kid.len);
+        // key is immutable after this
+        res = BSL_KeyStore_State.add_key(&view, keyhandle);
+    }
+    BSL_Crypto_ReleaseKeyHandle(keyhandle);
+    BSL_LOG_DEBUG("Store key result %d", res);
+    if (BSL_SUCCESS != res)
+    {
+        BSL_LOG_ERR("Unable to store key");
+    }
+}
+
 /** Decode a @c COSE_KeySet array.
  *  Matches ::BSL_CBOR_Decode_f signature.
  */
@@ -184,103 +413,15 @@ static int BSL_Crypto_KeyLoader_LoadCoseKeySet_decode(QCBORDecodeContext *dec, c
     // array-of-key-maps
     while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
     {
-        bool       has_kty = false;
-        int64_t    kty     = 0;
-        bool       has_alg = false;
-        int64_t    alg     = 0;
-        UsefulBufC kid     = NULLUsefulBufC;
-        UsefulBufC baseiv  = NULLUsefulBufC;
-        UsefulBufC k_data  = NULLUsefulBufC;
-
         QCBORDecode_EnterArray(dec, NULL); // using QCBOR_DECODE_MODE_MAP_AS_ARRAY
 
-        while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
+        BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(dec);
+        if (QCBOR_SUCCESS != QCBORDecode_GetAndResetError(dec))
         {
-            int64_t label;
-            QCBORDecode_GetInt64(dec, &label);
-            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
-            {
-                BSL_LOG_ERR("Unable to get key label");
-                break;
-            }
-            BSL_LOG_DEBUG("got label %" PRId64, label);
-
-            switch (label)
-            {
-                case BSLX_COSEMSG_KEY_PARAM_KTY:
-                    QCBORDecode_GetInt64(dec, &kty);
-                    has_kty = true;
-                    break;
-                case BSLX_COSEMSG_KEY_PARAM_KID:
-                    QCBORDecode_GetByteString(dec, &kid);
-                    break;
-                case BSLX_COSEMSG_KEY_PARAM_ALG:
-                    QCBORDecode_GetInt64(dec, &alg);
-                    has_alg = true;
-                    break;
-                case BSLX_COSEMSG_KEY_PARAM_BASEIV:
-                    QCBORDecode_GetByteString(dec, &baseiv);
-                    break;
-                case -1:
-                    if (has_kty && (kty == 4))
-                    {
-                        QCBORDecode_GetByteString(dec, &k_data);
-                    }
-                    break;
-                default:
-                    // consume but ignore
-                    QCBORDecode_VGetNextConsume(dec, &item);
-                    break;
-            }
-            if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
-            {
-                BSL_LOG_ERR("Unable to get key value");
-                break;
-            }
-
-            if (has_kty && (kty != 4))
-            {
-                BSL_LOG_WARNING("Ignoring non-symmetric key type %" PRId64, kty);
-                break;
-            }
+            BSL_LOG_WARNING("Unable to handle key object");
         }
+
         QCBORDecode_ExitArray(dec);
-
-        // If valid enough to store
-        if (has_kty && kid.ptr && k_data.ptr)
-        {
-            BSL_Data_t kid_view;
-            BSL_Data_InitView(&kid_view, kid.len, (BSL_DataPtr_t)kid.ptr);
-
-            BSL_Crypto_KeyHandle_t keyhandle;
-            BSL_Crypto_LoadKey(k_data.ptr, k_data.len, &keyhandle);
-
-            if (has_alg)
-            {
-                BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG), alg);
-            }
-            else
-            {
-                BSL_LOG_WARNING("COSE Key without an alg parameter");
-            }
-
-            if (baseiv.len > 0)
-            {
-                BSL_Data_t view;
-                BSL_Data_InitView(&view, baseiv.len, (BSL_DataPtr_t)baseiv.ptr);
-                BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV),
-                                       view);
-            }
-
-            retval = BSL_KeyStore_State.add_key(&kid_view, keyhandle);
-            BSL_Crypto_ReleaseKeyHandle(keyhandle);
-            BSL_LOG_DEBUG("Adding key result %d", retval);
-            if (BSL_SUCCESS != retval)
-            {
-                BSL_LOG_ERR("Unable to store key");
-                break;
-            }
-        }
     }
     QCBORDecode_ExitArray(dec);
     return retval;
