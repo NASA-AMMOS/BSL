@@ -117,6 +117,23 @@ enum BSLX_CoseMsg_KeyParam_e
     BSLX_COSEMSG_KEY_PARAM_ALG = 3,
     /// Base IV value as bytes
     BSLX_COSEMSG_KEY_PARAM_BASEIV = 5,
+    /// Curve as @c int64_t
+    BSLX_COSEMSG_KEY_PARAM_EC2_CRV = -1,
+    /// EC2 public X as bytes
+    BSLX_COSEMSG_KEY_PARAM_EC2_X = -2,
+    /// EC2 public Y as bytes
+    BSLX_COSEMSG_KEY_PARAM_EC2_Y = -3,
+    /// EC2 private D as bytes
+    BSLX_COSEMSG_KEY_PARAM_EC2_D = -4,
+};
+
+/** Relevant key types managed by IANA.
+ * https://www.iana.org/assignments/cose#key-type
+ */
+enum BSLX_CoseMsg_KeyType_e
+{
+    BSLX_COSEMSG_KEY_TYPE_EC2 = 2,
+    BSLX_COSEMSG_KEY_TYPE_SYMMETRIC = 4,
 };
 
 /** @struct BSLX_CoseMsg_HdrMapTree_t
