@@ -47,6 +47,15 @@ EXAMPLE_A_1_WITH_BIB = """\
 """
 """ Bundle with BIB over target #1, adjusted sec block to #2 """
 
+EXAMPLE_A_2_WITH_BIB = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [11, 2, 0, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[18, << [<< {1: -51} >>, {4: 'ExampleA.2'}, null, h'9c64328dfe9570262f5be687c35cc51ced48b8682d2a61d8baadfd3410233634251c2c1862b0a194b8503985931051a77731a74a1514b83092d7c662e6dbcda2629af72b24bf1cc3c5e2552f54ddfcc1762e6bc46fd5e6c2137e4a695e563eae'] >>]]] >>],
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
+]
+"""
+""" Bundle with BIB over target #1, using deterministic ECDSA """
+
 EXAMPLE_A_EMPTY_PAYLOAD = """\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
@@ -758,6 +767,21 @@ class TestCoseScEncrypt(TestAgent):
                 expected_output=EXAMPLE_A_NO_SEC,
                 sec_src_eid="dtn://dst/",
                 policy_config="data/cose-sc/policy-any-bib-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+class TestCoseScSign1(TestAgent):
+    def test_exampleA_2_source(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_NO_SEC,
+                expected_output=EXAMPLE_A_2_WITH_BIB,
+                sec_src_eid="dtn://src/",
+                policy_config="data/cose-sc/policy-exA.2-source.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
                 input_data_format=DataFormat.CBORDIAG,
