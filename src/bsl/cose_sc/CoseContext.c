@@ -2481,7 +2481,7 @@ static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_Varia
 }
 
 /** Internal processing according to Section 4.4 of RFC 9052 to generate
- * Sig_Structure bytes.
+ * @c Sig_Structure bytes.
  */
 static void BSLX_CoseSc_Signature_TBS(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *body,
                                       const BSLX_CoseMsg_Headers_t *signer, BSLX_CoseSc_ChunkList_t chunklist,
