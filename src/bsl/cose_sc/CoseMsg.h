@@ -138,7 +138,7 @@ enum BSLX_CoseMsg_KeyParam_e
  */
 enum BSLX_CoseMsg_KeyType_e
 {
-    BSLX_COSEMSG_KEY_TYPE_EC2 = 2,
+    BSLX_COSEMSG_KEY_TYPE_EC2       = 2,
     BSLX_COSEMSG_KEY_TYPE_SYMMETRIC = 4,
 };
 

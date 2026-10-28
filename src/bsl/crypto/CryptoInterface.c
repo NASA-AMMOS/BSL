@@ -41,6 +41,9 @@
 #include <valgrind/memcheck.h>
 #endif /* defined(HAVE_VALGRIND) */
 
+/// The symbol OSSL_SIGNATURE_PARAM_NONCE_TYPE defined in v3.2.0
+#define OPENSSL_CAN_ECDSA_DETERMINISTIC (OPENSSL_VERSION_NUMBER >= 0x30200000L)
+
 extern BSL_KeyStore_Descriptors_t BSL_KeyStore_State;
 
 /// Random bytes generator
@@ -618,19 +621,19 @@ int BSL_SignCtx_Init(BSL_SignCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_C
     int64_t key_crv;
     CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsInt64(key_crv_var, &key_crv));
 
-    const char *grp_name  = NULL;
+    const char *grp_name = NULL;
     switch (key_crv)
     {
         case 1:
-            grp_name  = "P-256";
+            grp_name       = "P-256";
             ctx->coord_len = 32;
             break;
         case 2:
-            grp_name  = "P-384";
+            grp_name       = "P-384";
             ctx->coord_len = 48;
             break;
         case 3:
-            grp_name  = "P-521";
+            grp_name       = "P-521";
             ctx->coord_len = 66;
             break;
         default:
@@ -700,9 +703,7 @@ int BSL_SignCtx_Init(BSL_SignCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_C
     CHK_PRECONDITION(mdctx != NULL);
     ctx->libhandle = mdctx;
 
-#define BSL_CRYPTO_ECDSA_DETERMINISTIC 1
-
-#if BSL_CRYPTO_ECDSA_DETERMINISTIC
+#if OPENSSL_CAN_ECDSA_DETERMINISTIC
     unsigned int nonce_type = 1;
     // full parameters
     OSSL_PARAM sigparams[3] = {
@@ -712,7 +713,7 @@ int BSL_SignCtx_Init(BSL_SignCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_C
     };
 #else
     OSSL_PARAM *sigparams = NULL;
-#endif // BSL_CRYPTO_ECDSA_DETERMINISTIC
+#endif // OPENSSL_CAN_ECDSA_DETERMINISTIC
 
     res = EVP_DigestSignInit_ex(mdctx, NULL, digest_name, NULL, NULL, key, sigparams);
     CHK_PROPERTY(res == 1);
@@ -783,7 +784,7 @@ int BSL_SignCtx_Finalize(BSL_SignCtx_t *ctx, BSL_Data_t *signature)
 {
     ASSERT_ARG_NONNULL(ctx);
     ASSERT_ARG_NONNULL(signature);
-        int res;
+    int res;
 
     // get the needed tag size
     size_t sig_size;
