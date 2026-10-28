@@ -41,7 +41,7 @@
 #include <valgrind/memcheck.h>
 #endif /* defined(HAVE_VALGRIND) */
 
-/// The symbol OSSL_SIGNATURE_PARAM_NONCE_TYPE defined in v3.2.0
+/// The symbol @c OSSL_SIGNATURE_PARAM_NONCE_TYPE defined in v3.2.0
 #define OPENSSL_CAN_ECDSA_DETERMINISTIC (OPENSSL_VERSION_NUMBER >= 0x30200000L)
 
 extern BSL_KeyStore_Descriptors_t BSL_KeyStore_State;
@@ -479,13 +479,10 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
     EVP_MAC_free(mac);
     CHK_PRECONDITION(hmac_ctx->libhandle != NULL);
 
-    OSSL_PARAM params[2];
-    {
-        OSSL_PARAM *par = params;
-
-        *par++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, digest_name, strlen(digest_name));
-        *par++ = OSSL_PARAM_construct_end();
-    }
+    const OSSL_PARAM params[] = {
+        OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, digest_name, strlen(digest_name)),
+        OSSL_PARAM_construct_end(),
+    };
 
     BSL_LOG_PLAINTEXT_PTR("using key", hmac_ctx, key_view.ptr, key_view.len);
     int res = EVP_MAC_init(hmac_ctx->libhandle, key_view.ptr, key_view.len, params);
@@ -594,7 +591,7 @@ int BSL_SignCtx_Init(BSL_SignCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_C
     ASSERT_ARG_NONNULL(ctx);
     CHK_ARG_NONNULL(keyhandle);
 
-    char *digest_name;
+    char *digest_name; // NOSONAR
     switch (variant)
     {
         case BSL_CRYPTO_ECDSA_P256_SHA_256:
@@ -706,13 +703,13 @@ int BSL_SignCtx_Init(BSL_SignCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_C
 #if OPENSSL_CAN_ECDSA_DETERMINISTIC
     unsigned int nonce_type = 1;
     // full parameters
-    OSSL_PARAM sigparams[3] = {
+    const OSSL_PARAM sigparams[] = {
         OSSL_PARAM_construct_uint(OSSL_SIGNATURE_PARAM_NONCE_TYPE, &nonce_type),
         OSSL_PARAM_construct_utf8_string(OSSL_SIGNATURE_PARAM_DIGEST, digest_name, 0),
         OSSL_PARAM_construct_end(),
     };
 #else
-    OSSL_PARAM *sigparams = NULL;
+    const OSSL_PARAM *sigparams = NULL;
 #endif // OPENSSL_CAN_ECDSA_DETERMINISTIC
 
     res = EVP_DigestSignInit_ex(mdctx, NULL, digest_name, NULL, NULL, key, sigparams);
@@ -813,13 +810,15 @@ int BSL_SignCtx_Finalize(BSL_SignCtx_t *ctx, BSL_Data_t *signature)
         ECDSA_SIG     *ecdsa_sig = d2i_ECDSA_SIG(NULL, &offset, (long)dersig->len);
         CHK_PROPERTY(ecdsa_sig);
 
-        const BIGNUM *r = NULL, *s = NULL;
-        ECDSA_SIG_get0(ecdsa_sig, &r, &s);
-        CHK_PROPERTY(r);
-        CHK_PROPERTY(s);
+        const BIGNUM *sig_r = NULL;
+        const BIGNUM *sig_s = NULL;
+        ECDSA_SIG_get0(ecdsa_sig, &sig_r, &sig_s);
+        CHK_PROPERTY(sig_r);
+        CHK_PROPERTY(sig_s);
+
         BSL_Data_Resize(signature, 2 * ctx->coord_len);
-        BN_bn2binpad(r, signature->ptr, (int)(ctx->coord_len));
-        BN_bn2binpad(s, signature->ptr + ctx->coord_len, (int)(ctx->coord_len));
+        BN_bn2binpad(sig_r, signature->ptr, (int)(ctx->coord_len));
+        BN_bn2binpad(sig_s, signature->ptr + ctx->coord_len, (int)(ctx->coord_len));
         ECDSA_SIG_free(ecdsa_sig);
     }
 

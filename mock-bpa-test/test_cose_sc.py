@@ -887,6 +887,8 @@ class TestCoseScSign1(TestAgent):
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
                 input_data_format=DataFormat.CBORDIAG,
-                expected_output_format=(DataFormat.CBORDIAG if OPENSSL_CAN_ECDSA_DETERMINISTIC else DataFormat.ANYCBOR),
+                expected_output_format=(
+                    DataFormat.CBORDIAG if OPENSSL_CAN_ECDSA_DETERMINISTIC else DataFormat.ANYCBOR
+                ),
             )
         )
