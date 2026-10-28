@@ -1954,8 +1954,16 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
         }
         else
         {
-            read_len  = ctx->target_block.btsd_len - tag_len;
-            write_len = read_len;
+            if (ctx->target_block.btsd_len < tag_len)
+            {
+                BSL_LOG_ERR("Target ciphertext length shorter than auth tag length");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
+            else
+            {
+                read_len  = ctx->target_block.btsd_len - tag_len;
+                write_len = read_len;
+            }
         }
     }
 
