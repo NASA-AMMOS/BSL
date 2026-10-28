@@ -429,7 +429,7 @@ BSL_REQUIRE_CHECK
 int BSL_SignCtx_Init(BSL_SignCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant);
 
 /**
-* Input data to signature context.
+ * Input data to signature context.
  * @param[in,out] ctx pointer to hmac context struct to add data to
  * @param[in] data buffer containing data to sign
  * @param data_len length of incoming data buffer, which is internally limited to INT_MAX

@@ -100,6 +100,7 @@ dir
 DocID
 doxygen
 dtn
+ECDSA
 eid
 Encodings
 enum

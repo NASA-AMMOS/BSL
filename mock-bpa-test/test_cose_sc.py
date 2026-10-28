@@ -23,6 +23,7 @@
 
 import logging
 import os
+import ssl
 
 from _test_util import BundleDestLoc, DataFormat, _TestCase, sc_config_modifier
 from test_bpa import TestAgent
@@ -774,6 +775,10 @@ class TestCoseScEncrypt(TestAgent):
             )
         )
 
+# Assume that the same version compiled into BSL is used for this runtime
+OPENSSL_CAN_ECDSA_DETERMINISTIC = ssl.OPENSSL_VERSION_INFO[:2] >= (3, 2)
+
+
 class TestCoseScSign1(TestAgent):
     def test_exampleA_2_source(self):
         self._single_test(
@@ -785,6 +790,6 @@ class TestCoseScSign1(TestAgent):
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
                 input_data_format=DataFormat.CBORDIAG,
-                expected_output_format=DataFormat.CBORDIAG,
+                expected_output_format=(DataFormat.CBORDIAG if OPENSSL_CAN_ECDSA_DETERMINISTIC else DataFormat.ANYCBOR),
             )
         )
