@@ -775,16 +775,18 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
 
                 // Cannot add BIB or BCB to fragmented bundle
                 BSL_PrimaryBlock_t primary_block;
+                BSL_PrimaryBlock_Init(&primary_block);
                 if (BSL_SUCCESS != BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block))
                 {
                     BSL_LOG_ERR("Cannot get bundle primary block");
+                    BSL_PrimaryBlock_deinit(&primary_block);
                     return BSL_ERR_HOST_CALLBACK_FAILED;
                 }
+
                 if (0 != (primary_block.field_flags & BSL_BUNDLE_IS_FRAGMENT))
                 {
                     BSL_LOG_ERR("Cannot add BIB or BCB to fragmented bundle");
                     secop_invalid_count++;
-                    continue;
                 }
                 BSL_PrimaryBlock_deinit(&primary_block);
             }

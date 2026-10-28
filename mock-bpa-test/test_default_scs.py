@@ -564,3 +564,23 @@ class TestBcbAesGcm(TestAgent):
                 expected_output_format=DataFormat.ANYCBOR,
             )
         )
+
+    def test_fragmented_bundle_source_rejected(self):
+        input_diag = """\
+[_
+    [7, 1, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000, 0, 70],
+    [1, 1, 0, 0, h'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
+]
+"""
+
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=(r".*<ERROR>.*Cannot add BIB or BCB to fragmented bundle"),
+                policy_config="data/default-scs/policy-exA.1-source.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ERR,
+            )
+        )
