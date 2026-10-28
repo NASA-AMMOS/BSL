@@ -197,12 +197,12 @@ Much of the public API involves state kept in a struct with associated functions
 Generally, users of the API should not access struct members directly.
 But specific documentation on each struct will define its specific public API.
 
-## Initialization <name>\_Init() and <name>\_Init\_<form>()
+## Initialization `<name>_Init()` and `<name>_Init_<form>()`
 
 All BSL structs must have an associated initialization function.
 Members of the struct cannot be accessed before its initialization and functions called on the struct will have undefined behavior.
 
-## De-initialization <name>\_Deinit()
+## De-initialization `<name>_Deinit()`
 
 All BSL structs must have an associated de-initialization function.
 After its de-initialization the members of the struct will no longer have well defined state.

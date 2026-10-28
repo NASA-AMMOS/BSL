@@ -76,7 +76,7 @@ int BSLX_CoseSc_SetAadScope(BSL_Variant_t *option, const BSLX_CoseSc_AadScope_It
 /** Acceptable target algorithms for MAC.
  * @note These must be sorted for @c bsearch() to work.
  */
-static const int64_t cose_bib_cnt_algs[] = {
+static const int64_t cose_mac_cnt_algs[] = {
     BSLX_COSEMSG_ALG_HMAC_SHA_256_256,
     BSLX_COSEMSG_ALG_HMAC_SHA_384_384,
     BSLX_COSEMSG_ALG_HMAC_SHA_512_512,
@@ -84,10 +84,18 @@ static const int64_t cose_bib_cnt_algs[] = {
 /** Acceptable target algorithms for Encrypt.
  * @note These must be sorted for @c bsearch() to work.
  */
-static const int64_t cose_bcb_cnt_algs[] = {
+static const int64_t cose_enc_cnt_algs[] = {
     BSLX_COSEMSG_ALG_AES_GCM_128,
     BSLX_COSEMSG_ALG_AES_GCM_192,
     BSLX_COSEMSG_ALG_AES_GCM_256,
+};
+/** Acceptable target algorithms for Sign.
+ * @note These must be sorted for @c bsearch() to work.
+ */
+static const int64_t cose_sign_cnt_algs[] = {
+    BSLX_COSEMSG_ALG_ESP512,
+    BSLX_COSEMSG_ALG_ESP384,
+    BSLX_COSEMSG_ALG_ESP256,
 };
 #if 0
 /// Acceptable recipient algorithms for MAC and Encrypt
@@ -153,6 +161,10 @@ typedef struct
     bool hdr_tgt_alg;
     /// Required content layer algorithm from ::BSLX_CoseMsg_Alg_e
     int64_t tgt_alg;
+    /** The result type to use when #is_source is true.
+     * This is based on the security service #is_bib and target algorithm #tgt_alg.
+     */
+    enum BSLX_CoseSc_Result_e src_msg;
     /// Key length for #tgt_alg
     size_t tgt_keylen;
 
@@ -201,9 +213,10 @@ typedef struct
 
     /// MAC processing state, may be NULL
     BSL_AuthCtx_t *mac_ctx;
-
     /// Encrypt processing state, may be NULL
     BSL_Cipher_t *enc_ctx;
+    /// Signature processing state, may be NULL
+    BSL_SigCtx_t *sig_ctx;
 
 } BSLX_CoseSc_t;
 
@@ -242,6 +255,11 @@ static void BSLX_CoseSc_Deinit(BSLX_CoseSc_t *self)
     {
         BSL_Cipher_Deinit(self->enc_ctx);
         BSL_free(self->enc_ctx);
+    }
+    if (self->sig_ctx)
+    {
+        BSL_SigCtxSign_Deinit(self->sig_ctx);
+        BSL_free(self->sig_ctx);
     }
 
     BSL_PrimaryBlock_deinit(&self->primary_block);
@@ -461,13 +479,30 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         const uint64_t *found;
         if (self->is_bib)
         {
-            found = bsearch(&self->tgt_alg, cose_bib_cnt_algs, sizeof(cose_bib_cnt_algs) / sizeof(int64_t),
+            found = bsearch(&self->tgt_alg, cose_mac_cnt_algs, sizeof(cose_mac_cnt_algs) / sizeof(int64_t),
                             sizeof(int64_t), &local_cmp_int64);
+            if (found)
+            {
+                self->src_msg = BSLX_COSESC_RESULT_COSE_MAC0;
+            }
+            else
+            {
+                found = bsearch(&self->tgt_alg, cose_sign_cnt_algs, sizeof(cose_sign_cnt_algs) / sizeof(int64_t),
+                                sizeof(int64_t), &local_cmp_int64);
+                if (found)
+                {
+                    self->src_msg = BSLX_COSESC_RESULT_COSE_SIGN1;
+                }
+            }
         }
         else
         {
-            found = bsearch(&self->tgt_alg, cose_bcb_cnt_algs, sizeof(cose_bcb_cnt_algs) / sizeof(int64_t),
+            found = bsearch(&self->tgt_alg, cose_enc_cnt_algs, sizeof(cose_enc_cnt_algs) / sizeof(int64_t),
                             sizeof(int64_t), &local_cmp_int64);
+            if (found)
+            {
+                self->src_msg = BSLX_COSESC_RESULT_COSE_ENCRYPT0;
+            }
         }
         if (!found)
         {
@@ -962,7 +997,7 @@ static void BSLX_CoseSc_GetAndValidateTarget(BSLX_CoseSc_t *self, const BSLX_Cos
             self->tgt_keylen = 64;
             break;
         default:
-            BSL_LOG_ERR("Unhandled content alg %" PRId64, self->tgt_alg);
+            BSL_LOG_DEBUG("Unhandled content alg %" PRId64, self->tgt_alg);
             self->tgt_keylen = 0;
             break;
     }
@@ -2453,6 +2488,357 @@ static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_Varia
     BSLX_CoseMsg_Encrypt_Deinit(&msg);
 }
 
+/** Internal processing according to Section 4.4 of RFC 9052 to generate
+ * @c Sig_Structure bytes.
+ */
+static void BSLX_CoseSc_Signature_TBS(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *body,
+                                      const BSLX_CoseMsg_Headers_t *signer, BSLX_CoseSc_ChunkList_t chunklist,
+                                      BSL_Crypto_SignVariant_e *bsl_sig_var)
+{
+    switch (ctx->tgt_alg)
+    {
+        case BSLX_COSEMSG_ALG_ESP256:
+            *bsl_sig_var = BSL_CRYPTO_ECDSA_P256_SHA_256;
+            break;
+        case BSLX_COSEMSG_ALG_ESP384:
+            *bsl_sig_var = BSL_CRYPTO_ECDSA_P384_SHA_384;
+            break;
+        case BSLX_COSEMSG_ALG_ESP512:
+            *bsl_sig_var = BSL_CRYPTO_ECDSA_P521_SHA_512;
+            break;
+        default:
+            BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, ctx->tgt_alg);
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            return;
+    }
+
+    { // 4-item array
+        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_ARRAY, 4);
+    }
+    BSLX_CoseSc_BuildAad(ctx, chunklist, body, signer ? "Signature" : "Signature1");
+    { // length of payload
+        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->target_block.btsd_len);
+    }
+    { // the target BTSD as payload
+        BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
+        // GCOV_EXCL_START
+        if (!seq)
+        {
+            BSL_LOG_ERR("Failed to construct reader");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            return;
+        }
+        // GCOV_EXCL_STOP
+        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+        BSLX_CoseSc_ChunkItem_move_seq(*item, seq);
+    }
+}
+
+/** Internal processing according to Section 4.4 of RFC 9052 to sign.
+ */
+static void BSLX_CoseSc_Signature_Sign(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *body,
+                                       const BSLX_CoseMsg_Headers_t *signer, BSL_Data_t *signature)
+{
+    int res;
+
+    BSL_Crypto_SignVariant_e bsl_sig_var;
+
+    // Chunks of Sig_Structure
+    BSLX_CoseSc_ChunkList_t chunklist;
+    BSLX_CoseSc_ChunkList_init(chunklist);
+    BSLX_CoseSc_Signature_TBS(ctx, body, signer, chunklist, &bsl_sig_var);
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        ctx->sig_ctx = BSL_malloc(sizeof(BSL_SigCtx_t));
+        // use separate content key when available
+        BSL_Crypto_KeyHandle_t content_key = ctx->cekhandle ? ctx->cekhandle : ctx->keyhandle;
+
+        res = BSL_SigCtxSign_Init(ctx->sig_ctx, content_key, bsl_sig_var);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to construct MAC context");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+        }
+        // GCOV_EXCL_STOP
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_ChunkList_it_t chunk_it;
+        for (BSLX_CoseSc_ChunkList_it(chunk_it, chunklist); !BSLX_CoseSc_ChunkList_end_p(chunk_it);
+             BSLX_CoseSc_ChunkList_next(chunk_it))
+        {
+            const BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_cref(chunk_it);
+
+            const m_bstring_t      *data;
+            BSL_SeqReader_t *const *seq;
+            if ((data = BSLX_CoseSc_ChunkItem_cget_data(*item)))
+            {
+                size_t         size = m_bstring_size(*data);
+                const uint8_t *ptr  = m_bstring_view(*data, 0, size);
+
+                res = BSL_SigCtxSign_DigestBuffer(ctx->sig_ctx, ptr, size);
+                // GCOV_EXCL_START
+                if (BSL_SUCCESS != res)
+                {
+                    BSL_LOG_ERR("Failed to process signature");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                }
+                // GCOV_EXCL_STOP
+            }
+            else if ((seq = BSLX_CoseSc_ChunkItem_cget_seq(*item)))
+            {
+                res = BSL_SigCtxSign_DigestSeq(ctx->sig_ctx, *seq);
+                // GCOV_EXCL_START
+                if (BSL_SUCCESS != res)
+                {
+                    BSL_LOG_ERR("Failed to process signature");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                }
+                // GCOV_EXCL_STOP
+            }
+            // GCOV_EXCL_START
+            else
+            {
+                BSL_LOG_WARNING("Ignoring empty chunk");
+            }
+            // GCOV_EXCL_STOP
+        }
+    }
+
+    { // unconditionally cleanup
+        BSLX_CoseSc_ChunkList_it_t chunk_it;
+        for (BSLX_CoseSc_ChunkList_it(chunk_it, chunklist); !BSLX_CoseSc_ChunkList_end_p(chunk_it);
+             BSLX_CoseSc_ChunkList_next(chunk_it))
+        {
+            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_ref(chunk_it);
+
+            BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
+            if (seq)
+            {
+                BSL_SeqReader_Destroy(*seq);
+                *seq = NULL;
+            }
+        }
+    }
+    BSLX_CoseSc_ChunkList_clear(chunklist);
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        res = BSL_SigCtxSign_Finalize(ctx->sig_ctx, signature);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("BSL_SigCtxSign_Finalize failed with code %d", res);
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+        }
+        // GCOV_EXCL_STOP
+    }
+}
+
+/** Internal processing according to Section 4.4 of RFC 9052 to verify.
+ */
+static void BSLX_CoseSc_Signature_Verify(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *body,
+                                         const BSLX_CoseMsg_Headers_t *signer, const BSL_Data_t *signature)
+{
+    int res;
+
+    BSL_Crypto_SignVariant_e bsl_sig_var;
+
+    // Chunks of Sig_Structure
+    BSLX_CoseSc_ChunkList_t chunklist;
+    BSLX_CoseSc_ChunkList_init(chunklist);
+    BSLX_CoseSc_Signature_TBS(ctx, body, signer, chunklist, &bsl_sig_var);
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        ctx->sig_ctx = BSL_malloc(sizeof(BSL_SigCtx_t));
+        // use separate content key when available
+        BSL_Crypto_KeyHandle_t content_key = ctx->cekhandle ? ctx->cekhandle : ctx->keyhandle;
+
+        res = BSL_SigCtxVerify_Init(ctx->sig_ctx, content_key, bsl_sig_var);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to construct MAC context");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+        }
+        // GCOV_EXCL_STOP
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_ChunkList_it_t chunk_it;
+        for (BSLX_CoseSc_ChunkList_it(chunk_it, chunklist); !BSLX_CoseSc_ChunkList_end_p(chunk_it);
+             BSLX_CoseSc_ChunkList_next(chunk_it))
+        {
+            const BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_cref(chunk_it);
+
+            const m_bstring_t      *data;
+            BSL_SeqReader_t *const *seq;
+            if ((data = BSLX_CoseSc_ChunkItem_cget_data(*item)))
+            {
+                size_t         size = m_bstring_size(*data);
+                const uint8_t *ptr  = m_bstring_view(*data, 0, size);
+
+                res = BSL_SigCtxVerify_DigestBuffer(ctx->sig_ctx, ptr, size);
+                // GCOV_EXCL_START
+                if (BSL_SUCCESS != res)
+                {
+                    BSL_LOG_ERR("Failed to process signature");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                }
+                // GCOV_EXCL_STOP
+            }
+            else if ((seq = BSLX_CoseSc_ChunkItem_cget_seq(*item)))
+            {
+                res = BSL_SigCtxVerify_DigestSeq(ctx->sig_ctx, *seq);
+                // GCOV_EXCL_START
+                if (BSL_SUCCESS != res)
+                {
+                    BSL_LOG_ERR("Failed to process signature");
+                    ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                }
+                // GCOV_EXCL_STOP
+            }
+            // GCOV_EXCL_START
+            else
+            {
+                BSL_LOG_WARNING("Ignoring empty chunk");
+            }
+            // GCOV_EXCL_STOP
+        }
+    }
+
+    { // unconditionally cleanup
+        BSLX_CoseSc_ChunkList_it_t chunk_it;
+        for (BSLX_CoseSc_ChunkList_it(chunk_it, chunklist); !BSLX_CoseSc_ChunkList_end_p(chunk_it);
+             BSLX_CoseSc_ChunkList_next(chunk_it))
+        {
+            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_ref(chunk_it);
+
+            BSL_SeqReader_t **seq = BSLX_CoseSc_ChunkItem_get_seq(*item);
+            if (seq)
+            {
+                BSL_SeqReader_Destroy(*seq);
+                *seq = NULL;
+            }
+        }
+    }
+    BSLX_CoseSc_ChunkList_clear(chunklist);
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        res = BSL_SigCtxVerify_Finalize(ctx->sig_ctx, signature);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("BSL_SigCtxVerify_Finalize failed with code %d", res);
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+        }
+        else
+        {
+            BSL_LOG_DEBUG("Signature verified");
+        }
+    }
+}
+
+/** Internal processing to source a COSE_Sign1 message.
+ */
+static void BSLX_CoseSc_Sign1_Source(BSLX_CoseSc_t *ctx)
+{
+    int res;
+
+    BSLX_CoseMsg_Sign1_t msg;
+    BSLX_CoseMsg_Sign1_Init(&msg);
+
+    BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, NULL);
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_Signature_Sign(ctx, &msg.headers, NULL, &msg.signature);
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_AddAadScope(ctx);
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSL_Data_t msg_enc;
+        BSL_Data_Init(&msg_enc);
+        res = BSL_CBOR_Encode_Twopass(&msg_enc, (BSL_CBOR_Encode_f)&BSLX_CoseMsg_Sign1_Encode, &msg);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to encode Sign1");
+            ctx->status = res;
+        }
+        // GCOV_EXCL_STOP
+        else
+        {
+            BSL_Variant_t *result = BSL_SecOper_AddResult(ctx->sec_oper, BSLX_COSESC_RESULT_COSE_SIGN1);
+            BSL_Variant_SetBytestr(result, msg_enc);
+        }
+        BSL_Data_Deinit(&msg_enc);
+    }
+
+    BSLX_CoseMsg_Sign1_Deinit(&msg);
+}
+
+/** Internal processing to verify a COSE_Sign1 message.
+ */
+static void BSLX_CoseSc_Sign1_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_Variant_t *result)
+{
+    int res;
+
+    BSLX_CoseSc_GetAndValidateAddlHeaders(ctx);
+    BSLX_CoseSc_GetAndValidateAadScope(ctx);
+    if (BSL_SUCCESS != ctx->status)
+    {
+        // early exit
+        return;
+    }
+
+    BSLX_CoseMsg_Sign1_t msg;
+    BSLX_CoseMsg_Sign1_Init(&msg);
+    {
+        BSL_Data_t msg_enc;
+        BSL_Data_Init(&msg_enc);
+        if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(result, &msg_enc))
+        {
+            BSL_LOG_ERR("Failed to get encoded message");
+            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+        }
+        else
+        {
+            res = BSL_CBOR_Decode(&msg_enc, (BSL_CBOR_Decode_f)&BSLX_CoseMsg_Sign1_Decode, &msg);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to decode COSE_Sign1");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+            }
+        }
+        BSL_Data_Deinit(&msg_enc);
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_VerifyHeaders(ctx, &msg.headers, NULL);
+    }
+
+    if (BSL_SUCCESS == ctx->status)
+    {
+        BSLX_CoseSc_Signature_Verify(ctx, &msg.headers, NULL, &msg.signature);
+    }
+
+    BSLX_CoseMsg_Sign1_Deinit(&msg);
+}
+
 int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper) // NOSONAR
 {
     BSLX_CoseSc_t ctx;
@@ -2475,25 +2861,49 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecO
             if (ctx.key_alg != ctx.tgt_alg)
             {
                 // has a recipient layer
-                if (ctx.is_bib)
+                switch (ctx.src_msg)
                 {
-                    BSLX_CoseSc_Mac_Source(&ctx);
-                }
-                else
-                {
-                    BSLX_CoseSc_Encrypt_Source(&ctx);
+                    case BSLX_COSESC_RESULT_COSE_MAC0:
+                        BSLX_CoseSc_Mac_Source(&ctx);
+                        break;
+                    case BSLX_COSESC_RESULT_COSE_ENCRYPT0:
+                        BSLX_CoseSc_Encrypt_Source(&ctx);
+                        break;
+                    case BSLX_COSESC_RESULT_COSE_SIGN1:
+                    // GCOV_EXCL_START
+                    case BSLX_COSESC_RESULT_COSE_ENCRYPT:
+                    case BSLX_COSESC_RESULT_COSE_MAC:
+                    case BSLX_COSESC_RESULT_COSE_SIGN:
+                    default:
+                        BSL_LOG_ERR("Unhandled source case");
+                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                        break;
+                        // GCOV_EXCL_STOP
                 }
             }
             else
             {
                 // only one content layer
-                if (ctx.is_bib)
+                switch (ctx.src_msg)
                 {
-                    BSLX_CoseSc_Mac0_Source(&ctx);
-                }
-                else
-                {
-                    BSLX_CoseSc_Encrypt0_Source(&ctx);
+                    case BSLX_COSESC_RESULT_COSE_MAC0:
+                        BSLX_CoseSc_Mac0_Source(&ctx);
+                        break;
+                    case BSLX_COSESC_RESULT_COSE_ENCRYPT0:
+                        BSLX_CoseSc_Encrypt0_Source(&ctx);
+                        break;
+                    case BSLX_COSESC_RESULT_COSE_SIGN1:
+                        BSLX_CoseSc_Sign1_Source(&ctx);
+                        break;
+                    // GCOV_EXCL_START
+                    case BSLX_COSESC_RESULT_COSE_ENCRYPT:
+                    case BSLX_COSESC_RESULT_COSE_MAC:
+                    case BSLX_COSESC_RESULT_COSE_SIGN:
+                    default:
+                        BSL_LOG_ERR("Unhandled source case");
+                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                        break;
+                        // GCOV_EXCL_STOP
                 }
             }
         }
@@ -2507,38 +2917,36 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecO
             }
             else
             {
+                const BSL_Variant_t *result;
                 if (ctx.is_bib)
                 {
-                    const BSL_Variant_t *result_mac0 =
-                        BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC0);
-                    const BSL_Variant_t *result_mac = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC);
-                    if (result_mac0)
+                    if ((result = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC0)))
                     {
-                        BSLX_CoseSc_Mac0_VerifyAccept(&ctx, result_mac0);
+                        BSLX_CoseSc_Mac0_VerifyAccept(&ctx, result);
                     }
-                    else if (result_mac)
+                    else if ((result = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_MAC)))
                     {
-                        BSLX_CoseSc_Mac_VerifyAccept(&ctx, result_mac);
+                        BSLX_CoseSc_Mac_VerifyAccept(&ctx, result);
+                    }
+                    else if ((result = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_SIGN1)))
+                    {
+                        BSLX_CoseSc_Sign1_VerifyAccept(&ctx, result);
                     }
                     else
                     {
-                        BSL_LOG_ERR("Need either a COSE_Mac0 or COSE_Mac result");
+                        BSL_LOG_ERR("Need either a COSE_Mac0 or COSE_Mac or COSE_Sign1 result");
                         ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                     }
                 }
                 else
                 {
-                    const BSL_Variant_t *result_enc0 =
-                        BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT0);
-                    const BSL_Variant_t *result_enc =
-                        BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT);
-                    if (result_enc0)
+                    if ((result = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT0)))
                     {
-                        BSLX_CoseSc_Encrypt0_VerifyAccept(&ctx, result_enc0);
+                        BSLX_CoseSc_Encrypt0_VerifyAccept(&ctx, result);
                     }
-                    else if (result_enc)
+                    else if ((result = BSL_SecOper_FindResult(ctx.sec_oper, BSLX_COSESC_RESULT_COSE_ENCRYPT)))
                     {
-                        BSLX_CoseSc_Encrypt_VerifyAccept(&ctx, result_enc);
+                        BSLX_CoseSc_Encrypt_VerifyAccept(&ctx, result);
                     }
                     else
                     {

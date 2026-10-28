@@ -23,6 +23,7 @@
 
 import logging
 import os
+import ssl
 
 from _test_util import BundleDestLoc, DataFormat, _TestCase, sc_config_modifier
 from test_bpa import TestAgent
@@ -46,6 +47,15 @@ EXAMPLE_A_1_WITH_BIB = """\
 ]
 """
 """ Bundle with BIB over target #1, adjusted sec block to #2 """
+
+EXAMPLE_A_2_WITH_BIB = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [11, 2, 0, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[18, << [<< {1: -51} >>, {4: 'ExampleA.2'}, null, h'9c64328dfe9570262f5be687c35cc51ced48b8682d2a61d8baadfd3410233634251c2c1862b0a194b8503985931051a77731a74a1514b83092d7c662e6dbcda2629af72b24bf1cc3c5e2552f54ddfcc1762e6bc46fd5e6c2137e4a695e563eae'] >>]]] >>],
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
+]
+"""
+""" Bundle with BIB over target #1, using deterministic ECDSA """
 
 EXAMPLE_A_EMPTY_PAYLOAD = """\
 [_
@@ -249,7 +259,7 @@ class TestCoseScMac0(TestAgent):
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_1_WITH_BIB,
-                    expected_output=".*<ERROR>.* Mismatched key ID value",
+                    expected_output=r".*<ERROR>.* Mismatched key ID value",
                     sec_src_eid="dtn://dst/",
                     policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
@@ -267,7 +277,7 @@ class TestCoseScMac0(TestAgent):
             self._single_test(
                 _TestCase(
                     input_data=EXAMPLE_A_1_WITH_BIB,
-                    expected_output=".*<ERROR>.* Mismatch of AAD Scope parameter",
+                    expected_output=r".*<ERROR>.* Mismatch of AAD Scope parameter",
                     sec_src_eid="dtn://dst/",
                     policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
@@ -287,7 +297,7 @@ class TestCoseScMac0(TestAgent):
     [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
 ]
 """,
-                expected_output=".*<ERROR>.* Unknown key from ID",
+                expected_output=r".*<ERROR>.* Unknown key from ID",
                 sec_src_eid="dtn://dst/",
                 policy_config="data/cose-sc/policy-any-bib-accept.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -544,7 +554,7 @@ class TestCoseScEncrypt0(TestAgent):
         self._single_test(
             _TestCase(
                 input_data=input_diag,
-                expected_output=".*<ERROR>.* No full or parital IV header present",
+                expected_output=r".*<ERROR>.* No full or parital IV header present",
                 sec_src_eid="dtn://dst/",
                 policy_config="data/cose-sc/policy-any-bcb-accept.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -691,7 +701,7 @@ class TestCoseScEncrypt(TestAgent):
         self._single_test(
             _TestCase(
                 input_data=input_diag,
-                expected_output=".*<ERROR>.* Missing required salt header",
+                expected_output=r".*<ERROR>.* Missing required salt header",
                 sec_src_eid="dtn://dst/",
                 policy_config="data/cose-sc/policy-any-bcb-accept.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -713,7 +723,7 @@ class TestCoseScEncrypt(TestAgent):
         self._single_test(
             _TestCase(
                 input_data=input_diag,
-                expected_output=".*<ERROR>.* Invalid salt header",
+                expected_output=r".*<ERROR>.* Invalid salt header",
                 sec_src_eid="dtn://dst/",
                 policy_config="data/cose-sc/policy-any-bcb-accept.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -762,5 +772,104 @@ class TestCoseScEncrypt(TestAgent):
                 key_set="data/cose-sc/keyset-1.cbordiag",
                 input_data_format=DataFormat.CBORDIAG,
                 expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+
+# Assume that the same version compiled into BSL is used for this runtime
+OPENSSL_CAN_ECDSA_DETERMINISTIC = ssl.OPENSSL_VERSION_INFO[:2] >= (3, 2)
+
+
+class TestCoseScSign1(TestAgent):
+    def test_exampleA_2_source(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_NO_SEC,
+                expected_output=EXAMPLE_A_2_WITH_BIB,
+                sec_src_eid="dtn://src/",
+                policy_config="data/cose-sc/policy-exA.2-source.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=(
+                    DataFormat.CBORDIAG if OPENSSL_CAN_ECDSA_DETERMINISTIC else DataFormat.ANYCBOR
+                ),
+            )
+        )
+
+    def test_exampleA_2_acceptor_valid_loose(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_2_WITH_BIB,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-any-bib-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_exampleA_2_acceptor_valid_pubkey(self):
+        input_diag = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [11, 2, 0, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[18, << [<< {1: -51} >>, {4: 'ExampleA.2-pub'}, null, h'9c64328dfe9570262f5be687c35cc51ced48b8682d2a61d8baadfd3410233634251c2c1862b0a194b8503985931051a77731a74a1514b83092d7c662e6dbcda2629af72b24bf1cc3c5e2552f54ddfcc1762e6bc46fd5e6c2137e4a695e563eae'] >>]]] >>],
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
+]
+"""
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-any-bib-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_exampleA_2_acceptor_invalid_altered_sig(self):
+        input_diag = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [11, 2, 0, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[18, << [<< {1: -51} >>, {4: 'ExampleA.2'}, null, h'9c64328dfe9570262f5be687c35cc51ced48b8682d2a61d8baadfd3410233634251c2c1862b0a194b8503985931051a77731a74a1514b83092d7c662e6dbcda2629af72b24bf1cc3c5e2552f54ddfcc1762e6bc46fd5e6c2137e4a695e563ead'] >>]]] >>],
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
+]
+"""
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=r".*<ERROR>.* BSL_SigCtxVerify_Finalize failed with code -200",
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-any-bib-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ERR,
+            )
+        )
+
+    def test_exampleA_2_acceptor_invalid_short_sig(self):
+        input_diag = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
+    [11, 2, 0, 0, << [1], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[18, << [<< {1: -51} >>, {4: 'ExampleA.2'}, null, h'01020304'] >>]]] >>],
+    [1, 1, 0, 2, h'6568656C6C6F', h'4EC359D2']
+]
+"""
+        self._single_test(
+            _TestCase(
+                input_data=input_diag,
+                expected_output=r".*<ERROR>.* Precondition Failed: Did not satisfy \(catsig->len == 2 \* ctx->coord_len\).*",
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-any-bib-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ERR,
             )
         )

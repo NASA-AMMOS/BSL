@@ -280,7 +280,7 @@ void BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx);
  *
  * HMAC Operations:
  *
- * To generate HMAC over a string,
+ * To generate HMAC tag over a string,
  * 1. Initialize the HMAC generation context: BSL_AuthCtx_Init()
  * 2. Add data to the HMAC context. This can be done with a flat buffer: BSL_AuthCtx_DigestBuffer(),
  * or with a sequential reader: BSL_AuthCtx_DigestSeq()
@@ -367,6 +367,148 @@ int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *tag);
 void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx);
 
 ///@} MAC
+
+/** @name Integrity Signature interface
+ *
+ * To generate a digital signature over a string,
+ * 1. Initialize the generation context: BSL_SigCtxSign_Init()
+ * 2. Add data to the context. This can be done with a flat buffer: BSL_SigCtxSign_DigestBuffer(),
+ * or with a sequential reader: BSL_SigCtxSign_DigestSeq()
+ * 3. Finalize the context to get final tag: BSL_SigCtxSign_Finalize()
+ * 4. Deinitialize the context: BSL_SigCtxSign_Deinit()
+ *
+ * To verify a digital signature over a string,
+ * 1. Initialize the generation context: BSL_SigCtxVerify_Init()
+ * 2. Add data to the context. This can be done with a flat buffer: BSL_SigCtxVerify_DigestBuffer(),
+ * or with a sequential reader: BSL_SigCtxVerify_DigestSeq()
+ * 3. Finalize the context to get final tag: BSL_SigCtxVerify_Finalize()
+ * 4. Deinitialize the context: BSL_SigCtxVerify_Deinit()
+ */
+///@{
+
+/** Choice of fully-specified signature algorithm.
+ */
+typedef enum
+{
+    /// ECDSA P256 with SHA2-256 digest
+    BSL_CRYPTO_ECDSA_P256_SHA_256,
+    /// ECDSA P384 with SHA2-384 digest
+    BSL_CRYPTO_ECDSA_P384_SHA_384,
+    /// ECDSA P521 with SHA2-512 digest
+    BSL_CRYPTO_ECDSA_P521_SHA_512,
+} BSL_Crypto_SignVariant_e;
+
+/**
+ * Struct def for signature (signing or verification) context
+ */
+typedef struct BSL_SigCtx_s
+{
+    /// Signature variant of context
+    BSL_Crypto_SignVariant_e variant;
+    /// pointer to library specific data
+    BSL_Crypto_LibHandle_t libhandle;
+    /// Key handle used by context
+    BSL_Crypto_KeyHandle_t keyhandle;
+    /// Derived internal coordinate length in bytes
+    size_t coord_len;
+    /**
+     * Block size used by backend
+     * @note Private value
+     */
+    size_t block_size;
+    /** Storage for input blocks.
+     * After init this is sized to #block_size.
+     */
+    BSL_Data_t in_buf;
+} BSL_SigCtx_t;
+
+/**
+ * Initialize signature context resources and set private key and variant.
+ * @param[in,out] ctx pointer to hmac context struct to init and set
+ * @param[in] keyhandle handle for key to use.
+ * The HMAC context keeps its own reference to this handle.
+ * @param[in] variant Signature variant to use.
+ * @return 0 if successful
+ */
+BSL_REQUIRE_CHECK
+int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant);
+
+/**
+ * Input data to signature context.
+ * @param[in,out] ctx pointer to hmac context struct to add data to
+ * @param[in] data buffer containing data to sign
+ * @param data_len length of incoming data buffer, which is internally limited to INT_MAX
+ * @return 0 if successful
+ */
+BSL_REQUIRE_CHECK
+int BSL_SigCtxSign_DigestBuffer(BSL_SigCtx_t *ctx, const void *data, size_t data_len);
+
+/**
+ * Input data to signature context.
+ * @param[in,out] ctx pointer to context struct to add data to
+ * @param[in] reader sequential reader over data to sign
+ * @return 0 if successful
+ */
+int BSL_SigCtxSign_DigestSeq(BSL_SigCtx_t *ctx, BSL_SeqReader_t *reader);
+
+/**
+ * Finalize the signature.
+ * @param[in,out] ctx pointer to context struct to add data to
+ * @param[out] signature The output buffer to resize and populate.
+ * @return 0 if successful
+ */
+int BSL_SigCtxSign_Finalize(BSL_SigCtx_t *ctx, BSL_Data_t *signature);
+
+/**
+ * Deinitialize context resources.
+ * @param[in,out] ctx pointer to context struct to add data to
+ */
+void BSL_SigCtxSign_Deinit(BSL_SigCtx_t *ctx);
+
+/**
+ * Initialize signature context resources and set private key and variant.
+ * @param[in,out] ctx pointer to hmac context struct to init and set
+ * @param[in] keyhandle handle for key to use.
+ * The HMAC context keeps its own reference to this handle.
+ * @param[in] variant Signature variant to use.
+ * @return 0 if successful
+ */
+BSL_REQUIRE_CHECK
+int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant);
+
+/**
+ * Input data to signature context.
+ * @param[in,out] ctx pointer to hmac context struct to add data to
+ * @param[in] data buffer containing data to sign
+ * @param data_len length of incoming data buffer, which is internally limited to INT_MAX
+ * @return 0 if successful
+ */
+BSL_REQUIRE_CHECK
+int BSL_SigCtxVerify_DigestBuffer(BSL_SigCtx_t *ctx, const void *data, size_t data_len);
+
+/**
+ * Input data to signature context.
+ * @param[in,out] ctx pointer to context struct to add data to
+ * @param[in] reader sequential reader over data to sign
+ * @return 0 if successful
+ */
+int BSL_SigCtxVerify_DigestSeq(BSL_SigCtx_t *ctx, BSL_SeqReader_t *reader);
+
+/**
+ * Finalize the signature.
+ * @param[in,out] ctx pointer to context struct to add data to
+ * @param[out] signature The input buffer to verify against.
+ * @return 0 if successful
+ */
+int BSL_SigCtxVerify_Finalize(BSL_SigCtx_t *ctx, const BSL_Data_t *signature);
+
+/**
+ * Deinitialize context resources.
+ * @param[in,out] ctx pointer to context struct to add data to
+ */
+void BSL_SigCtxVerify_Deinit(BSL_SigCtx_t *ctx);
+
+///@} Signature
 
 #ifdef __cplusplus
 } // extern C
