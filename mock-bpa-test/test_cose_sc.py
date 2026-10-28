@@ -843,7 +843,7 @@ class TestCoseScSign1(TestAgent):
         self._single_test(
             _TestCase(
                 input_data=input_diag,
-                expected_output=r".*<ERROR>.* EVP_DigestVerifyFinal: error:030000EA:digital envelope routines::provider signature failure",
+                expected_output=r".*<ERROR>.* BSL_SigCtxVerify_Finalize failed with code -200",
                 sec_src_eid="dtn://dst/",
                 policy_config="data/cose-sc/policy-any-bib-accept.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
