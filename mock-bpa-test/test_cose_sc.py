@@ -800,18 +800,18 @@ class TestCoseScEncrypt(TestAgent):
             orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-source-primary.json"),
             modify={"aad_scope": {0: 1, -1: 1, -2: 1}},
         ) as polfile_path:
-          self._single_test(
-              _TestCase(
-                  input_data=EXAMPLE_A_NO_SEC,
-                  expected_output=EXAMPLE_A_PRIMARY_BLOCK_BIB_EXPLICIT_AAD,
-                  sec_src_eid="dtn://src/",
-                  policy_config=polfile_path,
-                  bundle_dest_loc=BundleDestLoc.APPIN,
-                  key_set="data/cose-sc/keyset-1.cbordiag",
-                  input_data_format=DataFormat.CBORDIAG,
-                  expected_output_format=DataFormat.CBORDIAG,
-              )
-          )
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_NO_SEC,
+                    expected_output=EXAMPLE_A_PRIMARY_BLOCK_BIB_EXPLICIT_AAD,
+                    sec_src_eid="dtn://src/",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/cose-sc/keyset-1.cbordiag",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.CBORDIAG,
+                )
+            )
 
     def test_BIB_verify_primary_block_default_aad(self):
         self._single_test(
