@@ -288,7 +288,7 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, BS
 
     const uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
     if (target_block_num > 0)
-    { 
+    {
         res = BSL_BundleCtx_GetBlockMetadata(bundle, target_block_num, &self->target_block);
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
