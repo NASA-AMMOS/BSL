@@ -58,7 +58,7 @@ EXAMPLE_A_EMPTY_PAYLOAD = """\
 EXAMPLE_A_PRIMARY_BLOCK_BIB = """\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82a081c9'],
-    [11, 2, 0, 0, << [0], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[17, << [ << {1: 6} >>, {4: 'ExampleA.1'}, null, h'24056852D63C93B42FF71794B4EC5C52C90160453C46EE8C6C1FE14A9FC7551D47F503A3E7A65BB83D6866BF5A9A2DE6'] >> ]]] >>],
+    [11, 2, 0, 0, << [0], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1, -2: 1}]], [[[17, << [ << {1: 6} >>, {4: 'ExampleA.1'}, null, h'86c0d5134f1fa34d36c05ba25a21dd19cef63120568b2d53683bba3c216cdfe4bf266d596724aadee10ba1a4a4931f24'] >> ]]] >>],
     [1, 1, 0, 2, h'6568656c6c6f', h'4ec359d2']
 ]"""
 """ Example A input bundle with BIB targeting primary block"""
