@@ -55,6 +55,14 @@ EXAMPLE_A_EMPTY_PAYLOAD = """\
 """
 """ Example A input bundle adjusted to have empty payload """
 
+EXAMPLE_A_PRIMARY_BLOCK_BIB = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82a081c9'],
+    [11, 2, 0, 0, << [0], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1}]], [[[17, << [ << {1: 6} >>, {4: 'ExampleA.1'}, null, h'24056852D63C93B42FF71794B4EC5C52C90160453C46EE8C6C1FE14A9FC7551D47F503A3E7A65BB83D6866BF5A9A2DE6'] >> ]]] >>],
+    [1, 1, 0, 2, h'6568656c6c6f', h'4ec359d2']
+]"""
+""" Example A input bundle with BIB targeting primary block"""
+
 EXAMPLE_A_1_WITH_BIB_ADDL_UHDR = """\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82A081C9'],
@@ -758,6 +766,48 @@ class TestCoseScEncrypt(TestAgent):
                 expected_output=EXAMPLE_A_NO_SEC,
                 sec_src_eid="dtn://dst/",
                 policy_config="data/cose-sc/policy-any-bib-accept.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_BIB_source_primary_block_cose(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_NO_SEC,
+                expected_output=EXAMPLE_A_PRIMARY_BLOCK_BIB,
+                sec_src_eid="dtn://src/",
+                policy_config="data/cose-sc/policy-bib-source-primary.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_BIB_verify_primary_block_cose(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_PRIMARY_BLOCK_BIB,
+                expected_output=EXAMPLE_A_PRIMARY_BLOCK_BIB,
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-bib-verify-primary.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_BIB_accept_primary_block_cose(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_PRIMARY_BLOCK_BIB,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-bib-accept-primary.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
                 input_data_format=DataFormat.CBORDIAG,

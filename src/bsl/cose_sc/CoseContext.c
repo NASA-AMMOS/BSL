@@ -286,16 +286,20 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, BS
 
     self->sec_blk_num = BSL_SecOper_GetSecurityBlockNum(sec_oper);
 
-    res = BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &self->target_block);
-    // GCOV_EXCL_START
-    if (BSL_SUCCESS != res)
-    {
-        BSL_LOG_ERR("Failed to get target block data");
-        self->status = res;
-        return;
+    const uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
+    if (target_block_num > 0)
+    { 
+        res = BSL_BundleCtx_GetBlockMetadata(bundle, target_block_num, &self->target_block);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to get target block data");
+            self->status = res;
+            return;
+        }
+        // GCOV_EXCL_STOP
+        BSL_LOG_DEBUG("operating on target block %" PRIu64, self->target_block.block_num);
     }
-    // GCOV_EXCL_STOP
-    BSL_LOG_DEBUG("operating on target block %" PRIu64, self->target_block.block_num);
 }
 
 static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec_oper)
@@ -793,17 +797,26 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
         BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->target_block.btsd_len);
     }
     { // the target BTSD as payload
-        BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
-        // GCOV_EXCL_START
-        if (!seq)
+        if (ctx->target_block.block_num > 0)
         {
-            BSL_LOG_ERR("Failed to construct reader");
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
-            return;
+            BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
+            // GCOV_EXCL_START
+            if (!seq)
+            {
+                BSL_LOG_ERR("Failed to construct reader");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                return;
+            }
+            // GCOV_EXCL_STOP
+
+            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+            BSLX_CoseSc_ChunkItem_move_seq(*item, seq);
         }
-        // GCOV_EXCL_STOP
-        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-        BSLX_CoseSc_ChunkItem_move_seq(*item, seq);
+        else
+        {
+            m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
+            m_bstring_push_back_bytes(*data, ctx->primary_block.encoded->len, ctx->primary_block.encoded->ptr);
+        }
     }
 
     if (BSL_SUCCESS == ctx->status)
