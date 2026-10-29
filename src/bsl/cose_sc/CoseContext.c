@@ -1168,8 +1168,27 @@ static void BSLX_CoseSc_GetAndValidateAddlHeaders(BSLX_CoseSc_t *self)
     }
 }
 
+/** Common logic for AAD Scope at the source.
+ */
+static void BSLX_CoseSc_SourceAadScope(BSLX_CoseSc_t *ctx)
+{
+    if (ctx->opt_aad_scope)
+    {
+        return; // leave in place
+    }
+
+    // default scope when absent
+    BSLX_CoseSc_AadScope_reset(ctx->aad_scope);
+    BSLX_CoseSc_AadScope_set_at(ctx->aad_scope, 0, 0x1);
+    BSLX_CoseSc_AadScope_set_at(ctx->aad_scope, -1, 0x1);
+    BSLX_CoseSc_AadScope_set_at(ctx->aad_scope, -2, 0x1);
+}
+
 static void BSLX_CoseSc_GetAndValidateAadScope(BSLX_CoseSc_t *self)
 {
+    BSLX_CoseSc_AadScope_t msg_scope;
+    BSLX_CoseSc_AadScope_init(msg_scope);
+
     const BSL_Variant_t *param = BSL_SecOper_FindParam(self->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
     if (param)
     {
@@ -1181,29 +1200,39 @@ static void BSLX_CoseSc_GetAndValidateAadScope(BSLX_CoseSc_t *self)
         }
         else
         {
-            BSLX_CoseSc_AadScope_t msg_scope;
-            BSLX_CoseSc_AadScope_init(msg_scope);
             int res = BSL_CBOR_Decode(&enc_data, (BSL_CBOR_Decode_f)&BSLX_CoseSc_AadScope_Decode, &msg_scope);
             if (BSL_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed to decode AAD Scope parameter");
-                BSLX_CoseSc_AadScope_clear(msg_scope);
                 self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
-            else
-            {
-                if (self->opt_aad_scope && !BSLX_CoseSc_AadScope_equal_p(self->aad_scope, msg_scope))
-                {
-                    BSL_LOG_ERR("Mismatch of AAD Scope parameter");
-                    BSLX_CoseSc_AadScope_clear(msg_scope);
-                    self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                }
-                else
-                {
-                    BSLX_CoseSc_AadScope_move(self->aad_scope, msg_scope);
-                }
-            }
         }
+    }
+    else
+    {
+        // default scope when absent
+        BSLX_CoseSc_AadScope_set_at(msg_scope, 0, 0x1);
+        BSLX_CoseSc_AadScope_set_at(msg_scope, -1, 0x1);
+        BSLX_CoseSc_AadScope_set_at(msg_scope, -2, 0x1);
+    }
+
+    if (BSL_SUCCESS == self->status)
+    {
+        // compare with policy required scope
+        if (self->opt_aad_scope && !BSLX_CoseSc_AadScope_equal_p(self->aad_scope, msg_scope))
+        {
+            BSL_LOG_ERR("Mismatch of AAD Scope parameter");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS == self->status)
+    {
+        BSLX_CoseSc_AadScope_move(self->aad_scope, msg_scope);
+    }
+    else
+    {
+        BSLX_CoseSc_AadScope_clear(msg_scope);
     }
 }
 
@@ -1290,8 +1319,15 @@ static void BSLX_CoseSc_VerifyHeaders(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t
     BSLX_CoseSc_GetAndValidateTarget(ctx, headers0);
 }
 
+/** Add an AAD Scope parameter to the operation if provided by an option.
+ */
 static void BSLX_CoseSc_AddAadScope(BSLX_CoseSc_t *ctx)
 {
+    if (!(ctx->opt_aad_scope))
+    {
+        return; // leave default out
+    }
+
     BSL_Data_t aad_scope_enc;
     BSL_Data_Init(&aad_scope_enc);
 
@@ -1322,6 +1358,7 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
     BSLX_CoseMsg_Mac0_Init(&msg);
 
     BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, NULL);
+    BSLX_CoseSc_SourceAadScope(ctx);
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -1734,6 +1771,7 @@ static void BSLX_CoseSc_Mac_Source(BSLX_CoseSc_t *ctx)
     BSLX_CoseMsg_Recipient_t *recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_front(msg.recipients));
 
     BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, &recip->headers);
+    BSLX_CoseSc_SourceAadScope(ctx);
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -2255,6 +2293,7 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
     BSLX_CoseMsg_Encrypt0_Init(&msg);
 
     BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, NULL);
+    BSLX_CoseSc_SourceAadScope(ctx);
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -2362,6 +2401,7 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
     BSLX_CoseMsg_Recipient_t *recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_front(msg.recipients));
 
     BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, &recip->headers);
+    BSLX_CoseSc_SourceAadScope(ctx);
 
     if (BSL_SUCCESS == ctx->status)
     {
