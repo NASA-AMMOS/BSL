@@ -39,7 +39,6 @@
 extern "C" {
 #endif
 
-
 /**
  * Initialize local policy provider from JSON file.
  * @param[in] file_path File path to open and read JSON containing policy configuration.
