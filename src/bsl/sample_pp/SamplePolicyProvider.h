@@ -24,6 +24,7 @@
  * @file
  * @ingroup sample_pp
  * @brief Spec of locally-defined data structures.
+ * Configuration input is handled by @ref PolicyParser.h functions.
  */
 #ifndef BSLP_SAMPLE_POLICY_PROVIDER_H
 #define BSLP_SAMPLE_POLICY_PROVIDER_H
