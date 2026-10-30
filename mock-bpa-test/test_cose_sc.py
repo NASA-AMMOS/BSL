@@ -55,7 +55,15 @@ EXAMPLE_A_EMPTY_PAYLOAD = """\
 """
 """ Example A input bundle adjusted to have empty payload """
 
-EXAMPLE_A_PRIMARY_BLOCK_BIB = """\
+EXAMPLE_A_PRIMARY_BLOCK_BIB_DEFAULT_AAD = """\
+[_
+    [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82a081c9'],
+    [11, 2, 0, 0, << [0], 3, 0, [1, "//src/"], [[[17, << [ << {1: 6} >>, {4: 'ExampleA.1'}, null, h'86c0d5134f1fa34d36c05ba25a21dd19cef63120568b2d53683bba3c216cdfe4bf266d596724aadee10ba1a4a4931f24'] >> ]]] >>],
+    [1, 1, 0, 2, h'6568656c6c6f', h'4ec359d2']
+]"""
+""" Example A input bundle with BIB targeting primary block"""
+
+EXAMPLE_A_PRIMARY_BLOCK_BIB_EXPLICIT_AAD = """\
 [_
     [7, 0, 2, [1, "//dst/svc"], [1, "//src/svc"], [1, "//src/"], [813110400000, 0], 1000000, h'82a081c9'],
     [11, 2, 0, 0, << [0], 3, 1, [1, "//src/"], [[5, {0: 1, -1: 1, -2: 1}]], [[[17, << [ << {1: 6} >>, {4: 'ExampleA.1'}, null, h'86c0d5134f1fa34d36c05ba25a21dd19cef63120568b2d53683bba3c216cdfe4bf266d596724aadee10ba1a4a4931f24'] >> ]]] >>],
@@ -773,11 +781,11 @@ class TestCoseScEncrypt(TestAgent):
             )
         )
 
-    def test_BIB_source_primary_block_cose(self):
+    def test_BIB_source_primary_block_default_aad(self):
         self._single_test(
             _TestCase(
                 input_data=EXAMPLE_A_NO_SEC,
-                expected_output=EXAMPLE_A_PRIMARY_BLOCK_BIB,
+                expected_output=EXAMPLE_A_PRIMARY_BLOCK_BIB_DEFAULT_AAD,
                 sec_src_eid="dtn://src/",
                 policy_config="data/cose-sc/policy-bib-source-primary.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -787,11 +795,29 @@ class TestCoseScEncrypt(TestAgent):
             )
         )
 
-    def test_BIB_verify_primary_block_cose(self):
+    def test_BIB_source_primary_block_explicit_aad(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-source-primary.json"),
+            modify={"aad_scope": {0: 1, -1: 1, -2: 1}},
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_NO_SEC,
+                    expected_output=EXAMPLE_A_PRIMARY_BLOCK_BIB_EXPLICIT_AAD,
+                    sec_src_eid="dtn://src/",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/cose-sc/keyset-1.cbordiag",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.CBORDIAG,
+                )
+            )
+
+    def test_BIB_verify_primary_block_default_aad(self):
         self._single_test(
             _TestCase(
-                input_data=EXAMPLE_A_PRIMARY_BLOCK_BIB,
-                expected_output=EXAMPLE_A_PRIMARY_BLOCK_BIB,
+                input_data=EXAMPLE_A_PRIMARY_BLOCK_BIB_DEFAULT_AAD,
+                expected_output=EXAMPLE_A_PRIMARY_BLOCK_BIB_DEFAULT_AAD,
                 sec_src_eid="dtn://dst/",
                 policy_config="data/cose-sc/policy-bib-verify-primary.json",
                 bundle_dest_loc=BundleDestLoc.APPIN,
@@ -801,10 +827,24 @@ class TestCoseScEncrypt(TestAgent):
             )
         )
 
-    def test_BIB_accept_primary_block_cose(self):
+    def test_BIB_accept_primary_block_default_aad(self):
         self._single_test(
             _TestCase(
-                input_data=EXAMPLE_A_PRIMARY_BLOCK_BIB,
+                input_data=EXAMPLE_A_PRIMARY_BLOCK_BIB_DEFAULT_AAD,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid="dtn://dst/",
+                policy_config="data/cose-sc/policy-bib-accept-primary.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/cose-sc/keyset-1.cbordiag",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_BIB_accept_primary_block_explicit_aad(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_PRIMARY_BLOCK_BIB_EXPLICIT_AAD,
                 expected_output=EXAMPLE_A_NO_SEC,
                 sec_src_eid="dtn://dst/",
                 policy_config="data/cose-sc/policy-bib-accept-primary.json",
