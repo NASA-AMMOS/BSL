@@ -56,7 +56,7 @@ M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t *, M_PTR_OPLIST)
 // NOLINTEND
 /// @endcond
 
-/** @brief A policy rule and its associated predicate.
+/** @struct Policy rule and its associated predicate.
  */
 typedef struct
 {

@@ -39,14 +39,14 @@
 extern "C" {
 #endif
 
-/** Rule-set behavior used while loading a policy file. */
+/// @brief Rule update behavior to use when loading a policy config file
 typedef enum
 {
-    /** Add new rules and replace matching IDs, retaining all other rules. */
+    /// @brief Add new rules and replace matching IDs, retaining all other rules
     BSLP_POLICY_LOAD_ADDITIVE = 0,
-    /** Remove all rules before loading the file. */
+    /// @brief Remove all rules before loading the file
     BSLP_POLICY_LOAD_CLEAN,
-    /** Add or replace file rules, then remove rules whose IDs are absent from the file. */
+    /// @brief Add or replace file rules, then remove rules whose IDs are absent from the file
     BSLP_POLICY_LOAD_FULL_SPEC
 } BSLP_PolicyParser_LoadMode_e;
 
