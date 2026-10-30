@@ -954,14 +954,24 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
                          BSLB_VariantPtr_ref(*(opt_pair->value_ptr)));
     }
 
-    int add_res = BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
-    if (add_res != BSL_SUCCESS)
+    int res;
+    if (BSLP_PolicyProvider_GetRuleById(policy, rule_id_int) != NULL)
+    {
+        BSL_LOG_WARNING("Replacing existing policy rule with ID %" PRId64, rule_id_int);
+        res = BSLP_PolicyProvider_ReplaceRuleById(policy, rule_id_int, &rule, &predicate);
+    }
+    else
+    {
+        res = BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
+    }
+
+    if (res != BSL_SUCCESS)
     {
         BSLP_PolicyRule_Deinit(&rule);
         BSLP_PolicyPredicate_Deinit(&predicate);
     }
     BSLB_VariantPtrMap_clear(options);
-    return add_res;
+    return res;
 }
 
 int BSLP_PolicyParser_LoadFile(const char *file_path, BSLP_PolicyProvider_t *policy)
