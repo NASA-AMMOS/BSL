@@ -900,3 +900,14 @@ void test_BSL_32(void)
 
     BSL_PrimaryBlock_deinit(&primary_block);
 }
+
+void test_UnregisterPolicyProvider(void)
+{
+    const BSL_PolicyDesc_t *desc = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID);
+    TEST_ASSERT_NOT_NULL(desc);
+
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_API_DeregisterPolicyProvider(&LocalTestCtx.bsl, BSL_SAMPLE_PP_ID));
+
+    desc = BSL_PolicyDict_get(LocalTestCtx.bsl.policy_reg, BSL_SAMPLE_PP_ID);
+    TEST_ASSERT_NULL(desc);
+}
