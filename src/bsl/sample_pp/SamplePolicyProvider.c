@@ -768,24 +768,10 @@ void BSLP_PolicyRule_Move(BSLP_PolicyRule_t *self, BSLP_PolicyRule_t *src)
     {
         return;
     }
-    m_string_move(self->description, src->description);
-    BSLB_VariantPtrMap_move(self->options, src->options);
-
-    self->rule_id             = src->rule_id;
-    self->role                = src->role;
-    self->target_block_type   = src->target_block_type;
-    self->sec_block_type      = src->sec_block_type;
-    self->context_id          = src->context_id;
-    self->failure_action_code = src->failure_action_code;
-    self->correlation_id      = src->correlation_id;
-
-    src->rule_id             = 0;
-    src->role                = 0;
-    src->target_block_type   = 0;
-    src->sec_block_type      = 0;
-    src->context_id          = 0;
-    src->failure_action_code = 0;
-    src->correlation_id      = 0;
+    BSLP_PolicyRule_Deinit(self);
+    // move as POD
+    *self = *src;
+    memset(src, 0, sizeof(BSLP_PolicyRule_t));
 }
 
 BSL_Variant_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self, int64_t opt_id)
