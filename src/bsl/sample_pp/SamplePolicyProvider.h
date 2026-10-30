@@ -255,14 +255,6 @@ int BSLP_PolicyProvider_RemoveRuleById(BSLP_PolicyProvider_t *self, int64_t rule
  */
 void BSLP_PolicyProvider_ClearRules(BSLP_PolicyProvider_t *self);
 
-/** Remove all policy rules except those identified in a keep list.
- *
- * @param[in] self policy provider
- * @param[in] rule_ids rule IDs to retain, or NULL when rule_count is zero
- * @param[in] rule_count number of entries in rule_ids
- */
-void BSLP_PolicyProvider_PruneRules(BSLP_PolicyProvider_t *self, const int64_t *rule_ids, size_t rule_count);
-
 /** Replace a policy rule and its associated predicate by rule ID.
  *
  * @param[in] self policy provider

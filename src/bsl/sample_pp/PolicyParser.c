@@ -976,12 +976,6 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
 
 int BSLP_PolicyParser_LoadFile(const char *file_path, BSLP_PolicyProvider_t *policy)
 {
-    return BSLP_PolicyParser_LoadFileWithMode(file_path, policy, BSLP_POLICY_LOAD_ADDITIVE);
-}
-
-int BSLP_PolicyParser_LoadFileWithMode(const char *file_path, BSLP_PolicyProvider_t *policy,
-                                       BSLP_PolicyParser_LoadMode_e mode)
-{
     CHK_ARG_NONNULL(file_path);
     CHK_ARG_NONNULL(policy);
 
@@ -991,18 +985,13 @@ int BSLP_PolicyParser_LoadFileWithMode(const char *file_path, BSLP_PolicyProvide
         BSL_LOG_ERR("Failed to open input file %s", file_path);
         return BSL_ERR_DECODING;
     }
-    int retval = BSLP_PolicyParser_LoadFdWithMode(infd, policy, mode);
+    int retval = BSLP_PolicyParser_LoadFd(infd, policy);
     close(infd);
 
     return retval;
 }
 
 int BSLP_PolicyParser_LoadFd(int infd, BSLP_PolicyProvider_t *policy)
-{
-    return BSLP_PolicyParser_LoadFdWithMode(infd, policy, BSLP_POLICY_LOAD_ADDITIVE);
-}
-
-int BSLP_PolicyParser_LoadFdWithMode(int infd, BSLP_PolicyProvider_t *policy, BSLP_PolicyParser_LoadMode_e mode)
 {
     CHK_ARG_EXPR(infd >= 0);
     CHK_ARG_NONNULL(policy);
@@ -1028,11 +1017,6 @@ int BSLP_PolicyParser_LoadFdWithMode(int infd, BSLP_PolicyProvider_t *policy, BS
     }
     else
     {
-        if (mode == BSLP_POLICY_LOAD_CLEAN)
-        {
-            BSLP_PolicyProvider_ClearRules(policy);
-        }
-
         // Keep map of correlation ID to required like params to compare as we parse
         BSLP_CorrelationMap_t correlation_map;
         BSLP_CorrelationMap_init(correlation_map);
@@ -1159,30 +1143,12 @@ int BSLP_PolicyParser_LoadFdWithMode(int infd, BSLP_PolicyProvider_t *policy, BS
         }
     }
 
+    json_decref(root);
     if (failures)
     {
-        json_decref(root);
         BSL_LOG_ERR("Policy contains %zu invalid rules", failures);
         return BSL_ERR_POLICY_CONFIG;
     }
-
-    if (mode == BSLP_POLICY_LOAD_FULL_SPEC)
-    {
-        size_t   rule_count = json_array_size(policyrule_set);
-        int64_t *rule_ids   = rule_count ? BSL_malloc(rule_count * sizeof(int64_t)) : NULL;
-        for (size_t ix = 0; ix < rule_count; ++ix)
-        {
-            const json_t *rule_entry = json_array_get(policyrule_set, ix);
-            const json_t *rule       = json_object_get(rule_entry, "policyrule");
-            const json_t *filter     = json_object_get(rule, "filter");
-            const json_t *rule_id    = json_object_get(filter, "rule_id");
-            ASSERT_PROPERTY(BSL_SUCCESS == BSLP_GetNumberInt(rule_id, &rule_ids[ix]));
-        }
-        BSLP_PolicyProvider_PruneRules(policy, rule_ids, rule_count);
-        BSL_free(rule_ids);
-    }
-
-    json_decref(root);
 
     return BSL_SUCCESS;
 }

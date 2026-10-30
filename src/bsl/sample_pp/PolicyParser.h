@@ -39,42 +39,19 @@
 extern "C" {
 #endif
 
-/// @brief Rule update behavior to use when loading a policy config file
-typedef enum
-{
-    /// @brief Add new rules and replace matching IDs, retaining all other rules
-    BSLP_POLICY_LOAD_ADDITIVE = 0,
-    /// @brief Remove all rules before loading the file
-    BSLP_POLICY_LOAD_CLEAN,
-    /// @brief Add or replace file rules, then remove rules whose IDs are absent from the file
-    BSLP_POLICY_LOAD_FULL_SPEC
-} BSLP_PolicyParser_LoadMode_e;
 
 /**
  * Initialize local policy provider from JSON file.
  * @param[in] file_path File path to open and read JSON containing policy configuration.
  * @param[in,out] policy Policy provider to configure. Must be initialize/allocated before calling.
- * This is equivalent to calling ::BSLP_PolicyParser_LoadFileWithMode with ::BSLP_POLICY_LOAD_ADDITIVE.
  * @return BSL_SUCCESS if successful.
  */
 int BSLP_PolicyParser_LoadFile(const char *file_path, BSLP_PolicyProvider_t *policy);
 
-/** Load policy configuration from a JSON file with explicit rule-set behavior.
- * @param[in] file_path File path to open and read.
- * @param[in,out] policy Policy provider to configure.
- * @param mode Rule-set loading behavior.
- * @return BSL_SUCCESS if successful.
- */
-int BSLP_PolicyParser_LoadFileWithMode(const char *file_path, BSLP_PolicyProvider_t *policy,
-                                       BSLP_PolicyParser_LoadMode_e mode);
-
-/** Read policy from a file descriptor using ::BSLP_POLICY_LOAD_ADDITIVE.
+/** Read policy from a file descriptor.
  * @overload
  */
 int BSLP_PolicyParser_LoadFd(int infd, BSLP_PolicyProvider_t *policy);
-
-/** Read policy from a file descriptor with explicit rule-set behavior. */
-int BSLP_PolicyParser_LoadFdWithMode(int infd, BSLP_PolicyProvider_t *policy, BSLP_PolicyParser_LoadMode_e mode);
 
 /** Bitwise Diagram of the mock bpa config data structure:
  * @code{.unparsed}

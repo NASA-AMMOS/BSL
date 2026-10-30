@@ -574,41 +574,6 @@ void BSLP_PolicyProvider_ClearRules(BSLP_PolicyProvider_t *self)
     pthread_rwlock_unlock(&self->mutex);
 }
 
-void BSLP_PolicyProvider_PruneRules(BSLP_PolicyProvider_t *self, const int64_t *rule_ids, size_t rule_count)
-{
-    ASSERT_ARG_NONNULL(self);
-    ASSERT_ARG_EXPR((rule_count == 0) || (rule_ids != NULL));
-
-    pthread_rwlock_wrlock(&self->mutex);
-    bool removed;
-    do
-    {
-        removed = false;
-        BSLP_PolicyRuleMap_it_t rule_it;
-        for (BSLP_PolicyRuleMap_it(rule_it, self->rules); !BSLP_PolicyRuleMap_end_p(rule_it); BSLP_PolicyRuleMap_next(rule_it))
-        {
-            int64_t rule_id = BSLP_PolicyRuleMap_cref(rule_it)->key;
-            bool    keep    = false;
-            for (size_t ix = 0; ix < rule_count; ++ix)
-            {
-                if (rule_ids[ix] == rule_id)
-                {
-                    keep = true;
-                    break;
-                }
-            }
-            if (!keep)
-            {
-                BSLP_PolicyRuleMap_erase(self->rules, rule_id);
-                removed = true;
-                break;
-            }
-        }
-    }
-    while (removed);
-    pthread_rwlock_unlock(&self->mutex);
-}
-
 int BSLP_PolicyProvider_ReplaceRuleById(BSLP_PolicyProvider_t *self, int64_t rule_id, BSLP_PolicyRule_t *rule,
                                         BSLP_PolicyPredicate_t *predicate)
 {
