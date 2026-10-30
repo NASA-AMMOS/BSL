@@ -146,8 +146,8 @@ void test_SamplePolicyProvider_ClearRules(void)
     BSLP_PolicyProvider_ClearRules(provider);
 
     TEST_ASSERT_EQUAL(0, BSLP_PolicyProvider_RuleCount(provider));
-    TEST_ASSERT_NULL(BSLP_PolicyProvider_GetRuleById(provider, 42));
-    TEST_ASSERT_NULL(BSLP_PolicyProvider_GetRuleById(provider, 7));
+    TEST_ASSERT_NULL(BSLP_PolicyProvider_GetRuleById(provider, 1));
+    TEST_ASSERT_NULL(BSLP_PolicyProvider_GetRuleById(provider, 2));
 
     BSLP_PolicyProvider_Destroy(provider);
 }
