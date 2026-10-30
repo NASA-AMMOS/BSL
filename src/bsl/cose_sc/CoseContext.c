@@ -186,6 +186,8 @@ typedef struct
     BSL_PrimaryBlock_t primary_block;
     /// Parent security block number
     uint64_t sec_blk_num;
+    /// Target block number
+    uint64_t target_block_num;
     /// Metadata for target block
     BSL_CanonicalBlock_t target_block;
     /// True if this is a source or acceptor role and target BTSD is replaced for encryption
@@ -286,16 +288,20 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, BS
 
     self->sec_blk_num = BSL_SecOper_GetSecurityBlockNum(sec_oper);
 
-    res = BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &self->target_block);
-    // GCOV_EXCL_START
-    if (BSL_SUCCESS != res)
+    self->target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
+    if (self->target_block_num > 0)
     {
-        BSL_LOG_ERR("Failed to get target block data");
-        self->status = res;
-        return;
+        res = BSL_BundleCtx_GetBlockMetadata(bundle, self->target_block_num, &self->target_block);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to get target block data");
+            self->status = res;
+            return;
+        }
+        // GCOV_EXCL_STOP
+        BSL_LOG_DEBUG("operating on target block %" PRIu64, self->target_block.block_num);
     }
-    // GCOV_EXCL_STOP
-    BSL_LOG_DEBUG("operating on target block %" PRIu64, self->target_block.block_num);
 }
 
 static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec_oper)
@@ -613,7 +619,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
     {
         const BSLX_CoseSc_AadScope_subtype_ct *aads_pair = BSLX_CoseSc_AadScope_cref(aads_it);
 
-        const int64_t blk_num   = *(aads_pair->key_ptr);
+        int64_t       blk_num   = *(aads_pair->key_ptr);
         const int64_t aad_flags = *(aads_pair->value_ptr);
 
         // copy buffer
@@ -627,7 +633,15 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
             switch (blk_num)
             {
                 case -1:
-                    aad_block = ctx->target_block;
+                    if (ctx->target_block_num == 0)
+                    {
+                        // target is also primary
+                        blk_num = 0;
+                    }
+                    else
+                    {
+                        aad_block = ctx->target_block;
+                    }
                     break;
                 case -2:
                     res = BSL_BundleCtx_GetBlockMetadata(ctx->bundle, ctx->sec_blk_num, &aad_block);
@@ -788,22 +802,33 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
         BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_ARRAY, 4);
     }
     BSLX_CoseSc_BuildAad(ctx, chunklist, headers, context);
-    { // length of payload
-        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
-        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->target_block.btsd_len);
-    }
-    { // the target BTSD as payload
-        BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
-        // GCOV_EXCL_START
-        if (!seq)
-        {
-            BSL_LOG_ERR("Failed to construct reader");
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
-            return;
+    if (ctx->target_block.block_num > 0)
+    {
+        { // length of payload
+            m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
+            BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->target_block.btsd_len);
         }
-        // GCOV_EXCL_STOP
-        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-        BSLX_CoseSc_ChunkItem_move_seq(*item, seq);
+        { // the target BTSD as payload
+            BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
+            // GCOV_EXCL_START
+            if (!seq)
+            {
+                BSL_LOG_ERR("Failed to construct reader");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                return;
+            }
+            // GCOV_EXCL_STOP
+
+            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+            BSLX_CoseSc_ChunkItem_move_seq(*item, seq);
+        }
+    }
+    else
+    {
+        // the payload content is encoded primary block
+        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->primary_block.encoded->len);
+        m_bstring_push_back_bytes(*data, ctx->primary_block.encoded->len, ctx->primary_block.encoded->ptr);
     }
 
     if (BSL_SUCCESS == ctx->status)
@@ -1143,8 +1168,27 @@ static void BSLX_CoseSc_GetAndValidateAddlHeaders(BSLX_CoseSc_t *self)
     }
 }
 
+/** Common logic for AAD Scope at the source.
+ */
+static void BSLX_CoseSc_SourceAadScope(BSLX_CoseSc_t *ctx)
+{
+    if (ctx->opt_aad_scope)
+    {
+        return; // leave in place
+    }
+
+    // default scope when absent
+    BSLX_CoseSc_AadScope_reset(ctx->aad_scope);
+    BSLX_CoseSc_AadScope_set_at(ctx->aad_scope, 0, 0x1);
+    BSLX_CoseSc_AadScope_set_at(ctx->aad_scope, -1, 0x1);
+    BSLX_CoseSc_AadScope_set_at(ctx->aad_scope, -2, 0x1);
+}
+
 static void BSLX_CoseSc_GetAndValidateAadScope(BSLX_CoseSc_t *self)
 {
+    BSLX_CoseSc_AadScope_t msg_scope;
+    BSLX_CoseSc_AadScope_init(msg_scope);
+
     const BSL_Variant_t *param = BSL_SecOper_FindParam(self->sec_oper, BSLX_COSESC_PARAM_AAD_SCOPE);
     if (param)
     {
@@ -1156,29 +1200,39 @@ static void BSLX_CoseSc_GetAndValidateAadScope(BSLX_CoseSc_t *self)
         }
         else
         {
-            BSLX_CoseSc_AadScope_t msg_scope;
-            BSLX_CoseSc_AadScope_init(msg_scope);
             int res = BSL_CBOR_Decode(&enc_data, (BSL_CBOR_Decode_f)&BSLX_CoseSc_AadScope_Decode, &msg_scope);
             if (BSL_SUCCESS != res)
             {
                 BSL_LOG_ERR("Failed to decode AAD Scope parameter");
-                BSLX_CoseSc_AadScope_clear(msg_scope);
                 self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
             }
-            else
-            {
-                if (self->opt_aad_scope && !BSLX_CoseSc_AadScope_equal_p(self->aad_scope, msg_scope))
-                {
-                    BSL_LOG_ERR("Mismatch of AAD Scope parameter");
-                    BSLX_CoseSc_AadScope_clear(msg_scope);
-                    self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
-                }
-                else
-                {
-                    BSLX_CoseSc_AadScope_move(self->aad_scope, msg_scope);
-                }
-            }
         }
+    }
+    else
+    {
+        // default scope when absent
+        BSLX_CoseSc_AadScope_set_at(msg_scope, 0, 0x1);
+        BSLX_CoseSc_AadScope_set_at(msg_scope, -1, 0x1);
+        BSLX_CoseSc_AadScope_set_at(msg_scope, -2, 0x1);
+    }
+
+    if (BSL_SUCCESS == self->status)
+    {
+        // compare with policy required scope
+        if (self->opt_aad_scope && !BSLX_CoseSc_AadScope_equal_p(self->aad_scope, msg_scope))
+        {
+            BSL_LOG_ERR("Mismatch of AAD Scope parameter");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+    }
+
+    if (BSL_SUCCESS == self->status)
+    {
+        BSLX_CoseSc_AadScope_move(self->aad_scope, msg_scope);
+    }
+    else
+    {
+        BSLX_CoseSc_AadScope_clear(msg_scope);
     }
 }
 
@@ -1265,8 +1319,15 @@ static void BSLX_CoseSc_VerifyHeaders(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t
     BSLX_CoseSc_GetAndValidateTarget(ctx, headers0);
 }
 
+/** Add an AAD Scope parameter to the operation if provided by an option.
+ */
 static void BSLX_CoseSc_AddAadScope(BSLX_CoseSc_t *ctx)
 {
+    if (!(ctx->opt_aad_scope))
+    {
+        return; // leave default out
+    }
+
     BSL_Data_t aad_scope_enc;
     BSL_Data_Init(&aad_scope_enc);
 
@@ -1297,6 +1358,7 @@ static void BSLX_CoseSc_Mac0_Source(BSLX_CoseSc_t *ctx)
     BSLX_CoseMsg_Mac0_Init(&msg);
 
     BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, NULL);
+    BSLX_CoseSc_SourceAadScope(ctx);
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -1709,6 +1771,7 @@ static void BSLX_CoseSc_Mac_Source(BSLX_CoseSc_t *ctx)
     BSLX_CoseMsg_Recipient_t *recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_front(msg.recipients));
 
     BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, &recip->headers);
+    BSLX_CoseSc_SourceAadScope(ctx);
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -2230,6 +2293,7 @@ static void BSLX_CoseSc_Encrypt0_Source(BSLX_CoseSc_t *ctx)
     BSLX_CoseMsg_Encrypt0_Init(&msg);
 
     BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, NULL);
+    BSLX_CoseSc_SourceAadScope(ctx);
 
     if (BSL_SUCCESS == ctx->status)
     {
@@ -2337,6 +2401,7 @@ static void BSLX_CoseSc_Encrypt_Source(BSLX_CoseSc_t *ctx)
     BSLX_CoseMsg_Recipient_t *recip = BSLX_CoseMsg_RecipientPtr_ref(*BSLX_CoseMsg_RecipientList_front(msg.recipients));
 
     BSLX_CoseSc_SourceHeaders(ctx, &msg.headers, &recip->headers);
+    BSLX_CoseSc_SourceAadScope(ctx);
 
     if (BSL_SUCCESS == ctx->status)
     {
