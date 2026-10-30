@@ -82,6 +82,29 @@ void test_SamplePolicyProvider_GetRuleById(void)
     BSLP_PolicyProvider_Destroy(provider);
 }
 
+void test_SamplePolicyProvider_RejectsDuplicateRuleId(void)
+{
+    BSLP_PolicyProvider_t *provider = BSLP_PolicyProvider_New(1);
+
+    BSLP_PolicyRule_t rule;
+    BSLP_PolicyRule_InitFrom(&rule, 42, "original", 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+                             BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
+    BSLP_PolicyPredicate_t predicate;
+    BSLP_PolicyPredicate_InitFrom(&predicate, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "*:**");
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLP_PolicyProvider_AddRule(provider, &rule, &predicate));
+
+    BSLP_PolicyRule_InitFrom(&rule, 42, "duplicate", 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+                             BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
+    BSLP_PolicyPredicate_InitFrom(&predicate, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "*:**");
+    TEST_ASSERT_EQUAL(BSL_ERR_POLICY_CONFIG, BSLP_PolicyProvider_AddRule(provider, &rule, &predicate));
+    TEST_ASSERT_EQUAL(1, BSLP_PolicyProvider_RuleCount(provider));
+    TEST_ASSERT_EQUAL_STRING("original", m_string_get_cstr(BSLP_PolicyProvider_GetRuleById(provider, 42)->description));
+
+    BSLP_PolicyRule_Deinit(&rule);
+    BSLP_PolicyPredicate_Deinit(&predicate);
+    BSLP_PolicyProvider_Destroy(provider);
+}
+
 void test_SamplePolicyProvider_RemoveRuleById(void)
 {
     BSLP_PolicyProvider_t *provider = BSLP_PolicyProvider_New(1);
@@ -131,15 +154,13 @@ void test_SamplePolicyProvider_ReplaceRuleById(void)
     TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLP_QueryPolicy(provider, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
                                                     BSL_POLICYLOCATION_APPIN));
     TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_CountActions(&action_set));
-    TEST_ASSERT_EQUAL(1,
-                      BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
+    TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
     BSL_SecurityActionSet_Deinit(&action_set);
 
     BSLP_PolicyRule_InitFrom(&replacement, 42, "replacement", 2, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB,
                              BSL_BLOCK_TYPE_PRIMARY, BSL_POLICYACTION_NOTHING);
     BSLP_PolicyPredicate_t replacement_predicate;
-    BSLP_PolicyPredicate_InitFrom(&replacement_predicate, BSL_POLICYLOCATION_CLOUT, "ipn:1.*", "ipn:2.*",
-                                  "ipn:3.*");
+    BSLP_PolicyPredicate_InitFrom(&replacement_predicate, BSL_POLICYLOCATION_CLOUT, "ipn:1.*", "ipn:2.*", "ipn:3.*");
     TEST_ASSERT_EQUAL(BSL_SUCCESS,
                       BSLP_PolicyProvider_ReplaceRuleById(provider, 42, &replacement, &replacement_predicate));
     TEST_ASSERT_EQUAL(1, BSLP_PolicyProvider_RuleCount(provider));
