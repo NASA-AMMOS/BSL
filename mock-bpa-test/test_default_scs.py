@@ -257,6 +257,72 @@ class TestBibHmacSha(TestAgent):
             )
         )
 
+    def test_BIB_source_primary_block(self):
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_NO_SEC,
+                expected_output="""\
+                    [_
+                        [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                        [11, 2, 0, 0, << [0], 1, 1, [2, [2, 1]], [[1, 7], [3, 0]], [[[1, h'5D9BDD1E2F043CF971588111F2FE1B847666CFACB7FB403C2468EF92A8EC93DF80B41620DF5BC639D0C355E1CCE6217E17D3B8C5560EDC14ABA3D005196B046E']]] >>],
+                        [1, 1, 0, 0, h'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
+                    ]
+                    """,
+                sec_src_eid="ipn:2.1",
+                policy_config="data/default-scs/policy-bib-source-primary.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_BIB_verify_primary_block(self):
+        self._single_test(
+            _TestCase(
+                input_data="""\
+                    [_
+                        [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                        [11, 2, 0, 0, << [0], 1, 1, [2, [2, 1]], [[1, 7], [3, 0]], [[[1, h'5D9BDD1E2F043CF971588111F2FE1B847666CFACB7FB403C2468EF92A8EC93DF80B41620DF5BC639D0C355E1CCE6217E17D3B8C5560EDC14ABA3D005196B046E']]] >>],
+                        [1, 1, 0, 0, h'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
+                    ]
+                    """,
+                expected_output="""\
+                    [_
+                        [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                        [11, 2, 0, 0, << [0], 1, 1, [2, [2, 1]], [[1, 7], [3, 0]], [[[1, h'5D9BDD1E2F043CF971588111F2FE1B847666CFACB7FB403C2468EF92A8EC93DF80B41620DF5BC639D0C355E1CCE6217E17D3B8C5560EDC14ABA3D005196B046E']]] >>],
+                        [1, 1, 0, 0, h'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
+                    ]
+                    """,
+                sec_src_eid="ipn:2.1",
+                policy_config="data/default-scs/policy-bib-verify-primary.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
+    def test_BIB_accept_primary_block(self):
+        self._single_test(
+            _TestCase(
+                input_data="""\
+                    [_
+                        [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
+                        [11, 2, 0, 0, << [0], 1, 1, [2, [2, 1]], [[1, 7], [3, 0]], [[[1, h'5D9BDD1E2F043CF971588111F2FE1B847666CFACB7FB403C2468EF92A8EC93DF80B41620DF5BC639D0C355E1CCE6217E17D3B8C5560EDC14ABA3D005196B046E']]] >>],
+                        [1, 1, 0, 0, h'526561647920746F2067656E657261746520612033322D62797465207061796C6F6164']
+                    ]
+                    """,
+                expected_output=EXAMPLE_A_NO_SEC,
+                sec_src_eid="ipn:2.1",
+                policy_config="data/default-scs/policy-bib-accept-primary.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.CBORDIAG,
+            )
+        )
+
 
 class TestBcbAesGcm(TestAgent):
     def test_exampleA_2_source(self):

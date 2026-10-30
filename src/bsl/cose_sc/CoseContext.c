@@ -186,6 +186,8 @@ typedef struct
     BSL_PrimaryBlock_t primary_block;
     /// Parent security block number
     uint64_t sec_blk_num;
+    /// Target block number
+    uint64_t target_block_num;
     /// Metadata for target block
     BSL_CanonicalBlock_t target_block;
     /// True if this is a source or acceptor role and target BTSD is replaced for encryption
@@ -286,16 +288,20 @@ static void BSLX_CoseSc_Prepare(BSLX_CoseSc_t *self, BSL_BundleRef_t *bundle, BS
 
     self->sec_blk_num = BSL_SecOper_GetSecurityBlockNum(sec_oper);
 
-    res = BSL_BundleCtx_GetBlockMetadata(bundle, BSL_SecOper_GetTargetBlockNum(sec_oper), &self->target_block);
-    // GCOV_EXCL_START
-    if (BSL_SUCCESS != res)
+    self->target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
+    if (self->target_block_num > 0)
     {
-        BSL_LOG_ERR("Failed to get target block data");
-        self->status = res;
-        return;
+        res = BSL_BundleCtx_GetBlockMetadata(bundle, self->target_block_num, &self->target_block);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Failed to get target block data");
+            self->status = res;
+            return;
+        }
+        // GCOV_EXCL_STOP
+        BSL_LOG_DEBUG("operating on target block %" PRIu64, self->target_block.block_num);
     }
-    // GCOV_EXCL_STOP
-    BSL_LOG_DEBUG("operating on target block %" PRIu64, self->target_block.block_num);
 }
 
 static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec_oper)
@@ -613,7 +619,7 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
     {
         const BSLX_CoseSc_AadScope_subtype_ct *aads_pair = BSLX_CoseSc_AadScope_cref(aads_it);
 
-        const int64_t blk_num   = *(aads_pair->key_ptr);
+        int64_t       blk_num   = *(aads_pair->key_ptr);
         const int64_t aad_flags = *(aads_pair->value_ptr);
 
         // copy buffer
@@ -627,7 +633,15 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
             switch (blk_num)
             {
                 case -1:
-                    aad_block = ctx->target_block;
+                    if (ctx->target_block_num == 0)
+                    {
+                        // target is also primary
+                        blk_num = 0;
+                    }
+                    else
+                    {
+                        aad_block = ctx->target_block;
+                    }
                     break;
                 case -2:
                     res = BSL_BundleCtx_GetBlockMetadata(ctx->bundle, ctx->sec_blk_num, &aad_block);
@@ -788,22 +802,33 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
         BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_ARRAY, 4);
     }
     BSLX_CoseSc_BuildAad(ctx, chunklist, headers, context);
-    { // length of payload
-        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
-        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->target_block.btsd_len);
-    }
-    { // the target BTSD as payload
-        BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
-        // GCOV_EXCL_START
-        if (!seq)
-        {
-            BSL_LOG_ERR("Failed to construct reader");
-            ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
-            return;
+    if (ctx->target_block.block_num > 0)
+    {
+        { // length of payload
+            m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
+            BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->target_block.btsd_len);
         }
-        // GCOV_EXCL_STOP
-        BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
-        BSLX_CoseSc_ChunkItem_move_seq(*item, seq);
+        { // the target BTSD as payload
+            BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, ctx->target_block.block_num);
+            // GCOV_EXCL_START
+            if (!seq)
+            {
+                BSL_LOG_ERR("Failed to construct reader");
+                ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
+                return;
+            }
+            // GCOV_EXCL_STOP
+
+            BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
+            BSLX_CoseSc_ChunkItem_move_seq(*item, seq);
+        }
+    }
+    else
+    {
+        // the payload content is encoded primary block
+        m_bstring_t *data = BSLX_CoseSc_ChunkList_GetBstring(chunklist);
+        BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ctx->primary_block.encoded->len);
+        m_bstring_push_back_bytes(*data, ctx->primary_block.encoded->len, ctx->primary_block.encoded->ptr);
     }
 
     if (BSL_SUCCESS == ctx->status)
