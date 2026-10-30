@@ -541,6 +541,86 @@ size_t BSLP_PolicyProvider_RuleCount(BSLP_PolicyProvider_t *self)
     return count;
 }
 
+const BSLP_PolicyRule_t *BSLP_PolicyProvider_GetRuleById(BSLP_PolicyProvider_t *self, int64_t rule_id)
+{
+    ASSERT_ARG_NONNULL(self);
+
+    const BSLP_PolicyRule_t *result = NULL;
+
+    pthread_rwlock_rdlock(&self->mutex);
+    BSLP_PolicyRuleList_it_t rule_it;
+    for (BSLP_PolicyRuleList_it(rule_it, self->rules); !BSLP_PolicyRuleList_end_p(rule_it); BSLP_PolicyRuleList_next(rule_it))
+    {
+        const BSLP_PolicyRule_t *rule = BSLP_PolicyRulePtr_cref(*BSLP_PolicyRuleList_cref(rule_it));
+        if (rule->rule_id == rule_id)
+        {
+            result = rule;
+            break;
+        }
+    }
+    pthread_rwlock_unlock(&self->mutex);
+
+    return result;
+}
+
+int BSLP_PolicyProvider_RemoveRuleById(BSLP_PolicyProvider_t *self, int64_t rule_id)
+{
+    ASSERT_ARG_NONNULL(self);
+
+    pthread_rwlock_wrlock(&self->mutex);
+    BSLP_PolicyRuleList_it_t      rule_it;
+    BSLP_PolicyPredicateList_it_t pred_it;
+    for (BSLP_PolicyRuleList_it(rule_it, self->rules), BSLP_PolicyPredicateList_it(pred_it, self->predicates);
+         !BSLP_PolicyRuleList_end_p(rule_it) && !BSLP_PolicyPredicateList_end_p(pred_it);
+         BSLP_PolicyRuleList_next(rule_it), BSLP_PolicyPredicateList_next(pred_it))
+    {
+        const BSLP_PolicyRule_t *rule = BSLP_PolicyRulePtr_cref(*BSLP_PolicyRuleList_cref(rule_it));
+        if (rule->rule_id == rule_id)
+        {
+            BSLP_PolicyRuleList_remove(self->rules, rule_it);
+            BSLP_PolicyPredicateList_remove(self->predicates, pred_it);
+            pthread_rwlock_unlock(&self->mutex);
+            return BSL_SUCCESS;
+        }
+    }
+
+    pthread_rwlock_unlock(&self->mutex);
+    return BSL_ERR_POLICY_CONFIG;
+}
+
+int BSLP_PolicyProvider_ReplaceRuleById(BSLP_PolicyProvider_t *self, int64_t rule_id, BSLP_PolicyRule_t *rule, BSLP_PolicyPredicate_t *predicate)
+{
+    ASSERT_ARG_NONNULL(self);
+    if (!BSLP_PolicyRule_IsConsistent(rule) || (NULL != predicate && !BSLP_PolicyPredicate_IsConsistent(predicate)))
+    {
+        return BSL_ERR_ARG_INVALID;
+    }
+
+    pthread_rwlock_wrlock(&self->mutex);
+    BSLP_PolicyRuleList_it_t      rule_it;
+    BSLP_PolicyPredicateList_it_t pred_it;
+    for (BSLP_PolicyRuleList_it(rule_it, self->rules), BSLP_PolicyPredicateList_it(pred_it, self->predicates);
+         !BSLP_PolicyRuleList_end_p(rule_it) && !BSLP_PolicyPredicateList_end_p(pred_it);
+         BSLP_PolicyRuleList_next(rule_it), BSLP_PolicyPredicateList_next(pred_it))
+    {
+        BSLP_PolicyRule_t *stored_rule = BSLP_PolicyRulePtr_ref(*BSLP_PolicyRuleList_ref(rule_it));
+        if (stored_rule->rule_id == rule_id)
+        {
+            BSLP_PolicyPredicate_t *stored_predicate = BSLP_PolicyPredicatePtr_ref(*BSLP_PolicyPredicateList_ref(pred_it));
+            BSLP_PolicyRule_Move(stored_rule, rule);
+            if (NULL != predicate)
+            {
+                BSLP_PolicyPredicate_Move(stored_predicate, predicate);
+            }
+            pthread_rwlock_unlock(&self->mutex);
+            return BSL_SUCCESS;
+        }
+    }
+
+    pthread_rwlock_unlock(&self->mutex);
+    return BSL_ERR_POLICY_CONFIG;
+}
+
 void BSLP_PolicyProvider_SetNoRuleAction(BSLP_PolicyProvider_t *self, BSL_PolicyLocation_e loc,
                                          BSL_PolicyAction_e action)
 {

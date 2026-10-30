@@ -61,6 +61,113 @@ void tearDown(void)
     TEST_ASSERT_EQUAL(0, BSL_TestContext_Deinit(&LocalTestCtx));
 }
 
+void test_SamplePolicyProvider_GetRuleById(void)
+{
+    BSLP_PolicyProvider_t *provider = BSLP_PolicyProvider_New(1);
+
+    BSLP_PolicyRule_t rule;
+    BSLP_PolicyRule_InitFrom(&rule, 42, "rule 42", 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+                             BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
+
+    BSLP_PolicyPredicate_t predicate;
+    BSLP_PolicyPredicate_InitFrom(&predicate, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "*:**");
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLP_PolicyProvider_AddRule(provider, &rule, &predicate));
+
+    const BSLP_PolicyRule_t *found = BSLP_PolicyProvider_GetRuleById(provider, 42);
+    TEST_ASSERT_NOT_NULL(found);
+    TEST_ASSERT_EQUAL(42, found->rule_id);
+    TEST_ASSERT_EQUAL_STRING("rule 42", m_string_get_cstr(found->description));
+    TEST_ASSERT_NULL(BSLP_PolicyProvider_GetRuleById(provider, 7));
+
+    BSLP_PolicyProvider_Destroy(provider);
+}
+
+void test_SamplePolicyProvider_RemoveRuleById(void)
+{
+    BSLP_PolicyProvider_t *provider = BSLP_PolicyProvider_New(1);
+
+    BSLP_PolicyRule_t rule;
+    BSLP_PolicyRule_InitFrom(&rule, 42, "rule 42", 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+                             BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
+
+    BSLP_PolicyPredicate_t predicate;
+    BSLP_PolicyPredicate_InitFrom(&predicate, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "*:**");
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLP_PolicyProvider_AddRule(provider, &rule, &predicate));
+    TEST_ASSERT_EQUAL(1, BSLP_PolicyProvider_RuleCount(provider));
+
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLP_PolicyProvider_RemoveRuleById(provider, 42));
+    TEST_ASSERT_EQUAL(0, BSLP_PolicyProvider_RuleCount(provider));
+    TEST_ASSERT_NULL(BSLP_PolicyProvider_GetRuleById(provider, 42));
+    TEST_ASSERT_EQUAL(BSL_ERR_POLICY_CONFIG, BSLP_PolicyProvider_RemoveRuleById(provider, 42));
+
+    BSLP_PolicyProvider_Destroy(provider);
+}
+
+void test_SamplePolicyProvider_ReplaceRuleById(void)
+{
+    BSLP_PolicyProvider_t *provider = BSLP_PolicyProvider_New(1);
+
+    BSLP_PolicyRule_t rule;
+    BSLP_PolicyRule_InitFrom(&rule, 42, "original", 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+                             BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
+    BSLP_PolicyPredicate_t predicate;
+    BSLP_PolicyPredicate_InitFrom(&predicate, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "*:**");
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLP_PolicyProvider_AddRule(provider, &rule, &predicate));
+
+    BSLP_PolicyRule_t replacement;
+    BSLP_PolicyRule_InitFrom(&replacement, 42, "replacement without predicate", 1, BSL_SECROLE_VERIFIER,
+                             BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLP_PolicyProvider_ReplaceRuleById(provider, 42, &replacement, NULL));
+    TEST_ASSERT_EQUAL(1, BSLP_PolicyProvider_RuleCount(provider));
+
+    const BSLP_PolicyRule_t *found = BSLP_PolicyProvider_GetRuleById(provider, 42);
+    TEST_ASSERT_NOT_NULL(found);
+    TEST_ASSERT_EQUAL_STRING("replacement without predicate", m_string_get_cstr(found->description));
+
+    TEST_ASSERT_EQUAL(0,
+                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
+    BSL_SecurityActionSet_t action_set;
+    BSL_SecurityActionSet_Init(&action_set);
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLP_QueryPolicy(provider, &action_set, &LocalTestCtx.mock_bpa_ctr.bundle_ref,
+                                                    BSL_POLICYLOCATION_APPIN));
+    TEST_ASSERT_EQUAL(1, BSL_SecurityActionSet_CountActions(&action_set));
+    TEST_ASSERT_EQUAL(1,
+                      BSL_SecurityAction_CountSecOpers(BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0)));
+    BSL_SecurityActionSet_Deinit(&action_set);
+
+    BSLP_PolicyRule_InitFrom(&replacement, 42, "replacement", 2, BSL_SECROLE_ACCEPTOR, BSL_SECBLOCKTYPE_BCB,
+                             BSL_BLOCK_TYPE_PRIMARY, BSL_POLICYACTION_NOTHING);
+    BSLP_PolicyPredicate_t replacement_predicate;
+    BSLP_PolicyPredicate_InitFrom(&replacement_predicate, BSL_POLICYLOCATION_CLOUT, "ipn:1.*", "ipn:2.*",
+                                  "ipn:3.*");
+    TEST_ASSERT_EQUAL(BSL_SUCCESS,
+                      BSLP_PolicyProvider_ReplaceRuleById(provider, 42, &replacement, &replacement_predicate));
+    TEST_ASSERT_EQUAL(1, BSLP_PolicyProvider_RuleCount(provider));
+    TEST_ASSERT_NULL(replacement_predicate.src_eid_pattern.handle);
+    TEST_ASSERT_NULL(replacement_predicate.secsrc_eid_pattern.handle);
+    TEST_ASSERT_NULL(replacement_predicate.dst_eid_pattern.handle);
+
+    found = BSLP_PolicyProvider_GetRuleById(provider, 42);
+    TEST_ASSERT_NOT_NULL(found);
+    TEST_ASSERT_EQUAL_STRING("replacement", m_string_get_cstr(found->description));
+    TEST_ASSERT_EQUAL(2, found->context_id);
+    TEST_ASSERT_EQUAL(BSL_SECROLE_ACCEPTOR, found->role);
+    TEST_ASSERT_EQUAL(BSL_SECBLOCKTYPE_BCB, found->sec_block_type);
+
+    BSLP_PolicyRule_t missing;
+    BSLP_PolicyRule_InitFrom(&missing, 7, "missing", 1, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BIB,
+                             BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BUNDLE);
+    BSLP_PolicyPredicate_t missing_predicate;
+    BSLP_PolicyPredicate_InitFrom(&missing_predicate, BSL_POLICYLOCATION_APPIN, "*:**", "*:**", "*:**");
+    TEST_ASSERT_EQUAL(BSL_ERR_POLICY_CONFIG,
+                      BSLP_PolicyProvider_ReplaceRuleById(provider, 7, &missing, &missing_predicate));
+    TEST_ASSERT_EQUAL(7, missing.rule_id);
+    BSLP_PolicyRule_Deinit(&missing);
+    BSLP_PolicyPredicate_Deinit(&missing_predicate);
+
+    BSLP_PolicyProvider_Destroy(provider);
+}
+
 /**
  * @brief Purpose: Exercise the Rule and Predicate primitives to for BIB in a given bundle.
  *
