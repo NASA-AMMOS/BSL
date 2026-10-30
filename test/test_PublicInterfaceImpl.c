@@ -423,7 +423,7 @@ void setUp(void)
     BSLP_PolicyPredicate_InitFrom(&predicate_bsl_6, BSL_POLICYLOCATION_CLOUT, "*:**", "*:**", "ipn:*.0.6");
     BSLP_PolicyRule_t rule_bsl_6;
     BSLP_PolicyRule_InitFrom(
-        &rule_bsl_6, 6, "SOURCE BIB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:0.6) WITH POLICY DROP BLOCK", 1,
+        &rule_bsl_6, 106, "SOURCE BIB OVER PAYLOAD AT CLOUT FILTER(DEST=ipn:0.6) WITH POLICY DROP BLOCK", 1,
         BSL_SECROLE_SOURCE, BSL_SECBLOCKTYPE_BIB, BSL_BLOCK_TYPE_PAYLOAD, BSL_POLICYACTION_DROP_BLOCK);
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_6, BSLX_BIB_OPT_SHA_VARIANT), RFC9173_BIB_SHA_HMAC512);
     BSL_Variant_SetInt64(BSLP_PolicyRule_AddOption(&rule_bsl_6, BSLX_BIB_OPT_SCOPE), 0);

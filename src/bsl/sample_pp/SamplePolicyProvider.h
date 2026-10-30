@@ -233,6 +233,39 @@ int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *
  */
 size_t BSLP_PolicyProvider_RuleCount(BSLP_PolicyProvider_t *self);
 
+/** Find a policy rule by its rule ID
+ *
+ * @param[in] self policy provider
+ * @param[in] rule_id rule ID of rule to find.
+ * @return Pointer to the rule (const, owned by provider), or NULL if not found.
+ */
+const BSLP_PolicyRule_t *BSLP_PolicyProvider_GetRuleById(BSLP_PolicyProvider_t *self, int64_t rule_id);
+
+/** Remove a policy rule by its rule ID
+ *
+ * @param[in] self policy provider
+ * @param[in] rule_id rule ID of rule to remove.
+ * @return BSL_SUCCESS on successful removal, else fail
+ */
+int BSLP_PolicyProvider_RemoveRuleById(BSLP_PolicyProvider_t *self, int64_t rule_id);
+
+/** Remove all policy rules from a provider.
+ *
+ * @param[in] self policy provider
+ */
+void BSLP_PolicyProvider_ClearRules(BSLP_PolicyProvider_t *self);
+
+/** Replace a policy rule and its associated predicate by rule ID.
+ *
+ * @param[in] self policy provider
+ * @param[in] rule_id rule ID of rule to replace
+ * @param[in,out] rule updated policy rule
+ * @param[in,out] predicate optional updated predicate. If NULL, original predicate will remain
+ * @return BSL_SUCCESS on success, else fail
+ */
+int BSLP_PolicyProvider_ReplaceRuleById(BSLP_PolicyProvider_t *self, int64_t rule_id, BSLP_PolicyRule_t *rule,
+                                        BSLP_PolicyPredicate_t *predicate);
+
 /** Set the action to perform when no rules match a bundle.
  *
  * @param[in] self The policy storage to set.

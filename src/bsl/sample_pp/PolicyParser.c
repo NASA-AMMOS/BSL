@@ -954,9 +954,24 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
                          BSLB_VariantPtr_ref(*(opt_pair->value_ptr)));
     }
 
-    BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
+    int res;
+    if (BSLP_PolicyProvider_GetRuleById(policy, rule_id_int) != NULL)
+    {
+        BSL_LOG_WARNING("Replacing existing policy rule with ID %" PRId64, rule_id_int);
+        res = BSLP_PolicyProvider_ReplaceRuleById(policy, rule_id_int, &rule, &predicate);
+    }
+    else
+    {
+        res = BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
+    }
+
+    if (res != BSL_SUCCESS)
+    {
+        BSLP_PolicyRule_Deinit(&rule);
+        BSLP_PolicyPredicate_Deinit(&predicate);
+    }
     BSLB_VariantPtrMap_clear(options);
-    return BSL_SUCCESS;
+    return res;
 }
 
 int BSLP_PolicyParser_LoadFile(const char *file_path, BSLP_PolicyProvider_t *policy)
@@ -1138,8 +1153,8 @@ int BSLP_PolicyParser_LoadFd(int infd, BSLP_PolicyProvider_t *policy)
     return BSL_SUCCESS;
 }
 
-static void BSLP_RegisterPolicyFromBitstring(const uint64_t policy_bits, BSLP_PolicyProvider_t *policy,
-                                             BSLB_VariantPtrMap_t options)
+static int BSLP_RegisterPolicyFromBitstring(const uint64_t policy_bits, BSLP_PolicyProvider_t *policy,
+                                            BSLB_VariantPtrMap_t options)
 {
     BSL_LOG_DEBUG("Interpreting policy: 0x%" PRIx64, policy_bits);
 
@@ -1252,7 +1267,7 @@ static void BSLP_RegisterPolicyFromBitstring(const uint64_t policy_bits, BSLP_Po
             BSL_LOG_DEBUG("Policy: 0x%" PRIx64 " - Bundle Block Type: BUNDLE AGE", policy_bits);
             break;
         default:
-            return;
+            return BSL_ERR_POLICY_CONFIG;
     }
 
     BSL_PolicyAction_e policy_action_enum;
@@ -1315,8 +1330,14 @@ static void BSLP_RegisterPolicyFromBitstring(const uint64_t policy_bits, BSLP_Po
     BSLP_PolicyPredicate_t predicate_all_in;
     BSLP_PolicyPredicate_InitFrom(&predicate_all_in, policy_loc_enum, eid_src_pat_str, "*:**", "*:**");
 
+    int64_t rule_id = 0;
+    while (BSLP_PolicyProvider_GetRuleById(policy, rule_id) != NULL)
+    {
+        ++rule_id;
+    }
+
     BSLP_PolicyRule_t rule_all_in;
-    BSLP_PolicyRule_InitFrom(&rule_all_in, 0, policybits_str, sec_context, sec_role_enum, sec_block_enum,
+    BSLP_PolicyRule_InitFrom(&rule_all_in, rule_id, policybits_str, sec_context, sec_role_enum, sec_block_enum,
                              bundle_block_enum, policy_action_enum);
 
     // move options into rule
@@ -1329,7 +1350,13 @@ static void BSLP_RegisterPolicyFromBitstring(const uint64_t policy_bits, BSLP_Po
                          BSLB_VariantPtr_ref(*(pair->value_ptr)));
     }
 
-    BSLP_PolicyProvider_AddRule(policy, &rule_all_in, &predicate_all_in);
+    int res = BSLP_PolicyProvider_AddRule(policy, &rule_all_in, &predicate_all_in);
+    if (res != BSL_SUCCESS)
+    {
+        BSLP_PolicyRule_Deinit(&rule_all_in);
+        BSLP_PolicyPredicate_Deinit(&predicate_all_in);
+    }
+    return res;
 }
 
 int BSLP_PolicyParser_FromBitstringList(const char *policies, BSLP_PolicyProvider_t *policy)
@@ -1350,9 +1377,13 @@ int BSLP_PolicyParser_FromBitstringList(const char *policies, BSLP_PolicyProvide
         {
             BSL_LOG_ERR("Failed to decode policy integer at: %s", curs);
         }
-        curs = pend;
-        BSLP_RegisterPolicyFromBitstring(val, policy, options);
+        curs    = pend;
+        int res = BSLP_RegisterPolicyFromBitstring(val, policy, options);
         BSLB_VariantPtrMap_clear(options);
+        if (res != BSL_SUCCESS)
+        {
+            return res;
+        }
 
         if (*curs == '\0')
         {

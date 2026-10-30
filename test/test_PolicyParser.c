@@ -89,3 +89,26 @@ void test_PolicyParser_ReadConfigInvalid(const char *filename)
 
     TEST_ASSERT_EQUAL_size_t(0, BSLP_PolicyProvider_RuleCount(policy));
 }
+
+void test_PolicyParser_ReplacesExistingRuleId(void)
+{
+    BSLP_PolicyRule_t existing_rule;
+    BSLP_PolicyRule_InitFrom(&existing_rule, 1, "existing", 2, BSL_SECROLE_VERIFIER, BSL_SECBLOCKTYPE_BCB,
+                             BSL_BLOCK_TYPE_PRIMARY, BSL_POLICYACTION_NOTHING);
+    BSLP_PolicyPredicate_t existing_predicate;
+    BSLP_PolicyPredicate_InitFrom(&existing_predicate, BSL_POLICYLOCATION_CLOUT, "*:**", "*:**", "*:**");
+    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLP_PolicyProvider_AddRule(policy, &existing_rule, &existing_predicate));
+
+    int infd = open("test_PolicyParser-data/validSC1.json", O_RDONLY);
+    TEST_ASSERT_GREATER_OR_EQUAL_INT(0, infd);
+    TEST_ASSERT_EQUAL_INT(BSL_SUCCESS, BSLP_PolicyParser_LoadFd(infd, policy));
+    TEST_ASSERT_EQUAL_INT(0, close(infd));
+
+    TEST_ASSERT_EQUAL_size_t(1, BSLP_PolicyProvider_RuleCount(policy));
+    const BSLP_PolicyRule_t *rule = BSLP_PolicyProvider_GetRuleById(policy, 1);
+    TEST_ASSERT_NOT_NULL(rule);
+    TEST_ASSERT_EQUAL_INT(BSL_SECROLE_SOURCE, rule->role);
+    TEST_ASSERT_EQUAL_INT(BSL_SECBLOCKTYPE_BIB, rule->sec_block_type);
+    TEST_ASSERT_EQUAL_INT(1, rule->context_id);
+    TEST_ASSERT_EQUAL_UINT64(BSL_BLOCK_TYPE_PAYLOAD, rule->target_block_type);
+}
