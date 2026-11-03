@@ -16,9 +16,9 @@
 #include <inttypes.h>
 #include <unity.h>
 
-#if !defined(OPENSSL_NO_ML_DSA)
-#define OPENSSL_NO_ML_DSA (OPENSSL_VERSION_NUMBER < 0x30500000L)
-#endif // OPENSSL_NO_ML_DSA
+#if !defined(OPENSSL_ML_DSA)
+#define OPENSSL_ML_DSA (OPENSSL_VERSION_NUMBER >= 0x30500000L)
+#endif // OPENSSL_ML_DSA
 
 #if !defined(OPENSSL_ECDSA_DETERMINISTIC)
 #define OPENSSL_ECDSA_DETERMINISTIC (OPENSSL_VERSION_NUMBER >= 0x30200000L)
@@ -148,7 +148,11 @@ void test_ecdsa_load_sign(void)
         BN_bn2binpad(s, catsig.ptr + 48, 48);
         ECDSA_SIG_free(ecdsa_sig);
     }
+#if OPENSSL_ECDSA_DETERMINISTIC
     TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(catsig_hex, catsig));
+#else
+    (void)catsig_hex;
+#endif // OPENSSL_ECDSA_DETERMINISTIC
 
     BSL_Data_Deinit(&catsig);
     BSL_Data_Deinit(&dersig);
@@ -261,6 +265,7 @@ void test_ecdsa_load_verify(void)
     BSL_Data_Deinit(&key_x);
 }
 
+#if OPENSSL_ML_DSA
 static void mldsa_get_mu(uint8_t mu_val[64], const EVP_PKEY *key, const BSL_Data_t *tbs)
 {
     EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
@@ -297,10 +302,11 @@ static void mldsa_get_mu(uint8_t mu_val[64], const EVP_PKEY *key, const BSL_Data
     EVP_MD_free(md);
     EVP_MD_CTX_free(mdctx);
 }
+#endif // OPENSSL_ML_DSA
 
 void test_mldsa_load_sign(void)
 {
-#if OPENSSL_NO_ML_DSA
+#if !OPENSSL_ML_DSA
     TEST_IGNORE_MESSAGE("no ML-DSA");
 #else
     // Key from BPSec COSE example A.10
@@ -427,12 +433,12 @@ void test_mldsa_load_sign(void)
     BSL_Data_Deinit(&tbs);
     BSL_Data_Deinit(&key_priv);
     BSL_Data_Deinit(&key_pub);
-#endif // OPENSSL_NO_ML_DSA
+#endif // OPENSSL_ML_DSA
 }
 
 void test_mldsa_load_verify(void)
 {
-#if OPENSSL_NO_ML_DSA
+#if !OPENSSL_ML_DSA
     TEST_IGNORE_MESSAGE("no ML-DSA");
 #else
     // Key from BPSec COSE example A.10
@@ -630,5 +636,5 @@ void test_mldsa_load_verify(void)
     BSL_Data_Deinit(&sig);
     BSL_Data_Deinit(&tbs);
     BSL_Data_Deinit(&key_pub);
-#endif // OPENSSL_NO_ML_DSA
+#endif // OPENSSL_ML_DSA
 }
