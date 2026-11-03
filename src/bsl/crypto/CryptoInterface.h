@@ -427,11 +427,14 @@ typedef struct BSL_SigCtx_s
  * @param[in,out] ctx pointer to hmac context struct to init and set
  * @param[in] keyhandle handle for key to use.
  * The HMAC context keeps its own reference to this handle.
- * @param[in] variant Signature variant to use.
+ * @param variant Signature variant to use.
+ * @param nonce_deterministic If true, the signature will use a deterministic
+ * nonce for signing.
  * @return 0 if successful
  */
 BSL_REQUIRE_CHECK
-int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant);
+int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant,
+                        bool nonce_deterministic);
 
 /**
  * Input data to signature context.

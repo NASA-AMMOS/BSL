@@ -212,6 +212,8 @@ typedef struct
     BSL_Crypto_KeyHandle_t cekhandle;
     /// Optional wrapped content key
     BSL_Data_t wrapped_cek;
+    /// Config for deterministic signing
+    bool sig_nonce_det;
 
     /// MAC processing state, may be NULL
     BSL_AuthCtx_t *mac_ctx;
@@ -240,6 +242,7 @@ static void BSLX_CoseSc_Init(BSLX_CoseSc_t *self)
     BSL_Data_Init(&self->wrapped_cek);
     self->mac_ctx = NULL;
     self->enc_ctx = NULL;
+    self->sig_ctx = NULL;
     BSL_PrimaryBlock_Init(&self->primary_block);
     self->status = BSL_SUCCESS;
 }
@@ -463,6 +466,21 @@ static void BSLX_CoseSc_GetOptions(BSLX_CoseSc_t *self, const BSL_SecOper_t *sec
         else
         {
             self->opt_salt_offset = true;
+        }
+    }
+
+    opt = BSL_SecOper_FindOption(sec_oper, BSLX_COSESC_OPTION_SIGN_DETERMINISTIC);
+    if (opt)
+    {
+        int64_t value;
+        if ((BSL_SUCCESS != BSL_Variant_GetAsInt64(opt, &value)))
+        {
+            BSL_LOG_ERR("Invalid sign deterministic value");
+            self->status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+        }
+        else
+        {
+            self->sig_nonce_det = (value != 0);
         }
     }
 
@@ -2618,10 +2636,8 @@ static void BSLX_CoseSc_Signature_Sign(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_He
     if (BSL_SUCCESS == ctx->status)
     {
         ctx->sig_ctx = BSL_malloc(sizeof(BSL_SigCtx_t));
-        // use separate content key when available
-        BSL_Crypto_KeyHandle_t content_key = ctx->cekhandle ? ctx->cekhandle : ctx->keyhandle;
 
-        res = BSL_SigCtxSign_Init(ctx->sig_ctx, content_key, bsl_sig_var);
+        res = BSL_SigCtxSign_Init(ctx->sig_ctx, ctx->keyhandle, bsl_sig_var, ctx->sig_nonce_det);
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {

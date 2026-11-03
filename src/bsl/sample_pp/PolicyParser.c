@@ -507,6 +507,19 @@ static int BSLP_PolicyOptions_SC3(BSLB_VariantPtrMap_t options, const char *id_s
             BSL_Variant_SetInt64(opt, as_int);
         }
     }
+    else if (0 == strcasecmp(id_str, "sign_deterministic"))
+    {
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_COSESC_OPTION_SIGN_DETERMINISTIC, value);
+        if (opt)
+        {
+            bool as_bool;
+            if (BSLP_GetBoolean(value, &as_bool))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, (int64_t)as_bool);
+        }
+    }
     else
     {
         BSL_LOG_ERR("INVALID PARAM KEY %s FOR SC ID 3", id_str);
