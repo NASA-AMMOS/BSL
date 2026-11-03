@@ -394,6 +394,10 @@
             },
             "salt_base": {
               "$ref": "#/$defs/BytesAsHex"
+            },
+            "sign_deterministic": {
+              "description": "A boolean value controlling internal signing logic.",
+              "$ref": "#/$defs/BooleanOrText"
             }
           }
         }
