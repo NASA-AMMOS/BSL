@@ -697,7 +697,8 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
     return BSL_SUCCESS;
 }
 
-int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant)
+int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant,
+                        bool nonce_deterministic)
 {
     ASSERT_ARG_NONNULL(ctx);
     CHK_ARG_NONNULL(keyhandle);
@@ -716,7 +717,7 @@ int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL
     ctx->libhandle = mdctx;
 
 #if OPENSSL_CAN_ECDSA_DETERMINISTIC
-    unsigned int nonce_type = 1;
+    unsigned int nonce_type = nonce_deterministic;
     // full parameters
     const OSSL_PARAM sigparams[] = {
         OSSL_PARAM_construct_uint(OSSL_SIGNATURE_PARAM_NONCE_TYPE, &nonce_type),
@@ -724,6 +725,10 @@ int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL
         OSSL_PARAM_construct_end(),
     };
 #else
+    if (nonce_deterministic)
+    {
+        BSL_LOG_WARNING("Cannot sign with deterministic nonce on this OpenSSL version");
+    }
     const OSSL_PARAM *sigparams = NULL;
 #endif // OPENSSL_CAN_ECDSA_DETERMINISTIC
 
