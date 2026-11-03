@@ -115,8 +115,9 @@ static int BSLP_GetBoolean(const json_t *value, bool *as_bool)
     if (json_is_boolean(value))
     {
         *as_bool = json_is_true(value);
+        return BSL_SUCCESS;
     }
-    if (json_is_integer(value))
+    else if (json_is_integer(value))
     {
         *as_bool = (json_integer_value(value) != 0);
         return BSL_SUCCESS;

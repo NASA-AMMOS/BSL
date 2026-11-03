@@ -17,7 +17,7 @@
             "key_name": "ExampleA.2",
             "aes_variant": 1,
             "aad_scope": 0,
-            "key_wrap": 1
+            "key_wrap": true
           }
         },
         "policy_action_on_fail": "delete_bundle"

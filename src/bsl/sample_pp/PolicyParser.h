@@ -22,8 +22,7 @@
 /**
  * @file
  * @ingroup sample_pp
- * Entry point for the sample policy provider of the BSL.
- * Configuration input is handled by @ref PolicyParser.h functions.
+ * Configuration file readers for the sample policy provider of the BSL.
  */
 #ifndef BSLP_POLICY_PARSER_H_
 #define BSLP_POLICY_PARSER_H_
@@ -95,4 +94,4 @@ int BSLP_PolicyParser_FromBitstringList(const char *policies, BSLP_PolicyProvide
 } // extern C
 #endif
 
-#endif /* BSLP_POLICY_PARSER_H */
+#endif /* BSLP_POLICY_PARSER_H_ */
