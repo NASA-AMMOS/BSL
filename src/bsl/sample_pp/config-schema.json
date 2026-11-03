@@ -212,7 +212,7 @@
       }
     },
     "IntegerOrText": {
-      "description": "A direct integer value or a text value which can be converted to integer as either base 10 or base 16.",
+      "description": "A direct integer value or a text value which can be converted to integer as either base 10 or base 16. The null value is interpreted as no-option-present.",
       "anyOf": [
         {
           "type": "integer"
@@ -220,11 +220,14 @@
         {
           "type": "string",
           "pattern": "^-?([0-9]+|0x[0-9a-fA-F]+)$"
+        },
+        {
+          "type": "null"
         }
       ]
     },
     "BooleanOrText": {
-      "description": "A true/false boolean value or an integer or text value interpreted as one. Value zero or text 0 is false and all others are true.",
+      "description": "A true/false boolean value or an integer or text value interpreted as one. Value zero or text 0 is false and all others are true. The null value is interpreted as no-option-present.",
       "anyOf": [
         {
           "type": "boolean"
@@ -234,13 +237,34 @@
         },
         {
           "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "TextOption": {
+      "description": "An arbitrary text option. The null value is interpreted as no-option-present.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
         }
       ]
     },
     "BytesAsHex": {
-      "description": "A byte string represented as hexadecimal encoding of each byte in sequence. The prefix marker 0x is optional and recommended.",
-      "type": "string",
-      "pattern": "(0x)?([0-9a-fA-F]{2})*"
+      "description": "A byte string represented as hexadecimal encoding of each byte in sequence. The prefix marker 0x is optional and recommended. The null value is interpreted as no-option-present.",
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "(0x)?([0-9a-fA-F]{2})*"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "BundleEidPattern": {
       "description": "An EID Pattern in text form which is not restricted by this schema.",
@@ -295,7 +319,7 @@
           ],
           "properties": {
             "key_name": {
-              "type": "string"
+              "$ref": "#/$defs/TextOption"
             },
             "key_wrap": {
               "$ref": "#/$defs/BooleanOrText"
@@ -329,7 +353,7 @@
           ],
           "properties": {
             "key_name": {
-              "type": "string"
+              "$ref": "#/$defs/TextOption"
             },
             "key_wrap": {
               "$ref": "#/$defs/BooleanOrText"
@@ -362,7 +386,7 @@
           "additionalProperties": false,
           "properties": {
             "key_name": {
-              "type": "string"
+              "$ref": "#/$defs/TextOption"
             },
             "key_id": {
               "$ref": "#/$defs/BytesAsHex"
