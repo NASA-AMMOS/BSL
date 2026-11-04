@@ -891,7 +891,7 @@ class TestCoseScSign1(TestAgent):
                     input_data=EXAMPLE_A_NO_SEC,
                     expected_output=EXAMPLE_A_2_WITH_BIB,
                     sec_src_eid="dtn://src/",
-                    policy_config="data/cose-sc/policy-exA.2-source.json",
+                    policy_config=polfile_path,
                     bundle_dest_loc=BundleDestLoc.APPIN,
                     key_set="data/cose-sc/keyset-1.cbordiag",
                     input_data_format=DataFormat.CBORDIAG,
