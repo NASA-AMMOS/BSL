@@ -5,6 +5,7 @@ Acceptor
 ACCEPTOR
 ADU
 aes
+AKP
 AMMOS
 amongst
 ABI
@@ -102,6 +103,7 @@ deregister
 dir
 DocID
 doxygen
+DSA
 dtn
 ECDSA
 eid
