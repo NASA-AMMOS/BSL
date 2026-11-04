@@ -96,6 +96,9 @@ static const int64_t cose_enc_cnt_algs[] = {
 static const int64_t cose_sign_cnt_algs[] = {
     BSLX_COSEMSG_ALG_ESP512,
     BSLX_COSEMSG_ALG_ESP384,
+    BSLX_COSEMSG_ALG_MLDSA87,
+    BSLX_COSEMSG_ALG_MLDSA65,
+    BSLX_COSEMSG_ALG_MLDSA44,
     BSLX_COSEMSG_ALG_ESP256,
 };
 #if 0
@@ -2577,7 +2580,7 @@ static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_Varia
  */
 static void BSLX_CoseSc_Signature_TBS(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *body,
                                       const BSLX_CoseMsg_Headers_t *signer, BSLX_CoseSc_ChunkList_t chunklist,
-                                      BSL_Crypto_SignVariant_e *bsl_sig_var)
+                                      BSL_Crypto_SignVariant_t *bsl_sig_var)
 {
     switch (ctx->tgt_alg)
     {
@@ -2589,6 +2592,15 @@ static void BSLX_CoseSc_Signature_TBS(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Hea
             break;
         case BSLX_COSEMSG_ALG_ESP512:
             *bsl_sig_var = BSL_CRYPTO_ECDSA_P521_SHA_512;
+            break;
+        case BSLX_COSEMSG_ALG_MLDSA44:
+            *bsl_sig_var = BSL_CRYPTO_MLDSA_44;
+            break;
+        case BSLX_COSEMSG_ALG_MLDSA65:
+            *bsl_sig_var = BSL_CRYPTO_MLDSA_65;
+            break;
+        case BSLX_COSEMSG_ALG_MLDSA87:
+            *bsl_sig_var = BSL_CRYPTO_MLDSA_87;
             break;
         default:
             BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, ctx->tgt_alg);
@@ -2627,7 +2639,7 @@ static void BSLX_CoseSc_Signature_Sign(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_He
 {
     int res;
 
-    BSL_Crypto_SignVariant_e bsl_sig_var;
+    BSL_Crypto_SignVariant_t bsl_sig_var;
 
     // Chunks of Sig_Structure
     BSLX_CoseSc_ChunkList_t chunklist;
@@ -2642,7 +2654,7 @@ static void BSLX_CoseSc_Signature_Sign(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_He
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
-            BSL_LOG_ERR("Failed to construct MAC context");
+            BSL_LOG_ERR("Failed to construct sign context");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
         // GCOV_EXCL_STOP
@@ -2729,7 +2741,7 @@ static void BSLX_CoseSc_Signature_Verify(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_
 {
     int res;
 
-    BSL_Crypto_SignVariant_e bsl_sig_var;
+    BSL_Crypto_SignVariant_t bsl_sig_var;
 
     // Chunks of Sig_Structure
     BSLX_CoseSc_ChunkList_t chunklist;
@@ -2746,7 +2758,7 @@ static void BSLX_CoseSc_Signature_Verify(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
-            BSL_LOG_ERR("Failed to construct MAC context");
+            BSL_LOG_ERR("Failed to construct verify context");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
         // GCOV_EXCL_STOP

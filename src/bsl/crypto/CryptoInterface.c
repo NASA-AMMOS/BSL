@@ -45,6 +45,8 @@
 
 /// The symbol @c OSSL_SIGNATURE_PARAM_NONCE_TYPE defined in v3.2.0
 #define OPENSSL_CAN_ECDSA_DETERMINISTIC (OPENSSL_VERSION_NUMBER >= 0x30200000L)
+/// The algorithms for ML-DSA are available in v3.5.0
+#define OPENSSL_CAN_MLDSA (OPENSSL_VERSION_NUMBER >= 0x30500000L)
 
 extern BSL_KeyStore_Descriptors_t BSL_KeyStore_State;
 
@@ -588,18 +590,29 @@ void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
     memset(hmac_ctx, 0, sizeof(BSL_AuthCtx_t));
 }
 
+#define MLDSA_SHAKE256_SIZE 64
+
 static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **digest_name)
 {
     switch (ctx->variant)
     {
         case BSL_CRYPTO_ECDSA_P256_SHA_256:
+            ctx->mode    = BSL_CRPYTO_SIGNMODE_SEQUENTIAL;
             *digest_name = SN_sha256;
             break;
         case BSL_CRYPTO_ECDSA_P384_SHA_384:
+            ctx->mode    = BSL_CRPYTO_SIGNMODE_SEQUENTIAL;
             *digest_name = SN_sha384;
             break;
         case BSL_CRYPTO_ECDSA_P521_SHA_512:
+            ctx->mode    = BSL_CRPYTO_SIGNMODE_SEQUENTIAL;
             *digest_name = SN_sha512;
+            break;
+        case BSL_CRYPTO_MLDSA_44:
+        case BSL_CRYPTO_MLDSA_65:
+        case BSL_CRYPTO_MLDSA_87:
+            ctx->mode    = BSL_CRPYTO_SIGNMODE_EXTHASH;
+            *digest_name = SN_shake256;
             break;
             // GCOV_EXCL_START
         default:
@@ -612,106 +625,166 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
     CHK_PRECONDITION(key_kty_var);
     int64_t key_kty;
     CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsInt64(key_kty_var, &key_kty));
-    CHK_PRECONDITION(key_kty == BSL_CRYPTO_KEYPARAM_TYPE_EC2);
 
-    const BSL_Variant_t *key_crv_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_CRV);
-    CHK_PRECONDITION(key_crv_var);
-    int64_t key_crv;
-    CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsInt64(key_crv_var, &key_crv));
-
-    const char *grp_name = NULL;
-    switch (key_crv)
+    if (key_kty == BSL_CRYPTO_KEYPARAM_TYPE_EC2)
     {
-        case 1:
-            grp_name       = "P-256";
-            ctx->coord_len = 32;
-            break;
-        case 2:
-            grp_name       = "P-384";
-            ctx->coord_len = 48;
-            break;
-        case 3:
-            grp_name       = "P-521";
-            ctx->coord_len = 66;
-            break;
-        default:
+        const BSL_Variant_t *key_crv_var =
+            BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_CRV);
+        CHK_PRECONDITION(key_crv_var);
+        int64_t key_crv;
+        CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsInt64(key_crv_var, &key_crv));
+
+        const char *grp_name = NULL;
+        switch (key_crv)
+        {
+            case 1:
+                grp_name       = "P-256";
+                ctx->coord_len = 32;
+                break;
+            case 2:
+                grp_name       = "P-384";
+                ctx->coord_len = 48;
+                break;
+            case 3:
+                grp_name       = "P-521";
+                ctx->coord_len = 66;
+                break;
+            default:
+                return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+
+        const BSL_Variant_t *key_x_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_X);
+        CHK_PRECONDITION(key_x_var);
+        BSL_Data_t key_x;
+        CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsBytestr(key_x_var, &key_x));
+        CHK_PRECONDITION(key_x.len == ctx->coord_len);
+
+        const BSL_Variant_t *key_y_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_Y);
+        CHK_PRECONDITION(key_y_var);
+        BSL_Data_t key_y;
+        CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsBytestr(key_y_var, &key_y));
+        CHK_PRECONDITION(key_y.len == ctx->coord_len);
+
+        const BSL_Variant_t *key_d_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_D);
+        // present only for private keys
+        BSL_Data_t key_d = BSL_DATA_INIT_NULL;
+        if (key_d_var)
+        {
+            CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsBytestr(key_d_var, &key_d));
+        }
+
+        OSSL_PARAM_BLD *param_bld = OSSL_PARAM_BLD_new();
+        CHK_PRECONDITION(param_bld);
+        OSSL_PARAM_BLD_push_utf8_string(param_bld, OSSL_PKEY_PARAM_GROUP_NAME, grp_name, 0);
+
+        // SEC1 point buffer 0x04 || X || Y
+        BSL_Data_t pubdata;
+        BSL_Data_InitBuffer(&pubdata, 1 + 2 * ctx->coord_len);
+        pubdata.ptr[0] = 0x04;
+        memcpy(pubdata.ptr + 1, key_x.ptr, key_x.len);
+        memcpy(pubdata.ptr + 1 + ctx->coord_len, key_y.ptr, key_y.len);
+        OSSL_PARAM_BLD_push_octet_string(param_bld, OSSL_PKEY_PARAM_PUB_KEY, pubdata.ptr, pubdata.len);
+
+        BIGNUM *key_d_bn = NULL;
+        if (key_d.len > 0)
+        {
+            key_d_bn = BN_bin2bn(key_d.ptr, (int)key_d.len, 0);
+            OSSL_PARAM_BLD_push_BN(param_bld, OSSL_PKEY_PARAM_PRIV_KEY, key_d_bn);
+        }
+
+        OSSL_PARAM *params = OSSL_PARAM_BLD_to_param(param_bld);
+        OSSL_PARAM_BLD_free(param_bld);
+        CHK_PRECONDITION(params);
+
+        EVP_PKEY_CTX *keyctx = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
+        CHK_PRECONDITION(keyctx);
+        CHK_PRECONDITION(1 == EVP_PKEY_fromdata_init(keyctx));
+
+        int res = EVP_PKEY_fromdata(keyctx, key, EVP_PKEY_KEYPAIR, params);
+        CHK_PROPERTY(*key);
+
+        EVP_PKEY_CTX_free(keyctx);
+        OSSL_PARAM_free(params);
+        if (key_d_bn)
+        {
+            BN_free(key_d_bn);
+        }
+        BSL_Data_Deinit(&pubdata);
+
+        if (res != 1)
+        {
+            BSL_LOG_ERR("Failed to convert EC2 key");
+            EVP_PKEY_free(*key);
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
     }
-
-    const BSL_Variant_t *key_x_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_X);
-    CHK_PRECONDITION(key_x_var);
-    BSL_Data_t key_x;
-    CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsBytestr(key_x_var, &key_x));
-    CHK_PRECONDITION(key_x.len == ctx->coord_len);
-
-    const BSL_Variant_t *key_y_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_Y);
-    CHK_PRECONDITION(key_y_var);
-    BSL_Data_t key_y;
-    CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsBytestr(key_y_var, &key_y));
-    CHK_PRECONDITION(key_y.len == ctx->coord_len);
-
-    const BSL_Variant_t *key_d_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_D);
-    // present only for private keys
-    BSL_Data_t key_d = BSL_DATA_INIT_NULL;
-    if (key_d_var)
+    else if (key_kty == BSL_CRYPTO_KEYPARAM_TYPE_AKP)
     {
-        CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsBytestr(key_d_var, &key_d));
+        const BSL_Variant_t *key_pub_var =
+            BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_AKP_PUB);
+        CHK_PRECONDITION(key_pub_var);
+        BSL_Data_t key_pub;
+        CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsBytestr(key_pub_var, &key_pub));
+
+        const BSL_Variant_t *key_priv_var =
+            BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_AKP_PRIV);
+        // present only for private keys
+        BSL_Data_t key_priv = BSL_DATA_INIT_NULL;
+        if (key_priv_var)
+        {
+            CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsBytestr(key_priv_var, &key_priv));
+        }
+
+        OSSL_PARAM_BLD *param_bld = OSSL_PARAM_BLD_new();
+        CHK_PRECONDITION(param_bld);
+
+        OSSL_PARAM_BLD_push_octet_string(param_bld, OSSL_PKEY_PARAM_PUB_KEY, key_pub.ptr, key_pub.len);
+        OSSL_PARAM_BLD_push_octet_string(param_bld, OSSL_PKEY_PARAM_ML_DSA_SEED, key_priv.ptr, key_priv.len);
+
+        OSSL_PARAM *params = OSSL_PARAM_BLD_to_param(param_bld);
+        OSSL_PARAM_BLD_free(param_bld);
+        CHK_PRECONDITION(params);
+
+        EVP_PKEY_CTX *keyctx = EVP_PKEY_CTX_new_from_name(NULL, "ML-DSA-87", NULL);
+        CHK_PRECONDITION(keyctx);
+        CHK_PRECONDITION(1 == EVP_PKEY_fromdata_init(keyctx));
+
+        int res = EVP_PKEY_fromdata(keyctx, key, EVP_PKEY_KEYPAIR, params);
+        CHK_PROPERTY(*key);
+
+        EVP_PKEY_CTX_free(keyctx);
+        OSSL_PARAM_free(params);
+
+        if (res != 1)
+        {
+            BSL_LOG_ERR("Failed to convert AKP key");
+            EVP_PKEY_free(*key);
+            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
     }
-
-    OSSL_PARAM_BLD *param_bld = OSSL_PARAM_BLD_new();
-    CHK_PRECONDITION(param_bld);
-    OSSL_PARAM_BLD_push_utf8_string(param_bld, OSSL_PKEY_PARAM_GROUP_NAME, grp_name, 0);
-
-    // SEC1 point buffer 0x04 || X || Y
-    BSL_Data_t pubdata;
-    BSL_Data_InitBuffer(&pubdata, 1 + 2 * ctx->coord_len);
-    pubdata.ptr[0] = 0x04;
-    memcpy(pubdata.ptr + 1, key_x.ptr, key_x.len);
-    memcpy(pubdata.ptr + 1 + ctx->coord_len, key_y.ptr, key_y.len);
-    OSSL_PARAM_BLD_push_octet_string(param_bld, OSSL_PKEY_PARAM_PUB_KEY, pubdata.ptr, pubdata.len);
-
-    BIGNUM *key_d_bn = NULL;
-    if (key_d.len > 0)
+    else
     {
-        key_d_bn = BN_bin2bn(key_d.ptr, (int)key_d.len, 0);
-        OSSL_PARAM_BLD_push_BN(param_bld, OSSL_PKEY_PARAM_PRIV_KEY, key_d_bn);
-    }
-
-    OSSL_PARAM *params = OSSL_PARAM_BLD_to_param(param_bld);
-    OSSL_PARAM_BLD_free(param_bld);
-    CHK_PRECONDITION(params);
-
-    EVP_PKEY_CTX *keyctx = EVP_PKEY_CTX_new_from_name(NULL, "EC", NULL);
-    CHK_PRECONDITION(keyctx);
-    CHK_PRECONDITION(1 == EVP_PKEY_fromdata_init(keyctx));
-
-    int res = EVP_PKEY_fromdata(keyctx, key, EVP_PKEY_KEYPAIR, params);
-    CHK_PROPERTY(*key);
-
-    EVP_PKEY_CTX_free(keyctx);
-    OSSL_PARAM_free(params);
-    if (key_d_bn)
-    {
-        BN_free(key_d_bn);
-    }
-    BSL_Data_Deinit(&pubdata);
-
-    if (res != 1)
-    {
-        BSL_LOG_ERR("Failed to convert private key");
-        EVP_PKEY_free(*key);
+        BSL_LOG_ERR("Unhandled key kty value %" PRId64, key_kty);
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
     return BSL_SUCCESS;
 }
 
-int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant,
+int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_t variant,
                         bool nonce_deterministic)
 {
     ASSERT_ARG_NONNULL(ctx);
     CHK_ARG_NONNULL(keyhandle);
+    memset(ctx, 0, sizeof(*ctx));
 
     ctx->variant = variant;
+#if !OPENSSL_CAN_MLDSA
+    // check this before any state requiring cleanup
+    if ((variant == BSL_CRYPTO_MLDSA_44) || (variant == BSL_CRYPTO_MLDSA_65) || (variant == BSL_CRYPTO_MLDSA_87))
+    {
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+#endif // !OPENSSL_CAN_MLDSA
 
     ctx->keyhandle = BSL_KeyStore_State.acquire_key(keyhandle);
     CHK_PRECONDITION(ctx->keyhandle);
@@ -720,29 +793,71 @@ int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL
     EVP_PKEY *key = NULL;
     CHK_PRECONDITION(BSL_SUCCESS == BSL_SigCtx_CommonInit(ctx, &key, &digest_name));
 
+    // same handle structure, different modes of operation
     EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
     CHK_PRECONDITION(mdctx != NULL);
     ctx->libhandle = mdctx;
 
-#if OPENSSL_CAN_ECDSA_DETERMINISTIC
-    unsigned int nonce_type = nonce_deterministic;
-    // full parameters
-    const OSSL_PARAM sigparams[] = {
-        OSSL_PARAM_construct_uint(OSSL_SIGNATURE_PARAM_NONCE_TYPE, &nonce_type),
-        OSSL_PARAM_construct_utf8_string(OSSL_SIGNATURE_PARAM_DIGEST, digest_name, 0),
-        OSSL_PARAM_construct_end(),
-    };
-#else
-    if (nonce_deterministic)
+    int res;
+    if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
     {
-        BSL_LOG_WARNING("Cannot sign with deterministic nonce on this OpenSSL version");
-    }
-    const OSSL_PARAM *sigparams = NULL;
+#if OPENSSL_CAN_ECDSA_DETERMINISTIC
+        unsigned int nonce_type = nonce_deterministic ? 1 : 0;
+
+        const OSSL_PARAM sign_params[] = {
+            OSSL_PARAM_construct_uint(OSSL_SIGNATURE_PARAM_NONCE_TYPE, &nonce_type),
+            OSSL_PARAM_construct_utf8_string(OSSL_SIGNATURE_PARAM_DIGEST, digest_name, 0),
+            OSSL_PARAM_construct_end(),
+        };
+#else
+        if (nonce_deterministic)
+        {
+            BSL_LOG_WARNING("Cannot sign with deterministic nonce on this OpenSSL version");
+        }
+        const OSSL_PARAM *sign_params = NULL;
 #endif // OPENSSL_CAN_ECDSA_DETERMINISTIC
 
-    int res = EVP_DigestSignInit_ex(mdctx, NULL, digest_name, NULL, NULL, key, sigparams);
+        res = EVP_DigestSignInit_ex(mdctx, NULL, digest_name, NULL, NULL, key, sign_params);
+        // mdctx keeps a key reference
+        EVP_PKEY_free(key);
+    }
+    else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
+    {
+        ctx->libcache = key;
+
+        EVP_MD *md = EVP_MD_fetch(NULL, "SHAKE256", NULL);
+        CHK_PRECONDITION(md);
+
+        // Compute key digest "tr"
+        CHK_PRECONDITION(1 == EVP_DigestInit_ex2(mdctx, md, NULL));
+        {
+            size_t publen;
+            CHK_PRECONDITION(1 == EVP_PKEY_get_octet_string_param(key, OSSL_PKEY_PARAM_PUB_KEY, NULL, 0, &publen));
+            uint8_t *pubdata = malloc(publen);
+            CHK_PRECONDITION(
+                1 == EVP_PKEY_get_octet_string_param(key, OSSL_PKEY_PARAM_PUB_KEY, pubdata, publen, &publen));
+
+            CHK_PRECONDITION(1 == EVP_DigestUpdate(mdctx, pubdata, publen));
+            free(pubdata);
+        }
+        uint8_t      tr_val[MLDSA_SHAKE256_SIZE];
+        unsigned int tr_len = MLDSA_SHAKE256_SIZE;
+        CHK_PRECONDITION(1 == EVP_DigestFinalXOF(mdctx, tr_val, tr_len));
+
+        // Start of message digest "mu"
+        res = EVP_DigestInit_ex2(mdctx, md, NULL);
+        if (res == 1)
+        {
+            EVP_DigestUpdate(mdctx, tr_val, tr_len);
+            // fixed empty context
+            static const uint8_t prefix[2] = { 0x00, 0x00 };
+            EVP_DigestUpdate(mdctx, prefix, sizeof(prefix));
+        }
+
+        // context already keeps its reference
+        EVP_MD_free(md);
+    }
     CHK_PROPERTY(res == 1);
-    EVP_PKEY_free(key);
 
     ctx->block_size = (size_t)EVP_MD_CTX_get_block_size(mdctx);
     BSL_LOG_DEBUG("MD block size %zu", ctx->block_size);
@@ -770,8 +885,17 @@ int BSL_SigCtxSign_DigestBuffer(BSL_SigCtx_t *ctx, const void *data, size_t data
     CHK_PRECONDITION(data_len <= INT_MAX);
 
     BSL_LOG_PLAINTEXT_PTR("data in", ctx, data, data_len);
-    int res = EVP_DigestSignUpdate(ctx->libhandle, data, data_len);
-    BSL_LOG_DEBUG("EVP_DigestSignUpdate took %zu bytes, return %d", data_len, res);
+    int res = 0;
+    if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
+    {
+        res = EVP_DigestSignUpdate(ctx->libhandle, data, data_len);
+        BSL_LOG_DEBUG("EVP_DigestSignUpdate took %zu bytes, return %d", data_len, res);
+    }
+    else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
+    {
+        res = EVP_DigestUpdate(ctx->libhandle, data, data_len);
+        BSL_LOG_DEBUG("EVP_DigestUpdate took %zu bytes, return %d", data_len, res);
+    }
     CHK_PROPERTY(res == 1);
 
     BSL_KeyStore_State.update_stats(ctx->keyhandle, 0, data_len);
@@ -795,8 +919,17 @@ int BSL_SigCtxSign_DigestSeq(BSL_SigCtx_t *ctx, BSL_SeqReader_t *reader)
         }
 
         BSL_LOG_PLAINTEXT_PTR("data in", ctx, ctx->in_buf.ptr, block_size);
-        int res = EVP_DigestSignUpdate(ctx->libhandle, ctx->in_buf.ptr, block_size);
-        BSL_LOG_DEBUG("EVP_DigestSignUpdate took %zu bytes, return %d", block_size, res);
+        int res = 0;
+        if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
+        {
+            res = EVP_DigestSignUpdate(ctx->libhandle, ctx->in_buf.ptr, block_size);
+            BSL_LOG_DEBUG("EVP_DigestSignUpdate took %zu bytes, return %d", block_size, res);
+        }
+        else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
+        {
+            res = EVP_DigestUpdate(ctx->libhandle, ctx->in_buf.ptr, block_size);
+            BSL_LOG_DEBUG("EVP_DigestUpdate took %zu bytes, return %d", block_size, res);
+        }
         CHK_PROPERTY(res == 1);
 
         BSL_KeyStore_State.update_stats(ctx->keyhandle, 0, block_size);
@@ -811,43 +944,81 @@ int BSL_SigCtxSign_Finalize(BSL_SigCtx_t *ctx, BSL_Data_t *signature)
     ASSERT_ARG_NONNULL(signature);
     int res;
 
-    // get the needed tag size
-    size_t sig_size;
-    EVP_DigestSignFinal(ctx->libhandle, NULL, &sig_size);
-    CHK_PROPERTY(sig_size > 0);
-    CHK_PROPERTY(sig_size <= INT_MAX);
-
-    BSL_Data_t *dersig = &ctx->in_buf;
-    // reuse this buffer
-    res = BSL_Data_Resize(dersig, sig_size);
-    // GCOV_EXCL_START
-    if (BSL_SUCCESS != res)
+    if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
     {
-        return res;
+        // get the needed tag size
+        size_t sig_size;
+        EVP_DigestSignFinal(ctx->libhandle, NULL, &sig_size);
+        CHK_PROPERTY(sig_size > 0);
+        CHK_PROPERTY(sig_size <= INT_MAX);
+
+        BSL_Data_t *dersig = &ctx->in_buf;
+        // reuse this buffer
+        res = BSL_Data_Resize(dersig, sig_size);
+        // GCOV_EXCL_START
+        if (BSL_SUCCESS != res)
+        {
+            return res;
+        }
+        // GCOV_EXCL_STOP
+
+        res = EVP_DigestSignFinal(ctx->libhandle, dersig->ptr, &dersig->len);
+        BSL_LOG_DEBUG("EVP_DigestSignFinal gave %zu bytes, return %d", sig_size, res);
+        CHK_PROPERTY(res == 1);
+        BSL_LOG_PLAINTEXT_PTR("signature out", ctx, dersig->ptr, dersig->len);
+
+        {
+            // internal structure conversion
+            const uint8_t *offset    = dersig->ptr;
+            ECDSA_SIG     *ecdsa_sig = d2i_ECDSA_SIG(NULL, &offset, (long)dersig->len);
+            CHK_PROPERTY(ecdsa_sig);
+
+            const BIGNUM *sig_r = NULL;
+            const BIGNUM *sig_s = NULL;
+            ECDSA_SIG_get0(ecdsa_sig, &sig_r, &sig_s);
+            CHK_PROPERTY(sig_r);
+            CHK_PROPERTY(sig_s);
+
+            CHK_PROPERTY(BSL_SUCCESS == BSL_Data_Resize(signature, 2 * ctx->coord_len));
+            BN_bn2binpad(sig_r, signature->ptr, (int)(ctx->coord_len));
+            BN_bn2binpad(sig_s, signature->ptr + ctx->coord_len, (int)(ctx->coord_len));
+            ECDSA_SIG_free(ecdsa_sig);
+        }
     }
-    // GCOV_EXCL_STOP
-
-    res = EVP_DigestSignFinal(ctx->libhandle, dersig->ptr, &dersig->len);
-    BSL_LOG_DEBUG("EVP_DigestSignFinal gave %zu bytes, return %d", sig_size, res);
-    CHK_PROPERTY(res == 1);
-    BSL_LOG_PLAINTEXT_PTR("signature out", ctx, dersig->ptr, dersig->len);
-
+    else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
     {
-        // internal structure conversion
-        const uint8_t *offset    = dersig->ptr;
-        ECDSA_SIG     *ecdsa_sig = d2i_ECDSA_SIG(NULL, &offset, (long)dersig->len);
-        CHK_PROPERTY(ecdsa_sig);
+        uint8_t      mu_val[MLDSA_SHAKE256_SIZE];
+        unsigned int mu_len = MLDSA_SHAKE256_SIZE;
+        // Fixed Mu size
+        res = EVP_DigestFinalXOF(ctx->libhandle, mu_val, mu_len);
+        BSL_LOG_DEBUG("EVP_DigestFinalXOF gave %zu bytes, return %d", mu_len, res);
+        CHK_PROPERTY(1 == res);
 
-        const BIGNUM *sig_r = NULL;
-        const BIGNUM *sig_s = NULL;
-        ECDSA_SIG_get0(ecdsa_sig, &sig_r, &sig_s);
-        CHK_PROPERTY(sig_r);
-        CHK_PROPERTY(sig_s);
+        EVP_PKEY_CTX *sigctx = EVP_PKEY_CTX_new_from_pkey(NULL, ctx->libcache, NULL);
+        CHK_PROPERTY(sigctx);
+        EVP_SIGNATURE *sig_alg = EVP_SIGNATURE_fetch(NULL, "ML-DSA-87", NULL);
+        CHK_PROPERTY(sig_alg);
 
-        BSL_Data_Resize(signature, 2 * ctx->coord_len);
-        BN_bn2binpad(sig_r, signature->ptr, (int)(ctx->coord_len));
-        BN_bn2binpad(sig_s, signature->ptr + ctx->coord_len, (int)(ctx->coord_len));
-        ECDSA_SIG_free(ecdsa_sig);
+        // FIXME condition on option
+        int deterministic = 1;
+        // treat plaintext as mu value
+        int use_external_mu = 1;
+
+        OSSL_PARAM sign_params[] = {
+            OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_DETERMINISTIC, &deterministic),
+            OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_MU, &use_external_mu),
+            OSSL_PARAM_construct_end(),
+        };
+        CHK_PROPERTY(1 == EVP_PKEY_sign_message_init(sigctx, sig_alg, sign_params));
+
+        size_t sig_len = 0;
+        CHK_PROPERTY(1 == EVP_PKEY_sign(sigctx, NULL, &sig_len, mu_val, sizeof(mu_val)));
+        CHK_PROPERTY(0 < sig_len);
+        CHK_PROPERTY(BSL_SUCCESS == BSL_Data_Resize(signature, sig_len));
+        CHK_PROPERTY(1 == EVP_PKEY_sign(sigctx, signature->ptr, &(signature->len), mu_val, sizeof(mu_val)));
+
+        EVP_SIGNATURE_free(sig_alg);
+        EVP_PKEY_CTX_free(sigctx);
     }
 
     return BSL_SUCCESS;
@@ -859,17 +1030,29 @@ void BSL_SigCtxSign_Deinit(BSL_SigCtx_t *ctx)
 
     BSL_Data_Deinit(&ctx->in_buf);
     EVP_MD_CTX_free(ctx->libhandle);
+    if (ctx->libcache)
+    {
+        EVP_PKEY_free(ctx->libcache);
+    }
     BSL_KeyStore_State.release_key(ctx->keyhandle);
 
     memset(ctx, 0, sizeof(BSL_SigCtx_t));
 }
 
-int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant)
+int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_t variant)
 {
     ASSERT_ARG_NONNULL(ctx);
     CHK_ARG_NONNULL(keyhandle);
+    memset(ctx, 0, sizeof(*ctx));
 
     ctx->variant = variant;
+#if !OPENSSL_CAN_MLDSA
+    // check this before any state requiring cleanup
+    if ((variant == BSL_CRYPTO_MLDSA_44) || (variant == BSL_CRYPTO_MLDSA_65) || (variant == BSL_CRYPTO_MLDSA_87))
+    {
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+#endif // !OPENSSL_CAN_MLDSA
 
     ctx->keyhandle = BSL_KeyStore_State.acquire_key(keyhandle);
     CHK_PRECONDITION(ctx->keyhandle);
@@ -969,7 +1152,7 @@ int BSL_SigCtxVerify_Finalize(BSL_SigCtx_t *ctx, const BSL_Data_t *signature)
         ECDSA_SIG_set0(ecdsa_sig, sig_r, sig_s);
 
         int derlen = i2d_ECDSA_SIG(ecdsa_sig, NULL);
-        BSL_Data_Resize(&dersig, (size_t)derlen);
+        CHK_PROPERTY(BSL_SUCCESS == BSL_Data_Resize(&dersig, (size_t)derlen));
 
         uint8_t *offset = dersig.ptr;
         i2d_ECDSA_SIG(ecdsa_sig, &offset);
