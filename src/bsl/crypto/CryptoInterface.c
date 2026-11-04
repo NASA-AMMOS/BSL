@@ -627,7 +627,8 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
         case BSL_CRYPTO_MLDSA_65:
         case BSL_CRYPTO_MLDSA_87:
         {
-            ctx->mode    = BSL_CRPYTO_SIGNMODE_EXTHASH;
+#if OPENSSL_CAN_MLDSA // guard use of define names
+            ctx->mode = BSL_CRPYTO_SIGNMODE_EXTHASH;
             // digest for data, not signature name
             *digest_name = SN_shake256;
 
@@ -651,6 +652,11 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
 
             ctx->libctx = libctx;
             break;
+#else
+            // GCOV_EXCL_START
+            return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+            // GCOV_EXCL_STOP
+#endif // OPENSSL_CAN_MLDSA
         }
             // GCOV_EXCL_START
         default:
@@ -1056,6 +1062,7 @@ int BSL_SigCtxSign_Finalize(BSL_SigCtx_t *ctx, BSL_Data_t *signature)
     }
     else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
     {
+#if OPENSSL_CAN_MLDSA // guard use of define names
         const BSL_Crypto_ExtHash_Data_t *libctx = ctx->libctx;
 
         uint8_t      mu_val[MLDSA_SHAKE256_SIZE];
@@ -1070,7 +1077,6 @@ int BSL_SigCtxSign_Finalize(BSL_SigCtx_t *ctx, BSL_Data_t *signature)
         EVP_SIGNATURE *sig_alg = EVP_SIGNATURE_fetch(NULL, libctx->sign_name, NULL);
         CHK_PROPERTY(sig_alg);
 
-#if OPENSSL_CAN_MLDSA // guard use of define names
         int deterministic = libctx->nonce_deterministic ? 1 : 0;
         // treat plaintext as mu bytes
         int use_external_mu = 1;
@@ -1080,9 +1086,6 @@ int BSL_SigCtxSign_Finalize(BSL_SigCtx_t *ctx, BSL_Data_t *signature)
             OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_MU, &use_external_mu),
             OSSL_PARAM_construct_end(),
         };
-#else
-        const OSSL_PARAM *sign_params = NULL;
-#endif // OPENSSL_CAN_MLDSA
         CHK_PROPERTY(1 == EVP_PKEY_sign_message_init(sigctx, sig_alg, sign_params));
 
         size_t sig_len = 0;
@@ -1093,6 +1096,9 @@ int BSL_SigCtxSign_Finalize(BSL_SigCtx_t *ctx, BSL_Data_t *signature)
 
         EVP_SIGNATURE_free(sig_alg);
         EVP_PKEY_CTX_free(sigctx);
+#else
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+#endif // OPENSSL_CAN_MLDSA
     }
 
     return BSL_SUCCESS;
@@ -1279,7 +1285,8 @@ int BSL_SigCtxVerify_Finalize(BSL_SigCtx_t *ctx, const BSL_Data_t *signature)
     }
     else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
     {
-      const BSL_Crypto_ExtHash_Data_t *libctx = ctx->libctx;
+#if OPENSSL_CAN_MLDSA // guard use of define names
+        const BSL_Crypto_ExtHash_Data_t *libctx = ctx->libctx;
 
         uint8_t      mu_val[MLDSA_SHAKE256_SIZE];
         unsigned int mu_len = MLDSA_SHAKE256_SIZE;
@@ -1293,7 +1300,6 @@ int BSL_SigCtxVerify_Finalize(BSL_SigCtx_t *ctx, const BSL_Data_t *signature)
         EVP_SIGNATURE *sig_alg = EVP_SIGNATURE_fetch(NULL, libctx->sign_name, NULL);
         CHK_PROPERTY(sig_alg);
 
-#if OPENSSL_CAN_MLDSA // guard use of define names
         // treat plaintext as mu bytes
         int use_external_mu = 1;
 
@@ -1301,20 +1307,20 @@ int BSL_SigCtxVerify_Finalize(BSL_SigCtx_t *ctx, const BSL_Data_t *signature)
             OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_MU, &use_external_mu),
             OSSL_PARAM_construct_end(),
         };
-#else
-        const OSSL_PARAM *verify_params = NULL;
-#endif // OPENSSL_CAN_MLDSA
         CHK_PROPERTY(1 == EVP_PKEY_verify_message_init(sigctx, sig_alg, verify_params));
 
         res = EVP_PKEY_verify(sigctx, signature->ptr, signature->len, mu_val, sizeof(mu_val));
         BSL_LOG_DEBUG("EVP_PKEY_verify took %zu bytes, return %d", signature->len, res);
         if (res <= 0)
         {
-          BSL_LOG_ERR("EVP_PKEY_verify: %s", ERR_error_string(ERR_get_error(), NULL));
+            BSL_LOG_ERR("EVP_PKEY_verify: %s", ERR_error_string(ERR_get_error(), NULL));
         }
 
         EVP_SIGNATURE_free(sig_alg);
         EVP_PKEY_CTX_free(sigctx);
+#else
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+#endif // OPENSSL_CAN_MLDSA
     }
 
     return (res == 1) ? BSL_SUCCESS : BSL_ERR_SECURITY_CONTEXT_FAILED;
