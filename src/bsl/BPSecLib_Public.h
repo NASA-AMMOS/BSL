@@ -565,9 +565,17 @@ int BSL_API_RegisterSecurityContext(BSL_LibCtx_t *lib, int64_t sec_ctx_id, BSL_S
  * @param[in,out] lib Pointer to BSL context.
  * @param pp_id The unique policy provider ID number.
  * @param desc  Policy Provider callbacks.
+ * @returns 0 on success
  */
 BSL_REQUIRE_CHECK
 int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_PolicyDesc_t desc);
+
+/** @brief Deregister a Policy Provider module from the BSL.
+ * @param[in,out] lib Pointer to BSL context.
+ * @param pp_id The unique policy provider ID to remove.
+ * @returns 0 on success
+ */
+int BSL_API_DeregisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id);
 
 /** @brief Query BSL to populate a `BSL_SecurityActionSet_t` containing security processing instructions.
  *
