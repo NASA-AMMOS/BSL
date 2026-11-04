@@ -28,6 +28,7 @@ https://github.com/NASA-AMMOS/BSL/wiki/Cryptographic-test-truth-data
 import logging
 import os
 import ssl
+import unittest
 
 from _test_util import BundleDestLoc, DataFormat, _TestCase, sc_config_modifier
 from test_bpa import TestAgent
@@ -902,7 +903,9 @@ class TestCoseScSign1(TestAgent):
                     key_set="data/cose-sc/keyset-1.cbordiag",
                     input_data_format=DataFormat.CBORDIAG,
                     expected_output_format=(
-                        DataFormat.CBORDIAG if OPENSSL_CAN_ECDSA_DETERMINISTIC else DataFormat.ANYCBOR
+                        DataFormat.CBORDIAG
+                        if OPENSSL_CAN_ECDSA_DETERMINISTIC
+                        else DataFormat.ANYCBOR
                     ),
                 )
             )
@@ -1011,7 +1014,9 @@ class TestCoseScSign1(TestAgent):
                 _TestCase(
                     input_data=EXAMPLE_A_NO_SEC,
                     expected_output=(
-                        EXAMPLE_A_10_WITH_BIB if OPENSSL_CAN_MLDSA else r".*<ERROR>.* No ML-DSA support"
+                        EXAMPLE_A_10_WITH_BIB
+                        if OPENSSL_CAN_MLDSA
+                        else r".*<ERROR>.* No ML-DSA support"
                     ),
                     sec_src_eid="dtn://src/",
                     policy_config=polfile_path,
@@ -1064,6 +1069,7 @@ class TestCoseScSign1(TestAgent):
             )
         )
 
+    @unittest.skipUnless(OPENSSL_CAN_MLDSA, "No ML-DSA support")
     def test_exampleA_10_acceptor_valid_pubkey(self):
         input_diag = """\
 [_
@@ -1085,6 +1091,7 @@ class TestCoseScSign1(TestAgent):
             )
         )
 
+    @unittest.skipUnless(OPENSSL_CAN_MLDSA, "No ML-DSA support")
     def test_exampleA_10_acceptor_invalid_altered_sig(self):
         input_diag = """\
 [_
