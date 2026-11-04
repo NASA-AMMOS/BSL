@@ -30,6 +30,7 @@
 
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/crypto/CryptoInterface.h"
+#include "bsl/crypto/KeyParam.h"
 #include "bsl/dynamic/CBOR.h"
 #include "bsl/dynamic/MLibConfig.h"
 
@@ -1142,7 +1143,7 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
     }
 
     // Key itself must agree with chosen alg
-    const BSL_Variant_t *param = BSL_Crypto_GetKeyParameter(self->keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG);
+    const BSL_Variant_t *param = BSL_Crypto_GetKeyParameter(self->keyhandle, BSL_CRYPTO_KEYPARAM_ALG);
     if (param)
     {
         int64_t key_alg_int;
@@ -2196,7 +2197,7 @@ static void BSLX_CoseSc_GenerateIV(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Headers_t *h
 {
     BSL_Data_t baseiv_view;
     BSL_Data_Init(&baseiv_view);
-    const BSL_Variant_t *keyparam = BSL_Crypto_GetKeyParameter(ctx->keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV);
+    const BSL_Variant_t *keyparam = BSL_Crypto_GetKeyParameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_BASEIV);
     if (keyparam)
     {
         if (BSL_SUCCESS != BSL_Variant_GetAsBytestr(keyparam, &baseiv_view))
@@ -2299,7 +2300,7 @@ static void BSLX_CoseSc_ExtractIV(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers
 
         BSL_Data_t baseiv_val;
         // need to combine with key Base IV
-        const BSL_Variant_t *keyparam = BSL_Crypto_GetKeyParameter(ctx->keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV);
+        const BSL_Variant_t *keyparam = BSL_Crypto_GetKeyParameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_BASEIV);
         if (!keyparam)
         {
             BSL_LOG_ERR("Key is missing Base IV");
