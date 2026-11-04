@@ -654,6 +654,7 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
             break;
 #else
             // GCOV_EXCL_START
+            (void)nonce_deterministic;
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
             // GCOV_EXCL_STOP
 #endif // OPENSSL_CAN_MLDSA
