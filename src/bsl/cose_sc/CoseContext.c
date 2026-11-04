@@ -94,12 +94,8 @@ static const int64_t cose_enc_cnt_algs[] = {
  * @note These must be sorted for @c bsearch() to work.
  */
 static const int64_t cose_sign_cnt_algs[] = {
-    BSLX_COSEMSG_ALG_ESP512,
-    BSLX_COSEMSG_ALG_ESP384,
-    BSLX_COSEMSG_ALG_MLDSA87,
-    BSLX_COSEMSG_ALG_MLDSA65,
-    BSLX_COSEMSG_ALG_MLDSA44,
-    BSLX_COSEMSG_ALG_ESP256,
+    BSLX_COSEMSG_ALG_ESP512,  BSLX_COSEMSG_ALG_ESP384,  BSLX_COSEMSG_ALG_MLDSA87,
+    BSLX_COSEMSG_ALG_MLDSA65, BSLX_COSEMSG_ALG_MLDSA44, BSLX_COSEMSG_ALG_ESP256,
 };
 #if 0
 /// Acceptable recipient algorithms for MAC and Encrypt
