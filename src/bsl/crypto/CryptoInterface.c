@@ -917,6 +917,13 @@ int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL
     }
 #endif // !OPENSSL_CAN_MLDSA
     ctx->variant = variant;
+#if !OPENSSL_CAN_MLDSA
+    // check this before any state requiring cleanup
+    if ((variant == BSL_CRYPTO_MLDSA_44) || (variant == BSL_CRYPTO_MLDSA_65) || (variant == BSL_CRYPTO_MLDSA_87))
+    {
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+#endif // !OPENSSL_CAN_MLDSA
 
     ctx->keyhandle = BSL_KeyStore_State.acquire_key(keyhandle);
     CHK_PRECONDITION(ctx->keyhandle);
@@ -1170,6 +1177,13 @@ int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, B
     }
 #endif // !OPENSSL_CAN_MLDSA
     ctx->variant = variant;
+#if !OPENSSL_CAN_MLDSA
+    // check this before any state requiring cleanup
+    if ((variant == BSL_CRYPTO_MLDSA_44) || (variant == BSL_CRYPTO_MLDSA_65) || (variant == BSL_CRYPTO_MLDSA_87))
+    {
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
+#endif // !OPENSSL_CAN_MLDSA
 
     ctx->keyhandle = BSL_KeyStore_State.acquire_key(keyhandle);
     CHK_PRECONDITION(ctx->keyhandle);
