@@ -303,6 +303,7 @@ enum OptMismatch_e
     OPT_MISMATCH_MODIFY_BLK_0,
     OPT_MISMATCH_MODIFY_BLK_1,
     OPT_MISMATCH_MODIFY_BLK_3,
+    OPT_MISMATCH_SHORT_TARGET,
 };
 
 TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 0, 1, 2, 3, 4, 5, 6, 7 ])
@@ -758,6 +759,7 @@ void test_AppendixA_Example4_BCB_Source(void)
 }
 
 // no use of OPT_MISMATCH_MODIFY_BLK_3 here (tag is in the ciphertext)
+TEST_CASE(BSL_SECROLE_VERIFIER, 8)
 TEST_MATRIX([ BSL_SECROLE_VERIFIER, BSL_SECROLE_ACCEPTOR ], [ 0, 1, 2, 3, 4, 5 ])
 void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
 {
@@ -787,7 +789,8 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
     TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, exA_4_enc0));
     TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
 
-    MockBPA_CanonicalBlock_t *alter_blk = NULL;
+    MockBPA_CanonicalBlock_t *alter_blk         = NULL;
+    size_t                    original_btsd_len = 0;
     if (mismatch == OPT_MISMATCH_MODIFY_BLK_0)
     {
         // manipulate encoded form
@@ -803,6 +806,16 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
         TEST_ASSERT_NOT_NULL(alter_blk);
 
         ((uint8_t *)alter_blk->btsd)[alter_blk->btsd_len - 1] += 1;
+    }
+    else if (mismatch == OPT_MISMATCH_SHORT_TARGET)
+    {
+        MockBPA_CanonicalBlock_t **found = MockBPA_BlockByNum_get(LocalTestCtx.mock_bpa_ctr.bundle->blocks_num, 1);
+        TEST_ASSERT_NOT_NULL(found);
+        alter_blk = *found;
+        TEST_ASSERT_NOT_NULL(alter_blk);
+
+        original_btsd_len   = alter_blk->btsd_len;
+        alter_blk->btsd_len = 15;
     }
 
     BSL_SecOper_t sec_oper;
@@ -849,7 +862,11 @@ void test_AppendixA_Example4_BCB_VerifyAccept(BSL_SecRole_e role, int mismatch)
                                                   &LocalTestCtx.mock_bpa_ctr.bundle_ref, &sec_oper);
     TEST_ASSERT_EQUAL_INT(expect_status, exec_status);
 
-    if (alter_blk)
+    if (mismatch == OPT_MISMATCH_SHORT_TARGET)
+    {
+        alter_blk->btsd_len = original_btsd_len;
+    }
+    else if (alter_blk)
     {
         // put back for output comparison
         ((uint8_t *)alter_blk->btsd)[alter_blk->btsd_len - 1] -= 1;

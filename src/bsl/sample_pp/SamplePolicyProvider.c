@@ -280,7 +280,6 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
             BSL_LOG_ERR("Rule `%s` is not consistent", m_string_get_cstr(rule->description));
             continue;
         }
-        BSL_LOG_DEBUG("Evaluating against rule `%s`", m_string_get_cstr(rule->description));
 
         if (!BSLP_PolicyPredicate_IsMatch(predicate, location, primary_block.field_src_node_id,
                                           primary_block.field_dest_eid))
@@ -288,6 +287,7 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
             BSL_LOG_DEBUG("Rule `%s` not a match", m_string_get_cstr(rule->description));
             continue;
         }
+        BSL_LOG_DEBUG("Rule `%s` IS a match", m_string_get_cstr(rule->description));
 
         uint64_t target_block_num = get_target_block_id(bundle, rule->target_block_type);
         if ((target_block_num == 0) && (rule->target_block_type != BSL_BLOCK_TYPE_PRIMARY))
@@ -734,9 +734,10 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
         BSL_PrimaryBlock_t primary_block;
         BSL_PrimaryBlock_Init(&primary_block);
         BSL_BundleCtx_GetBundleMetadata(bundle, &primary_block);
-        CHK_PRECONDITION(BSLP_PolicyPredicate_IsMatch(predicate, location, primary_block.field_src_node_id,
-                                                      primary_block.field_dest_eid));
+        bool ruleMatchesBundle = BSLP_PolicyPredicate_IsMatch(predicate, location, primary_block.field_src_node_id,
+                                                              primary_block.field_dest_eid);
         BSL_PrimaryBlock_deinit(&primary_block);
+        CHK_PRECONDITION(ruleMatchesBundle);
     }
 
     // The rule gives us the target block TYPE, now we have to find the ID of the block with that type.
