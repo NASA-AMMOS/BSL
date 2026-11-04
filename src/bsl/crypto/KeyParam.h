@@ -64,7 +64,7 @@ enum BSL_Crypto_KeyParam_e
 enum BSL_Crypto_KeyParam_Type_e
 {
     /// EC2 key type
-    BSL_CRYPTO_KEYPARAM_TYPE_EC2       = 2,
+    BSL_CRYPTO_KEYPARAM_TYPE_EC2 = 2,
     /// Symmetric key type
     BSL_CRYPTO_KEYPARAM_TYPE_SYMMETRIC = 4,
 };
