@@ -25,11 +25,12 @@
  */
 #include "KeyLoader.h"
 
+#include "KeyParam.h"
+
 #include <bsl/front/TextUtil.h>
 #include "bsl/dynamic/MLibConfig.h"
 #include <bsl/dynamic/CBOR.h>
 #include <bsl/dynamic/Variant.h>
-#include <bsl/cose_sc/CoseMsg.h>
 
 #include <jansson.h>
 #include <m-string.h>
@@ -203,7 +204,7 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
         {
             switch (label)
             {
-                case BSLX_COSEMSG_KEY_PARAM_KTY:
+                case BSL_CRYPTO_KEYPARAM_KTY:
                     QCBORDecode_GetInt64(dec, &kty);
                     if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
                     {
@@ -213,7 +214,7 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
                     has_kty = true;
                     BSL_LOG_DEBUG("got kty %" PRId64, kty);
                     break;
-                case BSLX_COSEMSG_KEY_PARAM_KID:
+                case BSL_CRYPTO_KEYPARAM_KID:
                     QCBORDecode_GetByteString(dec, &kid);
                     if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
                     {
@@ -221,7 +222,7 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
                         return;
                     }
                     break;
-                case BSLX_COSEMSG_KEY_PARAM_ALG:
+                case BSL_CRYPTO_KEYPARAM_ALG:
                     QCBORDecode_GetInt64(dec, &alg);
                     if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
                     {
@@ -230,7 +231,7 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
                     }
                     has_alg = true;
                     break;
-                case BSLX_COSEMSG_KEY_PARAM_BASEIV:
+                case BSL_CRYPTO_KEYPARAM_BASEIV:
                     QCBORDecode_GetByteString(dec, &baseiv);
                     break;
                 default:
@@ -241,7 +242,7 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
         }
         else if (has_kty)
         {
-            if (kty == BSLX_COSEMSG_KEY_TYPE_SYMMETRIC)
+            if (kty == BSL_CRYPTO_KEYPARAM_TYPE_SYMMETRIC)
             {
                 switch (label)
                 {
@@ -259,11 +260,11 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
                         return;
                 }
             }
-            else if (kty == BSLX_COSEMSG_KEY_TYPE_EC2)
+            else if (kty == BSL_CRYPTO_KEYPARAM_TYPE_EC2)
             {
                 switch (label)
                 {
-                    case BSLX_COSEMSG_KEY_PARAM_EC2_CRV:
+                    case BSL_CRYPTO_KEYPARAM_EC2_CRV:
                         QCBORDecode_GetInt64(dec, &ec_crv);
                         if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
                         {
@@ -272,7 +273,7 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
                         }
                         has_crv = true;
                         break;
-                    case BSLX_COSEMSG_KEY_PARAM_EC2_X:
+                    case BSL_CRYPTO_KEYPARAM_EC2_X:
                         QCBORDecode_GetByteString(dec, &x_data);
                         if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
                         {
@@ -280,7 +281,7 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
                             return;
                         }
                         break;
-                    case BSLX_COSEMSG_KEY_PARAM_EC2_Y:
+                    case BSL_CRYPTO_KEYPARAM_EC2_Y:
                         QCBORDecode_GetByteString(dec, &y_data);
                         if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
                         {
@@ -288,7 +289,7 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
                             return;
                         }
                         break;
-                    case BSLX_COSEMSG_KEY_PARAM_EC2_D:
+                    case BSL_CRYPTO_KEYPARAM_EC2_D:
                         QCBORDecode_GetByteString(dec, &d_data);
                         if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
                         {
@@ -310,7 +311,7 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
     {
         return;
     }
-    if (kty == BSLX_COSEMSG_KEY_TYPE_SYMMETRIC)
+    if (kty == BSL_CRYPTO_KEYPARAM_TYPE_SYMMETRIC)
     {
         if (k_data.len == 0)
         {
@@ -318,7 +319,7 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
             return;
         }
     }
-    else if (kty == BSLX_COSEMSG_KEY_TYPE_EC2)
+    else if (kty == BSL_CRYPTO_KEYPARAM_TYPE_EC2)
     {
         if (!has_crv || (x_data.len == 0) || (y_data.len == 0))
         {
@@ -340,11 +341,11 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
         BSL_LOG_ERR("Unable to create key");
         return;
     }
-    BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_KTY), kty);
+    BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_KTY), kty);
 
     if (has_alg)
     {
-        BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_ALG), alg);
+        BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_ALG), alg);
     }
     else
     {
@@ -353,7 +354,7 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
     if (baseiv.len > 0)
     {
         BSL_Data_t view = BSL_DATA_INIT_VIEW(baseiv.ptr, baseiv.len);
-        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_BASEIV), view);
+        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_BASEIV), view);
     }
 
     if (k_data.len > 0)
@@ -369,22 +370,22 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
     }
     if (has_crv)
     {
-        BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_EC2_CRV), ec_crv);
+        BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_CRV), ec_crv);
     }
     if (x_data.len > 0)
     {
         BSL_Data_t view = BSL_DATA_INIT_VIEW(x_data.ptr, x_data.len);
-        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_EC2_X), view);
+        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_X), view);
     }
     if (y_data.len > 0)
     {
         BSL_Data_t view = BSL_DATA_INIT_VIEW(y_data.ptr, y_data.len);
-        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_EC2_Y), view);
+        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_Y), view);
     }
     if (d_data.len > 0)
     {
         BSL_Data_t view = BSL_DATA_INIT_VIEW(d_data.ptr, d_data.len);
-        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSLX_COSEMSG_KEY_PARAM_EC2_D), view);
+        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_D), view);
     }
 
     {

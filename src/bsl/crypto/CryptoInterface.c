@@ -25,6 +25,8 @@
  */
 #include "CryptoInterface.h"
 
+#include "KeyParam.h"
+
 #include "bsl/BPSecLib_Private.h"
 #include "bsl/front/TextUtil.h"
 #include "bsl/dynamic/Variant.h"
@@ -606,7 +608,13 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
             // GCOV_EXCL_STOP
     }
 
-    const BSL_Variant_t *key_crv_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, -1);
+    const BSL_Variant_t *key_kty_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_KTY);
+    CHK_PRECONDITION(key_kty_var);
+    int64_t key_kty;
+    CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsInt64(key_kty_var, &key_kty));
+    CHK_PRECONDITION(key_kty == BSL_CRYPTO_KEYPARAM_TYPE_EC2);
+
+    const BSL_Variant_t *key_crv_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_CRV);
     CHK_PRECONDITION(key_crv_var);
     int64_t key_crv;
     CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsInt64(key_crv_var, &key_crv));
@@ -630,19 +638,19 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
             return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 
-    const BSL_Variant_t *key_x_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, -2);
+    const BSL_Variant_t *key_x_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_X);
     CHK_PRECONDITION(key_x_var);
     BSL_Data_t key_x;
     CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsBytestr(key_x_var, &key_x));
     CHK_PRECONDITION(key_x.len == ctx->coord_len);
 
-    const BSL_Variant_t *key_y_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, -3);
+    const BSL_Variant_t *key_y_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_Y);
     CHK_PRECONDITION(key_y_var);
     BSL_Data_t key_y;
     CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsBytestr(key_y_var, &key_y));
     CHK_PRECONDITION(key_y.len == ctx->coord_len);
 
-    const BSL_Variant_t *key_d_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, -4);
+    const BSL_Variant_t *key_d_var = BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_EC2_D);
     // present only for private keys
     BSL_Data_t key_d = BSL_DATA_INIT_NULL;
     if (key_d_var)
