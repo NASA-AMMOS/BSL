@@ -421,8 +421,10 @@ typedef struct BSL_SigCtx_s
 {
     /// Signature variant of context
     BSL_Crypto_SignVariant_t variant;
-    /// Mode of signing
+    /// Internal mode of signing API
     BSL_Crypto_SignMode_t mode;
+    /// Option to use deterministic nonce (when signing)
+    bool nonce_deterministic;
     /// pointer to library specific data
     BSL_Crypto_LibHandle_t libhandle;
     /// Key handle used by context

@@ -881,21 +881,43 @@ OPENSSL_CAN_MLDSA = ssl.OPENSSL_VERSION_INFO[:2] >= (3, 5)
 
 
 class TestCoseScSign1(TestAgent):
-    def test_exampleA_2_source(self):
-        self._single_test(
-            _TestCase(
-                input_data=EXAMPLE_A_NO_SEC,
-                expected_output=EXAMPLE_A_2_WITH_BIB,
-                sec_src_eid="dtn://src/",
-                policy_config="data/cose-sc/policy-exA.2-source.json",
-                bundle_dest_loc=BundleDestLoc.APPIN,
-                key_set="data/cose-sc/keyset-1.cbordiag",
-                input_data_format=DataFormat.CBORDIAG,
-                expected_output_format=(
-                    DataFormat.CBORDIAG if OPENSSL_CAN_ECDSA_DETERMINISTIC else DataFormat.ANYCBOR
-                ),
+    def test_exampleA_2_source_deterministic(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.2-source.json"),
+            modify={"sign_deterministic": True},
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_NO_SEC,
+                    expected_output=EXAMPLE_A_2_WITH_BIB,
+                    sec_src_eid="dtn://src/",
+                    policy_config="data/cose-sc/policy-exA.2-source.json",
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/cose-sc/keyset-1.cbordiag",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=(
+                        DataFormat.CBORDIAG if OPENSSL_CAN_ECDSA_DETERMINISTIC else DataFormat.ANYCBOR
+                    ),
+                )
             )
-        )
+
+    def test_exampleA_2_source_rng(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.2-source.json"),
+            modify={"sign_deterministic": False},
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_NO_SEC,
+                    expected_output=None,
+                    sec_src_eid="dtn://src/",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/cose-sc/keyset-1.cbordiag",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.ANYCBOR,
+                )
+            )
 
     def test_exampleA_2_acceptor_valid_loose(self):
         self._single_test(
@@ -974,20 +996,47 @@ class TestCoseScSign1(TestAgent):
             )
         )
 
-    def test_exampleA_10_source(self):
-        self._single_test(
-            _TestCase(
-                input_data=EXAMPLE_A_NO_SEC,
-                expected_output=(
-                    EXAMPLE_A_10_WITH_BIB if OPENSSL_CAN_MLDSA else r".*<ERROR>.* No ML-DSA support"
-                ),
-                sec_src_eid="dtn://src/",
-                policy_config="data/cose-sc/policy-exA.10-source.json",
-                bundle_dest_loc=BundleDestLoc.APPIN,
-                key_set="data/cose-sc/keyset-1.cbordiag",
-                input_data_format=DataFormat.CBORDIAG,
-                expected_output_format=(
-                    DataFormat.CBORDIAG if OPENSSL_CAN_MLDSA else DataFormat.ERR
-                ),
+    def test_exampleA_10_source_deterministic(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.10-source.json"),
+            modify={"sign_deterministic": True},
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_NO_SEC,
+                    expected_output=(
+                        EXAMPLE_A_10_WITH_BIB if OPENSSL_CAN_MLDSA else r".*<ERROR>.* No ML-DSA support"
+                    ),
+                    sec_src_eid="dtn://src/",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/cose-sc/keyset-1.cbordiag",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=(
+                        DataFormat.CBORDIAG if OPENSSL_CAN_MLDSA else DataFormat.ERR
+                    ),
+                )
             )
-        )
+
+    def test_exampleA_10_source_rng(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.10-source.json"),
+            modify={"sign_deterministic": False},
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_NO_SEC,
+                    expected_output=(
+                        None if OPENSSL_CAN_MLDSA else r".*<ERROR>.* No ML-DSA support"
+                    ),
+                    sec_src_eid="dtn://src/",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/cose-sc/keyset-1.cbordiag",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=(
+                        DataFormat.ANYCBOR if OPENSSL_CAN_MLDSA else DataFormat.ERR
+                    ),
+                )
+            )
+            

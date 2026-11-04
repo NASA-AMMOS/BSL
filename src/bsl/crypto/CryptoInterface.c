@@ -739,7 +739,12 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
         CHK_PRECONDITION(param_bld);
 
         OSSL_PARAM_BLD_push_octet_string(param_bld, OSSL_PKEY_PARAM_PUB_KEY, key_pub.ptr, key_pub.len);
-        OSSL_PARAM_BLD_push_octet_string(param_bld, OSSL_PKEY_PARAM_ML_DSA_SEED, key_priv.ptr, key_priv.len);
+#if OPENSSL_CAN_MLDSA // guard use of define names
+        if (key_priv.len > 0)
+        {
+            OSSL_PARAM_BLD_push_octet_string(param_bld, OSSL_PKEY_PARAM_ML_DSA_SEED, key_priv.ptr, key_priv.len);
+        }
+#endif // OPENSSL_CAN_MLDSA
 
         OSSL_PARAM *params = OSSL_PARAM_BLD_to_param(param_bld);
         OSSL_PARAM_BLD_free(param_bld);
@@ -777,7 +782,6 @@ int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL
     CHK_ARG_NONNULL(keyhandle);
     memset(ctx, 0, sizeof(*ctx));
 
-    ctx->variant = variant;
 #if !OPENSSL_CAN_MLDSA
     // check this before any state requiring cleanup
     if ((variant == BSL_CRYPTO_MLDSA_44) || (variant == BSL_CRYPTO_MLDSA_65) || (variant == BSL_CRYPTO_MLDSA_87))
@@ -785,6 +789,8 @@ int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 #endif // !OPENSSL_CAN_MLDSA
+    ctx->variant = variant;
+    ctx->nonce_deterministic = nonce_deterministic;
 
     ctx->keyhandle = BSL_KeyStore_State.acquire_key(keyhandle);
     CHK_PRECONDITION(ctx->keyhandle);
@@ -798,7 +804,7 @@ int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL
     CHK_PRECONDITION(mdctx != NULL);
     ctx->libhandle = mdctx;
 
-    int res;
+    int res = 0;
     if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
     {
 #if OPENSSL_CAN_ECDSA_DETERMINISTIC
@@ -999,16 +1005,19 @@ int BSL_SigCtxSign_Finalize(BSL_SigCtx_t *ctx, BSL_Data_t *signature)
         EVP_SIGNATURE *sig_alg = EVP_SIGNATURE_fetch(NULL, "ML-DSA-87", NULL);
         CHK_PROPERTY(sig_alg);
 
-        // FIXME condition on option
-        int deterministic = 1;
-        // treat plaintext as mu value
+#if OPENSSL_CAN_MLDSA // guard use of define names
+        int deterministic = ctx->nonce_deterministic ? 1 : 0;
+        // treat plaintext as mu bytes
         int use_external_mu = 1;
 
-        OSSL_PARAM sign_params[] = {
+        const OSSL_PARAM sign_params[] = {
             OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_DETERMINISTIC, &deterministic),
             OSSL_PARAM_construct_int(OSSL_SIGNATURE_PARAM_MU, &use_external_mu),
             OSSL_PARAM_construct_end(),
         };
+#else
+        const OSSL_PARAM *sign_params = NULL;
+#endif // OPENSSL_CAN_MLDSA
         CHK_PROPERTY(1 == EVP_PKEY_sign_message_init(sigctx, sig_alg, sign_params));
 
         size_t sig_len = 0;
@@ -1045,7 +1054,6 @@ int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, B
     CHK_ARG_NONNULL(keyhandle);
     memset(ctx, 0, sizeof(*ctx));
 
-    ctx->variant = variant;
 #if !OPENSSL_CAN_MLDSA
     // check this before any state requiring cleanup
     if ((variant == BSL_CRYPTO_MLDSA_44) || (variant == BSL_CRYPTO_MLDSA_65) || (variant == BSL_CRYPTO_MLDSA_87))
@@ -1053,6 +1061,7 @@ int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, B
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 #endif // !OPENSSL_CAN_MLDSA
+    ctx->variant = variant;
 
     ctx->keyhandle = BSL_KeyStore_State.acquire_key(keyhandle);
     CHK_PRECONDITION(ctx->keyhandle);
