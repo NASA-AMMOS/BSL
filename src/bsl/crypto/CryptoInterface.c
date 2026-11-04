@@ -592,7 +592,7 @@ void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
 
 #define MLDSA_SHAKE256_SIZE 64
 
-/** libhandle data specific to MLDSA needs.
+/** BSL_SigCtx_t::libhandle data specific to ML-DSA needs.
  */
 typedef struct
 {
