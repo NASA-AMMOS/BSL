@@ -56,34 +56,34 @@ M_ARRAY_DEF(BSLP_SecOperPtrList, BSL_SecOper_t *, M_PTR_OPLIST)
 // NOLINTEND
 /// @endcond
 
-/** @struct BSLP_PolicyPredicatePtr_t
- * Thread-unsafe shared pointer to ::BSLP_PolicyPredicate_t.
- */
-/** @struct BSLP_PolicyPredicateList_t
- * Defines list of policy predicates (::BSLP_PolicyPredicate_t)
- */
-/// @cond Doxygen_Suppress
-// NOLINTBEGIN
-// GCOV_EXCL_START
-M_SHARED_WEAK_PTR_DEF(BSLP_PolicyPredicatePtr, BSLP_PolicyPredicate_t, M_OPL_BSLP_PolicyPredicate_t())
-#define M_OPL_BSLP_PolicyPredicatePtr_t() M_SHARED_PTR_OPLIST(BSLP_PolicyPredicatePtr, M_OPL_BSLP_PolicyPredicate_t())
-M_ARRAY_DEF(BSLP_PolicyPredicateList, BSLP_PolicyPredicatePtr_t *, M_OPL_BSLP_PolicyPredicatePtr_t())
-// GCOV_EXCL_STOP
-// NOLINTEND
-/// @endcond
+/// @brief Policy rule and its associated predicate
+typedef struct
+{
+    BSLP_PolicyRule_t      rule;
+    BSLP_PolicyPredicate_t predicate;
+} BSLP_PolicyEntry_t;
 
-/** @struct BSLP_PolicyRulePtr_t
- * A thread-unsafe shared pointer to a single ::BSLP_PolicyRule_t instance.
- */
-/** @struct BSLP_PolicyRuleList_t
- * Defines list of policy rules (::BSLP_PolicyRule_t)
- */
+static void BSLP_PolicyEntry_Init(BSLP_PolicyEntry_t *self)
+{
+    BSLP_PolicyRule_Init(&self->rule);
+    BSLP_PolicyPredicate_Init(&self->predicate);
+}
+
+static void BSLP_PolicyEntry_Deinit(BSLP_PolicyEntry_t *self)
+{
+    BSLP_PolicyRule_Deinit(&self->rule);
+    BSLP_PolicyPredicate_Deinit(&self->predicate);
+}
+
+#define M_OPL_BSLP_PolicyEntry_t() \
+    (INIT(API_2(BSLP_PolicyEntry_Init)), INIT_SET(0), SET(0), CLEAR(API_2(BSLP_PolicyEntry_Deinit)))
+
 /// @cond Doxygen_Suppress
 // NOLINTBEGIN
 // GCOV_EXCL_START
-M_SHARED_WEAK_PTR_DEF(BSLP_PolicyRulePtr, BSLP_PolicyRule_t, M_OPL_BSLP_PolicyRule_t())
-#define M_OPL_BSLP_PolicyRulePtr_t() M_SHARED_PTR_OPLIST(BSLP_PolicyRulePtr, M_OPL_BSLP_PolicyRule_t())
-M_ARRAY_DEF(BSLP_PolicyRuleList, BSLP_PolicyRulePtr_t *, M_OPL_BSLP_PolicyRulePtr_t())
+M_SHARED_WEAK_PTR_DEF(BSLP_PolicyEntryPtr, BSLP_PolicyEntry_t, M_OPL_BSLP_PolicyEntry_t())
+#define M_OPL_BSLP_PolicyEntryPtr_t() M_SHARED_PTR_OPLIST(BSLP_PolicyEntryPtr, M_OPL_BSLP_PolicyEntry_t())
+M_DICT_DEF2(BSLP_PolicyRuleMap, int64_t, M_BASIC_OPLIST, BSLP_PolicyEntryPtr_t *, M_OPL_BSLP_PolicyEntryPtr_t())
 // GCOV_EXCL_STOP
 // NOLINTEND
 /// @endcond
@@ -210,10 +210,8 @@ static uint64_t get_target_block_id(const BSL_BundleRef_t *bundle, uint64_t targ
 
 struct BSLP_PolicyProvider_s
 {
-    /// Variable-length list of policy rules
-    BSLP_PolicyRuleList_t rules;
-    /// Variable-length list of policy predicates
-    BSLP_PolicyPredicateList_t predicates;
+    /// Policy rules and predicates keyed by rule ID
+    BSLP_PolicyRuleMap_t rules;
     /// Action when no rules match at an interaction point
     BSLP_PolicyNoRuleActionMap_t norule_action;
     /// ID of policy provider
@@ -267,14 +265,13 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
     BSLP_SecOperPtrList_init(secops);
 
     pthread_rwlock_rdlock(&self->mutex);
-    BSLP_PolicyRuleList_it_t      rule_it;
-    BSLP_PolicyPredicateList_it_t pred_it;
-    for (BSLP_PolicyRuleList_it(rule_it, self->rules), BSLP_PolicyPredicateList_it(pred_it, self->predicates);
-         !BSLP_PolicyRuleList_end_p(rule_it) && !BSLP_PolicyPredicateList_end_p(pred_it);
-         BSLP_PolicyRuleList_next(rule_it), BSLP_PolicyPredicateList_next(pred_it))
+    BSLP_PolicyRuleMap_it_t rule_it;
+    for (BSLP_PolicyRuleMap_it(rule_it, self->rules); !BSLP_PolicyRuleMap_end_p(rule_it);
+         BSLP_PolicyRuleMap_next(rule_it))
     {
-        const BSLP_PolicyRule_t      *rule      = BSLP_PolicyRulePtr_cref(*BSLP_PolicyRuleList_cref(rule_it));
-        const BSLP_PolicyPredicate_t *predicate = BSLP_PolicyPredicatePtr_cref(*BSLP_PolicyPredicateList_cref(pred_it));
+        const BSLP_PolicyEntry_t     *entry     = BSLP_PolicyEntryPtr_cref(BSLP_PolicyRuleMap_cref(rule_it)->value);
+        const BSLP_PolicyRule_t      *rule      = &entry->rule;
+        const BSLP_PolicyPredicate_t *predicate = &entry->predicate;
         if (!BSLP_PolicyRule_IsConsistent(rule))
         {
             BSL_LOG_ERR("Rule `%s` is not consistent", m_string_get_cstr(rule->description));
@@ -500,8 +497,7 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_New(uint64_t pp_id)
     ASSERT_ARG_NONNULL(pp);
 
     pp->pp_id = pp_id;
-    BSLP_PolicyRuleList_init(pp->rules);
-    BSLP_PolicyPredicateList_init(pp->predicates);
+    BSLP_PolicyRuleMap_init(pp->rules);
     BSLP_PolicyNoRuleActionMap_init(pp->norule_action);
     pthread_rwlock_init(&pp->mutex, NULL);
 
@@ -516,15 +512,19 @@ int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *
         return BSL_ERR_ARG_INVALID;
     }
 
-    BSLP_PolicyRulePtr_t *rule_ptr = BSLP_PolicyRulePtr_new();
-    BSLP_PolicyRule_Move(BSLP_PolicyRulePtr_ref(rule_ptr), rule);
-
-    BSLP_PolicyPredicatePtr_t *pred_ptr = BSLP_PolicyPredicatePtr_new();
-    BSLP_PolicyPredicate_Move(BSLP_PolicyPredicatePtr_ref(pred_ptr), predicate);
-
     pthread_rwlock_wrlock(&self->mutex);
-    BSLP_PolicyRuleList_push_move(self->rules, &rule_ptr);
-    BSLP_PolicyPredicateList_push_move(self->predicates, &pred_ptr);
+    if (BSLP_PolicyRuleMap_get(self->rules, rule->rule_id) != NULL)
+    {
+        pthread_rwlock_unlock(&self->mutex);
+        return BSL_ERR_POLICY_CONFIG;
+    }
+
+    BSLP_PolicyEntryPtr_t *entry_ptr = BSLP_PolicyEntryPtr_new();
+    BSLP_PolicyEntry_t    *entry     = BSLP_PolicyEntryPtr_ref(entry_ptr);
+    BSLP_PolicyRule_Move(&entry->rule, rule);
+    BSLP_PolicyPredicate_Move(&entry->predicate, predicate);
+    BSLP_PolicyRuleMap_set_at(self->rules, entry->rule.rule_id, entry_ptr);
+    BSLP_PolicyEntryPtr_release(entry_ptr);
     pthread_rwlock_unlock(&self->mutex);
 
     return BSL_SUCCESS;
@@ -535,10 +535,70 @@ size_t BSLP_PolicyProvider_RuleCount(BSLP_PolicyProvider_t *self)
     ASSERT_ARG_NONNULL(self);
 
     pthread_rwlock_rdlock(&self->mutex);
-    size_t count = BSLP_PolicyRuleList_size(self->rules);
+    size_t count = BSLP_PolicyRuleMap_size(self->rules);
     pthread_rwlock_unlock(&self->mutex);
 
     return count;
+}
+
+const BSLP_PolicyRule_t *BSLP_PolicyProvider_GetRuleById(BSLP_PolicyProvider_t *self, int64_t rule_id)
+{
+    ASSERT_ARG_NONNULL(self);
+
+    pthread_rwlock_rdlock(&self->mutex);
+    BSLP_PolicyEntryPtr_t *const *entry_ptr = BSLP_PolicyRuleMap_cget(self->rules, rule_id);
+    const BSLP_PolicyEntry_t     *entry     = entry_ptr ? BSLP_PolicyEntryPtr_cref(*entry_ptr) : NULL;
+    const BSLP_PolicyRule_t      *result    = entry ? &entry->rule : NULL;
+    pthread_rwlock_unlock(&self->mutex);
+
+    return result;
+}
+
+int BSLP_PolicyProvider_RemoveRuleById(BSLP_PolicyProvider_t *self, int64_t rule_id)
+{
+    ASSERT_ARG_NONNULL(self);
+
+    pthread_rwlock_wrlock(&self->mutex);
+    bool removed = BSLP_PolicyRuleMap_erase(self->rules, rule_id);
+    pthread_rwlock_unlock(&self->mutex);
+    return removed ? BSL_SUCCESS : BSL_ERR_POLICY_CONFIG;
+}
+
+void BSLP_PolicyProvider_ClearRules(BSLP_PolicyProvider_t *self)
+{
+    ASSERT_ARG_NONNULL(self);
+
+    pthread_rwlock_wrlock(&self->mutex);
+    BSLP_PolicyRuleMap_reset(self->rules);
+    pthread_rwlock_unlock(&self->mutex);
+}
+
+int BSLP_PolicyProvider_ReplaceRuleById(BSLP_PolicyProvider_t *self, int64_t rule_id, BSLP_PolicyRule_t *rule,
+                                        BSLP_PolicyPredicate_t *predicate)
+{
+    ASSERT_ARG_NONNULL(self);
+    if (!BSLP_PolicyRule_IsConsistent(rule) || (rule->rule_id != rule_id)
+        || (NULL != predicate && !BSLP_PolicyPredicate_IsConsistent(predicate)))
+    {
+        return BSL_ERR_ARG_INVALID;
+    }
+
+    pthread_rwlock_wrlock(&self->mutex);
+    BSLP_PolicyEntryPtr_t **entry_ptr = BSLP_PolicyRuleMap_get(self->rules, rule_id);
+    if (entry_ptr)
+    {
+        BSLP_PolicyEntry_t *entry = BSLP_PolicyEntryPtr_ref(*entry_ptr);
+        BSLP_PolicyRule_Move(&entry->rule, rule);
+        if (NULL != predicate)
+        {
+            BSLP_PolicyPredicate_Move(&entry->predicate, predicate);
+        }
+        pthread_rwlock_unlock(&self->mutex);
+        return BSL_SUCCESS;
+    }
+
+    pthread_rwlock_unlock(&self->mutex);
+    return BSL_ERR_POLICY_CONFIG;
 }
 
 void BSLP_PolicyProvider_SetNoRuleAction(BSLP_PolicyProvider_t *self, BSL_PolicyLocation_e loc,
@@ -570,8 +630,7 @@ void BSLP_PolicyProvider_Destroy(BSLP_PolicyProvider_t *self)
     ASSERT_ARG_NONNULL(self);
 
     pthread_rwlock_wrlock(&self->mutex);
-    BSLP_PolicyRuleList_clear(self->rules);
-    BSLP_PolicyPredicateList_clear(self->predicates);
+    BSLP_PolicyRuleMap_clear(self->rules);
     BSLP_PolicyNoRuleActionMap_clear(self->norule_action);
     pthread_rwlock_unlock(&self->mutex);
 
