@@ -885,6 +885,7 @@ int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL
     // check this before any state requiring cleanup
     if ((variant == BSL_CRYPTO_MLDSA_44) || (variant == BSL_CRYPTO_MLDSA_65) || (variant == BSL_CRYPTO_MLDSA_87))
     {
+        BSL_LOG_ERR("No ML-DSA support");
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 #endif // !OPENSSL_CAN_MLDSA
@@ -1132,6 +1133,7 @@ int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, B
     // check this before any state requiring cleanup
     if ((variant == BSL_CRYPTO_MLDSA_44) || (variant == BSL_CRYPTO_MLDSA_65) || (variant == BSL_CRYPTO_MLDSA_87))
     {
+        BSL_LOG_ERR("No ML-DSA support");
         return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
     }
 #endif // !OPENSSL_CAN_MLDSA
