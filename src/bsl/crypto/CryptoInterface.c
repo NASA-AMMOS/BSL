@@ -765,6 +765,8 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
     }
     else if (key_kty == BSL_CRYPTO_KEYPARAM_TYPE_AKP)
     {
+        const BSL_Crypto_ExtHash_Data_t *libctx = ctx->libctx;
+
         const BSL_Variant_t *key_pub_var =
             BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_AKP_PUB);
         CHK_PRECONDITION(key_pub_var);
@@ -795,7 +797,8 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
         OSSL_PARAM_BLD_free(param_bld);
         CHK_PRECONDITION(params);
 
-        EVP_PKEY_CTX *keyctx = EVP_PKEY_CTX_new_from_name(NULL, "ML-DSA-87", NULL);
+        // algorithm name from key alg
+        EVP_PKEY_CTX *keyctx = EVP_PKEY_CTX_new_from_name(NULL, libctx->sign_name, NULL);
         CHK_PRECONDITION(keyctx);
         CHK_PRECONDITION(1 == EVP_PKEY_fromdata_init(keyctx));
 
