@@ -1039,6 +1039,12 @@ class TestCoseScSign1(TestAgent):
             (-51, "esp384"),
             (-52, "esp512"),
         ]
+        if OPENSSL_CAN_MLDSA:
+            ALGS += [
+                (-48, "mldsa44"),
+                (-49, "mldsa65"),
+                (-50, "mldsa87"),
+            ]
         for alg, keyname in ALGS:
             with (
                 self.subTest(keyname),
