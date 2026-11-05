@@ -7,7 +7,7 @@
           "rule_id": "1",
           "role": "a",
           "tgt": 0,
-          "loc": "appin",
+          "loc": "appout",
           "sc_id": 3
         },
         "spec": {
@@ -18,5 +18,8 @@
         "policy_action_on_fail": "delete_bundle"
       }
     }
-  ]
+  ],
+  "policy_action_no_rules": {
+    "appout": "delete_bundle"
+  }
 }
