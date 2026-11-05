@@ -2960,7 +2960,8 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecO
                         BSLX_CoseSc_Encrypt_Source(&ctx);
                         break;
                     case BSLX_COSESC_RESULT_COSE_SIGN1:
-                        BSL_LOG_ERR("Mismatch between key alg %" PRId64 " and target alg %"PRId64, ctx.key_alg, ctx.tgt_alg);
+                        BSL_LOG_ERR("Mismatch between key alg %" PRId64 " and target alg %" PRId64, ctx.key_alg,
+                                    ctx.tgt_alg);
                         ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                         break;
                     // GCOV_EXCL_START
