@@ -184,24 +184,26 @@ class TestCoseScMac0(TestAgent):
         # check all HMAC strengths to get some output
         KEYS = [("hmac-256", 5), ("hmac-384", 6), ("hmac-512", 7)]
         for keyname, alg in KEYS:
-            with self.subTest(keyname):
-                with sc_config_modifier(
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
                     orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
                     modify={"target_alg": alg, "key_name": keyname},
-                ) as polfile_path:
-                    self._single_test(
-                        _TestCase(
-                            input_data=EXAMPLE_A_NO_SEC,
-                            expected_output=None,
-                            sec_src_eid="dtn://src/",
-                            policy_config=polfile_path,
-                            bundle_dest_loc=BundleDestLoc.APPIN,
-                            key_set="data/cose-sc/all-algs.cbordiag",
-                            input_data_format=DataFormat.CBORDIAG,
-                            expected_output_format=DataFormat.ANYCBOR,
-                        )
+                ) as polfile_path,
+            ):
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=None,
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ANYCBOR,
                     )
-                    self._stop()
+                )
+                self._stop()
 
     def test_exampleA_1_source(self):
         self._single_test(
@@ -417,25 +419,27 @@ class TestCoseScMac(TestAgent):
             "a256kw",
         ]
         for keyname in KEYS:
-            for mac_alg in {5, 6, 7}:
-                with self.subTest(keyname):
-                    with sc_config_modifier(
+            for mac_alg in (5, 6, 7):
+                with (
+                    self.subTest(keyname),
+                    sc_config_modifier(
                         orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
                         modify={"target_alg": mac_alg, "key_name": keyname},
-                    ) as polfile_path:
-                        self._single_test(
-                            _TestCase(
-                                input_data=EXAMPLE_A_NO_SEC,
-                                expected_output=None,
-                                sec_src_eid="dtn://src/",
-                                policy_config=polfile_path,
-                                bundle_dest_loc=BundleDestLoc.APPIN,
-                                key_set="data/cose-sc/all-algs.cbordiag",
-                                input_data_format=DataFormat.CBORDIAG,
-                                expected_output_format=DataFormat.ANYCBOR,
-                            )
+                    ) as polfile_path,
+                ):
+                    self._single_test(
+                        _TestCase(
+                            input_data=EXAMPLE_A_NO_SEC,
+                            expected_output=None,
+                            sec_src_eid="dtn://src/",
+                            policy_config=polfile_path,
+                            bundle_dest_loc=BundleDestLoc.APPIN,
+                            key_set="data/cose-sc/all-algs.cbordiag",
+                            input_data_format=DataFormat.CBORDIAG,
+                            expected_output_format=DataFormat.ANYCBOR,
                         )
-                        self._stop()
+                    )
+                    self._stop()
 
     def test_ccsds_interop_keywrap_source(self):
         self._single_test(
@@ -495,24 +499,26 @@ class TestCoseScEncrypt0(TestAgent):
         # check all AES-GCM strengths to get some output
         KEYS = [("aesgcm-128", 1), ("aesgcm-192", 2), ("aesgcm-256", 3)]
         for keyname, alg in KEYS:
-            with self.subTest(keyname):
-                with sc_config_modifier(
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
                     orig=os.path.join(OWNPATH, "data/cose-sc/policy-bcb-payload-source.json"),
                     modify={"target_alg": alg, "key_name": keyname},
-                ) as polfile_path:
-                    self._single_test(
-                        _TestCase(
-                            input_data=EXAMPLE_A_NO_SEC,
-                            expected_output=None,
-                            sec_src_eid="dtn://src/",
-                            policy_config=polfile_path,
-                            bundle_dest_loc=BundleDestLoc.APPIN,
-                            key_set="data/cose-sc/all-algs.cbordiag",
-                            input_data_format=DataFormat.CBORDIAG,
-                            expected_output_format=DataFormat.ANYCBOR,
-                        )
+                ) as polfile_path,
+            ):
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=None,
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ANYCBOR,
                     )
-                    self._stop()
+                )
+                self._stop()
 
     def test_exampleA_4_source(self):
         self._single_test(
@@ -780,25 +786,27 @@ class TestCoseScEncrypt(TestAgent):
             "a256kw",
         ]
         for keyname in KEYS:
-            for mac_alg in {1, 2, 3}:
-                with self.subTest(keyname):
-                    with sc_config_modifier(
+            for mac_alg in (1, 2, 3):
+                with (
+                    self.subTest(keyname),
+                    sc_config_modifier(
                         orig=os.path.join(OWNPATH, "data/cose-sc/policy-bcb-payload-source.json"),
                         modify={"target_alg": mac_alg, "key_name": keyname},
-                    ) as polfile_path:
-                        self._single_test(
-                            _TestCase(
-                                input_data=EXAMPLE_A_NO_SEC,
-                                expected_output=None,
-                                sec_src_eid="dtn://src/",
-                                policy_config=polfile_path,
-                                bundle_dest_loc=BundleDestLoc.APPIN,
-                                key_set="data/cose-sc/all-algs.cbordiag",
-                                input_data_format=DataFormat.CBORDIAG,
-                                expected_output_format=DataFormat.ANYCBOR,
-                            )
+                    ) as polfile_path,
+                ):
+                    self._single_test(
+                        _TestCase(
+                            input_data=EXAMPLE_A_NO_SEC,
+                            expected_output=None,
+                            sec_src_eid="dtn://src/",
+                            policy_config=polfile_path,
+                            bundle_dest_loc=BundleDestLoc.APPIN,
+                            key_set="data/cose-sc/all-algs.cbordiag",
+                            input_data_format=DataFormat.CBORDIAG,
+                            expected_output_format=DataFormat.ANYCBOR,
                         )
-                        self._stop()
+                    )
+                    self._stop()
 
     def test_exampleA_5_source(self):
         """The IV header is non-deterministic"""
@@ -1032,24 +1040,26 @@ class TestCoseScSign1(TestAgent):
             (-52, "esp512"),
         ]
         for alg, keyname in ALGS:
-            with self.subTest(keyname):
-                with sc_config_modifier(
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
                     orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
                     modify={"target_alg": alg, "key_name": keyname},
-                ) as polfile_path:
-                    self._single_test(
-                        _TestCase(
-                            input_data=EXAMPLE_A_NO_SEC,
-                            expected_output=None,
-                            sec_src_eid="dtn://src/",
-                            policy_config=polfile_path,
-                            bundle_dest_loc=BundleDestLoc.APPIN,
-                            key_set="data/cose-sc/all-algs.cbordiag",
-                            input_data_format=DataFormat.CBORDIAG,
-                            expected_output_format=DataFormat.ANYCBOR,
-                        )
+                ) as polfile_path,
+            ):
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=None,
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ANYCBOR,
                     )
-                    self._stop()
+                )
+                self._stop()
 
     def test_exampleA_2_source_deterministic(self):
         with sc_config_modifier(
