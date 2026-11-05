@@ -1,0 +1,38 @@
+[
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'aesgcm-128',
+    / alg / 3: 1, / A128GCM /
+    / k / -1: h'33ef5c399e5163c086e7006c2be7d7cb'
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'aesgcm-192',
+    / alg / 3: 2, / A192GCM /
+    / k / -1: h'49ce21cd9457d711dd3e4659e254a13d0c1374d86dc06fd7'
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'aesgcm-256',
+    / alg / 3: 3, / A256GCM /
+    / k / -1: h'fd876a2523ed927ca6387a4e594f47a7b38b5b083175797dbf2491d04571da54'
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'hmac-256',
+    / alg / 3: 5, / HMAC 256 256 /
+    / k / -1: h'fa5686e78eb358646aa7a87c57ea528e9527c00ee7685cad9f3835e1f758fd2c'
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'hmac-384',
+    / alg / 3: 6, / HMAC 384 384 /
+    / k / -1: h'b35fc255f6014e3d9e74d5b5bbe891260e5da7774c68e6fbcae2493c95379bd635e74dd4a6a83158b9b6c946061016aa'
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'hmac-512',
+    / alg / 3: 7, / HMAC 512 512 /
+    / k / -1: h'594ba6a94bc85e463f6cf42d4db0e135f243a510e7497b3dc04c8d8481583b2c46cefcd7497feb8769bea85b5e8db9545a593e7ce7c4364bf7704cad8bd9dd15'
+  }
+]
