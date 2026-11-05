@@ -181,12 +181,16 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
     UsefulBufC kid     = NULLUsefulBufC;
     UsefulBufC baseiv  = NULLUsefulBufC;
     // type-specific options
-    UsefulBufC k_data  = NULLUsefulBufC;
+    UsefulBufC k_data = NULLUsefulBufC;
+    // parameters for EC2 type
     bool       has_crv = false;
     int64_t    ec_crv  = 0;
     UsefulBufC x_data  = NULLUsefulBufC;
     UsefulBufC y_data  = NULLUsefulBufC;
     UsefulBufC d_data  = NULLUsefulBufC;
+    // parameters for AKP type
+    UsefulBufC pub_data  = NULLUsefulBufC;
+    UsefulBufC priv_data = NULLUsefulBufC;
 
     QCBORItem item;
     while (QCBOR_SUCCESS == QCBORDecode_PeekNext(dec, &item))
@@ -303,6 +307,32 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
                         return;
                 }
             }
+            else if (kty == BSL_CRYPTO_KEYPARAM_TYPE_AKP)
+            {
+                switch (label)
+                {
+                    case BSL_CRYPTO_KEYPARAM_AKP_PUB:
+                        QCBORDecode_GetByteString(dec, &pub_data);
+                        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+                        {
+                            BSL_LOG_ERR("Invalid pub value");
+                            return;
+                        }
+                        break;
+                    case BSL_CRYPTO_KEYPARAM_AKP_PRIV:
+                        QCBORDecode_GetByteString(dec, &priv_data);
+                        if (QCBOR_SUCCESS != QCBORDecode_GetError(dec))
+                        {
+                            BSL_LOG_ERR("Invalid priv value");
+                            return;
+                        }
+                        break;
+                    default:
+                        // key is invalid
+                        BSL_LOG_WARNING("Invalid key label %" PRId64, label);
+                        return;
+                }
+            }
         }
     }
 
@@ -311,26 +341,36 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
     {
         return;
     }
-    if (kty == BSL_CRYPTO_KEYPARAM_TYPE_SYMMETRIC)
+    switch (kty)
     {
-        if (k_data.len == 0)
+        case BSL_CRYPTO_KEYPARAM_TYPE_SYMMETRIC:
+            if (k_data.len == 0)
+            {
+                BSL_LOG_WARNING("Ignoring symmetric key without k");
+                return;
+            }
+            break;
+        case BSL_CRYPTO_KEYPARAM_TYPE_EC2:
+            if (!has_crv || (x_data.len == 0) || (y_data.len == 0))
+            {
+                BSL_LOG_WARNING("Ignoring EC2 key without x or y");
+                return;
+            }
+            break;
+        case BSL_CRYPTO_KEYPARAM_TYPE_AKP:
         {
-            BSL_LOG_WARNING("Ignoring symmetric key without k");
-            return;
+            if (!has_alg || (pub_data.len == 0))
+            {
+                BSL_LOG_WARNING("Ignoring AKP key without alg or pub");
+                return;
+            }
+            break;
         }
-    }
-    else if (kty == BSL_CRYPTO_KEYPARAM_TYPE_EC2)
-    {
-        if (!has_crv || (x_data.len == 0) || (y_data.len == 0))
-        {
-            BSL_LOG_WARNING("Ignoring EC2 key without x or y");
+        // GCOV_EXCL_START
+        default:
+            BSL_LOG_WARNING("Ignoring unhandled key type %" PRId64, kty);
             return;
-        }
-    }
-    else
-    {
-        BSL_LOG_WARNING("Ignoring unhandled key type %" PRId64, kty);
-        return;
+            // GCOV_EXCL_STOP
     }
 
     BSL_Crypto_KeyHandle_t keyhandle;
@@ -357,35 +397,59 @@ static void BSL_Crypto_KeyLoader_LoadCoseKeyMap_decode(QCBORDecodeContext *dec)
         BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_BASEIV), view);
     }
 
-    if (k_data.len > 0)
+    switch (kty)
     {
-        BSL_Data_t view = BSL_DATA_INIT_VIEW(k_data.ptr, k_data.len);
+        case BSL_CRYPTO_KEYPARAM_TYPE_SYMMETRIC:
+            if (k_data.len > 0)
+            {
+                BSL_Data_t view = BSL_DATA_INIT_VIEW(k_data.ptr, k_data.len);
 
-        res = BSL_KeyStore_State.set_keymat(keyhandle, &view);
-        if (BSL_SUCCESS != res)
-        {
-            BSL_LOG_ERR("Failed to set new key material");
+                res = BSL_KeyStore_State.set_keymat(keyhandle, &view);
+                if (BSL_SUCCESS != res)
+                {
+                    BSL_LOG_ERR("Failed to set new key material");
+                    return;
+                }
+            }
+            break;
+        case BSL_CRYPTO_KEYPARAM_TYPE_EC2:
+            if (has_crv)
+            {
+                BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_CRV), ec_crv);
+            }
+            if (x_data.len > 0)
+            {
+                BSL_Data_t view = BSL_DATA_INIT_VIEW(x_data.ptr, x_data.len);
+                BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_X), view);
+            }
+            if (y_data.len > 0)
+            {
+                BSL_Data_t view = BSL_DATA_INIT_VIEW(y_data.ptr, y_data.len);
+                BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_Y), view);
+            }
+            if (d_data.len > 0)
+            {
+                BSL_Data_t view = BSL_DATA_INIT_VIEW(d_data.ptr, d_data.len);
+                BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_D), view);
+            }
+            break;
+        case BSL_CRYPTO_KEYPARAM_TYPE_AKP:
+            if (pub_data.len > 0)
+            {
+                BSL_Data_t view = BSL_DATA_INIT_VIEW(pub_data.ptr, pub_data.len);
+                BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_AKP_PUB), view);
+            }
+            if (priv_data.len > 0)
+            {
+                BSL_Data_t view = BSL_DATA_INIT_VIEW(priv_data.ptr, priv_data.len);
+                BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_AKP_PRIV), view);
+            }
+            break;
+        // GCOV_EXCL_START
+        default:
+            BSL_LOG_ERR("Ignoring unhandled key type %" PRId64, kty);
             return;
-        }
-    }
-    if (has_crv)
-    {
-        BSL_Variant_SetInt64(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_CRV), ec_crv);
-    }
-    if (x_data.len > 0)
-    {
-        BSL_Data_t view = BSL_DATA_INIT_VIEW(x_data.ptr, x_data.len);
-        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_X), view);
-    }
-    if (y_data.len > 0)
-    {
-        BSL_Data_t view = BSL_DATA_INIT_VIEW(y_data.ptr, y_data.len);
-        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_Y), view);
-    }
-    if (d_data.len > 0)
-    {
-        BSL_Data_t view = BSL_DATA_INIT_VIEW(d_data.ptr, d_data.len);
-        BSL_Variant_SetBytestr(BSL_KeyStore_State.set_parameter(keyhandle, BSL_CRYPTO_KEYPARAM_EC2_D), view);
+            // GCOV_EXCL_STOP
     }
 
     {
