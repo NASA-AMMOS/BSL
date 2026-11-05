@@ -2,37 +2,94 @@
   {
     / kty / 1: 4, / symmetric /
     / kid / 2: 'aesgcm-128',
-    / alg / 3: 1, / A128GCM /
+    / alg / 3: 1,
     / k / -1: h'33ef5c399e5163c086e7006c2be7d7cb'
   },
   {
     / kty / 1: 4, / symmetric /
     / kid / 2: 'aesgcm-192',
-    / alg / 3: 2, / A192GCM /
+    / alg / 3: 2,
     / k / -1: h'49ce21cd9457d711dd3e4659e254a13d0c1374d86dc06fd7'
   },
   {
     / kty / 1: 4, / symmetric /
     / kid / 2: 'aesgcm-256',
-    / alg / 3: 3, / A256GCM /
+    / alg / 3: 3,
     / k / -1: h'fd876a2523ed927ca6387a4e594f47a7b38b5b083175797dbf2491d04571da54'
   },
   {
     / kty / 1: 4, / symmetric /
     / kid / 2: 'hmac-256',
-    / alg / 3: 5, / HMAC 256 256 /
+    / alg / 3: 5,
     / k / -1: h'fa5686e78eb358646aa7a87c57ea528e9527c00ee7685cad9f3835e1f758fd2c'
   },
   {
     / kty / 1: 4, / symmetric /
     / kid / 2: 'hmac-384',
-    / alg / 3: 6, / HMAC 384 384 /
+    / alg / 3: 6,
     / k / -1: h'b35fc255f6014e3d9e74d5b5bbe891260e5da7774c68e6fbcae2493c95379bd635e74dd4a6a83158b9b6c946061016aa'
   },
   {
     / kty / 1: 4, / symmetric /
     / kid / 2: 'hmac-512',
-    / alg / 3: 7, / HMAC 512 512 /
+    / alg / 3: 7,
     / k / -1: h'594ba6a94bc85e463f6cf42d4db0e135f243a510e7497b3dc04c8d8481583b2c46cefcd7497feb8769bea85b5e8db9545a593e7ce7c4364bf7704cad8bd9dd15'
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'a128kw',
+    / alg / 3: -3,
+    / k / -1: h'49e65318db3b805eabe794406d1ddcf8'
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'a192kw',
+    / alg / 3: -4,
+    / k / -1: h'13862e4a61a31cdf5b3962a3972861d59a44a39260a9fa5e'
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'a256kw',
+    / alg / 3: -5,
+    / k / -1: h'7a84651bf6d647d2837c7ee84922d0faf701aa152ee107ef72293010ce29c338'
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'hkdf-sha-256',
+    / alg / 3: -10,
+    / k / -1: h'af5b0e64f8e40bcc36e5c822cf598f18'
+  },
+  {
+    / kty / 1: 4, / symmetric /
+    / kid / 2: 'hkdf-sha-512',
+    / alg / 3: -11,
+    / k / -1: h'5157c74b2ac78b9ba692a3a6affa9da6eb880686916eab5262c47f5372b59aab'
+  },
+  {
+    / kty / 1: 2, / EC2 /
+    / kid / 2: 'esp256',
+    / alg / 3: -9,
+    -1:1,
+    -2:h'e73b1a0a563e7bbf447e5f293d77f28915d1306c153580ddedc4ab9c4e29a5d2',
+    -3:h'5f124bc24e7e18fce0ba4813625b19509890ba43c62a7e4bc2ec859325d3b671',
+    -4:h'f8366a4ab545dbc5be51f413cc03d74b0af311125119ecd405c54b055b4756f8'
+  },
+  {
+    / kty / 1: 2, / EC2 /
+    / kid / 2: 'esp384',
+    / alg / 3: -51,
+    -1:2,
+    -2:h'4ae0896ca818ca00f235444b7ad75c1e4d06e81a0e345a568c37e9939c7f1dee5186b447abee3c5e3b1c5ac33a33d2a0',
+    -3:h'a173fb8c99da06cf8bb653cb9257ee19fafc0b7ff4cf4b5ea95baae01a1226c5f5499d4f82f846fb622949d94745077f',
+    -4:h'ef389c5c02cbaef78a24a5191df1ffb077e624a96b8eb686b698e528b55b3297958f5de8788c921ba57a6acbf646d62b'
+  },
+  {
+    / kty / 1: 2, / EC2 /
+    / kid / 2: 'esp512',
+    / alg / 3: -52,
+    -1:3,
+    -2:h'01122446d20a839b82210e6d324e93cbd309dffdcb76d7c5591725567223d2159723be4ecc8d51a4a05069b8e3db2001657f02cbc8328a31787cf8c5d464e150c7e2',
+    -3:h'00cd3dad6690b7dfb6ae902cb8a4ee042a4a68fc4c82264772776271fb6e5af8c8b29c86bd2615a8125198ed8028b60a1ec62a50e9dfe9075abdb6b10a46c769523e',
+    -4:h'017cf83beed0a89d1cd711514155f897f92efb202ecf2810f084b8775b111b71dcf1d5a91f282bfaf14b30e42c83823322fb951525eb8f72817672192e9ce971cb34'
   }
 ]
