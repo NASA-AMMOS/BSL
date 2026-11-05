@@ -26,5 +26,8 @@
         "policy_action_on_fail": "delete_bundle"
       }
     }
-  ]
+  ],
+  "policy_action_no_rules": {
+    "appin": "delete_bundle"
+  }
 }
