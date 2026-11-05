@@ -1040,7 +1040,7 @@ static void BSLX_CoseSc_GetAndValidateTarget(BSLX_CoseSc_t *self, const BSLX_Cos
             self->tgt_keylen = 64;
             break;
         default:
-            BSL_LOG_DEBUG("Unhandled content alg %" PRId64, self->tgt_alg);
+            // content layer is not symmetric
             self->tgt_keylen = 0;
             break;
     }
@@ -1162,7 +1162,7 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
             }
             else
             {
-                BSL_LOG_DEBUG("Using key algorithm %" PRId64 " from key store", hdr_alg_val);
+                BSL_LOG_DEBUG("Using key algorithm %" PRId64 " from key store", key_alg_int);
                 self->key_alg = key_alg_int;
             }
         }
@@ -2960,12 +2960,15 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecO
                         BSLX_CoseSc_Encrypt_Source(&ctx);
                         break;
                     case BSLX_COSESC_RESULT_COSE_SIGN1:
+                        BSL_LOG_ERR("Mismatch between key alg %" PRId64 " and target alg %"PRId64, ctx.key_alg, ctx.tgt_alg);
+                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                        break;
                     // GCOV_EXCL_START
                     case BSLX_COSESC_RESULT_COSE_ENCRYPT:
                     case BSLX_COSESC_RESULT_COSE_MAC:
                     case BSLX_COSESC_RESULT_COSE_SIGN:
                     default:
-                        BSL_LOG_ERR("Unhandled source case");
+                        BSL_LOG_ERR("Unhandled source case %d", ctx.src_msg);
                         ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                         break;
                         // GCOV_EXCL_STOP
@@ -2990,7 +2993,7 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecO
                     case BSLX_COSESC_RESULT_COSE_MAC:
                     case BSLX_COSESC_RESULT_COSE_SIGN:
                     default:
-                        BSL_LOG_ERR("Unhandled source case");
+                        BSL_LOG_ERR("Unhandled source case %d", ctx.src_msg);
                         ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                         break;
                         // GCOV_EXCL_STOP
