@@ -1099,6 +1099,7 @@ class TestCoseScSign1(TestAgent):
                 )
             )
 
+    @unittest.skipUnless(OPENSSL_CAN_MLDSA, "No ML-DSA support")
     def test_exampleA_10_source_invalid_algmatch(self):
         with sc_config_modifier(
             orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.10-source.json"),
