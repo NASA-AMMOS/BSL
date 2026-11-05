@@ -213,6 +213,24 @@ class TestCoseScMac0(TestAgent):
                 )
             )
 
+    def test_exampleA_1_source_invalid_algmatch(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.1-source.json"),
+            modify={"target_alg": 5},  # key uses alg 6
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_NO_SEC,
+                    expected_output=r".*<ERROR>.* Unsupported recipient algorithm 6",
+                    sec_src_eid="dtn://src/",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/cose-sc/keyset-1.cbordiag",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.ERR,
+                )
+            )
+
     def test_exampleA_1_acceptor_valid_loose(self):
         self._single_test(
             _TestCase(
@@ -433,6 +451,24 @@ class TestCoseScEncrypt0(TestAgent):
                 expected_output_format=DataFormat.CBORDIAG,
             )
         )
+
+    def test_exampleA_4_source_invalid_algmatch(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.4-source.json"),
+            modify={"target_alg": 2},  # key uses alg 3
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_NO_SEC,
+                    expected_output=r".*<ERROR>.* Unsupported recipient algorithm 3",
+                    sec_src_eid="dtn://src/",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/cose-sc/keyset-1.cbordiag",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.ERR,
+                )
+            )
 
     def test_exampleA_4_acceptor_valid_loose(self):
         self._single_test(
@@ -922,6 +958,24 @@ class TestCoseScSign1(TestAgent):
                 )
             )
 
+    def test_exampleA_2_source_invalid_algmatch(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.2-source.json"),
+            modify={"target_alg": -52},  # key uses alg -51
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_NO_SEC,
+                    expected_output=r".*<ERROR>.* Mismatch between key alg -51 and target alg -52",
+                    sec_src_eid="dtn://src/",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/cose-sc/keyset-1.cbordiag",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.ERR,
+                )
+            )
+
     def test_exampleA_2_acceptor_valid_loose(self):
         self._single_test(
             _TestCase(
@@ -1042,6 +1096,24 @@ class TestCoseScSign1(TestAgent):
                     expected_output_format=(
                         DataFormat.ANYCBOR if OPENSSL_CAN_MLDSA else DataFormat.ERR
                     ),
+                )
+            )
+
+    def test_exampleA_10_source_invalid_algmatch(self):
+        with sc_config_modifier(
+            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.10-source.json"),
+            modify={"target_alg": -49},  # key uses alg -50
+        ) as polfile_path:
+            self._single_test(
+                _TestCase(
+                    input_data=EXAMPLE_A_NO_SEC,
+                    expected_output=r".*<ERROR>.* Mismatch between key alg -50 and target alg -49",
+                    sec_src_eid="dtn://src/",
+                    policy_config=polfile_path,
+                    bundle_dest_loc=BundleDestLoc.APPIN,
+                    key_set="data/cose-sc/keyset-1.cbordiag",
+                    input_data_format=DataFormat.CBORDIAG,
+                    expected_output_format=DataFormat.ERR,
                 )
             )
 
