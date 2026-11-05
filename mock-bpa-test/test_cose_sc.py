@@ -180,6 +180,28 @@ CCSDS_MAC_WITH_BIB = """\
 
 
 class TestCoseScMac0(TestAgent):
+    def test_all_algs(self):
+        # check all HMAC strengths to get some output
+        for alg, keyname in {5: "hmac-256", 6: "hmac-384", 7: "hmac-512"}.items():
+            with self.subTest(keyname):
+                with sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path:
+                    self._single_test(
+                        _TestCase(
+                            input_data=EXAMPLE_A_NO_SEC,
+                            expected_output=None,
+                            sec_src_eid="dtn://src/",
+                            policy_config=polfile_path,
+                            bundle_dest_loc=BundleDestLoc.APPIN,
+                            key_set="data/cose-sc/all-algs.cbordiag",
+                            input_data_format=DataFormat.CBORDIAG,
+                            expected_output_format=DataFormat.ANYCBOR
+                        )
+                    )
+                    self._stop()
+
     def test_exampleA_1_source(self):
         self._single_test(
             _TestCase(
@@ -438,6 +460,28 @@ class TestCoseScMac(TestAgent):
 
 
 class TestCoseScEncrypt0(TestAgent):
+    def test_all_algs(self):
+        # check all AES-GCM strengths to get some output
+        for alg, keyname in {1: "aesgcm-128", 2: "aesgcm-192", 3: "aesgcm-256"}.items():
+            with self.subTest(keyname):
+                with sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bcb-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path:
+                    self._single_test(
+                        _TestCase(
+                            input_data=EXAMPLE_A_NO_SEC,
+                            expected_output=None,
+                            sec_src_eid="dtn://src/",
+                            policy_config=polfile_path,
+                            bundle_dest_loc=BundleDestLoc.APPIN,
+                            key_set="data/cose-sc/all-algs.cbordiag",
+                            input_data_format=DataFormat.CBORDIAG,
+                            expected_output_format=DataFormat.ANYCBOR
+                        )
+                    )
+                    self._stop()
+
     def test_exampleA_4_source(self):
         self._single_test(
             _TestCase(
