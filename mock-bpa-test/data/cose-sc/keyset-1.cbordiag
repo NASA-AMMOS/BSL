@@ -7,6 +7,30 @@
     / k / -1: h'3a5c74e32ab4558a99581ec3a816576812aabe895db04494cda2
 5b711d7b5ed4077466e677860648412f1bf8c91d0624'
   },
+  { / signing private key /
+    / kty / 1: 2, / EC2 /
+    / kid / 2: 'ExampleA.2',
+    / alg / 3: -51, / ESP384 /
+    / ops / 4: [1, 2], / sign, verify /
+    / crv / -1: 2, / P-384 /
+    / x / -2: h'02dfc49747f5d3d219fe6185744729fa1672ef7d11cb57ca0320
+c632be06ca3fdcc118e63140ba3ec57ea7b85d419568',
+    / y / -3: h'4526e81bf0d9ea0924f05a3453ad75b92806671511544c993f6b
+d908a7a4239d476cfdfd74d6c68836488ad1e60b0e7d',
+    / d / -4: h'3494803544d85a84d802400b50f51eea23b72d7d850b53cbf300
+6e5be2940d4a2c18d510a412efc7dc7875fbba22cca9'
+  },
+  { / verifying public key /
+    / kty / 1: 2, / EC2 /
+    / kid / 2: 'ExampleA.2-pub',
+    / alg / 3: -51, / ESP384 /
+    / ops / 4: [2], / verify /
+    / crv / -1: 2, / P-384 /
+    / x / -2: h'02dfc49747f5d3d219fe6185744729fa1672ef7d11cb57ca0320
+c632be06ca3fdcc118e63140ba3ec57ea7b85d419568',
+    / y / -3: h'4526e81bf0d9ea0924f05a3453ad75b92806671511544c993f6b
+d908a7a4239d476cfdfd74d6c68836488ad1e60b0e7d'
+  },
   {
     / kty / 1: 4, / symmetric /
     / kid / 2: 'ExampleA.4',

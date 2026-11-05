@@ -365,6 +365,76 @@ int BSLX_CoseMsg_Encrypt0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt0_
     return BSL_SUCCESS;
 }
 
+void BSLX_CoseMsg_Sign1_Init(BSLX_CoseMsg_Sign1_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    memset(obj, 0, sizeof(*obj));
+    BSLX_CoseMsg_Headers_Init(&obj->headers);
+    BSL_Data_Init(&obj->signature);
+}
+
+void BSLX_CoseMsg_Sign1_Deinit(BSLX_CoseMsg_Sign1_t *obj)
+{
+    ASSERT_ARG_NONNULL(obj);
+    BSL_Data_Deinit(&obj->signature);
+    BSLX_CoseMsg_Headers_Deinit(&obj->headers);
+    memset(obj, 0, sizeof(*obj));
+}
+
+int BSLX_CoseMsg_Sign1_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Sign1_t *obj)
+{
+    ASSERT_ARG_NONNULL(enc);
+    ASSERT_ARG_NONNULL(obj);
+
+    QCBOREncode_OpenArray(enc);
+
+    BSLX_CoseMsg_Headers_Encode(enc, &obj->headers);
+    // detached payload
+    QCBOREncode_AddNULL(enc);
+    // signature
+    QCBOREncode_AddBytes(enc, UsefulBufC_FROM_BSL_Data(obj->signature));
+
+    QCBOREncode_CloseArray(enc);
+    return BSL_SUCCESS;
+}
+
+int BSLX_CoseMsg_Sign1_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Sign1_t *obj)
+{
+    ASSERT_ARG_NONNULL(dec);
+    ASSERT_ARG_NONNULL(obj);
+
+    QCBORDecode_EnterArray(dec, NULL);
+
+    int res = BSLX_CoseMsg_Headers_Decode(dec, &obj->headers);
+    if (BSL_SUCCESS != res)
+    {
+        return res;
+    }
+    // detached payload
+    QCBORDecode_GetNull(dec);
+    if (QCBOR_SUCCESS != QCBORDecode_GetAndResetError(dec))
+    {
+        BSL_LOG_ERR("COSE payload is not detached");
+        return BSL_ERR_DECODING;
+    }
+    { // signature
+        UsefulBufC view;
+        QCBORDecode_GetByteString(dec, &view);
+        if (QCBOR_SUCCESS != QCBORDecode_GetAndResetError(dec))
+        {
+            BSL_LOG_ERR("COSE Sign1 signature is invalid");
+            return BSL_ERR_DECODING;
+        }
+        else
+        {
+            BSL_Data_CopyFrom(&obj->signature, view.len, view.ptr);
+        }
+    }
+
+    QCBORDecode_ExitArray(dec);
+    return BSL_SUCCESS;
+}
+
 void BSLX_CoseMsg_Recipient_Init(BSLX_CoseMsg_Recipient_t *obj)
 {
     ASSERT_ARG_NONNULL(obj);
