@@ -818,9 +818,9 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self);
 bool BSL_SecOper_IsBCB(const BSL_SecOper_t *self);
 
 /**
- * Retrieve policy-provider data from a security operation
+ * Retrieve policy provider data from a security operation
  * @param[in] self The security operation
- * @return the policy-provider data
+ * @return the policy provider data
  */
 int BSL_SecOper_GetUserData(const BSL_SecOper_t *self);
 
