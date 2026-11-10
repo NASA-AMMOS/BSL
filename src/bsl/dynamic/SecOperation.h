@@ -54,7 +54,7 @@ struct BSL_SecOper_s
     const BSL_HostEID_t *sec_src_eid;
 
     /** @brief Opaque data supplied and interpreted by the policy provider.
-     * Integer was used for v2.1 to preserve the ABI compatibility with the previous version (v.20).
+     * Integer was used for v2.1 to preserve the ABI compatibility with the previous version (v2.0).
      * Future releases will update this to an opaque pointer.
      */
     int user_data;
