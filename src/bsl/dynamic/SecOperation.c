@@ -53,7 +53,7 @@ void BSL_SecOper_InitSet(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->target_block_num = src->target_block_num;
     self->sec_block_num    = src->sec_block_num;
     self->sec_src_eid      = src->sec_src_eid;
-    self->policy_action    = src->policy_action;
+    self->user_data        = src->user_data;
     self->conclusion       = src->conclusion;
     self->reason_code      = src->reason_code;
     self->_role            = src->_role;
@@ -82,7 +82,7 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
     self->target_block_num = src->target_block_num;
     self->sec_block_num    = src->sec_block_num;
     self->sec_src_eid      = src->sec_src_eid;
-    self->policy_action    = src->policy_action;
+    self->user_data        = src->user_data;
     self->conclusion       = src->conclusion;
     self->reason_code      = src->reason_code;
     self->_role            = src->_role;
@@ -96,14 +96,13 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
 }
 
 void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
-                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action,
-                          uint64_t correlation_id)
+                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, int user_data, uint64_t correlation_id)
 {
     ASSERT_ARG_NONNULL(self);
     self->context_id       = context_id;
     self->target_block_num = target_block_num;
     self->sec_block_num    = sec_block_num;
-    self->policy_action    = policy_action;
+    self->user_data        = user_data;
     self->_service_type    = sec_type;
     self->_role            = sec_role;
     self->correlation_id   = correlation_id;
@@ -250,10 +249,10 @@ bool BSL_SecOper_IsBCB(const BSL_SecOper_t *self)
     return self->_service_type == BSL_SECBLOCKTYPE_BCB;
 }
 
-BSL_PolicyAction_e BSL_SecOper_GetPolicyAction(const BSL_SecOper_t *self)
+int BSL_SecOper_GetUserData(const BSL_SecOper_t *self)
 {
     ASSERT_PRECONDITION(BSL_SecOper_IsConsistent(self));
-    return self->policy_action;
+    return self->user_data;
 }
 
 BSL_ReasonCode_t BSL_SecOper_GetReasonCode(const BSL_SecOper_t *self)

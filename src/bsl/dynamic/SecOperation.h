@@ -53,10 +53,11 @@ struct BSL_SecOper_s
      */
     const BSL_HostEID_t *sec_src_eid;
 
-    /// @brief Policy for handing what to do to the block or bundle if security processing fails.
-    /// @note Currently the implementation is for the Policy Provider to use the policy action on failure to determine
-    /// and execute course of action (e.g., remove block, etc.)
-    BSL_PolicyAction_e policy_action;
+    /** @brief Opaque data supplied and interpreted by the policy provider.
+     * Integer was used for v2.1 to preserve the ABI compatibility with the previous version (v.20).
+     * Future releases will update this to an opaque pointer.
+     */
+    int user_data;
 
     /// @brief Conclusion state of security operation processing
     BSL_SecOper_ConclusionState_e conclusion;
