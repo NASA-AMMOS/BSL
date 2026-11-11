@@ -106,6 +106,12 @@ enum BSLX_CoseSc_Option_e
      * Optional for source and unused for verifier/acceptor.
      */
     BSLX_COSESC_OPTION_SALT_BASE,
+    /** An option to determine whether signatures should use deterministic
+     * nonce values.
+     * The value is an integer, either zero or non-zero.
+     * Optional for source and unused for verifier/acceptor.
+     */
+    BSLX_COSESC_OPTION_SIGN_DETERMINISTIC,
 };
 
 /// @brief From https://www.ietf.org/archive/id/draft-ietf-dtn-bpsec-cose-16.html#section-2.2

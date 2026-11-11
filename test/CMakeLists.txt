@@ -149,6 +149,9 @@ if(BUILD_FUZZING)
   add_fuzz_test(SOURCE fuzz_CoseMsg_Encrypt_cbor.cpp RUNS_COUNT 500000)
   target_link_libraries(fuzz_CoseMsg_Encrypt_cbor PUBLIC ${LIB_ORDERED})
 
+  add_fuzz_test(SOURCE fuzz_CoseMsg_Sign1_cbor.cpp RUNS_COUNT 1000000)
+  target_link_libraries(fuzz_CoseMsg_Sign1_cbor PUBLIC ${LIB_ORDERED})
+
   add_fuzz_test(SOURCE fuzz_CoseContext_bib_acceptor.cpp RUNS_COUNT 500000)
   target_link_libraries(fuzz_CoseContext_bib_acceptor PUBLIC ${LIB_ORDERED})
 
