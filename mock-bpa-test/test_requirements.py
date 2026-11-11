@@ -28,6 +28,10 @@ from test_bpa import TestAgent
 # The language implies that BSL should generate bundle status reports per policy. This is a responsibility of the BPA, not BSL.
 # This requriment is satisfied by the reason code interface, present in all Mock BPA tests.
 
+# Note about BSL_66:
+# Many failure test cases parse logs successfully to determine correct failure mode.
+# This satisfies the requirement.
+
 class TestRequirements(TestAgent):
     # BSL_2
     # Deterministic Processing Order
