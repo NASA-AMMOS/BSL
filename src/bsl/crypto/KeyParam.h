@@ -56,6 +56,10 @@ enum BSL_Crypto_KeyParam_e
     BSL_CRYPTO_KEYPARAM_EC2_Y = -3,
     /// EC2 private D as bytes
     BSL_CRYPTO_KEYPARAM_EC2_D = -4,
+    /// AKP public key as bytes
+    BSL_CRYPTO_KEYPARAM_AKP_PUB = -1,
+    /// AKP private key as bytes
+    BSL_CRYPTO_KEYPARAM_AKP_PRIV = -2,
 };
 
 /** Relevant key types managed by IANA.
@@ -67,6 +71,8 @@ enum BSL_Crypto_KeyParam_Type_e
     BSL_CRYPTO_KEYPARAM_TYPE_EC2 = 2,
     /// Symmetric key type
     BSL_CRYPTO_KEYPARAM_TYPE_SYMMETRIC = 4,
+    /// Algorithm-key pair type
+    BSL_CRYPTO_KEYPARAM_TYPE_AKP = 7,
 };
 
 #ifdef __cplusplus
