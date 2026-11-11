@@ -152,10 +152,12 @@ int BSL_API_DeregisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id)
         policy->deinit_fn(policy->user_data);
     }
 
+    // GCOV_EXCL_START
     if (!BSL_PolicyDict_erase(lib->policy_reg, pp_id))
     {
         BSL_LOG_WARNING("Failed to remove policy provider with ID %" PRIu64, pp_id);
     }
+    // GCOV_EXCL_STOP
 
     return BSL_SUCCESS;
 }
