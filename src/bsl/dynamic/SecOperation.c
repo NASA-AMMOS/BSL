@@ -96,8 +96,7 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src)
 }
 
 void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
-                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, BSL_PolicyAction_e policy_action,
-                          uint64_t correlation_id)
+                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, int policy_action, uint64_t correlation_id)
 {
     ASSERT_ARG_NONNULL(self);
     self->context_id       = context_id;
