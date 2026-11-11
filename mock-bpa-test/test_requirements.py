@@ -531,11 +531,10 @@ class TestRequirements(TestAgent):
     def test_BSL_17(self):
         self._single_test(
             _TestCase(
-                # Bundle with a BIB targeting extension block with private use type
-                # TODO what is meant by private use type?
+                # Bundle with a BIB targeting a private-use extension block (type 192).
                 input_data=[
                     [7, 0, 0, [2, [1, 2]], [2, [2, 1]], [2, [2, 1]], [0, 40], 1000000],
-                    [7, 2, 0, 0, bytes.fromhex("19012C")],  # 2 byte, 012c
+                    [192, 2, 0, 0, bytes.fromhex("19012C")],  # 2 byte, 012c
                     # NOTE this differs from RFC9173 A3, uses SHA512 instead of SHA256
                     # NOTE modified first 2 bytes of signature for failure
                     [
@@ -579,7 +578,8 @@ class TestRequirements(TestAgent):
                         ),
                     ],
                 ],
-                policy_config="0x5E",
+                # BIB verifier, CLIN, private-use target, drop target on failure.
+                policy_config="0x5A",
                 bundle_dest_loc=BundleDestLoc.CLIN,
                 key_set="data/key_set_1.json",
                 input_data_format=DataFormat.BUNDLEARRAY,
@@ -1306,8 +1306,6 @@ class TestRequirements(TestAgent):
     # BSL_45
     # Request BPA Block Contents
     # The purpose of this test case is to verify that the BSL can use a BPA interface to request, from the BPA, block contents associated with a specific block.
-    #
-    # TODO is my interpretation of this language correct?
     def test_BSL_45(self):
         self._single_test(
             _TestCase(

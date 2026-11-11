@@ -182,19 +182,20 @@ void test_SecurityContext_BIB_Source(void)
 }
 
 /**
- * @brief Purpose: Tests that running as role VERIFIER passes correctly when the cryptographic material matches.
+ * @brief Purpose: Tests BIB verification with matching and mismatching cryptographic material.
  *
  * Steps:
  *  - Get a BIB secured bundle from RFC9173 Appendix A1.4.
- *  - Create a BIB-Verify security operation with hard-coded arguments (From RFC9173 A1 ASB)
- *  - Use the high-level security context interface to execute a security operation.
- *  - Confirm the bundle's BIB HMAC matches the operation's HMAC.
+ *  - Create a BIB-Verify security operation with hard-coded arguments (From RFC9173 A1 ASB).
+ *  - Execute the operation once with the correct key and once with an incorrect key.
+ *  - Confirm the matching operation with the correct key preserves the bundle, and the incorrect key fails.
  *
  * Notes:
- *  - Common repeated patterns are in the process of being factored out
  *  - All values are drawn from RFC9173 Appendix A.
  */
-void test_SecurityContext_BIB_Verifier(void)
+TEST_CASE(RFC9173_EXAMPLE_A1_KEY, true)
+TEST_CASE(RFC9173_EXAMPLE_A2_KEY, false)
+void test_SecurityContext_BIB_Verifier(const char *key, bool expect_success)
 {
     TEST_ASSERT_EQUAL(0,
                       BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
@@ -203,58 +204,24 @@ void test_SecurityContext_BIB_Verifier(void)
 
     BIBTestContext bib_test_context;
     BIBTestContext_Init(&bib_test_context);
-    BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_VERIFIER, RFC9173_EXAMPLE_A1_KEY);
-
-    BSL_SecurityActionSet_t *malloced_actionset = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
-
-    TEST_ASSERT_EQUAL(
-        0, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref, malloced_actionset));
-    TEST_ASSERT_EQUAL(0, mock_bpa_ctr_encode(mock_bpa_ctr));
-    bool is_match =
-        (BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bundle_bib, mock_bpa_ctr->encoded));
-
-    BSL_SecurityActionSet_Deinit(malloced_actionset);
-    BSL_free(malloced_actionset);
-    BIBTestContext_Deinit(&bib_test_context);
-
-    TEST_ASSERT_TRUE(is_match);
-}
-
-/**
- * @brief Purpose: Test that a BIB verification operation does not pass when the cryptographic material does not match.
- *
- * Steps:
- *  - Get a BIB secured bundle from RFC9173 Appendix A1.4.
- *  - Create a BIB-Verify security operation with hard-coded arguments (From RFC9173 A1 ASB)
- *  - Manipulate the arguments so they use a different key
- *  - Use the high-level security context interface to execute a security operation.
- *  - Confirm that the execution failed (return code != 0)
- *
- * Notes:
- *  - Check more than return code, look deeper into operation.
- */
-void test_SecurityContext_BIB_Verifier_Failure(void)
-{
-    // TODO(bvb) Note that this is basically identical to above except different key, they should be consolidated
-    TEST_ASSERT_EQUAL(0,
-                      BSL_TestUtils_LoadBundleFromCBOR(&LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_bib));
-    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPOUT));
-    mock_bpa_ctr_t *mock_bpa_ctr = &LocalTestCtx.mock_bpa_ctr;
-
-    BIBTestContext bib_test_context;
-    BIBTestContext_Init(&bib_test_context);
-    // Note - switch to use the WRONG KEY
-    BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_VERIFIER, RFC9173_EXAMPLE_A2_KEY);
+    BSL_TestUtils_InitBIB_AppendixA1(&bib_test_context, BSL_SECROLE_VERIFIER, key);
 
     BSL_SecurityActionSet_t *malloced_actionset = BSL_TestUtils_InitMallocBIBActionSet(&bib_test_context);
 
     TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_SecCtx_ExecutePolicyActionSet(&LocalTestCtx.bsl, &mock_bpa_ctr->bundle_ref,
                                                                      malloced_actionset));
 
-    TEST_ASSERT_EQUAL(
-        BSL_SecurityAction_GetSecOperAtIndex(BSL_SecurityActionSet_GetActionAtIndex(malloced_actionset, 0), 0)
-            ->conclusion,
-        BSL_SECOP_CONCLUSION_FAILURE);
+    BSL_SecOper_t *sec_oper =
+        BSL_SecurityAction_GetSecOperAtIndex(BSL_SecurityActionSet_GetActionAtIndex(malloced_actionset, 0), 0);
+    if (expect_success)
+    {
+        TEST_ASSERT_EQUAL(0, mock_bpa_ctr_encode(mock_bpa_ctr));
+        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bundle_bib, mock_bpa_ctr->encoded));
+    }
+    else
+    {
+        TEST_ASSERT_EQUAL(BSL_SECOP_CONCLUSION_FAILURE, sec_oper->conclusion);
+    }
 
     BSL_SecurityActionSet_Deinit(malloced_actionset);
     BSL_free(malloced_actionset);
