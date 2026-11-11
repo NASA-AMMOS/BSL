@@ -677,11 +677,12 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src);
  * @param[in] sec_block_num Block ID of security block.
  * @param[in] sec_type Member of ::BSL_SecBlockType_e enum indicating BIB or BCB
  * @param[in] sec_role Member of ::BSL_SecRole_e enum indicating role.
- * @param[in] user_data Opaque data supplied by the policy provider
+ * @param[in] policy_action data supplied by the policy provider (to be renamed to user_data and made an opaque pointer in future releases)
  * @param[in] correlation_id Correlation ID for this operation; 0 indicates no correlation
  */
 void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
-                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, int user_data, uint64_t correlation_id);
+                          BSL_SecBlockType_e sec_type, BSL_SecRole_e sec_role, int policy_action,
+                          uint64_t correlation_id);
 
 /** Returns true if internal consistency and sanity checks pass
  *
@@ -818,11 +819,11 @@ bool BSL_SecOper_IsBIB(const BSL_SecOper_t *self);
 bool BSL_SecOper_IsBCB(const BSL_SecOper_t *self);
 
 /**
- * Retrieve policy provider data from a security operation
+ * Retrieve the policy action of a security operation
  * @param[in] self The security operation
- * @return the policy provider data
+ * @return the policy provider data (to be renamed in future releases)
  */
-int BSL_SecOper_GetUserData(const BSL_SecOper_t *self);
+int BSL_SecOper_GetPolicyAction(const BSL_SecOper_t *self);
 
 /**
  * Retrieve the conclusion state of a security operation

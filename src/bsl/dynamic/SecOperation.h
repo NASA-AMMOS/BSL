@@ -55,9 +55,9 @@ struct BSL_SecOper_s
 
     /** @brief Opaque data supplied and interpreted by the policy provider.
      * Integer was used for v2.1 to preserve the ABI compatibility with the previous version (v2.0).
-     * Future releases will update this to an opaque pointer.
+     * Future releases will update this to an opaque pointer, and rename to user_data.
      */
-    int user_data;
+    int policy_action;
 
     /// @brief Conclusion state of security operation processing
     BSL_SecOper_ConclusionState_e conclusion;

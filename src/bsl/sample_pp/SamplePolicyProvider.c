@@ -125,7 +125,7 @@ static int BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, const BSL
     int error_ret = BSL_SUCCESS;
 
     uint64_t           block_num          = BSL_SecOper_GetTargetBlockNum(sec_oper);
-    BSL_PolicyAction_e fail_policy_action = (BSL_PolicyAction_e)BSL_SecOper_GetUserData(sec_oper);
+    BSL_PolicyAction_e fail_policy_action = (BSL_PolicyAction_e)BSL_SecOper_GetPolicyAction(sec_oper);
 
     // Handle failure with specify rule policy code
     switch (fail_policy_action)
