@@ -482,8 +482,8 @@ typedef enum
  */
 typedef enum
 {
-    BSL_SECBLOCKTYPE_BIB = 11, ///< RFC9172 code for BIB
-    BSL_SECBLOCKTYPE_BCB = 12  ///< RFC9172 code for BCB
+    BSL_SECBLOCKTYPE_BIB = 11, ///< block type code for BIB @cite rfc9172
+    BSL_SECBLOCKTYPE_BCB = 12  ///< block type code for BCB @cite rfc9172
 } BSL_SecBlockType_e;
 
 /// @brief Helper to determine if a given block type is security
