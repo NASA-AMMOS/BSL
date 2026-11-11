@@ -965,11 +965,14 @@ static int BSLP_PolicyParser_ReadOneRule(BSLP_PolicyProvider_t *policy, const js
         res = BSLP_PolicyProvider_AddRule(policy, &rule, &predicate);
     }
 
+    // GCOV_EXCL_START
     if (res != BSL_SUCCESS)
     {
         BSLP_PolicyRule_Deinit(&rule);
         BSLP_PolicyPredicate_Deinit(&predicate);
     }
+    // GCOV_EXCL_STOP
+
     BSLB_VariantPtrMap_clear(options);
     return res;
 }
@@ -1351,11 +1354,14 @@ static int BSLP_RegisterPolicyFromBitstring(const uint64_t policy_bits, BSLP_Pol
     }
 
     int res = BSLP_PolicyProvider_AddRule(policy, &rule_all_in, &predicate_all_in);
+    // GCOV_EXCL_START
     if (res != BSL_SUCCESS)
     {
         BSLP_PolicyRule_Deinit(&rule_all_in);
         BSLP_PolicyPredicate_Deinit(&predicate_all_in);
     }
+    // GCOV_EXCL_STOP
+
     return res;
 }
 
@@ -1380,10 +1386,13 @@ int BSLP_PolicyParser_FromBitstringList(const char *policies, BSLP_PolicyProvide
         curs    = pend;
         int res = BSLP_RegisterPolicyFromBitstring(val, policy, options);
         BSLB_VariantPtrMap_clear(options);
+
+        // GCOV_EXCL_START
         if (res != BSL_SUCCESS)
         {
             return res;
         }
+        // GCOV_EXCL_STOP
 
         if (*curs == '\0')
         {

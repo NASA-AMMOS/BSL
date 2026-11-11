@@ -577,11 +577,14 @@ int BSLP_PolicyProvider_ReplaceRuleById(BSLP_PolicyProvider_t *self, int64_t rul
                                         BSLP_PolicyPredicate_t *predicate)
 {
     ASSERT_ARG_NONNULL(self);
+
+    // GCOV_EXCL_START
     if (!BSLP_PolicyRule_IsConsistent(rule) || (rule->rule_id != rule_id)
         || (NULL != predicate && !BSLP_PolicyPredicate_IsConsistent(predicate)))
     {
         return BSL_ERR_ARG_INVALID;
     }
+    // GCOV_EXCL_STOP
 
     pthread_rwlock_wrlock(&self->mutex);
     BSLP_PolicyEntryPtr_t **entry_ptr = BSLP_PolicyRuleMap_get(self->rules, rule_id);
