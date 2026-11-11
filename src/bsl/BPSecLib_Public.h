@@ -571,9 +571,11 @@ BSL_REQUIRE_CHECK
 int BSL_API_RegisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id, BSL_PolicyDesc_t desc);
 
 /** @brief Deregister a Policy Provider module from the BSL.
+ * If found and removed, the provider de-init function is called on the instance.
  * @param[in,out] lib Pointer to BSL context.
  * @param pp_id The unique policy provider ID to remove.
  * @returns 0 on success
+ * @sa BSL_PolicyDesc_t::deinit_fn
  */
 int BSL_API_DeregisterPolicyProvider(BSL_LibCtx_t *lib, uint64_t pp_id);
 
