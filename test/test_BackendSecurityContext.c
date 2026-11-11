@@ -183,6 +183,7 @@ void test_SecurityContext_BIB_Source(void)
 
 /**
  * @brief Purpose: Tests BIB verification with matching and mismatching cryptographic material.
+ * BSL_31 satisfied by this.
  *
  * Steps:
  *  - Get a BIB secured bundle from RFC9173 Appendix A1.4.
@@ -350,6 +351,9 @@ void test_RFC9173_AppendixA_Example3_Acceptor(void)
     BSL_PrimaryBlock_deinit(&primary_block);
 }
 
+/**
+ * BSL_40 is satisfied by this
+ */
 void test_RFC9173_AppendixA_Example3_Source(void)
 {
     // See: https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.3.1

@@ -24,11 +24,15 @@ from test_bpa import TestAgent
 
 # Test Cases specified by the Requirements Document
 
+# Note about BSL_20:
+# The language implies that BSL should generate bundle status reports per policy. This is a responsibility of the BPA, not BSL.
+# This requriment is satisfied by the reason code interface, present in all Mock BPA tests.
 
 class TestRequirements(TestAgent):
     # BSL_2
     # Deterministic Processing Order
     # The purpose of this test case is to verify that BSL shall impose a deterministic processing order for all security blocks.
+    # BSL_4, BSL_18 explicitly satisfied by this fixture per Test Spec
     def test_BSL_02(self):
         self._single_test(
             _TestCase(
@@ -59,6 +63,8 @@ class TestRequirements(TestAgent):
     # BSL_3
     # Security Block Inclusion
     # The purpose of this test case is to verify that the BSL shall construct security blocks for inclusion in a bundle.
+    #
+    # BSL_5 Unit Test informally satisfied by this fixture
     def test_BSL_03(self):
         self._single_test(
             _TestCase(
@@ -88,6 +94,9 @@ class TestRequirements(TestAgent):
     # BSL_7
     # Removing Security Operations
     # The purpose of this test case is to verify that the BSL can remove security operations from a bundle.
+    #
+    # BSL_8, BSL_9 Unit Tests informally satisfied by this fixture
+    # BSL_16 explicitly satisfied by BSL_8 per Test Spec
     def test_BSL_07(self):
         self._single_test(
             _TestCase(
@@ -191,6 +200,7 @@ class TestRequirements(TestAgent):
     #       3. Identical output with log showing verification
     #       4. Remove BIB
     #
+    # BSL_15 explicitly satisfied by this fixture per Test Spec
     def test_BSL_14a(self):
         self._single_test(
             _TestCase(
@@ -334,6 +344,8 @@ class TestRequirements(TestAgent):
     # The purpose of this test case is verify that the BSL can request that the BPA delete a bundle when required by policy.
     #
     # 19) need logs to show deletion
+    #
+    # BSL_42 Unit Test informally satisfied by this fixture
     def test_BSL_19(self):
         self._single_test(
             _TestCase(
@@ -458,6 +470,8 @@ class TestRequirements(TestAgent):
     #       Second input is CBOR provided in Appendix A2 for BCB https://www.rfc-editor.org/rfc/rfc9173.html#appendix-A.2
     # Test that for both BIB-protected and BCB-protected Bundle, the expected results match the final result.
     # This shows that they implement the security context of RFC9173 in Appendix A1 and A2.
+    #
+    # BSL_25 explicitly satisfied by this fixture per Test Spec
     def test_BSL_27a(self):
         self._single_test(
             _TestCase(
@@ -512,6 +526,8 @@ class TestRequirements(TestAgent):
     # The purpose of this test case is to verify that the BSL can support the use of the BCB-AES-GCM default security context [RFC 9173] for BCB-confidentiality security operations.
     # This is the first half of the validation for SSF-4-0
     # repeat of bsl_27b
+    #
+    # BSL_11 Unit Test informally satisfied by this fixture
     def test_BSL_28(self):
         self._single_test(
             _TestCase(
@@ -648,6 +664,8 @@ class TestRequirements(TestAgent):
     # The purpose of this test case is to verify that the BSL can cease processing related security operations when there is a processing error associated with those operations.
     #
     # 38) need logs to show new further sec option processed
+    #
+    # BSL_36 Unit Test informally satisfied by this fixture
     def test_BSL_38(self):
         self._single_test(
             _TestCase(
@@ -762,6 +780,8 @@ class TestRequirements(TestAgent):
     # BSL_45
     # Request BPA Block Contents
     # The purpose of this test case is to verify that the BSL can use a BPA interface to request, from the BPA, block contents associated with a specific block.
+    #
+    # BSL_10 Unit Test informally satisfied by this fixture
     def test_BSL_45(self):
         self._single_test(
             _TestCase(

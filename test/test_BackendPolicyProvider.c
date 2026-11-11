@@ -201,6 +201,7 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
 /**
  * 2 PPs: First has role to source BIB over primary,  second has role to source BIB over payloads
  * Assert actions have correct pp_ids
+ * BSL_69 satisfied by this
  */
 void test_MultiplePolicyProviders(void)
 {

@@ -102,6 +102,7 @@ class TestSamplePolicy(TestAgent):
             )
         )
 
+    # BSL_70 "prioritization" satisfied by this
     def test_accept_bib_bcb(self):
         self._single_test(
             _TestCase(

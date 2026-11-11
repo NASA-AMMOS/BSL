@@ -119,6 +119,9 @@ if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
   # Test user-specified dynamic mem mgmt callbacks
   add_unity_test(SOURCE test_DynamicMemCbs.c)
   target_link_libraries(test_DynamicMemCbs PUBLIC ${LIB_ORDERED})
+
+  add_unity_test(SOURCE test_Logging.c)
+  target_link_libraries(test_Logging PUBLIC ${LIB_ORDERED})
 endif(BUILD_UNITTEST AND NOT BUILD_FUZZING)
 
 if(BUILD_FUZZING)

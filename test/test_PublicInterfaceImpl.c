@@ -514,6 +514,9 @@ TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.9", NULL, BSL_SECROLE_VERIFIER,
           BSL_POLICYACTION_DROP_BLOCK, true, 2, 0) // PASS
 TEST_CASE(BSL_POLICYLOCATION_APPIN, NULL, "ipn:1.10", NULL, BSL_SECROLE_VERIFIER, 98, BSL_BLOCK_TYPE_PAYLOAD,
           BSL_POLICYACTION_DROP_BLOCK, true, 2, 0) // PASS
+/**
+* BSL_41, BSL_64, BSL_71, and BSL_72 are satisfied by this
+*/
 void test_comprehensive(BSL_PolicyLocation_e policy_loc, const char *src_eid, const char *dest_eid,
                         const char *secsrc_eid, BSL_SecRole_e sec_role, int sec_block_type, uint8_t target_block,
                         BSL_PolicyAction_e policy_act, bool good_key, int sec_blks_ct, int expected_act_ct)
