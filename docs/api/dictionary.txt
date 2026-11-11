@@ -96,6 +96,8 @@ deinitialize
 deinitialized
 Deinitializes
 dereference
+Deregister
+deregister
 dir
 DocID
 doxygen
