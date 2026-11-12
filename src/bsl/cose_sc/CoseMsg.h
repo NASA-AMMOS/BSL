@@ -72,10 +72,16 @@ enum BSLX_CoseMsg_Header_e
  */
 enum BSLX_CoseMsg_Alg_e
 {
+    /// ESP512
+    BSLX_COSEMSG_ALG_ESP512 = -52,
+    /// ESP384
+    BSLX_COSEMSG_ALG_ESP384 = -51,
     /// direct+HKDF-SHA-512
     BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_512 = -11,
     /// direct+HKDF-SHA-256
     BSLX_COSEMSG_ALG_DIRECT_HKDF_SHA_256 = -10,
+    /// ESP256
+    BSLX_COSEMSG_ALG_ESP256 = -9,
     /// direct
     BSLX_COSEMSG_ALG_DIRECT = -6,
     /// A256KW
@@ -103,21 +109,6 @@ enum BSLX_CoseMsg_Alg_e
  * "This document fixes the size of the nonce at 96 bits."
  */
 #define BSLX_COSEMSG_AESGCM_IV_LEN (12)
-
-/** Key parameter code points managed by IANA.
- * https://www.iana.org/assignments/cose/cose.xhtml#key-common-parameters
- */
-enum BSLX_CoseMsg_KeyParam_e
-{
-    /// Key type value as @c int64_t
-    BSLX_COSEMSG_KEY_PARAM_KTY = 1,
-    /// Key ID value as bytes
-    BSLX_COSEMSG_KEY_PARAM_KID = 2,
-    /// Algorithm value as @c int64_t
-    BSLX_COSEMSG_KEY_PARAM_ALG = 3,
-    /// Base IV value as bytes
-    BSLX_COSEMSG_KEY_PARAM_BASEIV = 5,
-};
 
 /** @struct BSLX_CoseMsg_HdrMapTree_t
  * Defines an internal lookup dictionary for ::BSLB_VariantPtr_t pointers
@@ -226,6 +217,23 @@ void BSLX_CoseMsg_Encrypt0_Deinit(BSLX_CoseMsg_Encrypt0_t *obj);
 int BSLX_CoseMsg_Encrypt0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Encrypt0_t *obj);
 /// Match ::BSL_CBOR_Decode_f signature.
 int BSLX_CoseMsg_Encrypt0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt0_t *obj);
+
+/// Decoded COSE_Sign1
+typedef struct
+{
+    /// Common headers
+    BSLX_CoseMsg_Headers_t headers;
+    /// The signature bytes
+    BSL_Data_t signature;
+} BSLX_CoseMsg_Sign1_t;
+/// Initialize the struct
+void BSLX_CoseMsg_Sign1_Init(BSLX_CoseMsg_Sign1_t *obj);
+/// Deinitialize the struct
+void BSLX_CoseMsg_Sign1_Deinit(BSLX_CoseMsg_Sign1_t *obj);
+/// Match ::BSL_CBOR_Encode_f signature.
+int BSLX_CoseMsg_Sign1_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Sign1_t *obj);
+/// Match ::BSL_CBOR_Decode_f signature.
+int BSLX_CoseMsg_Sign1_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Sign1_t *obj);
 
 /** Each recipient of a COSE_Mac or COSE_Encrypt.
  * This implementation does not support recursive recipients.

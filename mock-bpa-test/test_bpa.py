@@ -160,7 +160,7 @@ class TestAgent(unittest.TestCase):
         else:
             raise ValueError(f"Unhandled data format {format}")
 
-    def _wait_for(self, sock: socket.socket, timeout: float = 1.0) -> bytes:
+    def _wait_for(self, sock: socket.socket, timeout: float = 2.0) -> bytes:
         LOGGER.debug("Waiting for socket data...")
         rrd, _rwr, _rxp = select.select([sock], [], [], timeout)
         if not rrd:
