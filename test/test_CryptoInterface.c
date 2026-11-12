@@ -38,7 +38,7 @@
 #include <unity.h>
 
 /**
- * BSL_22, BSL_53, BSL_54, BSL_55, BSL_56, BSL_57 satisifed by the unit tests present in this file.
+ * BSL_22, BSL_53, BSL_54, BSL_55, BSL_56, BSL_57 satisfied by the unit tests present in this file.
  */
 
 static BSL_LibCtx_t bsl;
