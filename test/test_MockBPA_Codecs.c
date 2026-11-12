@@ -165,6 +165,9 @@ void test_bsl_mock_encode_bundle(void)
     MockBPA_Bundle_Deinit(&bundle);
 }
 
+/**
+ * BSL_51 and BSL_52 are satisfied by this
+ */
 TEST_CASE("8202820102")                   // IPN scheme
 TEST_CASE("821A00010000A203426869041819") // unknown scheme with complex data
 void test_bsl_loopback_eid(const char *hexdata)
