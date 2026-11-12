@@ -125,7 +125,7 @@ static int BSLP_PolicyProvider_HandleFailures(BSL_BundleRef_t *bundle, const BSL
     int error_ret = BSL_SUCCESS;
 
     uint64_t           block_num          = BSL_SecOper_GetTargetBlockNum(sec_oper);
-    BSL_PolicyAction_e fail_policy_action = BSL_SecOper_GetPolicyAction(sec_oper);
+    BSL_PolicyAction_e fail_policy_action = (BSL_PolicyAction_e)BSL_SecOper_GetPolicyAction(sec_oper);
 
     // Handle failure with specify rule policy code
     switch (fail_policy_action)
@@ -750,7 +750,7 @@ int BSLP_PolicyRule_EvaluateAsSecOper(const BSLP_PolicyRule_t *self, const BSLP_
 
     // It's found, so populate the security operation from the rule and bundle.
     BSL_SecOper_Populate(sec_oper, self->context_id, target_block_num, 0, self->sec_block_type, self->role,
-                         self->failure_action_code, self->correlation_id);
+                         (int)self->failure_action_code, self->correlation_id);
 
     // Next, append all the options from the matched rule.
     BSLB_VariantPtrMap_it_t pit;
