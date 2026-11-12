@@ -5,6 +5,7 @@ Acceptor
 ACCEPTOR
 ADU
 aes
+AKP
 AMMOS
 amongst
 APIs
@@ -99,6 +100,7 @@ dereference
 dir
 DocID
 doxygen
+DSA
 dtn
 ECDSA
 eid
