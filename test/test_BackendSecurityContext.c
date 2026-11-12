@@ -217,7 +217,8 @@ void test_SecurityContext_BIB_Verifier(const char *key, bool expect_success)
     if (expect_success)
     {
         TEST_ASSERT_EQUAL(0, mock_bpa_ctr_encode(mock_bpa_ctr));
-        TEST_ASSERT_TRUE(BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bundle_bib, mock_bpa_ctr->encoded));
+        TEST_ASSERT_TRUE(
+            BSL_TestUtils_IsB16StrEqualTo(RFC9173_TestVectors_AppendixA1.hex_bundle_bib, mock_bpa_ctr->encoded));
     }
     else
     {

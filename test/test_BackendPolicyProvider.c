@@ -191,8 +191,8 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
     TEST_ASSERT_EQUAL_STRING(RFC9173_EXAMPLE_A1_KEY, key_id);
 
     TEST_ASSERT_NOT_NULL(BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_USE_KEY_WRAP));
-    TEST_ASSERT_EQUAL(0, BSL_Variant_GetAsInt64(
-                             BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_USE_KEY_WRAP), &option_value));
+    TEST_ASSERT_EQUAL(
+        0, BSL_Variant_GetAsInt64(BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_USE_KEY_WRAP), &option_value));
     TEST_ASSERT_EQUAL_INT64(0, option_value);
 
     BSL_SecurityActionSet_Deinit(&action_set);
