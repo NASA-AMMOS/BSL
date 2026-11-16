@@ -677,7 +677,8 @@ void BSL_SecOper_Set(BSL_SecOper_t *self, const BSL_SecOper_t *src);
  * @param[in] sec_block_num Block ID of security block.
  * @param[in] sec_type Member of ::BSL_SecBlockType_e enum indicating BIB or BCB
  * @param[in] sec_role Member of ::BSL_SecRole_e enum indicating role.
- * @param[in] policy_action data supplied by the policy provider (to be renamed to user_data and made an opaque pointer in future releases)
+ * @param[in] policy_action data supplied by the policy provider (to be renamed to user_data and made an opaque pointer
+ * in future releases)
  * @param[in] correlation_id Correlation ID for this operation; 0 indicates no correlation
  */
 void BSL_SecOper_Populate(BSL_SecOper_t *self, int64_t context_id, uint64_t target_block_num, uint64_t sec_block_num,
