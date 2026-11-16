@@ -79,7 +79,7 @@ enum BSLX_BCB_Options_e
     BSLX_BCB_OPT_AES_VARIANT,
     /// @brief A uint value from the choices ::rfc9173_bcb_aad_scope_flag_ids_e
     BSLX_BCB_OPT_SCOPE,
-    /// @brief A boolean indicating that the AEAD authentication tag is appended to the target BTSD
+    /// @brief A boolean indicating that the AEAD authentication tag should be appended to the target BTSD
     BSLX_BCB_OPT_APPEND_AUTHTAG,
 };
 

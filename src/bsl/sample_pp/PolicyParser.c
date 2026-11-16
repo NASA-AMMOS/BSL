@@ -278,6 +278,7 @@ static int BSLP_PolicyOptions_SC2(BSLB_VariantPtrMap_t options, const char *id_s
     else if (0 == strcmp(id_str, "append_authtag"))
     {
         BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_BCB_OPT_APPEND_AUTHTAG, value);
+        BSL_LOG_WARNING("Policy rule indicates resulting authtag should be appended to BTSD. The option is valid only for BCBs and source-role policy rules.");
         if (opt)
         {
             bool as_bool;
