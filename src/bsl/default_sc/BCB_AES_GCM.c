@@ -36,6 +36,7 @@
 #include <qcbor/qcbor_encode.h>
 #include <qcbor/qcbor_spiffy_decode.h>
 
+#include <stdint.h>
 #include <stdlib.h>
 
 bool BSLX_BCB_Validate(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, BSL_SecOper_t *sec_oper) // NOSONAR
@@ -392,9 +393,21 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
             BSL_LOG_ERR("Failed to construct reader");
             retval = BSL_ERR_HOST_CALLBACK_FAILED;
         }
-        // output is same size
-        btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num,
-                                             bcb_context->target_block.btsd_len);
+        size_t output_len = bcb_context->target_block.btsd_len;
+        if (bcb_context->append_authtag)
+        {
+            const size_t tag_len = BSL_Cipher_TagLen(&cipher);
+            if (output_len > SIZE_MAX - tag_len)
+            {
+                BSL_LOG_ERR("Encrypted target BTSD length overflows");
+                retval = BSL_ERR_SECURITY_CONTEXT_FAILED;
+            }
+            else
+            {
+                output_len += tag_len;
+            }
+        }
+        btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num, output_len);
         if (!btsd_write)
         {
             BSL_LOG_ERR("Failed to construct writer");
@@ -430,6 +443,15 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
         {
             BSL_LOG_ERR("Failed to get authentication tag");
             retval = BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+        }
+        else if (bcb_context->append_authtag)
+        {
+            res = BSL_SeqWriter_Put(btsd_write, bcb_context->authtag.ptr, bcb_context->authtag.len);
+            if (BSL_SUCCESS != res)
+            {
+                BSL_LOG_ERR("Failed to append authentication tag to target BTSD");
+                retval = BSL_ERR_HOST_CALLBACK_FAILED;
+            }
         }
     }
 
@@ -531,6 +553,22 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
         {
             bcb_context->keywrap     = (as_int != 0);
             bcb_context->opt_keywrap = true;
+        }
+    }
+    param = BSL_SecOper_FindOption(sec_oper, BSLX_BCB_OPT_APPEND_AUTHTAG);
+    if (param)
+    {
+        int64_t as_int;
+        res = BSL_Variant_GetAsInt64(param, &as_int);
+        if (BSL_SUCCESS != res)
+        {
+            BSL_LOG_ERR("Invalid append authentication tag value");
+            bcb_context->err_count++;
+        }
+        else
+        {
+            bcb_context->append_authtag     = (as_int != 0);
+            bcb_context->opt_append_authtag = true;
         }
     }
 
@@ -802,11 +840,10 @@ int BSLX_BCB_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecOper
 
     if (bcb_context.is_source)
     {
-        // Generally we expect an auth tag with the encryption
-        // If present, append it to the result.
-        if (bcb_context.authtag.len > 0)
+        // Place the authentication tag in the ASB unless it was appended to the target BTSD.
+        if (bcb_context.authtag.len > 0 && !bcb_context.append_authtag)
         {
-            BSL_LOG_INFO("Appending BCB Auth Tag");
+            BSL_LOG_INFO("Appending BCB Auth Tag as a security result");
             BSL_Variant_t *auth_tag = BSL_SecOper_AddResult(sec_oper, RFC9173_BCB_RESULTID_AUTHTAG);
             BSL_Variant_SetBytestr(auth_tag, bcb_context.authtag);
         }

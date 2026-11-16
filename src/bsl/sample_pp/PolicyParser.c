@@ -275,6 +275,20 @@ static int BSLP_PolicyOptions_SC2(BSLB_VariantPtrMap_t options, const char *id_s
             BSL_LOG_DEBUG("     %s: %" PRId64, id_str, as_int);
         }
     }
+    else if (0 == strcmp(id_str, "append_authtag"))
+    {
+        BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_BCB_OPT_APPEND_AUTHTAG, value);
+        if (opt)
+        {
+            bool as_bool;
+            if (BSLP_GetBoolean(value, &as_bool))
+            {
+                return BSL_ERR_POLICY_CONFIG;
+            }
+            BSL_Variant_SetInt64(opt, (int64_t)as_bool);
+            BSL_LOG_DEBUG("     %s: %" PRId64, id_str, (int64_t)as_bool);
+        }
+    }
     else if (0 == strcmp(id_str, "key_wrap"))
     {
         BSL_Variant_t *opt = BSLP_OptionAddOrErase(options, BSLX_BCB_OPT_USE_KEY_WRAP, value);
