@@ -337,8 +337,8 @@ int BSL_AbsSecBlock_Encode(QCBOREncodeContext *enc, const BSL_AbsSecBlock_t *asb
 
 int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
 {
-    ASSERT_ARG_NONNULL(dec);
-    ASSERT_ARG_NONNULL(self);
+    CHK_ARG_NONNULL(dec);
+    CHK_ARG_NONNULL(self);
     QCBORItem asbitem;
     int       res;
 
@@ -516,6 +516,6 @@ int BSL_AbsSecBlock_Decode(QCBORDecodeContext *dec, BSL_AbsSecBlock_t *self)
         return BSL_ERR_DECODING;
     }
 
-    ASSERT_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
+    CHK_POSTCONDITION(BSL_AbsSecBlock_IsConsistent(self));
     return BSL_SUCCESS;
 }

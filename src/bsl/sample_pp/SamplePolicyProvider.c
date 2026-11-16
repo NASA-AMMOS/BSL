@@ -510,7 +510,7 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_New(uint64_t pp_id)
 
 int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule, BSLP_PolicyPredicate_t *predicate)
 {
-    ASSERT_ARG_NONNULL(self);
+    CHK_ARG_NONNULL(self);
     if (!BSLP_PolicyRule_IsConsistent(rule) || !BSLP_PolicyPredicate_IsConsistent(predicate))
     {
         return BSL_ERR_ARG_INVALID;
@@ -673,7 +673,7 @@ int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, int64_t rule_id, const cha
 
 int BSLP_PolicyRule_SetCorrelation(BSLP_PolicyRule_t *self, uint64_t correlation_id)
 {
-    ASSERT_ARG_NONNULL(self);
+    CHK_ARG_NONNULL(self);
     if (correlation_id <= 0)
     {
         return BSL_ERR_PROPERTY_CHECK_FAILED;

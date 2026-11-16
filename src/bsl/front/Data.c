@@ -55,7 +55,7 @@ void BSL_Data_Init(BSL_Data_t *data)
 
 int BSL_Data_InitBuffer(BSL_Data_t *data, size_t bytelen)
 {
-    ASSERT_ARG_NONNULL(data);
+    CHK_ARG_NONNULL(data);
     bsl_data_int_reset(data);
 
     if (bytelen == 0)
@@ -108,7 +108,7 @@ void BSL_Data_Deinit(BSL_Data_t *data)
 
 int BSL_Data_CopyFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src)
 {
-    ASSERT_ARG_NONNULL(data);
+    CHK_ARG_NONNULL(data);
 
     if (len)
     {
@@ -139,7 +139,7 @@ int BSL_Data_CopyFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src)
 
 int BSL_Data_Resize(BSL_Data_t *data, size_t len)
 {
-    ASSERT_ARG_NONNULL(data);
+    CHK_ARG_NONNULL(data);
 
     if (len == data->len)
     {
@@ -200,7 +200,7 @@ int BSL_Data_AppendFrom(BSL_Data_t *data, size_t len, BSL_DataConstPtr_t src)
 
 int BSL_Data_SetViewCstr(BSL_Data_t *data, const char *cstr)
 {
-    ASSERT_ARG_NONNULL(data);
+    CHK_ARG_NONNULL(data);
     bsl_data_int_free(data);
     *data = BSL_DATA_INIT_VIEW_CSTR(cstr);
     return BSL_SUCCESS;

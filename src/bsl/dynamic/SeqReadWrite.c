@@ -44,10 +44,10 @@ void BSL_SeqReader_Destroy(BSL_SeqReader_t *obj)
 
 int BSL_SeqReader_Get(BSL_SeqReader_t *obj, uint8_t *buf, size_t *bufsize)
 {
-    ASSERT_ARG_NONNULL(obj);
+    CHK_ARG_NONNULL(obj);
     CHK_ARG_NONNULL(buf);
     CHK_ARG_NONNULL(bufsize);
-    ASSERT_PRECONDITION(obj->read);
+    CHK_PRECONDITION(obj->read);
 
     return obj->read(obj->user_data, buf, bufsize);
 }

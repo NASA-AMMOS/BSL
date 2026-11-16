@@ -517,7 +517,7 @@ static int BSLP_PolicyOptions_SC3(BSLB_VariantPtrMap_t options, const char *id_s
 
 static int BSLP_PolicyParser_GetLoc(BSL_PolicyLocation_e *loc, const char *text)
 {
-    ASSERT_ARG_NONNULL(loc);
+    CHK_ARG_NONNULL(loc);
     CHK_ARG_NONNULL(text);
 
     if (0 == strcmp(text, "appin"))
