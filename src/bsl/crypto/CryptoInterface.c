@@ -57,9 +57,9 @@ static const size_t BSL_CRYPTO_AESKW_BLOCK_SIZE = 8;
 int BSL_Crypto_UnwrapKey(BSL_Crypto_KeyHandle_t kek_handle, const BSL_Data_t *wrapped_key,
                          BSL_Crypto_KeyHandle_t *cek_handle)
 {
-    CHK_ARG_NONNULL(kek_handle);
-    CHK_ARG_NONNULL(wrapped_key);
-    CHK_ARG_NONNULL(cek_handle);
+    ASSERT_ARG_NONNULL(kek_handle);
+    ASSERT_ARG_NONNULL(wrapped_key);
+    ASSERT_ARG_NONNULL(cek_handle);
     *cek_handle = NULL;
 
     if (wrapped_key->len < 2 * BSL_CRYPTO_AESKW_BLOCK_SIZE)
@@ -506,8 +506,8 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
 
 int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t data_len)
 {
-    CHK_ARG_NONNULL(hmac_ctx);
-    CHK_ARG_NONNULL(data);
+    ASSERT_ARG_NONNULL(hmac_ctx);
+    ASSERT_ARG_NONNULL(data);
     CHK_PRECONDITION(data_len > 0);
     CHK_PRECONDITION(data_len <= INT_MAX);
 
@@ -523,8 +523,8 @@ int BSL_AuthCtx_DigestBuffer(BSL_AuthCtx_t *hmac_ctx, const void *data, size_t d
 
 int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
 {
-    CHK_ARG_NONNULL(hmac_ctx);
-    CHK_ARG_NONNULL(reader);
+    ASSERT_ARG_NONNULL(hmac_ctx);
+    ASSERT_ARG_NONNULL(reader);
 
     while (true)
     {
@@ -549,8 +549,8 @@ int BSL_AuthCtx_DigestSeq(BSL_AuthCtx_t *hmac_ctx, BSL_SeqReader_t *reader)
 
 int BSL_AuthCtx_Finalize(BSL_AuthCtx_t *hmac_ctx, BSL_Data_t *tag)
 {
-    CHK_ARG_NONNULL(hmac_ctx);
-    CHK_ARG_NONNULL(tag);
+    ASSERT_ARG_NONNULL(hmac_ctx);
+    ASSERT_ARG_NONNULL(tag);
 
     // get the needed tag size
     size_t size = EVP_MAC_CTX_get_mac_size(hmac_ctx->libhandle);
@@ -596,9 +596,9 @@ bool BSL_Crypto_Compare(const void *data1, size_t size1, const void *data2, size
 int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_AESVariant_e aes_var,
                     const BSL_Data_t *iv_val, BSL_Crypto_KeyHandle_t keyhandle)
 {
-    CHK_ARG_NONNULL(cipher_ctx);
-    CHK_ARG_NONNULL(iv_val);
-    CHK_ARG_NONNULL(keyhandle);
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(iv_val);
+    ASSERT_ARG_NONNULL(keyhandle);
     CHK_PRECONDITION(iv_val->len > 0);
     CHK_PRECONDITION(iv_val->len <= INT_MAX);
 
@@ -681,8 +681,8 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
 
 int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, size_t aad_len)
 {
-    CHK_ARG_NONNULL(cipher_ctx);
-    CHK_ARG_NONNULL(aad);
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(aad);
     CHK_PRECONDITION(aad_len > 0);
     CHK_PRECONDITION(aad_len <= INT_MAX);
 
@@ -700,8 +700,8 @@ int BSL_Cipher_AddAadBuffer(BSL_Cipher_t *cipher_ctx, const void *aad, size_t aa
 
 int BSL_Cipher_AddAadSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader)
 {
-    CHK_ARG_NONNULL(cipher_ctx);
-    CHK_ARG_NONNULL(reader);
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(reader);
 
     while (true)
     {
@@ -728,8 +728,8 @@ int BSL_Cipher_AddAadSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader)
 
 int BSL_Cipher_AddSeq(BSL_Cipher_t *cipher_ctx, BSL_SeqReader_t *reader, BSL_SeqWriter_t *writer, size_t limit)
 {
-    CHK_ARG_NONNULL(cipher_ctx);
-    CHK_ARG_NONNULL(reader);
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(reader);
 
     while (limit)
     {
@@ -772,9 +772,9 @@ size_t BSL_Cipher_TagLen(const BSL_Cipher_t *cipher_ctx)
 
 int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag)
 {
-    CHK_ARG_NONNULL(cipher_ctx);
-    CHK_ARG_NONNULL(cipher_ctx->libhandle);
-    CHK_ARG_NONNULL(tag);
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(cipher_ctx->libhandle);
+    ASSERT_ARG_NONNULL(tag);
 
     int res = BSL_Data_Resize(tag, (size_t)EVP_CIPHER_CTX_get_tag_length(cipher_ctx->libhandle));
     // GCOV_EXCL_START
@@ -796,8 +796,8 @@ int BSL_Cipher_GetTag(BSL_Cipher_t *cipher_ctx, BSL_Data_t *tag)
 
 int BSL_Cipher_SetTag(BSL_Cipher_t *cipher_ctx, const BSL_Data_t *tag)
 {
-    CHK_ARG_NONNULL(cipher_ctx);
-    CHK_ARG_NONNULL(tag);
+    ASSERT_ARG_NONNULL(cipher_ctx);
+    ASSERT_ARG_NONNULL(tag);
 
     BSL_LOG_PLAINTEXT_PTR("tag in", cipher_ctx, tag->ptr, tag->len);
     int res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_TAG, (int)(tag->len), (void *)(tag->ptr));
@@ -846,7 +846,7 @@ void BSL_Cipher_Deinit(BSL_Cipher_t *cipher_ctx)
 
 int BSL_Crypto_GenIV(BSL_Data_t *buf)
 {
-    CHK_PRECONDITION(rand_bytes_generator);
+    ASSERT_PRECONDITION(rand_bytes_generator);
     CHK_ARG_NONNULL(buf);
 
     memset(buf->ptr, 0, buf->len);

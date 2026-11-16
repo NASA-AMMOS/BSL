@@ -44,8 +44,8 @@
 
 int BSLX_CoseSc_SetAadScope(BSL_Variant_t *option, const BSLX_CoseSc_AadScope_Item_t *list, size_t count)
 {
-    CHK_ARG_NONNULL(option);
-    CHK_ARG_NONNULL(list);
+    ASSERT_ARG_NONNULL(option);
+    ASSERT_ARG_NONNULL(list);
 
     BSLX_CoseSc_AadScope_t obj;
     BSLX_CoseSc_AadScope_init(obj);
@@ -574,9 +574,9 @@ static size_t BSLX_CoseSc_bstring_AppendRaw(m_bstring_t data, const BSL_Data_t *
  */
 static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc_ChunkList_t chunklist, size_t *total)
 {
-    CHK_ARG_NONNULL(ctx);
-    CHK_ARG_NONNULL(chunklist);
-    CHK_ARG_NONNULL(total);
+    ASSERT_ARG_NONNULL(ctx);
+    ASSERT_ARG_NONNULL(chunklist);
+    ASSERT_ARG_NONNULL(total);
     int res;
 
     *total = 0;

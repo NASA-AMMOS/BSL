@@ -72,8 +72,8 @@ void BSL_SecurityActionSet_SetImmediate(BSL_SecurityActionSet_t *self, BSL_Polic
 
 int BSL_SecurityActionSet_AppendAction(BSL_SecurityActionSet_t *self, const BSL_SecurityAction_t *action)
 {
-    CHK_ARG_NONNULL(self);
-    CHK_ARG_NONNULL(action);
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(action);
     BSL_SecActionList_push_back(self->actions, *action);
     return BSL_SUCCESS;
 }

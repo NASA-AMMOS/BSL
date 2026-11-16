@@ -32,8 +32,8 @@
 
 int BSL_TextUtil_Base16_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool uppercase)
 {
-    CHK_ARG_NONNULL(out);
-    CHK_ARG_NONNULL(in);
+    ASSERT_ARG_NONNULL(out);
+    ASSERT_ARG_NONNULL(in);
 
     const uint8_t *in_curs = in->ptr;
     const uint8_t *in_end  = in_curs + in->len;
@@ -88,8 +88,8 @@ static int base16_decode_char(uint8_t chr)
 
 int BSL_TextUtil_Base16_Decode(BSL_Data_t *out, const char *ptr, size_t len)
 {
-    CHK_ARG_NONNULL(out);
-    CHK_ARG_NONNULL(ptr);
+    ASSERT_ARG_NONNULL(out);
+    ASSERT_ARG_NONNULL(ptr);
 
     if (len % 2 != 0)
     {
@@ -134,8 +134,8 @@ static const char *base64url_alphabet =
 
 int BSL_TextUtil_Base64_Encode(BSL_Data_t *out, const BSL_Data_t *in, bool useurl, bool usepad)
 {
-    CHK_ARG_NONNULL(out);
-    CHK_ARG_NONNULL(in);
+    ASSERT_ARG_NONNULL(out);
+    ASSERT_ARG_NONNULL(in);
 
     size_t         in_len = in->len;
     const uint8_t *curs   = in->ptr;
@@ -248,8 +248,8 @@ static int base64_decode_char(uint8_t chr)
 
 int BSL_TextUtil_Base64_Decode(BSL_Data_t *out, const char *ptr, size_t len)
 {
-    CHK_ARG_NONNULL(out);
-    CHK_ARG_NONNULL(ptr);
+    ASSERT_ARG_NONNULL(out);
+    ASSERT_ARG_NONNULL(ptr);
 
     size_t      in_len = len;
     const char *curs   = ptr;

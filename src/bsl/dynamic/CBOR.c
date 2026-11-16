@@ -34,8 +34,8 @@
 
 int BSL_CBOR_Encode_GetSize(size_t *needlen, BSL_CBOR_Encode_f func, const void *obj)
 {
-    CHK_ARG_NONNULL(needlen);
-    CHK_ARG_NONNULL(func);
+    ASSERT_ARG_NONNULL(needlen);
+    ASSERT_ARG_NONNULL(func);
 
     QCBOREncodeContext encoder;
     QCBOREncode_Init(&encoder, SizeCalculateUsefulBuf);
@@ -59,8 +59,8 @@ int BSL_CBOR_Encode_GetSize(size_t *needlen, BSL_CBOR_Encode_f func, const void 
 
 int BSL_CBOR_Encode_Twopass(BSL_Data_t *buf, BSL_CBOR_Encode_f func, const void *obj)
 {
-    CHK_ARG_NONNULL(buf);
-    CHK_ARG_NONNULL(func);
+    ASSERT_ARG_NONNULL(buf);
+    ASSERT_ARG_NONNULL(func);
 
     int    res;
     size_t need_size;
@@ -120,8 +120,8 @@ int BSL_CBOR_Encode_Twopass(BSL_Data_t *buf, BSL_CBOR_Encode_f func, const void 
 
 int BSL_CBOR_Decode(const BSL_Data_t *buf, BSL_CBOR_Decode_f func, const void *obj)
 {
-    CHK_ARG_NONNULL(buf);
-    CHK_ARG_NONNULL(func);
+    ASSERT_ARG_NONNULL(buf);
+    ASSERT_ARG_NONNULL(func);
 
     BSL_LOG_PLAINTEXT_PTR("CBOR data", obj, buf->ptr, buf->len);
 
@@ -146,8 +146,8 @@ int BSL_CBOR_Decode(const BSL_Data_t *buf, BSL_CBOR_Decode_f func, const void *o
 
 int BSL_CBOR_Compare_Int64(const int64_t *ltv, const int64_t *rtv)
 {
-    CHK_ARG_NONNULL(ltv);
-    CHK_ARG_NONNULL(rtv);
+    ASSERT_ARG_NONNULL(ltv);
+    ASSERT_ARG_NONNULL(rtv);
 
     const int lt_major = (*ltv >= 0) ? 0 : 1;
     const int rt_major = (*rtv >= 0) ? 0 : 1;

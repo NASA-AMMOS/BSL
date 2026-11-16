@@ -105,8 +105,8 @@ static int map_rfc9173_sha_variant_to_crypto(BSL_Crypto_SHAVariant_e *bsl_sha, i
  */
 int BSLX_BIB_InitFromSecOper(BSLX_BIB_t *self, const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
 {
-    CHK_ARG_NONNULL(self);
-    CHK_ARG_NONNULL(sec_oper);
+    ASSERT_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(sec_oper);
     memset(self, 0, sizeof(*self));
 
     self->bundle          = bundle;
@@ -241,8 +241,7 @@ void BSLX_BIB_Deinit(BSLX_BIB_t *self)
  */
 static int BSLX_BIB_GenIPPT(QCBOREncodeContext *enc, const BSLX_BIB_t *self)
 {
-    CHK_ARG_NONNULL(enc);
-    CHK_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(self);
 
     QCBOREncode_AddInt64(enc, self->ippt_scope);
 

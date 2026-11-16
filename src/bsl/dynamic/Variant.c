@@ -313,8 +313,8 @@ bool BSL_Variant_IsConsistent(const BSL_Variant_t *self)
 
 int BSL_Variant_Decode(QCBORDecodeContext *dec, BSL_Variant_t *var)
 {
-    CHK_ARG_NONNULL(dec);
-    CHK_ARG_NONNULL(var);
+    ASSERT_ARG_NONNULL(dec);
+    ASSERT_ARG_NONNULL(var);
 
     const size_t value_begin = QCBORDecode_Tell(dec);
 

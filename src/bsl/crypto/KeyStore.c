@@ -83,9 +83,9 @@ bool BSL_Crypto_CompareKeys(BSL_Crypto_KeyHandle_t hdl1, BSL_Crypto_KeyHandle_t 
     }
 
     BSL_Data_t key1_view;
-    ASSERT_PRECONDITION(BSL_SUCCESS == BSL_KeyStore_State.get_keymat(hdl1, &key1_view));
+    CHK_AS_BOOL(BSL_SUCCESS == BSL_KeyStore_State.get_keymat(hdl1, &key1_view));
     BSL_Data_t key2_view;
-    ASSERT_PRECONDITION(BSL_SUCCESS == BSL_KeyStore_State.get_keymat(hdl2, &key2_view));
+    CHK_AS_BOOL(BSL_SUCCESS == BSL_KeyStore_State.get_keymat(hdl2, &key2_view));
 
     return BSL_Crypto_Compare(key1_view.ptr, key1_view.len, key2_view.ptr, key2_view.len);
 }
@@ -115,8 +115,8 @@ int BSL_Crypto_GenKey(size_t key_length, BSL_Crypto_KeyHandle_t *key_out)
 
 int BSL_Crypto_LoadKey(const uint8_t *secret, size_t secret_len, BSL_Crypto_KeyHandle_t *key_out)
 {
-    CHK_PRECONDITION(BSL_KeyStore_State.new_key);
-    CHK_PRECONDITION(BSL_KeyStore_State.set_keymat);
+    ASSERT_PRECONDITION(BSL_KeyStore_State.new_key);
+    ASSERT_PRECONDITION(BSL_KeyStore_State.set_keymat);
     CHK_ARG_NONNULL(key_out);
     *key_out = NULL;
     CHK_ARG_EXPR(secret_len > 0);
@@ -150,7 +150,7 @@ int BSL_Crypto_GetRegistryKey(const BSL_Data_t *keyid, BSL_Crypto_KeyHandle_t *h
 {
     CHK_ARG_NONNULL(keyid);
     CHK_ARG_NONNULL(handle);
-    CHK_PRECONDITION(BSL_KeyStore_State.find_key);
+    ASSERT_PRECONDITION(BSL_KeyStore_State.find_key);
     return BSL_KeyStore_State.find_key(keyid, handle);
 }
 
@@ -158,6 +158,6 @@ int BSL_Crypto_GetKeyStatistics(BSL_Crypto_KeyHandle_t handle, BSL_Crypto_KeySta
 {
     CHK_ARG_NONNULL(handle);
     CHK_ARG_NONNULL(stats);
-    CHK_PRECONDITION(BSL_KeyStore_State.find_key);
+    ASSERT_PRECONDITION(BSL_KeyStore_State.find_key);
     return BSL_KeyStore_State.get_stats(handle, stats);
 }

@@ -100,7 +100,7 @@ M_DICT_DEF2(BSLP_PolicyNoRuleActionMap, BSL_PolicyLocation_e, M_BASIC_OPLIST, BS
 static bool BSLP_PolicyPredicate_IsConsistent(const BSLP_PolicyPredicate_t *self)
 {
     ASSERT_ARG_NONNULL(self);
-    ASSERT_ARG_EXPR(self->location >= BSL_POLICYLOCATION_APPIN && self->location <= BSL_POLICYLOCATION_CLOUT);
+    CHK_AS_BOOL(self->location >= BSL_POLICYLOCATION_APPIN && self->location <= BSL_POLICYLOCATION_CLOUT);
     ASSERT_ARG_NONNULL(self->dst_eid_pattern.handle);
     ASSERT_ARG_NONNULL(self->src_eid_pattern.handle);
     ASSERT_ARG_NONNULL(self->secsrc_eid_pattern.handle);
@@ -111,9 +111,9 @@ static bool BSLP_PolicyRule_IsConsistent(const BSLP_PolicyRule_t *self)
 {
     ASSERT_ARG_NONNULL(self);
     ASSERT_ARG_NONNULL(self->options);
-    ASSERT_ARG_EXPR(BSL_SECROLE_ISVALID(self->role));
-    ASSERT_ARG_EXPR(self->sec_block_type > 0);
-    ASSERT_ARG_EXPR(self->context_id != 0);
+    CHK_AS_BOOL(BSL_SECROLE_ISVALID(self->role));
+    CHK_AS_BOOL(self->sec_block_type > 0);
+    CHK_AS_BOOL(self->context_id != 0);
     return true;
 }
 
@@ -494,7 +494,7 @@ int BSLP_FinalizePolicy(void *user_data _U_, const BSL_SecurityActionSet_t *outp
 
 BSLP_PolicyProvider_t *BSLP_PolicyProvider_New(uint64_t pp_id)
 {
-    ASSERT_ARG_EXPR(pp_id > 0);
+    CHK_AS_BOOL(pp_id > 0);
 
     BSLP_PolicyProvider_t *pp = BSL_malloc(sizeof(BSLP_PolicyProvider_t));
     ASSERT_ARG_NONNULL(pp);
@@ -510,7 +510,7 @@ BSLP_PolicyProvider_t *BSLP_PolicyProvider_New(uint64_t pp_id)
 
 int BSLP_PolicyProvider_AddRule(BSLP_PolicyProvider_t *self, BSLP_PolicyRule_t *rule, BSLP_PolicyPredicate_t *predicate)
 {
-    CHK_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(self);
     if (!BSLP_PolicyRule_IsConsistent(rule) || !BSLP_PolicyPredicate_IsConsistent(predicate))
     {
         return BSL_ERR_ARG_INVALID;
@@ -634,7 +634,7 @@ void BSLP_PolicyPredicate_Move(BSLP_PolicyPredicate_t *self, BSLP_PolicyPredicat
 bool BSLP_PolicyPredicate_IsMatch(const BSLP_PolicyPredicate_t *self, BSL_PolicyLocation_e location,
                                   const BSL_HostEID_t *src_eid, const BSL_HostEID_t *dst_eid)
 {
-    ASSERT_ARG_EXPR(BSLP_PolicyPredicate_IsConsistent(self));
+    CHK_AS_BOOL(BSLP_PolicyPredicate_IsConsistent(self));
 
     bool is_location_match    = location == self->location;
     bool is_src_pattern_match = BSL_HostEIDPattern_IsMatch(&self->src_eid_pattern, src_eid);
@@ -673,7 +673,7 @@ int BSLP_PolicyRule_InitFrom(BSLP_PolicyRule_t *self, int64_t rule_id, const cha
 
 int BSLP_PolicyRule_SetCorrelation(BSLP_PolicyRule_t *self, uint64_t correlation_id)
 {
-    CHK_ARG_NONNULL(self);
+    ASSERT_ARG_NONNULL(self);
     if (correlation_id <= 0)
     {
         return BSL_ERR_PROPERTY_CHECK_FAILED;
@@ -716,7 +716,7 @@ void BSLP_PolicyRule_Move(BSLP_PolicyRule_t *self, BSLP_PolicyRule_t *src)
 
 BSL_Variant_t *BSLP_PolicyRule_AddOption(BSLP_PolicyRule_t *self, int64_t opt_id)
 {
-    ASSERT_ARG_EXPR(BSLP_PolicyRule_IsConsistent(self));
+    CHK_AS_BOOL(BSLP_PolicyRule_IsConsistent(self));
 
     return BSLB_VariantPtrMap_add(self->options, opt_id);
 }

@@ -328,8 +328,8 @@ void BSLX_CoseMsg_Encrypt0_Deinit(BSLX_CoseMsg_Encrypt0_t *obj)
 
 int BSLX_CoseMsg_Encrypt0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Encrypt0_t *obj)
 {
-    CHK_ARG_NONNULL(enc);
-    CHK_ARG_NONNULL(obj);
+    ASSERT_ARG_NONNULL(enc);
+    ASSERT_ARG_NONNULL(obj);
 
     QCBOREncode_OpenArray(enc);
 
@@ -343,8 +343,8 @@ int BSLX_CoseMsg_Encrypt0_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Enc
 
 int BSLX_CoseMsg_Encrypt0_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt0_t *obj)
 {
-    CHK_ARG_NONNULL(dec);
-    CHK_ARG_NONNULL(obj);
+    ASSERT_ARG_NONNULL(dec);
+    ASSERT_ARG_NONNULL(obj);
 
     QCBORDecode_EnterArray(dec, NULL);
 
@@ -383,8 +383,8 @@ void BSLX_CoseMsg_Recipient_Deinit(BSLX_CoseMsg_Recipient_t *obj)
 
 int BSLX_CoseMsg_Recipient_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Recipient_t *obj)
 {
-    CHK_ARG_NONNULL(enc);
-    CHK_ARG_NONNULL(obj);
+    ASSERT_ARG_NONNULL(enc);
+    ASSERT_ARG_NONNULL(obj);
 
     QCBOREncode_OpenArray(enc);
 
@@ -398,8 +398,8 @@ int BSLX_CoseMsg_Recipient_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Re
 
 int BSLX_CoseMsg_Recipient_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Recipient_t *obj)
 {
-    CHK_ARG_NONNULL(dec);
-    CHK_ARG_NONNULL(obj);
+    ASSERT_ARG_NONNULL(dec);
+    ASSERT_ARG_NONNULL(obj);
 
     QCBORDecode_EnterArray(dec, NULL);
 
@@ -511,8 +511,8 @@ void BSLX_CoseMsg_Mac_Deinit(BSLX_CoseMsg_Mac_t *obj)
 
 int BSLX_CoseMsg_Mac_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac_t *obj)
 {
-    CHK_ARG_NONNULL(enc);
-    CHK_ARG_NONNULL(obj);
+    ASSERT_ARG_NONNULL(enc);
+    ASSERT_ARG_NONNULL(obj);
 
     QCBOREncode_OpenArray(enc);
 
@@ -530,8 +530,8 @@ int BSLX_CoseMsg_Mac_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Mac_t *o
 
 int BSLX_CoseMsg_Mac_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Mac_t *obj)
 {
-    CHK_ARG_NONNULL(dec);
-    CHK_ARG_NONNULL(obj);
+    ASSERT_ARG_NONNULL(dec);
+    ASSERT_ARG_NONNULL(obj);
 
     QCBORDecode_EnterArray(dec, NULL);
 
@@ -589,8 +589,8 @@ void BSLX_CoseMsg_Encrypt_Deinit(BSLX_CoseMsg_Encrypt_t *obj)
 
 int BSLX_CoseMsg_Encrypt_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Encrypt_t *obj)
 {
-    CHK_ARG_NONNULL(enc);
-    CHK_ARG_NONNULL(obj);
+    ASSERT_ARG_NONNULL(enc);
+    ASSERT_ARG_NONNULL(obj);
 
     QCBOREncode_OpenArray(enc);
 
@@ -606,8 +606,8 @@ int BSLX_CoseMsg_Encrypt_Encode(QCBOREncodeContext *enc, const BSLX_CoseMsg_Encr
 
 int BSLX_CoseMsg_Encrypt_Decode(QCBORDecodeContext *dec, BSLX_CoseMsg_Encrypt_t *obj)
 {
-    CHK_ARG_NONNULL(dec);
-    CHK_ARG_NONNULL(obj);
+    ASSERT_ARG_NONNULL(dec);
+    ASSERT_ARG_NONNULL(obj);
 
     QCBORDecode_EnterArray(dec, NULL);
 
