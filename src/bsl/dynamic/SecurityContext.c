@@ -34,6 +34,54 @@
 
 #include "bsl/BPSecLib_Private.h"
 
+/**
+ * Validate RFC 9172 constraints, common to all security contexts.
+ * Specific checks include:
+ * - BCB cannot target primary block
+ * - BIB cannot target another BIB or BCB
+ * - BCB Cannot target another BCB
+ */
+static bool Validate_RFC9172_Constraints_SecOper(const BSL_BundleRef_t *bundle, const BSL_SecOper_t *sec_oper)
+{
+    if (!BSL_SecOper_IsRoleSource(sec_oper))
+    {
+        return true;
+    }
+
+    const uint64_t target_block_num = BSL_SecOper_GetTargetBlockNum(sec_oper);
+    if (BSL_SecOper_IsBCB(sec_oper) && target_block_num == BSL_BLOCK_TYPE_PRIMARY)
+    {
+        BSL_LOG_ERR("Invalid SecOp: BCB Cannot target primary block");
+        return false;
+    }
+
+    if (target_block_num > 0)
+    {
+        BSL_CanonicalBlock_t target_block;
+        if (BSL_SUCCESS != BSL_BundleCtx_GetBlockMetadata(bundle, target_block_num, &target_block))
+        {
+            // Leave host metadata errors to the normal backend/host validation path.
+            BSL_LOG_ERR("Error getting target metadata on SecOp validation");
+            return true;
+        }
+
+        if (BSL_SecOper_IsBIB(sec_oper)
+            && (target_block.type_code == BSL_BLOCK_TYPE_BIB || target_block.type_code == BSL_BLOCK_TYPE_BCB))
+        {
+            BSL_LOG_ERR("Invalid SecOp: BIB Cannot target another BIB/BCB");
+            return false;
+        }
+
+        if (BSL_SecOper_IsBCB(sec_oper) && target_block.type_code == BSL_BLOCK_TYPE_BCB)
+        {
+            BSL_LOG_ERR("Invalid SecOp: BCB Cannot target another BCB");
+            return false;
+        }
+    }
+
+    return true;
+}
+
 static int Encode_ASB(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundle, uint64_t blk_num, const BSL_AbsSecBlock_t *asb)
 {
     BSL_Data_t asb_data;
@@ -789,6 +837,12 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                     secop_invalid_count++;
                 }
                 BSL_PrimaryBlock_deinit(&primary_block);
+            }
+
+            // Validate sec oper against common RFC9172 constraints
+            if (!Validate_RFC9172_Constraints_SecOper(bundle, sec_oper))
+            {
+                secop_invalid_count++;
             }
 
             // context-specific validation
