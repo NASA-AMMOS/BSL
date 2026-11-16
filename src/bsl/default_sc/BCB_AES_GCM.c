@@ -407,11 +407,14 @@ int BSLX_BCB_Encrypt(BSLX_BCB_t *bcb_context)
                 output_len += tag_len;
             }
         }
-        btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num, output_len);
-        if (!btsd_write)
+        if (retval == BSL_SUCCESS)
         {
-            BSL_LOG_ERR("Failed to construct writer");
-            retval = BSL_ERR_HOST_CALLBACK_FAILED;
+            btsd_write = BSL_BundleCtx_WriteBTSD(bcb_context->bundle, bcb_context->target_block.block_num, output_len);
+            if (!btsd_write)
+            {
+                BSL_LOG_ERR("Failed to construct writer");
+                retval = BSL_ERR_HOST_CALLBACK_FAILED;
+            }
         }
     }
 
