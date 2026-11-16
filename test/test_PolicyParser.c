@@ -79,6 +79,7 @@ void test_PolicyParser_ReadConfigValid(const char *filename, int rule_count)
     TEST_ASSERT_EQUAL_size_t(rule_count, BSLP_PolicyProvider_RuleCount(policy));
 }
 
+// BSL_70: invalid policy statements are rejected by sample pp
 TEST_CASE("test_PolicyParser-data/unknownSC-99.json")
 void test_PolicyParser_ReadConfigInvalid(const char *filename)
 {

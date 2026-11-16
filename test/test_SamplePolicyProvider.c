@@ -110,7 +110,13 @@ void test_SamplePolicyProvider_WildcardPolicyRuleVerifiesBIB(void)
     // Confirm the block ID of the BIB block is 2.
     // TEST_ASSERT_EQUAL(2, sec_oper.sec_block_num);
 
-    // TODO - Test security parameters.
+    // Confirm the security operation contains the parameters from the rule.
+    TEST_ASSERT_EQUAL_INT64(1, sec_oper.context_id);
+    TEST_ASSERT_EQUAL(BSL_SECROLE_VERIFIER, sec_oper._role);
+    TEST_ASSERT_EQUAL(BSL_SECBLOCKTYPE_BIB, sec_oper._service_type);
+    TEST_ASSERT_EQUAL(BSL_POLICYACTION_DROP_BUNDLE, BSL_SecOper_GetPolicyAction(&sec_oper));
+    TEST_ASSERT_EQUAL_UINT64(0, sec_oper.correlation_id);
+    TEST_ASSERT_EQUAL(0, BSL_SecOper_CountOptions(&sec_oper));
 
     BSL_SecOper_Deinit(&sec_oper);
     BSLP_PolicyRule_Deinit(&rule);

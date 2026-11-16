@@ -478,13 +478,12 @@ typedef enum
 #define BSL_SECROLE_ISVALID(role_value) (((role_value) >= BSL_SECROLE_SOURCE) && ((role_value) <= BSL_SECROLE_ACCEPTOR))
 
 /**
- * RFC 9172-specified block type codes for BIB and BCB.
- * @todo Consider making an RFC9172 header file.
+ * Block type codes for BIB and BCB @cite rfc9172.
  */
 typedef enum
 {
-    BSL_SECBLOCKTYPE_BIB = 11, ///< RFC9172 code for BIB
-    BSL_SECBLOCKTYPE_BCB = 12  ///< RFC9172 code for BCB
+    BSL_SECBLOCKTYPE_BIB = 11, ///< block type code for BIB @cite rfc9172
+    BSL_SECBLOCKTYPE_BCB = 12  ///< block type code for BCB @cite rfc9172
 } BSL_SecBlockType_e;
 
 /// @brief Helper to determine if a given block type is security

@@ -22,8 +22,6 @@
 /** @file PublicInterfaceImpl.c
  * @ingroup backend_dyn
  * Implementation of the dynamic backend Public API.
- *
- * @todo MAJOR Complete implementation for ApplySecurity so it can drop blocks or bundles as-needed.
  */
 #include "PublicInterfaceImpl.h"
 

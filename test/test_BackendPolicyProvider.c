@@ -33,6 +33,7 @@
 
 #include <bsl/BPSecLib_Private.h>
 #include <bsl/BPSecLib_Public.h>
+#include <bsl/default_sc/DefaultSecContext.h>
 #include <bsl/sample_pp/SamplePolicyProvider.h>
 #include <bsl/mock_bpa/MockBPA.h>
 
@@ -160,16 +161,47 @@ void test_PolicyProvider_Inspect_RFC9173_BIB(void)
     const BSL_SecurityAction_t *act = BSL_SecurityActionSet_GetActionAtIndex(&action_set, 0);
     TEST_ASSERT_EQUAL(BSL_SAMPLE_PP_ID, act->pp_id);
     TEST_ASSERT_EQUAL(1, BSL_SecurityAction_CountSecOpers(act));
-    TEST_ASSERT_EQUAL(4, BSL_SecOper_CountOptions(BSL_SecurityAction_GetSecOperAtIndex(act, 0)));
+
+    const BSL_SecOper_t *sec_oper = BSL_SecurityAction_GetSecOperAtIndex(act, 0);
+    TEST_ASSERT_EQUAL_INT64(RFC9173_TestVectors_AppendixA1.bib_asb_context_id, sec_oper->context_id);
+    TEST_ASSERT_EQUAL_UINT64(RFC9173_TestVectors_AppendixA1.bib_asb_sec_target,
+                             BSL_SecOper_GetTargetBlockNum(sec_oper));
+    TEST_ASSERT_TRUE(BSL_SecOper_IsBIB(sec_oper));
+    TEST_ASSERT_TRUE(BSL_SecOper_IsRoleVerifier(sec_oper));
+    TEST_ASSERT_EQUAL(BSL_POLICYACTION_DROP_BUNDLE, BSL_SecOper_GetPolicyAction(sec_oper));
+    TEST_ASSERT_EQUAL(4, BSL_SecOper_CountOptions(sec_oper));
+
+    int64_t option_value;
+    TEST_ASSERT_NOT_NULL(BSL_SecOper_FindOption(sec_oper, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key));
+    TEST_ASSERT_EQUAL(0, BSL_Variant_GetAsInt64(
+                             BSL_SecOper_FindOption(sec_oper, RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_key),
+                             &option_value));
+    TEST_ASSERT_EQUAL_INT64(RFC9173_TestVectors_AppendixA1.bib_asb_sha_variant_value, option_value);
+
+    TEST_ASSERT_NOT_NULL(BSL_SecOper_FindOption(sec_oper, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key));
+    TEST_ASSERT_EQUAL(0, BSL_Variant_GetAsInt64(
+                             BSL_SecOper_FindOption(sec_oper, RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_key),
+                             &option_value));
+    TEST_ASSERT_EQUAL_INT64(RFC9173_TestVectors_AppendixA1.bib_asb_scope_flags_value, option_value);
+
+    const BSL_Variant_t *key_option = BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_KEY_ID);
+    TEST_ASSERT_NOT_NULL(key_option);
+    const char *key_id;
+    TEST_ASSERT_EQUAL(0, BSL_Variant_GetAsTextstr(key_option, &key_id));
+    TEST_ASSERT_EQUAL_STRING(RFC9173_EXAMPLE_A1_KEY, key_id);
+
+    TEST_ASSERT_NOT_NULL(BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_USE_KEY_WRAP));
+    TEST_ASSERT_EQUAL(
+        0, BSL_Variant_GetAsInt64(BSL_SecOper_FindOption(sec_oper, BSLX_BIB_OPT_USE_KEY_WRAP), &option_value));
+    TEST_ASSERT_EQUAL_INT64(0, option_value);
 
     BSL_SecurityActionSet_Deinit(&action_set);
 }
 
-// TODO - test with also setting sec pararms and other things and test the RFC 9173 things.
-
 /**
  * 2 PPs: First has role to source BIB over primary,  second has role to source BIB over payloads
  * Assert actions have correct pp_ids
+ * BSL_69 satisfied by this
  */
 void test_MultiplePolicyProviders(void)
 {
