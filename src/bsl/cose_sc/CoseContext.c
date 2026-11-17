@@ -94,9 +94,8 @@ static const int64_t cose_enc_cnt_algs[] = {
  * @note These must be sorted for @c bsearch() to work.
  */
 static const int64_t cose_sign_cnt_algs[] = {
-    BSLX_COSEMSG_ALG_ESP512,
-    BSLX_COSEMSG_ALG_ESP384,
-    BSLX_COSEMSG_ALG_ESP256,
+    BSLX_COSEMSG_ALG_ESP512,  BSLX_COSEMSG_ALG_ESP384,  BSLX_COSEMSG_ALG_MLDSA87,
+    BSLX_COSEMSG_ALG_MLDSA65, BSLX_COSEMSG_ALG_MLDSA44, BSLX_COSEMSG_ALG_ESP256,
 };
 #if 0
 /// Acceptable recipient algorithms for MAC and Encrypt
@@ -2590,6 +2589,15 @@ static void BSLX_CoseSc_Signature_TBS(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Hea
         case BSLX_COSEMSG_ALG_ESP512:
             *bsl_sig_var = BSL_CRYPTO_ECDSA_P521_SHA_512;
             break;
+        case BSLX_COSEMSG_ALG_MLDSA44:
+            *bsl_sig_var = BSL_CRYPTO_MLDSA_44;
+            break;
+        case BSLX_COSEMSG_ALG_MLDSA65:
+            *bsl_sig_var = BSL_CRYPTO_MLDSA_65;
+            break;
+        case BSLX_COSEMSG_ALG_MLDSA87:
+            *bsl_sig_var = BSL_CRYPTO_MLDSA_87;
+            break;
         default:
             BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, ctx->tgt_alg);
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
@@ -2642,7 +2650,7 @@ static void BSLX_CoseSc_Signature_Sign(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_He
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
-            BSL_LOG_ERR("Failed to construct MAC context");
+            BSL_LOG_ERR("Failed to construct sign context");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
         // GCOV_EXCL_STOP
@@ -2746,7 +2754,7 @@ static void BSLX_CoseSc_Signature_Verify(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_
         // GCOV_EXCL_START
         if (BSL_SUCCESS != res)
         {
-            BSL_LOG_ERR("Failed to construct MAC context");
+            BSL_LOG_ERR("Failed to construct verify context");
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         }
         // GCOV_EXCL_STOP

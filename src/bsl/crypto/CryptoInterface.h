@@ -396,7 +396,23 @@ typedef enum
     BSL_CRYPTO_ECDSA_P384_SHA_384,
     /// ECDSA P521 with SHA2-512 digest
     BSL_CRYPTO_ECDSA_P521_SHA_512,
+    /// ML-DSA-44
+    BSL_CRYPTO_MLDSA_44,
+    /// ML-DSA-65
+    BSL_CRYPTO_MLDSA_65,
+    /// ML-DSA-87
+    BSL_CRYPTO_MLDSA_87,
 } BSL_Crypto_SignVariant_t;
+
+/** Mode of algorithm operation
+ */
+typedef enum
+{
+    /// Direct use of sequential sign/verify interface
+    BSL_CRYPTO_SIGNMODE_SEQUENTIAL,
+    /// Indirect sign/verify of external hash value
+    BSL_CRYPTO_SIGNMODE_EXTHASH,
+} BSL_Crypto_SignMode_t;
 
 /**
  * Struct def for signature (signing or verification) context
@@ -405,8 +421,12 @@ typedef struct BSL_SigCtx_s
 {
     /// Signature variant of context
     BSL_Crypto_SignVariant_t variant;
+    /// Internal mode of signing API
+    BSL_Crypto_SignMode_t mode;
     /// pointer to library specific data
     BSL_Crypto_LibHandle_t libhandle;
+    /// pointer to library specific context
+    BSL_Crypto_LibHandle_t libctx;
     /// Key handle used by context
     BSL_Crypto_KeyHandle_t keyhandle;
     /// Derived internal coordinate length in bytes
