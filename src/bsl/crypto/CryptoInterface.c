@@ -624,7 +624,8 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
             break;
         case BSL_CRYPTO_ECDSA_P521_SHA_512:
             ctx->mode    = BSL_CRPYTO_SIGNMODE_SEQUENTIAL;
-            alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P521;            *digest_name = SN_sha512;
+            alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P521;
+            *digest_name = SN_sha512;
             break;
         case BSL_CRYPTO_MLDSA_44:
         case BSL_CRYPTO_MLDSA_65:
