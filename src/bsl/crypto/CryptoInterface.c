@@ -590,15 +590,19 @@ void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
 
 static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **digest_name)
 {
+	int64_t alg_need_crv; // fully specified algorithm curve
     switch (ctx->variant)
     {
         case BSL_CRYPTO_ECDSA_P256_SHA_256:
+        	alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P256;
             *digest_name = SN_sha256;
             break;
         case BSL_CRYPTO_ECDSA_P384_SHA_384:
+        	alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P384;
             *digest_name = SN_sha384;
             break;
         case BSL_CRYPTO_ECDSA_P521_SHA_512:
+        	alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P521;
             *digest_name = SN_sha512;
             break;
             // GCOV_EXCL_START
@@ -618,19 +622,20 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
     CHK_PRECONDITION(key_crv_var);
     int64_t key_crv;
     CHK_PRECONDITION(BSL_SUCCESS == BSL_Variant_GetAsInt64(key_crv_var, &key_crv));
+    CHK_PRECONDITION(key_crv == alg_need_crv);
 
     const char *grp_name = NULL;
     switch (key_crv)
     {
-        case 1:
+        case BSL_CRYPTO_KEYPARAM_CRV_P256:
             grp_name       = "P-256";
             ctx->coord_len = 32;
             break;
-        case 2:
+        case BSL_CRYPTO_KEYPARAM_CRV_P384:
             grp_name       = "P-384";
             ctx->coord_len = 48;
             break;
-        case 3:
+        case BSL_CRYPTO_KEYPARAM_CRV_P521:
             grp_name       = "P-521";
             ctx->coord_len = 66;
             break;
