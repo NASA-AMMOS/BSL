@@ -409,9 +409,9 @@ typedef enum
 typedef enum
 {
     /// Direct use of sequential sign/verify interface
-    BSL_CRPYTO_SIGNMODE_SEQUENTIAL,
+    BSL_CRYPTO_SIGNMODE_SEQUENTIAL,
     /// Indirect sign/verify of external hash value
-    BSL_CRPYTO_SIGNMODE_EXTHASH,
+    BSL_CRYPTO_SIGNMODE_EXTHASH,
 } BSL_Crypto_SignMode_t;
 
 /**

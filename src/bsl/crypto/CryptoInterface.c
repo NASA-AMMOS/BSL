@@ -613,17 +613,17 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
     switch (ctx->variant)
     {
         case BSL_CRYPTO_ECDSA_P256_SHA_256:
-            ctx->mode    = BSL_CRPYTO_SIGNMODE_SEQUENTIAL;
+            ctx->mode    = BSL_CRYPTO_SIGNMODE_SEQUENTIAL;
             alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P256;
             *digest_name = SN_sha256;
             break;
         case BSL_CRYPTO_ECDSA_P384_SHA_384:
-            ctx->mode    = BSL_CRPYTO_SIGNMODE_SEQUENTIAL;
+            ctx->mode    = BSL_CRYPTO_SIGNMODE_SEQUENTIAL;
             alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P384;
             *digest_name = SN_sha384;
             break;
         case BSL_CRYPTO_ECDSA_P521_SHA_512:
-            ctx->mode    = BSL_CRPYTO_SIGNMODE_SEQUENTIAL;
+            ctx->mode    = BSL_CRYPTO_SIGNMODE_SEQUENTIAL;
             alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P521;
             *digest_name = SN_sha512;
             break;
@@ -632,11 +632,12 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
         case BSL_CRYPTO_MLDSA_87:
         {
 #if OPENSSL_CAN_MLDSA // guard use of define names
-            ctx->mode = BSL_CRPYTO_SIGNMODE_EXTHASH;
+            ctx->mode = BSL_CRYPTO_SIGNMODE_EXTHASH;
             // digest for data, not signature name
             *digest_name = SN_shake256;
 
             BSL_Crypto_ExtHash_Data_t *libctx = BSL_malloc(sizeof(BSL_Crypto_ExtHash_Data_t));
+            ASSERT_PROPERTY(libctx != NULL);
             memset(libctx, 0, sizeof(BSL_Crypto_ExtHash_Data_t));
             // actual data
             libctx->nonce_deterministic = nonce_deterministic;
@@ -771,6 +772,7 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
     else if (key_kty == BSL_CRYPTO_KEYPARAM_TYPE_AKP)
     {
         const BSL_Crypto_ExtHash_Data_t *libctx = ctx->libctx;
+        CHK_PRECONDITION(libctx);
 
         const BSL_Variant_t *key_pub_var =
             BSL_KeyStore_State.get_parameter(ctx->keyhandle, BSL_CRYPTO_KEYPARAM_AKP_PUB);
@@ -838,33 +840,50 @@ static int BSL_SigCtx_MldsaPrep(EVP_MD_CTX *mdctx, EVP_PKEY *key)
     CHK_PRECONDITION(md);
 
     // Compute key digest "tr"
-    if (1 != (res = EVP_DigestInit_ex2(mdctx, md, NULL)))
+    res = EVP_DigestInit_ex2(mdctx, md, NULL);
+    // GCOV_EXCL_START
+    if (1 != res)
     {
+        EVP_MD_free(md);
         return res;
     }
+    // GCOV_EXCL_STOP
     {
         size_t publen;
-        if (1 != (res = EVP_PKEY_get_octet_string_param(key, OSSL_PKEY_PARAM_PUB_KEY, NULL, 0, &publen)))
+        res = EVP_PKEY_get_octet_string_param(key, OSSL_PKEY_PARAM_PUB_KEY, NULL, 0, &publen);
+        // GCOV_EXCL_START
+        if (1 != res)
         {
+            EVP_MD_free(md);
             return res;
         }
-        uint8_t *pubdata = malloc(publen);
+        // GCOV_EXCL_STOP
+        uint8_t *pubdata = BSL_malloc(publen);
+        ASSERT_PROPERTY(pubdata != NULL);
         EVP_PKEY_get_octet_string_param(key, OSSL_PKEY_PARAM_PUB_KEY, pubdata, publen, &publen);
 
         res = EVP_DigestUpdate(mdctx, pubdata, publen);
-        free(pubdata);
+        BSL_free(pubdata);
+        // GCOV_EXCL_START
         if (1 != res)
         {
+            EVP_MD_free(md);
             return res;
         }
+        // GCOV_EXCL_STOP
     }
 
     uint8_t      tr_val[MLDSA_SHAKE256_SIZE];
     unsigned int tr_len = MLDSA_SHAKE256_SIZE;
-    if (1 != (res = EVP_DigestFinalXOF(mdctx, tr_val, tr_len)))
+    // actual tr output
+    res = EVP_DigestFinalXOF(mdctx, tr_val, tr_len);
+    // GCOV_EXCL_START
+    if (1 != res)
     {
+        EVP_MD_free(md);
         return res;
     }
+    // GCOV_EXCL_STOP
 
     // Start of message digest "mu"
     res = EVP_DigestInit_ex2(mdctx, md, NULL);
@@ -912,7 +931,7 @@ int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL
     ctx->libhandle = mdctx;
 
     int res = 0;
-    if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
+    if (ctx->mode == BSL_CRYPTO_SIGNMODE_SEQUENTIAL)
     {
 #if OPENSSL_CAN_ECDSA_DETERMINISTIC
         unsigned int nonce_type = nonce_deterministic ? 1 : 0;
@@ -934,7 +953,7 @@ int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL
         // mdctx keeps a key reference
         EVP_PKEY_free(key);
     }
-    else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
+    else if (ctx->mode == BSL_CRYPTO_SIGNMODE_EXTHASH)
     {
         BSL_Crypto_ExtHash_Data_t *libctx = ctx->libctx;
         // keep reference for finalize
@@ -971,12 +990,12 @@ int BSL_SigCtxSign_DigestBuffer(BSL_SigCtx_t *ctx, const void *data, size_t data
 
     BSL_LOG_PLAINTEXT_PTR("data in", ctx, data, data_len);
     int res = 0;
-    if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
+    if (ctx->mode == BSL_CRYPTO_SIGNMODE_SEQUENTIAL)
     {
         res = EVP_DigestSignUpdate(ctx->libhandle, data, data_len);
         BSL_LOG_DEBUG("EVP_DigestSignUpdate took %zu bytes, return %d", data_len, res);
     }
-    else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
+    else if (ctx->mode == BSL_CRYPTO_SIGNMODE_EXTHASH)
     {
         res = EVP_DigestUpdate(ctx->libhandle, data, data_len);
         BSL_LOG_DEBUG("EVP_DigestUpdate took %zu bytes, return %d", data_len, res);
@@ -1005,12 +1024,12 @@ int BSL_SigCtxSign_DigestSeq(BSL_SigCtx_t *ctx, BSL_SeqReader_t *reader)
 
         BSL_LOG_PLAINTEXT_PTR("data in", ctx, ctx->in_buf.ptr, block_size);
         int res = 0;
-        if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
+        if (ctx->mode == BSL_CRYPTO_SIGNMODE_SEQUENTIAL)
         {
             res = EVP_DigestSignUpdate(ctx->libhandle, ctx->in_buf.ptr, block_size);
             BSL_LOG_DEBUG("EVP_DigestSignUpdate took %zu bytes, return %d", block_size, res);
         }
-        else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
+        else if (ctx->mode == BSL_CRYPTO_SIGNMODE_EXTHASH)
         {
             res = EVP_DigestUpdate(ctx->libhandle, ctx->in_buf.ptr, block_size);
             BSL_LOG_DEBUG("EVP_DigestUpdate took %zu bytes, return %d", block_size, res);
@@ -1029,7 +1048,7 @@ int BSL_SigCtxSign_Finalize(BSL_SigCtx_t *ctx, BSL_Data_t *signature)
     ASSERT_ARG_NONNULL(signature);
 
     int res = 0;
-    if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
+    if (ctx->mode == BSL_CRYPTO_SIGNMODE_SEQUENTIAL)
     {
         // get the needed tag size
         size_t sig_size;
@@ -1072,7 +1091,7 @@ int BSL_SigCtxSign_Finalize(BSL_SigCtx_t *ctx, BSL_Data_t *signature)
             ECDSA_SIG_free(ecdsa_sig);
         }
     }
-    else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
+    else if (ctx->mode == BSL_CRYPTO_SIGNMODE_EXTHASH)
     {
 #if OPENSSL_CAN_MLDSA // guard use of define names
         const BSL_Crypto_ExtHash_Data_t *libctx = ctx->libctx;
@@ -1128,7 +1147,10 @@ void BSL_SigCtxSign_Deinit(BSL_SigCtx_t *ctx)
         EVP_PKEY_free(libctx->key);
         BSL_free(libctx);
     }
-    BSL_KeyStore_State.release_key(ctx->keyhandle);
+    if (ctx->keyhandle)
+    {
+        BSL_KeyStore_State.release_key(ctx->keyhandle);
+    }
 
     memset(ctx, 0, sizeof(BSL_SigCtx_t));
 }
@@ -1161,13 +1183,13 @@ int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, B
     ctx->libhandle = mdctx;
 
     int res = 0;
-    if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
+    if (ctx->mode == BSL_CRYPTO_SIGNMODE_SEQUENTIAL)
     {
         res = EVP_DigestVerifyInit_ex(mdctx, NULL, digest_name, NULL, NULL, key, NULL);
         // mdctx keeps a key reference
         EVP_PKEY_free(key);
     }
-    else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
+    else if (ctx->mode == BSL_CRYPTO_SIGNMODE_EXTHASH)
     {
         BSL_Crypto_ExtHash_Data_t *libctx = ctx->libctx;
         // keep reference for finalize
@@ -1204,12 +1226,12 @@ int BSL_SigCtxVerify_DigestBuffer(BSL_SigCtx_t *ctx, const void *data, size_t da
 
     BSL_LOG_PLAINTEXT_PTR("data in", ctx, data, data_len);
     int res = 0;
-    if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
+    if (ctx->mode == BSL_CRYPTO_SIGNMODE_SEQUENTIAL)
     {
         res = EVP_DigestVerifyUpdate(ctx->libhandle, data, data_len);
         BSL_LOG_DEBUG("EVP_DigestVerifyUpdate took %zu bytes, return %d", data_len, res);
     }
-    else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
+    else if (ctx->mode == BSL_CRYPTO_SIGNMODE_EXTHASH)
     {
         res = EVP_DigestUpdate(ctx->libhandle, data, data_len);
         BSL_LOG_DEBUG("EVP_DigestUpdate took %zu bytes, return %d", data_len, res);
@@ -1238,12 +1260,12 @@ int BSL_SigCtxVerify_DigestSeq(BSL_SigCtx_t *ctx, BSL_SeqReader_t *reader)
 
         BSL_LOG_PLAINTEXT_PTR("data in", ctx, ctx->in_buf.ptr, block_size);
         int res = 0;
-        if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
+        if (ctx->mode == BSL_CRYPTO_SIGNMODE_SEQUENTIAL)
         {
             res = EVP_DigestVerifyUpdate(ctx->libhandle, ctx->in_buf.ptr, block_size);
             BSL_LOG_DEBUG("EVP_DigestVerifyUpdate took %zu bytes, return %d", block_size, res);
         }
-        else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
+        else if (ctx->mode == BSL_CRYPTO_SIGNMODE_EXTHASH)
         {
             res = EVP_DigestUpdate(ctx->libhandle, ctx->in_buf.ptr, block_size);
             BSL_LOG_DEBUG("EVP_DigestUpdate took %zu bytes, return %d", block_size, res);
@@ -1262,7 +1284,7 @@ int BSL_SigCtxVerify_Finalize(BSL_SigCtx_t *ctx, const BSL_Data_t *signature)
     ASSERT_ARG_NONNULL(signature);
 
     int res = 0;
-    if (ctx->mode == BSL_CRPYTO_SIGNMODE_SEQUENTIAL)
+    if (ctx->mode == BSL_CRYPTO_SIGNMODE_SEQUENTIAL)
     {
         const BSL_Data_t *catsig = signature;
         CHK_PRECONDITION(catsig->len == 2 * ctx->coord_len);
@@ -1296,7 +1318,7 @@ int BSL_SigCtxVerify_Finalize(BSL_SigCtx_t *ctx, const BSL_Data_t *signature)
         }
         BSL_Data_Deinit(&dersig);
     }
-    else if (ctx->mode == BSL_CRPYTO_SIGNMODE_EXTHASH)
+    else if (ctx->mode == BSL_CRYPTO_SIGNMODE_EXTHASH)
     {
 #if OPENSSL_CAN_MLDSA // guard use of define names
         const BSL_Crypto_ExtHash_Data_t *libctx = ctx->libctx;
