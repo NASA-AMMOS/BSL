@@ -396,7 +396,7 @@ typedef enum
     BSL_CRYPTO_ECDSA_P384_SHA_384,
     /// ECDSA P521 with SHA2-512 digest
     BSL_CRYPTO_ECDSA_P521_SHA_512,
-} BSL_Crypto_SignVariant_e;
+} BSL_Crypto_SignVariant_t;
 
 /**
  * Struct def for signature (signing or verification) context
@@ -404,7 +404,7 @@ typedef enum
 typedef struct BSL_SigCtx_s
 {
     /// Signature variant of context
-    BSL_Crypto_SignVariant_e variant;
+    BSL_Crypto_SignVariant_t variant;
     /// pointer to library specific data
     BSL_Crypto_LibHandle_t libhandle;
     /// Key handle used by context
@@ -433,7 +433,7 @@ typedef struct BSL_SigCtx_s
  * @return 0 if successful
  */
 BSL_REQUIRE_CHECK
-int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant,
+int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_t variant,
                         bool nonce_deterministic);
 
 /**
@@ -477,7 +477,7 @@ void BSL_SigCtxSign_Deinit(BSL_SigCtx_t *ctx);
  * @return 0 if successful
  */
 BSL_REQUIRE_CHECK
-int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant);
+int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_t variant);
 
 /**
  * Input data to signature context.

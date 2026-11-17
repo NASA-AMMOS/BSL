@@ -2577,7 +2577,7 @@ static void BSLX_CoseSc_Encrypt_VerifyAccept(BSLX_CoseSc_t *ctx, const BSL_Varia
  */
 static void BSLX_CoseSc_Signature_TBS(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Headers_t *body,
                                       const BSLX_CoseMsg_Headers_t *signer, BSLX_CoseSc_ChunkList_t chunklist,
-                                      BSL_Crypto_SignVariant_e *bsl_sig_var)
+                                      BSL_Crypto_SignVariant_t *bsl_sig_var)
 {
     switch (ctx->tgt_alg)
     {
@@ -2627,7 +2627,7 @@ static void BSLX_CoseSc_Signature_Sign(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_He
 {
     int res;
 
-    BSL_Crypto_SignVariant_e bsl_sig_var;
+    BSL_Crypto_SignVariant_t bsl_sig_var;
 
     // Chunks of Sig_Structure
     BSLX_CoseSc_ChunkList_t chunklist;
@@ -2729,7 +2729,7 @@ static void BSLX_CoseSc_Signature_Verify(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_
 {
     int res;
 
-    BSL_Crypto_SignVariant_e bsl_sig_var;
+    BSL_Crypto_SignVariant_t bsl_sig_var;
 
     // Chunks of Sig_Structure
     BSLX_CoseSc_ChunkList_t chunklist;

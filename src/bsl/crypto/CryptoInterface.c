@@ -710,7 +710,7 @@ static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **diges
     return BSL_SUCCESS;
 }
 
-int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant,
+int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_t variant,
                         bool nonce_deterministic)
 {
     ASSERT_ARG_NONNULL(ctx);
@@ -871,7 +871,7 @@ void BSL_SigCtxSign_Deinit(BSL_SigCtx_t *ctx)
     memset(ctx, 0, sizeof(BSL_SigCtx_t));
 }
 
-int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_e variant)
+int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL_Crypto_SignVariant_t variant)
 {
     ASSERT_ARG_NONNULL(ctx);
     CHK_ARG_NONNULL(keyhandle);
