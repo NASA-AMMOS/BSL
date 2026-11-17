@@ -590,19 +590,19 @@ void BSL_AuthCtx_Deinit(BSL_AuthCtx_t *hmac_ctx)
 
 static int BSL_SigCtx_CommonInit(BSL_SigCtx_t *ctx, EVP_PKEY **key, char **digest_name)
 {
-	int64_t alg_need_crv; // fully specified algorithm curve
+    int64_t alg_need_crv; // fully specified algorithm curve
     switch (ctx->variant)
     {
         case BSL_CRYPTO_ECDSA_P256_SHA_256:
-        	alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P256;
+            alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P256;
             *digest_name = SN_sha256;
             break;
         case BSL_CRYPTO_ECDSA_P384_SHA_384:
-        	alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P384;
+            alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P384;
             *digest_name = SN_sha384;
             break;
         case BSL_CRYPTO_ECDSA_P521_SHA_512:
-        	alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P521;
+            alg_need_crv = BSL_CRYPTO_KEYPARAM_CRV_P521;
             *digest_name = SN_sha512;
             break;
             // GCOV_EXCL_START
