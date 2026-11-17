@@ -186,6 +186,63 @@ CCSDS_MAC_WITH_BIB = """\
 
 
 class TestCoseScMac0(TestAgent):
+    def test_source_all_algs(self):
+        # check all HMAC strengths to get some output
+        KEYS = [("hmac-256", 5), ("hmac-384", 6), ("hmac-512", 7)]
+        for keyname, alg in KEYS:
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path,
+            ):
+                self._stop()
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=None,
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ANYCBOR,
+                    )
+                )
+
+    def test_source_mismatch_algs(self):
+        # check mismatches between key and alg
+        KEYS = [
+            ("hmac-384", 5),
+            ("hmac-512", 6),
+            ("hmac-256", 7),
+            # different alg or kty
+            ("aesgcm-128", 5),
+            ("esp256", 5),
+        ]
+        for keyname, alg in KEYS:
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path,
+            ):
+                self._stop()
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=r".*<ERROR>.* Unsupported recipient algorithm -?\d+",
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ERR,
+                    )
+                )
+
     def test_exampleA_1_source(self):
         self._single_test(
             _TestCase(
@@ -372,6 +429,38 @@ class TestCoseScMac0(TestAgent):
 
 
 class TestCoseScMac(TestAgent):
+    def test_source_all_algs(self):
+        # check all recipient algorithms to get some output for different content key sizes
+        KEYS = [
+            "hkdf-sha-256",
+            "hkdf-sha-512",
+            "a128kw",
+            "a192kw",
+            "a256kw",
+        ]
+        for keyname in KEYS:
+            for mac_alg in (5, 6, 7):
+                with (
+                    self.subTest(keyname),
+                    sc_config_modifier(
+                        orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
+                        modify={"target_alg": mac_alg, "key_name": keyname},
+                    ) as polfile_path,
+                ):
+                    self._stop()
+                    self._single_test(
+                        _TestCase(
+                            input_data=EXAMPLE_A_NO_SEC,
+                            expected_output=None,
+                            sec_src_eid="dtn://src/",
+                            policy_config=polfile_path,
+                            bundle_dest_loc=BundleDestLoc.APPIN,
+                            key_set="data/cose-sc/all-algs.cbordiag",
+                            input_data_format=DataFormat.CBORDIAG,
+                            expected_output_format=DataFormat.ANYCBOR,
+                        )
+                    )
+
     def test_ccsds_interop_keywrap_source(self):
         self._single_test(
             _TestCase(
@@ -426,6 +515,63 @@ class TestCoseScMac(TestAgent):
 
 
 class TestCoseScEncrypt0(TestAgent):
+    def test_source_all_algs(self):
+        # check all AES-GCM strengths to get some output
+        KEYS = [("aesgcm-128", 1), ("aesgcm-192", 2), ("aesgcm-256", 3)]
+        for keyname, alg in KEYS:
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bcb-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path,
+            ):
+                self._stop()
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=None,
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ANYCBOR,
+                    )
+                )
+
+    def test_source_mismatch_algs(self):
+        # check mismatches between key and alg
+        KEYS = [
+            ("aesgcm-192", 1),
+            ("aesgcm-256", 2),
+            ("aesgcm-128", 3),
+            # different alg or kty
+            ("hmac-256", 1),
+            ("esp256", 1),
+        ]
+        for keyname, alg in KEYS:
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bcb-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path,
+            ):
+                self._stop()
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=r".*<ERROR>.* Unsupported recipient algorithm -?\d+",
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ERR,
+                    )
+                )
+
     def test_exampleA_4_source(self):
         self._single_test(
             _TestCase(
@@ -664,6 +810,38 @@ class TestCoseScEncrypt0(TestAgent):
 
 
 class TestCoseScEncrypt(TestAgent):
+    def test_source_all_algs(self):
+        # check all recipient algorithms to get some output for different content key sizes
+        KEYS = [
+            "hkdf-sha-256",
+            "hkdf-sha-512",
+            "a128kw",
+            "a192kw",
+            "a256kw",
+        ]
+        for keyname in KEYS:
+            for mac_alg in (1, 2, 3):
+                with (
+                    self.subTest(keyname),
+                    sc_config_modifier(
+                        orig=os.path.join(OWNPATH, "data/cose-sc/policy-bcb-payload-source.json"),
+                        modify={"target_alg": mac_alg, "key_name": keyname},
+                    ) as polfile_path,
+                ):
+                    self._stop()
+                    self._single_test(
+                        _TestCase(
+                            input_data=EXAMPLE_A_NO_SEC,
+                            expected_output=None,
+                            sec_src_eid="dtn://src/",
+                            policy_config=polfile_path,
+                            bundle_dest_loc=BundleDestLoc.APPIN,
+                            key_set="data/cose-sc/all-algs.cbordiag",
+                            input_data_format=DataFormat.CBORDIAG,
+                            expected_output_format=DataFormat.ANYCBOR,
+                        )
+                    )
+
     def test_exampleA_5_source(self):
         """The IV header is non-deterministic"""
         self._single_test(
@@ -888,6 +1066,109 @@ OPENSSL_CAN_MLDSA = ssl.OPENSSL_VERSION_INFO[:2] >= (3, 5)
 
 
 class TestCoseScSign1(TestAgent):
+    def test_source_all_algs(self):
+        # check all algorithms to get some output
+        ALGS = [
+            ("esp256", -9),
+            ("esp384", -51),
+            ("esp512", -52),
+        ]
+        if OPENSSL_CAN_MLDSA:
+            ALGS += [
+                ("mldsa44", -48),
+                ("mldsa65", -49),
+                ("mldsa87", -50),
+            ]
+        for keyname, alg in ALGS:
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path,
+            ):
+                self._stop()
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=None,
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ANYCBOR,
+                    )
+                )
+
+    def test_source_mismatch_algs(self):
+        # check mismatches between key and alg
+        ALGS = [
+            ("esp384", -9),
+            ("esp512", -51),
+            ("esp256", -52),
+            # different kty and family
+            ("aesgcm-128", -9),
+        ]
+        if OPENSSL_CAN_MLDSA:
+            ALGS += [
+                ("mldsa65", -48),
+                ("mldsa87", -49),
+                ("mldsa44", -50),
+                # different kty and family
+                ("mldsa44", -9),
+                ("aesgcm-128", -48),
+                ("esp256", -48),
+            ]
+        for keyname, alg in ALGS:
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path,
+            ):
+                self._stop()
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=r".*<ERROR>.* Mismatch between key alg -?\d+ and target alg -?\d+",
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ERR,
+                    )
+                )
+
+    def test_source_mismatch_crvs(self):
+        # check mismatches in curve between key and alg
+        ALGS = [
+            ("esp256-badcrv", -9),
+        ]
+        for keyname, alg in ALGS:
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path,
+            ):
+                self._stop()
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=r".*<ERROR>.* Precondition Failed: Did not satisfy \(key_crv == alg_need_crv\)",
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ERR,
+                    )
+                )
+
     def test_exampleA_2_source_deterministic(self):
         with sc_config_modifier(
             orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.2-source.json"),
@@ -938,7 +1219,9 @@ class TestCoseScSign1(TestAgent):
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
                 input_data_format=DataFormat.CBORDIAG,
-                expected_output_format=DataFormat.CBORDIAG,
+                expected_output_format=(
+                    DataFormat.CBORDIAG if OPENSSL_CAN_ECDSA_DETERMINISTIC else DataFormat.ANYCBOR
+                ),
             )
         )
 
@@ -1087,7 +1370,9 @@ class TestCoseScSign1(TestAgent):
                 bundle_dest_loc=BundleDestLoc.APPIN,
                 key_set="data/cose-sc/keyset-1.cbordiag",
                 input_data_format=DataFormat.CBORDIAG,
-                expected_output_format=DataFormat.CBORDIAG,
+                expected_output_format=(
+                    DataFormat.CBORDIAG if OPENSSL_CAN_ECDSA_DETERMINISTIC else DataFormat.ANYCBOR
+                ),
             )
         )
 
