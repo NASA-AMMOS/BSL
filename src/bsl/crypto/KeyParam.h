@@ -88,19 +88,6 @@ enum BSL_Crypto_KeyParam_Curve_e
     BSL_CRYPTO_KEYPARAM_CRV_P521 = 3,
 };
 
-/** Relevant key curves managed by IANA.
- * https://www.iana.org/assignments/cose#elliptic-curves
- */
-enum BSL_Crypto_KeyParam_Curve_e
-{
-    /// P-256
-    BSL_CRYPTO_KEYPARAM_CRV_P256 = 1,
-    /// P-256
-    BSL_CRYPTO_KEYPARAM_CRV_P384 = 2,
-    /// P-256
-    BSL_CRYPTO_KEYPARAM_CRV_P521 = 3,
-};
-
 #ifdef __cplusplus
 } // extern C
 #endif
