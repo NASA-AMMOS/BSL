@@ -1170,7 +1170,7 @@ class TestCoseScSign1(TestAgent):
                 self._single_test(
                     _TestCase(
                         input_data=EXAMPLE_A_NO_SEC,
-                        expected_output=r".*<ERROR>.* Mismatch between key alg -?\d+ and target alg -?\d+",
+                        expected_output=r".*<ERROR>.* (Mismatch between key alg -?\d+ and target alg -?\d+|Precondition Failed: Did not satisfy \(key_crv == alg_need_crv\))",
                         sec_src_eid="dtn://src/",
                         policy_config=polfile_path,
                         bundle_dest_loc=BundleDestLoc.APPIN,
