@@ -276,24 +276,6 @@ class TestCoseScMac0(TestAgent):
                 )
             )
 
-    def test_exampleA_1_source_invalid_algmatch(self):
-        with sc_config_modifier(
-            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.1-source.json"),
-            modify={"target_alg": 5},  # key uses alg 6
-        ) as polfile_path:
-            self._single_test(
-                _TestCase(
-                    input_data=EXAMPLE_A_NO_SEC,
-                    expected_output=r".*<ERROR>.* Unsupported recipient algorithm 6",
-                    sec_src_eid="dtn://src/",
-                    policy_config=polfile_path,
-                    bundle_dest_loc=BundleDestLoc.APPIN,
-                    key_set="data/cose-sc/keyset-1.cbordiag",
-                    input_data_format=DataFormat.CBORDIAG,
-                    expected_output_format=DataFormat.ERR,
-                )
-            )
-
     def test_exampleA_1_acceptor_valid_loose(self):
         self._single_test(
             _TestCase(
@@ -603,24 +585,6 @@ class TestCoseScEncrypt0(TestAgent):
                 expected_output_format=DataFormat.CBORDIAG,
             )
         )
-
-    def test_exampleA_4_source_invalid_algmatch(self):
-        with sc_config_modifier(
-            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.4-source.json"),
-            modify={"target_alg": 2},  # key uses alg 3
-        ) as polfile_path:
-            self._single_test(
-                _TestCase(
-                    input_data=EXAMPLE_A_NO_SEC,
-                    expected_output=r".*<ERROR>.* Unsupported recipient algorithm 3",
-                    sec_src_eid="dtn://src/",
-                    policy_config=polfile_path,
-                    bundle_dest_loc=BundleDestLoc.APPIN,
-                    key_set="data/cose-sc/keyset-1.cbordiag",
-                    input_data_format=DataFormat.CBORDIAG,
-                    expected_output_format=DataFormat.ERR,
-                )
-            )
 
     def test_exampleA_4_acceptor_valid_loose(self):
         self._single_test(
@@ -1105,17 +1069,17 @@ class TestCoseScSign1(TestAgent):
     def test_source_all_algs(self):
         # check all algorithms to get some output
         ALGS = [
-            (-9, "esp256"),
-            (-51, "esp384"),
-            (-52, "esp512"),
+            ("esp256", -9),
+            ("esp384", -51),
+            ("esp512", -52),
         ]
         if OPENSSL_CAN_MLDSA:
             ALGS += [
-                (-48, "mldsa44"),
-                (-49, "mldsa65"),
-                (-50, "mldsa87"),
+                ("mldsa44", -48),
+                ("mldsa65", -49),
+                ("mldsa87", -50),
             ]
-        for alg, keyname in ALGS:
+        for keyname, alg in ALGS:
             with (
                 self.subTest(keyname),
                 sc_config_modifier(
@@ -1140,25 +1104,23 @@ class TestCoseScSign1(TestAgent):
     def test_source_mismatch_algs(self):
         # check mismatches between key and alg
         ALGS = [
-            (-9, "esp384"),
-            (-51, "esp512"),
-            (-52, "esp256"),
-            # invalid key crv
-            (-9, "esp256-badcrv"),
+            ("esp384", -9),
+            ("esp512", -51),
+            ("esp256", -52),
             # different kty and family
-            (-9, "aesgcm-128"),
+            ("aesgcm-128", -9),
         ]
         if OPENSSL_CAN_MLDSA:
             ALGS += [
-                (-48, "mldsa65"),
-                (-49, "mldsa87"),
-                (-50, "mldsa44"),
+                ("mldsa65", -48),
+                ("mldsa87", -49),
+                ("mldsa44", -50),
                 # different kty and family
-                (-9, "mldsa44"),
-                (-48, "aesgcm-128"),
-                (-48, "esp256"),
+                ("mldsa44", -9),
+                ("aesgcm-128", -48),
+                ("esp256", -48),
             ]
-        for alg, keyname in ALGS:
+        for keyname, alg in ALGS:
             with (
                 self.subTest(keyname),
                 sc_config_modifier(
@@ -1170,7 +1132,34 @@ class TestCoseScSign1(TestAgent):
                 self._single_test(
                     _TestCase(
                         input_data=EXAMPLE_A_NO_SEC,
-                        expected_output=r".*<ERROR>.* (Mismatch between key alg -?\d+ and target alg -?\d+|Precondition Failed: Did not satisfy \(key_crv == alg_need_crv\))",
+                        expected_output=r".*<ERROR>.* Mismatch between key alg -?\d+ and target alg -?\d+",
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ERR,
+                    )
+                )
+
+    def test_source_mismatch_crvs(self):
+        # check mismatches in curve between key and alg
+        ALGS = [
+            ("esp256-badcrv", -9),
+        ]
+        for keyname, alg in ALGS:
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path,
+            ):
+                self._stop()
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=r".*<ERROR>.* Precondition Failed: Did not satisfy \(key_crv == alg_need_crv\)",
                         sec_src_eid="dtn://src/",
                         policy_config=polfile_path,
                         bundle_dest_loc=BundleDestLoc.APPIN,
@@ -1217,24 +1206,6 @@ class TestCoseScSign1(TestAgent):
                     key_set="data/cose-sc/keyset-1.cbordiag",
                     input_data_format=DataFormat.CBORDIAG,
                     expected_output_format=DataFormat.ANYCBOR,
-                )
-            )
-
-    def test_exampleA_2_source_invalid_algmatch(self):
-        with sc_config_modifier(
-            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.2-source.json"),
-            modify={"target_alg": -52},  # key uses alg -51
-        ) as polfile_path:
-            self._single_test(
-                _TestCase(
-                    input_data=EXAMPLE_A_NO_SEC,
-                    expected_output=r".*<ERROR>.* Mismatch between key alg -51 and target alg -52",
-                    sec_src_eid="dtn://src/",
-                    policy_config=polfile_path,
-                    bundle_dest_loc=BundleDestLoc.APPIN,
-                    key_set="data/cose-sc/keyset-1.cbordiag",
-                    input_data_format=DataFormat.CBORDIAG,
-                    expected_output_format=DataFormat.ERR,
                 )
             )
 
@@ -1360,25 +1331,6 @@ class TestCoseScSign1(TestAgent):
                     expected_output_format=(
                         DataFormat.ANYCBOR if OPENSSL_CAN_MLDSA else DataFormat.ERR
                     ),
-                )
-            )
-
-    @unittest.skipUnless(OPENSSL_CAN_MLDSA, "No ML-DSA support")
-    def test_exampleA_10_source_invalid_algmatch(self):
-        with sc_config_modifier(
-            orig=os.path.join(OWNPATH, "data/cose-sc/policy-exA.10-source.json"),
-            modify={"target_alg": -49},  # key uses alg -50
-        ) as polfile_path:
-            self._single_test(
-                _TestCase(
-                    input_data=EXAMPLE_A_NO_SEC,
-                    expected_output=r".*<ERROR>.* Mismatch between key alg -50 and target alg -49",
-                    sec_src_eid="dtn://src/",
-                    policy_config=polfile_path,
-                    bundle_dest_loc=BundleDestLoc.APPIN,
-                    key_set="data/cose-sc/keyset-1.cbordiag",
-                    input_data_format=DataFormat.CBORDIAG,
-                    expected_output_format=DataFormat.ERR,
                 )
             )
 
