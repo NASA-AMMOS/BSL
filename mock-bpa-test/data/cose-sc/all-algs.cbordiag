@@ -76,6 +76,15 @@
   },
   {
     / kty / 1: 2, / EC2 /
+    / kid / 2: 'esp256-badcrv',
+    / alg / 3: -9,
+    -1:2,
+    -2:h'4ae0896ca818ca00f235444b7ad75c1e4d06e81a0e345a568c37e9939c7f1dee5186b447abee3c5e3b1c5ac33a33d2a0',
+    -3:h'a173fb8c99da06cf8bb653cb9257ee19fafc0b7ff4cf4b5ea95baae01a1226c5f5499d4f82f846fb622949d94745077f',
+    -4:h'ef389c5c02cbaef78a24a5191df1ffb077e624a96b8eb686b698e528b55b3297958f5de8788c921ba57a6acbf646d62b'
+  },
+  {
+    / kty / 1: 2, / EC2 /
     / kid / 2: 'esp384',
     / alg / 3: -51,
     -1:2,

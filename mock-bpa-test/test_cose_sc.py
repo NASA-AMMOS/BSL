@@ -197,6 +197,7 @@ class TestCoseScMac0(TestAgent):
                     modify={"target_alg": alg, "key_name": keyname},
                 ) as polfile_path,
             ):
+                self._stop()
                 self._single_test(
                     _TestCase(
                         input_data=EXAMPLE_A_NO_SEC,
@@ -209,7 +210,6 @@ class TestCoseScMac0(TestAgent):
                         expected_output_format=DataFormat.ANYCBOR,
                     )
                 )
-                self._stop()
 
     def test_exampleA_1_source(self):
         self._single_test(
@@ -433,6 +433,7 @@ class TestCoseScMac(TestAgent):
                         modify={"target_alg": mac_alg, "key_name": keyname},
                     ) as polfile_path,
                 ):
+                    self._stop()
                     self._single_test(
                         _TestCase(
                             input_data=EXAMPLE_A_NO_SEC,
@@ -445,7 +446,6 @@ class TestCoseScMac(TestAgent):
                             expected_output_format=DataFormat.ANYCBOR,
                         )
                     )
-                    self._stop()
 
     def test_ccsds_interop_keywrap_source(self):
         self._single_test(
@@ -512,6 +512,7 @@ class TestCoseScEncrypt0(TestAgent):
                     modify={"target_alg": alg, "key_name": keyname},
                 ) as polfile_path,
             ):
+                self._stop()
                 self._single_test(
                     _TestCase(
                         input_data=EXAMPLE_A_NO_SEC,
@@ -524,7 +525,6 @@ class TestCoseScEncrypt0(TestAgent):
                         expected_output_format=DataFormat.ANYCBOR,
                     )
                 )
-                self._stop()
 
     def test_exampleA_4_source(self):
         self._single_test(
@@ -800,6 +800,7 @@ class TestCoseScEncrypt(TestAgent):
                         modify={"target_alg": mac_alg, "key_name": keyname},
                     ) as polfile_path,
                 ):
+                    self._stop()
                     self._single_test(
                         _TestCase(
                             input_data=EXAMPLE_A_NO_SEC,
@@ -812,7 +813,6 @@ class TestCoseScEncrypt(TestAgent):
                             expected_output_format=DataFormat.ANYCBOR,
                         )
                     )
-                    self._stop()
 
     def test_exampleA_5_source(self):
         """The IV header is non-deterministic"""
@@ -1059,6 +1059,7 @@ class TestCoseScSign1(TestAgent):
                     modify={"target_alg": alg, "key_name": keyname},
                 ) as polfile_path,
             ):
+                self._stop()
                 self._single_test(
                     _TestCase(
                         input_data=EXAMPLE_A_NO_SEC,
@@ -1071,7 +1072,49 @@ class TestCoseScSign1(TestAgent):
                         expected_output_format=DataFormat.ANYCBOR,
                     )
                 )
+
+    def test_source_mismatch_algs(self):
+        # check mismatches between key and alg
+        ALGS = [
+            (-9, "esp384"),
+            (-51, "esp512"),
+            (-52, "esp256"),
+            # invalid key crv
+            (-9, "esp256-badcrv"),
+            # different kty and family
+            (-9, "aesgcm-128"),
+        ]
+        if OPENSSL_CAN_MLDSA:
+            ALGS += [
+                (-48, "mldsa65"),
+                (-49, "mldsa87"),
+                (-50, "mldsa44"),
+                # different kty and family
+                (-9, "mldsa44"),
+                (-48, "aesgcm-128"),
+                (-48, "esp256"),
+            ]
+        for alg, keyname in ALGS:
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path,
+            ):
                 self._stop()
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=r".*<ERROR>.* Mismatch between key alg -?\d+ and target alg -?\d+",
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ERR,
+                    )
+                )
 
     def test_exampleA_2_source_deterministic(self):
         with sc_config_modifier(
