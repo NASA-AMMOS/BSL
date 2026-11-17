@@ -39,8 +39,8 @@
 #include <bsl/default_sc/DefaultSecContext_Private.h>
 #include <bsl/mock_bpa/MockBPA.h>
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unity.h>
 
@@ -277,9 +277,10 @@ void test_BCB_SourceRejectsAppendedTagLengthOverflow(void)
     BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_test_context.sec_oper, BSLX_BCB_OPT_APPEND_AUTHTAG), 1);
 
     // Key not actually used, but id needs to be registered for this test
-    uint8_t rfc9173A2_key[]     = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
-                                    0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70 };
-    TEST_ASSERT_EQUAL_INT(0, BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A2_KEY, rfc9173A2_key, sizeof(rfc9173A2_key)));
+    uint8_t rfc9173A2_key[] = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+                                0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70 };
+    TEST_ASSERT_EQUAL_INT(0,
+                          BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A2_KEY, rfc9173A2_key, sizeof(rfc9173A2_key)));
 
     BSLX_BCB_t bcb_context;
     TEST_ASSERT_EQUAL(BSL_SUCCESS,

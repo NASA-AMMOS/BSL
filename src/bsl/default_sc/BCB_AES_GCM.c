@@ -570,7 +570,7 @@ int BSLX_BCB_GetOptions(const BSL_BundleRef_t *bundle, BSLX_BCB_t *bcb_context, 
         }
         else
         {
-            bcb_context->append_authtag     = (as_int != 0);
+            bcb_context->append_authtag = (as_int != 0);
         }
     }
 
