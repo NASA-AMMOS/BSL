@@ -818,7 +818,9 @@ int BSL_SigCtxSign_Finalize(BSL_SigCtx_t *ctx, BSL_Data_t *signature)
 
     // get the needed tag size
     size_t sig_size;
-    EVP_DigestSignFinal(ctx->libhandle, NULL, &sig_size);
+    res = EVP_DigestSignFinal(ctx->libhandle, NULL, &sig_size);
+    BSL_LOG_DEBUG("EVP_DigestSignFinal size %zu bytes, return %d", sig_size, res);
+    CHK_PROPERTY(res == 1);
     CHK_PROPERTY(sig_size > 0);
     CHK_PROPERTY(sig_size <= INT_MAX);
 
