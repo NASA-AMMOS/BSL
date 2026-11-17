@@ -65,6 +65,7 @@ target_sources(bsl_crypto
             FILES
                 bsl/crypto/CryptoInterface.h
                 bsl/crypto/KeyLoader.h
+                bsl/crypto/KeyParam.h
                 bsl/crypto/KeyStore.h
     PRIVATE
         bsl/crypto/CryptoInterface.c
