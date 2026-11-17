@@ -211,6 +211,38 @@ class TestCoseScMac0(TestAgent):
                     )
                 )
 
+    def test_source_mismatch_algs(self):
+        # check mismatches between key and alg
+        KEYS = [
+            ("hmac-384", 5),
+            ("hmac-512", 6),
+            ("hmac-256", 7),
+            # different alg or kty
+            ("aesgcm-128", 5),
+            ("esp256", 5),
+        ]
+        for keyname, alg in KEYS:
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bib-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path,
+            ):
+                self._stop()
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=r".*<ERROR>.* Unsupported recipient algorithm -?\d+",
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ERR,
+                    )
+                )
+
     def test_exampleA_1_source(self):
         self._single_test(
             _TestCase(
@@ -523,6 +555,38 @@ class TestCoseScEncrypt0(TestAgent):
                         key_set="data/cose-sc/all-algs.cbordiag",
                         input_data_format=DataFormat.CBORDIAG,
                         expected_output_format=DataFormat.ANYCBOR,
+                    )
+                )
+
+    def test_source_mismatch_algs(self):
+        # check mismatches between key and alg
+        KEYS = [
+            ("aesgcm-192", 1),
+            ("aesgcm-256", 2),
+            ("aesgcm-128", 3),
+            # different alg or kty
+            ("hmac-256", 1),
+            ("esp256", 1),
+        ]
+        for keyname, alg in KEYS:
+            with (
+                self.subTest(keyname),
+                sc_config_modifier(
+                    orig=os.path.join(OWNPATH, "data/cose-sc/policy-bcb-payload-source.json"),
+                    modify={"target_alg": alg, "key_name": keyname},
+                ) as polfile_path,
+            ):
+                self._stop()
+                self._single_test(
+                    _TestCase(
+                        input_data=EXAMPLE_A_NO_SEC,
+                        expected_output=r".*<ERROR>.* Unsupported recipient algorithm -?\d+",
+                        sec_src_eid="dtn://src/",
+                        policy_config=polfile_path,
+                        bundle_dest_loc=BundleDestLoc.APPIN,
+                        key_set="data/cose-sc/all-algs.cbordiag",
+                        input_data_format=DataFormat.CBORDIAG,
+                        expected_output_format=DataFormat.ERR,
                     )
                 )
 
