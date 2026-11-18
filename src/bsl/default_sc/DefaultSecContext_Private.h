@@ -142,6 +142,8 @@ typedef struct BSLX_BCB_s
     bool keywrap;
     /// True if #keywrap came from an option
     bool opt_keywrap;
+    /// True if the source authentication tag should be appended to the target BTSD
+    bool append_authtag;
 
     // Metadata about bundles and blocks
     BSL_PrimaryBlock_t   primary_block;
