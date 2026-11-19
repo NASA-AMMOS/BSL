@@ -38,7 +38,7 @@ jobs:
           - name: 'ubuntu-26.04'
             image: null
         compiler: ['gcc']
-    name: Fuzzing (${{matrix.os.name}} ${{matrix.compiler}})
+    name: Benchmark (${{matrix.os.name}} ${{matrix.compiler}})
     runs-on: ${{ matrix.os.image != null && 'ubuntu-latest' || matrix.os.name }}
     container: ${{ matrix.os.image }}
     permissions:
@@ -70,7 +70,7 @@ jobs:
               cmake ninja-build \
               ruby pkg-config ccache patch \
               ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
-              openssl-devel jansson-devel libbenchmark-devel \
+              openssl-devel jansson-devel google-benchmark-devel \
               xmlstarlet python3-pip
       - name: Checkout repository
         uses: actions/checkout@v6

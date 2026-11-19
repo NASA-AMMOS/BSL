@@ -21,9 +21,9 @@
  */
 /** @file
  * @ingroup benchmark_test
- * Microbenchmarking of cryptographic functions used by security contexts.
+ * Micro-benchmarking of cryptographic functions used by security contexts.
  *
- * The keyset used by these tests can be updated by editing the sibling file
+ * The key set used by these tests can be updated by editing the sibling file
  * @c bench_crypto_keyset.cbordiag and running this conversion command:
  * @code
  * diag2cbor.rb <test/bench_crypto_keyset.cbordiag >test/bench_crypto_keyset.cbor
@@ -218,14 +218,27 @@ static void BM_Encrypt(benchmark::State &state, BSL_Crypto_AESVariant_e variant,
             state.SkipWithError("failed to init");
             break;
         }
-        else
-        {
-            FakeReader_reset(reader);
-            BSL_Cipher_AddSeq(&ctx, reader, NULL, bign);
-        }
+        FakeReader_reset(reader);
+        BSL_Cipher_AddSeq(&ctx, reader, NULL, bign);
         int res = BSL_Cipher_FinalizeSeq(&ctx, NULL);
+        if (res)
+        {
+            state.SkipWithError("failed to finalize");
+            break;
+        }
+        {
+            BSL_Data_t tag = BSL_DATA_INIT_NULL;
+            // actual output
+            res = BSL_Cipher_GetTag(&ctx, &tag);
+            if (res || (tag.len == 0))
+            {
+                state.SkipWithError("failed to get tag");
+                break;
+            }
+            BSL_Data_Deinit(&tag);
+            benchmark::DoNotOptimize(res);
+        }
         BSL_Cipher_Deinit(&ctx);
-        benchmark::DoNotOptimize(res);
     }
 
     BSL_SeqReader_Destroy(reader);
@@ -264,16 +277,18 @@ static void BM_MAC(benchmark::State &state, BSL_Crypto_SHAVariant_e variant, con
             state.SkipWithError("failed to init");
             break;
         }
-        else
-        {
-            FakeReader_reset(reader);
-            BSL_AuthCtx_DigestSeq(&ctx, reader);
-        }
+        FakeReader_reset(reader);
+        BSL_AuthCtx_DigestSeq(&ctx, reader);
         {
             BSL_Data_t tag = BSL_DATA_INIT_NULL;
+            // actual output
             int res = BSL_AuthCtx_Finalize(&ctx, &tag);
+            if (res || (tag.len == 0))
+            {
+                state.SkipWithError("failed to finalize");
+                break;
+            }
             BSL_Data_Deinit(&tag);
-            benchmark::DoNotOptimize(res);
         }
         BSL_AuthCtx_Deinit(&ctx);
     }
@@ -314,16 +329,18 @@ static void BM_SigSign(benchmark::State &state, BSL_Crypto_SignVariant_t variant
             state.SkipWithError("failed to init");
             break;
         }
-        else
-        {
-            FakeReader_reset(reader);
-            BSL_SigCtxSign_DigestSeq(&ctx, reader);
-        }
+        FakeReader_reset(reader);
+        BSL_SigCtxSign_DigestSeq(&ctx, reader);
         {
             BSL_Data_t sig = BSL_DATA_INIT_NULL;
+            // actual output
             int res = BSL_SigCtxSign_Finalize(&ctx, &sig);
+            if (res || (sig.len == 0))
+            {
+                state.SkipWithError("failed to finalize");
+                break;
+            }
             BSL_Data_Deinit(&sig);
-            benchmark::DoNotOptimize(res);
         }
         BSL_SigCtxSign_Deinit(&ctx);
         benchmark::DoNotOptimize(ctx);
@@ -369,16 +386,14 @@ static void BM_SigVerify(benchmark::State &state, BSL_Crypto_SignVariant_t varia
             state.SkipWithError("failed to init");
             break;
         }
-        else
-        {
-            FakeReader_reset(reader);
-            BSL_SigCtxVerify_DigestSeq(&ctx, reader);
-        }
+        FakeReader_reset(reader);
+        BSL_SigCtxVerify_DigestSeq(&ctx, reader);
         {
             BSL_Data_t sig = BSL_DATA_INIT_VIEW(sig_empty.data(), sig_empty.size());
+            // actual output
             int res = BSL_SigCtxVerify_Finalize(&ctx, &sig);
-            BSL_Data_Deinit(&sig);
             benchmark::DoNotOptimize(res);
+            BSL_Data_Deinit(&sig);
         }
         BSL_SigCtxVerify_Deinit(&ctx);
     }
