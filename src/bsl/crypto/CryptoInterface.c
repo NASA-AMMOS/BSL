@@ -47,6 +47,8 @@
 #define OPENSSL_CAN_ECDSA_DETERMINISTIC (OPENSSL_VERSION_NUMBER >= 0x30200000L)
 /// The algorithms for ML-DSA are available in v3.5.0
 #define OPENSSL_CAN_MLDSA (OPENSSL_VERSION_NUMBER >= 0x30500000L)
+/// Preferred and minimum block size for sequential processing
+#define BSL_CRYPTO_MIN_BLOCK_SIZE (1 << 10)
 
 extern BSL_KeyStore_Descriptors_t BSL_KeyStore_State;
 
@@ -490,17 +492,18 @@ int BSL_AuthCtx_Init(BSL_AuthCtx_t *hmac_ctx, BSL_Crypto_KeyHandle_t keyhandle, 
 
     BSL_LOG_PLAINTEXT_PTR("using key", hmac_ctx, key_view.ptr, key_view.len);
     int res = EVP_MAC_init(hmac_ctx->libhandle, key_view.ptr, key_view.len, params);
-    CHK_PROPERTY(res == 1);
+    if (res <= 0)
+    {
+        BSL_LOG_ERR("EVP_MAC_init with HMAC %s: %s", digest_name, ERR_error_string(ERR_get_error(), NULL));
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
 
     hmac_ctx->block_size = EVP_MAC_CTX_get_block_size(hmac_ctx->libhandle);
     BSL_LOG_DEBUG("MAC block size %zu", hmac_ctx->block_size);
-    // GCOV_EXCL_START
-    if (hmac_ctx->block_size == 0)
+    if (hmac_ctx->block_size < BSL_CRYPTO_MIN_BLOCK_SIZE)
     {
-        hmac_ctx->block_size = 1024;
-        BSL_LOG_ERR("invalid block size zero, assuming %zu", hmac_ctx->block_size);
+        hmac_ctx->block_size = BSL_CRYPTO_MIN_BLOCK_SIZE;
     }
-    // GCOV_EXCL_STOP
 
     res = BSL_Data_InitBuffer(&hmac_ctx->in_buf, hmac_ctx->block_size);
     CHK_PROPERTY(BSL_SUCCESS == res);
@@ -965,13 +968,10 @@ int BSL_SigCtxSign_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, BSL
 
     ctx->block_size = (size_t)EVP_MD_CTX_get_block_size(mdctx);
     BSL_LOG_DEBUG("MD block size %zu", ctx->block_size);
-    // GCOV_EXCL_START
-    if (ctx->block_size == 0)
+    if (ctx->block_size < BSL_CRYPTO_MIN_BLOCK_SIZE)
     {
-        ctx->block_size = 1024;
-        BSL_LOG_ERR("invalid block size zero, assuming %zu", ctx->block_size);
+        ctx->block_size = BSL_CRYPTO_MIN_BLOCK_SIZE;
     }
-    // GCOV_EXCL_STOP
 
     res = BSL_Data_InitBuffer(&ctx->in_buf, ctx->block_size);
     CHK_PROPERTY(BSL_SUCCESS == res);
@@ -1201,13 +1201,10 @@ int BSL_SigCtxVerify_Init(BSL_SigCtx_t *ctx, BSL_Crypto_KeyHandle_t keyhandle, B
 
     ctx->block_size = (size_t)EVP_MD_CTX_get_block_size(mdctx);
     BSL_LOG_DEBUG("MD block size %zu", ctx->block_size);
-    // GCOV_EXCL_START
-    if (ctx->block_size == 0)
+    if (ctx->block_size < BSL_CRYPTO_MIN_BLOCK_SIZE)
     {
-        ctx->block_size = 1024;
-        BSL_LOG_ERR("invalid block size zero, assuming %zu", ctx->block_size);
+        ctx->block_size = BSL_CRYPTO_MIN_BLOCK_SIZE;
     }
-    // GCOV_EXCL_STOP
 
     res = BSL_Data_InitBuffer(&ctx->in_buf, ctx->block_size);
     CHK_PROPERTY(BSL_SUCCESS == res);
@@ -1429,7 +1426,11 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
     const int do_encrypt = (cipher_ctx->enc == BSL_CRYPTO_ENCRYPT);
 
     int res = EVP_CipherInit_ex(cipher_ctx->libhandle, cipher, NULL, NULL, NULL, do_encrypt);
-    CHK_PROPERTY(res == 1);
+    if (res <= 0)
+    {
+        BSL_LOG_ERR("EVP_CipherInit_ex with %s: %s", cipher, ERR_error_string(ERR_get_error(), NULL));
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
 
     {
         const size_t need_len = (size_t)EVP_CIPHER_CTX_get_key_length(cipher_ctx->libhandle);
@@ -1441,19 +1442,11 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
     }
 
     cipher_ctx->block_size = (size_t)EVP_CIPHER_CTX_get_block_size(cipher_ctx->libhandle);
-    if (cipher_ctx->block_size == 1)
-    {
-        // Choose a reasonable chunk size
-        cipher_ctx->block_size = 1024;
-    }
     BSL_LOG_DEBUG("Cipher block size %zu", cipher_ctx->block_size);
-    // GCOV_EXCL_START
-    if (cipher_ctx->block_size == 0)
+    if (cipher_ctx->block_size < BSL_CRYPTO_MIN_BLOCK_SIZE)
     {
-        BSL_LOG_ERR("invalid block size zero, assuming %zu", cipher_ctx->block_size);
-        cipher_ctx->block_size = 1024;
+        cipher_ctx->block_size = BSL_CRYPTO_MIN_BLOCK_SIZE;
     }
-    // GCOV_EXCL_STOP
 
     res = EVP_CIPHER_CTX_ctrl(cipher_ctx->libhandle, EVP_CTRL_GCM_SET_IVLEN, (int)iv_val->len, NULL);
     CHK_PROPERTY(res == 1);
@@ -1461,7 +1454,11 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
     BSL_LOG_PLAINTEXT_PTR("using key", cipher_ctx, key_view.ptr, key_view.len);
     BSL_LOG_PLAINTEXT_PTR("using IV", cipher_ctx, iv_val->ptr, iv_val->len);
     res = EVP_CipherInit_ex(cipher_ctx->libhandle, NULL, NULL, key_view.ptr, iv_val->ptr, -1);
-    CHK_PROPERTY(res == 1);
+    if (res <= 0)
+    {
+        BSL_LOG_ERR("EVP_CipherInit_ex with %s: %s", cipher, ERR_error_string(ERR_get_error(), NULL));
+        return BSL_ERR_SECURITY_CONTEXT_CRYPTO_FAILED;
+    }
 
     res = BSL_Data_InitBuffer(&cipher_ctx->in_buf, cipher_ctx->block_size);
     CHK_PROPERTY(BSL_SUCCESS == res);
