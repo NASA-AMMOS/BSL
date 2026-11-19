@@ -142,13 +142,20 @@ static void BM_KeyWrap(benchmark::State &state, const char *keyid)
     state.SetComplexityN(bign);
 }
 // clang-format off
-BENCHMARK_CAPTURE(BM_KeyWrap, AESKW_128, "a128kw")->DenseRange(16, 32, 8)->Complexity(benchmark::oN);
-BENCHMARK_CAPTURE(BM_KeyWrap, AESKW_256, "a256kw")->DenseRange(16, 32, 8)->Complexity(benchmark::oN);
+BENCHMARK_CAPTURE(BM_KeyWrap, AESKW_128, "a128kw")
+    ->DenseRange(16, 32, 8)
+    ->ArgName("ck")
+    ->Complexity(benchmark::oN);
+BENCHMARK_CAPTURE(BM_KeyWrap, AESKW_256, "a256kw")
+    ->DenseRange(16, 32, 8)
+    ->ArgName("ck")
+    ->Complexity(benchmark::oN);
 // clang-format on
 
 static void BM_KDF(benchmark::State &state, BSL_Crypto_KDFVariant_t variant, size_t salt_len, const char *keyid)
 {
-    const int64_t bign = state.range(0);
+    const int64_t info_len = state.range(0);
+    const int64_t out_len  = state.range(1);
 
     // outside the measurement loop
     BSL_Crypto_KeyHandle_t keyhandle = NULL;
@@ -167,14 +174,14 @@ static void BM_KDF(benchmark::State &state, BSL_Crypto_KDFVariant_t variant, siz
     BSL_Crypto_GenIV(&salt_buf);
     // context info
     BSL_Data_t info_buf;
-    BSL_Data_InitBuffer(&info_buf, 200);
+    BSL_Data_InitBuffer(&info_buf, info_len);
     BSL_Crypto_GenIV(&info_buf);
 
     BSL_Crypto_KeyHandle_t cekhandle = NULL;
 
     for (auto _ : state)
     {
-        int res = BSL_Crypto_KDF(keyhandle, variant, &salt_buf, &info_buf, bign, &cekhandle);
+        int res = BSL_Crypto_KDF(keyhandle, variant, &salt_buf, &info_buf, out_len, &cekhandle);
         benchmark::DoNotOptimize(res);
         BSL_Crypto_ReleaseKeyHandle(cekhandle);
     }
@@ -182,11 +189,23 @@ static void BM_KDF(benchmark::State &state, BSL_Crypto_KDFVariant_t variant, siz
     BSL_Data_Deinit(&info_buf);
     BSL_Data_Deinit(&salt_buf);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
-    state.SetComplexityN(bign);
+    state.SetComplexityN(out_len);
 }
 // clang-format off
-BENCHMARK_CAPTURE(BM_KDF, HKDF_SHA2_256, BSL_CRYPTO_KDF_HKDF_SHA_256, 32, "hkdf-sha-256")->DenseRange(16, 32, 8)->Complexity(benchmark::oN);
-BENCHMARK_CAPTURE(BM_KDF, HKDF_SHA2_512, BSL_CRYPTO_KDF_HKDF_SHA_512, 64, "hkdf-sha-512")->DenseRange(16, 32, 8)->Complexity(benchmark::oN);
+BENCHMARK_CAPTURE(BM_KDF, HKDF_SHA2_256, BSL_CRYPTO_KDF_HKDF_SHA_256, 32, "hkdf-sha-256")
+    ->ArgsProduct({
+        benchmark::CreateRange(10, 1000, 10),
+        benchmark::CreateDenseRange(16, 32, 8)
+    })
+    ->ArgNames({"info", "ck"})
+    ->Complexity(benchmark::oN);
+BENCHMARK_CAPTURE(BM_KDF, HKDF_SHA2_512, BSL_CRYPTO_KDF_HKDF_SHA_512, 64, "hkdf-sha-512")
+    ->ArgsProduct({
+        benchmark::CreateRange(10, 1000, 10),
+        benchmark::CreateDenseRange(16, 32, 8)
+    })
+    ->ArgNames({"info", "ck"})
+    ->Complexity(benchmark::oN);
 // clang-format on
 
 static void BM_Encrypt(benchmark::State &state, BSL_Crypto_AESVariant_e variant, const char *keyid)
@@ -247,8 +266,12 @@ static void BM_Encrypt(benchmark::State &state, BSL_Crypto_AESVariant_e variant,
     state.SetComplexityN(bign);
 }
 // clang-format off
-BENCHMARK_CAPTURE(BM_Encrypt, AES_128, BSL_CRYPTO_AES_128, "aesgcm-128")->Range(1 << 10, 1 << 20)->Complexity(benchmark::oN);
-BENCHMARK_CAPTURE(BM_Encrypt, AES_256, BSL_CRYPTO_AES_256, "aesgcm-256")->Range(1 << 10, 1 << 20)->Complexity(benchmark::oN);
+BENCHMARK_CAPTURE(BM_Encrypt, AES_128, BSL_CRYPTO_AES_128, "aesgcm-128")
+    ->Range(1 << 10, 1 << 20)
+    ->Complexity(benchmark::oN);
+BENCHMARK_CAPTURE(BM_Encrypt, AES_256, BSL_CRYPTO_AES_256, "aesgcm-256")
+    ->Range(1 << 10, 1 << 20)
+    ->Complexity(benchmark::oN);
 // clang-format on
 
 static void BM_MAC(benchmark::State &state, BSL_Crypto_SHAVariant_e variant, const char *keyid)
@@ -298,9 +321,15 @@ static void BM_MAC(benchmark::State &state, BSL_Crypto_SHAVariant_e variant, con
     state.SetComplexityN(bign);
 }
 // clang-format off
-BENCHMARK_CAPTURE(BM_MAC, HMAC_SHA2_256, BSL_CRYPTO_SHA_256, "hmac-256")->Range(1 << 10, 1 << 20)->Complexity(benchmark::oN);
-BENCHMARK_CAPTURE(BM_MAC, HMAC_SHA2_384, BSL_CRYPTO_SHA_384, "hmac-384")->Range(1 << 10, 1 << 20)->Complexity(benchmark::oN);
-BENCHMARK_CAPTURE(BM_MAC, HMAC_SHA2_512, BSL_CRYPTO_SHA_512, "hmac-512")->Range(1 << 10, 1 << 20)->Complexity(benchmark::oN);
+BENCHMARK_CAPTURE(BM_MAC, HMAC_SHA2_256, BSL_CRYPTO_SHA_256, "hmac-256")
+    ->Range(1 << 10, 1 << 20)
+    ->Complexity(benchmark::oN);
+BENCHMARK_CAPTURE(BM_MAC, HMAC_SHA2_384, BSL_CRYPTO_SHA_384, "hmac-384")
+    ->Range(1 << 10, 1 << 20)
+    ->Complexity(benchmark::oN);
+BENCHMARK_CAPTURE(BM_MAC, HMAC_SHA2_512, BSL_CRYPTO_SHA_512, "hmac-512")
+    ->Range(1 << 10, 1 << 20)
+    ->Complexity(benchmark::oN);
 // clang-format on
 
 static void BM_SigSign(benchmark::State &state, BSL_Crypto_SignVariant_t variant, const char *keyid)
