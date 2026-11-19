@@ -20,7 +20,7 @@ the prime contract 80NM0018D0004 between the Caltech and NASA under
 subcontract 1700763.
 ]]
 
-if(BUILD_UNITTEST OR BUILD_FUZZING)
+if(BUILD_UNITTEST OR BUILD_FUZZING OR BUILD_BENCHMARK)
   add_library(bsl_test_utils)
   target_sources(
       bsl_test_utils
@@ -52,7 +52,7 @@ if(BUILD_UNITTEST OR BUILD_FUZZING)
       ARCHIVE
           COMPONENT devel
   )
-endif(BUILD_UNITTEST OR BUILD_FUZZING)
+endif(BUILD_UNITTEST OR BUILD_FUZZING OR BUILD_BENCHMARK)
 
 set(LIB_ORDERED bsl_mock_bpa bsl_crypto bsl_test_utils)
 
@@ -179,3 +179,19 @@ if(BUILD_FUZZING)
   target_link_libraries(fuzz_PolicyParser_LoadFd PUBLIC ${LIB_ORDERED})
 
 endif(BUILD_FUZZING)
+
+if(BUILD_BENCHMARK)
+  add_executable(bench_crypto bench_crypto.cpp)
+  target_link_libraries(bench_crypto PRIVATE ${LIB_ORDERED} benchmark::benchmark benchmark::benchmark_main)
+  add_test(
+    NAME bench_crypto 
+    COMMAND
+      taskset -c 0
+      ./bench_crypto --v=0
+      --benchmark_time_unit=ns 
+      --benchmark_min_warmup_time=0.1
+  )
+  set_tests_properties(bench_crypto PROPERTIES
+    ENVIRONMENT "TEST_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+  )
+endif(BUILD_BENCHMARK)

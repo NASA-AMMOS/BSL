@@ -34,6 +34,7 @@ option(BUILD_UNITTEST "Enable building unit tests" ON)
 option(TEST_MEMCHECK "Enable test runtime memory checking" ON)
 option(BUILD_COVERAGE "Enable runtime coverage logging and reporting" OFF)
 option(BUILD_FUZZING "Enable building fuzzing executables" OFF)
+option(BUILD_BENCHMARK "Enable building microbenchmark executables" OFF)
 option(BSL_LOG_PLAINTEXT_ENABLE "Enable debug logging of internal state" OFF)
 if(BSL_LOG_PLAINTEXT_ENABLE)
     message(WARNING "Plaintext logging is enabled, be aware that this may leak secrets at the DEBUG log level!")
@@ -74,9 +75,9 @@ project(bsl
     LANGUAGES C
     VERSION ${PROJECT_VERSION}
 )
-if(BUILD_FUZZING)
+if(BUILD_FUZZING OR BUILD_BENCHMARK)
     enable_language(CXX)
-endif(BUILD_FUZZING)
+endif(BUILD_FUZZING OR BUILD_BENCHMARK)
 
 # Language options
 set(CMAKE_C_STANDARD 99)
@@ -91,10 +92,16 @@ add_compile_options(
     $<$<COMPILE_LANGUAGE:C>:-Wpedantic>
     $<$<COMPILE_LANGUAGE:C>:-Werror>
     $<$<COMPILE_LANGUAGE:C>:-Wformat>
-    -Wshadow -Wpointer-arith -Wstrict-prototypes
-    -Wmissing-prototypes -Wredundant-decls -Wcast-align
+    $<$<COMPILE_LANGUAGE:C>:-Wstrict-prototypes>
+    $<$<COMPILE_LANGUAGE:C>:-Wmissing-prototypes>
+    -Wshadow
+    -Wpointer-arith
+    -Wredundant-decls
+    -Wcast-align
     -Wformat=2
-    -fno-strict-aliasing -Werror=format-security -fno-common
+    -fno-strict-aliasing
+    -Werror=format-security
+    -fno-common
     -Wstrict-aliasing=2
     -Wconversion
     -ffunction-sections
@@ -162,8 +169,12 @@ if(BUILD_UNITTEST)
   endif(TEST_MEMCHECK)
 endif(BUILD_UNITTEST)
 if(BUILD_FUZZING)
-  find_package(libfuzzer)
+  find_package(libfuzzer REQUIRED)
 endif(BUILD_FUZZING)
+if(BUILD_BENCHMARK)
+  find_package(benchmark REQUIRED)
+  message(STATUS "Using benchmark ${benchmark_VERSION}")
+endif(BUILD_BENCHMARK)
 if(BUILD_COVERAGE)
   include(CodeCoverage)
   append_coverage_compiler_flags()
@@ -249,9 +260,9 @@ if(BUILD_LIB)
 endif(BUILD_LIB)
 
 set(TEST_INSTALL_PREFIX "${CMAKE_INSTALL_LIBEXECDIR}/${PROJECT_NAME}")
-if(BUILD_UNITTEST OR BUILD_FUZZING)
+if(BUILD_UNITTEST OR BUILD_FUZZING OR BUILD_BENCHMARK)
     add_subdirectory(test)
-endif(BUILD_UNITTEST OR BUILD_FUZZING)
+endif(BUILD_UNITTEST OR BUILD_FUZZING OR BUILD_BENCHMARK)
 if(BUILD_DOCS_API OR BUILD_DOCS_MAN)
     add_subdirectory(docs)
 endif(BUILD_DOCS_API OR BUILD_DOCS_MAN)
