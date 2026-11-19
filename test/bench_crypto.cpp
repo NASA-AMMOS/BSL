@@ -21,7 +21,7 @@
  */
 /** @file
  * @ingroup benchmark_test
- * Micro-benchmarking of cryptographic functions used by security contexts.
+ * Micro-benchmark testing of cryptographic functions used by security contexts.
  *
  * The key set used by these tests can be updated by editing the sibling file
  * @c bench_crypto_keyset.cbordiag and running this conversion command:
