@@ -189,7 +189,7 @@ static void BM_KDF(benchmark::State &state, BSL_Crypto_KDFVariant_t variant, siz
     BSL_Data_Deinit(&info_buf);
     BSL_Data_Deinit(&salt_buf);
     BSL_Crypto_ReleaseKeyHandle(keyhandle);
-    state.SetComplexityN(out_len);
+    state.SetComplexityN(salt_len * out_len);
 }
 // clang-format off
 BENCHMARK_CAPTURE(BM_KDF, HKDF_SHA2_256, BSL_CRYPTO_KDF_HKDF_SHA_256, 32, "hkdf-sha-256")

@@ -189,7 +189,8 @@ if(BUILD_BENCHMARK)
       taskset -c 0
       ./bench_crypto --v=0
       --benchmark_time_unit=ns 
-      --benchmark_min_warmup_time=0.1
+      --benchmark_min_warmup_time=0.2
+      --benchmark_min_time=1.0s
   )
   set_tests_properties(bench_crypto PROPERTIES
     ENVIRONMENT "TEST_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
