@@ -33,7 +33,7 @@ on:
 
 jobs:
   apidoc:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     steps:
@@ -95,7 +95,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     needs: apidoc
     if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/download-artifact@v8
         with:
