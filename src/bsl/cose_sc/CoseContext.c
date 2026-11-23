@@ -624,6 +624,7 @@ static size_t BSLX_CoseSc_bstring_AppendRaw(m_bstring_t data, const BSL_Data_t *
  * @param[in] ctx The context to read from.
  * @param[in,out] chunklist The list to append to.
  * @param[in,out] total The total size accumulator to add to.
+ * @return BSL_SUCCESS if successful, but this should not fail
  */
 static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc_ChunkList_t chunklist, size_t *total)
 {
@@ -698,11 +699,13 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
                     break;
                 case -2:
                     res = BSL_BundleCtx_GetBlockMetadata(ctx->bundle, ctx->sec_blk_num, &aad_block);
+                    // GCOV_EXCL_START
                     if (BSL_SUCCESS != res)
                     {
                         BSL_LOG_ERR("Failed to get AAD block data");
                         return res;
                     }
+                    // GCOV_EXCL_STOP
                     break;
                 default:
                     BSL_LOG_ERR("Unhandled AAD Scope special key %" PRId64, blk_num);
@@ -732,11 +735,13 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
             if (!special_key)
             {
                 res = BSL_BundleCtx_GetBlockMetadata(ctx->bundle, (uint64_t)blk_num, &aad_block);
+                // GCOV_EXCL_START
                 if (BSL_SUCCESS != res)
                 {
                     BSL_LOG_ERR("Failed to get AAD block data");
                     return res;
                 }
+                // GCOV_EXCL_STOP
             }
 
             if (aad_flags & BSLX_COSESC_AADSCOPE_FLAG_METADATA)
@@ -758,11 +763,13 @@ static int BSLX_CoseSc_ExternalAad_Chunked(const BSLX_CoseSc_t *ctx, BSLX_CoseSc
                 }
                 {
                     BSL_SeqReader_t *seq = BSL_BundleCtx_ReadBTSD(ctx->bundle, aad_block.block_num);
+                    // GCOV_EXCL_START
                     if (!seq)
                     {
                         BSL_LOG_ERR("Failed to construct reader");
                         return BSL_ERR_ENCODING;
                     }
+                    // GCOV_EXCL_STOP
                     BSLX_CoseSc_ChunkItem_t *item = BSLX_CoseSc_ChunkList_push_back_new(chunklist);
                     BSLX_CoseSc_ChunkItem_move_seq(*item, seq);
 
@@ -811,11 +818,13 @@ static void BSLX_CoseSc_BuildAad(BSLX_CoseSc_t *ctx, BSLX_CoseSc_ChunkList_t chu
     size_t ext_aad_len;
     // compute total size of what would be produced by chunks
     int res = BSLX_CoseSc_ExternalAad_Chunked(ctx, chunklist, &ext_aad_len);
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
         // continue processing
     }
+    // GCOV_EXCL_STOP
 
     // after external AAD size is known, inject bstr head above
     BSLX_CoseSc_bstring_AppendHead(*data, CBOR_MAJOR_TYPE_BYTE_STRING, ext_aad_len);
@@ -840,10 +849,12 @@ static void BSLX_CoseSc_Mac_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Heade
         case BSLX_COSEMSG_ALG_HMAC_SHA_512_512:
             bsl_sha_var = BSL_CRYPTO_SHA_512;
             break;
+            // GCOV_EXCL_START
         default:
             BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, ctx->tgt_alg);
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             return;
+            // GCOV_EXCL_STOP
     }
 
     // Chunks of MAC_Structure
@@ -1040,7 +1051,7 @@ static void BSLX_CoseSc_GetAndValidateTarget(BSLX_CoseSc_t *self, const BSLX_Cos
             self->tgt_keylen = 64;
             break;
         default:
-            BSL_LOG_DEBUG("Unhandled content alg %" PRId64, self->tgt_alg);
+            // content layer is not symmetric
             self->tgt_keylen = 0;
             break;
     }
@@ -1162,7 +1173,7 @@ static void BSLX_CoseSc_GetAndValidateKey(BSLX_CoseSc_t *self, const BSLX_CoseMs
             }
             else
             {
-                BSL_LOG_DEBUG("Using key algorithm %" PRId64 " from key store", hdr_alg_val);
+                BSL_LOG_DEBUG("Using key algorithm %" PRId64 " from key store", key_alg_int);
                 self->key_alg = key_alg_int;
             }
         }
@@ -1648,10 +1659,12 @@ static void BSLX_CoseSc_HkdfContentKey(BSLX_CoseSc_t *ctx, BSLX_CoseMsg_Recipien
             bsl_kdf  = BSL_CRYPTO_KDF_HKDF_SHA_512;
             salt_len = 64;
             break;
+            // GCOV_EXCL_START
         default:
             BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, ctx->key_alg);
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             return;
+            // GCOV_EXCL_STOP
     }
 
     BSL_Data_t salt;
@@ -1964,10 +1977,12 @@ static void BSLX_CoseSc_Encrypt_Compute(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_H
         case BSLX_COSEMSG_ALG_AES_GCM_256:
             bsl_aes_var = BSL_CRYPTO_AES_256;
             break;
+            // GCOV_EXCL_START
         default:
             BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, ctx->tgt_alg);
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             return;
+            // GCOV_EXCL_STOP
     }
 
     // Chunks of Enc_Structure
@@ -2598,10 +2613,12 @@ static void BSLX_CoseSc_Signature_TBS(BSLX_CoseSc_t *ctx, const BSLX_CoseMsg_Hea
         case BSLX_COSEMSG_ALG_MLDSA87:
             *bsl_sig_var = BSL_CRYPTO_MLDSA_87;
             break;
+            // GCOV_EXCL_START
         default:
             BSL_LOG_ERR("Invalid COSE algorithm %" PRId64, ctx->tgt_alg);
             ctx->status = BSL_ERR_SECURITY_CONTEXT_VALIDATION_FAILED;
             return;
+            // GCOV_EXCL_STOP
     }
 
     { // 4-item array
@@ -2960,12 +2977,16 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecO
                         BSLX_CoseSc_Encrypt_Source(&ctx);
                         break;
                     case BSLX_COSESC_RESULT_COSE_SIGN1:
+                        BSL_LOG_ERR("Mismatch between key alg %" PRId64 " and target alg %" PRId64, ctx.key_alg,
+                                    ctx.tgt_alg);
+                        ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
+                        break;
                     // GCOV_EXCL_START
                     case BSLX_COSESC_RESULT_COSE_ENCRYPT:
                     case BSLX_COSESC_RESULT_COSE_MAC:
                     case BSLX_COSESC_RESULT_COSE_SIGN:
                     default:
-                        BSL_LOG_ERR("Unhandled source case");
+                        BSL_LOG_ERR("Unhandled source case %d", ctx.src_msg);
                         ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                         break;
                         // GCOV_EXCL_STOP
@@ -2990,7 +3011,7 @@ int BSLX_CoseSc_Execute(BSL_LibCtx_t *lib _U_, BSL_BundleRef_t *bundle, BSL_SecO
                     case BSLX_COSESC_RESULT_COSE_MAC:
                     case BSLX_COSESC_RESULT_COSE_SIGN:
                     default:
-                        BSL_LOG_ERR("Unhandled source case");
+                        BSL_LOG_ERR("Unhandled source case %d", ctx.src_msg);
                         ctx.status = BSL_ERR_SECURITY_CONTEXT_FAILED;
                         break;
                         // GCOV_EXCL_STOP

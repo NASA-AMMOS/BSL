@@ -841,10 +841,11 @@ static int BSL_SigCtx_MldsaPrep(EVP_MD_CTX *mdctx, EVP_PKEY *key)
 
     // Compute key digest "tr"
     res = EVP_DigestInit_ex2(mdctx, md, NULL);
+    // context already keeps its reference
+    EVP_MD_free(md);
     // GCOV_EXCL_START
     if (1 != res)
     {
-        EVP_MD_free(md);
         return res;
     }
     // GCOV_EXCL_STOP
@@ -854,7 +855,6 @@ static int BSL_SigCtx_MldsaPrep(EVP_MD_CTX *mdctx, EVP_PKEY *key)
         // GCOV_EXCL_START
         if (1 != res)
         {
-            EVP_MD_free(md);
             return res;
         }
         // GCOV_EXCL_STOP
@@ -867,7 +867,6 @@ static int BSL_SigCtx_MldsaPrep(EVP_MD_CTX *mdctx, EVP_PKEY *key)
         // GCOV_EXCL_START
         if (1 != res)
         {
-            EVP_MD_free(md);
             return res;
         }
         // GCOV_EXCL_STOP
@@ -880,7 +879,6 @@ static int BSL_SigCtx_MldsaPrep(EVP_MD_CTX *mdctx, EVP_PKEY *key)
     // GCOV_EXCL_START
     if (1 != res)
     {
-        EVP_MD_free(md);
         return res;
     }
     // GCOV_EXCL_STOP
@@ -894,9 +892,6 @@ static int BSL_SigCtx_MldsaPrep(EVP_MD_CTX *mdctx, EVP_PKEY *key)
         static const uint8_t prefix[2] = { 0x00, 0x00 };
         EVP_DigestUpdate(mdctx, prefix, sizeof(prefix));
     }
-
-    // context already keeps its reference
-    EVP_MD_free(md);
 
     return res;
 }
@@ -1415,11 +1410,13 @@ int BSL_Cipher_Init(BSL_Cipher_t *cipher_ctx, BSL_CipherMode_e enc, BSL_Crypto_A
         case BSL_CRYPTO_AES_128:
             cipher = EVP_aes_128_gcm();
             break;
+        case BSL_CRYPTO_AES_192:
+            cipher = EVP_aes_192_gcm();
+            break;
         case BSL_CRYPTO_AES_256:
             cipher = EVP_aes_256_gcm();
             break;
             // GCOV_EXCL_START
-        case BSL_CRYPTO_AES_192:
         default:
             BSL_LOG_ERR("Invalid AES variant");
             return BSL_ERR_FAILURE;
