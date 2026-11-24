@@ -367,6 +367,9 @@
               "$ref": "#/$defs/IntegerOrText",
               "minimum": 0
             },
+            "append_authtag": {
+              "$ref": "#/$defs/BooleanOrText"
+            },
             "iv": {
               "deprecated": true
             }

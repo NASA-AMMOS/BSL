@@ -39,6 +39,7 @@
 #include <bsl/default_sc/DefaultSecContext_Private.h>
 #include <bsl/mock_bpa/MockBPA.h>
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unity.h>
@@ -262,6 +263,41 @@ int rfc3394_cek(unsigned char *buf, int len)
         memcpy(buf, cek_buf, sizeof(cek_buf));
     }
     return 1;
+}
+
+void test_BCB_SourceRejectsAppendedTagLengthOverflow(void)
+{
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUtils_LoadBundleFromCBOR(
+                                       &LocalTestCtx, RFC9173_TestVectors_AppendixA1.hex_bundle_original));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSL_TestUutils_QueryEmptyPolicy(&LocalTestCtx, BSL_POLICYLOCATION_APPIN));
+
+    BCBTestContext bcb_test_context;
+    BCBTestContext_Init(&bcb_test_context);
+    BSL_TestUtils_InitBCB_Appendix2(&bcb_test_context, BSL_SECROLE_SOURCE);
+    BSL_Variant_SetInt64(BSL_SecOper_AddOption(&bcb_test_context.sec_oper, BSLX_BCB_OPT_APPEND_AUTHTAG), 1);
+
+    // Key not actually used, but id needs to be registered for this test
+    uint8_t rfc9173A2_key[] = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+                                0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70 };
+    TEST_ASSERT_EQUAL_INT(0,
+                          BSL_Crypto_AddRegistryKeyName(RFC9173_EXAMPLE_A2_KEY, rfc9173A2_key, sizeof(rfc9173A2_key)));
+
+    BSLX_BCB_t bcb_context;
+    TEST_ASSERT_EQUAL(BSL_SUCCESS,
+                      BSLX_BCB_Init(&bcb_context, &LocalTestCtx.mock_bpa_ctr.bundle_ref, &bcb_test_context.sec_oper));
+    TEST_ASSERT_EQUAL(BSL_SUCCESS, BSLX_BCB_GetOptions(&LocalTestCtx.mock_bpa_ctr.bundle_ref, &bcb_context,
+                                                       &bcb_test_context.sec_oper));
+
+    uint8_t aad = 0;
+    BSL_Data_InitView(&bcb_context.aad, sizeof(aad), &aad);
+    bcb_context.bsl_aes               = BSL_CRYPTO_AES_128;
+    bcb_context.keysize               = sizeof(rfc9173A2_key);
+    bcb_context.target_block.btsd_len = SIZE_MAX;
+
+    TEST_ASSERT_EQUAL(BSL_ERR_SECURITY_CONTEXT_FAILED, BSLX_BCB_Encrypt(&bcb_context));
+
+    BSLX_BCB_Deinit(&bcb_context);
+    BCBTestContext_Deinit(&bcb_test_context);
 }
 
 TEST_MATRIX([ true, false ], [ true, false ])
