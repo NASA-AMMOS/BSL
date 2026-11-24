@@ -74,6 +74,7 @@ int BSL_BundleRefState_CacheASB(BSL_BundleRefState_t *obj, const struct BSL_Bund
     BSL_Data_t btsd_copy;
     // ASB decoder needs the whole BTSD now
     int res = BSL_Data_InitBuffer(&btsd_copy, block->btsd_len);
+    // GCOV_EXCL_START
     if (BSL_SUCCESS != res)
     {
         return BSL_ERR_FAILURE;
