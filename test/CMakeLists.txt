@@ -57,7 +57,7 @@ endif(BUILD_UNITTEST OR BUILD_FUZZING)
 set(LIB_ORDERED bsl_mock_bpa bsl_crypto bsl_test_utils)
 
 if(BUILD_UNITTEST AND NOT BUILD_FUZZING)
-  set(UNITY_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
+  set(UNITY_SOURCE_ROOT "${CMAKE_SOURCE_DIR}/deps/unity")
   find_package(unitytools)
 
   add_unity_test(SOURCE test_qcbor.c)
