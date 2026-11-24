@@ -980,6 +980,7 @@ int BSL_SigCtxSign_DigestBuffer(BSL_SigCtx_t *ctx, const void *data, size_t data
 {
     ASSERT_ARG_NONNULL(ctx);
     ASSERT_ARG_NONNULL(data);
+    CHK_PRECONDITION(ctx->libhandle);
     CHK_PRECONDITION(data_len > 0);
     CHK_PRECONDITION(data_len <= INT_MAX);
 
@@ -1006,6 +1007,7 @@ int BSL_SigCtxSign_DigestSeq(BSL_SigCtx_t *ctx, BSL_SeqReader_t *reader)
 {
     ASSERT_ARG_NONNULL(ctx);
     ASSERT_ARG_NONNULL(reader);
+    CHK_PRECONDITION(ctx->libhandle);
 
     while (true)
     {
@@ -1041,6 +1043,7 @@ int BSL_SigCtxSign_Finalize(BSL_SigCtx_t *ctx, BSL_Data_t *signature)
 {
     ASSERT_ARG_NONNULL(ctx);
     ASSERT_ARG_NONNULL(signature);
+    CHK_PRECONDITION(ctx->libhandle);
 
     int res = 0;
     if (ctx->mode == BSL_CRYPTO_SIGNMODE_SEQUENTIAL)
@@ -1216,6 +1219,7 @@ int BSL_SigCtxVerify_DigestBuffer(BSL_SigCtx_t *ctx, const void *data, size_t da
 {
     ASSERT_ARG_NONNULL(ctx);
     ASSERT_ARG_NONNULL(data);
+    CHK_PRECONDITION(ctx->libhandle);
     CHK_PRECONDITION(data_len > 0);
     CHK_PRECONDITION(data_len <= INT_MAX);
 
@@ -1242,6 +1246,7 @@ int BSL_SigCtxVerify_DigestSeq(BSL_SigCtx_t *ctx, BSL_SeqReader_t *reader)
 {
     ASSERT_ARG_NONNULL(ctx);
     ASSERT_ARG_NONNULL(reader);
+    CHK_PRECONDITION(ctx->libhandle);
 
     while (true)
     {
@@ -1277,6 +1282,7 @@ int BSL_SigCtxVerify_Finalize(BSL_SigCtx_t *ctx, const BSL_Data_t *signature)
 {
     ASSERT_ARG_NONNULL(ctx);
     ASSERT_ARG_NONNULL(signature);
+    CHK_PRECONDITION(ctx->libhandle);
 
     int res = 0;
     if (ctx->mode == BSL_CRYPTO_SIGNMODE_SEQUENTIAL)
@@ -1309,7 +1315,7 @@ int BSL_SigCtxVerify_Finalize(BSL_SigCtx_t *ctx, const BSL_Data_t *signature)
         BSL_LOG_DEBUG("EVP_DigestVerifyFinal took %zu bytes, return %d", dersig.len, res);
         if (res <= 0)
         {
-            BSL_LOG_ERR("EVP_DigestVerifyFinal: %s", ERR_error_string(ERR_get_error(), NULL));
+            BSL_LOG_DEBUG("EVP_DigestVerifyFinal: %s", ERR_error_string(ERR_get_error(), NULL));
         }
         BSL_Data_Deinit(&dersig);
     }
@@ -1343,7 +1349,7 @@ int BSL_SigCtxVerify_Finalize(BSL_SigCtx_t *ctx, const BSL_Data_t *signature)
         BSL_LOG_DEBUG("EVP_PKEY_verify took %zu bytes, return %d", signature->len, res);
         if (res <= 0)
         {
-            BSL_LOG_ERR("EVP_PKEY_verify: %s", ERR_error_string(ERR_get_error(), NULL));
+            BSL_LOG_DEBUG("EVP_PKEY_verify: %s", ERR_error_string(ERR_get_error(), NULL));
         }
 
         EVP_SIGNATURE_free(sig_alg);

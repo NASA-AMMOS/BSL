@@ -1,0 +1,97 @@
+##
+## Copyright (c) 2025-2026 The Johns Hopkins University Applied Physics
+## Laboratory LLC.
+##
+## This file is part of the Bundle Protocol Security Library (BSL).
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##     http://www.apache.org/licenses/LICENSE-2.0
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+## This work was performed for the Jet Propulsion Laboratory, California
+## Institute of Technology, sponsored by the United States Government under
+## the prime contract 80NM0018D0004 between the Caltech and NASA under
+## subcontract 1700763.
+##
+name: Build and run micro-benchmarks
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  push:
+    branches:
+      - main
+      - 'support/*'
+  pull_request: {} # any target
+
+jobs:
+  fuzzing:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - name: 'ubuntu-26.04'
+            image: null
+        compiler: ['gcc']
+    name: Benchmark (${{matrix.os.name}} ${{matrix.compiler}})
+    runs-on: ${{ matrix.os.image != null && 'ubuntu-latest' || matrix.os.name }}
+    container: ${{ matrix.os.image }}
+    permissions:
+      contents: read
+      actions: write
+    env:
+      CC: ${{matrix.compiler=='clang' && 'clang' || 'gcc'}}
+      CXX: ${{matrix.compiler=='clang' && 'clang++' || 'g++'}}
+    steps:
+      - name: Set up OS
+        if: startsWith(matrix.os.name, 'ubuntu')
+        env:
+          PIP_BREAK_SYSTEM_PACKAGES: 1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+              cmake ninja-build \
+              ruby pkg-config ccache patch \
+              ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc g++'}} \
+              libssl-dev libjansson-dev libbenchmark-dev \
+              xmlstarlet python3-pip
+      - name: Set up OS
+        if: startsWith(matrix.os.name, 'centos')
+        run: |
+          dnf install -y 'dnf-command(config-manager)' epel-release
+          dnf config-manager --set-enabled crb
+          dnf install -y \
+              git rsync \
+              cmake ninja-build \
+              ruby pkg-config ccache patch \
+              ${{matrix.compiler=='clang' && 'clang llvm' || 'gcc gcc-c++'}} \
+              openssl-devel jansson-devel google-benchmark-devel \
+              xmlstarlet python3-pip
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2.22
+        with:
+          create-symlink: true
+      - name: Dependencies
+        run: ./build.sh deps
+      - name: Prep
+        run: >
+          ./build.sh prep
+          -DBUILD_DOCS_API=OFF -DBUILD_DOCS_MAN=OFF
+          -DBUILD_MOCK_BPA=OFF -DBUILD_UNITTEST=OFF
+          -DBUILD_BENCHMARK=ON -DBUILD_COVERAGE=OFF
+      - name: Build
+        run: ./build.sh
+      - name: Install
+        run: ./build.sh install
+      - name: Benchmark
+        run: ./build.sh check --verbose

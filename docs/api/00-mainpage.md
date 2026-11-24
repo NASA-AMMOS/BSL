@@ -145,3 +145,7 @@ Tests cover the BSL itself, its example security contexts and sample policy prov
 
 @defgroup fuzz_test Fuzz Testing
 @brief Files used for fuzz testing of decoders.
+
+
+@defgroup benchmark_test Benchmark Testing
+@brief Files used for micro-benchmark testing of internal behaviors.
