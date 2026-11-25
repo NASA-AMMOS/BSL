@@ -317,8 +317,10 @@ int BSLP_QueryPolicy(void *user_data, BSL_SecurityActionSet_t *output_action_set
                           BSL_SecOper_IsBIB(*comp), BSL_SecOper_GetSecurityBlockNum(*comp));
             if (BSL_SecOper_GetTargetBlockNum(*comp) == BSL_SecOper_GetTargetBlockNum(sec_oper))
             {
-                // Both BIBs or BCBs
-                if (!(BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsBIB(*comp)))
+                // Both BIBs or BCBs in the same role are duplicates; an acceptor
+                // followed by a source of the same service replaces the block
+                if (!(BSL_SecOper_IsBIB(sec_oper) ^ BSL_SecOper_IsBIB(*comp))
+                    && (BSL_SecOper_IsRoleSource(sec_oper) == BSL_SecOper_IsRoleSource(*comp)))
                 {
                     BSL_SecOper_SetConclusion(sec_oper, BSL_SECOP_CONCLUSION_INVALID);
                 }

@@ -34,6 +34,17 @@
 
 #include "bsl/BPSecLib_Private.h"
 
+#include <m-dict.h>
+
+// NOLINTBEGIN
+/// @cond Doxygen_Suppress
+// GCOV_EXCL_START
+/// Set of block numbers, used for targets released by acceptor operations
+M_DICT_SET_DEF(BSLB_BlockNumSet, uint64_t, M_BASIC_OPLIST)
+// GCOV_EXCL_STOP
+/// @endcond
+// NOLINTEND
+
 /**
  * Validate RFC 9172 constraints, common to all security contexts.
  * Specific checks include:
@@ -727,7 +738,16 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
     {
         BSL_SecurityAction_t *action = BSL_SecActionList_ref(actlist_it);
 
-        uint64_t             secop_invalid_count = 0;
+        uint64_t secop_invalid_count = 0;
+
+        /* Targets whose existing BIB or BCB result is removed by an earlier
+         * acceptor operation in this action, so that a later source
+         * operation in the same action may protect the target again. */
+        BSLB_BlockNumSet_t accepted_bib_tgts;
+        BSLB_BlockNumSet_t accepted_bcb_tgts;
+        BSLB_BlockNumSet_init(accepted_bib_tgts);
+        BSLB_BlockNumSet_init(accepted_bcb_tgts);
+
         BSL_SecOperList_it_t secoplist_it;
         for (BSL_SecOperList_it(secoplist_it, action->sec_op_list); !BSL_SecOperList_end_p(secoplist_it);
              BSL_SecOperList_next(secoplist_it))
@@ -791,6 +811,13 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                     {
                         BSL_LOG_DEBUG("Found secop in block number %" PRIu64, found_asb->sec_block_num);
                         sec_oper->sec_block_num = found_asb->sec_block_num;
+
+                        if (sec_oper->_role == BSL_SECROLE_ACCEPTOR)
+                        {
+                            BSLB_BlockNumSet_push((sec_oper->_service_type == BSL_SECBLOCKTYPE_BCB) ? accepted_bcb_tgts
+                                                                                                    : accepted_bib_tgts,
+                                                  sec_oper->target_block_num);
+                        }
                     }
                     else
                     {
@@ -803,8 +830,12 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
             }
             else // role == BSL_SECROLE_SOURCE
             {
+                // An earlier acceptor in this action releases the target
+                const bool bib_released = BSLB_BlockNumSet_get(accepted_bib_tgts, sec_oper->target_block_num) != NULL;
+                const bool bcb_released = BSLB_BlockNumSet_get(accepted_bcb_tgts, sec_oper->target_block_num) != NULL;
+
                 // Cannot add BIB if BIB already targets
-                if (sec_oper->_service_type == BSL_SECBLOCKTYPE_BIB
+                if (sec_oper->_service_type == BSL_SECBLOCKTYPE_BIB && !bib_released
                     && BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bib_tgts, sec_oper->target_block_num))
                 {
                     // Non-blocking warning, for now
@@ -813,7 +844,7 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                 }
 
                 // Cannot add BIB or BCB if BCB alredy targets
-                if (BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bcb_tgts, sec_oper->target_block_num))
+                if (!bcb_released && BSLB_AsbPtrSetMap_cget(bundle->bsl_data->bcb_tgts, sec_oper->target_block_num))
                 {
                     BSL_LOG_ERR("Cannot add service to target %" PRIu64 " that is already targeted by an existing BCB",
                                 sec_oper->target_block_num);
@@ -828,6 +859,8 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                 {
                     BSL_LOG_ERR("Cannot get bundle primary block");
                     BSL_PrimaryBlock_deinit(&primary_block);
+                    BSLB_BlockNumSet_clear(accepted_bib_tgts);
+                    BSLB_BlockNumSet_clear(accepted_bcb_tgts);
                     return BSL_ERR_HOST_CALLBACK_FAILED;
                 }
 
@@ -859,6 +892,9 @@ int BSL_SecCtx_ValidatePolicyActionSet(BSL_LibCtx_t *lib, BSL_BundleRef_t *bundl
                 BSL_LOG_WARNING("Security context validator failed for context ID %" PRId64, sec_oper->context_id);
             }
         }
+
+        BSLB_BlockNumSet_clear(accepted_bib_tgts);
+        BSLB_BlockNumSet_clear(accepted_bcb_tgts);
 
         action->validation_state =
             (0 == secop_invalid_count) ? BSL_ACTION_VALIDATION_SUCCESS : BSL_ACTION_VALIDATION_FAILURE;

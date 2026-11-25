@@ -21,8 +21,12 @@
 #
 """Test Cases utilizing JSON policy definitions with the default contexts"""
 
+import io
 import logging
 import os
+
+import cbor2
+from cbor_diag import diag2cbor
 
 from _test_util import BundleDestLoc, DataFormat, _TestCase, sc_config_modifier
 from test_bpa import TestAgent
@@ -81,6 +85,40 @@ EXAMPLE_EMPTY_PAYLOAD_WITH_BCB = """\
 ]
 """
 """ Bundle with BCB over target #1 """
+
+
+def _security_blocks(bundle_data: bytes, block_type: int) -> list[list]:
+    """Decode a bundle and return each security block of one type as
+    [block number, targets, security source]."""
+    blocks = cbor2.loads(bundle_data)
+    found = []
+    for blk in blocks[1:]:
+        if blk[0] != block_type:
+            continue
+        dec = cbor2.CBORDecoder(io.BytesIO(blk[4]))
+        targets = dec.decode()
+        _ctx_id = dec.decode()
+        _flags = dec.decode()
+        source = dec.decode()
+        found.append([blk[1], targets, source])
+    return found
+
+
+def _payload_btsd(bundle_data: bytes) -> bytes:
+    """Decode a bundle and return the payload block-type-specific data."""
+    for blk in cbor2.loads(bundle_data)[1:]:
+        if blk[0] == 1:
+            return blk[4]
+    raise ValueError("no payload block")
+
+
+def _run_through_clout(agent: TestAgent, testcase: _TestCase) -> bytes:
+    """Send a bundle from the convergence layer and return the bundle
+    forwarded back to the convergence layer."""
+    agent._start(testcase)
+    assert agent._ul_sock is not None
+    agent._ul_sock.send(diag2cbor(testcase.input_data))
+    return agent._wait_for(agent._ul_sock)
 
 
 class TestBibHmacSha(TestAgent):
@@ -322,6 +360,28 @@ class TestBibHmacSha(TestAgent):
                 expected_output_format=DataFormat.CBORDIAG,
             )
         )
+
+    def test_exampleA_1_accept_and_source_same_location(self):
+        """Accept an existing BIB and source a replacement BIB over the same
+        target at the same interaction point."""
+        rx_data = _run_through_clout(
+            self,
+            _TestCase(
+                input_data=EXAMPLE_A_1_WITH_BIB,
+                expected_output=None,
+                sec_src_eid="ipn:3.0",
+                policy_config="data/default-scs/policy-exA.1-resign.json",
+                bundle_dest_loc=BundleDestLoc.CLIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ANYCBOR,
+            ),
+        )
+        # only the replacement BIB remains, from the new security source
+        bibs = _security_blocks(rx_data, 11)
+        self.assertEqual(1, len(bibs))
+        self.assertEqual([1], bibs[0][1])
+        self.assertEqual([2, [3, 0]], bibs[0][2])
 
 
 class TestBcbAesGcm(TestAgent):
@@ -584,3 +644,28 @@ class TestBcbAesGcm(TestAgent):
                 expected_output_format=DataFormat.ERR,
             )
         )
+
+    def test_exampleA_2_accept_and_source_same_location(self):
+        """Accept an existing BCB and source a replacement BCB over the same
+        target at the same interaction point."""
+        rx_data = _run_through_clout(
+            self,
+            _TestCase(
+                input_data=EXAMPLE_A_2_WITH_BCB,
+                expected_output=None,
+                sec_src_eid="ipn:3.0",
+                policy_config="data/default-scs/policy-exA.2-reencrypt.json",
+                bundle_dest_loc=BundleDestLoc.CLIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ANYCBOR,
+            ),
+        )
+        # only the replacement BCB remains, from the new security source
+        bcbs = _security_blocks(rx_data, 12)
+        self.assertEqual(1, len(bcbs))
+        self.assertEqual([1], bcbs[0][1])
+        self.assertEqual([2, [3, 0]], bcbs[0][2])
+        # payload is ciphertext again, not the plaintext
+        plaintext = _payload_btsd(diag2cbor(EXAMPLE_A_NO_SEC))
+        self.assertNotEqual(plaintext, _payload_btsd(rx_data))
