@@ -27,6 +27,17 @@
 
 #include "bsl/BPSecLib_Private.h"
 
+#include <m-array.h>
+
+/// @cond Doxygen_Suppress
+// NOLINTBEGIN
+// GCOV_EXCL_START
+/// List of block numbers, used for targets left without any security block
+M_ARRAY_DEF(BSLB_BlockNumList, uint64_t, M_BASIC_OPLIST)
+// GCOV_EXCL_STOP
+// NOLINTEND
+/// @endcond
+
 void BSL_BundleRefState_Init(BSL_BundleRefState_t *obj)
 {
     // GCOV_EXCL_START
@@ -128,13 +139,30 @@ int BSL_BundleRefState_CacheASB(BSL_BundleRefState_t *obj, const struct BSL_Bund
 
 void BSL_BundleRefState_RepopulateTgts(BSLB_AsbPtrSetMap_t tgtmap, BSL_AbsSecBlockPtr_t *asb_ptr)
 {
+    // targets that no security block references any more
+    BSLB_BlockNumList_t untargeted;
+    BSLB_BlockNumList_init(untargeted);
+
     // remove any existing references
     BSLB_AsbPtrSetMap_it_t map_it;
     for (BSLB_AsbPtrSetMap_it(map_it, tgtmap); !BSLB_AsbPtrSetMap_end_p(map_it); BSLB_AsbPtrSetMap_next(map_it))
     {
         // do not care if if was there or not
         BSLB_AsbPtrSet_pop_at(NULL, BSLB_AsbPtrSetMap_ref(map_it)->value, asb_ptr);
+        if (BSLB_AsbPtrSet_empty_p(BSLB_AsbPtrSetMap_ref(map_it)->value))
+        {
+            BSLB_BlockNumList_push_back(untargeted, BSLB_AsbPtrSetMap_ref(map_it)->key);
+        }
     }
+
+    // a block is only present in the map while some security block targets it,
+    // so that a removed result (e.g. by an acceptor) no longer counts as a target
+    BSLB_BlockNumList_it_t num_it;
+    for (BSLB_BlockNumList_it(num_it, untargeted); !BSLB_BlockNumList_end_p(num_it); BSLB_BlockNumList_next(num_it))
+    {
+        BSLB_AsbPtrSetMap_erase(tgtmap, *BSLB_BlockNumList_cref(num_it));
+    }
+    BSLB_BlockNumList_clear(untargeted);
 
     const BSL_AbsSecBlock_t *asb = BSL_AbsSecBlockPtr_cref(asb_ptr);
     // add new references

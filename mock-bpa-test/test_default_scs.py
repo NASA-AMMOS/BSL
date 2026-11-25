@@ -339,6 +339,36 @@ class TestBcbAesGcm(TestAgent):
             )
         )
 
+    def test_exampleA_2_accept_clin_source_clout(self):
+        """Accept the BCB at CLIN and source a new BCB over the same target at CLOUT."""
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_2_WITH_BCB,
+                expected_output=None,  # non-deterministic BTSD
+                sec_src_eid="ipn:3.0",
+                policy_config="data/default-scs/policy-exA.2-accept-clin-source-clout.json",
+                bundle_dest_loc=BundleDestLoc.CLIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ANYCBOR,
+            )
+        )
+
+    def test_exampleA_2_accept_appin_source_appout(self):
+        """Accept the BCB at APPIN and source a new BCB over the same target at APPOUT."""
+        self._single_test(
+            _TestCase(
+                input_data=EXAMPLE_A_2_WITH_BCB,
+                expected_output=None,  # non-deterministic BTSD
+                sec_src_eid="ipn:3.0",
+                policy_config="data/default-scs/policy-exA.2-accept-appin-source-appout.json",
+                bundle_dest_loc=BundleDestLoc.APPIN,
+                key_set="data/default-scs/keyset-1.json",
+                input_data_format=DataFormat.CBORDIAG,
+                expected_output_format=DataFormat.ANYCBOR,
+            )
+        )
+
     def test_exampleA_2_acceptor_valid_loose(self):
         self._single_test(
             _TestCase(
