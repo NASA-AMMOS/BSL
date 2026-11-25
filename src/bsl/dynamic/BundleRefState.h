@@ -106,6 +106,7 @@ int BSL_BundleRefState_CacheASB(BSL_BundleRefState_t *obj, const BSL_BundleRef_t
                                 const BSL_CanonicalBlock_t *block);
 
 /** Re-populate a target map for an existing ASB.
+ * Targets which are no longer referenced by any ASB are removed from the map.
  */
 void BSL_BundleRefState_RepopulateTgts(BSLB_AsbPtrSetMap_t map, BSL_AbsSecBlockPtr_t *asb_ptr);
 
