@@ -1,0 +1,48 @@
+{
+  "policyrule_set": [
+    {
+      "policyrule": {
+        "desc": "Confidentiality accept rule",
+        "filter": {
+          "rule_id": "1",
+          "role": "a",
+          "tgt": 1,
+          "loc": "clout",
+          "sc_id": 2
+        },
+        "spec": {
+          "svc": "bcb",
+          "sc_id": 2,
+          "sc_parms": {
+            "key_name": "ExampleA.2",
+            "key_wrap": true
+          }
+        },
+        "policy_action_on_fail": "delete_bundle"
+      }
+    },
+    {
+      "policyrule": {
+        "desc": "Confidentiality source rule at the same location",
+        "filter": {
+          "rule_id": "2",
+          "role": "s",
+          "tgt": 1,
+          "loc": "clout",
+          "sc_id": 2
+        },
+        "spec": {
+          "svc": "bcb",
+          "sc_id": 2,
+          "sc_parms": {
+            "key_name": "ExampleA.2",
+            "aes_variant": 1,
+            "aad_scope": 0,
+            "key_wrap": true
+          }
+        },
+        "policy_action_on_fail": "delete_bundle"
+      }
+    }
+  ]
+}
